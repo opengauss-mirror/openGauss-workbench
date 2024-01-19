@@ -14,7 +14,7 @@
 
     <select id="selectByMainTaskId" resultMap="MigrationTaskResult">
         select
-               m.*,
+               m.id,m.main_task_id,m.run_host_id,m.create_time,
                (select count(1) from tb_migration_task x where x.run_host_id=m.run_host_id and x.exec_status in (1,3,4)) as running_task_count
         from tb_migration_task_host_ref m
         where m.main_task_id = #{mainTaskId}
