@@ -143,14 +143,15 @@ public class NotifyListener implements ApplicationListener<NotifyEvent> {
         }
         Integer maxRepeatCount = templateRule.getMaxRepeatCount();
         Integer sendCount = recordDto.getSendCount() != null ? recordDto.getSendCount() : 0;
-        if (isRepeat != null && isRepeat.equals(CommonConstants.IS_NOT_REPEAT) && maxRepeatCount != null
-            && maxRepeatCount <= sendCount) {
+        if (isRepeat != null && isRepeat.equals(CommonConstants.IS_REPEAT) && maxRepeatCount != null
+            && maxRepeatCount.compareTo(sendCount) <= 0) {
             return false;
         }
         Integer nextRepeat = templateRule.getNextRepeat();
         String nextRepeatUnit = templateRule.getNextRepeatUnit();
         LocalDateTime sendTime = recordDto.getSendTime();
-        if (sendTime != null && nextRepeat != null && StrUtil.isNotBlank(nextRepeatUnit)) {
+        if (isRepeat != null && isRepeat.equals(CommonConstants.IS_REPEAT)
+            && sendTime != null && nextRepeat != null && StrUtil.isNotBlank(nextRepeatUnit)) {
             LocalDateTime nextTime = nextRepeatUnit.equals(CommonConstants.SECOND) ? sendTime.plusSeconds(nextRepeat)
                 : nextRepeatUnit.equals(CommonConstants.MINUTE) ? sendTime.plusMinutes(nextRepeat)
                 : nextRepeatUnit.equals(CommonConstants.HOUR) ? sendTime.plusHours(nextRepeat)
@@ -239,6 +240,7 @@ public class NotifyListener implements ApplicationListener<NotifyEvent> {
         Map<String, String> alertParams = new HashMap<>();
         LocalDateTime alertTime = detail.getStartTime();
         alertParams.put("content", detail.getAlertContent());
+        alertParams.put("level", detail.getLevel());
         alertParams.put("alertTime", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(alertTime));
         if (detail.getAlertStatus().equals(CommonConstants.FIRING_STATUS)) {
             alertParams.put("alertStatus", MessageSourceUtils.get("alerting", Locale.getDefault()));
