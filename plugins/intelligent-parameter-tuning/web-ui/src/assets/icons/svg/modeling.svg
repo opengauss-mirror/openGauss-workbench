@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>业务-未</title>
+    <g id="控件" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="业务-未" stroke="currentColor">
+            <g id="编组" transform="translate(2.500000, 1.000000)">
+                <rect id="矩形" x="0" y="0" width="11" height="11" rx="5.5"></rect>
+                <path d="M8.2,5.50415393 C8.2,7.42855946 7.15464059,9.10880822 5.60079601,10.008026 C4.04580391,9.1095226 3,7.42896856 3,5.50415393 C3,3.57933931 4.04580391,1.89878527 5.60019503,0.999708538 C7.15464059,1.89949965 8.2,3.57974841 8.2,5.50415393 Z" id="形状结合"></path>
+                <polyline id="直线-4" stroke-linecap="round" stroke-linejoin="round" points="0.5 4.5 3.66424582 4.5 5.01487386 4.5 4.91143697 4.5"></polyline>
+                <polyline id="直线-4备份-2" stroke-linecap="round" stroke-linejoin="round" points="7.29203541 4.5 9.66424582 4.5 10.76271 4.5 10.911437 4.5"></polyline>
+                <path d="M0.975212168,7.5 C6.97521217,7.5 9.97521217,7.5 9.97521217,7.5" id="直线-4备份" stroke-linecap="round" stroke-linejoin="round"></path>
+            </g>
+            <rect id="矩形" x="7" y="13" width="2" height="2" rx="1"></rect>
+            <line x1="2.5" y1="14" x2="6.94519453" y2="14" id="直线" stroke-linecap="round" stroke-linejoin="round"></line>
+            <line x1="9.5" y1="14" x2="13" y2="14" id="直线备份" stroke-linecap="round" stroke-linejoin="round"></line>
+        </g>
+    </g>
+</svg>

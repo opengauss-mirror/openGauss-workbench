@@ -220,8 +220,9 @@
         <module>plugins/observability-instance</module>
         <module>plugins/observability-log-search</module>
         <module>plugins/observability-sql-diagnosis</module>
-        <module>plugins/openGauss-tools-monitor</module>
         <module>plugins/compatibility-assessment</module>
+        <module>plugins/intelligent-parameter-tuning</module>
+        <module>plugins/openGauss-tools-monitor</module>
     </modules>
     <packaging>pom</packaging>
     
@@ -339,5 +340,4 @@
             </plugins>
         </pluginManagement>
     </build>
-
 </project>

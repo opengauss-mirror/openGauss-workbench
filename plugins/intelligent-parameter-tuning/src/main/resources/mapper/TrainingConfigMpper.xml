@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.tun.mapper.TrainingConfigMpper">
+    <resultMap id="TrainingConfigResultMap" type="org.opengauss.tun.domain.TrainingConfig">
+        <id column="training_id" property="trainingId"/>
+        <result column="benchmark" property="benchmark"/>
+        <result column="cluster_name" property="clusterName"/>
+        <result column="host" property="host"/>
+        <result column="port" property="port"/>
+        <result column="db" property="db"/>
+        <result column="user" property="user"/>
+        <result column="password" property="password"/>
+        <result column="omm_password" property="ommPassword"/>
+        <result column="opengauss_node_path" property="opengaussNodePath"/>
+        <result column="root_password" property="rootPassword"/>
+        <result column="has_pressure_tab" property="hasPressureTab"/>
+        <result column="tables" property="tables"/>
+        <result column="table_size" property="tableSize"/>
+        <result column="mode" property="mode"/>
+        <result column="sampling_number" property="samplingNumber"/>
+        <result column="iteration" property="iteration"/>
+        <result column="threads" property="threads"/>
+        <result column="running_time" property="runningTime"/>
+        <result column="ranked_knobs_number" property="rankedKnobsNumber"/>
+        <result column="online" property="online"/>
+        <result column="finetune" property="finetune"/>
+        <result column="restart_when_finetune" property="restartWhenFinetune"/>
+        <result column="time_wait" property="timeWait"/>
+        <result column="warm_up_time" property="warmUpTime"/>
+        <result column="schema_name" property="schemaName"/>
+        <result column="remote_cache_path" property="remoteCachePath"/>
+        <result column="local_cache_path" property="localCachePath"/>
+        <result column="use_local" property="useLocal"/>
+        <result column="sql_num" property="sqlNum"/>
+        <result column="read_write_ratio" property="readWriteRatio"/>
+        <result column="json_extract_result_path" property="jsonExtractResultPath"/>
+        <result column="workload" property="workload"/>
+        <result column="sql_num_print" property="sqlNumPrint"/>
+        <result column="memory" property="memory"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="is_custom_payloads" property="isCustomPayloads"/>
+        <result column="table_domain_distribution" property="tableDomainDistribution"/>
+        <result column="query_comparison_operator_ratio" property="queryComparisonOperatorRatio"/>
+        <result column="query_logic_predicate_num" property="queryLogicPredicateNum"/>
+        <result column="average_aggregation_operator_num" property="averageAggregationOperatorNum"/>
+        <result column="average_query_column_num" property="averageQueryColumnNum"/>
+        <result column="group_by_ratio_if_read_sql" property="groupByRatioIfReadSql"/>
+        <result column="order_by_desc_or_asc_if_grouped" property="orderByDescOrAscIfGrouped"/>
+        <result column="process" property="process"/>
+        <result column="status" property="status"/>
+        <result column="log_path" property="logPath"></result>
+    </resultMap>
+
+    <select id="selectAllConfig" resultMap="TrainingConfigResultMap">
+        SELECT
+        training_id,
+        benchmark,
+        cluster_name,
+        host,
+        port,
+        db,
+        user,
+        opengauss_node_path,
+        has_pressure_tab,
+        tables,
+        table_size,
+        mode,
+        sampling_number,
+        iteration,
+        threads,
+        running_time,
+        log_path,
+        ranked_knobs_number,
+        online,
+        finetune,
+        restart_when_finetune,
+        time_wait,
+        warm_up_time,
+        schema_name,
+        remote_cache_path,
+        local_cache_path,
+        use_local,
+        sql_num,
+        read_write_ratio,
+        json_extract_result_path,
+        workload,
+        sql_num_print,
+        memory,
+        start_time,
+        end_time,
+        is_custom_payloads,
+        table_domain_distribution,
+        query_comparison_operator_ratio,
+        query_logic_predicate_num,
+        average_aggregation_operator_num,
+        average_query_column_num,
+        group_by_ratio_if_read_sql,
+        order_by_desc_or_asc_if_grouped,
+        CASE
+        WHEN status = '运行中' THEN 0
+        WHEN status = '运行失败' THEN 2
+        WHEN status = '运行成功' THEN 1
+        ELSE status
+        END AS status,
+        CASE
+        WHEN (status = '运行成功') THEN '100'
+        WHEN (status = '运行失败') THEN '0'
+        WHEN (status = '运行中') THEN '25'
+        ELSE process
+        END AS process,
+        status
+        FROM training_config
+        WHERE 1=1
+        <if test="clusterName != null and clusterName != '' ">
+            AND cluster_name = #{clusterName}
+        </if>
+        <if test="db != null and db != '' ">
+            AND db = #{db}
+        </if>
+        <if test="startTime != null and startTime != '' and endTime != null and endTime != ''">
+            AND start_time &gt;= #{startTime} AND start_time &lt;= #{endTime}
+        </if>
+        ORDER BY
+        start_time DESC
+    </select>
+
+    <update id="updateStatusByTrainingId" >
+        UPDATE training_config
+        SET status = #{status}
+        SET process = #{process}
+        WHERE training_id = #{trainingId}
+    </update>
+
+    <select id="selectClusterNames" resultType="java.lang.String">
+        SELECT DISTINCT cluster_name FROM training_config;
+    </select>
+
+    <select id="selectdbs" resultType="java.lang.String">
+        SELECT DISTINCT db FROM training_config;
+    </select>
+</mapper>
