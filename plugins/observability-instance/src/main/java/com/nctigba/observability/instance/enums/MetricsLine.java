@@ -187,7 +187,7 @@ public enum MetricsLine {
     INSTANCE_DB_BGWRITER_BACKEND(Type.DB, "rate(pg_stat_bgwriter_buffers_backend_total{instanceId='ogbrench"
         + "'}[5m])"),
 
-    PG_TABLESPACE_SIZE(Type.DB, "pg_tablespace_size{instanceId='ogbrench'}/1024", "{spcname}"),
+    PG_TABLESPACE_SIZE(Type.DB, "pg_tablespace_size{instanceId='ogbrench'}", "{spcname}"),
 
     // opengauss session
     SESSION_MAX_CONNECTION(Type.DB, "pg_connections_max_conn{instanceId='ogbrench'}"),

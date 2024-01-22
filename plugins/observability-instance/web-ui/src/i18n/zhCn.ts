@@ -369,7 +369,7 @@ export default {
     hit: '命中率(%)',
     resettime: '重置时间',
     tablespaceInfo: '表空间',
-    tablespaceSize: '表空间使用总量(GB)',
+    tablespaceSize: '表空间使用总量(MB)',
     tablesTop10: '容量前十的表',
     indexsTop10: '容量前十的索引',
     deadTableTop10: '容量前十的死元组',

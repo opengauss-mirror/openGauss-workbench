@@ -26,15 +26,15 @@
         <el-form :model="formData" :rules="connectionFormRules" ref="connectionFormRef">
           <el-form-item :label="t('install.machine')" prop="nodeId">
             <Machines
-              width="200"
+              width="300"
               @change="changeMachine"
               autoSelectFirst
               notClearable
-              style="width: 200px; margin: 0 4px"
+              style="width: 300px; margin: 0 4px"
             />
           </el-form-item>
           <el-form-item :label="t('install.installUser')" prop="username">
-            <el-select v-model="formData.username" style="width: 200px; margin: 0 4px">
+            <el-select v-model="formData.username" style="width: 300px; margin: 0 4px">
               <el-option
                 v-for="item in hostUserList"
                 :key="item.hostUserId"
@@ -51,7 +51,7 @@
             <el-input-number
               @click.stop="() => {}"
               class="left-align"
-              style="width: 200px; margin: 0 4px"
+              style="width: 300px; margin: 0 4px"
               v-model="formData.port"
               :min="0"
               :max="65535"
@@ -60,12 +60,12 @@
             </el-input-number>
           </el-form-item>
           <el-form-item :label="t('install.installPath')" prop="path">
-            <el-input v-model="formData.path" style="width: 200px; margin: 0 4px" />
+            <el-input v-model="formData.path" style="width: 300px; margin: 0 4px" />
           </el-form-item>
           <el-form-item :label="t('install.storageDays')" prop="storageDays">
             <el-input
               v-model="formData.storageDays"
-              style="width: 200px; margin: 0 4px"
+              style="width: 300px; margin: 0 4px"
               @input="allNumber(formData.storageDays)"
             >
               <template #append>{{ t('install.storageDaysUnit') }}</template>
@@ -343,14 +343,14 @@ const onWebSocketMessage = (data: Array<any>) => {
 // action
 const back = () => {
   started.value = false
-  dialogWith.value = '400px'
+  dialogWith.value = '500px'
   ws.instance.close()
   installData.value = []
 }
 
 // list Data
 const installData = ref<Array<any>>([])
-const dialogWith = ref<string>('400px')
+const dialogWith = ref<string>('500px')
 const doingIndex = computed(() => {
   for (let index = 0; index < installData.value.length; index++) {
     const element = installData.value[index]

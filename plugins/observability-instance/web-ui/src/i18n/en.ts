@@ -377,7 +377,7 @@ export default {
     hit: 'Hit rate(%)',
     resettime: 'Reset Time',
     tablespaceInfo: 'Tablespace',
-    tablespaceSize: 'Total tablespace usage(GB)',
+    tablespaceSize: 'Total tablespace usage(MB)',
     tablesTop10: 'The top ten tables by capacity',
     indexsTop10: 'The top ten indess by capacity',
     deadTableTop10: 'The top ten dead tuples by capacity',
