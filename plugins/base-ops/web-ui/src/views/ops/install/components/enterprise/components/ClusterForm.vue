@@ -123,7 +123,9 @@
         <a-switch
           v-model="data.isEnvSeparate"
           @change="isEnvSeparateChange"
+          style="margin-right: 20px;"
         />
+        <div v-if="!data.isEnvSeparate" class="label-color">{{ $t('simple.InstallConfig.else14') }}</div>
       </a-form-item>
       <a-form-item
         v-if="data.isEnvSeparate"
@@ -259,6 +261,11 @@ const formRules = computed(() => {
           return new Promise(resolve => {
             if (!value.trim()) {
               cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            }
+
+            if (value.length > 20) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jro0'))
               resolve(false)
             }
             const param = {
