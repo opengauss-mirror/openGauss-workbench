@@ -58,6 +58,19 @@ processors:
     - append:
         field: error.message
         value: '{{ _ingest.on_failure_message }}'
+- script:
+      lang: painless
+      source: >
+          def timestamp = ZonedDateTime.parse(ctx['@timestamp']).toInstant();   
+          def current = ZonedDateTime.parse(ctx.event.ingested).toInstant();   
+          if (timestamp.isAfter(current)) {
+             ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(timestamp, ZoneId.systemDefault());
+             ZoneOffset offset = ZoneOffset.of(ctx.event.timezone);
+             int offsetHours = offset.getTotalSeconds() / 3600;
+             ZonedDateTime result = zonedDateTime.minusYears(1).plusHours(offsetHours);
+             Instant newTimestamp = result.toInstant();
+             ctx['@timestamp'] = DateTimeFormatter.ISO_INSTANT.format(newTimestamp);
+          }
 - set:
     field: event.kind
     value: event

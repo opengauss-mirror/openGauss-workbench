@@ -40,6 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -94,6 +95,37 @@ public class EsLogSearchUtils {
         } catch (Exception e) {
             log.info(e.getMessage());
             return null;
+        }
+    }
+
+    /**
+     * ES query LogInfo by id
+     *
+     * @param queryParam query log info by queryParam
+     * @return logInfo SearchResponse
+     */
+    public SearchResponse<HashMap> queryLogInfoById(EsSearchQuery queryParam) {
+        SearchResponse<HashMap> response = null;
+        try {
+            var client = clientProvider.client();
+            response = client.search(s -> {
+                s.index(this.getIndexName(queryParam));
+                s.size(queryParam.getRowCount());
+                s.query(this.queryById(queryParam));
+                s.sort(this.sort(queryParam));
+                s.sort(this.indexsSort(queryParam));
+                s.sort(this.logSort(queryParam));
+                if (queryParam.getSorts() != null && !queryParam.getSorts().isEmpty()) {
+                    s.searchAfter(queryParam.getSorts());
+                }
+                s.highlight(this.highlight());
+                s.ignoreUnavailable(true);
+                return s;
+            }, HashMap.class);
+            return response;
+        } catch (IOException e) {
+            log.info(e.getMessage());
+            return response;
         }
     }
 
@@ -361,7 +393,6 @@ public class EsLogSearchUtils {
     }
 
     /**
-     *
      * @return highlight Function
      */
     public Function<Highlight.Builder, ObjectBuilder<Highlight>> highlight() {
