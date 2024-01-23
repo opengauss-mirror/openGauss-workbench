@@ -340,24 +340,32 @@ const beforeConfirm = async (): Promise<boolean> => {
     }
   }
 
+  // ensure install user is the same and ip is different, and cm port
   if (validRes) {
-    if (data.form.cluster.databaseKernelArch === DatabaseKernelArch.SHARING_STORAGE) {
-      loadingFunc.toLoading()
+    loadingFunc.toLoading()
 
-      if (refList.value.length > 1 && data.form.nodes.length === refList.value.length) {
-        for (let i = 1; i < refList.value.length; i++) {
-          if (data.form.nodes[i].hostId === data.form.nodes[0].hostId) {
-            refList.value[i].userDefineValidate("hostId", t('enterprise.ClusterConfig.5mpm3ku3jso0'))
-            data.activeTab = data.form.nodes[i].id;
-            validRes = false
-          }
+    if (refList.value.length > 1 && data.form.nodes.length === refList.value.length) {
+      for (let i = 1; i < refList.value.length; i++) {
+        if (data.form.nodes[i].hostId === data.form.nodes[0].hostId) {
+          refList.value[i].userDefineValidate("hostId", t('enterprise.ClusterConfig.5mpm3ku3jso0'))
+          data.activeTab = data.form.nodes[i].id;
+          validRes = false
+        }
 
-          if (data.form.nodes[i].installUsername !== data.form.nodes[0].installUsername) {
-            refList.value[i].userDefineValidate("installUserId", t('enterprise.ClusterConfig.5mpm3ku3jto0'))
+        if (data.form.nodes[i].installUsername !== data.form.nodes[0].installUsername) {
+          refList.value[i].userDefineValidate("installUserId", t('enterprise.ClusterConfig.5mpm3ku3jto0'))
+          data.activeTab = data.form.nodes[i].id;
+          validRes = false
+        }
+
+        if (data.form.cluster.isInstallCM) {
+          if (data.form.nodes[i].cmPort !== data.form.nodes[0].cmPort) {
+            refList.value[i].userDefineValidate("cmPort", t('enterprise.ClusterConfig.5mpm3ku3jwo0'))
             data.activeTab = data.form.nodes[i].id;
             validRes = false
           }
         }
+
       }
     }
   }
