@@ -1154,6 +1154,12 @@ INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,l
    '+ rateagent_network_transmit_errors_total{instance=~"$'||'{instances}"}[5m])',
  '网络每秒错包数量大于5',0,now(),null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
 
+  update public.alert_rule_item_exp_src set exp = 'rate(agent_network_receive_errors_total{instance=~"$'||'{instances}"}[5m])' ||
+  '+ rate(agent_network_transmit_errors_total{instance=~"$'||'{instances}"}[5m])' where id = 80;
+
+  update public.alert_rule_item set rule_exp = 'rate(agent_network_receive_errors_total{instance=~"$'||'{instances}"}[5m])' ||
+   '+ rate(agent_network_receive_errors_total{instance=~"$'||'{instances}"}[5m])' where id = 33;
+
 -- 磁盘IO读写延迟
 insert into public.alert_rule_item_src(id,name,name_zh,name_en,unit,params,create_time) values (81,
 'IOLatency','磁盘IO读写延迟','Disk I/O read-write latency','','',now()) ON DUPLICATE KEY UPDATE NOTHING;

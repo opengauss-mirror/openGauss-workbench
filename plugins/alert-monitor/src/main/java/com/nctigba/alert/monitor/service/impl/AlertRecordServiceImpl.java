@@ -253,8 +253,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
                 continue;
             }
             int count = 0;
-            if (alertStatusMap.get("count") instanceof Long) {
-                count = ((Long) alertStatusMap.get("count")).intValue();
+            if (alertStatusMap.get("count") instanceof Number) {
+                count = ((Number) alertStatusMap.get("count")).intValue();
             }
             if (alertStatusMap.get("alertstatus").equals(FIRING_STATUS)) {
                 alertStatisticsDto.setFiringNum(count);
@@ -281,8 +281,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
                 continue;
             }
             int count = 0;
-            if (recordStatusMap.get("count") instanceof Long) {
-                count = ((Long) recordStatusMap.get("count")).intValue();
+            if (recordStatusMap.get("count") instanceof Number) {
+                count = ((Number) recordStatusMap.get("count")).intValue();
             }
             if (recordStatusMap.get("recordstatus").equals(UNREAD_STATUS)) {
                 alertStatisticsDto.setUnReadNum(count);
@@ -308,8 +308,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
                 continue;
             }
             int count = 0;
-            if (levelMap.get("count") instanceof Long) {
-                count = ((Long) levelMap.get("count")).intValue();
+            if (levelMap.get("count") instanceof Number) {
+                count = ((Number) levelMap.get("count")).intValue();
             }
             if (levelMap.get("level").equals(CommonConstants.SERIOUS)) {
                 alertStatisticsDto.setSeriousNum(count);

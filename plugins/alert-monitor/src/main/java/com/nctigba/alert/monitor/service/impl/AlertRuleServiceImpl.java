@@ -48,6 +48,7 @@ import com.nctigba.alert.monitor.service.AlertRuleItemService;
 import com.nctigba.alert.monitor.service.AlertRuleService;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleItemService;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
+import com.nctigba.alert.monitor.util.MessageSourceUtils;
 import org.opengauss.admin.common.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -235,6 +236,12 @@ public class AlertRuleServiceImpl extends ServiceImpl<AlertRuleMapper, AlertRule
     @Override
     @Transactional
     public void delRuleById(Long id) {
+        List<AlertTemplateRuleDO> list = templateRuleService.list(
+            Wrappers.<AlertTemplateRuleDO>lambdaQuery().eq(AlertTemplateRuleDO::getIsDeleted,
+                CommonConstants.IS_NOT_DELETE).eq(AlertTemplateRuleDO::getRuleId, id));
+        if (CollectionUtil.isNotEmpty(list)) {
+            throw new ServiceException(MessageSourceUtils.get("ruleIsUsed"));
+        }
         LambdaUpdateWrapper<AlertRuleDO> ruleUpdateWrapper =
             new LambdaUpdateWrapper<AlertRuleDO>().set(AlertRuleDO::getIsDeleted, CommonConstants.IS_DELETE)
                 .set(AlertRuleDO::getUpdateTime, LocalDateTime.now()).eq(AlertRuleDO::getId, id);
