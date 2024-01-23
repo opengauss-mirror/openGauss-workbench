@@ -23,6 +23,7 @@
 
 package com.nctigba.observability.instance.service;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -33,6 +34,8 @@ import java.util.Properties;
 
 import javax.sql.DataSource;
 
+import com.alibaba.druid.pool.DruidDataSource;
+import com.baomidou.dynamic.datasource.ds.ItemDataSource;
 import com.nctigba.observability.instance.exception.InstanceException;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
@@ -163,8 +166,10 @@ public class ClusterManager {
             throw new RuntimeException(CommonConstants.NODE_NOT_FOUND);
         if (StringUtils.isBlank(dbname))
             dbname = node.getDbName();
-        ds.addDataSource(nodeId, dataSourceCreator.createDataSource(new DataSourceProperty()
-                .setDriverClassName("org.opengauss.Driver")
+        DataSourceProperty dataSourceProperty = new DataSourceProperty();
+        dataSourceProperty.getDruid().setMaxWait(5000);
+        ds.addDataSource(nodeId, dataSourceCreator.createDataSource(dataSourceProperty
+            .setDriverClassName("org.opengauss.Driver")
                 .setUrl(CommonConstants.JDBC_OPENGAUSS + node.getPublicIp() + ":" + node.getDbPort() + "/" + dbname)
                 .setUsername(node.getDbUser()).setPassword(node.getDbUserPassword())));
         DynamicDataSourceContextHolder.push(nodeId);
@@ -172,6 +177,39 @@ public class ClusterManager {
 
     public void pool() {
         DynamicDataSourceContextHolder.poll();
+    }
+
+    /**
+     * remove DataSource when connection is fail
+     *
+     * @param nodeId String
+     */
+    public void removeDataSourceOnFailStatus(String nodeId) {
+        var ds = (DynamicRoutingDataSource) dataSource;
+        // Switch if data source exists
+        if (!ds.getDataSources().containsKey(nodeId)) {
+            return;
+        }
+        ItemDataSource itemDataSource = (ItemDataSource) ds.getDataSource(nodeId);
+        DruidDataSource realDataSource = (DruidDataSource) itemDataSource.getRealDataSource();
+        if (checkDataSourceFailContinuousStatus(realDataSource)) {
+            ds.removeDataSource(nodeId);
+        }
+    }
+
+    private boolean checkDataSourceFailContinuousStatus(DruidDataSource dataSource) {
+        boolean failContinuous = dataSource.isFailContinuous();
+        boolean conectionIsAlive = true;
+        try {
+            Field createConnectionThread = dataSource.getClass().getDeclaredField("createConnectionThread");
+            createConnectionThread.setAccessible(true);
+            DruidDataSource.CreateConnectionThread connectionThread =
+                (DruidDataSource.CreateConnectionThread) createConnectionThread.get(dataSource);
+            conectionIsAlive = connectionThread.isAlive();
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            conectionIsAlive = false;
+        }
+        return failContinuous && !conectionIsAlive;
     }
 
     /**

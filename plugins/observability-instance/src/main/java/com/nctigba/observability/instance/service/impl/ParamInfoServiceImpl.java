@@ -24,39 +24,37 @@
 
 package com.nctigba.observability.instance.service.impl;
 
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.dynamic.datasource.annotation.DS;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.nctigba.observability.instance.constants.CommonConstants;
+import com.nctigba.observability.instance.exception.InstanceException;
+import com.nctigba.observability.instance.mapper.DbConfigMapper;
+import com.nctigba.observability.instance.mapper.ParamInfoMapper;
+import com.nctigba.observability.instance.mapper.ParamValueInfoMapper;
+import com.nctigba.observability.instance.model.dto.param.ParamInfoDTO;
+import com.nctigba.observability.instance.model.entity.ParamInfoDO;
+import com.nctigba.observability.instance.model.entity.ParamInfoDO.ParamType;
+import com.nctigba.observability.instance.model.entity.ParamValueInfoDO;
+import com.nctigba.observability.instance.model.query.ParamQuery;
+import com.nctigba.observability.instance.service.ClusterManager;
+import com.nctigba.observability.instance.service.ParamInfoService;
+import com.nctigba.observability.instance.util.MessageSourceUtils;
+import com.nctigba.observability.instance.util.SshSessionUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import com.baomidou.dynamic.datasource.annotation.DS;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.nctigba.observability.instance.model.entity.ParamInfoDO;
-import com.nctigba.observability.instance.service.ClusterManager;
-import com.nctigba.observability.instance.service.ParamInfoService;
-import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import com.nctigba.observability.instance.constants.CommonConstants;
-import com.nctigba.observability.instance.model.dto.param.ParamInfoDTO;
-import com.nctigba.observability.instance.model.entity.ParamInfoDO.ParamType;
-import com.nctigba.observability.instance.model.entity.ParamValueInfoDO;
-import com.nctigba.observability.instance.exception.InstanceException;
-import com.nctigba.observability.instance.mapper.DbConfigMapper;
-import com.nctigba.observability.instance.mapper.ParamInfoMapper;
-import com.nctigba.observability.instance.mapper.ParamValueInfoMapper;
-import com.nctigba.observability.instance.model.query.ParamQuery;
-import com.nctigba.observability.instance.util.MessageSourceUtils;
-import com.nctigba.observability.instance.util.SshSessionUtils;
-
-import cn.hutool.core.util.StrUtil;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * ParamInfoServiceImpl
@@ -152,7 +150,7 @@ public class ParamInfoServiceImpl extends ServiceImpl<ParamInfoMapper, ParamInfo
         var ids = getIds(t);
         paramValueInfoService.remove(Wrappers.lambdaQuery(ParamValueInfoDO.class)
                 .in(ParamValueInfoDO::getSid, ids));
-        paramValueInfoService.saveBatch(list);
+        paramValueInfoMapper.batchInsert(list);
     }
 
     @Override

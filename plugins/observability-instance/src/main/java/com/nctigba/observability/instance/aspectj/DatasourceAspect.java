@@ -90,6 +90,7 @@ public class DatasourceAspect {
             return joinPoint.proceed();
         } finally {
             clusterManager.pool();
+            clusterManager.removeDataSourceOnFailStatus(nodeId.toString());
         }
     }
 

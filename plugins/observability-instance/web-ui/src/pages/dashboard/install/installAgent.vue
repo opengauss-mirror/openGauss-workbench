@@ -24,11 +24,11 @@
         </div>
       </div>
       <div class="dialog-content" v-loading="started" v-show="installData.length === 0">
-        <el-form :model="formData" :rules="connectionFormRules" ref="connectionFormRef" label-width="140px">
+        <el-form :model="formData" :rules="connectionFormRules" ref="connectionFormRef" label-width="130px">
           <el-form-item :label="t('install.collectInstance')" prop="nodeIds">
             <ClusterCascader
               ref="nodeRef"
-              width="200"
+              width="300"
               multiple
               instanceValueKey="nodeId"
               @getCluster="handleClusterValue"
@@ -40,7 +40,7 @@
             <Machines
               ref="machineRef"
               :disabled="editing"
-              width="200"
+              width="300"
               @change="changeMachine"
               :autoSelectFirst="!editing"
               notClearable
@@ -48,7 +48,7 @@
             />
           </el-form-item>
           <el-form-item :label="t('install.installUser')" prop="username">
-            <el-select v-model="formData.username" style="width: 200px; margin: 0 4px" :disabled="editing">
+            <el-select v-model="formData.username" style="width: 300px; margin: 0 4px" :disabled="editing">
               <el-option
                 v-for="item in hostUserList"
                 :key="item.hostUserId"
@@ -62,7 +62,7 @@
             <el-input-number
               @click.stop="() => {}"
               class="left-align"
-              style="width: 200px; margin: 0 4px"
+              style="width: 300px; margin: 0 4px"
               v-model="formData.httpPort"
               :disabled="editing"
               :min="0"
@@ -72,7 +72,7 @@
             </el-input-number>
           </el-form-item>
           <el-form-item :label="t('install.installPath')" prop="path">
-            <el-input v-model="formData.path" style="width: 200px; margin: 0 4px" :disabled="editing" />
+            <el-input v-model="formData.path" style="width: 300px; margin: 0 4px" :disabled="editing" />
           </el-form-item>
         </el-form>
       </div>

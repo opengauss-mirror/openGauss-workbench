@@ -189,8 +189,8 @@ public interface DbConfigMapper {
         + "       t1.relname tableName from pg_stat_user_tables t1 "
         + "       left join information_schema.tables t2 on t1.relname = t2.table_name "
         + "       and t1.schemaname = t2.table_schema "
-        + "       where (t1.n_tup_upd + t1.n_tup_del) / t1.n_live_tup > 0.1 "
-        + "       and t1.n_tup_upd + t1.n_tup_del > 1000 "
+        + "       where (t1.n_tup_upd + t1.n_tup_del) / t1.n_live_tup >= 0.1 "
+        + "       and t1.n_tup_upd + t1.n_tup_del >= 1000 "
         + "       and t1.n_live_tup > 0 "
         + "       order by ((t1.n_tup_upd + t1.n_tup_del) / t1.n_live_tup) desc limit 10")
     List<Map<String, Object>> vacuumTop10();

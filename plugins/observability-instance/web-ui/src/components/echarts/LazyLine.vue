@@ -3,7 +3,7 @@
     <div class="line-tips" v-if="tips">
       <div class=""><svg-icon name="info" />{{ tips }}</div>
     </div>
-    <div :key="`${i18n.global.locale.value}`" @mouseout="divMouseout" :id="domId" ref="loadRef" style="width: 100%; height: 100%"></div>
+    <div @mouseout="divMouseout" :id="domId" ref="loadRef" style="width: 100%; height: 100%"></div>
   </div>
 </template>
 

@@ -1,5 +1,5 @@
 <template>
-  <div :key="`${i18n.global.locale.value}`" :id="domId" ref="loadRef" style="width: 100%; height: 100%"></div>
+  <div :id="domId" ref="loadRef" style="width: 100%; height: 100%"></div>
 </template>
 
 <!-- eslint-disable indent -->
@@ -130,6 +130,8 @@ let myChart: echarts.ECharts
 const timer = ref<number>()
 const lastWidth = ref<number>(0)
 const notMatch = ref<boolean>()
+
+const show = ref<boolean>(true)
 onMounted(() => {
   // to solve the problem
   // when windows resize,other chart in tab cannot get the windows size
@@ -149,6 +151,17 @@ onMounted(() => {
     },
     computed(() => 500)
   )
+
+  // @ts-ignore
+  const wujie = window.$wujie
+  // Judge whether it is a plug-in environment or a local environment through wujie
+  if (wujie) {
+    // Monitoring platform language change
+    wujie?.bus.$on('opengauss-locale-change', (val: string) => {
+      nextTick(() => {
+      })
+    })
+  }
 })
 const domId = uuid()
 const renderChart = () => {
@@ -294,7 +307,6 @@ const renderChart = () => {
     props.defaultBrushArea.length === 2 &&
     props.xData.length > 0
   ) {
-    console.log('defaultBrushArea', props.defaultBrushArea)
     nextTick(() => {
       let interval =
         (moment(props.defaultBrushArea![1]).valueOf() - moment(props.defaultBrushArea![0]).valueOf()) / 1000

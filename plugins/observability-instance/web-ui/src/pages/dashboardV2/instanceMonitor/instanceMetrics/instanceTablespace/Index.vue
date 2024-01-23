@@ -4,7 +4,7 @@
       <my-card :title="$t('instanceIndex.tablespaceInfo')" height="300" :bodyPadding="false" style="position: relative; overflow: auto">
         <el-table
           :data="metricsData.tablespaceInfo"
-          style="width: 100%"
+          style="width: 100%;height: 260px"
           border
           :header-cell-class-name="
             () => {
@@ -43,7 +43,7 @@
       >
       <el-table
           :data="metricsData.tablesTop10"
-          style="width: 100%"
+          style="width: 100%;height: 260px"
           border
           :header-cell-class-name="
             () => {
@@ -67,7 +67,7 @@
       >
       <el-table
           :data="metricsData.indexsTop10"
-          style="width: 100%"
+          style="width: 100%;height: 260px"
           border
           :header-cell-class-name="
             () => {
@@ -97,7 +97,7 @@
       >
       <el-table
           :data="metricsData.deadTableTop10"
-          style="width: 100%"
+          style="width: 100%;height: 260px"
           border
           :header-cell-class-name="
             () => {
@@ -121,7 +121,7 @@
       >
       <el-table
           :data="metricsData.vacuumTop10"
-          style="width: 100%"
+          style="width: 100%;height: 260px"
           border
           :header-cell-class-name="
             () => {

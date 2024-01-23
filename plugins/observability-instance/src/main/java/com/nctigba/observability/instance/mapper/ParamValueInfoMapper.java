@@ -20,12 +20,16 @@
  *
  *  -------------------------------------------------------------------------
  */
+
 package com.nctigba.observability.instance.mapper;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.nctigba.observability.instance.model.entity.ParamValueInfoDO;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 /**
  * ParamValueInfoMapper
@@ -36,4 +40,17 @@ import org.apache.ibatis.annotations.Mapper;
 @DS("embedded")
 @Mapper
 public interface ParamValueInfoMapper extends BaseMapper<ParamValueInfoDO> {
+    /**
+     * Batch insert data INSERT INTO param_value_info ( sid, instance, actual_value ) VALUES ( ?, ?, ? )
+     *
+     * @param list List of ParamValueInfoDO
+     */
+    @Insert("<script>"
+            + "INSERT INTO param_value_info (sid, instance, actual_value) "
+            + "VALUES "
+            + "<foreach collection='list' item='item' separator=','>"
+            + "(#{item.sid}, #{item.instance}, #{item.actualValue})"
+            + "</foreach>"
+            + "</script>")
+    void batchInsert(List<ParamValueInfoDO> list);
 }

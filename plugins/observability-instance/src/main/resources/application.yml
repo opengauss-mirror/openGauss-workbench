@@ -26,7 +26,7 @@ spring:
         validation-query: "select 1"
         validation-query-timeout: 10000
         connection-error-retry-attempts: 3
-        break-after-acquire-failure: false
+        break-after-acquire-failure: true
         time-between-connect-error-millis: 60000
         max-wait: 300000
         connection-properties:

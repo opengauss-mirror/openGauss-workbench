@@ -4,7 +4,7 @@
       <my-card :title="$t('instanceIndex.cacheHit')" height="300" :bodyPadding="false" style="position: relative; overflow: auto">
         <el-table
           :data="metricsData.cacheHitTable"
-          style="width: 100%"
+          style="width: 100%;height: 260px"
           border
           :header-cell-class-name="
             () => {
