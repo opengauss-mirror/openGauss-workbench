@@ -24,7 +24,7 @@ const handleData = <T>(res: AxiosResponse<ApiResponse<T>, any>) => {
   }
 }
 
-axios.defaults.timeout = 10000;
+axios.defaults.timeout = 120000;
 
 export class Request {
   constructor(config?: AxiosRequestConfig) {

@@ -104,4 +104,8 @@ public class SyncSituationDTO {
     public void setSyncState(String state) {
         this.syncState = new StateDTO("cluster.node.syncState." + state);
     }
+
+    public void setSyncState(StateDTO state) {
+        this.syncState = state;
+    }
 }

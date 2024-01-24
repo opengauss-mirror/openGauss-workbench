@@ -371,7 +371,7 @@ const setNodeState = () => {
 const setNodeSyncState = () => {
   let chart = echarts.init(main3.value)
   const option = cloneDeep(optionDefault)
-  option.color = ['#61DDAA', '#FFA53C', '#F6605A']
+  // option.color = ['#61DDAA', '#FFA53C', '#F6605A']
   option.title.text = t('clusterMonitor.nodeSyncState')
   let rows = statisticsData?.value?.nodeSyncStat?.proportion
   option.series[0].data = [
@@ -386,6 +386,10 @@ const setNodeSyncState = () => {
     {
       value: rows?.find((obj) => obj.color === 'RED')?.num || 0,
       name: rows?.find((obj) => obj.color === 'RED')?.value || '',
+    },
+    {
+      value: rows?.find((obj) => obj.color === 'GREY')?.num || 0,
+      name: rows?.find((obj) => obj.color === 'GREY')?.value || '',
     },
   ]
   option.legend.formatter = function (name: any) {
