@@ -87,6 +87,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -137,7 +138,8 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
     private static final String[] NODE_SYNC_STATES = {
             "cluster.node.syncState.Streaming",
             "cluster.node.syncState.Catchup",
-            "cluster.node.syncState.Delay"
+            "cluster.node.syncState.Delay",
+            "cluster.node.syncState.Unknown"
     };
     private static final long CACHE_TIMEOUT = 15000L;
     private static final long CACHE_CLEAN_INTERVAL = 60000L;
@@ -334,7 +336,7 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
     }
 
     private void addCascadeStandby(Map<String, OpsClusterNodeVO> ipNodeMap, HashSet<String> allAliveNodeIpSet,
-        List<NodeRelationDTO> standbyList) {
+                                   List<NodeRelationDTO> standbyList) {
         for (NodeRelationDTO standby : standbyList) {
             List<NodeRelationDTO> cascadeStandbyList =
                     clustersMapper.relation(standby.getNodeId());
@@ -462,15 +464,20 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
                 .buildPieChart(nodesDataToStandbyNodesState, SyncSituationDTO::getNodeState, NODE_STATES);
         res.setNodeStat(standbyNodesState);
         List<SyncSituationDTO> nodesDataToStandbyNodesSyncState = allStandbyNodes.stream().map(node -> {
-            if (parseSize(node.getReceivedDelay()) > 10*1024*1024) {
-                node.setNodeState(new StateDTO(NODE_SYNC_STATES[2]));
+            if (node.getReceivedDelay() == null) {
+                node.setSyncState(new StateDTO(NODE_SYNC_STATES[3]));
+                return node;
+            }
+            if (parseSize(node.getReceivedDelay()) > 10 * 1024 * 1024) {
+                node.setSyncState(new StateDTO(NODE_SYNC_STATES[2]));
             }
             return node;
         }).collect(Collectors.toList());
         ClusterStatisticsDTO.PieChart standbyNodesSyncState = ClusterStatisticsDTO
                 .buildPieChart(nodesDataToStandbyNodesSyncState,
-                SyncSituationDTO::getSyncState, NODE_SYNC_STATES);
+                        SyncSituationDTO::getSyncState, NODE_SYNC_STATES);
         res.setNodeSyncStat(standbyNodesSyncState);
+        allStandbyNodes.removeIf(node -> node.getReceivedDelay() == null);
         allStandbyNodes.sort((o1, o2) -> {
             long size1 = parseSize(o1.getReceivedDelay());
             long size2 = parseSize(o2.getReceivedDelay());
@@ -713,32 +720,24 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
                 allNodeIp.add(entry.getKey());
             }
         }
-        if (standbyList.isEmpty()) {
-            for (OpsClusterNodeVO clusterNode : cluster.getClusterNodes()) {
-                SyncSituationDTO dto = new SyncSituationDTO();
-                dto.setClusterId(cluster.getClusterId());
-                dto.setNodeId(clusterNode.getNodeId());
-                dto.setHostIp(clusterNode.getPublicIp());
-                dto.setNodeName(clusterNode.getHostname());
-                dto.setLocalAddr(clusterNode.getPublicIp() + ":" + clusterNode.getHostPort());
-                dto.setRole(stateCache.getNodeRole().getOrDefault(clusterNode.getPublicIp(), "Unknown"));
-                dto.setNodeState("Unknown");
-                standbyList.add(dto);
-            }
-            return;
-        }
+        Optional<OpsClusterNodeVO> primary = cluster.getClusterNodes().stream().filter(clusterNode ->
+                "Primary".equalsIgnoreCase(stateCache.getNodeRole().get(clusterNode.getPublicIp()))).findFirst();
         if (standbyList.size() != allNodeIp.size()) {
             Set<String> standbyIps = standbyList.stream().map(SyncSituationDTO::getHostIp).collect(Collectors.toSet());
             for (String ip : allNodeIp) {
                 if (!standbyIps.contains(ip)) {
                     SyncSituationDTO dto = new SyncSituationDTO();
+                    dto.setHostIp(ip);
+                    dto.setPrimaryAddr(primary.map(opsClusterNodeVO ->
+                            opsClusterNodeVO.getPublicIp() + ":" + opsClusterNodeVO.getDbPort()).orElse(null)
+                    );
                     dto.setClusterId(cluster.getClusterId());
                     dto.setNodeId(cluster.getClusterNodes().stream().filter(node -> node.getPublicIp().equals(ip))
                             .findFirst().get().getNodeId());
                     dto.setNodeName(stateCache.getNodeName().get(ip));
                     dto.setLocalAddr(ip + ":" + cluster.getClusterNodes().get(0).getDbPort());
-                    dto.setRole(stateCache.getNodeRole().get(ip));
-                    dto.setNodeState(stateCache.getNodeState().get(ip));
+                    dto.setRole(stateCache.getNodeRole().getOrDefault(ip, "Unknown"));
+                    dto.setNodeState(stateCache.getNodeState().getOrDefault(ip, "Unknown"));
                     standbyList.add(dto);
                 }
             }

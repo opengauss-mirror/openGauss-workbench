@@ -48,8 +48,8 @@ public enum StateColor {
             "OS.bin.state.TASK_TRACED", "OS.bin.state.TASK_UNINTERRUPTIBLE"),
     RED("cluster.state.value.Unavailable", "cluster.node.state.Unknown", "OS.bin.state.EXIT_ZOMBIE",
             "OS.bin.state.EXIT_DEAD", "OS.bin.state.STOP", "cluster.node.state.Exception",
-            "cluster.node.syncState.Delay"),
-    GREY("cluster.state.value.Unknown", "OS.bin.state.UNKNOWN");
+            "cluster.node.syncState.Delay", "cluster.node.state.stopped"),
+    GREY("cluster.state.value.Unknown", "OS.bin.state.UNKNOWN", "cluster.node.syncState.Unknown");
 
     private String[] state;
 
