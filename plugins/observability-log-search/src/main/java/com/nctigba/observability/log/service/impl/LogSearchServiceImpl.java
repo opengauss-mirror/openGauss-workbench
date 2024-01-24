@@ -307,9 +307,9 @@ public class LogSearchServiceImpl implements LogSearchService {
         List<String> sortList = new ArrayList<>();
         HashMap<String, List<String>> sortMap = new HashMap<>();
         try {
-            boolean sortIsEmpty = queryParam.getSorts() == null;
-            boolean idIsEmpty = queryParam.getId() == null || "".equals(queryParam.getId());
-            if (sortIsEmpty && !idIsEmpty) {
+            boolean isSortEmpty = queryParam.getSorts() == null || queryParam.getSorts().size() == 0;
+            boolean isIdEmpty = queryParam.getId() == null || "".equals(queryParam.getId());
+            if (isSortEmpty && !isIdEmpty) {
                 HashMap<List<String>, ContextSearchDTO> map = this.getSorts(queryParam);
                 if (!CollectionUtils.isEmpty(map)) {
                     for (List<String> list : map.keySet()) {
@@ -465,7 +465,7 @@ public class LogSearchServiceImpl implements LogSearchService {
         queryParam.setId(param.getId());
         HashMap<List<String>, ContextSearchDTO> map = new HashMap<>();
         try {
-            SearchResponse<HashMap> searchResponse = esLogSearchUtils.queryLogInfo(queryParam);
+            SearchResponse<HashMap> searchResponse = esLogSearchUtils.queryLogInfoById(queryParam);
             if (searchResponse == null) {
                 return null;
             }

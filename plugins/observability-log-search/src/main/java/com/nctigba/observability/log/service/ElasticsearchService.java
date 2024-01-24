@@ -114,7 +114,11 @@ public class ElasticsearchService extends AbstractInstaller {
                 env.setUsername(username);
                 try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), username,
                         encryptionUtils.decrypt(user.getPassword()));) {
-
+                    String message = session.execute(
+                            "netstat -tuln | grep -q " + env.getPort() + " && echo \"true\" || echo \"false\"");
+                    if (message.contains("true")) {
+                        throw new CustomException("port is exists");
+                    }
                     curr = nextStep(wsSession, steps, curr);
                     session.execute("mkdir -p " + path);
                     var vm = session.execute("/usr/sbin/sysctl -n vm.max_map_count");
@@ -178,13 +182,13 @@ public class ElasticsearchService extends AbstractInstaller {
 
                     curr = nextStep(wsSession, steps, curr);
                     // 调用http验证es
-                    for (int i = 0; i < 10; i++) {
+                    for (int i = 0; i < 60; i++) {
                         ThreadUtil.sleep(3000L);
                         try {
                             HttpUtil.get("http://" + env.getHost().getPublicIp() + ":" + env.getPort());
                             break;
                         } catch (Exception e) {
-                            if (i == 9) {
+                            if (i == 59) {
                                 throw new CustomException("elastic.install.start.fail" + e.getMessage());
                             }
                         }
