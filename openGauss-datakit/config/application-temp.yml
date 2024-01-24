@@ -20,13 +20,13 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     # For openGauss
-#    driver-class-name: org.opengauss.Driver
-#    url: jdbc:opengauss://ip:port/database?currentSchema=public&batchMode=off
-#    username: dbuser
-#    password: dbpassword
+    driver-class-name: org.opengauss.Driver
+    url: jdbc:opengauss://ip:port/database?currentSchema=public&batchMode=off
+    username: dbuser
+    password: dbpassword
     # For Intarkdb
-    driver-class-name: org.intarkdb.IntarkdbJDBC
-    url: jdbc:intarkdb:data/datakit
+#    driver-class-name: org.intarkdb.IntarkdbJDBC
+#    url: jdbc:intarkdb:data/datakit
     druid:
       test-while-idle: true
       test-on-borrow: true
