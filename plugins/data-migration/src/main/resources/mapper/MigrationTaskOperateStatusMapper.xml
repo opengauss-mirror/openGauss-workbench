@@ -18,7 +18,9 @@
     </resultMap>
 
     <select id="selectByTaskId" resultMap="MigrationTaskResult">
-        select s.*,o.title as operate_title,o.oper_type,o.oper_user,o.oper_time from tb_migration_task_status_record s
+        select s.id,s.title,s.operate_id,s.task_id,s.status_id,s.create_time,o.title as
+            operate_title,o.oper_type,o.oper_user,o.oper_time from
+            tb_migration_task_status_record s
         left join tb_migration_task_operate_record o on s.operate_id = o.id
         where s.task_id=#{taskId}
         order by s.create_time
