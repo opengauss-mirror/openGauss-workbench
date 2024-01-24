@@ -256,7 +256,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             if (alertStatusMap.get("count") instanceof Number) {
                 count = ((Number) alertStatusMap.get("count")).intValue();
             }
-            if (alertStatusMap.get("alertstatus").equals(FIRING_STATUS)) {
+            Integer alertstatus = ((Number) alertStatusMap.get("alertstatus")).intValue();
+            if (alertstatus.equals(FIRING_STATUS)) {
                 alertStatisticsDto.setFiringNum(count);
             } else {
                 alertStatisticsDto.setRecoverNum(count);
@@ -284,7 +285,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             if (recordStatusMap.get("count") instanceof Number) {
                 count = ((Number) recordStatusMap.get("count")).intValue();
             }
-            if (recordStatusMap.get("recordstatus").equals(UNREAD_STATUS)) {
+            Integer recordstatus = ((Number) recordStatusMap.get("recordstatus")).intValue();
+            if (recordstatus.equals(UNREAD_STATUS)) {
                 alertStatisticsDto.setUnReadNum(count);
             } else {
                 alertStatisticsDto.setReadNum(count);

@@ -23,6 +23,7 @@
 
 package com.nctigba.alert.monitor.service.impl.communication;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
@@ -32,6 +33,7 @@ import com.nctigba.alert.monitor.mapper.NotifyTemplateMapper;
 import com.nctigba.alert.monitor.model.dto.NotifySnmpDTO;
 import com.nctigba.alert.monitor.model.entity.NotifyConfigDO;
 import com.nctigba.alert.monitor.model.entity.NotifyMessageDO;
+import com.nctigba.alert.monitor.model.entity.NotifyTemplateDO;
 import com.nctigba.alert.monitor.model.entity.NotifyWayDO;
 import com.nctigba.alert.monitor.service.CommunicationService;
 import lombok.extern.slf4j.Slf4j;
@@ -127,7 +129,9 @@ public class SNMPServiceImpl implements CommunicationService {
 
     @Override
     public boolean sendTest(NotifyConfigDO notifyConfigDO, NotifyWayDO notifyWayDO) {
-        return CommunicationService.super.sendTest(notifyConfigDO, notifyWayDO);
+        NotifySnmpDTO notifySnmpDto = BeanUtil.copyProperties(notifyWayDO, NotifySnmpDTO.class);
+        NotifyTemplateDO notifyTemplateDO = templateMapper.selectById(notifyWayDO.getNotifyTemplateId());
+        return sendMsg(notifySnmpDto, notifyTemplateDO.getNotifyContent());
     }
 
     @Override
