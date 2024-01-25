@@ -24,9 +24,13 @@
 package com.nctigba.observability.sql.config;
 
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
+import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
+import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceProperties;
 import com.gitee.starblues.bootstrap.PluginContextHolder;
 import com.gitee.starblues.spring.environment.EnvironmentProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,7 +45,15 @@ import javax.sql.DataSource;
  * @since 2023/12/5
  */
 @Configuration
+@EnableConfigurationProperties(DynamicDataSourceProperties.class)
 public class DataSourceConfig {
+    static final String GS_DRIVER = "org.opengauss.Driver";
+    static final String SQLITE_DRIVER = "org.sqlite.JDBC";
+    static final String SQLITE_URL = "jdbc:sqlite:data/observability-sql-diagnosis-data.db";
+
+    @Autowired
+    DynamicDataSourceProperties properties;
+
     /**
      * primary dataSource
      *
@@ -63,6 +75,12 @@ public class DataSourceConfig {
         var d = new DynamicRoutingDataSource();
         d.addDataSource("primary", primary);
         d.setPrimary("primary");
+        if (GS_DRIVER.equals(driverClassName)) {
+            DataSourceProperty embedded = properties.getDatasource().get("embedded");
+            if (!SQLITE_DRIVER.equals(embedded.getDriverClassName())) {
+                embedded.setDriverClassName(SQLITE_DRIVER).setUrl(SQLITE_URL);
+            }
+        }
         return d;
     }
 }
