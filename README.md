@@ -35,47 +35,113 @@ https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-
 2. 执行`sh build.sh`
 3. 编译输出件在output/Datakit-${pom_version}.tar.gz
 
-## 使用
-1. 解压安装包，目录如下:
-   ```java
-   $ ls -l
-   total 92389
-   -rw-r--r-- 1 Administrator 197121    22173  8月 29 15:25 alert-monitor-README.md
-   -rw-r--r-- 1 Administrator 197121      977  8月 29 15:22 application-temp.yml
-   -rw-r--r-- 1 Administrator 197121     6923  8月 29 15:30 base-ops-README.md
-   -rw-r--r-- 1 Administrator 197121     1162  8月 29 15:32 datakit-demo-plugin-README.md
-   -rw-r--r-- 1 Administrator 197121     7928  8月 29 15:22 datakit-README.md
-   -rw-r--r-- 1 Administrator 197121     3839  8月 29 15:34 data-migration-README.md
-   -rw-r--r-- 1 Administrator 197121    86951  8月 29 15:36 data-studio-README.md
-   -rw-r--r-- 1 Administrator 197121       69  8月 29 15:37 datasync-mysql-README.md
-   -rw-r--r-- 1 Administrator 197121    18837  8月 29 15:41 observability-instance-README.md
-   -rw-r--r-- 1 Administrator 197121     8931  8月 29 15:44 observability-log-search-README.md
-   -rw-r--r-- 1 Administrator 197121 94425028  8月 29 15:22 openGauss-datakit-5.1.0.jar
-   drwxr-xr-x 1 Administrator 197121        0  8月 29 15:44 visualtool-plugin```
-2. 创建新的目录
- ```shell
-mkdir config files ssl logs
-```
-3. 更改配置文件
-解压的文件中`application-temp.yml`内容需要移动到第二步的config目录下,同时需要正确编辑, /ops路径统一修改为实际路径，而第二步的目录就是为了此处统一使用的:
+## 安装步骤
+1. 解压安装包\
+   通过下载链接或编译代码获取安装包`Datakit-5.1.0.tar.gz`，解压安装包至`datakit`安装目录下，例如安装目录为`/path/datakit_server`时，解压目录如下:
+   ```shell
+   $ tar -zxvf Datakit-5.1.0.tar.gz -C /path/datakit_server
+   ./application-temp.yml
+   ./doc/
+   ./doc/datasync-mysql-README.md
+   ./doc/data-migration-README.md
+   ./doc/datakit-README.md
+   ./doc/datakit-demo-plugin-README.md
+   ./doc/observability-log-search-README.md
+   ./doc/observability-instance-README.md
+   ./doc/data-studio-README.md
+   ./doc/alert-monitor-README.md
+   ./doc/observability-sql-diagnosis-README.md
+   ./doc/openGauss-tools-monitor-README.md
+   ./doc/base-ops-README.md
+   ./openGauss-datakit-5.1.0.jar
+   ./visualtool-plugin/
+   ./visualtool-plugin/alert-monitor-5.1.0-repackage.jar
+   ./visualtool-plugin/base-ops-5.1.0-repackage.jar
+   ./visualtool-plugin/observability-instance-5.1.0-repackage.jar
+   ./visualtool-plugin/monitor-tools-5.1.0-repackage.jar
+   ./visualtool-plugin/datasync-mysql-5.1.0-repackage.jar
+   ./visualtool-plugin/data-migration-5.1.0-repackage.jar
+   ./visualtool-plugin/datakit-demo-plugin-5.1.0-repackage.jar
+   ./visualtool-plugin/observability-log-search-5.1.0-repackage.jar
+   ./visualtool-plugin/webds-plugin-5.1.0-repackage.jar
+   ./visualtool-plugin/observability-sql-diagnosis-5.1.0-repackage.jar
+   ```
+2. 创建新目录\
+   在`datakit`安装目录下，创建新的目录`config`, `files`, `ssl`, `logs`
+   ```shell
+   $ cd /path/datakit_server
+   mkdir config files ssl logs
+   ```
+3. 更改配置文件\
+   修改`datakit`安装目录下的`application-temp.yml`文件，文件中的`/ops`路径统一修改为实际`datakit`安装目录的路径`/path/datakit_server`，而第二步创建的目录就是为了此处统一使用的；
+   ```shell
+   $ vim application-temp.yml
    system.defaultStoragePath: /ops/files  
    server.ssl.key-store: /ops/ssl/keystore.p12
    logging.file.path: /ops/logs
-   还有数据库采用openGauss请正确配置连接信息.
-4. 生成密钥信息
+   ```
+   同时正确配置`openGauss`数据库的连接信息，配置内容如下：
    ```shell
-   keytool -genkey -noprompt \
-   -dname "CN=opengauss, OU=opengauss, O=opengauss, L=Beijing, S=Beijing, C=CN"\
-   -alias opengauss\
-   -storetype PKCS12 \
-   -keyalg RSA \
-   -keysize 2048 \
-   -keystore /ops/ssl/keystore.p12 \
-   -validity 3650 \
-   -storepass 123456```
-   *注意*:这里的storepass与配置文件中的key-store-password应该保持一致。 keystore路径即为配置文件中的key-store路径
-5.启动
-nohup java -Xms2048m -Xmx4096m -jar openGauss-datakit-5.1.0.jar --spring.profiles.active=temp >datakit.out 2>&1 &
+   spring.datasource.url: jdbc:opengauss://ip:port/database?currentSchema=public&batchMode=off
+   spring.datasource.username: dbuser
+   spring.datasource.password: dbpassword
+   ```
+   配置文件更改完成后，保存并退出文件编辑，然后执行如下命令，将`application-temp.yml`文件移动到第二步创建的`config`目录下
+   ```shell
+   mv application-temp.yml config
+   ```
+   *注意*：此处连接的数据库信息需要有一些参数配置，详细步骤请参考下方目录**补充：openGauss参数配置**
+4. 生成密钥信息\
+   修改并执行如下命令生成密钥信息。修改`-storepass`参数值与`application.yml`配置文件中的`key-store-password`值保持一致，默认时两者均为`123456`；修改`-keystore`路径值与配置文件中的`key-store`路径值保持一致，即第三步中修改`/ops`后的路径。
+   ```shell
+   keytool -genkey -noprompt -dname "CN=opengauss, OU=opengauss, O=opengauss, L=Beijing, S=Beijing, C=CN" -alias opengauss -storetype PKCS12 -keyalg RSA -keysize 2048 -keystore /ops/ssl/keystore.p12 -validity 3650 -storepass 123456
+   ```
+   *注意*：此处为一条完整命令。
+5. 启动服务\
+   在`datakit`安装目录下，例如安装目录为`/path/datakit_server`，执行如下命令在后台启动`datakit`服务
+   ```shell
+   nohup java -Xms2048m -Xmx4096m -jar openGauss-datakit-5.1.0.jar --spring.profiles.active=temp >datakit.out 2>&1 &
+   ```
+6. 访问服务\
+   启动成功后，通过浏览器输入如下地址：`https://ip:9494/` 访问`datakit`服务，这里的`ip`为`datakit`服务安装在的主机`ip`，`9494`为`datakit`服务默认端口，如有修改请根据实际情况替换。初始用户为`admin`，初始密码为`admin123`，首次登录需修改初始密码。
+
+## 补充：openGauss参数配置
+1. 安装`openGauss`数据库\
+   `openGauss`数据库的下载及安装请参考官网教程，这里不做赘述，下载地址：https://opengauss.org/zh/download/
+2. 切换数据库安装用户，并加载环境变量\
+   成功安装`openGauss`数据库后，主机切换到数据库安装用户，如`omm`用户。然后`source`环境变量文件，来加载`openGauss`的环境变量，如`omm`用户环境变量文件`~/.bashrc`。注意此环境变量文件为`openGauss`数据库环境变量所在文件，请根据实际情况替换。
+   ```shell
+   source ~/.bashrc
+   ```
+3. 参数配置\
+   修改并执行如下命令，设置配置文件`pg_hba.conf`相关参数
+   ```shell
+   gs_guc set -D /opt/software/openGauss/data/single_node -h "host all all 0.0.0.0/0 sha256"
+   ```
+   修改并执行如下命令，配置文件`postgresql.conf`相关参数
+   ```shell
+   gs_guc set -D /opt/software/openGauss/data/single_node -c "listen_addresses = '*'"
+   ```
+   上述命令中的`/opt/software/openGauss/data/single_node`为数据库节点的安装目录路径，此目录下包含有上述两个文件，请根据数据库的实际情况替换。此处参数配置的目的是使得数据库接受来自任意`ip`地址的连接请求，以便在外部服务器可以成功连接到数据库。
+4. 启动数据库\
+   执行如下命令启动数据库，此处的`/opt/software/openGauss/data/single_node`请按第三步的方法替换为实际路径
+   ```shell
+   gs_ctl start -D /opt/software/openGauss/data/single_node
+   ```
+5. 连接数据库\
+   执行如下命令连接数据库，此处`5432`为`openGauss`数据库默认端口，请根据实际情况替换
+   ```shell
+   gsql -d postgres -p 5432 -r
+   ```
+6. 创建用户及数据库\
+   成功连接数据库后，依次执行如下三条命令，分别进行创建用户，赋予用户管理员权限，创建数据库的操作。
+   ```shell
+   create user opengauss_test with password 'Sample@123';
+   grant all privileges to opengauss_test;
+   create database db_datakit;
+   ```
+   由于`openGauss`数据库不支持通过初始用户进行远程连接，因此此处创建新的用户供`datakit`远程连接时使用。同时，由于`datakit`需要拥有管理员权限对数据库进行操作，因此需要赋予连接用户管理员权限。此处新建`db_datakit`数据库作为`datakit`平台的底层数据库使用，不用做任何操作，`datakit`成功连接后会自动初始化数据。
+7. 所有配置完成，保持`openGauss`数据库服务启动
 
 ## 参与开发
 插件开发请参考 openGauss-datakit/doc 目录下的开发手册
