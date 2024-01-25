@@ -128,6 +128,21 @@ function prepare_env()
     prepare_npm_env
 }
 
+function get_git_log(){
+    cd $output_path
+    package_time=`date '+%Y-%m-%d %H:%M:%S'`
+    echo "--------------------------------get_git_log---------------------------------"
+    echo "build time: "$package_time
+    echo "build time: "$package_time >> build_commit_id.log
+    echo "git branch: "$(git rev-parse --abbrev-ref HEAD)
+    echo "git branch: "$(git rev-parse --abbrev-ref HEAD) >> build_commit_id.log
+    echo "last commit:"
+    echo "last commit:" >> build_commit_id.log
+    echo "$(git log -1)"
+    echo "$(git log -1)" >> build_commit_id.log
+    echo "--------------------------------get_git_log finished---------------------------------"
+}
+
 function build_pkg() {
     cd $root_path
     echo "build dir:${root_path} ,to run cmd: mvn ${mvn_target} ${mvn_args}"
@@ -169,6 +184,7 @@ function copy_plugin_pkg() {
 }
 
 prepare_env
+get_git_log
 build_pkg
 copy_plugin_pkg
 cd $output_path
