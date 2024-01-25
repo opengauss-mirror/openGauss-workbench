@@ -134,6 +134,8 @@ function get_git_log(){
     echo "--------------------------------get_git_log---------------------------------"
     echo "build time: "$package_time
     echo "build time: "$package_time >> build_commit_id.log
+    echo "git branch: "$(git rev-parse --abbrev-ref HEAD)
+    echo "git branch: "$(git rev-parse --abbrev-ref HEAD) >> build_commit_id.log
     echo "last commit:"
     echo "last commit:" >> build_commit_id.log
     echo "$(git log -1)"
