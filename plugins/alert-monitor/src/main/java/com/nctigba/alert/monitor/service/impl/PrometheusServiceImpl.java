@@ -412,10 +412,8 @@ public class PrometheusServiceImpl implements PrometheusService {
         if (StrUtil.isBlank(clusterNodeIds)) {
             List<AlertRuleConfigDTO.Group> groups = config.getGroups().stream().filter(
                 item -> !ruleNames.contains(item.getName())).collect(Collectors.toList());
-            if (!CollectionUtil.containsAll(config.getGroups(), groups)) {
-                config.setGroups(groups);
-                uploadRuleConfig(session, config, templateId);
-            }
+            config.setGroups(groups);
+            uploadRuleConfig(session, config, templateId);
             return;
         }
         if (CollectionUtil.isEmpty(config.getGroups())) {
@@ -492,12 +490,7 @@ public class PrometheusServiceImpl implements PrometheusService {
                     alertTemplateRuleDO.getId()));
         }
         String ruleExpComb = alertTemplateRuleDO.getRuleExpComb();
-        for (AlertTemplateRuleItemDO alertTemplateRuleItemDO : alertTemplateRuleItemDOS) {
-            ruleExpComb = ruleExpComb.replace(alertTemplateRuleItemDO.getRuleMark(),
-                alertTemplateRuleItemDO.getRuleExp() + " " + alertTemplateRuleItemDO.getOperate()
-                    + alertTemplateRuleItemDO.getLimitValue());
-        }
-        ruleExpComb = ruleExpComb.replaceAll("\\$\\{instances\\}", instances);
+        ruleExpComb = parseRuleExpComb(ruleExpComb, alertTemplateRuleItemDOS, instances);
         AlertRuleConfigDTO.Group group = new AlertRuleConfigDTO.Group();
         String name = "rule_" + alertTemplateRuleDO.getId();
         group.setName(name);
@@ -519,6 +512,52 @@ public class PrometheusServiceImpl implements PrometheusService {
         rules.add(rule);
         group.setRules(rules);
         return group;
+    }
+
+    private String parseRuleExpComb(String ruleExpComb, List<AlertTemplateRuleItemDO> alertTemplateRuleItemDOS,
+                                    String instances) {
+        int position = 0;
+        int start = 0;
+        String ruleExp = "";
+        while (ruleExpComb.indexOf(" and ", position) > -1 || ruleExpComb.indexOf(" or ", position) > -1) {
+            String key = "";
+            int andIdx = ruleExpComb.indexOf(" and ", position);
+            int orIdx = ruleExpComb.indexOf(" or ", position);
+            if (andIdx == -1) {
+                position = orIdx;
+                key = " or ";
+            } else if (ruleExpComb.indexOf(" or ", position) == -1) {
+                position = andIdx;
+                key = " and ";
+            } else if (andIdx < orIdx) {
+                position = andIdx;
+                key = " and ";
+            } else {
+                position = orIdx;
+                key = " or ";
+            }
+            String ruleMark = ruleExpComb.substring(start, position);
+            AlertTemplateRuleItemDO alertTemplateRuleItemDO =
+                alertTemplateRuleItemDOS.stream().filter(item -> item.getRuleMark().equals(ruleMark.trim()))
+                    .findFirst().orElse(null);
+            if (alertTemplateRuleItemDO == null) {
+                continue;
+            }
+            ruleExp += alertTemplateRuleItemDO.getRuleExp() + alertTemplateRuleItemDO.getOperate()
+                + alertTemplateRuleItemDO.getLimitValue() + key;
+            start = position + key.length();
+            position++;
+        }
+        String ruleMark = ruleExpComb.substring(start);
+        if (StrUtil.isNotBlank(ruleMark)) {
+            AlertTemplateRuleItemDO alertTemplateRuleItemDO =
+                alertTemplateRuleItemDOS.stream().filter(item -> item.getRuleMark().equals(ruleMark.trim()))
+                    .findFirst().orElse(null);
+            ruleExp += alertTemplateRuleItemDO.getRuleExp() + alertTemplateRuleItemDO.getOperate()
+                + alertTemplateRuleItemDO.getLimitValue();
+        }
+        ruleExp = ruleExp.replaceAll("\\$\\{instances\\}", instances);
+        return ruleExp;
     }
 
     /**
