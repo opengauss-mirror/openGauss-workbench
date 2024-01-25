@@ -56,7 +56,6 @@ import org.opengauss.admin.system.service.ops.IOpsClusterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -81,8 +80,6 @@ import static cn.hutool.core.collection.CollUtil.forEach;
 @Service
 @Slf4j
 public class AlertApiServiceImpl implements AlertApiService {
-    private static final Integer LIMIT = 1000;
-
     @Autowired
     private AlertRecordMapper alertRecordMapper;
     @Autowired
@@ -117,7 +114,7 @@ public class AlertApiServiceImpl implements AlertApiService {
      *
      * @param alertApiReqList List<AlertApiReq>
      */
-    public void alerts(List<AlertApiReq> alertApiReqList) {
+    public synchronized void alerts(List<AlertApiReq> alertApiReqList) {
         List<AlertRecordDO> recordList = new ArrayList<>();
         for (AlertApiReq alertApiReq : alertApiReqList) {
             try {
@@ -134,18 +131,17 @@ public class AlertApiServiceImpl implements AlertApiService {
                 if (optional.isEmpty()) {
                     continue;
                 }
-                recordList.add(optional.get());
-                if (recordList.size() >= LIMIT) {
-                    saveRecordList(recordList);
-                    recordList.clear();
-                }
+                AlertRecordDO alertRecordDO = optional.get();
+                recordService.saveOrUpdate(alertRecordDO);
+                List<AlertRecordDetailDO> recordDetailList = alertRecordDO.getRecordDetailList();
+                recordDetailList.forEach(detail -> {
+                    detail.setRecordId(alertRecordDO.getId());
+                });
+                recordDetailService.saveOrUpdateBatch(recordDetailList);
             } catch (NumberFormatException | NullPointerException | ServiceException e) {
                 log.error("alertApiReq is ", alertApiReq);
                 log.error("exception: ", e);
             }
-        }
-        if (CollectionUtil.isNotEmpty(recordList)) {
-            saveRecordList(recordList);
         }
         context.publishEvent(new NotifyEvent(this));
     }
@@ -168,7 +164,7 @@ public class AlertApiServiceImpl implements AlertApiService {
                 .setRecordStatus(CommonConstants.UNREAD_STATUS);
         } else {
             alertRecordDO = alertRecordDOS.get(0);
-            if (alertRecordDO.getAlertStatus() == CommonConstants.RECOVER_STATUS) {
+            if (alertRecordDO.getAlertStatus().equals(CommonConstants.RECOVER_STATUS)) {
                 return Optional.empty();
             }
             alertRecordDO.setAlertStatus(alertApiReq.getAlertStatus()).setUpdateTime(LocalDateTime.now());
@@ -243,18 +239,5 @@ public class AlertApiServiceImpl implements AlertApiService {
                 : opsClusterEntity.getClusterId());
         alertParams.put("clusterId", opsClusterEntity.getClusterId());
         return alertParams;
-    }
-
-    @Transactional
-    private void saveRecordList(List<AlertRecordDO> recordList) {
-        recordService.saveOrUpdateBatch(recordList);
-        List<AlertRecordDetailDO> recordDetails = recordList.stream().flatMap(item -> {
-            List<AlertRecordDetailDO> recordDetailList = item.getRecordDetailList();
-            recordDetailList.forEach(detail -> {
-                detail.setRecordId(item.getId());
-            });
-            return recordDetailList.stream();
-        }).collect(Collectors.toList());
-        recordDetailService.saveOrUpdateBatch(recordDetails);
     }
 }
