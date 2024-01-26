@@ -92,6 +92,9 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class PrometheusServiceImpl implements PrometheusService {
+    private final String AND = " and ";
+    private final String OR = " or ";
+
     @Autowired
     private AlertTemplateRuleMapper alertTemplateRuleMapper;
 
@@ -518,23 +521,24 @@ public class PrometheusServiceImpl implements PrometheusService {
                                     String instances) {
         int position = 0;
         int start = 0;
+        boolean isAnd = false;
         String ruleExp = "";
-        while (ruleExpComb.indexOf(" and ", position) > -1 || ruleExpComb.indexOf(" or ", position) > -1) {
+        while (ruleExpComb.indexOf(AND, position) > -1 || ruleExpComb.indexOf(OR, position) > -1) {
             String key = "";
-            int andIdx = ruleExpComb.indexOf(" and ", position);
-            int orIdx = ruleExpComb.indexOf(" or ", position);
+            int andIdx = ruleExpComb.indexOf(AND, position);
+            int orIdx = ruleExpComb.indexOf(OR, position);
             if (andIdx == -1) {
                 position = orIdx;
-                key = " or ";
+                key = OR;
             } else if (ruleExpComb.indexOf(" or ", position) == -1) {
                 position = andIdx;
-                key = " and ";
+                key = AND;
             } else if (andIdx < orIdx) {
                 position = andIdx;
-                key = " and ";
+                key = AND;
             } else {
                 position = orIdx;
-                key = " or ";
+                key = OR;
             }
             String ruleMark = ruleExpComb.substring(start, position);
             AlertTemplateRuleItemDO alertTemplateRuleItemDO =
@@ -543,9 +547,14 @@ public class PrometheusServiceImpl implements PrometheusService {
             if (alertTemplateRuleItemDO == null) {
                 continue;
             }
-            ruleExp += alertTemplateRuleItemDO.getRuleExp() + alertTemplateRuleItemDO.getOperate()
-                + alertTemplateRuleItemDO.getLimitValue() + key;
+            ruleExp += (isAnd ? "on(instance) " : "") + alertTemplateRuleItemDO.getRuleExp()
+                + alertTemplateRuleItemDO.getOperate() + alertTemplateRuleItemDO.getLimitValue() + key;
             start = position + key.length();
+            if (key.equals(AND)) {
+                isAnd = true;
+            } else {
+                isAnd = false;
+            }
             position++;
         }
         String ruleMark = ruleExpComb.substring(start);
@@ -553,8 +562,8 @@ public class PrometheusServiceImpl implements PrometheusService {
             AlertTemplateRuleItemDO alertTemplateRuleItemDO =
                 alertTemplateRuleItemDOS.stream().filter(item -> item.getRuleMark().equals(ruleMark.trim()))
                     .findFirst().orElse(null);
-            ruleExp += alertTemplateRuleItemDO.getRuleExp() + alertTemplateRuleItemDO.getOperate()
-                + alertTemplateRuleItemDO.getLimitValue();
+            ruleExp += (isAnd ? "on(instance) " : "") + alertTemplateRuleItemDO.getRuleExp()
+                + alertTemplateRuleItemDO.getOperate() + alertTemplateRuleItemDO.getLimitValue();
         }
         ruleExp = ruleExp.replaceAll("\\$\\{instances\\}", instances);
         return ruleExp;
