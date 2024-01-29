@@ -97,9 +97,11 @@
         :label="$t('enterprise.NodeConfig.else5')"
         validate-trigger="blur"
       >
-        <a-input
+        <a-input-number
           v-model.trim="form.cmPort"
           :placeholder="$t('enterprise.NodeConfig.5mpme7w6bko0')"
+          :min="0"
+          :max="65535"
         />
       </a-form-item>
       <div class="label-color ft-m ft-b mb">
@@ -202,25 +204,7 @@ const formRules = computed(() => {
     ],
     installUserId: [{ required: true, 'validate-trigger': 'change', message: t('enterprise.NodeConfig.5mpme7w6c5g0') }],
     cmPort: [
-      { required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6bko0') },
-      {
-        validator: (value: any, cb: any) => {
-          return new Promise(resolve => {
-            if (!value.trim()) {
-              cb(t('enterprise.ClusterConfig.else2'))
-              resolve(false)
-            }
-            const reg = /^([0-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{4}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/
-            const re = new RegExp(reg)
-            if (re.test(value)) {
-              resolve(true)
-            } else {
-              cb(t('simple.InstallConfig.else2'))
-              resolve(false)
-            }
-          })
-        }
-      }
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6bko0') }
     ],
     cmDataPath: [
       { required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6c8s0') },

@@ -116,6 +116,8 @@
             <a-input-number
               v-model="data.form.port"
               :placeholder="$t('simple.InstallConfig.5mpmu0larmo0')"
+              :min="0"
+              :max="65535"
             />
           </a-form-item>
           <a-form-item
@@ -255,21 +257,7 @@ const initData = () => {
       }
     ],
     port: [
-      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0larmo0') },
-      {
-        validator: (value: any, cb: any) => {
-          return new Promise(resolve => {
-            const reg = /^([0-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{4}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/
-            const re = new RegExp(reg)
-            if (re.test(value)) {
-              resolve(true)
-            } else {
-              cb(t('simple.InstallConfig.else2'))
-              resolve(false)
-            }
-          })
-        }
-      }
+      { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0larmo0') }
     ],
     rootPassword: [
       { required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0laqwo0') },

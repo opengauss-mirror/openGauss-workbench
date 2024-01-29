@@ -64,9 +64,11 @@
         :label="$t('enterprise.ClusterConfig.5mpm3ku3iz80')"
         validate-trigger="blur"
       >
-        <a-input
+        <a-input-number
           v-model.trim="data.port"
           :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3j300')"
+          :min="0"
+          :max="65535"
         />
       </a-form-item>
       <a-form-item
@@ -382,21 +384,7 @@ const formRules = computed(() => {
       }
     ],
     port: [
-      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3j300') },
-      {
-        validator: (value: any, cb: any) => {
-          return new Promise(resolve => {
-            const reg = /^([0-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{4}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/
-            const re = new RegExp(reg)
-            if (re.test(value)) {
-              resolve(true)
-            } else {
-              cb(t('simple.InstallConfig.else2'))
-              resolve(false)
-            }
-          })
-        }
-      }
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3j300') }
     ],
     databaseUsername: [
       { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3j9s0') },

@@ -43,7 +43,7 @@
       <a-button type="primary" @click="onAddShardingTar">+</a-button>
     </a-form-item>
     <a-form-item field="shardingPort" :label="$t('components.openLooKeng.5mpiji1qpcc24')">
-      <a-input v-model="data.form.shardingPort" :placeholder="$t('components.openLooKeng.5mpiji1qpcc25')"/>
+      <a-input-number v-model="data.form.shardingPort" :placeholder="$t('components.openLooKeng.5mpiji1qpcc25')" :min="0" :max="65535"/>
     </a-form-item>
     <a-form-item field="zkTarId" :label="$t('components.openLooKeng.5mpiji1qpcc26')">
       <a-select v-model="data.form.zkTarId" :placeholder="$t('components.openLooKeng.5mpiji1qpcc27')"
@@ -54,7 +54,7 @@
       <a-button type="primary" @click="onAddZkTar">+</a-button>
     </a-form-item>
     <a-form-item field="zkPort" :label="$t('components.openLooKeng.5mpiji1qpcc28')">
-      <a-input v-model="data.form.zkPort" :placeholder="$t('components.openLooKeng.5mpiji1qpcc29')"/>
+      <a-input-number v-model="data.form.zkPort" :placeholder="$t('components.openLooKeng.5mpiji1qpcc29')" :min="0" :max="65535"/>
     </a-form-item>
     <a-divider orientation="left">{{ $t('components.openLooKeng.5mpiji1qpcc30') }}</a-divider>
     <a-form-item field="dsConfig" :extra="$t('components.openLooKeng.5mpiji1qpcc48')"
@@ -261,19 +261,6 @@ const validatePort = async (port: number) => {
   return false
 }
 
-const portValidator = (value: any, cb: any) => {
-  return new Promise(resolve => {
-    const reg = /^([0-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{4}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/
-    const re = new RegExp(reg)
-    if (re.test(value)) {
-      resolve(true)
-    } else {
-      cb(t('simple.InstallConfig.else2'))
-      resolve(false)
-    }
-  })
-}
-
 const validateDs = (value: any, cb: any) => {
   return new Promise(resolve => {
     if (value.length < 2) {
@@ -289,13 +276,9 @@ const rules = computed(() => {
   return {
     shardingPort: [{
       required: true, message: t('components.openLooKeng.5mpiji1qpcc24')
-    }, {
-      validator: portValidator
     }],
     zkPort: [{
       required: true, message: t('components.openLooKeng.5mpiji1qpcc28')
-    }, {
-      validator: portValidator
     }],
     hostId: { required: true, message: t('simpleInstall.index.5mpn813gukw0') },
     installUsername: { required: true, message: t('components.openLooKeng.5mpiji1qpcc12') },
