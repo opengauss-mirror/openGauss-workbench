@@ -452,11 +452,10 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
 
     @Override
     public List<AlertRecordDO> getList(
-        String clusterNodeId, Long templateId, Long templateRuleId, LocalDateTime startTime) {
+        String clusterNodeId, Long templateId, Long templateRuleId) {
         return this.list(Wrappers.<AlertRecordDO>lambdaQuery()
             .eq(AlertRecordDO::getClusterNodeId, clusterNodeId).eq(AlertRecordDO::getTemplateId, templateId)
-            .eq(AlertRecordDO::getTemplateRuleId, templateRuleId).eq(AlertRecordDO::getStartTime,
-                startTime).orderByDesc(AlertRecordDO::getUpdateTime));
+            .eq(AlertRecordDO::getTemplateRuleId, templateRuleId).orderByDesc(AlertRecordDO::getUpdateTime));
     }
 
     private BoolQuery getSearchParams(

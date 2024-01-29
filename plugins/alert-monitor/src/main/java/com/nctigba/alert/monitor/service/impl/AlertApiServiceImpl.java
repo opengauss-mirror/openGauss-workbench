@@ -69,8 +69,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static cn.hutool.core.collection.CollUtil.forEach;
-
 /**
  * AlertApiServiceImpl
  *
@@ -115,7 +113,6 @@ public class AlertApiServiceImpl implements AlertApiService {
      * @param alertApiReqList List<AlertApiReq>
      */
     public synchronized void alerts(List<AlertApiReq> alertApiReqList) {
-        List<AlertRecordDO> recordList = new ArrayList<>();
         for (AlertApiReq alertApiReq : alertApiReqList) {
             try {
                 Map<String, String> labels = alertApiReq.getLabels();
@@ -149,24 +146,24 @@ public class AlertApiServiceImpl implements AlertApiService {
     private Optional<AlertRecordDO> generateRecord(AlertApiReq alertApiReq, AlertTemplateRuleDO alertTemplateRuleDO) {
         String clusterNodeId = alertApiReq.getLabels().get("instance");
         Long templateId = Long.valueOf(alertApiReq.getLabels().get("templateId"));
-        LocalDateTime startsAt = alertApiReq.getStartsAt();
         List<AlertRecordDO> alertRecordDOS =
-            recordService.getList(clusterNodeId, templateId, alertTemplateRuleDO.getId(), startsAt);
+            recordService.getList(clusterNodeId, templateId, alertTemplateRuleDO.getId());
         AlertRecordDO alertRecordDO = null;
-        if (CollectionUtil.isEmpty(alertRecordDOS)) {
+        if (CollectionUtil.isEmpty(alertRecordDOS)
+            || alertRecordDOS.get(0).getAlertStatus().equals(CommonConstants.RECOVER_STATUS)) {
+            if (alertApiReq.getAlertStatus().equals(CommonConstants.RECOVER_STATUS)) {
+                return Optional.empty();
+            }
             alertRecordDO = new AlertRecordDO();
             AlertTemplateDO alertTemplateDO = templateMapper.selectById(templateId);
             alertRecordDO.setClusterNodeId(clusterNodeId).setTemplateId(templateId).setTemplateRuleId(
                     alertTemplateRuleDO.getId()).setCreateTime(LocalDateTime.now())
                 .setTemplateName(alertTemplateDO.getTemplateName()).setTemplateRuleName(
-                    alertTemplateRuleDO.getRuleName()).setAlertStatus(alertApiReq.getAlertStatus())
+                    alertTemplateRuleDO.getRuleName()).setStartTime(alertApiReq.getStartsAt())
                 .setTemplateRuleType(alertTemplateRuleDO.getRuleType()).setLevel(alertTemplateRuleDO.getLevel())
                 .setRecordStatus(CommonConstants.UNREAD_STATUS);
         } else {
             alertRecordDO = alertRecordDOS.get(0);
-            if (alertRecordDO.getAlertStatus().equals(CommonConstants.RECOVER_STATUS)) {
-                return Optional.empty();
-            }
             alertRecordDO.setAlertStatus(alertApiReq.getAlertStatus()).setUpdateTime(LocalDateTime.now());
         }
         List<NotifyWayDO> notifyWayDOS = notifyWayMapper.selectBatchIds(
@@ -175,9 +172,9 @@ public class AlertApiServiceImpl implements AlertApiService {
             Collectors.joining(CommonConstants.DELIMITER));
         Map<String, String> alertParams = generateAlertParams(alertApiReq);
         alertRecordDO.setNotifyWayIds(alertTemplateRuleDO.getNotifyWayIds()).setNotifyWayNames(notifyWayNames)
-            .setEndTime(alertApiReq.getEndsAt()).setStartTime(alertApiReq.getStartsAt()).setDuration(
+            .setEndTime(alertApiReq.getEndsAt()).setDuration(
                 Duration.between(alertRecordDO.getStartTime(), alertRecordDO.getEndTime()).toSeconds())
-            .setClusterId(alertParams.get("clusterId"))
+            .setClusterId(alertParams.get("clusterId")).setAlertStatus(alertApiReq.getAlertStatus())
             .setAlertContent(TextParserUtils.parse(alertTemplateRuleDO.getRuleContent(), alertParams));
         AlertRecordDetailDO detail = new AlertRecordDetailDO();
         detail.setClusterId(alertRecordDO.getClusterId()).setRecordId(alertRecordDO.getId())
