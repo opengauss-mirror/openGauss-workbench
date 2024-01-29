@@ -48,7 +48,7 @@
         <a-input v-model.trim="data.installPath" :placeholder="$t('components.openLooKeng.5mpiji1qpcc6')"/>
       </a-form-item>
       <a-form-item field="port" :label="$t('components.openLooKeng.5mpiji1qpcc40')">
-        <a-input-number v-model="data.port" :placeholder="$t('components.openLooKeng.5mpiji1qpcc41')"/>
+        <a-input-number v-model="data.port" :placeholder="$t('components.openLooKeng.5mpiji1qpcc41')" :min="0" :max="65535"/>
       </a-form-item>
     </a-form>
     <add-package-dlg ref="addPackageRef" @finish="refreshPackageList"/>
@@ -353,19 +353,6 @@ const changeHostId = (isInit: boolean) => {
   })
 }
 
-const portValidator = (value: any, cb: any) => {
-  return new Promise(resolve => {
-    const reg = /^([0-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{4}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/
-    const re = new RegExp(reg)
-    if (re.test(value)) {
-      resolve(true)
-    } else {
-      cb(t('simple.InstallConfig.else2'))
-      resolve(false)
-    }
-  })
-}
-
 const pathValidator = (value: any, cb: any) => {
   return new Promise(resolve => {
     const reg = /^\/([^/\0?]+(\/[^/\0?]+)*(\/[^/\0?]+\?)?)?$/
@@ -384,7 +371,7 @@ const rules = computed(() => {
     name: {
       required: true, message: t('components.openLooKeng.5mpiji1qpcb1')
     },
-    port: [{ required: true, message: t('components.openLooKeng.5mpiji1qpcc14') }, { validator: portValidator }],
+    port: [{ required: true, message: t('components.openLooKeng.5mpiji1qpcc14') }],
     hostId: { required: true, message: t('simpleInstall.index.5mpn813gukw0') },
     installUsername: { required: true, message: t('components.openLooKeng.5mpiji1qpcc12') },
     rootPassword: { required: true, message: t('components.openLooKeng.5mpiji1qpcc13') },

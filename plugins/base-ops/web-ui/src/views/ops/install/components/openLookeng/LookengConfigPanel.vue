@@ -42,7 +42,7 @@
       <a-button type="primary" @click="onAddOlkTar">+</a-button>
     </a-form-item>
     <a-form-item field="olkPort" :label="$t('components.openLooKeng.5mpiji1qpcc10')">
-      <a-input-number v-model="data.form.olkPort" :placeholder="$t('components.openLooKeng.5mpiji1qpcc11')"/>
+      <a-input-number v-model="data.form.olkPort" :placeholder="$t('components.openLooKeng.5mpiji1qpcc11')" :min="0" :max="65535"/>
     </a-form-item>
     <a-collapse :bordered="false">
       <a-collapse-item :header="$t('components.openLooKeng.5mpiji1qpcc52')" key="1">
@@ -369,19 +369,6 @@ const validateSpecialFields = async () => {
   return result
 }
 
-const portValidator = (value: any, cb: any) => {
-  return new Promise(resolve => {
-    const reg = /^([0-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{4}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/
-    const re = new RegExp(reg)
-    if (re.test(value)) {
-      resolve(true)
-    } else {
-      cb(t('simple.InstallConfig.else2'))
-      resolve(false)
-    }
-  })
-}
-
 const rules = computed(() => {
   return {
     hostId: { required: true, message: t('simpleInstall.index.5mpn813gukw0') },
@@ -397,8 +384,6 @@ const rules = computed(() => {
     ],
     olkPort: [{
       required: true, message: t('components.openLooKeng.5mpiji1qpcc15')
-    }, {
-      validator: portValidator
     }],
     olkTarId: { required: true, message: t('components.openLooKeng.5mpiji1qpcc16') }
   }
