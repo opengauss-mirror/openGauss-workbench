@@ -37,6 +37,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * @author LZW
@@ -47,7 +49,8 @@ import javax.sql.DataSource;
 public class DataSourceConfig {
     static final String GS_DRIVER = "org.opengauss.Driver";
     static final String SQLITE_DRIVER = "org.sqlite.JDBC";
-    static final String SQLITE_URL = "jdbc:sqlite:data/observability-instance-data.db";
+    static final String DB_PATH = "data/observability-instance-data.db";
+    static final String SQLITE_URL = "jdbc:sqlite:" + DB_PATH;
 
     @Autowired
     DynamicDataSourceProperties properties;
@@ -56,11 +59,12 @@ public class DataSourceConfig {
      * primary dataSource
      *
      * @return DataSource
+     * @throws IOException e
      */
     @Bean
     @ConfigurationProperties(prefix = "spring.datasource")
     @Profile("!dev")
-    public DataSource dataSource() {
+    public DataSource dataSource() throws IOException {
         EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();
         // read config from dataKit platform
         String url = environmentProvider.getString("spring.datasource.url");
@@ -77,8 +81,20 @@ public class DataSourceConfig {
             DataSourceProperty embedded = properties.getDatasource().get("embedded");
             if (!SQLITE_DRIVER.equals(embedded.getDriverClassName())) {
                 embedded.setDriverClassName(SQLITE_DRIVER).setUrl(SQLITE_URL);
+                initDbFile();
             }
         }
         return d;
+    }
+
+    private void initDbFile() throws IOException {
+        File dbFile = new File(DB_PATH);
+        File dbDir = dbFile.getParentFile();
+        if (!dbDir.exists()) {
+            dbDir.mkdirs();
+        }
+        if (!dbFile.exists()) {
+            dbFile.createNewFile();
+        }
     }
 }
