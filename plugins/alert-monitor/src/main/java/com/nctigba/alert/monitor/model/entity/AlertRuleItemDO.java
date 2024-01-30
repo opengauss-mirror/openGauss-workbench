@@ -62,10 +62,8 @@ public class AlertRuleItemDO {
     @NotBlank(groups = AlertRuleDO.IndexRuleGroup.class)
     @EnumString(values = {"normal", "increase", "decrease"})
     private String action;
-    @NotBlank
     @EnumString(values = {">", ">=", "=", "<=", "<", "!="})
     private String operate;
-    @NotBlank
     @Pattern(regexp = "^-?\\d+(\\.\\d+)?$")
     private String limitValue;
     private String unit;

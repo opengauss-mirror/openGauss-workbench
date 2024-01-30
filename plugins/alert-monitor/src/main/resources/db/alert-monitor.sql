@@ -319,6 +319,7 @@ ALTER TABLE "public"."alert_rule_item" ADD COLUMN "block_word" text;
 COMMENT ON COLUMN "public"."alert_rule_item"."keyword" IS '关键字，多个用逗号分隔';
 COMMENT ON COLUMN "public"."alert_rule_item"."block_word" IS '屏蔽词，多个用逗号分隔';
 ALTER TABLE public.alert_rule_item ALTER COLUMN rule_exp_param TYPE text USING rule_exp_param::text;
+alter table "public"."alert_rule_item" ALTER COLUMN rule_exp TYPE text;
 alter table "public"."alert_rule_item" ALTER COLUMN rule_exp DROP NOT NULL;
 
 
@@ -502,6 +503,7 @@ ALTER TABLE "public"."alert_template_rule_item" ADD COLUMN "block_word" text;
 COMMENT ON COLUMN "public"."alert_template_rule_item"."keyword" IS '关键字，多个用逗号分隔';
 COMMENT ON COLUMN "public"."alert_template_rule_item"."block_word" IS '屏蔽词，多个用逗号分隔';
 ALTER TABLE public.alert_template_rule_item ALTER COLUMN rule_exp_param TYPE text USING rule_exp_param::text;
+alter table "public"."alert_template_rule_item" ALTER COLUMN rule_exp TYPE text;
 alter table "public"."alert_template_rule_item" ALTER COLUMN rule_exp DROP NOT NULL;
 
 CREATE TABLE alert_template_rule_item_param (
@@ -848,6 +850,8 @@ INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,l
  rule_item_desc,is_deleted,create_time,update_time,action,rule_exp_param)
   VALUES (8,8,'A','tablespaceSize','>',500,'MB','pg_tablespace_size{name=~"$'||'{name}",instance=~"$'||'{instances}"}',
   '表空间容量超过500MB',0,'2023-08-07 15:45:20.02',null,'normal','{"name":"postgres"}') ON DUPLICATE KEY UPDATE NOTHING;
+  update alert_rule_item set rule_exp = 'pg_tablespace_size{instance=~"${instances}"}', rule_exp_param = '' where id =
+  8;
 
  INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
   VALUES (9,'慢sql运行时间监控','serious','index','A','$'||'{nodeName}的一些sql运行时间超过10秒',0,'s',1,0,null,null,'firing','1',
@@ -934,8 +938,6 @@ COMMENT ON COLUMN "public"."alert_rule_item_src"."alert_params" IS '告警参数
 ALTER TABLE "public"."alert_rule_item_src" ADD COLUMN "name_zh" varchar(100);
 ALTER TABLE "public"."alert_rule_item_src" ADD COLUMN "name_en" varchar(100);
 ALTER TABLE "public"."alert_rule_item_src" ADD COLUMN "analysis_bean_name" varchar(200);
-
-alter table "public"."alert_rule_item" ALTER COLUMN rule_exp TYPE text;
 
 delete from public.alert_rule_item_src where id = 18;
 delete from public.alert_rule_item_exp_src where id = 45;
@@ -1035,6 +1037,7 @@ INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,l
  VALUES (26,26,'A','activeSessionGtCpuCore','',null,'%','sum(pg_state_activity_group_count{state="active",
  instance=~"$'||'{instances}"}) by (instance) > count(agent_cpu_seconds_total{mode="system",instance=~"$'||'{instances}"}) by (instance)',
  '活动会话数大于CPU核数',0,now(),null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
+ update public.alert_rule_item set unit = '%' where id = 26;
 
 --每秒死锁数
 insert into public.alert_rule_item_src(id,name,name_zh,name_en,unit,params,create_time,alert_params) values (74,
@@ -1073,6 +1076,8 @@ insert into public.alert_rule_item_src(id,name,name_zh,name_en,unit,params,creat
 insert into public.alert_rule_item_exp_src(id,rule_item_src_id,action,operate,limit_value,exp,show_limit_value,
 create_time) values(76,76,'normal','',null,
 'pg_replication_slots_delay_lsn{instance=~"$'||'{instances}"}/1024/1024',1,now()) ON DUPLICATE KEY UPDATE NOTHING;
+update public.alert_rule_item_exp_src set exp = 'pg_replication_slots_delay_lsn{instance=~"$'||'{instances}"}/1024/1024' where
+id = 76;
 
 INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (29,'主库复制槽延迟告警','serious','index','A','故障描述：位于$'||'{nodeName}上的$'||'{slot_name}延迟大于1MB,当前值：$'||'{value}'
@@ -1082,6 +1087,8 @@ INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,l
  VALUES (29,29,'A','dbReplicationSlotDelay','>',1,'MB',
  'pg_replication_slots_delay_lsn{instance=~"$'||'{instances}"}[2m]',
 '主库复制槽延迟大于1MB',0,now(),null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
+update public.alert_rule_item set rule_exp = 'pg_replication_slots_delay_lsn{instance=~"$'||'{instances}"}/1024/1024'
+where id = 29;
 
 -- 锁阻塞时间
 insert into public.alert_rule_item_src(id,name,name_zh,name_en,unit,params,create_time,alert_params,analysis_bean_name) values (77,
