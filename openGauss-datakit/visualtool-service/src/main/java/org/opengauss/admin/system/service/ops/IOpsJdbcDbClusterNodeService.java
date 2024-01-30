@@ -39,7 +39,15 @@ import java.util.Set;
 public interface IOpsJdbcDbClusterNodeService extends IService<OpsJdbcDbClusterNodeEntity> {
     void del(String clusterNodeId);
 
-    OpsJdbcDbClusterNodeEntity getClusterNodeByIpAndPort(String ip, String port);
+    /**
+     * find jdbc cluster by ip, port and username
+     *
+     * @param ip ip
+     * @param port port
+     * @param username username
+     * @return jdbc cluster info
+     */
+    OpsJdbcDbClusterNodeEntity getClusterNodeByIpAndPort(String ip, String port, String username);
 
     Set<String> fuzzyQueryClusterIdsByIp(String ip);
 

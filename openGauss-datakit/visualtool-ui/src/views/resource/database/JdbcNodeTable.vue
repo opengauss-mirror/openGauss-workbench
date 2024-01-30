@@ -18,7 +18,10 @@
             <div class="mr-s" style="max-width: 160px;">{{ $t('database.JdbcNodeTable.else1') }}: {{ record.ip }}</div>
             <icon-code-square :size="25" style="cursor: pointer;" @click="showTerminal(record.ip)" />
           </div>
-          <div>{{ $t('database.JdbcNodeTable.else2') }}: {{ record.port }}</div>
+          <div class="flex-row">
+            <div class="mr-s">{{ $t('database.JdbcNodeTable.else2') }}: {{ record.port }}</div>
+            <div>{{ $t('database.JdbcInstance.5oxhtcboa240') }}: {{ record.username }}</div>
+          </div>
         </div>
       </template>
       <template #status="{ record }">

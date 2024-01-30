@@ -282,7 +282,8 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
                         throw new OpsException("wrong port");
                     }
 
-                    OpsJdbcDbClusterNodeEntity clusterNodeByIpAndPort = opsJdbcDbClusterNodeService.getClusterNodeByIpAndPort(jdbcInfo.getIp(), jdbcInfo.getPort());
+                    OpsJdbcDbClusterNodeEntity clusterNodeByIpAndPort = opsJdbcDbClusterNodeService
+                            .getClusterNodeByIpAndPort(jdbcInfo.getIp(), jdbcInfo.getPort(), node.getUsername());
                     if (Objects.nonNull(clusterNodeByIpAndPort)) {
                         throw new OpsException("The current instance node already exists in other clusters");
                     }
@@ -526,7 +527,8 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
             String url = node.getUrl();
             JdbcInfo jdbcInfo = JdbcUtil.parseUrl(url);
 
-            OpsJdbcDbClusterNodeEntity clusterNodeEntity = opsJdbcDbClusterNodeService.getClusterNodeByIpAndPort(jdbcInfo.getIp(), jdbcInfo.getPort());
+            OpsJdbcDbClusterNodeEntity clusterNodeEntity = opsJdbcDbClusterNodeService
+                    .getClusterNodeByIpAndPort(jdbcInfo.getIp(), jdbcInfo.getPort(), node.getUsername());
             if (Objects.nonNull(clusterNodeEntity)) {
                 throw new OpsException("Cluster node information already exists");
             }
