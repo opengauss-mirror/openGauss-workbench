@@ -34,7 +34,6 @@ import com.nctigba.alert.monitor.model.query.AlertRecordQuery;
 import com.nctigba.alert.monitor.model.query.AlertStatisticsQuery;
 import org.apache.poi.ss.usermodel.Workbook;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -87,8 +86,7 @@ public interface AlertRecordService extends IService<AlertRecordDO> {
      * @param clusterNodeId clusterNodeId
      * @param templateId templateId
      * @param templateRuleId templateRuleId
-     * @param startTime startTime
      * @return List<AlertRecord>
      */
-    List<AlertRecordDO> getList(String clusterNodeId, Long templateId, Long templateRuleId, LocalDateTime startTime);
+    List<AlertRecordDO> getList(String clusterNodeId, Long templateId, Long templateRuleId);
 }
