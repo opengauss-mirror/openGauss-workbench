@@ -23,8 +23,8 @@
 
 package com.nctigba.observability.sql.service.impl.point.sql;
 
-import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constant.SqlConstants;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.DiagnosisResultMapper;
 import com.nctigba.observability.sql.mapper.DiagnosisTaskMapper;
 import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
@@ -113,7 +113,12 @@ public class RandomPageCost implements DiagnosisPointService<AutoShowDataVO> {
         if (task == null) {
             throw new HisDiagnosisException("taskId is not exists!");
         }
-        List<?> resultList = (List<?>) dbUtils.rangQuery(SqlConstants.RANDOM_PAGE_COST, null, null, task.getNodeId());
+        Object resultObj = dbUtils.rangQuery(
+                SqlConstants.RANDOM_PAGE_COST, null, null, task.getNodeId());
+        List<?> resultList = new ArrayList<>();
+        if (resultObj instanceof ArrayList) {
+            resultList = (List<?>) resultObj;
+        }
         List<ShowData> tableList = pointUtils.getTableData(resultList, "RandomPageCost");
         AutoShowDataVO dataVO = new AutoShowDataVO();
         dataVO.setData(tableList);

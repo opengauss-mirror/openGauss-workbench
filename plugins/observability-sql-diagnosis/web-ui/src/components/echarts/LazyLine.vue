@@ -167,7 +167,8 @@ const renderChart = () => {
   props.data.forEach((d) => {
     const o: Record<string, any> = {
       type: 'line',
-      symbol: 'none',
+      symbol: props.xData.length > 1 ? 'none' : 'circle',
+      symbolSize: 6,
       yAxisIndex: 0,
       zlevel: 1,
       areaStyle: props.areaStyle ? {} : undefined,

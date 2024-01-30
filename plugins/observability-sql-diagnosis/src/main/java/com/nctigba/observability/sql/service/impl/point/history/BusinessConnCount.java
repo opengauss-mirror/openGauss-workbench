@@ -23,20 +23,20 @@
 
 package com.nctigba.observability.sql.service.impl.point.history;
 
-import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constant.MetricConstants;
 import com.nctigba.observability.sql.constant.PrometheusConstants;
 import com.nctigba.observability.sql.constant.ThresholdConstants;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.DiagnosisTaskMapper;
-import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
-import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
-import com.nctigba.observability.sql.model.vo.collection.PrometheusVO;
 import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
-import com.nctigba.observability.sql.model.vo.point.ConnCountVO;
 import com.nctigba.observability.sql.model.dto.point.AspAnalysisDTO;
 import com.nctigba.observability.sql.model.dto.point.BusinessConnCountDTO;
 import com.nctigba.observability.sql.model.dto.point.MetricDataDTO;
 import com.nctigba.observability.sql.model.dto.point.PrometheusDataDTO;
+import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
+import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
+import com.nctigba.observability.sql.model.vo.collection.PrometheusVO;
+import com.nctigba.observability.sql.model.vo.point.ConnCountVO;
 import com.nctigba.observability.sql.service.CollectionItem;
 import com.nctigba.observability.sql.service.DataStoreService;
 import com.nctigba.observability.sql.service.DiagnosisPointService;
@@ -208,7 +208,13 @@ public class BusinessConnCount implements DiagnosisPointService<Object> {
         }
         List<PrometheusDataDTO> dataList = new ArrayList<>();
         for (CollectionItem<?> item : getSourceDataKeys()) {
-            List<?> list = (List<?>) item.queryData(task);
+            List<?> list;
+            Object obj = item.queryData(task);
+            if (obj instanceof ArrayList) {
+                list = (List<?>) obj;
+            } else {
+                continue;
+            }
             List<PrometheusVO> prometheusVOList = pointUtils.dataToObject(list);
             if (CollectionUtils.isEmpty(prometheusVOList)) {
                 continue;

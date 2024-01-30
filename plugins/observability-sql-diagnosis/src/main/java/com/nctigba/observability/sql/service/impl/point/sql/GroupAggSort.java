@@ -74,8 +74,12 @@ public class GroupAggSort implements DiagnosisPointService<Object> {
     public AnalysisDTO analysis(DiagnosisTaskDO task, DataStoreService dataStoreService) {
         List<String> rsList = new ArrayList<>();
         List<?> rsObject = (List<?>) dataStoreService.getData(item).getCollectionData();
+        List<Map<String, Object>> dataList = new ArrayList<>();
         rsObject.forEach(obj -> {
             if (obj instanceof String) {
+                Map<String, Object> hashMap = new HashMap<>();
+                hashMap.put("explain", obj);
+                dataList.add(hashMap);
                 rsList.add((String) obj);
             }
         });
@@ -85,13 +89,9 @@ public class GroupAggSort implements DiagnosisPointService<Object> {
         analysisDTO.setIsHint(DiagnosisResultDO.ResultState.NO_ADVICE);
         analysisDTO.setPointType(DiagnosisResultDO.PointType.DIAGNOSIS);
         String explain = sb.toString();
-        if (explain.contains(THRESHOLD_VALUE) && explain.contains("sort")) {
+        if (explain.contains(THRESHOLD_VALUE) && explain.contains("Sort")) {
             analysisDTO.setIsHint(DiagnosisResultDO.ResultState.SUGGESTIONS);
         }
-        List<Map<String, Object>> dataList = new ArrayList<>();
-        Map<String, Object> hashMap = new HashMap<>();
-        hashMap.put("explain", rsList);
-        dataList.add(hashMap);
         List<TableShowDataColumnVO> columnList = new ArrayList<>();
         TableShowDataColumnVO columnVO = new TableShowDataColumnVO();
         columnVO.setKey("explain");

@@ -23,19 +23,19 @@
 
 package com.nctigba.observability.sql.service.impl.point.sql;
 
-import com.nctigba.observability.sql.enums.OptionEnum;
-import com.nctigba.observability.sql.model.vo.LineChartVO;
-import com.nctigba.observability.sql.model.vo.FrameVO;
 import com.nctigba.observability.sql.enums.FrameTypeEnum;
+import com.nctigba.observability.sql.enums.OptionEnum;
 import com.nctigba.observability.sql.enums.ResultTypeEnum;
+import com.nctigba.observability.sql.model.dto.TaskResultDTO;
+import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
 import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
 import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
-import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
-import com.nctigba.observability.sql.model.dto.TaskResultDTO;
+import com.nctigba.observability.sql.model.vo.FrameVO;
+import com.nctigba.observability.sql.model.vo.LineChartVO;
 import com.nctigba.observability.sql.service.CollectionItem;
-import com.nctigba.observability.sql.service.impl.collection.ebpf.PidStatItem;
 import com.nctigba.observability.sql.service.DataStoreService;
 import com.nctigba.observability.sql.service.DiagnosisPointService;
+import com.nctigba.observability.sql.service.impl.collection.ebpf.PidStatItem;
 import com.nctigba.observability.sql.util.LocaleStringUtils;
 import com.nctigba.observability.sql.util.PercentUtils;
 import org.opengauss.admin.common.exception.CustomException;
@@ -87,14 +87,19 @@ public class IoWaitCpu implements DiagnosisPointService<Object> {
             TaskResultDTO waitResult = new TaskResultDTO(task,
                     TaskResultDTO.ResultState.NO_ADVICE, ResultTypeEnum.iowait, FrameTypeEnum.LineChart,
                     FrameVO.bearing.center);
-            waitResult.setData(generateLineChart(file));
+            LineChartVO lineChartVO = generateLineChart(file);
+            waitResult.setData(lineChartVO);
             List<TaskResultDTO> list = new ArrayList<>();
             list.add(waitResult);
             FrameVO f = new FrameVO();
             for (TaskResultDTO taskResultDTO : list) {
                 f.addChild(taskResultDTO.getBearing(), taskResultDTO.toFrame());
             }
-            analysisDTO.setIsHint(DiagnosisResultDO.ResultState.SUGGESTIONS);
+            if (lineChartVO.getSeries().size() > 0) {
+                analysisDTO.setIsHint(DiagnosisResultDO.ResultState.SUGGESTIONS);
+            } else {
+                analysisDTO.setIsHint(DiagnosisResultDO.ResultState.NO_ADVICE);
+            }
             analysisDTO.setPointData(f);
         } else {
             analysisDTO.setIsHint(DiagnosisResultDO.ResultState.NO_ADVICE);

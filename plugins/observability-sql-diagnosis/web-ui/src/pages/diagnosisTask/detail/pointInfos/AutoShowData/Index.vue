@@ -52,7 +52,7 @@
         <my-card
           v-if="row.type == 'PARAM'"
           :title="$t('datasource.editSuggestion')"
-          :height="row.height ? row.height + 40 : 350"
+          :height="row.height ? row.height + 40 : 400"
           :bodyPadding="false"
           style="margin-top: 10px"
         >

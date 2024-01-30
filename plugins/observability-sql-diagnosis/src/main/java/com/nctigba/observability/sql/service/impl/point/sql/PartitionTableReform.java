@@ -112,8 +112,15 @@ public class PartitionTableReform implements DiagnosisPointService<Object> {
         if (task == null) {
             throw new HisDiagnosisException("taskId is not exists!");
         }
+        if (!task.getSql().contains("from")) {
+            return null;
+        }
         String sql = String.format(SqlConstants.DEAD_TUPLE, pointUtils.getTableName(task.getSql()));
-        List<?> resultList = (List<?>) dbUtils.rangQuery(sql, null, null, task.getNodeId());
+        Object resultObj = dbUtils.rangQuery(sql, null, null, task.getNodeId());
+        List<?> resultList = new ArrayList<>();
+        if (resultObj instanceof ArrayList) {
+            resultList = (List<?>) resultObj;
+        }
         List<ShowData> tableList = pointUtils.getTableData(resultList, "PartitionTableReform");
         AutoShowDataVO dataVO = new AutoShowDataVO();
         dataVO.setData(tableList);

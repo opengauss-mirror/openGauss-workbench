@@ -23,8 +23,8 @@
 
 package com.nctigba.observability.sql.service.impl.point.sql;
 
-import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constant.SqlConstants;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.DiagnosisTaskMapper;
 import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
 import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
@@ -43,6 +43,7 @@ import org.springframework.stereotype.Service;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -103,8 +104,15 @@ public class ObjectInfo implements DiagnosisPointService<AutoShowDataVO> {
         if (task == null) {
             throw new HisDiagnosisException("taskId is not exists!");
         }
+        if (!task.getSql().contains("from")) {
+            return null;
+        }
         String sql = String.format(SqlConstants.OBJECT_INFO, pointUtils.getTableName(task.getSql()));
-        List<?> resultList = (List<?>) dbUtils.rangQuery(sql, null, null, task.getNodeId());
+        Object resultObj = dbUtils.rangQuery(sql, null, null, task.getNodeId());
+        List<?> resultList = new ArrayList<>();
+        if (resultObj instanceof ArrayList) {
+            resultList = (List<?>) resultObj;
+        }
         List<ShowData> tableList = pointUtils.getTableData(resultList, "ObjectInfo");
         AutoShowDataVO dataVO = new AutoShowDataVO();
         dataVO.setData(tableList);
