@@ -108,10 +108,11 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
     }
 
     @Override
-    public OpsJdbcDbClusterNodeEntity getClusterNodeByIpAndPort(String ip, String port) {
+    public OpsJdbcDbClusterNodeEntity getClusterNodeByIpAndPort(String ip, String port, String username) {
         LambdaQueryWrapper<OpsJdbcDbClusterNodeEntity> queryWrapper = Wrappers.lambdaQuery(OpsJdbcDbClusterNodeEntity.class)
                 .eq(OpsJdbcDbClusterNodeEntity::getIp, ip)
-                .eq(OpsJdbcDbClusterNodeEntity::getPort, port);
+                .eq(OpsJdbcDbClusterNodeEntity::getPort, port)
+                .eq(StrUtil.isNotEmpty(username), OpsJdbcDbClusterNodeEntity::getUsername, username);
         return getOne(queryWrapper, false);
     }
 
@@ -205,7 +206,8 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
         String url = clusterNodeInput.getUrl();
         JdbcInfo jdbcInfo = JdbcUtil.parseUrl(url);
 
-        OpsJdbcDbClusterNodeEntity clusterNodeEntity = getClusterNodeByIpAndPort(jdbcInfo.getIp(), jdbcInfo.getPort());
+        OpsJdbcDbClusterNodeEntity clusterNodeEntity = getClusterNodeByIpAndPort(jdbcInfo.getIp(),
+                jdbcInfo.getPort(), clusterNodeInput.getUsername());
         if (Objects.nonNull(clusterNodeEntity)) {
             throw new OpsException("Cluster node information already exists");
         }
