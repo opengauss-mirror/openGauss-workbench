@@ -164,8 +164,7 @@ public class SNMPServiceImpl implements CommunicationService {
     }
 
     private boolean sendMsg(NotifySnmpDTO notifySnmpDto, String msg) {
-        try {
-            TransportMapping<UdpAddress> transport = new DefaultUdpTransportMapping();
+        try (TransportMapping<UdpAddress> transport = new DefaultUdpTransportMapping()) {
             transport.listen();
             Integer snmpVersion = notifySnmpDto.getSnmpVersion();
             PDU pdu = pduMap.get(snmpVersion);
@@ -191,18 +190,22 @@ public class SNMPServiceImpl implements CommunicationService {
             // timeout
             target.setTimeout(1500);
 
-            Snmp snmp = new Snmp(transport);
-            if (notifySnmpDto.getSnmpVersion().equals(SnmpConstants.version3)) {
-                SecurityProtocols.getInstance().addAuthenticationProtocol(new AuthMD5());
-                USM usm = new USM(SecurityProtocols.getInstance(),
-                    new OctetString(MPv3.createLocalEngineID()), 0);
-                SecurityModels.getInstance().addSecurityModel(usm);
-                OctetString userName = new OctetString(notifySnmpDto.getSnmpUsername());
-                OctetString authPass = new OctetString(notifySnmpDto.getSnmpAuthPasswd());
-                OctetString privPass = new OctetString(notifySnmpDto.getSnmpPrivPasswd());
-                snmp.getUSM().addUser(userName, new UsmUser(userName, AuthMD5.ID, authPass, PrivDES.ID, privPass));
+            try (Snmp snmp = new Snmp(transport)) {
+                if (notifySnmpDto.getSnmpVersion().equals(SnmpConstants.version3)) {
+                    SecurityProtocols.getInstance().addAuthenticationProtocol(new AuthMD5());
+                    USM usm = new USM(SecurityProtocols.getInstance(),
+                        new OctetString(MPv3.createLocalEngineID()), 0);
+                    SecurityModels.getInstance().addSecurityModel(usm);
+                    OctetString userName = new OctetString(notifySnmpDto.getSnmpUsername());
+                    OctetString authPass = new OctetString(notifySnmpDto.getSnmpAuthPasswd());
+                    OctetString privPass = new OctetString(notifySnmpDto.getSnmpPrivPasswd());
+                    snmp.getUSM().addUser(userName, new UsmUser(userName, AuthMD5.ID, authPass, PrivDES.ID, privPass));
+                }
+                snmp.send(pdu, target);
+            } catch (IOException e) {
+                log.error("SNMP send failed", e);
+                return false;
             }
-            snmp.send(pdu, target);
             return true;
         } catch (IOException e) {
             log.error("SNMP send failed", e);

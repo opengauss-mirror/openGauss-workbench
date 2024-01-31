@@ -547,8 +547,8 @@ public class PrometheusServiceImpl implements PrometheusService {
             if (alertTemplateRuleItemDO == null) {
                 continue;
             }
-            ruleExp += (isAnd ? "on(instance) " : "") + alertTemplateRuleItemDO.getRuleExp()
-                + alertTemplateRuleItemDO.getOperate() + alertTemplateRuleItemDO.getLimitValue() + key;
+            ruleExp += subRuleExp(isAnd, alertTemplateRuleItemDO.getRuleExp(), alertTemplateRuleItemDO.getOperate(),
+                alertTemplateRuleItemDO.getLimitValue()) + key;
             start = position + key.length();
             if (key.equals(AND)) {
                 isAnd = true;
@@ -562,11 +562,14 @@ public class PrometheusServiceImpl implements PrometheusService {
             AlertTemplateRuleItemDO alertTemplateRuleItemDO =
                 alertTemplateRuleItemDOS.stream().filter(item -> item.getRuleMark().equals(ruleMark.trim()))
                     .findFirst().orElse(null);
-            ruleExp += (isAnd ? "on(instance) " : "") + alertTemplateRuleItemDO.getRuleExp()
-                + alertTemplateRuleItemDO.getOperate() + alertTemplateRuleItemDO.getLimitValue();
+            ruleExp += subRuleExp(isAnd, alertTemplateRuleItemDO.getRuleExp(), alertTemplateRuleItemDO.getOperate(),
+                alertTemplateRuleItemDO.getLimitValue());
         }
         ruleExp = ruleExp.replaceAll("\\$\\{instances\\}", instances);
         return ruleExp;
+    }
+    private String subRuleExp(Boolean isAnd, String ruleExp, String operate, String limitValue) {
+        return (isAnd ? "on(instance) " : "") + ruleExp + (StrUtil.isNotBlank(operate) ? (operate + limitValue) : "");
     }
 
     /**
