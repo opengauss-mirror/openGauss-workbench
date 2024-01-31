@@ -23,8 +23,8 @@
 
 package com.nctigba.observability.sql.service.impl.point.sql;
 
-import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constant.SqlConstants;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.DiagnosisResultMapper;
 import com.nctigba.observability.sql.mapper.DiagnosisTaskMapper;
 import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
@@ -95,7 +95,11 @@ public class CoreOptimizerParam implements DiagnosisPointService<AutoShowDataVO>
         analysisDTO.setPointType(DiagnosisResultDO.PointType.DIAGNOSIS);
         analysisDTO.setIsHint(DiagnosisResultDO.ResultState.NO_ADVICE);
         for (DatabaseVO databaseVO : databaseVOList) {
-            List<Object> dataList = databaseVO.getValue();
+            Object dataObj = databaseVO.getValue().get(0);
+            List<?> dataList = new ArrayList<>();
+            if (dataObj instanceof ArrayList) {
+                dataList = (List<?>) dataObj;
+            }
             dataList.forEach(data -> {
                 if (data instanceof Map) {
                     Map<?, ?> map = (Map<?, ?>) data;
@@ -116,8 +120,12 @@ public class CoreOptimizerParam implements DiagnosisPointService<AutoShowDataVO>
         if (task == null) {
             throw new HisDiagnosisException("taskId is not exists!");
         }
-        List<?> resultList = (List<?>) dbUtils.rangQuery(
+        Object resultObj = dbUtils.rangQuery(
                 SqlConstants.CORE_OPTIMIZER_PARAM, null, null, task.getNodeId());
+        List<?> resultList = new ArrayList<>();
+        if (resultObj instanceof ArrayList) {
+            resultList = (List<?>) resultObj;
+        }
         List<ShowData> tableList = pointUtils.getTableData(resultList, "CoreOptimizerParam");
         AutoShowDataVO dataVO = new AutoShowDataVO();
         dataVO.setData(tableList);

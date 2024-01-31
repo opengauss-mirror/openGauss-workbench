@@ -44,7 +44,7 @@
                 </el-table-column>
                 <el-table-column prop="dbName" :label="$t('datasource.slowLogTable[3]')" width="100" />
                 <el-table-column prop="clientAddr" :label="$t('datasource.slowLogTable[4]')" width="110" />
-                <el-table-column prop="schemaName" :label="$t('datasource.slowLogTable[5]')" width="100" />
+                <el-table-column prop="userName" :label="$t('datasource.slowLogTable[5]')" width="100" />
                 <el-table-column prop="dbTime" :label="$t('datasource.slowLogTable[6]')" width="120" />
                 <el-table-column prop="cpuTime" :label="$t('datasource.slowLogTable[7]')" width="120" />
                 <el-table-column prop="dataIoTime" :label="$t('datasource.slowLogTable[8]')" width="120" />
@@ -157,6 +157,10 @@ const handleQuery = () => {
 const handleReset = () => {
     page.currentPage = 1
     formData.dateValue = []
+    if (!queryData.value.nodeId) {
+        ElMessage.warning(t('datasource.pleaseSelectInstance'))
+        return
+    }
     requestData()
 }
 const changePageCurrent = (data: number) => {

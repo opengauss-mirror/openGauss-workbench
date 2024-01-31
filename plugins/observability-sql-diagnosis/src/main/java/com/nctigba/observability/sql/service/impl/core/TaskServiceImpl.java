@@ -269,7 +269,11 @@ public class TaskServiceImpl implements TaskService {
                 options.add(query);
             }
             ThreadUtil.execAsync(() -> sqlExecutor.executeSql(task));
-            ThreadUtil.sleep(500L);
+            for (int i = 0; i < 10; i++) {
+                if (task.getSessionId() == null) {
+                    ThreadUtil.sleep(500L);
+                }
+            }
             task.addRemarks("execute SQL while starting diagnosis");
             Integer pid = obtainPid(task);
             task.addRemarks("get pid:" + pid);
@@ -650,8 +654,10 @@ public class TaskServiceImpl implements TaskService {
                 task.addRemarks("start analysis:" + pointName);
                 if (!isExplain) {
                     updateExplainChildNode(task, DiagnosisResultDO.PointState.NOT_SATISFIED_DIAGNOSIS);
+                    updateExplainRelatedNode(pointName, task, DiagnosisResultDO.PointState.NOT_SATISFIED_DIAGNOSIS);
                 } else if (isRun) {
                     updateExplainChildNode(task, DiagnosisResultDO.PointState.NOT_MATCH_OPTION);
+                    updateExplainRelatedNode(pointName, task, DiagnosisResultDO.PointState.NOT_MATCH_OPTION);
                 } else {
                     updateExplainChildNode(task, DiagnosisResultDO.PointState.SUCCEED);
                     explainAnalysis(pointService, task, pointName);
@@ -665,6 +671,16 @@ public class TaskServiceImpl implements TaskService {
         task.setTaskEndTime(new Date());
         task.setSpan(task.getCost());
         taskMapper.updateById(task);
+    }
+
+    private void updateExplainRelatedNode(String pointName, DiagnosisTaskDO task, DiagnosisResultDO.PointState state) {
+        if (!"ObjectInfoCheck".equals(pointName)) {
+            DiagnosisResultDO result = new DiagnosisResultDO(
+                    task, pointName, state, DiagnosisResultDO.ResultState.NO_ADVICE);
+            resultMapper.update(result, Wrappers.<DiagnosisResultDO>lambdaQuery().eq(
+                            DiagnosisResultDO::getTaskId, result.getTaskId())
+                    .eq(DiagnosisResultDO::getPointName, pointName));
+        }
     }
 
     private void explainAnalysis(DiagnosisPointService<?> pointService, DiagnosisTaskDO task, String pointName) {

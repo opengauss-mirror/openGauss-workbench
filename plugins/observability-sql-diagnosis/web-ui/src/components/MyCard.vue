@@ -15,7 +15,7 @@
         resize: props.resize ? 'vertical' : 'none',
       }"
     >
-      <div style="position: relative; height: 100%">
+      <div style="position: relative; height: 100%; overflow: auto">
         <slot />
       </div>
     </div>

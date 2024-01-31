@@ -68,7 +68,7 @@ public class Hint implements DiagnosisPointService<Object> {
         String[] sqlList = task.getSql().toLowerCase(Locale.ROOT).split("select");
         for (String sql : sqlList) {
             if (sql.trim().startsWith("/*")) {
-                list.add(sql.substring(sql.indexOf("/*") + 2, sql.indexOf("*/") - 1));
+                list.add(sql.substring(sql.indexOf("/*") + 2, sql.indexOf("*/")));
                 analysisDTO.setIsHint(DiagnosisResultDO.ResultState.SUGGESTIONS);
             }
         }

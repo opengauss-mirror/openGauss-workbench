@@ -23,18 +23,18 @@
 
 package com.nctigba.observability.sql.service.impl.point.history;
 
-import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constant.PointTypeConstants;
 import com.nctigba.observability.sql.constant.ThresholdConstants;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
+import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
 import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
 import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
 import com.nctigba.observability.sql.model.entity.DiagnosisThresholdDO;
 import com.nctigba.observability.sql.model.vo.collection.DatabaseVO;
-import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
 import com.nctigba.observability.sql.service.CollectionItem;
+import com.nctigba.observability.sql.service.DataStoreService;
 import com.nctigba.observability.sql.service.DiagnosisPointService;
 import com.nctigba.observability.sql.service.impl.collection.table.SlowSqlItem;
-import com.nctigba.observability.sql.service.DataStoreService;
 import com.nctigba.observability.sql.util.LocaleStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -84,7 +84,11 @@ public class CurrentSlowSql implements DiagnosisPointService<Object> {
         if (map.isEmpty()) {
             throw new HisDiagnosisException("fetch threshold data failed!");
         }
-        List<?> list = (List<?>) dataStoreService.getData(item).getCollectionData();
+        List<?> list = new ArrayList<>();
+        Object obj = dataStoreService.getData(item).getCollectionData();
+        if (obj instanceof ArrayList) {
+            list = (List<?>) obj;
+        }
         List<DatabaseVO> databaseVOList = new ArrayList<>();
         list.forEach(data -> {
             if (data instanceof DatabaseVO) {
@@ -92,8 +96,14 @@ public class CurrentSlowSql implements DiagnosisPointService<Object> {
             }
         });
         AnalysisDTO analysisDTO = new AnalysisDTO();
-        if (!CollectionUtils.isEmpty(databaseVOList) && databaseVOList.get(0).getValue().size() > Integer.parseInt(
-                map.get(ThresholdConstants.SQL_NUM))) {
+        int sqlNum = 0;
+        if (!CollectionUtils.isEmpty(databaseVOList) && databaseVOList.get(0).getValue().size() > 0) {
+            Object objResult = databaseVOList.get(0).getValue().get(0);
+            if (objResult instanceof ArrayList) {
+                sqlNum = ((ArrayList<?>) objResult).size();
+            }
+        }
+        if (sqlNum > Integer.parseInt(map.get(ThresholdConstants.SQL_NUM))) {
             analysisDTO.setIsHint(DiagnosisResultDO.ResultState.SUGGESTIONS);
         } else {
             analysisDTO.setIsHint(DiagnosisResultDO.ResultState.NO_ADVICE);

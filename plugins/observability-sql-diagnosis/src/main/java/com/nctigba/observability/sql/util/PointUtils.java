@@ -26,8 +26,8 @@ package com.nctigba.observability.sql.util;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constant.PrometheusConstants;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.HisThresholdMapper;
 import com.nctigba.observability.sql.model.dto.point.AspAnalysisDTO;
 import com.nctigba.observability.sql.model.entity.DiagnosisThresholdDO;
@@ -338,7 +338,7 @@ public class PointUtils {
     /**
      * Get table data
      *
-     * @param list data
+     * @param list      data
      * @param chartName Chart name
      * @return List<ShowData>
      */
@@ -352,21 +352,23 @@ public class PointUtils {
         }
         List<TableShowDataColumnVO> columnList = new ArrayList<>();
         List<Map<String, Object>> dataList = new ArrayList<>();
-        List<?> resultData = (List<?>) databaseVO.getValue().get(0);
-        resultData.forEach(f -> {
-            Map<String, Object> hashMap = new HashMap<>();
-            Map<String, String> map = (Map<String, String>) f;
-            for (String key : map.keySet()) {
-                TableShowDataColumnVO columnVO = new TableShowDataColumnVO();
-                columnVO.setKey(key);
-                columnVO.setName(key);
-                if (!columnList.contains(columnVO)) {
-                    columnList.add(columnVO);
+        if (databaseVO.getValue() != null) {
+            List<?> resultData = (List<?>) databaseVO.getValue().get(0);
+            resultData.forEach(f -> {
+                Map<String, Object> hashMap = new HashMap<>();
+                Map<String, String> map = (Map<String, String>) f;
+                for (String key : map.keySet()) {
+                    TableShowDataColumnVO columnVO = new TableShowDataColumnVO();
+                    columnVO.setKey(key);
+                    columnVO.setName(key);
+                    if (!columnList.contains(columnVO)) {
+                        columnList.add(columnVO);
+                    }
+                    hashMap.put(key, map.get(key));
                 }
-                hashMap.put(key, map.get(key));
-            }
-            dataList.add(hashMap);
-        });
+                dataList.add(hashMap);
+            });
+        }
         TableShowDataVO data = new TableShowDataVO();
         data.setDataName(chartName);
         data.setData(dataList);
@@ -380,16 +382,27 @@ public class PointUtils {
     /**
      * Generate table data,only supports one column
      *
-     * @param rsList data
+     * @param rsList     data
      * @param columnName column name
-     * @param dataName data name
+     * @param dataName   data name
      * @return TableShowDataVO
      */
     public TableShowDataVO generateTableData(Object rsList, String columnName, String dataName) {
         List<Map<String, Object>> dataList = new ArrayList<>();
-        Map<String, Object> hashMap = new HashMap<>();
-        hashMap.put(columnName, rsList);
-        dataList.add(hashMap);
+        if (rsList instanceof ArrayList) {
+            List<?> rsObject = (List<?>) rsList;
+            rsObject.forEach(obj -> {
+                if (obj instanceof String) {
+                    Map<String, Object> hashMap = new HashMap<>();
+                    hashMap.put(columnName, obj);
+                    dataList.add(hashMap);
+                }
+            });
+        } else {
+            Map<String, Object> hashMap = new HashMap<>();
+            hashMap.put(columnName, rsList);
+            dataList.add(hashMap);
+        }
         List<TableShowDataColumnVO> columnList = new ArrayList<>();
         TableShowDataColumnVO columnVO = new TableShowDataColumnVO();
         columnVO.setKey(columnName);
@@ -434,7 +447,7 @@ public class PointUtils {
     /**
      * Is it a type conversion
      *
-     * @param rightSide data
+     * @param rightSide  data
      * @param columnType data
      * @return List<String>
      */

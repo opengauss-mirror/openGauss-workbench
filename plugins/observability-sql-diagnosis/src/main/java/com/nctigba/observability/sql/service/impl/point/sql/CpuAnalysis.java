@@ -96,7 +96,12 @@ public class CpuAnalysis implements DiagnosisPointService<Object> {
                 f.addChild(taskResultDTO.getBearing(), taskResultDTO.toFrame());
             }
             analysisDTO.setPointData(f);
-            analysisDTO.setIsHint(DiagnosisResultDO.ResultState.SUGGESTIONS);
+            Object data = f.getData();
+            if (data instanceof LineChartVO && ((LineChartVO) data).getSeries().size() > 0) {
+                analysisDTO.setIsHint(DiagnosisResultDO.ResultState.SUGGESTIONS);
+            } else {
+                analysisDTO.setIsHint(DiagnosisResultDO.ResultState.NO_ADVICE);
+            }
         } else {
             analysisDTO.setIsHint(DiagnosisResultDO.ResultState.NO_ADVICE);
         }

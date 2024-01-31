@@ -49,7 +49,7 @@ import java.util.List;
  */
 @Service
 public class ExternalMergeDisk implements DiagnosisPointService<Object> {
-    private static final String THRESHOLD_VALUE = "external merge disk";
+    private static final String THRESHOLD_VALUE = "external merge Disk";
 
     @Autowired
     private ExplainItem item;
@@ -84,7 +84,7 @@ public class ExternalMergeDisk implements DiagnosisPointService<Object> {
         AnalysisDTO analysisDTO = new AnalysisDTO();
         analysisDTO.setIsHint(DiagnosisResultDO.ResultState.NO_ADVICE);
         analysisDTO.setPointType(DiagnosisResultDO.PointType.DIAGNOSIS);
-        if (sb.toString().equals(THRESHOLD_VALUE)) {
+        if (sb.toString().contains(THRESHOLD_VALUE)) {
             analysisDTO.setIsHint(DiagnosisResultDO.ResultState.SUGGESTIONS);
         }
         TableShowDataVO tableData = pointUtils.generateTableData(rsList, "explain", "explain");

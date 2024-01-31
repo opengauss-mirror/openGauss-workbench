@@ -23,9 +23,9 @@
 
 package com.nctigba.observability.sql.service.impl.point.sql;
 
-import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constant.SqlConstants;
 import com.nctigba.observability.sql.enums.OptionEnum;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
 import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
 import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
@@ -47,6 +47,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * SeqScan
@@ -101,7 +103,7 @@ public class SeqScan implements DiagnosisPointService<Object> {
         List<ShowData> tableList = new ArrayList<>();
         TableShowDataVO tableData = pointUtils.generateTableData(rsList, "explain", "explain");
         tableList.add(tableData);
-        if (!sb.toString().contains("Seq Scan on")) {
+        if (!sb.toString().contains("Seq Scan on") || sb.toString().contains("Partitioned Seq Scan on")) {
             AutoShowDataVO dataVO = new AutoShowDataVO();
             dataVO.setData(tableList);
             analysisDTO.setPointData(dataVO);
@@ -135,12 +137,10 @@ public class SeqScan implements DiagnosisPointService<Object> {
                     isHint = true;
                     suggest.append(column).append(" index is lose efficacy; ");
                 }
-                for (int i = 0; i < rsList.size(); i++) {
-                    if (rsList.get(i).contains("Partitioned Seq Scan on" + column) && rsList.get(i + 1).contains(
-                            "like")) {
-                        isHint = true;
-                        suggest.append(column).append(" has like; ");
-                    }
+                boolean isHasArithmetic = isHasArithmetic(rsList, column);
+                if (isHasArithmetic) {
+                    isHint = true;
+                    suggest.append(column).append(" has logical operation; ");
                 }
                 String columnType = rs.getString(7);
                 boolean isExists = conditions.stream().anyMatch(f -> {
@@ -170,6 +170,23 @@ public class SeqScan implements DiagnosisPointService<Object> {
             throw new HisDiagnosisException("execute sql failed!");
         }
         return isHint;
+    }
+
+    private boolean isHasArithmetic(List<String> rsList, String column) {
+        for (int i = 0; i < rsList.size(); i++) {
+            String explain = rsList.get(i);
+            boolean isHasOperator = explain.contains("Seq Scan on");
+            if (isHasOperator && i + 1 < rsList.size()) {
+                String pattern = "(?=.*Filter:)(?=.*[<~>])";
+                Pattern p = Pattern.compile(pattern);
+                Matcher m = p.matcher(rsList.get(i + 1));
+                boolean isHasLike = m.find();
+                if (isHasLike && rsList.get(i + 1).contains(column)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override

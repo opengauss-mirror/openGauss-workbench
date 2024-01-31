@@ -53,9 +53,9 @@ public abstract class DatabaseCollectionItem implements CollectionItem<Object> {
         HashMap<String, String> map = new HashMap<>();
         List<?> thresholdValue = task.getThresholds();
         for (Object ob : thresholdValue) {
-            if (ob instanceof LinkedHashMap) {
-                LinkedHashMap<String, String> hashMap = (LinkedHashMap<String, String>) ob;
-                map.put(hashMap.get("threshold"), hashMap.get("thresholdValue"));
+            if (ob instanceof DiagnosisThresholdDO) {
+                DiagnosisThresholdDO thresholdDO = (DiagnosisThresholdDO) ob;
+                map.put(thresholdDO.getThreshold(), thresholdDO.getThresholdValue());
             }
         }
         String during = map.get(ThresholdConstants.DURING);

@@ -59,10 +59,6 @@ values(9,'CPU','waitEventNum','{{i18n,history.threshold.waitEventNum.title}}','1
        '{{i18n,history.threshold.waitEventNum.detail}}','9','history');
 insert into his_diagnosis_threshold_info(
     id,threshold_type,threshold,threshold_name,threshold_value,threshold_unit,threshold_detail,sort_no,diagnosis_type)
-values(10,'IO','diskUtilization','{{i18n,history.threshold.diskUtilization.title}}','50','%',
-       '{{i18n,history.threshold.diskUtilization.detail}}','10','history');
-insert into his_diagnosis_threshold_info(
-    id,threshold_type,threshold,threshold_name,threshold_value,threshold_unit,threshold_detail,sort_no,diagnosis_type)
 values(11,'CPU','sysCpu','{{i18n,sql.threshold.sysCpu.title}}','50','%',
        '{{i18n,sql.threshold.sysCpu.detail}}','1','sql');
 insert into his_diagnosis_threshold_info(

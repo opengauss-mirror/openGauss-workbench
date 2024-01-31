@@ -28,8 +28,8 @@ CREATE TABLE IF NOT EXISTS his_diagnosis_task_info (
     db_name TEXT,
     task_name TEXT,
     sql_id TEXT,
-    sql TEXT,
-    topology_map TEXT,
+    sql CLOB,
+    topology_map CLOB,
     pid INTEGER,
     debug_query_id BIGINT,
     session_id BIGINT,
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS his_diagnosis_task_info (
     task_end_time DATETIME,
     state TEXT,
     span TEXT,
-    remarks TEXT,
+    remarks CLOB,
     conf TEXT,
     threshold CLOB,
     task_type TEXT,
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS his_diagnosis_result_info (
     point_title TEXT,
     point_suggestion TEXT,
     is_hint TEXT,
-    point_data TEXT,
+    point_data CLOB,
     point_detail TEXT,
     point_state TEXT,
     diagnosis_type TEXT,
@@ -92,11 +92,11 @@ CREATE TABLE IF NOT EXISTS param_info (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     paramType TEXT,
     paramName TEXT,
-    paramDetail TEXT,
+    paramDetail CLOB,
     suggestValue TEXT,
     defaultValue TEXT,
     unit TEXT,
-    suggestExplain TEXT,
+    suggestExplain CLOB,
     diagnosisRule TEXT
 );
 
@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS diagnosis_resource (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     taskid INTEGER,
 	grabType TEXT,
-	f BLOB
+	f CLOB
 );
 
 CREATE TABLE IF NOT EXISTS dictionary_config (

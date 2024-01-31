@@ -82,6 +82,7 @@ public class SqlExecutor {
                             sessionid = rs.getLong(1);
                             task.setSessionId(sessionid);
                             task.addRemarks("sessionId:" + sessionid);
+                            mapper.updateById(task);
                             break;
                         }
                     }

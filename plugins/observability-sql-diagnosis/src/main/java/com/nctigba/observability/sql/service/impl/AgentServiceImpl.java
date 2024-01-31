@@ -34,6 +34,7 @@ import com.nctigba.observability.sql.util.SshSessionUtils;
 import com.nctigba.observability.sql.util.SshSessionUtils.command;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
+import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -96,6 +97,11 @@ public class AgentServiceImpl extends AbstractInstaller {
             env = new NctigbaEnvDO().setHostid(hostId).setNodeid(nodeId).setPort(port).setUsername(AGENT_USER)
                     .setType(NctigbaEnvDO.envType.AGENT);
             try (var session = connect(env, rootPassword);) {
+                String message = session.execute(
+                        "netstat -tuln | grep -q " + port + " && echo \"true\" || echo \"false\"");
+                if (message.contains("true")) {
+                    throw new CustomException("port is exists");
+                }
                 curr = nextStep(wsSession, steps, curr);
                 session.execute("mkdir -p " + path);
                 if (!session.test("unzip -v")) {
