@@ -65,7 +65,7 @@
         validate-trigger="blur"
       >
         <a-input-number
-          v-model.trim="data.port"
+          v-model="data.port"
           :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3j300')"
           :min="0"
           :max="65535"
