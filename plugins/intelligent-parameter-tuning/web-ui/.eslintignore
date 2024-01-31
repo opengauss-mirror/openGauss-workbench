@@ -1,0 +1,6 @@
+# Ignore syntax checking for files of type js in the public directory
+public/*.js
+# Ignore syntax checking for files in the src directory
+src/assets
+# Ignore syntax checking for font files in the modeling directory
+src/views/modeling/style

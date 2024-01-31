@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.tun.mapper.TrainingProgressMapper">
+    <resultMap id="TrainingProgressResultMap" type="org.opengauss.tun.domain.TrainingProgress">
+        <id column="progress_id" property="progressId"/>
+        <result column="training_id" property="trainingId"/>
+        <result column="tuning_round" property="tuningRound"/>
+        <result column="parameter_type" property="parameterType"/>
+        <result column="running_time" property="runningTime"/>
+        <result column="training_parameter" property="trainingParameter"/>
+        <result column="tps" property="tps"/>
+    </resultMap>
+
+    <select id="selectByTrainingId" resultMap="TrainingProgressResultMap">
+        SELECT progress_id,
+               training_id,
+               tuning_round,
+               parameter_type,
+               running_time,
+               training_parameter,
+               tps
+        FROM training_progress
+        WHERE training_id = #{trainingId}
+    </select>
+
+    <select id="selectMaxTpsByTrainingId" resultMap="TrainingProgressResultMap">
+        SELECT progress_id,
+               training_id,
+               tuning_round,
+               parameter_type,
+               running_time,
+               training_parameter,
+               CAST(tps AS REAL) AS tps
+        FROM training_progress
+        WHERE training_id = #{trainingId}
+        ORDER BY tps DESC LIMIT 1
+    </select>
+
+    <select id="selectInitialTpsRecord" resultMap="TrainingProgressResultMap">
+        SELECT progress_id,
+               training_id,
+               tuning_round,
+               parameter_type,
+               running_time,
+               training_parameter,
+               tps
+        FROM training_progress
+        WHERE training_id = #{trainingId}
+          and parameter_type = #{parameterType}
+    </select>
+
+    <select id="selectCountByTrainingId" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM training_progress WHERE training_id = #{id}
+    </select>
+
+</mapper>

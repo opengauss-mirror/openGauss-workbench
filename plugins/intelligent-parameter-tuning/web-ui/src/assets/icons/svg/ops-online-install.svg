@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64px" height="64px" viewBox="0 0 64 64" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>在线-新</title>
+    <g id="控件" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="在线-新">
+            <line x1="26" y1="22.34375" x2="31.625" y2="22.34375" id="直线-2" stroke="#4E5969" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></line>
+            <line x1="26" y1="33.59375" x2="31.625" y2="33.59375" id="直线-2备份-4" stroke="#4E5969" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></line>
+            <g id="编组-23" transform="translate(15.500000, 26.750000)" stroke="#4E5969" stroke-linecap="square" stroke-width="1.2">
+                <line x1="0.375" y1="0" x2="0.375" y2="2.625" id="直线-6"></line>
+                <line x1="15.375" y1="0" x2="15.375" y2="2.625" id="直线-6备份"></line>
+                <line x1="0.375" y1="11.25" x2="0.375" y2="13.875" id="直线-6备份-3"></line>
+            </g>
+            <rect id="矩形备份-64" stroke="#4E5969" stroke-width="1.2" x="11.6" y="18.5375" width="23.55" height="7.8" rx="3"></rect>
+            <rect id="矩形备份-65" stroke="#4E5969" stroke-width="1.2" x="11.6" y="29.7875" width="23.55" height="7.8" rx="3"></rect>
+            <rect id="矩形备份-73" stroke="#4E5969" stroke-width="1.2" x="11.6" y="41.0375" width="23.55" height="7.8" rx="3"></rect>
+            <polyline id="直线-2备份-9" stroke="#4E5969" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" points="38.8866298 34.7156737 41.6747744 38.0052111 42.0985035 37.5936015 48.4475651 31.4261364"></polyline>
+            <line x1="26" y1="44.84375" x2="31.625" y2="44.84375" id="直线-2备份-5" stroke="#4E5969" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></line>
+            <rect id="矩形" fill="#4E5969" x="14.2386364" y="21.3125" width="1.77272727" height="1.77272727" rx="0.886363636"></rect>
+            <rect id="矩形备份-70" fill="#4E5969" x="14.2386364" y="32.4261364" width="1.77272727" height="1.77272727" rx="0.886363636"></rect>
+            <rect id="矩形备份-77" fill="#4E5969" x="14.2386364" y="44.2897727" width="1.77272727" height="1.77272727" rx="0.886363636"></rect>
+            <path d="M32.1875,26.4995108 L38.7112249,26.4995108 L42.4236568,23.9856051 L51.6963629,23.9856051 C52.5198952,23.9856051 53.1875,24.6103241 53.1875,25.3809539 L53.1875,43.2796512 C53.1875,44.050281 52.5198952,44.675 51.6963629,44.675 L35.0883871,44.675 M30.3125,40.925 L30.3125,40.925 L30.3125,37.925" id="形状" stroke="#4E5969" stroke-width="1.2"></path>
+            <polyline id="路径" stroke="#4E5969" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" points="53.2960463 17.3054993 39.9768499 17.3054993 40.1442606 19.3232227 35.9375 15.1616114 39.9768499 11 39.9768499 12.8054993 53.2960463 12.8054993"></polyline>
+            <polyline id="路径备份-9" stroke="#4E5969" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" transform="translate(44.523023, 52.661611) scale(-1, 1) translate(-44.523023, -52.661611) " points="53.2960463 54.8054993 39.7893499 54.8054993 39.9567606 56.8232227 35.75 52.6616114 39.7893499 48.5 39.7893499 50.3054993 53.2960463 50.3054993"></polyline>
+        </g>
+    </g>
+</svg>

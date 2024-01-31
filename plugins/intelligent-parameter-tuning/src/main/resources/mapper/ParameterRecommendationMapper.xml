@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.tun.mapper.ParameterRecommendationMapper">
+    <resultMap id="parameterRecommendationResult" type="org.opengauss.tun.domain.ParameterRecommendation">
+        <id property="parameterId" column="parameter_id" />
+        <result property="trainingId" column="training_id" />
+        <result property="clusterName" column="cluster_name" />
+        <result property="db" column="db" />
+        <result property="startTime" column="start_time" />
+        <result property="initialTps" column="initial_tps" />
+        <result property="optimalTps" column="optimal_tps" />
+        <result property="initialParameterValues" column="initial_parameter_values" />
+        <result property="adviseParameterValues" column="advise_parameter_values" />
+        <result property="performanceImprovement" column="performance_improvement" />
+    </resultMap>
+
+    <select id="selectRecommendation" parameterType="org.opengauss.tun.domain.ParameterRecommendation"  resultMap="parameterRecommendationResult">
+        SELECT parameter_id, training_id, cluster_name, db, start_time, initial_tps,
+        optimal_tps, initial_parameter_values, advise_parameter_values, performance_improvement
+        FROM parameter_recommendation
+        WHERE 1=1
+        <if test="clusterName != null and clusterName != ''">
+            AND cluster_name = #{clusterName}
+        </if>
+        <if test="db != null and db != ''">
+            AND db = #{db}
+        </if>
+        <if test="startTime != null and startTime != '' and endTime != null and endTime != ''">
+            AND start_time &gt;= #{startTime} AND start_time &lt;= #{endTime}
+        </if>
+        ORDER BY start_time DESC
+    </select>
+
+    <select id="selectClusterNames" resultType="java.lang.String">
+        SELECT DISTINCT cluster_name FROM parameter_recommendation;
+    </select>
+
+    <select id="selectdbs" resultType="java.lang.String">
+        SELECT DISTINCT db FROM parameter_recommendation;
+    </select>
+</mapper>

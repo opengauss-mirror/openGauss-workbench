@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.tun.mapper.TuningLogMapper">
+    <!-- 定义ResultMap -->
+    <resultMap id="TuningLogResultMap" type="TuningLog">
+        <id property="logId" column="log_id"/>
+        <result property="trainingId" column="training_id"/>
+        <result property="clusterName" column="cluster_name"/>
+        <result property="startTime" column="start_time"/>
+        <result property="tuningStartTime" column="tuning_start_time"/>
+        <result property="dbStartTime" column="db_start_time"/>
+        <result property="pressureStartTime" column="pressure_start_time"/>
+        <result property="dbSize" column="db_size"/>
+        <result property="pressureSize" column="pressure_size"/>
+        <result property="tuningSize" column="tuning_size"/>
+        <result property="dbPath" column="db_path"/>
+        <result property="pressurePath" column="pressure_path"/>
+        <result property="tuningPath" column="tuning_path"/>
+    </resultMap>
+
+    <!-- 查询语句 -->
+    <select id="selectTuningLogsByTrainingId" resultMap="TuningLogResultMap">
+        SELECT training_id,
+               log_id,
+               cluster_name,
+               start_time,
+               tuning_start_time,
+               db_start_time,
+               pressure_start_time,
+               db_size,
+               pressure_size,
+               tuning_size,
+               db_path,
+               pressure_path,
+               tuning_path
+        FROM tuning_log
+        WHERE training_id = #{trainingId, jdbcType=VARCHAR}
+    </select>
+
+    <select id="selectClusterNames" resultType="java.lang.String">
+        SELECT DISTINCT cluster_name
+        FROM tuning_log;
+    </select>
+
+
+    <select id="selectAllLog" resultMap="TuningLogResultMap">
+        SELECT
+        training_id,
+        log_id,
+        cluster_name,
+        start_time,
+        tuning_start_time,
+        db_start_time,
+        pressure_start_time,
+        db_size,
+        pressure_size,
+        tuning_size,
+        db_path,
+        pressure_path,
+        tuning_path
+        FROM tuning_log
+        WHERE 1=1
+        <if test="clusterName != null and clusterName != '' ">
+            AND cluster_name = #{clusterName}
+        </if>
+        <if test="startTime != null and startTime != '' and endTime != null and endTime != ''">
+            AND start_time &gt;= #{startTime} AND start_time &lt;= #{endTime}
+        </if>
+        ORDER BY start_time DESC
+    </select>
+</mapper>
