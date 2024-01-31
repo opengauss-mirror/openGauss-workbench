@@ -53,9 +53,9 @@ logging:
     root: INFO
 
 postgresql:
-  prefix: jdbc:postgresql://
+  prefix: jdbc:opengauss://
   suffix: /postgres
-  driver: org.postgresql.Driver
+  driver: org.opengauss.Driver
 mysql:
   prefix: jdbc:mysql://
   suffix: ?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8

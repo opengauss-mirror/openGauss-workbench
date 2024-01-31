@@ -49,6 +49,11 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.opengauss</groupId>
+            <artifactId>opengauss-jdbc</artifactId>
+        </dependency>
+
         <!--导入校验框架实现技术-->
         <dependency>
             <groupId>org.hibernate</groupId>
@@ -58,11 +63,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>42.3.3</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
