@@ -98,7 +98,7 @@
         validate-trigger="blur"
       >
         <a-input-number
-          v-model.trim="form.cmPort"
+          v-model="form.cmPort"
           :placeholder="$t('enterprise.NodeConfig.5mpme7w6bko0')"
           :min="0"
           :max="65535"

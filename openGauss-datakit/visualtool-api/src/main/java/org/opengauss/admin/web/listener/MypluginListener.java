@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
@@ -88,14 +87,6 @@ public class MypluginListener implements PluginListener {
         StringWriter errorsWriter = new StringWriter();
         throwable.printStackTrace(new PrintWriter(errorsWriter));
         log.error("plugin[{}] start fail. {}", pluginInfo.getPluginId(), errorsWriter.toString());
-        if (sysPluginService.getByPluginId(pluginInfo.getPluginId()) == null) {
-            try{
-                File file = new File(pluginInfo.getPluginDescriptor().getPluginPath());
-                if (file.exists()) {
-                    file.delete();
-                }
-            } catch (Exception e){}
-        }
     }
 
     @Override
