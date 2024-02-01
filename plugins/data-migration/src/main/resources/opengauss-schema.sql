@@ -133,6 +133,16 @@ THEN
         CACHE 1;
 END IF;
 
+IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_tb_migration_tool_portal_download_info_id'' )
+THEN
+CREATE SEQUENCE "public"."sq_tb_migration_tool_portal_download_info_id"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+END IF;
+
 RETURN 0;
 END;'
 LANGUAGE plpgsql;
@@ -923,3 +933,58 @@ SET "param_key"     = 'type_override', "param_value"   = '0',
     "param_extends" = '[{"subKeyPrefix": "override_type","paramType": 1,"paramValue":"","desc": "全量迁移类型转换mysql数据类型", "paramRules": "[1, 64]"}, {"subKeyPrefix":"override_to","paramType": 1,"paramValue":"","desc": "全量迁移类型转换opengauss数据种类", "paramRules": "[1, 64]"},{"subKeyPrefix":"override_tables","paramType": 1,"paramValue":"''*''","desc": "全量迁移类型转换适用的表", "paramRules": "[1, 512]"}]',
     "param_rules" = '[0,9]'
 WHERE "id" = 31;
+
+-- ----------------------------
+-- Table structure for tb_migration_tool_portal_download_info
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."tb_migration_tool_portal_download_info" (
+    "id" int8 NOT NULL DEFAULT nextval('sq_tb_migration_tool_portal_download_info_id'::regclass),
+    "host_os" varchar(255) NOT NULL,
+    "host_os_version" varchar(255) NOT NULL,
+    "host_cpu_arch" varchar(255) NOT NULL,
+    "portal_pkg_download_url" text NOT NULL,
+    "portal_pkg_name" text NOT NULL,
+    "portal_jar_name" text NOT NULL,
+    CONSTRAINT "tb_migration_tool_portal_download_info_pkey" PRIMARY KEY ("id")
+    );
+
+COMMENT ON COLUMN "public"."tb_migration_tool_portal_download_info"."id" IS 'portal下载信息主键';
+COMMENT ON COLUMN "public"."tb_migration_tool_portal_download_info"."host_os" IS '主机系统类型';
+COMMENT ON COLUMN "public"."tb_migration_tool_portal_download_info"."host_os_version" IS '主机系统版本';
+COMMENT ON COLUMN "public"."tb_migration_tool_portal_download_info"."host_cpu_arch" IS '处理器架构';
+COMMENT ON COLUMN "public"."tb_migration_tool_portal_download_info"."portal_pkg_download_url" IS 'portal安装包下载地址';
+COMMENT ON COLUMN "public"."tb_migration_tool_portal_download_info"."portal_pkg_name" IS 'portal安装包名';
+COMMENT ON COLUMN "public"."tb_migration_tool_portal_download_info"."portal_jar_name" IS 'portal jar包名';
+
+-- ----------------------------
+-- Records of tb_migration_tool_portal_download_info
+-- ----------------------------
+
+CREATE OR REPLACE FUNCTION init_tb_migration_tool_portal_download_info_data_fuc(pkg_version varchar(255)[]) RETURNS void AS $$
+DECLARE
+host_os_info varchar(255)[][] := ARRAY[['centos', '7'],
+                                     ['openEuler', '20.03'],
+                                     ['openEuler', '20.03'],
+                                     ['openEuler', '22.03'],
+                                     ['openEuler', '22.03']];
+	host_cpu_arch varchar(255)[] := ARRAY['x86_64', 'x86_64', 'aarch64', 'x86_64', 'aarch64'];
+	row_i integer;
+	i integer;
+	num integer := 1;
+BEGIN
+    FOR i IN 1..array_length(pkg_version, 1) LOOP
+        FOR row_i IN 1..array_length(host_os_info, 1) LOOP
+            INSERT INTO "public"."tb_migration_tool_portal_download_info" ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
+                VALUES (num, host_os_info[row_i][1], host_os_info[row_i][2], host_cpu_arch[row_i], concat('https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/', host_os_info[row_i][1], host_os_info[row_i][2], '/'), concat('PortalControl-', pkg_version[i], '-', host_cpu_arch[row_i], '.tar.gz'), 'portalControl-1.0-SNAPSHOT-exec.jar')
+                ON DUPLICATE KEY UPDATE NOTHING;
+            num := num + 1;
+        END LOOP;
+    END LOOP;
+END;
+$$
+LANGUAGE plpgsql;
+
+SELECT init_tb_migration_tool_portal_download_info_data_fuc(ARRAY['6.0.0', '5.1.1', '5.1.0']);
+
+DROP FUNCTION init_tb_migration_tool_portal_download_info_data_fuc;

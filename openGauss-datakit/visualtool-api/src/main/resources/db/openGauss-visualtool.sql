@@ -1641,3 +1641,18 @@ COMMENT ON COLUMN "public"."sys_plugin_logo"."plugin_id" IS '插件ID';
 COMMENT ON COLUMN "public"."sys_plugin_logo"."logo_path" IS 'logo路径';
 
 update "public"."sys_menu" set menu_name = '服务器管理', menu_en_name = 'server', order_num = 2 where menu_id = 203;
+
+CREATE OR REPLACE FUNCTION add_host_field_func() RETURNS integer AS 'BEGIN
+    IF
+        ( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host'' AND COLUMN_NAME = ''os_version'' ) = 0
+    THEN
+        ALTER TABLE ops_host ADD COLUMN os_version varchar(255);
+        COMMENT ON COLUMN "public"."ops_host"."os_version" IS ''操作系统版本'';
+    END IF;
+    RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_host_field_func();
+
+DROP FUNCTION add_host_field_func;

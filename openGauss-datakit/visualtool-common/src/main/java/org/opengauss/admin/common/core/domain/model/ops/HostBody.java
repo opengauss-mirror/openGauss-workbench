@@ -28,6 +28,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.core.vo.HostInfoVo;
 import org.opengauss.admin.common.utils.ops.JschUtil;
 
 import javax.validation.constraints.NotEmpty;
@@ -55,15 +56,16 @@ public class HostBody {
     private List<String> tags;
     private String username;
 
-    public OpsHostEntity toHostEntity(String hostName,String os,String cpuArch) {
+    public OpsHostEntity toHostEntity(HostInfoVo hostInfoVo) {
         OpsHostEntity hostEntity = new OpsHostEntity();
         hostEntity.setPublicIp(publicIp);
         hostEntity.setPrivateIp(privateIp);
         hostEntity.setPort(port);
-        hostEntity.setHostname(hostName);
+        hostEntity.setHostname(hostInfoVo.getHostname());
         hostEntity.setRemark(remark);
-        hostEntity.setOs(os);
-        hostEntity.setCpuArch(cpuArch);
+        hostEntity.setOs(hostInfoVo.getOs());
+        hostEntity.setOsVersion(hostInfoVo.getOsVersion());
+        hostEntity.setCpuArch(hostInfoVo.getCpuArch());
         hostEntity.setName(name);
         return hostEntity;
     }
