@@ -151,10 +151,12 @@ public interface DbConfigMapper {
      * @return List<Map<String,Object>>
      */
     @Select("select t2.table_catalog datname,t1.schemaname, "
-        + " t1.relname tableName, pg_relation_size(t1.relid) / 1024 / 1024 as tableSize from pg_stat_user_tables t1 "
-        + "left join information_schema.tables t2 on "
-        + " t1.relname = t2.table_name "
-        + " and t1.schemaname = t2.table_schema order by pg_relation_size(t1.relid) desc limit 10")
+        + "         t1.tablename tableName, pg_relation_size(t3.oid) / 1024 / 1024 as tableSize from pg_tables t1 "
+        + "        left join information_schema.tables t2 on "
+        + "         t1.tablename = t2.table_name "
+        + "         and t1.schemaname = t2.table_schema "
+        + "        left join pg_class t3 on t1.tablename = t3.relname "
+        + "         order by pg_relation_size(t3.oid) desc limit 10")
     List<Map<String, Object>> tablesTop10();
 
     /**
@@ -162,10 +164,22 @@ public interface DbConfigMapper {
      *
      * @return List<Map<String,Object>>
      */
-    @Select("select t2.table_catalog datname,t1.schemaname,t1.relname tableName,t1.indexrelname indexName,"
-        + "pg_relation_size(t1.relid)/1024/1024 as indexSize"
-        + " from pg_stat_user_indexes t1 left join information_schema.tables t2 on t1.relname = t2.table_name"
-        + " and t1.schemaname = t2.table_schema order by pg_relation_size(relid) desc limit 10")
+    @Select("select "
+        + "t2.table_catalog datname, "
+        + "t1.schemaname, "
+        + "t1.tablename tableName, "
+        + "t1.indexname indexName, "
+        + "pg_relation_size(t3.oid)/ 1024 / 1024 as indexSize "
+        + "from "
+        + "pg_indexes t1 "
+        + "left join information_schema.tables t2 on "
+        + "t1.tablename = t2.table_name "
+        + "and t1.schemaname = t2.table_schema "
+        + "left join pg_class t3 on "
+        + "t1.indexname = t3.relname "
+        + "order by "
+        + "pg_relation_size(t3.oid) desc "
+        + "limit 10")
     List<Map<String, Object>> indexsTop10();
 
     /**
