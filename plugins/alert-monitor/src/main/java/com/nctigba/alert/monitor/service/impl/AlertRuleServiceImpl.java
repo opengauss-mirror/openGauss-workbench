@@ -238,7 +238,8 @@ public class AlertRuleServiceImpl extends ServiceImpl<AlertRuleMapper, AlertRule
     public void delRuleById(Long id) {
         List<AlertTemplateRuleDO> list = templateRuleService.list(
             Wrappers.<AlertTemplateRuleDO>lambdaQuery().eq(AlertTemplateRuleDO::getIsDeleted,
-                CommonConstants.IS_NOT_DELETE).eq(AlertTemplateRuleDO::getRuleId, id));
+                CommonConstants.IS_NOT_DELETE).isNotNull(AlertTemplateRuleDO::getTemplateId)
+                .eq(AlertTemplateRuleDO::getRuleId, id));
         if (CollectionUtil.isNotEmpty(list)) {
             throw new ServiceException(MessageSourceUtils.get("ruleIsUsed"));
         }

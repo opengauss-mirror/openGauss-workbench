@@ -47,6 +47,7 @@ import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
 import com.nctigba.alert.monitor.service.CommunicationService;
 import com.nctigba.alert.monitor.service.NotifyTemplateService;
 import com.nctigba.alert.monitor.service.NotifyWayService;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -77,6 +78,7 @@ import java.util.stream.Collectors;
  * @since 2023/11/24 09:44
  */
 @Component
+@Slf4j
 public class NotifyListener implements ApplicationListener<NotifyEvent> {
     private static volatile Integer status = 0;
 
@@ -110,6 +112,13 @@ public class NotifyListener implements ApplicationListener<NotifyEvent> {
                 return;
             }
             status = 1;
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                log.error(e.getMessage());
+                status = 0;
+                throw new ServiceException(e.getMessage());
+            }
         }
         try {
             while (recordDetailService.unnotifyCount() > 0) {
@@ -289,7 +298,7 @@ public class NotifyListener implements ApplicationListener<NotifyEvent> {
         }
         Set<Long> templateRuleIds = notifyRecordDetails.stream().map(item -> item.getTemplateRuleId()).collect(
             Collectors.toSet());
-        List<AlertTemplateRuleDO> templateRules = templateRuleService.getBaseMapper().selectBatchIds(templateRuleIds);
+        List<AlertTemplateRuleDO> templateRules = templateRuleService.listByIds(templateRuleIds);
         // filterByRule
         notifyRecordDetails = notifyRecordDetails.stream()
             .filter(item -> {
@@ -300,7 +309,9 @@ public class NotifyListener implements ApplicationListener<NotifyEvent> {
                 return isFilter;
             }).collect(Collectors.toList());
 
-        notifyHandle(notifyRecordDetails);
+        if (CollectionUtil.isNotEmpty(notifyRecordDetails)) {
+            notifyHandle(notifyRecordDetails);
+        }
 
         notifyRecordDetails.forEach(item -> item.setNotifyStatus(CommonConstants.SEND));
         recordDetailService.saveOrUpdateBatch(notifyRecordDetails);
@@ -323,21 +334,16 @@ public class NotifyListener implements ApplicationListener<NotifyEvent> {
         for (CommunicationService communicationService : communicationServices) {
             communicationService.send(notifyMessageDOS);
         }
-        List<AlertRecordDO> recordList = new ArrayList<>();
-        for (NotifyMessageDO notifyMessageDO : notifyMessageDOS) {
-            if (!notifyMessageDO.getStatus().equals(1)) {
-                continue;
-            }
-            List<String> recordIds = Arrays.asList(notifyMessageDO.getRecordIds().split(","));
-            List<AlertRecordDO> records = recordService.getBaseMapper().selectBatchIds(recordIds).stream().map(item -> {
-                Integer sendCount = item.getSendCount() != null ? item.getSendCount() : 0;
-                item.setSendCount(sendCount + 1).setSendTime(item.getEndTime());
-                return item;
-            }).collect(Collectors.toList());
-            recordList.addAll(records);
-        }
-        if (CollectionUtil.isNotEmpty(recordList)) {
-            recordService.updateBatchById(recordList);
+        LocalDateTime now = LocalDateTime.now();
+        List<Long> recordIds = notifyRecordDetails
+            .stream().map(item -> item.getRecordId()).collect(Collectors.toList());
+        List<AlertRecordDO> records = recordService.listByIds(recordIds).stream().map(item -> {
+            Integer sendCount = item.getSendCount() != null ? item.getSendCount() : 0;
+            item.setSendCount(sendCount + 1).setSendTime(now);
+            return item;
+        }).collect(Collectors.toList());
+        if (CollectionUtil.isNotEmpty(records)) {
+            recordService.updateBatchById(records);
         }
     }
 }

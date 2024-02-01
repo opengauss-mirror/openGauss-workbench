@@ -100,7 +100,7 @@
         </div>
       </el-form-item>
       <el-form-item :label="$t('alertRule.ruleExpComb')" prop="ruleExpComb">
-        <span v-for="(item, index) in ruleExpComb" :key="item" style="margin: 0 5px">
+        <span v-for="(item, index) in ruleExpComb" style="margin: 0 5px">
           <el-select v-model="ruleExpComb[index]" v-if="index % 2 === 1" style="width: 60px;" :disabled="disabled">
             <el-option v-for="item0 in logicSymbolList" :key="item0" :value="item0" :label="$t(`alertRule.${item0}`)" />
           </el-select>
@@ -257,6 +257,7 @@
 
 <script setup lang='ts'>
 import "element-plus/es/components/message-box/style/index";
+import { nextTick } from 'vue';
 import { Delete, Plus } from "@element-plus/icons-vue";
 import { useRequest } from "vue-request";
 import request from "@/request";
@@ -264,6 +265,7 @@ import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 import { parseContent, getAlertContentParam } from "@/utils/commonUtil"
 import type { FormInstance, FormRules } from 'element-plus'
+import { cloneDeep } from "lodash";
 import { i18n } from '@/i18n'
 const { t } = useI18n();
 
@@ -421,18 +423,28 @@ const addItem = () => {
   ruleExpComb.value.push(ruleMark)
 }
 const delItem = (index: number) => {
+  let expOperate = []
+  for(let i = 0; i < parseInt(ruleExpComb.value.length / 2); i++) {
+    expOperate.push(ruleExpComb.value[2 * i + 1])
+  }
   formData.value.alertRuleItemList.splice(index, 1)
+  if (index === 0) {
+    expOperate.splice(index, 1)
+  } else {
+    expOperate.splice(index - 1, 1)
+  }
   for (let i = 0; i < formData.value.alertRuleItemList.length; i++) {
     formData.value.alertRuleItemList[i].ruleMark = String.fromCharCode('A'.charCodeAt(0) + i)
   }
   ruleMarkList.value = formData.value.alertRuleItemList.map((item: any) => item.ruleMark)
-  ruleExpComb.value = []
+  let ruleExpComb0 = []
   for (let i = 0; i < ruleMarkList.value.length; i++) {
-    ruleExpComb.value.push(ruleMarkList.value[i]);
+    ruleExpComb0.push(ruleMarkList.value[i]);
     if (i < ruleMarkList.value.length - 1) {
-      ruleExpComb.value.push("");
+      ruleExpComb0.push(expOperate[i]);
     }
   }
+  ruleExpComb.value = cloneDeep(ruleExpComb0)
 }
 const changeRuleExpName = (val: any, index: number) => {
   formData.value.alertRuleItemList[index].ruleItemExpSrcList = []
