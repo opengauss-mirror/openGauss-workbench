@@ -147,6 +147,9 @@
                     <p v-if="judgeKeyExist(record.statusDesc,'increment_param') === true || judgeKeyExist(record.statusDesc,'reverse_param') === true">{{ parselogParameter(record.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(record.statusDesc,'lower_param') === true">{{ parseLowerParameter(record.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(record.statusDesc,'disk_space') === true">{{ parseDiskSpace(record.statusDesc) }}</p>
+                    <p v-if="judgeKeyExist(record.statusDesc,'mysql_encryption') === true">{{ parseMysqlEncryption(record.statusDesc) }}</p>
+                    <p v-if="judgeKeyExist(record.statusDesc,'sql_compatibility') === true">{{ parseOpenGaussBDB(record.statusDesc) }}</p>
+                    <p v-if="judgeKeyExist(record.statusDesc,'replication_slots') === true">{{ parseReplicationNumber(record.statusDesc) }}</p>
                   </div>
                 </template>
               </a-popover>
@@ -166,8 +169,8 @@
                 <template #default>{{
                   $t('detail.index.5q09asiwkds0')
                 }}</template>
-              </a-button>             
-              <a-popconfirm 
+              </a-button>
+              <a-popconfirm
               :content="tooltipMap(record.checkDataLevelingAndIncrementFinish)" @ok="stopSubIncrease(record)">
               <a-button
                 v-if="
@@ -503,7 +506,7 @@ const judgeKeyExist = (content,key) => {
   var obj = JSON.parse(content)
   if(key in obj){
       result = true
-  } 
+  }
   return result
 }
 
@@ -551,14 +554,14 @@ const parseDatabasePermission = (content) => {
     }
     if(obj.full_permission.opengauss === 0){
         result = result + t('detail.index.5qtkk97a2e13')
-    }else if(obj.full_permission.opengauss === 1){ 
+    }else if(obj.full_permission.opengauss === 1){
         result = result + t('detail.index.5qtkk97a2e14')
     }else{
         result = result + t('detail.index.5qtkk97a2e15')
     }
   }
-  
-  if ("increment_permission" in obj) { 
+
+  if ("increment_permission" in obj) {
     console.log('obj.increment_permission', obj.increment_permission)
     if(obj.increment_permission.mysql === 0){
         result = result + t('detail.index.5qtkk97a2e16')
@@ -569,14 +572,14 @@ const parseDatabasePermission = (content) => {
     }
     if(obj.increment_permission.opengauss === 0){
         result = result + t('detail.index.5qtkk97a2e19')
-    }else if(obj.increment_permission.opengauss === 1){ 
+    }else if(obj.increment_permission.opengauss === 1){
         result = result + t('detail.index.5qtkk97a2e20')
     }else{
         result = result + t('detail.index.5qtkk97a2e21')
     }
   }
-  
-  if ("reverse_permission" in obj) { 
+
+  if ("reverse_permission" in obj) {
     console.log('content.reverse_permission', obj.reverse_permission)
     if(obj.reverse_permission.mysql === 0){
         result = result + t('detail.index.5qtkk97a2e22')
@@ -587,7 +590,7 @@ const parseDatabasePermission = (content) => {
     }
     if(obj.reverse_permission.opengauss === 0){
         result = result + t('detail.index.5qtkk97a2e25')
-    }else if(obj.reverse_permission.opengauss === 1){ 
+    }else if(obj.reverse_permission.opengauss === 1){
         result = result + t('detail.index.5qtkk97a2e26')
     }else{
         result = result + t('detail.index.5qtkk97a2e27')
@@ -617,7 +620,7 @@ const parselogParameter = (content) => {
       result = result + t('detail.index.5qtkk97a2e34')
     }
   }
- 
+
   return result
 }
 
@@ -643,6 +646,42 @@ const parseDiskSpace = (content) => {
     result = result + t('detail.index.5qtkk97a2e38') + obj.disk_space.disk_error.need + t('detail.index.5qtkk97a2e39') + obj.disk_space.disk_error.remain + t('detail.index.5qtkk97a2e35')
   }else{
     result = result + t('detail.index.5qtkk97a2e40')
+  }
+  return result
+}
+
+const parseMysqlEncryption = (content) => {
+  var obj = JSON.parse(content)
+  var result=t('detail.index.5qtkk97a2e46')
+  console.log('obj.mysql_encryption', obj.mysql_encryption)
+  if (obj.mysql_encryption.result === 0){
+    result = result + t('detail.index.5qtkk97a2e47')
+  } else if (obj.mysql_encryption.result === 1){
+    result = result + t('detail.index.5qtkk97a2e48') + obj.mysql_encryption.encryption + t('detail.index.5qtkk97a2e49') + obj.mysql_encryption.valid_encryption + t('detail.index.5qtkk97a2e35')
+  }
+  return result
+}
+
+const parseOpenGaussBDB = (content) => {
+  var obj = JSON.parse(content)
+  var result=t('detail.index.5qtkk97a2e50')
+  console.log('obj.sql_compatibility', obj.sql_compatibility)
+  if (obj.sql_compatibility.result === 0){
+    result = result + t('detail.index.5qtkk97a2e51')
+  } else if (obj.sql_compatibility.result === 1){
+    result = result + t('detail.index.5qtkk97a2e52') + obj.sql_compatibility.sql_compatibility + t('detail.index.5qtkk97a2e53') + obj.sql_compatibility.valid_sql_compatibility + t('detail.index.5qtkk97a2e35')
+  }
+  return result
+}
+
+const parseReplicationNumber = (content) => {
+  var obj = JSON.parse(content)
+  var result=t('detail.index.5qtkk97a2e54')
+  console.log('obj.replication_slots', obj.replication_slots)
+  if (obj.replication_slots.result === 0){
+    result = result + t('detail.index.5qtkk97a2e55')
+  } else if (obj.replication_slots.result === 1){
+    result = result + obj.replication_slots.replication_number + t('detail.index.5qtkk97a2e56')
   }
   return result
 }
