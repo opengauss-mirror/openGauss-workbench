@@ -99,11 +99,11 @@ public class NotifyWayServiceImpl extends ServiceImpl<NotifyWayMapper, NotifyWay
         List<AlertRuleDO> ruleList = ruleService.list(
             Wrappers.<AlertRuleDO>query().eq("is_deleted", CommonConstants.IS_NOT_DELETE).and(
                 wrapper -> wrapper.like("notify_way_ids", id + ",").or().like(
-                    "notify_way_ids", "," + id).or().eq("notify_way_ids", id)));
+                    "notify_way_ids", "," + id).or().eq("notify_way_ids", id + "")));
         List<AlertTemplateRuleDO> templateRuleList = templateRuleService.list(
             Wrappers.<AlertTemplateRuleDO>query().eq("is_deleted", CommonConstants.IS_NOT_DELETE).isNotNull(
                 "template_id").and(wrapper -> wrapper.like("notify_way_ids", id + ",").or().like(
-                    "notify_way_ids", "," + id).or().eq("notify_way_ids", id)));
+                    "notify_way_ids", "," + id).or().eq("notify_way_ids", id + "")));
         if (CollectionUtil.isNotEmpty(ruleList) || CollectionUtil.isNotEmpty(templateRuleList)) {
             throw new ServiceException(MessageSourceUtils.get("notifyWayIsUsed"));
         }

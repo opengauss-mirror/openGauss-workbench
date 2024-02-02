@@ -928,7 +928,7 @@ INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,l
 
 
  -- 2023-11-20
-update public.notify_way set email = '' where id = 1;
+update public.notify_way set email = '' where id = 1 and email = 'xxxx@xxx.com';
 
 delete from public.alert_rule where id = 11;
 delete from public.alert_rule_item where id in (11,21);
