@@ -86,7 +86,7 @@ watch(() => props.open, (v) => {
 
 const pathValidator = (value: any, cb: any) => {
   return new Promise(resolve => {
-    const reg = /^(\/[\u4e00-\u9fa5\w-]+)*(\/[\u4e00-\u9fa5\w-]+(\.\d+)?)*\/$/
+    const reg = /^(\/[\u4e00-\u9fa5\w-\\.]+)*\/$/
     const re = new RegExp(reg)
     if (re.test(value)) {
       checkUploadPath(value).then(res => {
