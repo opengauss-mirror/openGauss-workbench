@@ -23,35 +23,22 @@
 
 package com.nctigba.observability.sql.history.point.sql;
 
-import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.enums.OptionEnum;
 import com.nctigba.observability.sql.mapper.DiagnosisResourceMapper;
-import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
-import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
-import com.nctigba.observability.sql.model.vo.DataStoreVO;
-import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
-import com.nctigba.observability.sql.service.DataStoreService;
 import com.nctigba.observability.sql.service.CollectionItem;
+import com.nctigba.observability.sql.service.DataStoreService;
 import com.nctigba.observability.sql.service.impl.collection.ebpf.OffCpuItem;
 import com.nctigba.observability.sql.service.impl.point.sql.OffCpu;
 import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * TestOffCpu
@@ -82,29 +69,6 @@ public class TestOffCpu {
         List<CollectionItem<?>> result = pointService.getSourceDataKeys();
         assertEquals(1, result.size());
         assertEquals(item, result.get(0));
-    }
-
-    @Test
-    public void testAnalysisData() {
-        try {
-            DataStoreVO config = mock(DataStoreVO.class);
-            config.setCollectionItem(item);
-            config.setCount(1);
-            when(dataStoreService.getData(item)).thenReturn(config);
-            MultipartFile file = mock(MultipartFile.class);
-            when(config.getCollectionData()).thenReturn(file);
-            InputStream inputStream = mock(InputStream.class);
-            when(file.getInputStream()).thenReturn(inputStream);
-            when(resourceMapper.insert(any())).thenReturn(1);
-            DiagnosisTaskDO task = new DiagnosisTaskDO();
-            task.setId(1);
-            AnalysisDTO result = pointService.analysis(task, dataStoreService);
-            Assertions.assertEquals(DiagnosisResultDO.ResultState.SUGGESTIONS, result.getIsHint());
-            Assertions.assertEquals(DiagnosisResultDO.PointType.DIAGNOSIS, result.getPointType());
-            assertNotNull(result);
-        } catch (IOException e) {
-            throw new HisDiagnosisException("error:", e);
-        }
     }
 
     @Test

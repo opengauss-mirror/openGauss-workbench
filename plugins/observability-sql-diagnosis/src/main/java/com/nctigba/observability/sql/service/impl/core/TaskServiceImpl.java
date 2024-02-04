@@ -269,7 +269,7 @@ public class TaskServiceImpl implements TaskService {
                 options.add(query);
             }
             ThreadUtil.execAsync(() -> sqlExecutor.executeSql(task));
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 50; i++) {
                 if (task.getSessionId() == null) {
                     ThreadUtil.sleep(500L);
                 }

@@ -23,32 +23,35 @@
 
 package com.nctigba.observability.sql.service.impl.point.sql;
 
-import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constant.CommonConstants;
-import com.nctigba.observability.sql.enums.OptionEnum;
-import com.nctigba.observability.sql.mapper.DiagnosisResourceMapper;
-import com.nctigba.observability.sql.enums.GrabTypeEnum;
-import com.nctigba.observability.sql.model.vo.FrameVO;
 import com.nctigba.observability.sql.enums.FrameTypeEnum;
+import com.nctigba.observability.sql.enums.GrabTypeEnum;
+import com.nctigba.observability.sql.enums.OptionEnum;
 import com.nctigba.observability.sql.enums.ResultTypeEnum;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
+import com.nctigba.observability.sql.mapper.DiagnosisResourceMapper;
+import com.nctigba.observability.sql.model.dto.TaskResultDTO;
+import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
 import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
 import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
-import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
 import com.nctigba.observability.sql.model.entity.ResourceDO;
-import com.nctigba.observability.sql.model.dto.TaskResultDTO;
+import com.nctigba.observability.sql.model.vo.FrameVO;
 import com.nctigba.observability.sql.service.CollectionItem;
+import com.nctigba.observability.sql.service.DataStoreService;
 import com.nctigba.observability.sql.service.DiagnosisPointService;
 import com.nctigba.observability.sql.service.impl.collection.ebpf.OffCpuItem;
-import com.nctigba.observability.sql.service.DataStoreService;
 import com.nctigba.observability.sql.util.LocaleStringUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 /**
  * OffCpu
@@ -56,6 +59,7 @@ import java.util.Map;
  * @author luomeng
  * @since 2023/7/28
  */
+@Slf4j
 @Service
 public class OffCpu implements DiagnosisPointService<Object> {
     @Autowired
@@ -87,7 +91,9 @@ public class OffCpu implements DiagnosisPointService<Object> {
         }
         ResourceDO resourceDO;
         try {
-            resourceDO = new ResourceDO(task, GrabTypeEnum.offcputime).setF(file.getInputStream().readAllBytes());
+            Scanner scanner = new Scanner(file.getInputStream(), StandardCharsets.UTF_8);
+            String result = scanner.useDelimiter("\\A").next();
+            resourceDO = new ResourceDO(task, GrabTypeEnum.offcputime).setF(result);
         } catch (IOException e) {
             throw new HisDiagnosisException("error:", e);
         }

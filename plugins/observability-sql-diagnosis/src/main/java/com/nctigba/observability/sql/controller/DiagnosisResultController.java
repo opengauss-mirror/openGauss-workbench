@@ -28,6 +28,7 @@ import com.nctigba.observability.sql.service.DiagnosisService;
 import com.nctigba.observability.sql.util.LocaleStringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,7 +37,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * DiagnosisResultController
@@ -70,7 +73,7 @@ public class DiagnosisResultController {
     /**
      * Query onCpu/offCpu svg
      *
-     * @param id resource id
+     * @param id   resource id
      * @param type diagnosis type
      * @param resp http response
      */
@@ -88,8 +91,10 @@ public class DiagnosisResultController {
                 log.error("fail data:{}", type);
                 break;
         }
+        String result = resourceMapper.selectById(id).getF();
+        byte[] bytes = result.getBytes(StandardCharsets.UTF_8);
         try {
-            resourceMapper.selectById(id).to(resp.getOutputStream());
+            IOUtils.copy(new ByteArrayInputStream(bytes), resp.getOutputStream());
         } catch (IOException e) {
             log.error("fail read data:{}", type);
         }
