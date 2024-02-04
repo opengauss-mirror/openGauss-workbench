@@ -159,8 +159,6 @@
                         :default-checked="zip"
                       >
                         <a-radio value="zip">zip</a-radio>
-                        <!-- <a-radio value="tar.gz">tar.gz</a-radio>
-                      <a-radio value="picture-card">picture-card</a-radio> -->
                       </a-radio-group>
                     </a-space>
                   </div>
@@ -238,11 +236,19 @@
                     :placeholder="$t('home.index.5mq3d6o62lc0')"
                   />
                 </a-form-item>
-                <a-form-item field="mysqlDbname" :label="$t('home.index.1mq3hrx8s6o7')">
-                  <a-input
+                <a-form-item field="mysqlDbname" :label="$t('home.index.1mq3hrx8s6o7')" validate-trigger="change" >
+                  <a-select
                     v-model="formLeft.mysqlDbname"
                     :placeholder="$t('home.index.5mq3d6o66ys0')"
-                  />
+                    allow-create
+                  >
+                    <a-option
+                      v-for="option in leftDbList"
+                      :label="option.label"
+                      :value="option.value"
+                      :key="option.value"
+                    ></a-option>
+                  </a-select>
                 </a-form-item>
               </a-form>
             </a-card>
@@ -322,17 +328,20 @@
                 <a-form-item
                   field="opengaussDbname"
                   :label="$t('home.index.1mq3hrx8s6o7')"
-                  :rules="[
-                    {
-                      required: true,
-                      message: $t('home.index.5mq3ijy1z1s0'),
-                    },
-                  ]"
+                  validate-trigger="change"
                 >
-                  <a-input
+                  <a-select
                     v-model="formRight.opengaussDbname"
                     :placeholder="$t('home.index.5mq3d6o66ys0')"
-                  />
+                    allow-create
+                  >
+                    <a-option
+                      v-for="option in rightDbList"
+                      :label="option.label"
+                      :value="option.value"
+                      :key="option.value"
+                    ></a-option>
+                  </a-select>
                 </a-form-item>
               </a-form>
             </a-card>
@@ -351,55 +360,50 @@
                   : $t("home.index.5mq3d6o67fo0")
               }}</a-button
             >
-            <a-progress
-              v-model:visible="downloadStatus.downloading"
-              :percent="downloadStatus.progress"
-              :steps="3"
-              size="small"
-              style="margin-left: 20px; flex-shrink: 0"
-            />
           </div>
-          <!-- <a-button
-            style="width: 150px"
-            type="primary"
-            :loading="loading1"
-            @click="fileDownload"
-            >{{
-              loading1
-                ? $t("home.index.5mq3d6o67dc2")
-                : $t("home.index.5mq3d6o67fo1")
-            }}</a-button
-          > -->
         </div>
       </div>
       <div style="width:100%">
         <a-table :columns="columns" :data="list.data" :loading="list.loading" @page-change="currentPage" :pagination="list.page" style="margin-top: 20px">
               <template #mysqlHost="{ record }">
-                <a-tooltip :content-style="{color:'#1d212a'}" background-color="#f2f3f5" content="" position="top">
-                  <template v-slot:content="{ visible }">
-                    <span style="display:block;margin-bottom:'5px'"  >{{$t("home.index.5mq3d6o5z6g0")}}:{{record.mysqlHost}}</span>
-                    <span style="display:block;margin-bottom:'5px'"  >{{$t("home.index.5mq3d6o608g0")}}:{{record.mysqlPort}}</span>
-                    <span style="display:block;margin-bottom:'5px'"  >{{$t("home.index.5mq3d6o60po0")}}:{{record.mysqlUser}}</span>
-                    <span style="display:block;margin-bottom:'5px'"  >{{$t('home.index.1mq3hrx8s6o7')}}:{{record.mysqlDbname}}</span>
-                    <span style="display:block;margin-bottom:'5px'"  >{{$t("home.index.5mq3d6o612g0")}}:{{record.mysqlPassword}}</span>
+                <a-tooltip position="top">
+                  <template #content>
+                    <div style="margin-bottom:'5px'"  >{{$t("home.index.5mq3d6o5z6g0")}}:{{record.mysqlHost}}</div>
+                    <div style="margin-bottom:'5px'"  >{{$t("home.index.5mq3d6o608g0")}}:{{record.mysqlPort}}</div>
+                    <div style="margin-bottom:'5px'"  >{{$t("home.index.5mq3d6o60po0")}}:{{record.mysqlUser}}</div>
+                    <div style="margin-bottom:'5px'"  >{{$t('home.index.1mq3hrx8s6o7')}}:{{record.mysqlDbname}}</div>
+                    <div style="margin-bottom:'5px'"  >{{$t("home.index.5mq3d6o612g0")}}:{{record.mysqlPassword}}</div>
                   </template>
-                  <span style="display:block;">{{record.mysqlHost}}</span>
+                  <div>{{record.mysqlHost}}</div>
                 </a-tooltip>
               </template>
               <template #opengaussHost="{ record }">
-                <a-tooltip :content-style="{color:'#1d212a'}" background-color="#f2f3f5" content="" position="top">
-                  <template v-slot:content="{ visible }">
-                    <span style="display:block;margin-bottom:'5px'"  >{{$t("home.index.5mq3d6o5z6g0")}}:{{record.opengaussHost}}</span>
-                    <span style="display:block;margin-bottom:'5px'"  >{{$t("home.index.5mq3d6o608g0")}}:{{record.opengaussPort}}</span>
-                    <span style="display:block;margin-bottom:'5px'"  >{{$t("home.index.5mq3d6o60po0")}}:{{record.opengaussUser}}</span>
-                    <span style="display:block;margin-bottom:'5px'"  >{{$t("home.index.1mq3hrx8s6o7")}}:{{record.opengaussDbname}}</span>
-                    <span style="display:block;margin-bottom:'5px'"  >{{$t("home.index.5mq3d6o612g0")}}:{{record.opengaussPassword}}</span>
+                <a-tooltip position="top" >
+                  <div>{{record.opengaussHost}}</div>
+                  <template #content>
+                    <div style="margin-bottom:'5px'"  >{{$t("home.index.5mq3d6o5z6g0")}}:{{record.opengaussHost}}</div>
+                    <div style="argin-bottom:'5px'"  >{{$t("home.index.5mq3d6o608g0")}}:{{record.opengaussPort}}</div>
+                    <div style="margin-bottom:'5px'"  >{{$t("home.index.5mq3d6o60po0")}}:{{record.opengaussUser}}</div>
+                    <div style="margin-bottom:'5px'"  >{{$t("home.index.1mq3hrx8s6o7")}}:{{record.opengaussDbname}}</div>
+                    <div style="margin-bottom:'5px'"  >{{$t("home.index.5mq3d6o612g0")}}:{{record.opengaussPassword}}</div>
                   </template>
-                  <span style="display:block;">{{record.opengaussHost}}</span>
                 </a-tooltip>
               </template>
               <template #operation="{ record }">
-                <a-button type="primary" @click="fileDownload(record.reportFileName)">{{$t("home.index.5mq3d6o67fo1")}}</a-button>
+                <a-link class="mr" @click="fileDownload(record.reportFileName)">{{
+                  $t("home.index.5mq3d6o67fo1")
+                }}</a-link>
+                <a-popconfirm
+                  :content="$t('packageManage.index.5myq5c8zms40')"
+                  type="warning"
+                  :ok-text="$t('packageManage.index.5myq5c8zn100')"
+                  :cancel-text="$t('packageManage.index.5myq5c8zn7k0')"
+                  @ok="deleteRows(record)"
+                >
+                  <a-link  status="danger">{{
+                    $t("packageManage.index.5myq5c8znew0")
+                  }}</a-link>
+                </a-popconfirm>
               </template>
         </a-table>
       </div>
@@ -432,7 +436,8 @@ import {
   getRightIps,
   getOpenGauss,
   getMysql,
-  getListResult
+  getListResult,
+  deleteAssess
 } from "@/api/ops";
 import { Message } from "@arco-design/web-vue";
 import {
@@ -596,6 +601,8 @@ const options = ref([]); // Initialize an empty options array
 const completePidList = ref([]);
 const rightIpsList = ref([]);
 const leftIpsList = ref([]);
+const rightDbList = ref([]);
+const leftDbList = ref([]);
 const modalContent = ref();
 const modalContainer = ref();
 // Fetch the options when the component is mounted
@@ -671,24 +678,42 @@ const getListData = () => {
       list.loading = false;
     });
 };
+const deleteRows = (record) => {
+  deleteAssess(record.assessmentId).then((res) => {
+    if (Number(res.code) === 200) {
+      Message.success({
+        content: "delete success",
+      });
+      getListData();
+    }
+  });
+};
 const getData = (flg) => {
   if (flg) {
     getOpenGauss(formRight.opengaussHost).then((res) => {
-      let parma = res.obj;
+      rightDbList.value = res.obj.dbNames.map((dbName) => ({
+        label: dbName,
+        value: dbName
+      }));
+      let parma = res.obj.node;
       formRight.opengaussHost = parma.ip,
       formRight.opengaussPort= parma.port,
       formRight.opengaussUser = parma.username,
       formRight.opengaussPassword = '',
-      formRight.opengaussDbname = ''
+      formRight.opengaussDbname = res.obj.dbNames.length > 0 ? res.obj.dbNames[0] : ''
     });
   } else {
     getMysql(formLeft.mysqlHost).then((res) => {
-      let parma = res.obj;
+      leftDbList.value = res.obj.dbNames.map((dbName) => ({
+        label: dbName,
+        value: dbName,
+      }));
+      let parma = res.obj.node;
       formLeft.mysqlHost = parma.ip,
       formLeft.mysqlPort= parma.port,
       formLeft.mysqlUser = parma.username,
       formLeft.mysqlPassword = '',
-      formLeft.mysqlDbname = ''
+      formLeft.mysqlDbname = res.obj.dbNames.length > 0 ? res.obj.dbNames[0] : ''
     });
   }
 };
@@ -827,12 +852,12 @@ const formRules = computed(() => {
       },
     ],
     mysqlPassword: [
-      { required: isCollectInputType, message: t("home.index.5mq3d6o5zb00") },
+      { required: isCollectInputType, message: t("home.index.5mq3d6o615g0") },
       {
         validator: (value, cb) => {
           return new Promise((resolve) => {
             if (!value.trim()) {
-              cb(t("home.index.5mq3d6o5zb00"));
+              cb(t("home.index.5mq3d6o615g0"));
               resolve(false);
             } else {
               resolve(true);

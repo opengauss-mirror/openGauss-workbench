@@ -45,4 +45,24 @@ public class DataBaseType {
      * DRIVER_CLASS_NAME
      */
     public static final String DRIVER_CLASS_NAME = "org.sqlite.JDBC";
+
+    /**
+     * SEARCH_DATABASE
+     */
+    public static final String GAUSS_DATABASE = "SELECT datname FROM pg_database";
+
+    /**
+     * MYSQL_DATABASE
+     */
+    public static final String MYSQL_DATABASE = "SHOW DATABASES";
+
+    /**
+     * SEARCH_RES
+     */
+    public static final String GAUSS_RES = "datname";
+
+    /**
+     * MYSQL_RES
+     */
+    public static final String MYSQL_RES = "Database";
 }

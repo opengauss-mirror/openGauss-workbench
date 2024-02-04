@@ -53,7 +53,9 @@ public enum AssessEnum implements AssessmentStrategy {
             // The format of uploading and decompressing to dataKitPath is currently/ops/files/access/
             if (assessment.getFile() != null && !assessment.getFile().isEmpty()) {
                 log.info("Start decompressing the uploaded file to the specified path " + dataKitPath);
-                FileUploadUtil.saveAndUnzipFile(assessment.getFile(), dataKitPath, dataKitPath);
+                // After the evaluation is completed, delete the cache files in the assess directory
+                FileUploadUtil.delCache(dataKitPath);
+                FileUploadUtil.extractResource(assessment.getFile(), dataKitPath);
             }
         }
     },
@@ -68,6 +70,8 @@ public enum AssessEnum implements AssessmentStrategy {
         public void startAssessment(Assessment assessment, Integer userId, String dataKitPath) {
             // Obtain the IP instrumentation file path for this server based on the ID. Currently,
             // dataKitPath is/ops/files/access/
+            // After the evaluation is completed, delete the cache files in the assess directory
+            FileUploadUtil.delCache(dataKitPath);
             String pid = assessment.getProccessPid();
             List<CollectPeriod> periodList = MonitSpringUtils.getClass(SqlTaskServiceImpl.class).getListByPid(pid);
             for (CollectPeriod period : periodList) {

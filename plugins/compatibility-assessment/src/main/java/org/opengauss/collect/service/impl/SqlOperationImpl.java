@@ -31,6 +31,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,11 +47,18 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
+import org.opengauss.admin.common.exception.ServiceException;
+import org.opengauss.admin.system.plugin.facade.SysSettingFacade;
+import org.opengauss.admin.system.service.ops.IHostService;
+import org.opengauss.admin.system.service.ops.IHostUserService;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.opengauss.collect.config.common.Constant;
 import org.opengauss.collect.domain.Assessment;
 import org.opengauss.collect.domain.CollectPeriod;
 import org.opengauss.collect.domain.LinuxConfig;
-import org.opengauss.collect.domain.SysConfig;
 import org.opengauss.collect.domain.builder.AssessmentBuilder;
 import org.opengauss.collect.enums.AssessEnum;
 import org.opengauss.collect.manager.MonitorManager;
@@ -67,17 +76,8 @@ import org.opengauss.collect.utils.FileCopy;
 import org.opengauss.collect.utils.IdUtils;
 import org.opengauss.collect.utils.JschUtil;
 import org.opengauss.collect.utils.StringUtil;
-import org.opengauss.collect.utils.file.FileUploadUtil;
 import org.opengauss.collect.utils.response.RespBean;
 import org.opengauss.collect.utils.scheduler.SchedulerUtil;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
-import org.opengauss.admin.common.enums.ops.DbTypeEnum;
-import org.opengauss.admin.common.exception.ServiceException;
-import org.opengauss.admin.system.plugin.facade.SysSettingFacade;
-import org.opengauss.admin.system.service.ops.IHostService;
-import org.opengauss.admin.system.service.ops.IHostUserService;
-import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -249,10 +249,8 @@ public class SqlOperationImpl implements SqlOperation {
         String command = getAssessCommand(sqlInputType);
         // 执行command  在真实路径下执行
         String actPath = envPath + Constant.ACT_PATH;
-        String comRes = CommandLineRunner.runCommand(command, actPath);
-        log.info(comRes);
-        // 评估结束后，删除assess目录下的缓存文件
-        FileUploadUtil.deleteFilesInDirectory(dataKitPath);
+        boolean isSuccess = CommandLineRunner.runCommand(command, actPath, Constant.TIME_OUT);
+        AssertUtil.isTrue(!isSuccess, "Evaluation failed");
         long id = IdUtils.SNOWFLAKE.nextId();
         String reportFileName = id + "_" + Constant.ASSESS_REPORT;
         // 保存评估信息到数据库,复制此时的report.html文件到 目录库便于下载
@@ -288,37 +286,27 @@ public class SqlOperationImpl implements SqlOperation {
         // 校验opengauss数据库
         String gaussUrl = "jdbc:opengauss://" + assessment.getOpengaussHost()
                 + ":" + assessment.getOpengaussPort() + "/" + assessment.getOpengaussDbname() + "?batchMode=off";
-        SysConfig gaussConfig = buildSysConfig(DbTypeEnum.OPENGAUSS, gaussUrl,
-                assessment.getOpengaussUser(), assessment.getOpengaussPassword());
-        ConnectionUtils.getConnection(gaussConfig);
+        ConnectionUtils.getConnection(DbTypeEnum.OPENGAUSS.getDriverClass(), gaussUrl, assessment.getOpengaussUser(),
+                assessment.getOpengaussPassword());
         if (sqlInputType.equals(Constant.ASSESS_COLLECT)) {
             // 校验mysql数据库
             String mysqlUrl = "jdbc:mysql://" + assessment.getMysqlHost()
                     + ":" + assessment.getMysqlPort() + "/" + assessment.getMysqlDbname()
                     + "?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/"
                     + "Shanghai&useSSL=false&allowPublicKeyRetrieval=true";
-            SysConfig mysqlConfig = buildSysConfig(DbTypeEnum.MYSQL, mysqlUrl,
-                    assessment.getMysqlUser(), assessment.getMysqlPassword());
-            ConnectionUtils.getConnection(mysqlConfig);
+            ConnectionUtils.getConnection(DbTypeEnum.MYSQL.getDriverClass(), mysqlUrl, assessment.getMysqlUser(),
+                    assessment.getMysqlPassword());
         }
-    }
-
-    private SysConfig buildSysConfig(DbTypeEnum dbType, String url, String username, String password) {
-        return SysConfig.builder()
-                .userName(username)
-                .password(password)
-                .driver(dbType.getDriverClass())
-                .url(url)
-                .build();
     }
 
     private String getAssessCommand(String sqlInputType) {
+        String suffix = " && echo execution succeeded || echo false";
         String command = "";
         if (sqlInputType.equals(Constant.ASSESS_FILE) || sqlInputType.equals(Constant.ASSESS_PID)) {
-            command = "sh start.sh -d file -c assessment.properties -o report.html";
+            command = "sh start.sh -d file -c assessment.properties -o report.html" + suffix;
         }
         if (sqlInputType.equals(Constant.ASSESS_COLLECT)) {
-            command = "sh start.sh -d collect -c assessment.properties -o report.html";
+            command = "sh start.sh -d collect -c assessment.properties -o report.html" + suffix;
         }
         return command;
     }
@@ -405,6 +393,8 @@ public class SqlOperationImpl implements SqlOperation {
         scheduler = schedulerFactory.getScheduler();
         // 获得时间的map 然后遍历
         Map<String, String> timeMap = StringUtil.handleString(task.getTimeInterval());
+        // 校验时间
+        AssertUtil.isTrue(checkaaTime(timeMap), "The start time cannot be less than the current server's time");
         for (Map.Entry<String, String> entry : timeMap.entrySet()) {
             String startTime = entry.getKey();
             String endTime = entry.getValue();
@@ -437,6 +427,19 @@ public class SqlOperationImpl implements SqlOperation {
         }
         scheduler.start();
         return scheduler;
+    }
+
+    private boolean checkaaTime(Map<String, String> timeMap) {
+        // 创建DateTimeFormatter用于解析时间字符串
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Constant.TIME_FORMAT);
+        // 获取当前时间
+        LocalDateTime now = LocalDateTime.now();
+        // 检查timeMap中是否有值小于当前时间的情况
+        return timeMap.keySet().stream()
+                .anyMatch(key -> {
+                    LocalDateTime time = LocalDateTime.parse(timeMap.get(key), formatter);
+                    return time.isBefore(now);
+                });
     }
 
     private void checkDetail(JobDetail detail) throws SchedulerException {

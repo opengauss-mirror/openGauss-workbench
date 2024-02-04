@@ -73,6 +73,24 @@ public class Constant {
     public static final String ENV_PATH = "data/";
 
     /**
+     * CREATE_PATH
+     */
+    public static final String CREATE_PATH = "if [ -d %s ]; then rm -rf %s*; result=$?; "
+            + "[ $result -eq 0 ] && echo execution succeeded || echo false; else mkdir -p %s; result=$?; "
+            + "[ $result -eq 0 ] "
+            + "&& echo execution succeeded || echo false; fi";
+
+    /**
+     * SUCCESS_INSTALL
+     */
+    public static final String SUCCESS_INSTALL = "execution succeeded";
+
+    /**
+     * TIME_OUT
+     */
+    public static final long TIME_OUT = 30L;
+
+    /**
      * TEMPORARY_SAVE
      */
     public static final String TEMPORARY_SAVE = "data/evaluate_history/";

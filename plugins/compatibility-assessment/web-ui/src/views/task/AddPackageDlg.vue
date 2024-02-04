@@ -31,7 +31,6 @@
         <a-select
           v-model="data.formData.host"
           :placeholder="$t('packageManage.AddPackageDlg.5myq6nneap41')"
-          @change="onTypeChange"
           dropdown-style="{ top: 'auto', bottom: 0 }"
         >
           <a-option
@@ -74,23 +73,33 @@
 
       <a-form-item
         :label="$t('packageManage.AddPackageDlg.5myq6nnebn44')"
+        field="timeInterval"
       >
-        <a-range-picker
-          style="width: 100%"
-          show-time
-          :default-value="getCurrentTime"
-          :allow-clear="false"
-          :time-picker-props="{ defaultValue: ['00:00:00', '23:59:59'] }"
-          format="YYYY-MM-DD HH:mm:ss"
-          @ok="dateOnOk"
-        />
-      
-      </a-form-item>
-        <a-form-item
-          :label="$t('packageManage.AddPackageDlg.5myq5c8zpu01')"
-          field="timeInterval"
-        >
-        <a-input-tag v-model="data.formData.timeInterval"  :default-value="getCurrentTime" :style="{width:'100%'}" :placeholder="$t('packageManage.AddPackageDlg.5myq5c8zpu02')" :max-tag-count="3" allow-clear/>
+        <a-input-tag v-model="data.formData.timeInterval" :style="{width:'100%'}" :placeholder="$t('packageManage.AddPackageDlg.5myq5c8zpu02')" :max-tag-count="5" allow-clear>
+          <template #prefix>
+            <a-tooltip>
+              <icon-question-circle-fill />
+              <template #content>
+                <div>{{$t("packageManage.AddPackageDlg.5myq5c8zpu04")}}</div>
+                <div>{{$t("packageManage.AddPackageDlg.5myq5c8zpu05")}}</div>
+                <div>{{$t("packageManage.AddPackageDlg.5myq5c8zpu06")}}</div>
+              </template>
+            </a-tooltip>
+          </template>
+         <template #suffix>
+              <a-range-picker
+                separator='~'
+                show-time
+                :allow-clear="false"
+                :time-picker-props="{ defaultValue: ['00:00:00', '23:59:59'] }"
+                format="YYYY-MM-DD HH:mm:ss"
+                @ok="dateOnOk"
+                v-model="data.formData.timeNone"
+              >
+              <icon-calendar />
+            </a-range-picker>
+          </template> 
+        </a-input-tag>
       </a-form-item>
     </a-form>
   </a-modal>
@@ -130,58 +139,88 @@ const data = reactive<KeyValue>({
     taskName: "",
     taskId: "",
     host: "",
-    startTime: "",
-    endTime: "",
     pid: "",
     filePath: "",
     remark: "",
-    timeInterval:[]
+    timeInterval:[],
+    timeNone:[]
   },
   rules: {},
   typeList: [],
 });
 
-const getCurrentTime = computed(() => {
-  const startTime = dayjs().add(2, "minutes").format("YYYY-MM-DD HH:mm:ss");
-  const endTime = dayjs().add(2, "hour").format("YYYY-MM-DD HH:mm:ss");
-  console.log([startTime+'-'+endTime])
-  return [startTime, endTime];
-});
-
 const remove = (tag: any) => {
-  const index = data.formData.timeInterval.indexOf(tag.value);
+  const index = data.formData.timeNone.indexOf(tag.value);
   if (index !== -1) {
-    data.formData.timeInterval.splice(index, 1);
+    data.formData.timeNone.splice(index, 1);
   }
 };
 const checkAndAddTimeRange = (selectedStartTime: any, selectedEndTime: any, timeRanges: any) => {
-  let shouldAdd = true;
-  for (const [startTime, endTime] of timeRanges) {
-    if (
-      (new Date(selectedStartTime).getTime() >= new Date(startTime).getTime() && new Date(selectedStartTime).getTime() <= new Date(endTime).getTime()) ||
-      (new Date(selectedEndTime).getTime() >= new Date(startTime).getTime() && new Date(selectedEndTime).getTime() <= new Date(endTime).getTime()) ||
-      (new Date(selectedStartTime).getTime() <= new Date(startTime).getTime() && new Date(selectedEndTime).getTime() >= new Date(endTime).getTime())
-    ) {
-      shouldAdd = false;
+  let shouldAdd = '';
+  for (let item of timeRanges) {
+    if (new Date(item.split('~')[0]).getTime() === new Date(item.split('~')[1]).getTime()) {
+      shouldAdd = t("packageManage.AddPackageDlg.5myq5c8zpu07");
+      break;
+    } else if (new Date(selectedStartTime).getTime() >= new Date(item.split('~')[0]).getTime() && new Date(selectedStartTime).getTime() <= new Date(item.split('~')[1]).getTime()) {
+      shouldAdd = t("packageManage.AddPackageDlg.5myq5c8zpu03");
+      break;
+    } else if (new Date(selectedEndTime).getTime() >= new Date(item.split('~')[0]).getTime() && new Date(selectedEndTime).getTime() <= new Date(item.split('~')[1]).getTime()) {
+      shouldAdd = t("packageManage.AddPackageDlg.5myq5c8zpu03");
+      break;
+    } else if (new Date(selectedStartTime).getTime() <= new Date(item.split('~')[0]).getTime() && new Date(selectedEndTime).getTime() >= new Date(item.split('~')[1]).getTime()) {
+      shouldAdd = t("packageManage.AddPackageDlg.5myq5c8zpu03");
       break;
     }
   }
-  if (shouldAdd) {
-    timeRanges.push([selectedStartTime+'~'+selectedEndTime]);
+  if (new Date(selectedStartTime).getTime() < new Date().getTime()) {
+    shouldAdd = t("packageManage.AddPackageDlg.5myq5c8zpu08");
+  } else if (new Date(selectedStartTime).getTime() === new Date(selectedEndTime).getTime()) {
+    shouldAdd = t("packageManage.AddPackageDlg.5myq5c8zpu07");
+  }
+  if (!shouldAdd) {
+    timeRanges.push(selectedStartTime+'~'+selectedEndTime);
   }
   return shouldAdd;
 }
 const dateOnOk = (date: any) => {
   data.formData.remark = "时间段";
-    if (!checkAndAddTimeRange(date[0], date[1], data.formData.timeInterval)) {
-      Message.warning(t("packageManage.AddPackageDlg.5myq5c8zpu03"));
+    let shouldAdd = '';
+    let [selectedStartTime,selectedEndTime] = date
+  for (let item of data.formData.timeInterval) {
+    if (new Date(item.split('~')[0]).getTime() === new Date(item.split('~')[1]).getTime()) {
+      shouldAdd = t("packageManage.AddPackageDlg.5myq5c8zpu07");
+      break;
+    } else if (new Date(selectedStartTime).getTime() >= new Date(item.split('~')[0]).getTime() && new Date(selectedStartTime).getTime() <= new Date(item.split('~')[1]).getTime()) {
+      shouldAdd = t("packageManage.AddPackageDlg.5myq5c8zpu03");
+      break;
+    } else if (new Date(selectedEndTime).getTime() >= new Date(item.split('~')[0]).getTime() && new Date(selectedEndTime).getTime() <= new Date(item.split('~')[1]).getTime()) {
+      shouldAdd = t("packageManage.AddPackageDlg.5myq5c8zpu03");
+      break;
+    } else if (new Date(selectedStartTime).getTime() <= new Date(item.split('~')[0]).getTime() && new Date(selectedEndTime).getTime() >= new Date(item.split('~')[1]).getTime()) {
+      shouldAdd = t("packageManage.AddPackageDlg.5myq5c8zpu03");
+      break;
     }
+  }
+  if (new Date(selectedStartTime).getTime() < new Date().getTime()) {
+    shouldAdd = t("packageManage.AddPackageDlg.5myq5c8zpu08");
+  } else if (new Date(selectedStartTime).getTime() === new Date(selectedEndTime).getTime()) {
+    shouldAdd = t("packageManage.AddPackageDlg.5myq5c8zpu07");
+  }
+  if (!shouldAdd) {
+    data.formData.timeInterval.push(selectedStartTime+'~'+selectedEndTime);
+    data.formData.timeNone = [selectedStartTime+'~'+selectedEndTime];
+    if (data.formData.timeInterval){ formRef.value?.clearValidate("timeInterval"); }
+  } else {
+    Message.warning(shouldAdd);
+  }
+  // let messageList = checkAndAddTimeRange(date[0], date[1], data.formData.timeNone)
 };
-const emits = defineEmits([`finish`]);
+const emits = defineEmits([`finish`,'']);
 
 const submitLoading = ref<boolean>(false);
 const formRef = ref<null | FormInstance>(null);
 const handleBeforeOk = () => {
+  console.log('88888888888',data.formData)
   formRef.value?.validate().then((result) => {
     if (!result) {
       submitLoading.value = true;
@@ -255,24 +294,33 @@ const open = (
   if (type === "create") {
     data.title = t("packageManage.AddPackageDlg.5myq6nnebrc0");
     // init formData
+      data.formData.timeInterval = [];
+      data.formData.timeNone = [];
     Object.assign(data.formData, {
       taskId: "",
       host: "",
       taskName: "",
-      startTime: "",
-      endTime: "",
       pid: "",
+      filePath: ""
     });
   } else {
     data.title = t("packageManage.AddPackageDlg.5myq6nnebwo0");
     if (packageData) {
+      let time_Interval = []
+      let packageData_timeInterval = packageData.timeInterval
+      if (packageData_timeInterval.length > 1) {
+          time_Interval = packageData_timeInterval.split(",");
+      } else {
+        time_Interval = [packageData.timeInterval]
+      }
       Object.assign(data.formData, {
         taskId: packageData.taskId,
         taskName: packageData.taskName,
         host: packageData.host,
-        startTime: packageData.startTime,
-        endTime: packageData.endTime,
+        timeInterval: time_Interval,
+        timeNone: [],
         pid: packageData.pid,
+        filePath: packageData.filePath
       });
     }
   }
@@ -377,6 +425,11 @@ defineExpose({
       color: rgb(var(--primary-6));
     }
   }
+}
+.iconClass {
+    margin: 0 10px;
+    font-size: 18px;
+    color: #165DFF;
 }
 :deep(.arco-upload-progress) {
   display: none !important;

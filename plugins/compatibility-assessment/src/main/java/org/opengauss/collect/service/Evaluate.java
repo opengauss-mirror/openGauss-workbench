@@ -76,4 +76,12 @@ public interface Evaluate {
      * @return RespBean
      */
     RespBean obtainAllEvaluationResults(Assessment assessment, int pageNum, int pageSize);
+
+    /**
+     * deleteAssess
+     *
+     * @param assessmentId assessmentId
+     * @return RespBean
+     */
+    RespBean deleteAssess(Long assessmentId);
 }

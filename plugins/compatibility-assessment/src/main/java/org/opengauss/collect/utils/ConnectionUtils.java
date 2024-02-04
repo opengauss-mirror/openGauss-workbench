@@ -29,7 +29,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
-import org.opengauss.collect.domain.SysConfig;
 import org.opengauss.admin.common.exception.ServiceException;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -47,22 +46,26 @@ public class ConnectionUtils {
     /**
      * getConnection
      *
-     * @param sysConfig sysConfig
+     * @param driver driver
+     * @param url url
+     * @param user user
+     * @param passWord passWord
+     * @return Connection
      */
-    public static void getConnection(SysConfig sysConfig) {
-        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+    public static Connection getConnection(String driver, String url, String user, String passWord) {
+        CompletableFuture<Connection> future = CompletableFuture.supplyAsync(() -> {
+            Connection connection = null;
             try {
-                Class.forName(sysConfig.getDriver());
-                try (Connection connection = DriverManager.getConnection(sysConfig.getUrl(), sysConfig.getUserName(),
-                        sysConfig.getPassword())) {
-                    log.info("Successfully obtained connection information");
-                }
+                Class.forName(driver);
+                connection = DriverManager.getConnection(url, user, passWord);
+                log.info("Successfully obtained connection information");
             } catch (SQLException | ClassNotFoundException exception) {
                 throw new ServiceException("Please check the database connection information");
             }
+            return connection;
         }, threadPoolExecutor);
         try {
-            future.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
+            return future.get(CONNECTION_TIMEOUT, TimeUnit.SECONDS);
         } catch (TimeoutException | InterruptedException | ExecutionException exception) {
             throw new ServiceException("Connection timeout or incorrect database connection information");
         }
