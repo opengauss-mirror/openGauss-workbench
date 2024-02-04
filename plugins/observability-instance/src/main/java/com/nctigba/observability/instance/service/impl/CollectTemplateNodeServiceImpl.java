@@ -61,6 +61,7 @@ import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.IOException;
@@ -108,7 +109,21 @@ public class CollectTemplateNodeServiceImpl
     AgentNodeRelationService agentNodeRelationService;
 
     @Override
-    public void setNodeTemplateDirect(SetNodeTemplateDirectDTO setNodeTemplateDirectDTO) {
+    @Transactional
+    @DS("embedded")
+    public Integer setNodeTemplateDirect(SetNodeTemplateDirectDTO setNodeTemplateDirectDTO) {
+        long startTime = System.currentTimeMillis();
+        Integer templateId = deleteNodeOldTemplateAndBuildNewOne(setNodeTemplateDirectDTO);
+
+        // call setNodeTemplate
+        SetNodeTemplateDTO setNodeTemplateDTO = new SetNodeTemplateDTO();
+        setNodeTemplateDTO.setNodeId(setNodeTemplateDirectDTO.getNodeId());
+        setNodeTemplateDTO.setTemplateId(templateId);
+        setNodeTemplate(setNodeTemplateDTO);
+        return templateId;
+    }
+
+    private Integer deleteNodeOldTemplateAndBuildNewOne(SetNodeTemplateDirectDTO setNodeTemplateDirectDTO) {
         // get node template id
         List<Integer> templateIds = collectTemplateNodeMapper.selectList(
                         new LambdaQueryWrapper<CollectTemplateNodeDO>()
@@ -144,15 +159,12 @@ public class CollectTemplateNodeServiceImpl
             newTemplateMetrics.setInterval(z.getInterval());
             collectTemplateMetricsMapper.insert(newTemplateMetrics);
         });
-
-        // call setNodeTemplate
-        SetNodeTemplateDTO setNodeTemplateDTO = new SetNodeTemplateDTO();
-        setNodeTemplateDTO.setNodeId(setNodeTemplateDirectDTO.getNodeId());
-        setNodeTemplateDTO.setTemplateId(newTemplate.getId());
-        setNodeTemplate(setNodeTemplateDTO);
+        return newTemplate.getId();
     }
 
     @Override
+    @Transactional
+    @DS("embedded")
     public void setNodeTemplate(SetNodeTemplateDTO templateNodeDTO) {
         String nodeId = templateNodeDTO.getNodeId();
 
@@ -169,11 +181,6 @@ public class CollectTemplateNodeServiceImpl
         entity.setNodeId(nodeId);
         entities.add(entity);
         collectTemplateNodeMapper.insert(entity);
-
-        List<PrometheusConfigNodeDTO> configNodes =
-                getNodePrometheusConfigParam(templateNodeDTO.getTemplateId(), Arrays.asList(nodeId));
-
-        setPrometheusConfig(configNodes);
     }
 
     @Override

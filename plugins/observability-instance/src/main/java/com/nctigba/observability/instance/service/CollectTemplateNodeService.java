@@ -43,9 +43,10 @@ public interface CollectTemplateNodeService extends IService<CollectTemplateNode
      * Set node template directly
      *
      * @param setNodeTemplateDirectDTO DTO
+     * @return New template Id
      * @since 2023/12/1
      */
-    void setNodeTemplateDirect(SetNodeTemplateDirectDTO setNodeTemplateDirectDTO);
+    Integer setNodeTemplateDirect(SetNodeTemplateDirectDTO setNodeTemplateDirectDTO);
 
     /**
      * Set template for node
