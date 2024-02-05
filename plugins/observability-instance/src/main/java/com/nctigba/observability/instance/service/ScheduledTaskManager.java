@@ -55,7 +55,7 @@ public class ScheduledTaskManager {
     /**
      * Scheduled switchRecord
      */
-    @Scheduled(fixedDelay = 30, timeUnit = TimeUnit.SECONDS)
+    @Scheduled(initialDelay = 5, fixedDelay = 30, timeUnit = TimeUnit.SECONDS)
     public void switchRecord() {
         List<OpsClusterVO> allOpsCluster = clusterManager.getAllOpsCluster().stream()
                 .filter(cluster -> DeployTypeEnum.CLUSTER.equals(cluster.getDeployType())).collect(Collectors.toList());
@@ -63,7 +63,7 @@ public class ScheduledTaskManager {
                 () -> clusterOpsService.switchRecordUpdate(opsClusterVO.getClusterId()))).collect(Collectors.toList());
         for (Future<?> future : futures) {
             try {
-                future.get(3000, TimeUnit.MILLISECONDS);
+                future.get(10000, TimeUnit.MILLISECONDS);
             } catch (InterruptedException | ExecutionException | TimeoutException e) {
                 future.cancel(true);
                 log.error(e.getMessage(), e);

@@ -841,18 +841,8 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
             if (s1.length == 1) {
                 continue;
             }
-            if (s1.length >= 9) {
-                for (int i = 8; i < s1.length; i++) {
-                    state += (s1[i] + " ");
-                }
-                role = s1[7];
-            }
-            if (s1.length == 8) {
-                state = s1[7];
-                role = s1[6];
-            }
-            nodeState.put(s1[2], state.trim());
-            nodeRole.put(s1[2], role);
+            nodeState.put(s1[2], s1[s1.length - 1]);
+            nodeRole.put(s1[2], s1[6]);
             nodeName.put(s1[2], s1[1]);
         }
         res.setNodeState(nodeState);
