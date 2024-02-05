@@ -42,6 +42,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -104,11 +105,9 @@ public class TestHisDiagnosisController {
             resourceDO.setGrabType(GrabTypeEnum.offcputime);
             resourceDO.setId(1);
             resourceDO.setTaskid(1);
-            byte[] f = new byte[1024];
-            resourceDO.setF(f);
+            resourceDO.setF("test");
             String id = "1";
             String type = "svg";
-            resourceDO.to(os);
             when(resourceMapper.selectById(id)).thenReturn(resourceDO);
             controller.res(id, type, resp);
             type = "png";
