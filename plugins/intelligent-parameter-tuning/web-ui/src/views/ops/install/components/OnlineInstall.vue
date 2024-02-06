@@ -107,15 +107,6 @@
       :placeholder="$t('install.Offline.7mpn60ejri25')"
     />
     </a-form-item>
-    <a-form-item
-    field="rankedKnobsNumber"
-    :label="$t('install.Offline.5mpn60ejri26')"
-  >
-    <a-input
-      v-model="formDwg.rankedKnobsNumber"
-      :placeholder="$t('install.Offline.7mpn60ejri26')"
-    />
-    </a-form-item>
     <p style="font-size: 20px;font-weight: bold;">{{$t('install.Online.8mpn80ejri01')}}</p>
     <a-form-item field="customLoad" :label="$t('install.Online.8mpn80ejri02')" >
       <template #label>
@@ -155,6 +146,19 @@
     field="sqlNum"
     :label="$t('install.Online.8mpn80ejri04')"
   >
+  <template #label>
+    <span>{{t('install.Online.8mpn80ejri04')}}</span>
+    <a-tooltip
+    :content-style="{ color: '#1d212a' }"
+    background-color="#fff7e8"
+    :content="$t('install.Online.8mpn82ejri23')"
+    position="right"
+  >
+    <icon-question-circle-fill
+      :style="{ 'margin-left': '5px', color: '#ff7d00', 'font-size': '16px' }"
+    />
+  </a-tooltip>
+  </template>
     <a-input
       v-model="formDwg.sqlNum"
       :placeholder="$t('install.Online.8mpn81ejri04')"
@@ -162,9 +166,45 @@
     </a-form-item>
     <a-form-item
     v-if="!Number(formDwg.isCustomPayloads)"
+    field="averageTableNum"
+    :label="$t('install.Online.8mpn80ejri06')"
+  >
+  <template #label>
+    <span>{{t('install.Online.8mpn80ejri06')}}</span>
+    <a-tooltip
+    :content-style="{ color: '#1d212a' }"
+    background-color="#fff7e8"
+    :content="$t('install.Online.8mpn82ejri23')"
+    position="right"
+  >
+    <icon-question-circle-fill
+      :style="{ 'margin-left': '5px', color: '#ff7d00', 'font-size': '16px' }"
+    />
+  </a-tooltip>
+  </template>
+    <a-input
+      v-model="formDwg.averageTableNum"
+      :placeholder="$t('install.Online.8mpn80ejri06')"
+    />
+    </a-form-item>
+    <a-form-item
+    v-if="!Number(formDwg.isCustomPayloads)"
     field="readWriteRatio"
     :label="$t('install.Online.8mpn80ejri05')"
   >
+  <template #label>
+    <span>{{t('install.Online.8mpn80ejri05')}}</span>
+    <a-tooltip
+    :content-style="{ color: '#1d212a' }"
+    background-color="#fff7e8"
+    :content="$t('install.Online.8mpn82ejri16')"
+    position="right"
+  >
+    <icon-question-circle-fill
+      :style="{ 'margin-left': '5px', color: '#ff7d00', 'font-size': '16px' }"
+    />
+  </a-tooltip>
+  </template>
     <a-input
       v-model="formDwg.readWriteRatio"
       :placeholder="$t('install.Online.8mpn81ejri05')"
@@ -172,19 +212,22 @@
     </a-form-item>
     <a-form-item
     v-if="!Number(formDwg.isCustomPayloads)"
-    field="tableDomainDistribution"
-    :label="$t('install.Online.8mpn80ejri06')"
-  >
-    <a-input
-      v-model="formDwg.tableDomainDistribution"
-      :placeholder="$t('install.Online.8mpn81ejri06')"
-    />
-    </a-form-item>
-    <a-form-item
-    v-if="!Number(formDwg.isCustomPayloads)"
     field="queryComparisonOperatorRatio"
     :label="$t('install.Online.8mpn80ejri07')"
   >
+  <template #label>
+    <span>{{t('install.Online.8mpn80ejri07')}}</span>
+    <a-tooltip
+    :content-style="{ color: '#1d212a' }"
+    background-color="#fff7e8"
+    :content="$t('install.Online.8mpn82ejri17')"
+    position="right"
+  >
+    <icon-question-circle-fill
+      :style="{ 'margin-left': '5px', color: '#ff7d00', 'font-size': '16px' }"
+    />
+  </a-tooltip>
+  </template>
     <a-input
       v-model="formDwg.queryComparisonOperatorRatio"
       :placeholder="$t('install.Online.8mpn81ejri07')"
@@ -195,6 +238,19 @@
     field="queryLogicPredicateNum"
     :label="$t('install.Online.8mpn80ejri08')"
   >
+  <template #label>
+    <span>{{t('install.Online.8mpn80ejri08')}}</span>
+    <a-tooltip
+    :content-style="{ color: '#1d212a' }"
+    background-color="#fff7e8"
+    :content="$t('install.Online.8mpn82ejri18')"
+    position="right"
+  >
+    <icon-question-circle-fill
+      :style="{ 'margin-left': '5px', color: '#ff7d00', 'font-size': '16px' }"
+    />
+  </a-tooltip>
+  </template>
     <a-input
       v-model="formDwg.queryLogicPredicateNum"
       :placeholder="$t('install.Online.8mpn81ejri08')"
@@ -205,6 +261,19 @@
     field="averageAggregationOperatorNum"
     :label="$t('install.Online.8mpn80ejri09')"
   >
+  <template #label>
+    <span>{{t('install.Online.8mpn80ejri09')}}</span>
+    <a-tooltip
+    :content-style="{ color: '#1d212a' }"
+    background-color="#fff7e8"
+    :content="$t('install.Online.8mpn82ejri19')"
+    position="right"
+  >
+    <icon-question-circle-fill
+      :style="{ 'margin-left': '5px', color: '#ff7d00', 'font-size': '16px' }"
+    />
+  </a-tooltip>
+  </template>
     <a-input
       v-model="formDwg.averageAggregationOperatorNum"
       :placeholder="$t('install.Online.8mpn81ejri09')"
@@ -215,6 +284,19 @@
     field="averageQueryColomnNum"
     :label="$t('install.Online.8mpn80ejri10')"
   >
+  <template #label>
+    <span>{{t('install.Online.8mpn80ejri10')}}</span>
+    <a-tooltip
+    :content-style="{ color: '#1d212a' }"
+    background-color="#fff7e8"
+    :content="$t('install.Online.8mpn82ejri20')"
+    position="right"
+  >
+    <icon-question-circle-fill
+      :style="{ 'margin-left': '5px', color: '#ff7d00', 'font-size': '16px' }"
+    />
+  </a-tooltip>
+  </template>
     <a-input
       v-model="formDwg.averageQueryColomnNum"
       :placeholder="$t('install.Online.8mpn81ejri10')"
@@ -225,6 +307,19 @@
     field="groupByRatioIfReadSql"
     :label="$t('install.Online.8mpn80ejri11')"
   >
+  <template #label>
+    <span>{{t('install.Online.8mpn80ejri11')}}</span>
+    <a-tooltip
+    :content-style="{ color: '#1d212a' }"
+    background-color="#fff7e8"
+    :content="$t('install.Online.8mpn82ejri21')"
+    position="right"
+  >
+    <icon-question-circle-fill
+      :style="{ 'margin-left': '5px', color: '#ff7d00', 'font-size': '16px' }"
+    />
+  </a-tooltip>
+  </template>
     <a-input
       v-model="formDwg.groupByRatioIfReadSql"
       :placeholder="$t('install.Online.8mpn81ejri11')"
@@ -235,6 +330,19 @@
     field="orderByDescOrAscIfGrouped"
     :label="$t('install.Online.8mpn80ejri12')"
   >
+  <template #label>
+    <span>{{t('install.Online.8mpn80ejri12')}}</span>
+    <a-tooltip
+    :content-style="{ color: '#1d212a' }"
+    background-color="#fff7e8"
+    :content="$t('install.Online.8mpn82ejri22')"
+    position="right"
+  >
+    <icon-question-circle-fill
+      :style="{ 'margin-left': '5px', color: '#ff7d00', 'font-size': '16px' }"
+    />
+  </a-tooltip>
+  </template>
     <a-input
       v-model="formDwg.orderByDescOrAscIfGrouped"
       :placeholder="$t('install.Online.8mpn81ejri12')"
@@ -290,18 +398,17 @@ const formDwg = reactive({
   iteration: "2",
   threads: "10",
   runningTime: "5",
-  rankedKnobsNumber: "10",
   customLoad: [],
   isCustomPayloads:"0",
-  sqlNum:"500",
-  readWriteRatio:"0.8",
-  tableDomainDistribution:"[0.5, 0.5]",
+  averageTableNum:'[1,0]',
+  sqlNum:"5000",
+  readWriteRatio:"0.9",
   queryComparisonOperatorRatio:"[0, 0, 1, 0]",
-  queryLogicPredicateNum:"[0.6, 0.2, 0.2]",
-  averageAggregationOperatorNum:"[0.5, 0.3, 0.2]",
-  averageQueryColomnNum:"[0, 0.6, 0.3, 0.1]",
-  groupByRatioIfReadSql:"[0.5, 0.5]",
-  orderByDescOrAscIfGrouped:"[0.5, 0.5]"
+  queryLogicPredicateNum:"[1, 0, 0]",
+  averageAggregationOperatorNum:"[1, 0, 0]",
+  averageQueryColomnNum:"[0, 1, 0]",
+  groupByRatioIfReadSql:"[1, 0]",
+  orderByDescOrAscIfGrouped:"[1, 0]"
 });
 const formRules = computed(() => {
   return {
@@ -440,15 +547,13 @@ const formRules = computed(() => {
         },
       },
     ],
-    rankedKnobsNumber: [
-      { required: true, message: t("install.Offline.6mpn60ejri26") },
+    averageTableNum: [
+      { required: true, message: t("install.Online.8mpn82ejri06") },
       {
         validator: (value, cb) => {
           return new Promise((resolve) => {
-            const reg = /^([1-9]|[1-9][0-9]|1[0-2][0-9]|13[0-5])$/;
-            const re = new RegExp(reg);
-            if (!re.test(value)) {
-              cb(t("install.Offline.5mpn60ejri27"));
+            if (!value.trim()) {
+              cb(t("install.Online.8mpn82ejri06"));
               resolve(false);
             } else {
               resolve(true);
@@ -479,21 +584,6 @@ const formRules = computed(() => {
           return new Promise((resolve) => {
             if (!value.trim()) {
               cb(t("install.Online.8mpn82ejri05"));
-              resolve(false);
-            } else {
-              resolve(true);
-            }
-          });
-        },
-      },
-    ],
-    tableDomainDistribution: [
-      { required: true, message: t("install.Online.8mpn82ejri06") },
-      {
-        validator: (value, cb) => {
-          return new Promise((resolve) => {
-            if (!value.trim()) {
-              cb(t("install.Online.8mpn82ejri06"));
               resolve(false);
             } else {
               resolve(true);
@@ -697,13 +787,12 @@ const submit = () => {
       iteration: formDwg.iteration,
       threads: formDwg.threads,
       runningTime: formDwg.runningTime,
-      rankedKnobsNumber: formDwg.rankedKnobsNumber,
       isCustomPayloads:formDwg.isCustomPayloads,
       customLoad:formDwg.customLoad,
       ...formDwg.isCustomPayloads === '0' ? {
+        averageTableNum:formDwg.averageTableNum,
         sqlNum:formDwg.sqlNum,
         readWriteRatio:formDwg.readWriteRatio,
-        tableDomainDistribution:formDwg.tableDomainDistribution,
         queryComparisonOperatorRatio:formDwg.queryComparisonOperatorRatio,
         queryLogicPredicateNum:formDwg.queryLogicPredicateNum,
         averageAggregationOperatorNum:formDwg.averageAggregationOperatorNum,

@@ -59,7 +59,7 @@ public class PluginListener implements ApplicationListener<ApplicationEvent> {
                 MenuVo parentMenu = menuFacade.savePluginMenu(pluginId, "智能参数调优",
                         "Intelligent parameter tuning", 50, "");
                 menuFacade.savePluginMenu(pluginId, "参数调优",
-                        "Parameter tuning", 2, "ops/tabList", parentMenu.getMenuId());
+                        "MetaTune", 2, "ops/tabList", parentMenu.getMenuId());
             }
             log.info("plugin start complete");
         } else if (event instanceof ContextClosedEvent) {

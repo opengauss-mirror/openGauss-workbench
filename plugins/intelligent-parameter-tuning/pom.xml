@@ -158,7 +158,7 @@
                 <configuration>
                     <mode>prod</mode>
                     <pluginInfo>
-                        <id>parameter-tuning</id>
+                        <id>MetaTune</id>
                         <bootstrapClass>org.opengauss.tun.PluginApplication</bootstrapClass>
                         <version>${project.version}</version>
                         <provider>opengauss</provider>

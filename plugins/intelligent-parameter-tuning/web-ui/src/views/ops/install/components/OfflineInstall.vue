@@ -148,15 +148,6 @@
       :placeholder="$t('install.Offline.7mpn60ejri25')"
     />
     </a-form-item>
-    <a-form-item
-    field="rankedKnobsNumber"
-    :label="$t('install.Offline.5mpn60ejri26')"
-  >
-    <a-input
-      v-model="formSysbench.rankedKnobsNumber"
-      :placeholder="$t('install.Offline.7mpn60ejri26')"
-    />
-    </a-form-item>
   </a-form>
   </div>
 </template>
@@ -208,7 +199,6 @@ const formSysbench = reactive({
   iteration: "2",
   threads: "10",
   runningTime: "5",
-  rankedKnobsNumber: "10"
 });
 const formRules = computed(() => {
   return {
@@ -406,23 +396,6 @@ const formRules = computed(() => {
           });
         },
       },
-    ],
-    rankedKnobsNumber: [
-      { required: true, message: t("install.Offline.6mpn60ejri26") },
-      {
-        validator: (value, cb) => {
-          return new Promise((resolve) => {
-            const reg = /^([1-9]|[1-9][0-9]|1[0-2][0-9]|13[0-5])$/;
-            const re = new RegExp(reg);
-            if (!re.test(value)) {
-              cb(t("install.Offline.5mpn60ejri27"));
-              resolve(false);
-            } else {
-              resolve(true);
-            }
-          });
-        },
-      },
     ],};
 });
 const modeList = computed(() => {
@@ -484,7 +457,6 @@ const submit = () => {
         iteration: formSysbench.iteration,
         threads: formSysbench.threads,
         runningTime: formSysbench.runningTime,
-        rankedKnobsNumber: formSysbench.rankedKnobsNumber
         }
     } 
   formSysbenchRef.value?.validate((valid) => {

@@ -52,8 +52,12 @@ public class CommandLineRunner {
      */
     public static boolean runCommand(String command, String filePath, String writePath, long timeOut) {
         String timeNow = DateUtil.getTimeNow();
-        String commandLine = command;
-        String content = String.join(StrUtil.LF, timeNow, commandLine, filePath);
+        String execute = command;
+        // Unable to print password information for data bureau
+        if (command.contains("--pgsql-password")) {
+            execute = "sysbench --db-driver=pgsql ........";
+        }
+        String content = String.join(StrUtil.LF, timeNow, execute, filePath);
         appendToFile(content, writePath);
         try {
             ProcessBuilder builder = new ProcessBuilder("bash", "-c", command);

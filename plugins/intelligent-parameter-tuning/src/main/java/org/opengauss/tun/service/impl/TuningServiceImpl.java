@@ -632,11 +632,14 @@ public class TuningServiceImpl implements TuningService {
     @Override
     public RespBean stopTask(List<String> ids) {
         // 更新状态,每次只会更新一个id,不会有多个
+        String killSysbench = "pkill sysbench";
         ids.forEach(item -> {
             TrainingConfig config = configMpper.selectById(item);
             AssertUtil.isTrue(!config.getStatus().equals(FixedTuning.RUNING), "You cannot perform this operation"
                     + " on non running tasks");
-            CommandLineRunner.runCommand(FixedTuning.STOP, FixedTuning.WORK_PATH, "", FixedTuning.TIME_OUT);
+            String path = String.format(FixedTuning.EXECUTE_FILE_PATH, config.getClusterName()) + FixedTuning.MAIN_PATH;
+            CommandLineRunner.runCommand(FixedTuning.STOP, path, "", FixedTuning.TIME_OUT);
+            CommandLineRunner.runCommand(killSysbench, path, "", FixedTuning.TIME_OUT);
             TuningHelper.updateStatusFailed(item);
         });
         return RespBean.success("Stopped successfully");

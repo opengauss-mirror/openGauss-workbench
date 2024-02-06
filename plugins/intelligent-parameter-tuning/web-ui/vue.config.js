@@ -8,7 +8,7 @@ module.exports = defineConfig({
   runtimeCompiler: true,
   transpileDependencies: false,
   lintOnSave: false,
-  publicPath: "/static-plugin/parameter-tuning/",
+  publicPath: "/static-plugin/MetaTune/",
   productionSourceMap: true,
   css: {
     loaderOptions: {
@@ -92,7 +92,7 @@ module.exports = defineConfig({
     },
     historyApiFallback: {
       rewrites: [
-        { from: /\/static-plugin\/parameter-tuning/, to: '/static-plugin/parameter-tuning/index.html' }
+        { from: /\/static-plugin\/MetaTune/, to: '/static-plugin/MetaTune/index.html' }
       ]
     },
     allowedHosts: 'all'

@@ -81,7 +81,7 @@
             "8mpn80ejri03": "Whether to use custom payload for all",
             "8mpn80ejri04": "Number of loads",
             "8mpn80ejri05": "Read to load ratio",
-            "8mpn80ejri06": "Table Value Domain Distribution",
+            "8mpn80ejri06": "Average number of tables",
             "8mpn80ejri07": "Comparison operator scale",
             "8mpn80ejri08": "Logical predicate ratio",
             "8mpn80ejri09": "Average aggregation operation ratio",
@@ -100,7 +100,7 @@
             "8mpn81ejri12": "Please enter the proportion of sorting queries",
             "8mpn82ejri04": "The number of loads cannot be empty",
             "8mpn82ejri05": "The read to read ratio in the load cannot be empty",
-            "8mpn82ejri06": "Table value range distribution cannot be empty",
+            "8mpn82ejri06": "The average number of tables cannot be empty",
             "8mpn82ejri07": "Comparison operator scale cannot be empty",
             "8mpn82ejri08": "The logical predicate ratio cannot be empty",
             "8mpn82ejri09": "The average aggregation operation ratio cannot be empty",
@@ -108,7 +108,16 @@
             "8mpn82ejri11": "The proportion of group queries cannot be empty",
             "8mpn82ejri12": "The proportion of sorting queries cannot be empty",
             "8mpn82ejri13": "Only supports SQL files",
-            "8mpn82ejri14": "The file size cannot exceed 500MB"
+            "8mpn82ejri14": "The file size cannot exceed 500MB",
+            "8mpn82ejri15": "Scale of generated load",
+            "8mpn82ejri16": "The proportion of read statements in the generated load; constraint: value range [0,1]",
+            "8mpn82ejri17": "The numerical values represent the proportion of the four comparison predicates in the query statement:>,<,=,<>; constraint: the total proportion is 1.",
+            "8mpn82ejri18": "The numerical values represent the proportion of 0, 1, and 2 logical predicates appearing, for example, [0.7, 0, 0.3] represents a probability of 70% that no logical predicate appears, and a probability of 30% that two logical predicates appear. Constraint: the total proportion is 1.",
+            "8mpn82ejri19": "The numerical values represent the average expected probability of each aggregation function in the query statement, and the first numerical value represents the probability of no aggregation function appearing. For example, [0.8, 0.2] indicates that the probability of no aggregation function appearing in a single SQL statement is 80%, and the probability of having one aggregation function is 20%. Constraint: the total proportion is 1.",
+            "8mpn82ejri20": "The numerical values represent the expected probability of returning the number of columns in the query statement. The first numerical value represents the probability of querying all columns, which is fixed to 0. For example, [0, 0.8, 0.2] indicates that the probability of only returning 1 column in a single SQL statement is 80%, and the probability of returning 2 columns is 20%. Constraint: the total proportion is 1.",
+            "8mpn82ejri21": "The numerical values represent the probability of occurrence of GROUP BY in the query statement. It is required that the number of query columns is greater than the number of group occurrences. For example, [0.8, 0.2] indicates an 80% probability that GROUP BY will not occur. Constraint: the total proportion is 1.",
+            "8mpn82ejri22": "The numerical values represent the proportion of descending and ascending in the sorting statement. For example, [0.8, 0.2] represents an ascending proportion of 80% and a descending proportion of 20%. Constraint: the total proportion is 1.",
+            "8mpn82ejri23": "The numerical values represent the probability of one or two tables appearing in the query statement, with a maximum of two tables. For example, [0.8, 0.2] indicates that the probability of one table appearing in a single SQL statement is 80%, and the probability of two tables appearing is 20%. Constraint: The total proportion is 1."
         }
     },
     "taskList": {
@@ -170,7 +179,9 @@
             "9mpn60ejri14": "Parameter application failed",
             "9mpn60ejri15": "One click restore successful",
             "9mpn60ejri16": "One click restore failed",
-            "9mpn60ejri17": "Selecting application parameters requires a restart to take effect. Do you want to continue?"
+            "9mpn60ejri17": "Selecting application parameters requires a restart to take effect. Do you want to continue?",
+            "9mpn60ejri18": "Consistent with initial parameters",
+            "9mpn60ejri19": "Select the parameters for the application, which will be applied to the database. Do you want to continue?"
         }
     },
     "operationLog": {
