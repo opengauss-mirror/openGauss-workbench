@@ -48,6 +48,7 @@ import org.opengauss.admin.common.core.domain.model.ops.host.tag.HostTagInputDto
 import org.opengauss.admin.common.core.handler.ops.cache.SSHChannelManager;
 import org.opengauss.admin.common.core.handler.ops.cache.TaskManager;
 import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
+import org.opengauss.admin.common.core.vo.HostInfoVo;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.ops.JschUtil;
 import org.opengauss.admin.common.utils.ops.WsUtil;
@@ -58,6 +59,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
@@ -103,7 +105,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
 
         Session session = jschUtil.getSession(hostBody.getPublicIp(), hostBody.getPort(), "root", encryptionUtils.decrypt(hostBody.getPassword())).orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
         try {
-            hostEntity = hostBody.toHostEntity(getHostName(session), getOS(session), getCpuArch(session));
+            hostEntity = hostBody.toHostEntity(getHostInfoVo(session));
         } finally {
             if (Objects.nonNull(session) && session.isConnected()) {
                 session.disconnect();
@@ -114,6 +116,15 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         opsHostTagService.addTag(HostTagInputDto.of(hostBody.getTags(), hostEntity.getHostId()));
         OpsHostUserEntity hostUserEntity = hostBody.toRootUser(hostEntity.getHostId());
         return hostUserService.save(hostUserEntity);
+    }
+
+    private HostInfoVo getHostInfoVo(Session rootSession) {
+        HostInfoVo hostInfoVo = new HostInfoVo();
+        hostInfoVo.setHostname(getHostName(rootSession));
+        hostInfoVo.setCpuArch(getCpuArch(rootSession));
+        hostInfoVo.setOs(getOS(rootSession));
+        hostInfoVo.setOsVersion(getOsVersion(rootSession));
+        return hostInfoVo;
     }
 
     private String getCpuArch(Session rootSession) {
@@ -145,6 +156,21 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         } catch (Exception e) {
             log.error("Failed to get system information", e);
             throw new OpsException("Failed to get system information");
+        }
+    }
+
+    private String getOsVersion(Session session) {
+        try {
+            JschResult jschResult = jschUtil.executeCommand(SshCommandConstants.OS_VERSION, session);
+            if (jschResult.getExitCode() != 0) {
+                log.error("Failed to obtain system version information, exitCode: {}, res: {}", jschResult.getExitCode(), jschResult.getResult());
+                throw new OpsException("Failed to obtain system version information");
+            } else {
+                return jschResult.getResult().trim();
+            }
+        } catch (IOException | InterruptedException e) {
+            log.error("Failed to obtain system version information：{}", e);
+            throw new OpsException("Failed to obtain system version information");
         }
     }
 
@@ -241,7 +267,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         }
 
         Session session = jschUtil.getSession(hostBody.getPublicIp(), hostBody.getPort(), "root", encryptionUtils.decrypt(hostBody.getPassword())).orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
-        OpsHostEntity newHostEntity = hostBody.toHostEntity(getHostName(session), getOS(session), getCpuArch(session));
+        OpsHostEntity newHostEntity = hostBody.toHostEntity(getHostInfoVo(session));
         newHostEntity.setHostId(hostId);
         updateById(newHostEntity);
 
@@ -400,6 +426,32 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         });
         TaskManager.registry(businessId, future);
         return res;
+    }
+
+    @Override
+    public void updateHostOsVersion(OpsHostEntity opsHostEntity) {
+        String hostId = opsHostEntity.getHostId();
+        String username = "root";
+
+        LambdaQueryWrapper<OpsHostUserEntity> userEntityQueryWrapper = new LambdaQueryWrapper<>();
+        userEntityQueryWrapper.eq(OpsHostUserEntity::getHostId, hostId).eq(OpsHostUserEntity::getUsername, username);
+        OpsHostUserEntity opsHostUserEntity = hostUserService.getOne(userEntityQueryWrapper);
+
+        Session session = jschUtil.getSession(opsHostEntity.getPublicIp(), opsHostEntity.getPort(), username, encryptionUtils.decrypt(opsHostUserEntity.getPassword())).orElseThrow(() -> new OpsException("Failed to establish a session with the hostId"));
+        String osVersion = "";
+        try {
+            osVersion = getOsVersion(session);
+        } catch (Exception e) {
+            log.error("Failed to establish a session with the hostId, hostId: {}", hostId);
+            throw new OpsException("Failed to establish a session with the hostId");
+        } finally {
+            if (Objects.nonNull(session) && session.isConnected()) {
+                session.disconnect();
+            }
+        }
+
+        opsHostEntity.setOsVersion(osVersion);
+        updateById(opsHostEntity);
     }
 
     private void doMonitor(WsSession wsSession, Session rootSession) {

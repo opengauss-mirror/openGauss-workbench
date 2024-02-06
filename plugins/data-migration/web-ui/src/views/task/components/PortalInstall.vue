@@ -44,8 +44,8 @@
           field="kafkaInstallType"
           :label="$t('components.PortalInstall.5q0aajl77lg20')"
         >
-    
-       
+
+
           <a-radio-group type="button" v-model="thirdPartyParam.kafkaInstallType">
             <a-radio :value="KAFKA_CONFIG_TYPE.BIND">{{
               $t('components.PortalInstall.5q0aajl77lg21')
@@ -62,7 +62,7 @@
                   </p>
                 </template>
          </a-popover>
-         
+
         </a-form-item>
         <template v-if="thirdPartyParam.kafkaInstallType == KAFKA_CONFIG_TYPE.INSTALL">
           <a-form-item
@@ -82,7 +82,7 @@
             v-model="thirdPartyParam.kafkaPort"
             :placeholder="$t('components.PortalInstall.5q0aajl77lg19')"
           />
-        </a-form-item> 
+        </a-form-item>
         <a-form-item
           field="schemaRegistryPort"
           :label="$t('components.PortalInstall.5q0aajl77lg30')"
@@ -91,7 +91,7 @@
             v-model="thirdPartyParam.schemaRegistryPort"
             :placeholder="$t('components.PortalInstall.5q0aajl77lg31')"
           />
-        </a-form-item> 
+        </a-form-item>
          <a-form-item
           field="kafkaInstallDir"
           :label="$t('components.PortalInstall.5q0aajl77lg27')"
@@ -127,7 +127,7 @@
           </a-select>
         </a-form-item>
       </template>
-       
+
         <a-form-item
           field="installType"
           :label="$t('components.PortalInstall.5q0aajl77lg0')"
@@ -146,6 +146,7 @@
         </a-form-item>
         <template v-if="form.installType === INSTALL_TYPE.ONLINE">
           <a-form-item
+            v-if="false"
             field="pkgDownloadUrl"
             :label="$t('components.PortalInstall.5q0aajl77lg3')"
             :rules="[
@@ -167,11 +168,14 @@
               },
             ]"
           >
-            <a-input v-model="form.pkgName"></a-input>
+            <a-select v-model="form.pkgName">
+              <a-option v-for="packageInfo in packageInfos.value" :value="packageInfo.portalPkgName">{{ packageInfo.portalPkgName }}</a-option>
+            </a-select>
           </a-form-item>
         </template>
         <template v-if="form.installType != INSTALL_TYPE.IMPORTINSTALL">
         <a-form-item
+          v-if="false"
           field="jarName"
           :label="$t('components.PortalInstall.5q0aajl77lg7')"
           :rules="[
@@ -248,7 +252,7 @@
 import { reactive, ref, watch, onMounted } from 'vue'
 // import { Message } from '@arco-design/web-vue'
 import { hostUsers, installPortal, reInstallPortal, listKafkaInstance } from '@/api/task'
-import { getSysSetting } from '@/api/common'
+import { getPortalDownloadInfoList } from '@/api/common'
 import { INSTALL_TYPE, KAFKA_CONFIG_TYPE } from '@/utils/constants'
 import { deletePortal } from '@/api/task'
 import { useI18n } from 'vue-i18n'
@@ -277,12 +281,16 @@ const form = reactive({
   pkgUploadPath: {}
 })
 
+const packageInfos = reactive({
+  value: []
+})
+
 const thirdPartyParam = reactive({
   zookeeperPort: '2181',
   kafkaPort: '9092',
   schemaRegistryPort: '8081',
   kafkaInstallType: KAFKA_CONFIG_TYPE.BIND,
-  
+
   kafkaInstallDir: form.installPath+KAFKA_CONFIG_TYPE.INSTALL_DIR_DEFAULT
 })
 
@@ -294,7 +302,6 @@ const visible = ref(false)
 const loading = ref(false)
 const hostUserData = ref([])
 const kafkaInstanceData = ref([])
-const sysSetting = ref()
 
 watch(()=>form.installPath, (v)=>{
   thirdPartyParam.kafkaInstallDir = v+KAFKA_CONFIG_TYPE.INSTALL_DIR_DEFAULT
@@ -306,10 +313,10 @@ watch(visible, (v) => {
 
 watch(
   () => props.open,
-  (v) => {   
+  (v) => {
     if (v) {
-      getSysSetting().then((res) => {
-        sysSetting.value = res.data
+      getPortalDownloadInfoList(props.hostId).then((res) => {
+        packageInfos.value = res.data
         getHostUsers()
         getKafkaInstance()
       })
@@ -321,13 +328,28 @@ watch(
       form.pkgName = ''
       form.pkgUploadPath = {}
       form.jarName = ''
+      packageInfos.value = []
       upload.fileList = []
     }
     visible.value = v
   }
 )
+
+watch(
+  ()=>form.pkgName,
+  (v)=>{
+    let pkgInfos = packageInfos.value
+    for (let i = 0; i < pkgInfos.length; i++) {
+      if (pkgInfos[i].portalPkgName === form.pkgName) {
+        form.pkgDownloadUrl = pkgInfos[i].portalPkgDownloadUrl
+        form.jarName = pkgInfos[i].portalJarName
+      }
+    }
+  }
+)
+
 const getKafkaInstance = () =>{
-  
+
   listKafkaInstance().then((res)=>{
     kafkaInstanceData.value = res.rows.length > 0 ? res.rows :[]
   })
@@ -354,15 +376,9 @@ const getHostUsers = () => {
       form.hostUserId = ''
       form.installPath = '~'
     }
-    form.pkgDownloadUrl = props.installInfo?.pkgDownloadUrl
-      ? props.installInfo?.pkgDownloadUrl
-      : sysSetting.value.portalPkgDownloadUrl
-    form.pkgName = props.installInfo?.pkgName
-      ? props.installInfo?.pkgName
-      : sysSetting.value.portalPkgName
-    form.jarName = props.installInfo?.jarName
-      ? props.installInfo?.jarName
-      : sysSetting.value.portalJarName
+    form.pkgDownloadUrl = props.installInfo?.pkgDownloadUrl || form.pkgDownloadUrl
+    form.pkgName = props.installInfo?.pkgName || form.pkgName
+    form.jarName = props.installInfo?.jarName || form.jarName
   })
 }
 
@@ -404,7 +420,7 @@ const buildInstallReq = () => {
   params.append('thirdPartySoftwareConfig.kafkaPort', thirdPartyParam.kafkaPort)
   params.append('thirdPartySoftwareConfig.installDir', thirdPartyParam.kafkaInstallDir)
   params.append('thirdPartySoftwareConfig.schemaRegistryPort', thirdPartyParam.schemaRegistryPort)
-  
+
   let uploadPath = form.pkgUploadPath
   if (form.installType === INSTALL_TYPE.ONLINE) {
     uploadPath = {}
