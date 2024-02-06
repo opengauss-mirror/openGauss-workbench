@@ -73,8 +73,8 @@ public class PileInsertionJob implements Job {
 
     private String getCommand(String pid, CollectPeriod task) {
         return Constant.INSERTION_ENVIRONMENT + ";" + Constant.INSERTION_PREFIX + " "
-                + task.getFilePath() + "/" + Constant.INSERTION_ATTACHNAME + " "
-                + pid + " " + task.getFilePath() + "/" + Constant.INSERTION_AGENTNAME
+                + task.getFilePath() + Constant.INSERTION_ATTACHNAME + " "
+                + pid + " " + task.getFilePath() + Constant.INSERTION_AGENTNAME
                 + " " + "install" + " ";
     }
 }

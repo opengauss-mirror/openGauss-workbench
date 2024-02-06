@@ -895,7 +895,9 @@
             "5myq5c8zn7k0": "Cancel",
             "5myq5c8znew0": "Delete",
             "5myq5c8znew1": "Download",
-            "5mja76hbim00": "Downloading...",   
+            "5mja76hbim00": "Downloading...",
+            "5mja76hbim001": "Enable",
+            "5mja76hbim002": "Deactivate",      
             "5myq5c8zpu85": "Task Name",
             "5myq5c8zpu83": "Server Ip",
             "5myq5c8znkk0": "Target process pid",
@@ -953,9 +955,13 @@
             "5myq5c8zpu98": "End time, cannot be empty",
             "5myq5c8zpu99": "The collection period cannot be empty",
             "5myq5c8zpu01": "Selected time period",
-            "5myq5c8zpu02": "Please add a time period",
-            "5myq5c8zpu03": "Time period not allowed to cross"
-           
+            "5myq5c8zpu02": "Please select a date and time period",
+            "5myq5c8zpu03": "Time period not allowed to cross",
+            "5myq5c8zpu04": "1. The start time must be greater than the current time",
+            "5myq5c8zpu05": "2. The end time must be greater than the start time",
+            "5myq5c8zpu06": "3. When selecting multiple time periods, crossing is not allowed",
+            "5myq5c8zpu07": "The start time of a time period cannot be equal to the end time",
+            "5myq5c8zpu08": "The start time of a time period cannot be less than the current time"
         }
     },
     "modeling": {

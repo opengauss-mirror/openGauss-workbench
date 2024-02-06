@@ -29,8 +29,7 @@
           </a-select>
         </div>
         <a-input-search
-          v-model="filter.taskName"
-          :loading="list.loading"
+          v-model="filter.taskName"          
           allowClear
           @search="isFilter"
           @press-enter="isFilter"
@@ -38,6 +37,11 @@
           :placeholder="$t('packageManage.index.5myq5c8z8540')"
           search-button
         />
+        <a-button type="primary" style="margin:0 0 0 20px" class="mr arco-input-append" @click="getListData()">
+          <template #icon>
+            <icon-refresh />
+          </template>
+        </a-button>
       </div>
     </div>
     <a-table
@@ -52,11 +56,16 @@
         {{ getVersionName(record.packageVersion) }}
       </template>
       <template #timeInterval="{ record }">
-        <a-tooltip :content-style="{color:'#1d212a'}" background-color="#f2f3f5" content="" position="right">
-          <template v-slot:content="{ visible }">
-            <span style="display:block;'margin-bottom':'5px'" v-for="data in record.timeInterval.split(',')" >{{ data }} </span>
+        <a-tooltip position="top">
+          <template #content>
+            <div
+              style="margin-bottom:'5px'"
+              v-for="(data, index) in record.timeInterval.split(',')"
+              :key="index"
+              >{{ data }}
+            </div>
           </template>
-          <span style="display:block;">{{record.timeInterval}}</span>
+           <div>{{ record.timeInterval }}</div>
         </a-tooltip>
       </template>
       <template #currentStatus="{ record }">
@@ -99,19 +108,19 @@
           ></div>
           <span style="color: #14a9f8">completed</span>
         </div>
-                <div v-else-if="record.currentStatus === 'waiting'">
-                <div
-                  style="
-                    display: inline-block;
-                    width: 12px;
-                    height: 12px;
-                    border-radius: 6px;
-                    background-color: #f8ca14;
-                    margin-right: 5px;
-                  "
-                ></div>
-                <span style="color: #f8ca14">waiting</span>
-              </div>
+        <div v-else-if="record.currentStatus === 'waiting'">
+          <div
+            style="
+              display: inline-block;
+              width: 12px;
+              height: 12px;
+              border-radius: 6px;
+              background-color: #f8ca14;
+              margin-right: 5px;
+            "
+          ></div>
+          <span style="color: #f8ca14">waiting</span>
+        </div>
       </template>
       <template #operation="{ record }">
         <div class="flex-row-start">
@@ -134,14 +143,6 @@
               $t("packageManage.index.5myq5c8znew1")
             }}</a-link>
           </div>
-          <a-progress
-            v-model:visible="record.downloading"
-            style="margin-left: 10px"
-            :steps="3"
-            size="small"
-            color="blue"
-            :percent="record.progress"
-          />
 
           <a-modal
             simple
@@ -154,13 +155,19 @@
             </template>
             <a-progress :percent="record.progress" />
           </a-modal>
-          <div style="width: 0px; margin: 0 0px 0 30px">
+          <div style="display: flex; align-items: center; margin: 0 0px 0 10px">
             <a-switch
               size="medium"
               v-model="record.switchStatus"
               @change="handleSwitchChange(record)"
             >
             </a-switch>
+            <span
+              v-if="record.switchStatus"
+              style="color: black; margin-left: 10px"
+              >{{ $t("packageManage.index.5mja76hbim001") }}</span
+            >
+            <span v-else style="color: black; margin-left: 10px">{{ $t("packageManage.index.5mja76hbim002") }}</span>
           </div>
         </div>
       </template>
@@ -365,7 +372,7 @@ const fileDownload = (record: KeyValue) => {
       record.progress = Math.floor((0.99 / 1) * 100) / 100;
     }
   }, 1000);
-  downloadFile(record.host,record.filePath)
+  downloadFile(record.host, record.filePath)
     .then((res: any) => {
       if (res) {
         const blob = new Blob([res], {

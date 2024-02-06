@@ -98,4 +98,15 @@ public class AssessmentController {
     public RespBean getOpenGaussIPs() {
         return evaluate.openGaussIp();
     }
+
+    /**
+     * deleteAssess
+     *
+     * @param assessmentId assessmentId
+     * @return RespBean
+     */
+    @GetMapping("/delete/{assessmentId}")
+    public RespBean deleteAssess(@PathVariable Long assessmentId) {
+        return evaluate.deleteAssess(assessmentId);
+    }
 }

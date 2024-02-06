@@ -23,10 +23,13 @@ import cn.hutool.core.util.StrUtil;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.util.StringJoiner;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.collect.config.common.Constant;
 
 /**
  * CommandLineRunner
@@ -41,29 +44,33 @@ public class CommandLineRunner {
      *
      * @param command  command
      * @param filePath filePath
-     * @return String
+     * @param timeOut  timeOut
+     * @return boolean
      */
-    public static String runCommand(String command, String filePath) {
-        log.info(command);
-        log.info(filePath);
+    public static boolean runCommand(String command, String filePath, long timeOut) {
         try {
-            File workingDirectory = new File(filePath);
-            ProcessBuilder builder = new ProcessBuilder(Arrays.asList(command.split(" ")));
-            builder.directory(workingDirectory);
+            ProcessBuilder builder = new ProcessBuilder("bash", "-c", command);
+            builder.directory(new File(filePath));
             Process process = builder.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(),
-                    StandardCharsets.UTF_8));
-            String line;
-            StringBuffer res = new StringBuffer();
-            while ((line = reader.readLine()) != null) {
-                res.append(line).append(StrUtil.LF);
-                log.info(line);
-            }
-            reader.close();
-            return res.toString();
-        } catch (IOException exception) {
-            log.error(exception.getMessage());
+            String output = readFromStream(process.getInputStream());
+            String error = readFromStream(process.getErrorStream());
+            process.waitFor(timeOut, TimeUnit.MINUTES);
+            StringBuilder result = new StringBuilder();
+            result.append(output).append(StrUtil.LF).append(error);
+            String res = result.toString();
+            log.info(res);
+            return res.contains(Constant.SUCCESS_INSTALL);
+        } catch (IOException | InterruptedException exception) {
+            log.error("Command execution failed: {}", exception.getMessage());
+            return false;
         }
-        return "";
+    }
+
+    private static String readFromStream(InputStream stream) throws IOException {
+        StringJoiner joiner = new StringJoiner(StrUtil.LF);
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+            reader.lines().forEach(joiner::add);
+        }
+        return joiner.toString();
     }
 }

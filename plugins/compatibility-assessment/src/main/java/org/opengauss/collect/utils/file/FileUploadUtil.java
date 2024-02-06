@@ -19,14 +19,21 @@
 
 package org.opengauss.collect.utils.file;
 
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.util.ZipUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.exception.ServiceException;
-import org.springframework.web.multipart.MultipartFile;
-
+import cn.hutool.core.util.ObjectUtil;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.ArchiveException;
+import org.apache.commons.compress.archivers.ArchiveInputStream;
+import org.apache.commons.compress.archivers.ArchiveStreamFactory;
+import org.apache.commons.compress.utils.IOUtils;
+import org.opengauss.collect.config.common.Constant;
+import org.opengauss.collect.utils.AssertUtil;
+import org.opengauss.collect.utils.CommandLineRunner;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * FileUploadUtil
@@ -37,54 +44,48 @@ import java.io.IOException;
 @Slf4j
 public class FileUploadUtil {
     /**
-     * saveAndUnzipFile
+     * extractResource
      *
-     * @param file file
-     * @param saveDirectory saveDirectory
-     * @param unzipDirectory unzipDirectory
+     * @param file                 file
+     * @param destinationDirectory destinationDirectory
      */
-    public static void saveAndUnzipFile(MultipartFile file, String saveDirectory, String unzipDirectory) {
-        File saveDir = new File(saveDirectory);
-        if (!saveDir.exists()) {
-            saveDir.mkdirs();
-        }
-        File unzipDir = new File(unzipDirectory);
-        if (!unzipDir.exists()) {
-            unzipDir.mkdirs();
-        }
-        // 保存文件到本地磁盘
-        File savedFile = null;
+    public static void extractResource(MultipartFile file, String destinationDirectory) {
+        // Create only if it doesn't exist, ignore if it already exists
         try {
-            savedFile = saveFile(file, saveDirectory);
-        } catch (IOException exception) {
-            log.info("FileUploadUtil occur error {}", exception.getMessage());
-            throw new ServiceException("saveAndUnzipFile occur error");
+            InputStream inputStream = file.getInputStream();
+            AssertUtil.isTrue(ObjectUtil.isEmpty(inputStream), "Resource does not exist");
+            ArchiveInputStream ais = new ArchiveStreamFactory().createArchiveInputStream("zip", inputStream);
+            ArchiveEntry entry;
+            while ((entry = ais.getNextEntry()) != null) {
+                if (!ais.canReadEntryData(entry)) {
+                    continue;
+                }
+                File entryFile = new File(destinationDirectory, entry.getName());
+                if (entry.isDirectory()) {
+                    entryFile.mkdirs();
+                } else {
+                    FileOutputStream fos = new FileOutputStream(entryFile);
+                    IOUtils.copy(ais, fos);
+                    fos.close();
+                }
+            }
+            ais.close();
+        } catch (ArchiveException | IOException e) {
+            log.error(e.getMessage());
         }
-        // 解压文件到指定目录
-        unzipFile(savedFile, unzipDirectory);
-        // 删除上传的压缩文件
-        FileUtil.del(savedFile);
-    }
-
-    private static File saveFile(MultipartFile file, String saveDirectory) throws IOException {
-        File savedFile = new File(saveDirectory, file.getOriginalFilename());
-        FileUtil.writeFromStream(file.getInputStream(), savedFile);
-        return savedFile;
-    }
-
-    private static void unzipFile(File file, String unzipDirectory) {
-        ZipUtil.unzip(file, new File(unzipDirectory));
     }
 
     /**
-     * deleteFilesInDirectory
+     * delCache
      *
-     * @param directoryPath directoryPath
+     * @param dataKitPath dataKitPath
      */
-    public static void deleteFilesInDirectory(String directoryPath) {
-        File directory = FileUtil.file(directoryPath);
-        if (directory.exists() && directory.isDirectory()) {
-            FileUtil.clean(directory);
-        }
+    public static void delCache(String dataKitPath) {
+        // 评估结束后，删除assess目录下的缓存文件
+        String command = String.format(Constant.CREATE_PATH, dataKitPath, dataKitPath, dataKitPath);
+        boolean isSuccess = CommandLineRunner.runCommand(command, Constant.ENV_PATH, Constant.TIME_OUT);
+        AssertUtil.isTrue(!isSuccess, "Failed to create upload "
+                + "directory or delete cache file, directory is" + dataKitPath
+                + "Please check permissions");
     }
 }
