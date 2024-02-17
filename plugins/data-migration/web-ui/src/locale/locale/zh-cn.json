@@ -538,7 +538,18 @@
             "5qtkk97a2e42": "一致；",
             "5qtkk97a2e43": "不一致，分别为：MySQL参数",
             "5qtkk97a2e44": "openGauss参数",
-            "5qtkk97a2e45": "，"
+            "5qtkk97a2e45": "，",
+            "5qtkk97a2e46": "MySQL加密方式：",
+            "5qtkk97a2e47": "正确；",
+            "5qtkk97a2e48": "不正确, 结果为：",
+            "5qtkk97a2e49": "，应改为default_authentication_plugin=",
+            "5qtkk97a2e50": "openGauss B兼容库：",
+            "5qtkk97a2e51": "满足；",
+            "5qtkk97a2e52": "不满足，类型为：",
+            "5qtkk97a2e53": "，应改为sql_compatibility=",
+            "5qtkk97a2e54": "逻辑复制数量：",
+            "5qtkk97a2e55": "可用；",
+            "5qtkk97a2e56": "，达到最大值，不可用；"
         }
     },
     "third": {
