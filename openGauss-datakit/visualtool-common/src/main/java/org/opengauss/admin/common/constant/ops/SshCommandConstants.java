@@ -89,7 +89,10 @@ public interface SshCommandConstants {
 
     String LIMITS = "echo -e \"* hard nofile 1048576\\n* soft nproc 1048576\\n* hard nproc 1048576\\n* soft nproc 1048576\" >> /etc/security/limits.conf";
 
-    String HOSTNAME = "cat /etc/hostname | sed 's/\\\"//g'";
+    /**
+     * hostname
+     */
+    String HOSTNAME = "hostname";
     /**
      * decompress
      */

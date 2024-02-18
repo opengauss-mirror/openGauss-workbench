@@ -90,10 +90,16 @@ mkdir -p output/$plugin_doc_output
 
 function prepare_java_env()
 {
-    echo "We no longer provide java, please makesure java(1.11*) already in PATH!"
+    echo "We no longer provide java, please makesure java(11+) already in PATH!"
     JAVA_VERSION=`java -version 2>&1 | awk -F '"' '/version/ {print $2}'`
+    if [ -z "$JAVA_VERSION" ]; then
+        echo "Failed to obtain java version!"
+        exit 1
+    fi
+
     echo java version is $JAVA_VERSION
-    if [ x"$JAVA_VERSION" \< x"11" ]; then
+    MAJOR_VERSION=`echo $JAVA_VERSION | awk -F '[.]' '{print $1}'`
+    if [ $MAJOR_VERSION -lt 11 ]; then
         echo "java version is not meeting requirements!"
         exit 1
     fi
@@ -103,10 +109,16 @@ function prepare_maven_env()
 {
     echo "We no longer provide mvn, please makesure mvn(3.6.0+) already in PATH!"
     MAVEN_VERSION=`mvn -v 2>&1 | awk '/Apache Maven / {print $3}'`
+    if [ -z "$MAVEN_VERSION" ]; then
+        echo "Failed to obtain maven version!"
+        exit 1
+    fi
+
     echo maven version is $MAVEN_VERSION
-    if [ x"$MAVEN_VERSION" \< x"3.6" ]; then
-          echo "maven version is not meeting requirements!"
-          exit 1
+    read MAJOR_VERSION MINOR_VERSION <<< $(echo $MAVEN_VERSION | awk -F '[.]' '{print $1, $2}')
+    if [ $MAJOR_VERSION -lt 3 ] || ([ $MAJOR_VERSION -eq 3 ] && [ $MINOR_VERSION -lt 6 ]); then
+        echo "maven version is not meeting requirements!"
+        exit 1
     fi
 }
 
@@ -114,10 +126,16 @@ function prepare_npm_env()
 {
     echo "We no longer provide node/npm, please makesure npm(8.11.0+) already in PATH!"
     NPM_VERSION=`npm -v 2>&1 | awk -F '"' '// {print $1}'`
+    if [ -z "$NPM_VERSION" ]; then
+        echo "Failed to obtain npm version!"
+        exit 1
+    fi
+
     echo npm version is $NPM_VERSION
-    if [ x"$NPM_VERSION" \< x"8.11" ]; then
-          echo "npm version is not meeting requirements!"
-          exit 1
+    read MAJOR_VERSION MINOR_VERSION <<< $(echo $NPM_VERSION | awk -F '[.]' '{print $1, $2}')
+    if [ $MAJOR_VERSION -lt 8 ] || ([ $MAJOR_VERSION -eq 8 ] && [ $MINOR_VERSION -lt 11 ]); then
+        echo "npm version is not meeting requirements!"
+        exit 1
     fi
 }
 
