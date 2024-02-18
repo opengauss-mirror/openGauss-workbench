@@ -117,8 +117,10 @@ public class CollectTemplateMetricsServiceImpl
                             templateConfigs.stream().filter(z -> z.getMetricsKey().equals(a)).findFirst();
                     if (match.isPresent()) {
                         temp.setInterval(match.get().getInterval());
+                        temp.setIsEnable(match.get().getIsEnable());
                     } else {
                         temp.setInterval(CommonConstants.DEFAULT_SCRAPE_TIME);
+                        temp.setIsEnable(true);
                     }
                     return temp;
                 })

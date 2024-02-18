@@ -25,6 +25,7 @@
 package com.nctigba.observability.instance.model.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Getter;
@@ -50,4 +51,6 @@ public class CollectTemplateMetricsDO {
     private Date createTime;
     private String updateBy;
     private Date updateTime;
+    @TableField(value = "is_enable")
+    private Boolean isEnable = true;
 }

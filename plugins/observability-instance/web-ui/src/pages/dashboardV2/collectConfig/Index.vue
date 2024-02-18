@@ -57,6 +57,11 @@
           </div>
         </template>
       </el-table-column>
+      <el-table-column align="center" width="80" prop="value" :label="$t('collectConfig.metricEnable')">
+        <template #default="{ row }">
+          <el-switch v-model="row.isEnable" />
+        </template>
+      </el-table-column>
     </el-table>
   </div>
 </template>
@@ -140,6 +145,7 @@ async function saveConfig(isReset: boolean) {
       details.push({
         metricKey: element.metricGroupKey,
         interval: isReset ? null : element.time.toString() + element.unit,
+        isEnable: isReset ? true : element.isEnable,
       })
     }
   })
