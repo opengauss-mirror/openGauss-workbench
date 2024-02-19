@@ -3,7 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { appRoutes } from './routes'
 
 const router = createRouter({
-  history: createWebHistory('/static-plugin/parameter-tuning/'),
+  history: createWebHistory('/static-plugin/MetaTune/'),
   routes: [
     {
       path: '/',

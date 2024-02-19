@@ -36,7 +36,7 @@ public class PluginExtensionInfoConfig implements PluginExtensionInfo {
     /**
      * PLUGIN_ID
      */
-    public static final String PLUGIN_ID = "parameter-tuning";
+    public static final String PLUGIN_ID = "MetaTune";
 
     @Override
     public Map<String, Object> extensionInfo() {

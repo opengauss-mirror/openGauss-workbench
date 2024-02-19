@@ -2,6 +2,7 @@
   <a-modal
     :scrollable="true"
     unmount-on-close
+    :destroyOnClose="true"
     :mask-closable="false"
     :esc-to-close="false"
     :visible="data.show"
@@ -9,8 +10,9 @@
     :modal-style="{ width: '60vw' }"
     @cancel="close"
   >
-  <div class="session-top-ten-c">
+  <div class="" >
     <a-table
+      v-if="list.data.length > 0"
       class="d-a-table-row"
       :data="list.data"
       :columns="columns"
@@ -27,6 +29,7 @@
       <span v-if='record.restart === "否"'>{{$t('install.Offline.5mpn60fjrb17')}}</span>
     </template>
     </a-table>
+    <span v-if="list.data.length === 0" class="nodataClass">{{$t('paramsRecommendation.paramsDetails.9mpn60ejri18')}}</span>
   </div>
   <template #footer>
     <div class="centrClass">
@@ -80,6 +83,7 @@ const columns = computed(() => [
 
 const close = () => {
   data.show = false
+  list.selectedRowKeys = []
 }
 const open = (
   paramsData?: KeyValue
@@ -111,7 +115,7 @@ const applicationParams = (flg) => {
     data: selectedRows,
     isOptimization : flg
   }
-  if(selectedRows.filter(row => row.restart === '否').length > 0){
+  if(selectedRows.filter(row => row.restart === '是').length > 0){
     Modal.confirm({
       content: t('paramsRecommendation.paramsDetails.9mpn60ejri17'),
       onOk: () => {
@@ -120,7 +124,13 @@ const applicationParams = (flg) => {
       onCancel: () => {}
     })
   } else{
-    ApplicationParam(param)
+    Modal.confirm({
+      content: t('paramsRecommendation.paramsDetails.9mpn60ejri19'),
+      onOk: () => {
+        ApplicationParam(param)
+      },
+      onCancel: () => {}
+    })
   }
 }
 const ApplicationParam = (param) => {
@@ -147,5 +157,10 @@ defineExpose({
   }
   .centrClass {
     text-align: center;
+  }
+  .nodataClass {
+    display: block;
+    text-align: center;
+    font-size: 18px;
   }
 </style>
