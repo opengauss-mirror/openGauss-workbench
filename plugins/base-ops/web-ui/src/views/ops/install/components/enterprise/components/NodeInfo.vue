@@ -306,7 +306,9 @@ const changeHostId = () => {
               form.value.installUserId = data.userListByHost[hostId][0].hostUserId
               form.value.installUsername = data.userListByHost[hostId][0].username
             }
-            emits('installUser', form.value.installUsername)
+            if (form.value.clusterRole === ClusterRoleEnum.MASTER) {
+              emits('installUser', form.value.installUsername)
+            }
           } else {
             form.value.installUserId = ''
             form.value.installUsername = ''
