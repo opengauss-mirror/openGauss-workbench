@@ -123,6 +123,11 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/../../lib/intarkdb-jdbc-1.0.0.1.jar</systemPath>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

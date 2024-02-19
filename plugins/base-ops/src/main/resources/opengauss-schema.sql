@@ -433,6 +433,28 @@ CREATE TABLE IF NOT EXISTS "public"."ops_package_manager" (
     )
 ;
 
+CREATE TABLE IF NOT EXISTS "public"."ops_device_manager" (
+    "name" varchar(64) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "host_ip" varchar(64) COLLATE "pg_catalog"."default",
+    "port" varchar(5) COLLATE "pg_catalog"."default",
+    "user_name" varchar(64) COLLATE "pg_catalog"."default",
+    "password" varchar(256) COLLATE "pg_catalog"."default",
+    "pair_id" varchar(256) COLLATE "pg_catalog"."default"
+    )
+;
+
+CREATE TABLE IF NOT EXISTS "public"."ops_disaster_cluster" (
+    "cluster_id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "primary_cluster_id" varchar(255) COLLATE "pg_catalog"."default",
+    "primary_cluster_device_manager_name" varchar(64) COLLATE "pg_catalog"."default",
+    "standby_cluster_id" varchar(255) COLLATE "pg_catalog"."default",
+    "standby_cluster_device_manager_name" varchar(64) COLLATE "pg_catalog"."default",
+    "primary_json_path" varchar(255) COLLATE "pg_catalog"."default",
+    "standby_json_path" varchar(255) COLLATE "pg_catalog"."default"
+    )
+;
+
+
 CREATE TABLE IF NOT EXISTS "public"."ops_olk" (
     "id" VARCHAR(64) NOT NULL PRIMARY KEY,
     "name" VARCHAR(255) NOT NULL,

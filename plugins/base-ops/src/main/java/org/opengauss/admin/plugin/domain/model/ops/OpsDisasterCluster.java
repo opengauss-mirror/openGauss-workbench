@@ -13,26 +13,21 @@
  * See the Mulan PSL v2 for more details.
  */
 
-package org.opengauss.admin.plugin.mapper.ops;
+package org.opengauss.admin.plugin.domain.model.ops;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
-import org.apache.ibatis.annotations.Mapper;
+import lombok.Data;
 
 import java.util.List;
 
 /**
- * cluster node mapper
+ * disaster cluster return response body
  *
  * @author wbd
- * @since 2024/1/20 09:14
+ * @since 2024/1/27 11:34
  **/
-@Mapper
-public interface OpsClusterNodeMapper extends BaseMapper<OpsClusterNodeEntity> {
-    /**
-     * query sharing resource cluster id
-     *
-     * @return List
-     */
-    List<String> queryDssCluster();
+@Data
+public class OpsDisasterCluster {
+    private String disasterClusterName;
+
+    private List<OpsDisasterSubCluster> subClusters;
 }

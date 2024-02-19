@@ -210,7 +210,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
                 throw new OpsException("install depencency fail");
             }
 
-        } catch (IOException e) {
+        } catch (OpsException | IOException e) {
             log.error("install depencency fail", e);
             errorFlag = true;
         }

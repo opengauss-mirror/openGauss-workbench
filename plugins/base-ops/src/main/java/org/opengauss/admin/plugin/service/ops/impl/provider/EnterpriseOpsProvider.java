@@ -169,7 +169,8 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
     }
 
-    private String createSoftLink(LunPathManager path, String prefix, Session rootSession) {
+    private String createSoftLink(LunPathManager path, String prefix, Session rootSession, boolean isDisasterNeed,
+        String installUser) {
         try {
             String exec = getDiskQueryCmd(path);
             JschResult jschResult = jschUtil.executeCommand(exec, rootSession);
@@ -180,7 +181,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
             }
 
             String disk = LunPathManager.getLunDiskName(jschResult.getResult());
-            String linkPath = LunPathManager.getLunLinkPath(path, prefix);
+            String linkPath = LunPathManager.getLunLinkPath(path, prefix, isDisasterNeed, installUser);
             String command = "ls -l " + linkPath;
             try {
                 if (jschUtil.executeCommand(command, rootSession).getExitCode() == 0) {
@@ -227,23 +228,34 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
 
                 Session rootSession = loginWithUser(jschUtil, encryptionUtils,
                         installContext.getHostInfoHolders(), true, hostEntity.getHostId(), null);
-
                 SharingStorageInstallConfig config =
                         installContext.getEnterpriseInstallConfig().getSharingStorageInstallConfig();
+                String installUser = installContext.getEnterpriseInstallConfig()
+                    .getNodeConfigList()
+                    .stream()
+                    .filter(node -> hostEntity.getHostId().equals(node.getHostId()))
+                    .findFirst()
+                    .orElseThrow(() -> new OpsException("root user information not found")).getInstallUsername();
                 config.setDssDataLunLinkPath(createSoftLink(new LunPathManager(config.getDssDataLunPath()),
-                        "data", rootSession));
-
+                        "data", rootSession, true, installUser));
                 List<String> xlogPaths = config.getXlogLunPath();
                 List<String> linkXlogPaths = new ArrayList<>();
-                for (String xlogPath : xlogPaths) {
-                    linkXlogPaths.add(createSoftLink(new LunPathManager(xlogPath.trim()), "xlog", rootSession));
+                if (xlogPaths.size() == 1) {
+                    linkXlogPaths.add(
+                        createSoftLink(new LunPathManager(xlogPaths.get(0).trim()), "xlog", rootSession, true,
+                            installUser));
+                } else {
+                    for (String xlogPath : xlogPaths) {
+                        linkXlogPaths.add(
+                            createSoftLink(new LunPathManager(xlogPath.trim()), "xlog", rootSession, false,
+                                installUser));
+                    }
                 }
                 config.setXlogLunLinkPath(linkXlogPaths);
                 config.setCmSharingLunLinkPath(createSoftLink(new LunPathManager(
-                        config.getCmSharingLunPath()), "cm_sharing", rootSession));
-
+                        config.getCmSharingLunPath()), "cm_sharing", rootSession, false, installUser));
                 config.setCmVotingLunLinkPath(createSoftLink(new LunPathManager(
-                        config.getCmVotingLunPath()), "cm_voting", rootSession));
+                        config.getCmVotingLunPath()), "cm_voting", rootSession, false, installUser));
 
                 if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
                     rootSession.disconnect();

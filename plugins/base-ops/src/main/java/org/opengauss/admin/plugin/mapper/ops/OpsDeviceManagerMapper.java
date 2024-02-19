@@ -16,23 +16,15 @@
 package org.opengauss.admin.plugin.mapper.ops;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
 import org.apache.ibatis.annotations.Mapper;
-
-import java.util.List;
+import org.opengauss.admin.plugin.domain.entity.ops.OpsDeviceManagerEntity;
 
 /**
- * cluster node mapper
+ * device manager mapper
  *
  * @author wbd
- * @since 2024/1/20 09:14
+ * @since 2024/2/1 09:04
  **/
 @Mapper
-public interface OpsClusterNodeMapper extends BaseMapper<OpsClusterNodeEntity> {
-    /**
-     * query sharing resource cluster id
-     *
-     * @return List
-     */
-    List<String> queryDssCluster();
+public interface OpsDeviceManagerMapper extends BaseMapper<OpsDeviceManagerEntity> {
 }

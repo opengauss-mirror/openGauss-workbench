@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.plugin.mapper.ops.OpsDisasterClusterMapper">
+
+    <select id="queryDisasterClusterCountByDeviceManagerName" parameterType="java.lang.String" resultType="int">
+        select count(*) from ops_disaster_cluster where primary_cluster_device_manager_name = #{deviceManagerName}
+            or standby_cluster_device_manager_name = #{deviceManagerName}
+    </select>
+
+    <select id="queryDisasterClusterCountByClusterName" parameterType="java.lang.String" resultType="int">
+        select count(*) from ops_disaster_cluster where primary_cluster_id = #{clusterName}
+        or standby_cluster_id = #{clusterName}
+    </select>
+
+    <select id="queryDisasterClusterInfo" resultType="java.util.Map">
+        select temp.*, node.host_id, node.cluster_role from (select d.cluster_id as disaster_id, d.primary_cluster_id,
+            c.cluster_id, c.version, c.version_num, c.database_username, c.port, c.env_path from ops_disaster_cluster d
+            left join ops_cluster c on (d.primary_cluster_id = c.cluster_id or d.standby_cluster_id = c.cluster_id)) temp
+            left join ops_cluster_node node on temp.cluster_id = node.cluster_id
+    </select>
+
+</mapper>
