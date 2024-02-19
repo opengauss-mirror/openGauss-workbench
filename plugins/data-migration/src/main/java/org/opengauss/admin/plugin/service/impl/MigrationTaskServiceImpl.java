@@ -629,6 +629,8 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         toolsParamQueryWrapper.eq(TbMigrationTaskGlobalToolsParam::getPortalHostID, task.getRunHostId());
         toolsParamQueryWrapper.eq(TbMigrationTaskGlobalToolsParam::getDeleteFlag,
                 TbMigrationTaskGlobalToolsParam.DeleteFlagEnum.USED.getDeleteFlag());
+        toolsParamQueryWrapper.ne(TbMigrationTaskGlobalToolsParam::getNewParamFlag,
+                TbMigrationTaskGlobalToolsParam.NewParamFlagEnum.NEW_PARAM.getNewParamFlag());
         List<TbMigrationTaskGlobalToolsParam> toolsParams = toolsParamService.list(toolsParamQueryWrapper);
 
         toolsParams.forEach(toolsParam -> {
@@ -651,12 +653,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                         TbMigrationTaskGlobalToolsParam.DeleteFlagEnum.USED.getDeleteFlag());
         List<TbMigrationTaskGlobalToolsParam> newParam = toolsParamService.list(toolsParamQueryWrapper);
         newParam.forEach(toolsParam -> {
-            if (toolsParam.getParamChangeValue() != null) {
-                return;
-            }
             toolsParamsMap.put(NEW_PARAM_PREFIX + toolsParam.getConfigId() + "." + toolsParam.getParamValueType()
                             + "." + toolsParam.getParamKey(),
-                    aroundApostrophe(toolsParam.getParamValue()));
+                    aroundApostrophe(toolsParam.getParamChangeValue() == null ? toolsParam.getParamValue()
+                            : toolsParam.getParamChangeValue()));
         });
     }
 
