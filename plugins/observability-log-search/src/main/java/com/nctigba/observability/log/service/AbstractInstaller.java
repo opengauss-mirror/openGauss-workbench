@@ -23,135 +23,183 @@
 
 package com.nctigba.observability.log.service;
 
-import java.net.http.WebSocket;
-import java.util.ArrayList;
-import java.util.List;
-
+import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
+import com.nctigba.observability.log.mapper.NctigbaEnvMapper;
+import com.nctigba.observability.log.model.entity.NctigbaEnvDO;
+import com.nctigba.observability.log.service.AbstractInstaller.Step.status;
+import com.nctigba.observability.log.util.MessageSourceUtil;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
-import org.opengauss.admin.common.core.domain.model.ops.HostUserBody;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
+import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.common.utils.ops.WsUtil;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
-import com.nctigba.observability.log.model.entity.NctigbaEnvDO;
-import com.nctigba.observability.log.mapper.NctigbaEnvMapper;
-import com.nctigba.observability.log.service.AbstractInstaller.Step.status;
-import com.nctigba.observability.log.util.MessageSourceUtil;
-
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
+import java.net.http.WebSocket;
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class AbstractInstaller {
-	public static final String TAR = ".tar.gz";
-	@Autowired
-	@AutowiredType(Type.PLUGIN_MAIN)
-	protected HostFacade hostFacade;
-	@Autowired
-	@AutowiredType(Type.PLUGIN_MAIN)
-	protected HostUserFacade hostUserFacade;
-	@Autowired
-	@AutowiredType(Type.PLUGIN_MAIN)
-	protected EncryptionUtils encryptionUtils;
-	@Autowired
-	protected NctigbaEnvMapper envMapper;
-	@Autowired
-	@AutowiredType(Type.PLUGIN_MAIN)
-	protected WsUtil wsUtil;
+    /**
+     * Tar name
+     */
+    public static final String TAR = ".tar.gz";
 
-	public static String arch(String str) {
-		return "aarch64".equals(str) ? "arm64" : "amd64";
-	}
+    @Autowired
+    @AutowiredType(Type.PLUGIN_MAIN)
+    protected HostFacade hostFacade;
+    @Autowired
+    @AutowiredType(Type.PLUGIN_MAIN)
+    protected HostUserFacade hostUserFacade;
+    @Autowired
+    @AutowiredType(Type.PLUGIN_MAIN)
+    protected EncryptionUtils encryptionUtils;
+    @Autowired
+    protected NctigbaEnvMapper envMapper;
+    @Autowired
+    @AutowiredType(Type.PLUGIN_MAIN)
+    protected WsUtil wsUtil;
 
-	protected OpsHostUserEntity getUser(OpsHostEntity hostEntity, String username, String rootPassword) {
-		var user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {
-			return username.equals(e.getUsername());
-		}).findFirst().orElse(null);
-		if (user == null && rootPassword != null) {
-			var body = new HostUserBody();
-			body.setHostId(hostEntity.getHostId());
-			body.setPassword(encryptionUtils.encrypt(StrUtil.uuid()));
-			body.setRootPassword(rootPassword);
-			body.setUsername(username);
-			hostUserFacade.add(body);
-			user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {
-				return username.equals(e.getUsername());
-			}).findFirst().orElse(null);
-		}
-		if (user == null)
-			throw new RuntimeException("user not found");
-		return user;
-	}
+    /**
+     * Get arch
+     *
+     * @param str String
+     * @return String
+     */
+    public static String arch(String str) {
+        return "aarch64".equals(str) ? "arm64" : "amd64";
+    }
 
-	protected int skipStep(WsSession wsSession, List<Step> steps, int curr) {
-		steps.get(curr).setState(status.SKIP);
-		curr++;
-		sendMsg(wsSession, steps, curr, status.DOING);
-		return curr;
-	}
+    /**
+     * Get user
+     *
+     * @param hostEntity OpsHostEntity
+     * @param username   String
+     * @return OpsHostUserEntity
+     */
+    protected OpsHostUserEntity getUser(OpsHostEntity hostEntity, String username) {
+        var user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(
+                e -> username.equals(e.getUsername())).findFirst().orElse(null);
+        if (user == null) {
+            throw new CustomException("user not found");
+        }
+        return user;
+    }
 
-	/**
-	 * change current step to {@code DONE} and next step to {@code DOING}, send to
-	 * {@link WebSocket}
-	 */
-	protected int nextStep(WsSession wsSession, List<Step> steps, int curr) {
-		steps.get(curr).setState(status.DONE);
-		curr++;
-		sendMsg(wsSession, steps, curr, status.DOING);
-		return curr;
-	}
+    /**
+     * Skip step
+     *
+     * @param wsSession Websocket
+     * @param steps     Step
+     * @param curr      Curr
+     * @return int
+     */
+    protected int skipStep(WsSession wsSession, List<Step> steps, int curr) {
+        steps.get(curr).setState(status.SKIP);
+        curr++;
+        sendMsg(wsSession, steps, curr, status.DOING);
+        return curr;
+    }
 
-	/**
-	 * change current step to {@code DONE}, send to {@link WebSocket}
-	 */
-	protected synchronized void sendMsg(WsSession wsSession, List<Step> steps, int curr, status state) {
-		steps.get(curr).setState(state);
-		wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
-	}
+    /**
+     * change current step to {@code DONE} and next step to {@code DOING}, send to
+     * {@link WebSocket}
+     */
+    protected int nextStep(WsSession wsSession, List<Step> steps, int curr) {
+        steps.get(curr).setState(status.DONE);
+        curr++;
+        sendMsg(wsSession, steps, curr, status.DOING);
+        return curr;
+    }
 
-	protected void addMsg(WsSession wsSession, List<Step> steps, int curr, String msg) {
-		steps.get(curr).add(msg);
-		wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
-	}
+    /**
+     * change current step to {@code DONE}, send to {@link WebSocket}
+     */
+    protected synchronized void sendMsg(WsSession wsSession, List<Step> steps, int curr, status state) {
+        steps.get(curr).setState(state);
+        wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+    }
 
-	public void save(NctigbaEnvDO env) {
-		if (envMapper.selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, env.getType())
-				.eq(NctigbaEnvDO::getPath, env.getPath())) == null)
-			envMapper.insert(env);
-	}
+    /**
+     * Add message
+     *
+     * @param wsSession WsSession
+     * @param steps     List<Step>
+     * @param curr      int
+     * @param msg       String
+     */
+    protected void addMsg(WsSession wsSession, List<Step> steps, int curr, String msg) {
+        steps.get(curr).add(msg);
+        wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+    }
 
-	@Data
-	@Accessors(chain = true)
-	@NoArgsConstructor
-	public static class Step {
-		String name;
-		status state = status.TODO;
-		List<String> msg = new ArrayList<>();
+    /**
+     * Save
+     *
+     * @param env NctigbaEnvDO
+     */
+    public void save(NctigbaEnvDO env) {
+        if (envMapper.selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, env.getType())
+                .eq(NctigbaEnvDO::getPath, env.getPath())) == null) {
+            envMapper.insert(env);
+        }
+    }
 
-		public Step(String name) {
-			this.name = MessageSourceUtil.get(name);
-		}
+    /**
+     * Step
+     *
+     * @author luomeng
+     * @since 2024/1/30
+     */
+    @Data
+    @Accessors(chain = true)
+    @NoArgsConstructor
+    public static class Step {
+        String name;
+        status state = status.TODO;
+        List<String> msg = new ArrayList<>();
 
-		public void add(String e, Object... objs) {
-			e = MessageSourceUtil.get(e, objs);
-			msg.add(e);
-		}
+        /**
+         * Step
+         *
+         * @param name String
+         */
+        public Step(String name) {
+            this.name = MessageSourceUtil.get(name);
+        }
 
-		public enum status {
-			TODO,
-			DOING,
-			DONE,
-			SKIP,
-			ERROR
-		}
-	}
+        /**
+         * Add
+         *
+         * @param e    String
+         * @param objs Object
+         */
+        public void add(String e, Object... objs) {
+            e = MessageSourceUtil.get(e, objs);
+            msg.add(e);
+        }
+
+        /**
+         * status
+         *
+         * @author luomeng
+         * @since 2024/1/30
+         */
+        public enum status {
+            TODO,
+            DOING,
+            DONE,
+            SKIP,
+            ERROR
+        }
+    }
 }

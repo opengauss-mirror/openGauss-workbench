@@ -71,7 +71,7 @@
                     <span>{{ t("install.downloadSuggest") }}：</span><el-link :href=" formData.url">{{ formData.url }}</el-link>
                 </div>
 
-                <el-upload v-model:file-list="fileList" drag :http-request="upload" :limit="1" :show-file-list="true" :on-exceed="handleExceed" :before-upload="uploadBefore">
+                <el-upload ref="uploadFile" v-model:file-list="fileList" drag :http-request="upload" :show-file-list="true" :on-exceed="handleExceed" :before-upload="uploadBefore">
                     <el-icon class="el-icon--upload"><plus /></el-icon>
                     <div class="el-upload__text">{{ t("install.uploadInfo") }}</div>
                 </el-upload>
@@ -312,6 +312,7 @@ const showUploadFile = (_type: string, _pgkName: string) => {
     showUpload.value = true;
     pgkName.value = _pgkName;
 };
+const uploadFile = ref()
 const DEFAULT_SIZE = 15 * 1024 * 2024;
 const fileTotalSize = ref<number>(0);
 const chunkCurNum = ref<number>(0);
@@ -499,7 +500,18 @@ const retryUpload = async() => {
 const handleExceed: UploadProps["onExceed"] = (files, uploadFiles) => {
     fileList.value = files;
 };
-const uploadBefore = () => {
+const uploadBefore = (file: UploadRawFile) => {
+    let index = formData.pkg.indexOf(".tar.gz")
+    let startStr = formData.pkg.substring(0, index)
+    let endStr = formData.pkg.substring(index)
+    if (!file.name.startsWith(startStr) || !file.name.endsWith(endStr)) {
+        ElMessage({
+            message: t('install.fileMismatch') + formData.pkg,
+            type: 'error',
+        }); 
+        return false;
+    }
+    uploadFile.value.clearFiles()
     fileList.value = [];
     return true;
 };

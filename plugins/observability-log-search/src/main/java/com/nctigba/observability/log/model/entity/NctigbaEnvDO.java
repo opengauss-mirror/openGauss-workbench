@@ -23,37 +23,59 @@
 
 package com.nctigba.observability.log.model.entity;
 
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
-
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+
+import java.util.Date;
 
 @Data
 @Accessors(chain = true)
 @TableName("nctigba_env")
 public class NctigbaEnvDO {
-	@TableId(type = IdType.ASSIGN_UUID)
-	String id;
-	String hostid;
-	type type;
-	String username;
-	String path;
-	Integer port;
-	String nodeid;
-	@TableField(exist = false)
-	OpsHostEntity host;
+    @TableId(type = IdType.ASSIGN_UUID)
+    String id;
+    String hostid;
+    InstallType type;
+    String username;
+    String path;
+    Integer port;
+    String nodeid;
+    @TableField(exist = false)
+    OpsHostEntity host;
+    String param;
+    String status;
+    @TableField("update_time")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
+    Date updateTime;
 
-	public enum type {
-		PROMETHEUS,NODE_EXPORTER,OPENGAUSS_EXPORTER,
-		ELASTICSEARCH,FILEBEAT,
-		AGENT,
-		PROMETHEUS_PKG,NODE_EXPORTER_PKG,OPENGAUSS_EXPORTER_PKG,
-		ELASTICSEARCH_PKG,FILEBEAT_PKG,
-		AGENT_PKG,
-	}
+    /**
+     * Set data
+     *
+     * @param status Enum value
+     * @return NctigbaEnvDO
+     */
+    public NctigbaEnvDO setEnvStatus(String status) {
+        this.status = status;
+        this.updateTime = new Date();
+        return this;
+    }
+
+    /**
+     * Installation type
+     *
+     */
+    public enum InstallType {
+        PROMETHEUS, NODE_EXPORTER, OPENGAUSS_EXPORTER,
+        ELASTICSEARCH, FILEBEAT,
+        AGENT,
+        PROMETHEUS_PKG, NODE_EXPORTER_PKG, OPENGAUSS_EXPORTER_PKG,
+        ELASTICSEARCH_PKG, FILEBEAT_PKG,
+        AGENT_PKG,
+    }
 }

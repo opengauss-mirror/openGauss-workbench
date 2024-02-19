@@ -14,7 +14,7 @@ export default {
         disconnect: 'disconnect',
         unknown: 'unknown',
         delete: 'delete',
-        confirmDel: "Confirm to delete",
+        confirmDel: 'Confirm to delete',
         cancel: 'cancel',
         confirm: 'confirm',
         edit: 'edit',
@@ -26,7 +26,7 @@ export default {
         lastThreeHour: 'Last 3 hour',
         lastSixHour: 'Last 6 hour',
         back: 'back',
-        logContextCountLabelList: ['5','10','20','30','40','50'],
+        logContextCountLabelList: ['5', '10', '20', '30', '40', '50'],
     },
     datasource: {
         name: 'Log Retrieval',
@@ -41,7 +41,8 @@ export default {
         logContext: 'Log Context',
         logContextPlaceholder: 'select please',
         showInfoTitleTip: 'Support for Lucene syntax',
-        showInfoContextTip: "Lucene syntax:\n(1) Single word query: word\n(2) Multiple word query: word1 word2 or word1,word2 (support comma and space as separators)\n(3) Field query: field:word\n(4) Wildcard query: wo?d or wo* (? matches a single character, * matches zero or more characters)\n(5) Fuzzy query: wo~0.1 (fuzziness factor [0-1])\n(6) Proximity query: &#34keyword word&#34~1 (maximum edit distance allowed)\n(7) Range query: field:&#91 10 TO 20 &#125 (&#91&#93 includes the boundary values, &#123&#125 excludes the boundary values)\n(8) Boosted query: word1 word2^2 (relevance score, default is 1)\n(9) Logical operation query: word1 AND word2 OR word3 NOT word4 +word5 -word6 (AND, OR, NOT, +, -)\n(10) Nested query: word1 OR (word2 AND word3) (grouping with parentheses)\n(11) Escaping special characters: &#47 (supports escaping + - &#38&#38 &#124&#124 &#33 ( ) &#123 &#125 &#91 &#93 &#94 &#34 &#126 * &#63 : &#47)",
+        showInfoContextTip:
+            'Lucene syntax:\n(1) Single word query: word\n(2) Multiple word query: word1 word2 or word1,word2 (support comma and space as separators)\n(3) Field query: field:word\n(4) Wildcard query: wo?d or wo* (? matches a single character, * matches zero or more characters)\n(5) Fuzzy query: wo~0.1 (fuzziness factor [0-1])\n(6) Proximity query: &#34keyword word&#34~1 (maximum edit distance allowed)\n(7) Range query: field:&#91 10 TO 20 &#125 (&#91&#93 includes the boundary values, &#123&#125 excludes the boundary values)\n(8) Boosted query: word1 word2^2 (relevance score, default is 1)\n(9) Logical operation query: word1 AND word2 OR word3 NOT word4 +word5 -word6 (AND, OR, NOT, +, -)\n(10) Nested query: word1 OR (word2 AND word3) (grouping with parentheses)\n(11) Escaping special characters: &#47 (supports escaping + - &#38&#38 &#124&#124 &#33 ( ) &#123 &#125 &#91 &#93 &#94 &#34 &#126 * &#63 : &#47)',
     },
     install: {
         pkg: 'node exporter',
@@ -79,18 +80,26 @@ export default {
         gsLocalLogPath: 'gs_local log path',
         cmLogPath: 'cm log path',
         continueUpload: 'continue to upload',
-        installServerAlert:'please install the server first!',
+        installServerAlert: 'please install the server first!',
         installedServerAlert: 'it is only allow to install one server!',
-        proxyRules: [
-            'choose the machine please',
-            'input the password of root please',
-            'input the proxy port please',
-            'choose an installer please'
-        ],
-        collectorRules: [
-            'choose the instance please',
-            'input the password of root please',
-            'Please enter the database run log path'
-        ],
+        status: {
+            normal: 'Running',
+            unknown: 'Unknown',
+            starting: 'Starting',
+            stopping: 'Stopping',
+            manualStop: 'Manually Stopped',
+            errorThreadNotExists: 'Exception: Thread does not exist',
+            errorProgramUnhealthy: 'Exception: Program is unhealthy',
+        },
+
+        proxyRules: ['choose the machine please', 'input the password of root please', 'input the proxy port please', 'choose an installer please'],
+        collectorRules: ['choose the instance please', 'input the password of root please', 'Please enter the database run log path'],
+        start: 'start',
+        stop: 'stop',
+        startSuccess: 'Start success',
+        startFail: 'Start failure',
+        stopSuccess: 'Stop success',
+        stopFail: 'Stop failure',
+        fileMismatch: 'Uploaded file does not match, please upload ',
     },
 };

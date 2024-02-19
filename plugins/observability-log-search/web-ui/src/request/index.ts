@@ -9,13 +9,12 @@ interface ApiResponse<T = any> {
     msg: string
 }
 
+let extraConfig = {};
 const handleData = <T>(res: AxiosResponse<ApiResponse<T>, any>) => {
     if (res.data && (res.data.code === '200' || res.data.code === 200)) {
         return Promise.resolve(res.data.data)
     } else {
-        return Promise.reject(res?.data.msg || 'Request Error').catch((err) => {
-            console.log(err)
-        })
+        return Promise.reject(res?.data.msg || 'Request Error')
     }
 }
 
@@ -23,10 +22,10 @@ const handleRESTfulData = (res: any) => {
     if (isSuccessResponse(res)) {
         return Promise.resolve(res.data)
     } else {
-        ElMessage.error(res?.data.msg || "Request Error")
-        return Promise.reject(res?.data?.msg || 'Request Error').catch((err) => {
-            console.log(err)
-        })
+        if (!extraConfig.notTip) {
+            ElMessage.error(res?.data.msg || "Request Error")
+        }
+        return Promise.reject(res?.data?.msg || 'Request Error')
     }
 }
 
@@ -52,7 +51,8 @@ export class Request {
         }
     }
 
-    async get<T = any>(url: string, params?: any, config?: AxiosRequestConfig) {
+    async get<T = any>(url: string, params?: any, config?: AxiosRequestConfig, extra = {} as any) {
+        extraConfig = extra
         const token = localStorage.getItem('opengauss-token')
         if (token) {
             if (!config) {
@@ -74,7 +74,8 @@ export class Request {
         }
     }
 
-    async delete<T = any>(url: string, params?: any, config?: AxiosRequestConfig) {
+    async delete<T = any>(url: string, params?: any, config?: AxiosRequestConfig, extra = {} as any) {
+        extraConfig = extra
         const token = localStorage.getItem('opengauss-token')
         if (token) {
             if (!config) {
@@ -96,7 +97,8 @@ export class Request {
         }
     }
 
-    async post<T = any, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>) {
+    async post<T = any, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>, extra = {} as any) {
+        extraConfig = extra
         const token = localStorage.getItem('opengauss-token')
         if (token) {
             if (!config) {
@@ -118,7 +120,8 @@ export class Request {
         }
     }
 
-    async put<T = any, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>) {
+    async put<T = any, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>, extra = {} as any) {
+        extraConfig = extra
         const token = localStorage.getItem('opengauss-token')
         if (token) {
             if (!config) {
@@ -140,7 +143,8 @@ export class Request {
         }
     }
 
-    async patch<T = any, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>) {
+    async patch<T = any, D = any>(url: string, data?: D, config?: AxiosRequestConfig<D>, extra = {} as any) {
+        extraConfig = extra
         const token = localStorage.getItem('opengauss-token')
         if (token) {
             if (!config) {

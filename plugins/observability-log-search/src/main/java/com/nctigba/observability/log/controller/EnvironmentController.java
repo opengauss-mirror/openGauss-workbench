@@ -30,16 +30,25 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
 import com.nctigba.observability.log.mapper.NctigbaEnvMapper;
 import com.nctigba.observability.log.model.entity.NctigbaEnvDO;
-import com.nctigba.observability.log.model.entity.NctigbaEnvDO.type;
+import com.nctigba.observability.log.model.entity.NctigbaEnvDO.InstallType;
+import com.nctigba.observability.log.model.vo.LogClusterNodeVO;
+import com.nctigba.observability.log.model.vo.LogClusterVO;
+import com.nctigba.observability.log.model.vo.LogPathVO;
 import com.nctigba.observability.log.service.ClusterManager;
-import com.nctigba.observability.log.service.ElasticsearchService;
-import com.nctigba.observability.log.service.FilebeatService;
+import com.nctigba.observability.log.service.impl.ElasticsearchService;
+import com.nctigba.observability.log.service.impl.FilebeatService;
+import com.nctigba.observability.log.util.SshSession;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
+import org.opengauss.admin.common.enums.ops.DeployTypeEnum;
 import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
+import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -55,6 +64,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +81,12 @@ public class EnvironmentController {
     @Autowired
     @AutowiredType(Type.PLUGIN_MAIN)
     private HostUserFacade hostUserFacade;
+    @Autowired
+    @AutowiredType(Type.PLUGIN_MAIN)
+    private IOpsClusterNodeService opsClusterNodeService;
+    @Autowired
+    @AutowiredType(Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
     @Autowired
     private ClusterManager clusterManager;
     @Autowired
@@ -93,7 +109,8 @@ public class EnvironmentController {
      * @return String
      */
     @GetMapping("/logPath")
-    public String logPath(@RequestParam String nodeId) {
+    public LogPathVO logPath(@RequestParam String nodeId) {
+        LogPathVO logPathVO = new LogPathVO();
         String logPathSql = "select name,setting from pg_settings where name in ('data_directory','log_directory');";
         try (var conn = clusterManager.getConnectionByNodeId(nodeId);
              var st = conn.createStatement(); var rs = st.executeQuery(logPathSql)) {
@@ -106,16 +123,47 @@ public class EnvironmentController {
                     suffixPath = rs.getString(2);
                 }
             }
-            String logPath;
+            String ogRunLogPath;
             if (suffixPath != null && !suffixPath.startsWith("/")) {
-                logPath = prefixPath + "/" + suffixPath;
+                ogRunLogPath = prefixPath + "/" + suffixPath;
             } else {
-                logPath = suffixPath;
+                ogRunLogPath = suffixPath;
             }
-            return logPath;
+            logPathVO.setOgRunLogPath(ogRunLogPath);
+            logPathVO.setCmLogPath(getCmLogPath(nodeId));
+            return logPathVO;
         } catch (SQLException e) {
+            throw new CustomException("connect database failed.");
+        }
+    }
+
+    private String getCmLogPath(String nodeId) {
+        OpsClusterVO opsClusterVO = clusterManager.getOpsClusterByNodeId(nodeId);
+        if (DeployTypeEnum.SINGLE_NODE.equals(opsClusterVO.getDeployType())) {
             return "";
         }
+        OpsClusterNodeEntity opsClusterNodeEntity = opsClusterNodeService.getById(nodeId);
+        if (opsClusterNodeEntity == null) {
+            throw new CustomException("No cluster node information found");
+        }
+        String installUserId = opsClusterNodeEntity.getInstallUserId();
+        OpsHostUserEntity user = hostUserFacade.getById(installUserId);
+        ClusterManager.OpsClusterNodeVOSub node = clusterManager.getOpsNodeById(nodeId);
+        OpsHostEntity hostEntity = hostFacade.getById(node.getHostId());
+        if (hostEntity == null) {
+            throw new CustomException("host not found");
+        }
+        String cmLogPath;
+        try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
+                user.getUsername(), encryptionUtils.decrypt(user.getPassword()))) {
+            String envPath = opsClusterVO.getEnvPath();
+            boolean isEnvApart = envPath != null && !"".equals(envPath);
+            String cmLogPathCommand = isEnvApart ? "source " + envPath + " && echo $GAUSSLOG/cm" : "echo $GAUSSLOG/cm";
+            cmLogPath = session.execute(cmLogPathCommand);
+        } catch (IOException e) {
+            throw new CustomException("connect failed:" + e.getMessage());
+        }
+        return cmLogPath;
     }
 
     @GetMapping("/hostUser/{hostId}")
@@ -123,21 +171,29 @@ public class EnvironmentController {
         return hostUserFacade.listHostUserByHostId(hostId);
     }
 
+    /**
+     * Get installed elasticsearch
+     *
+     * @return list
+     */
     @GetMapping("/elasticsearch")
-    public List<NctigbaEnvDO> listPrometheus() {
+    public List<NctigbaEnvDO> listElasticsearch() {
         List<NctigbaEnvDO> env = envMapper
-                .selectList(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, type.ELASTICSEARCH));
-        env.forEach(e -> {
-            e.setHost(hostFacade.getById(e.getHostid()));
-        });
+                .selectList(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, InstallType.ELASTICSEARCH));
+        env.forEach(e -> e.setHost(hostFacade.getById(e.getHostid())));
         return env;
     }
 
+    /**
+     * Get installed filebeat
+     *
+     * @return list
+     */
     @GetMapping("/filebeat")
-    public List<OpsClusterVO> listExporter() {
-        var env = envMapper
-                .selectList(Wrappers.<NctigbaEnvDO>lambdaQuery().in(NctigbaEnvDO::getType, List.of(type.FILEBEAT)));
-        var hosts = env.stream().map(NctigbaEnvDO::getNodeid).collect(Collectors.toSet());
+    public List<LogClusterVO> listFilebeat() {
+        List<NctigbaEnvDO> env = envMapper
+                .selectList(
+                        Wrappers.<NctigbaEnvDO>lambdaQuery().in(NctigbaEnvDO::getType, List.of(InstallType.FILEBEAT)));
         var clusters = clusterManager.getAllOpsCluster();
         env.forEach(e -> {
             if (e.getNodeid() == null) {
@@ -154,13 +210,43 @@ public class EnvironmentController {
                 }
             }
         });
-        return clusters.stream().filter(c -> {
-            var nodes = c.getClusterNodes().stream().filter(n -> {
-                return hosts.contains(n.getNodeId());
-            }).collect(Collectors.toList());
+        var hosts = env.stream().map(NctigbaEnvDO::getNodeid).collect(Collectors.toSet());
+        List<OpsClusterVO> clusterVOList = clusters.stream().filter(c -> {
+            var nodes = c.getClusterNodes().stream().filter(n -> hosts.contains(n.getNodeId())).collect(
+                    Collectors.toList());
             c.setClusterNodes(nodes);
             return nodes.size() > 0;
         }).collect(Collectors.toList());
+        return reBuildTree(clusterVOList, env);
+    }
+
+    private List<LogClusterVO> reBuildTree(List<OpsClusterVO> clusterVOList, List<NctigbaEnvDO> env) {
+        List<LogClusterVO> logClusterVOList = new ArrayList<>();
+        for (OpsClusterVO opsClusterVO : clusterVOList) {
+            LogClusterVO logClusterVO = new LogClusterVO();
+            logClusterVO.setClusterId(opsClusterVO.getClusterId());
+            logClusterVO.setClusterName(opsClusterVO.getClusterName());
+            logClusterVO.setDbType(opsClusterVO.getDeployType());
+            List<LogClusterNodeVO> logClusterNodeVOList = new ArrayList<>();
+            for (OpsClusterNodeVO opsClusterNodeVO : opsClusterVO.getClusterNodes()) {
+                LogClusterNodeVO logClusterNodeVO = new LogClusterNodeVO();
+                logClusterNodeVO.setNodeId(opsClusterNodeVO.getNodeId());
+                logClusterNodeVO.setHostId(opsClusterNodeVO.getHostId());
+                logClusterNodeVO.setClusterRole(opsClusterNodeVO.getClusterRole());
+                logClusterNodeVO.setDbPort(opsClusterNodeVO.getDbPort());
+                logClusterNodeVO.setPublicIp(opsClusterNodeVO.getPublicIp());
+                env.forEach(f -> {
+                    if (f.getNodeid().equals(opsClusterNodeVO.getNodeId()) && f.getHostid().equals(
+                            opsClusterNodeVO.getHostId())) {
+                        logClusterNodeVO.setId(f.getId());
+                    }
+                });
+                logClusterNodeVOList.add(logClusterNodeVO);
+            }
+            logClusterVO.setClusterNodes(logClusterNodeVOList);
+            logClusterVOList.add(logClusterVO);
+        }
+        return logClusterVOList;
     }
 
     @GetMapping("/hosts")
@@ -172,9 +258,9 @@ public class EnvironmentController {
     public Map<String, Object> listPkg(String key, String hostId) {
         Map<String, Object> map = new HashMap<>();
         var host = hostFacade.getById(hostId);
-        LambdaQueryWrapper<NctigbaEnvDO> wrapper = Wrappers.<NctigbaEnvDO>lambdaQuery();
+        LambdaQueryWrapper<NctigbaEnvDO> wrapper = Wrappers.lambdaQuery();
         boolean isElasticsearch = "elasticsearch".equals(key);
-        wrapper.eq(NctigbaEnvDO::getType, isElasticsearch ? type.ELASTICSEARCH_PKG : type.FILEBEAT_PKG);
+        wrapper.eq(NctigbaEnvDO::getType, isElasticsearch ? InstallType.ELASTICSEARCH_PKG : InstallType.FILEBEAT_PKG);
         var envs = envMapper.selectList(wrapper);
         String pkg;
         if (isElasticsearch) {
@@ -257,9 +343,9 @@ public class EnvironmentController {
             }
             env.setPath(file.getCanonicalPath());
             if (name.startsWith("elasticsearch")) {
-                env.setType(type.ELASTICSEARCH_PKG);
+                env.setType(InstallType.ELASTICSEARCH_PKG);
             } else if (name.startsWith("filebeat")) {
-                env.setType(type.FILEBEAT_PKG);
+                env.setType(InstallType.FILEBEAT_PKG);
             }
             elasticsearchService.save(env);
         } catch (IllegalStateException | IOException e) {

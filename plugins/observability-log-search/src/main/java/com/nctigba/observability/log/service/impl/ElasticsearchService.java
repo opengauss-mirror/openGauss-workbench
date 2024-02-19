@@ -1,0 +1,601 @@
+
+/*
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  ElasticsearchService.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-log-search/src/main/java/com/nctigba/observability/log/service/ElasticsearchService.java
+ *
+ *  -------------------------------------------------------------------------
+ */
+
+package com.nctigba.observability.log.service.impl;
+
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.nctigba.observability.log.config.ElasticsearchProvider;
+import com.nctigba.observability.log.enums.AgentStatusEnum;
+import com.nctigba.observability.log.model.dto.ElasticSearchInstallDTO;
+import com.nctigba.observability.log.model.entity.NctigbaEnvDO;
+import com.nctigba.observability.log.model.entity.NctigbaEnvDO.InstallType;
+import com.nctigba.observability.log.model.vo.AgentExceptionVO;
+import com.nctigba.observability.log.model.vo.AgentStatusVO;
+import com.nctigba.observability.log.service.AbstractInstaller;
+import com.nctigba.observability.log.service.AbstractInstaller.Step.status;
+import com.nctigba.observability.log.service.AgentService;
+import com.nctigba.observability.log.util.Download;
+import com.nctigba.observability.log.util.SshSession;
+import com.nctigba.observability.log.util.SshSession.command;
+import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.core.domain.model.ops.WsSession;
+import org.opengauss.admin.common.exception.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * ElasticsearchService
+ *
+ * @author luomeng
+ * @since 2024/1/5
+ */
+@Slf4j
+@Service("ElasticsearchService")
+public class ElasticsearchService extends AbstractInstaller implements AgentService {
+    /**
+     * Es download url
+     */
+    public static final String PATH = "https://artifacts.elastic.co/downloads/elasticsearch/";
+
+    /**
+     * Es version
+     */
+    public static final String VERSION = "8.3.3";
+
+    /**
+     * Es file name
+     */
+    public static final String NAME = "elasticsearch-" + VERSION + "-linux-";
+
+    /**
+     * Es SRC
+     */
+    public static final String SRC = "elasticsearch-" + VERSION;
+    private static final long MONITOR_CYCLE = 60L;
+
+    @Autowired
+    private ResourceLoader loader;
+    @Autowired
+    private ElasticsearchProvider provider;
+
+    /**
+     * Install elasticsearch
+     *
+     * @param wsSession  Websocket
+     * @param installDTO Install dto
+     */
+    public void install(WsSession wsSession, ElasticSearchInstallDTO installDTO) {
+        // @formatter:off
+        var steps = Arrays.asList(
+                new Step("elastic.install.step1"),
+                new Step("elastic.install.step2"),
+                new Step("elastic.install.step3"),
+                new Step("elastic.install.step4"),
+                new Step("elastic.install.step5"),
+                new Step("elastic.install.step6"),
+                new Step("elastic.install.step7"));
+        // @formatter:on
+        int curr = 0;
+        String path = installDTO.getPath();
+        if (!path.endsWith(File.separator)) {
+            path += File.separator;
+        }
+        // step1
+        try {
+            var env = envMapper
+                    .selectOne(
+                            Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, InstallType.ELASTICSEARCH));
+            if (env != null) {
+                throw new CustomException("elasticsearch exists");
+            }
+            env = new NctigbaEnvDO().setHostid(installDTO.getHostId()).setPort(installDTO.getPort()).setPath(
+                            path).setType(InstallType.ELASTICSEARCH)
+                    .setPath(path + SRC);
+            OpsHostEntity hostEntity = hostFacade.getById(installDTO.getHostId());
+            if (hostEntity == null) {
+                throw new CustomException("host not found");
+            }
+            env.setHost(hostEntity);
+            var user = getUser(hostEntity, installDTO.getUsername());
+            env.setUsername(installDTO.getUsername());
+            try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
+                    installDTO.getUsername(),
+                    encryptionUtils.decrypt(user.getPassword()))) {
+                String message = session.execute(
+                        "netstat -tuln | grep -q " + env.getPort() + " && echo 'true' || echo 'false'");
+                if (message.contains("true")) {
+                    throw new CustomException("port is exists");
+                }
+                String installPath = session.execute("[ -e " + path + " ] && echo 'true' || echo 'false'");
+                if (installPath.contains("false")) {
+                    session.execute("mkdir -p " + path);
+                } else {
+                    String fileIsEmpty = session.execute("[ ! -z " + path + " ] && echo 'true' || echo 'false'");
+                    if (fileIsEmpty.contains("false")) {
+                        throw new CustomException("The installation folder is not empty!");
+                    }
+                }
+                var vm = session.execute("/usr/sbin/sysctl -n vm.max_map_count");
+                if (NumberUtil.parseInt(vm) < 262144) {
+                    throw new CustomException(
+                            "please set vm.max_map_count to upper than 262144, command:echo vm.max_map_count = 262144 "
+                                    + ">> /etc/sysctl.conf &&sysctl -p");
+                }
+                String configCheck = session.execute("ulimit -n");
+                if (NumberUtil.parseInt(configCheck) < 65535) {
+                    throw new CustomException(
+                            "please set max file descriptors increase to at least [65535],command:echo * soft nofile "
+                                    + "65536 * hard nofile 65536 >> /etc/security/limits.conf && sysctl -p");
+                }
+            }
+            curr = nextStep(wsSession, steps, curr);
+            // step2
+            try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
+                    installDTO.getUsername(),
+                    encryptionUtils.decrypt(user.getPassword()))) {
+                var arch = session.execute(command.ARCH);
+                String name = NAME + arch;
+                String tar = name + TAR;
+                var pkg = envMapper.selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery()
+                        .eq(NctigbaEnvDO::getType, InstallType.ELASTICSEARCH_PKG).like(
+                                NctigbaEnvDO::getPath, tar));
+                boolean isDownload = false;
+                if (pkg == null) {
+                    isDownload = true;
+                } else {
+                    String fileIsExists = session.execute(
+                            "[ -f " + pkg.getPath() + " ] && echo 'true' || echo 'false'");
+                    if (fileIsExists.contains("false")) {
+                        isDownload = true;
+                    }
+                }
+                if (isDownload) {
+                    var f = Download.download(PATH + tar, "pkg/" + tar);
+                    pkg = new NctigbaEnvDO().setPath(f.getCanonicalPath()).setType(InstallType.ELASTICSEARCH_PKG);
+                    addMsg(wsSession, steps, curr, "elastic.install.download.success");
+                    save(pkg);
+                }
+                curr = nextStep(wsSession, steps, curr);
+                // step3
+                session.upload(pkg.getPath(), path + tar);
+                session.execute("cd " + path + " && " + command.TAR.parse(tar));
+            }
+            curr = nextStep(wsSession, steps, curr);
+            // step4
+            try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
+                    installDTO.getUsername(),
+                    encryptionUtils.decrypt(user.getPassword()))) {
+                // config
+                var elasticConfigFile = File.createTempFile("elasticsearch", ".yml");
+                // @formatter:off
+                FileUtil.appendUtf8String(
+                        "path.data: " + "data" + System.lineSeparator()
+                                + "path.logs: " + "logs" + System.lineSeparator()
+                                + "cluster.name: dbTools-es" + System.lineSeparator()
+                                + "cluster.initial_master_nodes: [\"node1\"]" + System.lineSeparator()
+                                + "discovery.seed_hosts: [\"127.0.0.1\"]" + System.lineSeparator()
+                                + "node.name: node1" + System.lineSeparator()
+                                + "network.host: 0.0.0.0" + System.lineSeparator()
+                                + "http.port: " + installDTO.getPort() + System.lineSeparator()
+                                + "http.host: 0.0.0.0" + System.lineSeparator()
+                                + "transport.host: 0.0.0.0" + System.lineSeparator()
+                                + "http.cors.enabled: true" + System.lineSeparator()
+                                + "http.cors.allow-origin: \"*\"" + System.lineSeparator()
+                                + "xpack.security.enrollment.enabled: true" + System.lineSeparator()
+                                + "xpack.security.enabled: false" + System.lineSeparator()
+                                + "xpack.security.http.ssl.enabled: false" + System.lineSeparator()
+                                + "xpack.security.transport.ssl.enabled: false", elasticConfigFile);
+                // @formatter:on
+                session.execute("mkdir -p " + path + SRC + "/config");
+                session.upload(elasticConfigFile.getAbsolutePath(), path + SRC + "/config/elasticsearch.yml");
+                Files.delete(elasticConfigFile.toPath());
+                // jvm config
+                try (InputStream in = loader.getResource("jvm.options").getInputStream()) {
+                    session.upload(in, path + SRC + "/config/jvm.options");
+                }
+                // run shell
+                try (InputStream in = loader.getResource("run_elasticsearch.sh").getInputStream()) {
+                    session.upload(in, path + SRC + "/run_elasticsearch.sh");
+                }
+            }
+            envMapper.insert(env);
+            curr = nextStep(wsSession, steps, curr);
+            // step5
+            startElasticsearch(env);
+            curr = nextStep(wsSession, steps, curr);
+            // step6
+            checkHealthStatus(env);
+            curr = nextStep(wsSession, steps, curr);
+            // step7
+            sendMsg(wsSession, steps, curr, status.DONE);
+        } catch (Exception e) {
+            steps.get(curr).setState(status.ERROR).add(e.getMessage());
+            wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+            var sw = new StringWriter();
+            try (var pw = new PrintWriter(sw)) {
+                e.printStackTrace(pw);
+            }
+            wsUtil.sendText(wsSession, sw.toString());
+        }
+    }
+
+    /**
+     * Uninstall elasticsearch
+     *
+     * @param wsSession Websocket
+     * @param id        Unique ID
+     */
+    public void uninstall(WsSession wsSession, String id) {
+        // @formatter:off
+        var steps = Arrays.asList(
+                new Step("elastic.uninstall.step1"),
+                new Step("elastic.uninstall.step2"),
+                new Step("elastic.uninstall.step3"),
+                new Step("elastic.uninstall.step4"),
+                new Step("elastic.uninstall.step5"));
+        // @formatter:on
+        var curr = 0;
+        try {
+            curr = nextStep(wsSession, steps, curr);
+            var env = envMapper.selectById(id);
+            if (env == null) {
+                throw new CustomException("id not found");
+            }
+            curr = nextStep(wsSession, steps, curr);
+            OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
+            if (hostEntity == null) {
+                throw new CustomException("host not found");
+            }
+            env.setHost(hostEntity);
+            uninstallElasticsearch(env);
+            curr = nextStep(wsSession, steps, curr);
+            AgentExceptionVO check = checkPidStatus(env);
+            if (check.isStatus()) {
+                throw new CustomException("pid cannot be killed");
+            }
+            clearInstallFolder(env);
+            envMapper.deleteById(id);
+            provider.clear();
+            sendMsg(wsSession, steps, curr, status.DONE);
+        } catch (Exception e) {
+            steps.get(curr).setState(status.ERROR).add(e.getMessage());
+            wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+            var sw = new StringWriter();
+            try (var pw = new PrintWriter(sw)) {
+                e.printStackTrace(pw);
+            }
+            wsUtil.sendText(wsSession, sw.toString());
+        }
+    }
+
+    @Override
+    public void start(String id) {
+        NctigbaEnvDO env = getAgentInfo(id);
+        startElasticsearch(env);
+        checkHealthStatus(env);
+    }
+
+    @Override
+    public void stop(String id) {
+        NctigbaEnvDO env = getAgentInfo(id);
+        stopElasticsearch(env);
+    }
+
+    @Override
+    public List<AgentStatusVO> getAgentStatus() {
+        List<AgentStatusVO> list = envMapper.selectStatusByType(InstallType.ELASTICSEARCH.name());
+        list.forEach(f -> {
+            String status = f.getStatus();
+            boolean isStop = AgentStatusEnum.MANUAL_STOP.getStatus().equals(status);
+            boolean isRunning =
+                    AgentStatusEnum.STARTING.getStatus().equals(status) || AgentStatusEnum.STOPPING.getStatus().equals(
+                            status);
+            boolean isRunTimeout = isRunning
+                    && new Date().getTime() - f.getUpdateTime().getTime() > 3 * MONITOR_CYCLE * 1000L;
+            boolean isTimeout = new Date().getTime() - f.getUpdateTime().getTime() > MONITOR_CYCLE * 1000L;
+            if (StrUtil.isBlank(status) || (!isStop && !isRunTimeout && isTimeout)) {
+                f.setStatus(AgentStatusEnum.UNKNOWN.getStatus());
+            }
+        });
+        return list;
+    }
+
+    /**
+     * Monitor status and auto pull up
+     */
+    @Scheduled(fixedDelay = MONITOR_CYCLE, timeUnit = TimeUnit.SECONDS)
+    public void monitorStatus() {
+        List<NctigbaEnvDO> envList = envMapper
+                .selectList(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, InstallType.ELASTICSEARCH));
+        envList.forEach(e -> e.setHost(hostFacade.getById(e.getHostid())));
+        for (NctigbaEnvDO env : envList) {
+            String status = env.getStatus();
+            if (StrUtil.isBlank(status)) {
+                oldVersionAdapter(env);
+            }
+            boolean isTimeout = new Date().getTime() - env.getUpdateTime().getTime() > 3 * MONITOR_CYCLE * 1000L;
+            boolean isDuring =
+                    (AgentStatusEnum.STARTING.getStatus().equals(status) || AgentStatusEnum.STOPPING.getStatus().equals(
+                            status)) && !isTimeout;
+            boolean isSkip = AgentStatusEnum.MANUAL_STOP.getStatus().equals(status) || isDuring;
+            if (isSkip) {
+                continue;
+            }
+            AgentExceptionVO check = checkPidStatus(env);
+            if (!check.isStatus()) {
+                startElasticsearch(env);
+                continue;
+            }
+            if (getHealthStatus(env)) {
+                status = AgentStatusEnum.NORMAL.getStatus();
+            } else {
+                status = AgentStatusEnum.ERROR_PROGRAM_UNHEALTHY.getStatus();
+            }
+            env.setEnvStatus(status);
+            envMapper.updateById(env);
+        }
+    }
+
+    private void oldVersionAdapter(NctigbaEnvDO env) {
+        try (SshSession session = connect(env);
+             InputStream in = loader.getResource("run_elasticsearch.sh").getInputStream()) {
+            session.upload(in, env.getPath() + SRC + "/run_elasticsearch.sh");
+            String pid = session.execute("lsof -ti :" + env.getPort());
+            if (pid != null && !"".equals(pid)) {
+                File pidFile = File.createTempFile("elasticsearch", ".pid");
+                FileUtil.appendUtf8String(pid, pidFile);
+                session.upload(pidFile.getCanonicalPath(), env.getPath() + SRC + "/elasticsearch.pid");
+            }
+        } catch (IOException e) {
+            throw new CustomException(e.getMessage());
+        }
+    }
+
+    private void startElasticsearch(NctigbaEnvDO env) {
+        AgentExceptionVO check = checkPidStatus(env);
+        if (check.isStatus()) {
+            throw new CustomException(check.getExceptionInfo());
+        }
+        check = checkRunningEnvironment(env);
+        if (!check.isStatus()) {
+            env.setEnvStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus());
+            envMapper.updateById(env);
+            throw new CustomException(check.getExceptionInfo());
+        }
+        env.setEnvStatus(AgentStatusEnum.STARTING.getStatus());
+        envMapper.updateById(env);
+        check = execStartCmd(env);
+        if (!check.isStatus()) {
+            env.setEnvStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus());
+            envMapper.updateById(env);
+            throw new CustomException(check.getExceptionInfo());
+        }
+    }
+
+    private void stopElasticsearch(NctigbaEnvDO env) {
+        AgentExceptionVO check = checkPidStatus(env);
+        if (!check.isStatus()) {
+            if (check.getExceptionInfo().contains("No such file or directory")) {
+                killPid(env);
+                return;
+            } else {
+                env.setEnvStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus());
+                envMapper.updateById(env);
+                throw new CustomException(check.getExceptionInfo());
+            }
+        }
+        stopping(env);
+    }
+
+    private void uninstallElasticsearch(NctigbaEnvDO env) {
+        if (env.getStatus() == null || "".equals(env.getStatus())) {
+            oldVersionAdapter(env);
+        }
+        AgentExceptionVO check = checkPidStatus(env);
+        if (!check.isStatus()) {
+            if (check.getExceptionInfo().contains("No such file or directory")) {
+                killPid(env);
+            }
+            return;
+        }
+        stopping(env);
+    }
+
+    private void stopping(NctigbaEnvDO env) {
+        env.setEnvStatus(AgentStatusEnum.STOPPING.getStatus());
+        envMapper.updateById(env);
+        AgentExceptionVO check = execStopCmd(env);
+        if (!check.isStatus()) {
+            env.setEnvStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus());
+            envMapper.updateById(env);
+            throw new CustomException(check.getExceptionInfo());
+        }
+        check = checkPidStatus(env);
+        if (check.isStatus()) {
+            env.setEnvStatus(AgentStatusEnum.ERROR_PROGRAM_UNHEALTHY.getStatus());
+            envMapper.updateById(env);
+            throw new CustomException(check.getExceptionInfo());
+        }
+        env.setEnvStatus(AgentStatusEnum.MANUAL_STOP.getStatus());
+        envMapper.updateById(env);
+    }
+
+    private void killPid(NctigbaEnvDO env) {
+        try (SshSession session = connect(env)) {
+            var pid = session.execute(command.PS.parse("elasticsearch"));
+            if (StrUtil.isNotBlank(pid) && NumberUtil.isLong(pid)) {
+                session.execute(command.KILL.parse(pid));
+            }
+        } catch (IOException | RuntimeException e) {
+            throw new CustomException("exec failed:" + e.getMessage());
+        }
+    }
+
+    private AgentExceptionVO checkPidStatus(NctigbaEnvDO env) {
+        AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
+        try (SshSession session = connect(env)) {
+            String cd = "cd " + env.getPath() + " && ";
+            String message = session.execute(cd + " sh run_elasticsearch.sh status");
+            agentExceptionVO.setAgentStatus(message.contains("Elasticsearch is running with PID"), message);
+        } catch (IOException | RuntimeException e) {
+            agentExceptionVO.setAgentStatus(false, "exec failed:" + e.getMessage());
+        }
+        return agentExceptionVO;
+    }
+
+    private boolean getHealthStatus(NctigbaEnvDO env) {
+        for (int i = 0; i < 10; i++) {
+            ThreadUtil.sleep(1000L);
+            try {
+                HttpUtil.get("http://" + env.getHost().getPublicIp() + ":" + env.getPort());
+                break;
+            } catch (Exception e) {
+                if (i == 9) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private void checkHealthStatus(NctigbaEnvDO env) {
+        for (int i = 0; i < 60; i++) {
+            ThreadUtil.sleep(3000L);
+            try {
+                HttpUtil.get("http://" + env.getHost().getPublicIp() + ":" + env.getPort());
+                break;
+            } catch (Exception e) {
+                if (i == 59) {
+                    env.setEnvStatus(AgentStatusEnum.ERROR_PROGRAM_UNHEALTHY.getStatus());
+                    envMapper.updateById(env);
+                    throw new CustomException(e.getMessage());
+                }
+            }
+        }
+        env.setEnvStatus(AgentStatusEnum.NORMAL.getStatus());
+        envMapper.updateById(env);
+    }
+
+    private AgentExceptionVO checkRunningEnvironment(NctigbaEnvDO env) {
+        AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
+        try (SshSession session = connect(env)) {
+            String message = session.execute(
+                    "netstat -tuln | grep -q " + env.getPort() + " && echo 'true' || echo 'false'");
+            if (message.contains("true")) {
+                return agentExceptionVO.setAgentStatus(false, "port is exists!");
+            }
+            String pkgPath = session.execute("[ -e " + env.getPath() + " ] && echo 'true' || echo 'false'");
+            if (pkgPath.contains("false")) {
+                return agentExceptionVO.setAgentStatus(false, "package is not exists!");
+            }
+        } catch (IOException | RuntimeException e) {
+            return agentExceptionVO.setAgentStatus(false, "exec failed:" + e.getMessage());
+        }
+        agentExceptionVO.setStatus(true);
+        return agentExceptionVO;
+    }
+
+    private AgentExceptionVO execStartCmd(NctigbaEnvDO env) {
+        AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
+        try (SshSession session = connect(env)) {
+            String cd = "cd " + env.getPath() + " && ";
+            session.executeNoWait(cd + " sh run_elasticsearch.sh start");
+        } catch (IOException | RuntimeException e) {
+            agentExceptionVO.setAgentStatus(false, "exec failed:" + e.getMessage());
+            return agentExceptionVO;
+        }
+        agentExceptionVO.setStatus(true);
+        return agentExceptionVO;
+    }
+
+    private AgentExceptionVO execStopCmd(NctigbaEnvDO env) {
+        AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
+        try (SshSession session = connect(env)) {
+            String cd = "cd " + env.getPath() + " && ";
+            session.execute(cd + "sh run_elasticsearch.sh stop");
+        } catch (IOException | RuntimeException e) {
+            agentExceptionVO.setAgentStatus(false, "exec failed:" + e.getMessage());
+            return agentExceptionVO;
+        }
+        agentExceptionVO.setStatus(true);
+        return agentExceptionVO;
+    }
+
+    private NctigbaEnvDO getAgentInfo(String id) {
+        NctigbaEnvDO env = envMapper.selectById(id);
+        if (env == null) {
+            throw new CustomException("elasticsearch not found");
+        }
+        env.setHost(hostFacade.getById(env.getHostid()));
+        return env;
+    }
+
+    private SshSession connect(NctigbaEnvDO env) throws IOException {
+        OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
+        if (hostEntity == null) {
+            throw new CustomException("host not found");
+        }
+        env.setHost(hostEntity);
+        OpsHostUserEntity user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(
+                e -> env.getUsername().equals(e.getUsername())).findFirst().orElse(null);
+        if (user == null) {
+            throw new CustomException(env.getUsername() + " not found");
+        }
+        return SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(), env.getUsername(),
+                encryptionUtils.decrypt(user.getPassword()));
+    }
+
+    private void clearInstallFolder(NctigbaEnvDO env) {
+        try (SshSession session = connect(env)) {
+            String pkgPath = session.execute("[ -e " + env.getPath() + " ] && echo 'true' || echo 'false'");
+            if (env.getPath() != null && !pkgPath.contains("false")) {
+                String cd = "cd " + env.getPath() + " && ";
+                session.execute(cd + "rm -rf " + env.getPath());
+            }
+        } catch (IOException e) {
+            throw new CustomException(e.getMessage());
+        }
+    }
+}
