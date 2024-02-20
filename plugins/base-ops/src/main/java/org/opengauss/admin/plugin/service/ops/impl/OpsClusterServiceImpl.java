@@ -60,6 +60,7 @@ import org.opengauss.admin.plugin.domain.model.ops.node.LiteInstallNodeConfig;
 import org.opengauss.admin.plugin.domain.model.ops.node.MinimalistInstallNodeConfig;
 import org.opengauss.admin.plugin.enums.ops.*;
 import org.opengauss.admin.plugin.mapper.ops.OpsClusterMapper;
+import org.opengauss.admin.plugin.mapper.ops.OpsDisasterClusterMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsCheckService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
@@ -159,6 +160,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private IOpsPackageManagerService pkgManagerService;
+
+    @Autowired
+    private OpsDisasterClusterMapper disasterClusterMapper;
 
     @Override
     public void download(DownloadBody downloadBody) {
@@ -1158,59 +1162,57 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     @Override
     public void uninstall(UnInstallBody unInstallBody) {
+        if (disasterClusterMapper.queryDisasterClusterCountByClusterName(unInstallBody.getClusterId()) != 0) {
+            throw new OpsException("the cluster is used by disaster cluster,can't uninstall");
+        }
         UnInstallContext unInstallContext = new UnInstallContext();
-
         OpsClusterEntity clusterEntity = getById(unInstallBody.getClusterId());
         if (Objects.isNull(clusterEntity)) {
             throw new OpsException("cluster does not exist");
         }
-
         unInstallContext.setOpsClusterEntity(clusterEntity);
-
         List<OpsClusterNodeEntity> opsClusterNodeEntityList = opsClusterNodeService.listClusterNodeByClusterId(unInstallBody.getClusterId());
         if (CollUtil.isEmpty(opsClusterNodeEntityList)) {
             throw new OpsException("Cluster node information does not exist");
         }
-
         unInstallContext.setOpsClusterNodeEntityList(opsClusterNodeEntityList);
-
         WsSession wsSession = wsConnectorManager.getSession(unInstallBody.getBusinessId()).orElseThrow(() -> new OpsException("websocket session not exist"));
         unInstallContext.setRetSession(wsSession);
+        constructUninstallContext(opsClusterNodeEntityList, clusterEntity, unInstallBody, unInstallContext);
+    }
 
+    private void constructUninstallContext(List<OpsClusterNodeEntity> opsClusterNodeEntityList,
+        OpsClusterEntity clusterEntity, UnInstallBody unInstallBody, UnInstallContext unInstallContext) {
         try {
-            List<String> hostIdList = opsClusterNodeEntityList.stream().map(OpsClusterNodeEntity::getHostId).collect(Collectors.toList());
-            if (CollUtil.isNotEmpty(hostIdList)) {
-                List<OpsHostEntity> opsHostEntities = hostFacade.listByIds(hostIdList);
-
-                List<OpsHostUserEntity> hostUserEntities = hostUserFacade.listHostUserByHostIdList(hostIdList);
-
-                List<HostInfoHolder> hostInfoHolderList = opsHostEntities
-                        .stream()
-                        .map(host -> new HostInfoHolder(host, hostUserEntities
-                                .stream()
-                                .filter(hostUser -> hostUser.getHostId().equals(host.getHostId()))
-                                .collect(Collectors.toList())))
-                        .collect(Collectors.toList());
-
-                for (HostInfoHolder hostInfoHolder : hostInfoHolderList) {
-                    List<OpsHostUserEntity> userEntities = hostInfoHolder.getHostUserEntities();
-                    OpsHostUserEntity rootUserEntity = userEntities.stream().filter(userEntity -> "root".equals(userEntity.getUsername())).findFirst().orElseThrow(() -> new OpsException("[" + hostInfoHolder.getHostEntity().getPublicIp() + "]root user information not found"));
-
-                    if (clusterEntity.getVersion() == OpenGaussVersionEnum.ENTERPRISE) {
-                        if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
-                            if (StrUtil.isNotEmpty(unInstallBody.getRootPasswords().get(rootUserEntity.getHostId()))) {
-                                rootUserEntity.setPassword(unInstallBody.getRootPasswords().get(rootUserEntity.getHostId()));
-                            } else {
-                                throw new OpsException("root password not found");
-                            }
+            List<String> hostIdList = opsClusterNodeEntityList.stream()
+                .map(OpsClusterNodeEntity::getHostId).collect(Collectors.toList());
+            if (CollUtil.isEmpty(hostIdList)) {
+                throw new OpsException("Node host configuration information cannot be empty");
+            }
+            List<OpsHostEntity> opsHostEntities = hostFacade.listByIds(hostIdList);
+            List<OpsHostUserEntity> hostUserEntities = hostUserFacade.listHostUserByHostIdList(hostIdList);
+            List<HostInfoHolder> hostInfoHolderList = opsHostEntities.stream()
+                .map(host -> new HostInfoHolder(host, hostUserEntities.stream()
+                    .filter(hostUser -> hostUser.getHostId().equals(host.getHostId()))
+                    .collect(Collectors.toList()))).collect(Collectors.toList());
+            for (HostInfoHolder hostInfoHolder : hostInfoHolderList) {
+                List<OpsHostUserEntity> userEntities = hostInfoHolder.getHostUserEntities();
+                OpsHostUserEntity rootUserEntity = userEntities.stream()
+                    .filter(userEntity -> "root".equals(userEntity.getUsername())).findFirst()
+                    .orElseThrow(() -> new OpsException(
+                        "[" + hostInfoHolder.getHostEntity().getPublicIp() + "]root user information not found"));
+                if (clusterEntity.getVersion() == OpenGaussVersionEnum.ENTERPRISE) {
+                    if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
+                        if (StrUtil.isNotEmpty(unInstallBody.getRootPasswords().get(rootUserEntity.getHostId()))) {
+                            rootUserEntity.setPassword(
+                                unInstallBody.getRootPasswords().get(rootUserEntity.getHostId()));
+                        } else {
+                            throw new OpsException("root password not found");
                         }
                     }
                 }
-
-                unInstallContext.setHostInfoHolders(hostInfoHolderList);
-            } else {
-                throw new OpsException("Node host configuration information cannot be empty");
             }
+            unInstallContext.setHostInfoHolders(hostInfoHolderList);
             unInstallContext.setOs(checkOS(unInstallContext.getHostInfoHolders(), false));
             RequestAttributes context = RequestContextHolder.currentRequestAttributes();
             Future<?> future = threadPoolTaskExecutor.submit(() -> {
@@ -1218,13 +1220,12 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 doUnInstall(unInstallContext, unInstallBody.getForce());
             });
             TaskManager.registry(unInstallBody.getBusinessId(), future);
-        } catch (Exception e) {
+        } catch (OpsException e) {
             if (Objects.nonNull(unInstallBody.getForce()) && unInstallBody.getForce()) {
                 OpsClusterEntity opsClusterEntity = unInstallContext.getOpsClusterEntity();
                 removeById(opsClusterEntity);
                 opsClusterNodeService.removeByIds(opsClusterNodeEntityList);
             }
-
             log.error("Uninstall exception：", e);
             wsUtil.sendText(unInstallContext.getRetSession(), "FINAL_EXECUTE_EXIT_CODE:-1");
         }
@@ -2170,9 +2171,14 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void removeCluster(String clusterId) {
+        if (disasterClusterMapper.queryDisasterClusterCountByClusterName(clusterId) != 0) {
+            throw new OpsException("the cluster is used by disaster cluster,can't delete");
+        }
         List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService.listClusterNodeByClusterId(clusterId);
         if (CollUtil.isNotEmpty(opsClusterNodeEntities)) {
-            opsClusterNodeService.removeBatchByIds(opsClusterNodeEntities.stream().map(OpsClusterNodeEntity::getClusterNodeId).collect(Collectors.toSet()));
+            opsClusterNodeService.removeBatchByIds(opsClusterNodeEntities.stream()
+                .map(OpsClusterNodeEntity::getClusterNodeId)
+                .collect(Collectors.toSet()));
         }
 
         removeById(clusterId);

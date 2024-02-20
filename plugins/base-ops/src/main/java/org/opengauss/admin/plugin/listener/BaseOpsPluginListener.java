@@ -62,6 +62,10 @@ public class BaseOpsPluginListener implements ApplicationListener<ApplicationEve
                 MenuVo resourceParent = menuFacade.savePluginMenu(pluginId, "资源中心", "Resources", 1, "resource");
                 menuFacade.savePluginMenu(pluginId, "集群管理", "cluster ops", 3, "monitor/dailyOps", resourceParent.getMenuId());
                 menuFacade.savePluginMenu(pluginId, "OpenLooKeng管理", "openLooKeng manage", 4, "ops/olk", resourceParent.getMenuId());
+                menuFacade.savePluginMenu(pluginId, "磁阵管理", "device manager", 5, "resource/deviceManager",
+                    resourceParent.getMenuId());
+                menuFacade.savePluginMenu(pluginId, "容灾集群管理", "disaster cluster manager", 6,
+                    "resource/disasterClusterManager", resourceParent.getMenuId());
                 MenuVo monitorParent = menuFacade.savePluginMenu(pluginId, "基础运维", "monitor", 3, "monitor");
                 menuFacade.savePluginMenu(pluginId, "集群监控", "cluster moniter", 1, "monitor/basic", monitorParent.getMenuId());
                 menuFacade.savePluginMenu(pluginId, "日志分析", "log analysis", 2, "monitor/logCenter", monitorParent.getMenuId());
@@ -81,6 +85,8 @@ public class BaseOpsPluginListener implements ApplicationListener<ApplicationEve
                 menuFacade.savePluginMenu(pluginId, "集群安装", "cluster install", 2, "ops/install", opsInstallParent.getMenuId());
                 menuFacade.savePluginMenu(pluginId, "批量安装", "cluster batch upgrade", 3, "ops/batchInstall", opsInstallParent.getMenuId());
                 menuFacade.savePluginMenu(pluginId, "批量升级", "cluster upgrade", 4, "ops/upgrade", opsInstallParent.getMenuId());
+                menuFacade.savePluginMenu(pluginId, "容灾集群安装", "disaster cluster install", 5,
+                    "ops/disasterClusterInstall", opsInstallParent.getMenuId());
             }
             log.info("base ops start complete");
         } else if (event instanceof ContextClosedEvent) {

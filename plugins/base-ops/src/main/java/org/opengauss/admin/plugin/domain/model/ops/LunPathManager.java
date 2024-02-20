@@ -110,10 +110,16 @@ public class LunPathManager {
      *
      * @param path lun path Manager
      * @param prefix prefix of link path
+     * @param isDisasterNeed is disaster cluster require
+     * @param installUser install user
      * @return soft link path of LUN
      */
-    public static String getLunLinkPath(LunPathManager path, String prefix) {
-        return "/dev/ln_" + prefix + "_" + path.getWwn().substring(path.getWwn().length()
-                - LunPathManager.SOFT_LINK_WWN_LEN);
+    public static String getLunLinkPath(LunPathManager path, String prefix, boolean isDisasterNeed,
+        String installUser) {
+        if (isDisasterNeed) {
+            return "/dev/" + installUser + "_dss_" + prefix;
+        }
+        return "/dev/ln_" + prefix + "_" + path.getWwn()
+            .substring(path.getWwn().length() - LunPathManager.SOFT_LINK_WWN_LEN);
     }
 }
