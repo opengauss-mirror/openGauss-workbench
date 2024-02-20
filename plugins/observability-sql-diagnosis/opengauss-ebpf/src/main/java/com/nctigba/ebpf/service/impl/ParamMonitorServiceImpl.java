@@ -25,13 +25,10 @@ package com.nctigba.ebpf.service.impl;
 
 import com.nctigba.ebpf.config.OsConfig;
 import com.nctigba.ebpf.config.UrlConfig;
-import com.nctigba.ebpf.constant.CommonConstants;
 import com.nctigba.ebpf.constant.FileTypeConstants;
 import com.nctigba.ebpf.service.ParamMonitorService;
-import com.nctigba.ebpf.util.HTTPUtils;
 import com.nctigba.ebpf.util.OSUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -47,16 +44,12 @@ public class ParamMonitorServiceImpl implements ParamMonitorService {
 
     @Override
     public void getOsParamData(String tid, String taskId, String monitorType) {
-        HTTPUtils httpUtils = new HTTPUtils();
-        String httpUrl = urlConfig.getHttpUrl();
         String outputUrl = System.getProperty("user.dir") + "/output/";
         File dir = new File(outputUrl);
         if (!dir.exists()) {
             dir.mkdirs();
         }
         String fileUrl = " > " + outputUrl + taskId + monitorType;
-        String url = httpUrl.substring(0, httpUrl.lastIndexOf(CommonConstants.SLASH) + 1) + taskId + httpUrl.substring(
-                httpUrl.lastIndexOf(CommonConstants.SLASH));
         String cmd;
         if ("osParam".equals(monitorType)) {
             cmd = "sysctl -a " + fileUrl + FileTypeConstants.DEFAULT;
@@ -65,7 +58,5 @@ public class ParamMonitorServiceImpl implements ParamMonitorService {
         }
         OSUtils osUtils = new OSUtils();
         osUtils.exec(cmd);
-        FileSystemResource file = new FileSystemResource(outputUrl + taskId + monitorType + FileTypeConstants.DEFAULT);
-        httpUtils.httpUrlPost(url, file, monitorType);
     }
 }

@@ -25,8 +25,9 @@ package com.nctigba.observability.sql.service.impl.core;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nctigba.observability.sql.mapper.HisThresholdMapper;
+import com.nctigba.observability.sql.model.dto.ThresholdDTO;
+import com.nctigba.observability.sql.model.dto.ThresholdUpdateDTO;
 import com.nctigba.observability.sql.model.entity.DiagnosisThresholdDO;
-import com.nctigba.observability.sql.model.query.ThresholdQuery;
 import com.nctigba.observability.sql.service.ThresholdService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -54,25 +55,19 @@ public class ThresholdServiceImpl implements ThresholdService {
     }
 
     @Override
-    public void insertOrUpdate(ThresholdQuery thresholdQuery) {
-        DiagnosisThresholdDO threshold = new DiagnosisThresholdDO();
-        if (thresholdQuery.getId() == null) {
-            threshold.setThresholdName(thresholdQuery.getThresholdName());
-            threshold.setThresholdType(thresholdQuery.getThresholdType());
-            threshold.setThresholdValue(thresholdQuery.getThresholdValue());
-            hisThresholdMapper.insert(threshold);
-        } else {
-            threshold.setId(thresholdQuery.getId());
-            threshold.setThresholdName(thresholdQuery.getThresholdName());
-            threshold.setThresholdType(thresholdQuery.getThresholdType());
-            threshold.setThresholdValue(thresholdQuery.getThresholdValue());
-            hisThresholdMapper.updateById(threshold);
+    public void setThreshold(ThresholdUpdateDTO thresholdUpdateDTO) {
+        if (thresholdUpdateDTO.getThresholds() == null) {
+            return;
         }
-    }
-
-    @Override
-    public void delete(int id) {
-        hisThresholdMapper.deleteById(id);
+        for (ThresholdDTO thresholdDTO : thresholdUpdateDTO.getThresholds()) {
+            DiagnosisThresholdDO thresholdDO = new DiagnosisThresholdDO();
+            thresholdDO.setThreshold(thresholdDTO.getThresholdKey());
+            thresholdDO.setThresholdValue(thresholdDTO.getThresholdValue());
+            LambdaQueryWrapper<DiagnosisThresholdDO> queryWrapper = new LambdaQueryWrapper<>();
+            hisThresholdMapper.update(
+                    thresholdDO, queryWrapper.eq(DiagnosisThresholdDO::getThreshold, thresholdDTO.getThresholdKey()).eq(
+                            DiagnosisThresholdDO::getDiagnosisType, thresholdUpdateDTO.getDiagnosisType()));
+        }
     }
 
     @Override

@@ -23,8 +23,8 @@
 
 package com.nctigba.ebpf.controller;
 
-import com.nctigba.ebpf.enums.OsTypeEnum;
 import com.nctigba.ebpf.service.EbpfMonitorService;
+import com.nctigba.ebpf.service.MonitorService;
 import com.nctigba.ebpf.service.OsMonitorService;
 import com.nctigba.ebpf.service.ParamMonitorService;
 import lombok.extern.slf4j.Slf4j;
@@ -36,15 +36,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * ebpf controller
+ * Monitor controller
  *
- * @author luomeng@ncti-gba.cn
+ * @author luomeng
  * @since 2022/10/17 09:00
  */
 @RestController
-@RequestMapping("/ebpf/v1")
+@RequestMapping("/monitor/v1")
 @Slf4j
-public class EbpfMonitorController {
+public class MonitorController {
+    @Autowired
+    MonitorService monitorService;
     @Autowired
     EbpfMonitorService ebpfMonitorService;
     @Autowired
@@ -55,31 +57,72 @@ public class EbpfMonitorController {
     @Value(value = "${project.version}")
     private String version;
 
-    @PostMapping("/ebpfMonitor")
-    public void ebpfMonitor(String tid, String taskId, String monitorType) {
+    /**
+     * Start monitor
+     *
+     * @param tid         String
+     * @param taskId      String
+     * @param monitorType String
+     */
+    @PostMapping("/startMonitor")
+    public void startMonitor(String tid, String taskId, String monitorType) {
         log.info(tid + ":" + taskId + ":" + monitorType);
         boolean isEmptyParam = tid == null || taskId == null || monitorType == null;
         if (isEmptyParam) {
             log.info("Parameter cannot be empty");
         }
-        boolean isExist = false;
-        for (OsTypeEnum type : OsTypeEnum.values()) {
-            if (type.getType().equals(monitorType)) {
-                isExist = true;
-                break;
-            }
-        }
-        if (isExist) {
-            osMonitorService.getCpuMonitorData(tid, taskId, monitorType);
-        } else if ("osParam".equals(monitorType) || "cpuCoreNum".equals(monitorType)) {
-            paramMonitorService.getOsParamData(tid, taskId, monitorType);
-        } else {
-            ebpfMonitorService.ebpfMonitor(tid, taskId, monitorType);
-        }
+        monitorService.startMonitor(tid, taskId, monitorType);
     }
 
+    /**
+     * Stop monitor
+     *
+     * @param taskId String
+     * @return boolean
+     */
+    @PostMapping("/stopMonitor")
+    public boolean stopMonitor(String taskId) {
+        return monitorService.stopMonitor(taskId);
+    }
+
+    /**
+     * Agent status monitor
+     *
+     * @param taskId String
+     * @return boolean
+     */
+    @PostMapping("/statusMonitor")
+    public boolean statusMonitor(String taskId) {
+        return monitorService.statusMonitor(taskId);
+    }
+
+    /**
+     * Get agent version
+     *
+     * @return String
+     */
     @GetMapping("/version")
     public String getVersion() {
         return version;
+    }
+
+    /**
+     * Get agent status
+     *
+     * @return AjaxResult
+     */
+    @GetMapping("/status")
+    public String getStatus() {
+        return "success";
+    }
+
+    /**
+     * Create a record
+     *
+     * @param taskId String
+     */
+    @PostMapping("/record")
+    public void record(String taskId) {
+        monitorService.record(taskId);
     }
 }

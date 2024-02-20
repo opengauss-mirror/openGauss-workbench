@@ -13,45 +13,38 @@
  *  See the Mulan PSL v2 for more details.
  *  -------------------------------------------------------------------------
  *
- *  TaskStateEnum.java
+ *  AgentStatusEnum.java
  *
  *  IDENTIFICATION
- *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/enums/TaskStateEnum.java
+ *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/enums/AgentStatusEnum.java
  *
  *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.enums;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.nctigba.observability.sql.util.LocaleStringUtils;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
- * TaskState
+ * AgentStatusEnum
  *
  * @author luomeng
- * @since 2023/6/9
+ * @since 2024/1/15
  */
-public enum TaskStateEnum {
-    CREATE,
-    WAITING,
-    SQL_RUNNING,
-    RECEIVING,
-    DATABASE_CONNECT_ERROR,
-    SQL_PARSE_ERROR,
-    SQL_ERROR,
-    ERROR,
-    TIMEOUT_ERROR,
-    COLLECT_PID_ERROR,
-    FINISH;
+@Getter
+@NoArgsConstructor
+public enum AgentStatusEnum {
+    NORMAL("normal"),
+    UNKNOWN("unknown"),
+    STARTING("starting"),
+    STOPPING("stopping"),
+    MANUAL_STOP("manualStop"),
+    ERROR_THREAD_NOT_EXISTS("errorThreadNotExists"),
+    ERROR_PROGRAM_UNHEALTHY("errorProgramUnhealthy");
+    private String status;
 
-    /**
-     * Get task state
-     *
-     * @return String
-     */
-    @JsonValue
-    public String getValue() {
-        return LocaleStringUtils.format("TaskState." + this.name());
+    AgentStatusEnum(String status) {
+        this.status = status;
     }
 }

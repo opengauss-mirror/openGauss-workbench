@@ -26,9 +26,10 @@ package com.nctigba.observability.sql.history.core;
 import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.DiagnosisTaskMapper;
 import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
-import com.nctigba.observability.sql.service.impl.ClusterManager;
 import com.nctigba.observability.sql.service.TaskService;
+import com.nctigba.observability.sql.service.impl.ClusterManager;
 import com.nctigba.observability.sql.service.impl.core.SqlExecutor;
+import com.nctigba.observability.sql.util.EbpfUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -58,6 +59,8 @@ public class TestSqlExecutor {
     private ClusterManager clusterManager;
     @Mock
     private TaskService taskService;
+    @Mock
+    private EbpfUtils ebpfUtils;
     @InjectMocks
     private SqlExecutor sqlExecutor;
 

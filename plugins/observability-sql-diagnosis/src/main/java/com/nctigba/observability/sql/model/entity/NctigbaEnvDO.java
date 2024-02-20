@@ -27,9 +27,12 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+
+import java.util.Date;
 
 @Data
 @Accessors(chain = true)
@@ -45,18 +48,52 @@ public class NctigbaEnvDO {
     String nodeid;
     @TableField(exist = false)
     OpsHostEntity host;
+    String param;
+    String status;
+    @TableField("update_time")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
+    Date updateTime;
 
+    /**
+     * Set data
+     *
+     * @return envType
+     */
     public envType type() {
         return envType.valueOf(type);
     }
 
+    /**
+     * Set data
+     *
+     * @param type Enum value
+     * @return NctigbaEnvDO
+     */
     public NctigbaEnvDO setType(String type) {
         this.type = type;
         return this;
     }
 
+    /**
+     * Set data
+     *
+     * @param type Enum value
+     * @return NctigbaEnvDO
+     */
     public NctigbaEnvDO setType(envType type) {
         this.type = type.name();
+        return this;
+    }
+
+    /**
+     * Set data
+     *
+     * @param status Enum value
+     * @return NctigbaEnvDO
+     */
+    public NctigbaEnvDO setEnvStatus(String status) {
+        this.status = status;
+        this.updateTime = new Date();
         return this;
     }
 

@@ -13,45 +13,47 @@
  *  See the Mulan PSL v2 for more details.
  *  -------------------------------------------------------------------------
  *
- *  TaskStateEnum.java
+ *  AgentService.java
  *
  *  IDENTIFICATION
- *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/enums/TaskStateEnum.java
+ *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/service/AgentService.java
  *
  *  -------------------------------------------------------------------------
  */
 
-package com.nctigba.observability.sql.enums;
+package com.nctigba.observability.sql.service;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.nctigba.observability.sql.util.LocaleStringUtils;
+import com.nctigba.observability.sql.model.vo.AgentStatusVO;
+
+import java.util.List;
 
 /**
- * TaskState
+ * AgentService
  *
  * @author luomeng
- * @since 2023/6/9
+ * @since 2024/1/2
  */
-public enum TaskStateEnum {
-    CREATE,
-    WAITING,
-    SQL_RUNNING,
-    RECEIVING,
-    DATABASE_CONNECT_ERROR,
-    SQL_PARSE_ERROR,
-    SQL_ERROR,
-    ERROR,
-    TIMEOUT_ERROR,
-    COLLECT_PID_ERROR,
-    FINISH;
+public interface AgentService {
+    /**
+     * Start agent
+     *
+     * @param id      Unique ID
+     * @param rootPwd Root password
+     */
+    void start(String id, String rootPwd);
 
     /**
-     * Get task state
+     * Stop agent
      *
-     * @return String
+     * @param id      Unique ID
+     * @param rootPwd Root password
      */
-    @JsonValue
-    public String getValue() {
-        return LocaleStringUtils.format("TaskState." + this.name());
-    }
+    void stop(String id, String rootPwd);
+
+    /**
+     * Query agent status
+     *
+     * @return List
+     */
+    List<AgentStatusVO> getAgentStatus();
 }

@@ -31,6 +31,7 @@ import com.nctigba.observability.sql.enums.TaskStateEnum;
 import com.nctigba.observability.sql.mapper.DiagnosisTaskMapper;
 import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
 import com.nctigba.observability.sql.service.TaskService;
+import com.nctigba.observability.sql.util.EbpfUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -54,12 +55,12 @@ import java.util.concurrent.TimeUnit;
 public class TaskManager {
     private final TaskService taskService;
     private final DiagnosisTaskMapper taskMapper;
+    private final EbpfUtils ebpfUtils;
 
     private final ExecutorService executorService = ThreadUtil.newExecutor(CommonConstants.MAX_RUN_NODE_NUM);
 
     /**
      * Run diagnosis task
-     *
      */
     @Scheduled(fixedDelay = 5, timeUnit = TimeUnit.SECONDS)
     public void run() {
@@ -103,6 +104,32 @@ public class TaskManager {
             diagnosisTask.setState(TaskStateEnum.WAITING);
             taskMapper.updateById(diagnosisTask);
             executorService.execute(() -> taskService.start(diagnosisTask.getId()));
+        }
+    }
+
+    /**
+     * Agent status monitor
+     */
+    @Scheduled(fixedDelay = 30, timeUnit = TimeUnit.SECONDS)
+    public void statusMonitor() {
+        List<DiagnosisTaskDO> taskList = taskMapper.selectList(
+                Wrappers.lambdaQuery(DiagnosisTaskDO.class).eq(
+                                DiagnosisTaskDO::getCollectPidStatus, 0)
+                        .eq(DiagnosisTaskDO::getDiagnosisType, "sql"));
+        if (CollectionUtils.isEmpty(taskList)) {
+            return;
+        }
+        for (DiagnosisTaskDO task : taskList) {
+            long time = ((new Date()).getTime() - task.getHisDataEndTime().getTime()) / 1000L;
+            if (time > 30) {
+                boolean isSuccess = ebpfUtils.statusMonitor(task);
+                if (isSuccess) {
+                    task.setCollectPidStatus(1);
+                } else {
+                    task.setState(TaskStateEnum.COLLECT_PID_ERROR);
+                }
+                taskMapper.updateById(task);
+            }
         }
     }
 }

@@ -13,45 +13,31 @@
  *  See the Mulan PSL v2 for more details.
  *  -------------------------------------------------------------------------
  *
- *  TaskStateEnum.java
+ *  LogClusterVO.java
  *
  *  IDENTIFICATION
- *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/enums/TaskStateEnum.java
+ *  plugins/observability-log-search/src/main/java/com/nctigba/observability/log/model/vo/LogClusterVO.java
  *
  *  -------------------------------------------------------------------------
  */
 
-package com.nctigba.observability.sql.enums;
+package com.nctigba.observability.sql.model.vo;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.nctigba.observability.sql.util.LocaleStringUtils;
+import lombok.Data;
+import org.opengauss.admin.common.enums.ops.DeployTypeEnum;
+
+import java.util.List;
 
 /**
- * TaskState
+ * LogClusterVO
  *
  * @author luomeng
- * @since 2023/6/9
+ * @since 2024/1/25
  */
-public enum TaskStateEnum {
-    CREATE,
-    WAITING,
-    SQL_RUNNING,
-    RECEIVING,
-    DATABASE_CONNECT_ERROR,
-    SQL_PARSE_ERROR,
-    SQL_ERROR,
-    ERROR,
-    TIMEOUT_ERROR,
-    COLLECT_PID_ERROR,
-    FINISH;
-
-    /**
-     * Get task state
-     *
-     * @return String
-     */
-    @JsonValue
-    public String getValue() {
-        return LocaleStringUtils.format("TaskState." + this.name());
-    }
+@Data
+public class AgentClusterVO {
+    private String clusterId;
+    private String clusterName;
+    private DeployTypeEnum dbType;
+    private List<AgentClusterNodeVO> clusterNodes;
 }

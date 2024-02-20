@@ -28,8 +28,8 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.NctigbaEnvMapper;
-import com.nctigba.observability.sql.model.entity.NctigbaEnvDO;
 import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
+import com.nctigba.observability.sql.model.entity.NctigbaEnvDO;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,23 +61,69 @@ public class EbpfUtils {
             throw new HisDiagnosisException("Agent not found");
         }
         var host = hostFacade.getById(env.getHostid());
-        return "http://" + host.getPublicIp() + ":" + env.getPort() + "/ebpf/v1/ebpfMonitor";
+        return "http://" + host.getPublicIp() + ":" + env.getPort();
     }
 
     /**
-     * Call agent
+     * Calling the agent to start collection
      *
-     * @param task task info
+     * @param task  task info
      * @param param collect param
      * @return success
      */
     public String callMonitor(DiagnosisTaskDO task, String param) {
-        var url = getAgentUrl(task.getNodeId());
+        var url = getAgentUrl(task.getNodeId()) + "/monitor/v1/startMonitor";
         // call post
         String postForObject = HttpUtil.post(
                 url,
                 Map.of("tid", task.getPid(), "taskId", task.getId(), "monitorType", param));
         task.addRemarks("bccResult for :" + param + ":" + (postForObject == null ? "" : postForObject));
         return "success";
+    }
+
+    /**
+     * Get agent status
+     *
+     * @param env node info
+     * @return success
+     */
+    public boolean getStatus(NctigbaEnvDO env) {
+        String url = getAgentUrl(env.getNodeid()) + "/monitor/v1/status";
+        String status = HttpUtil.get(url);
+        return "success".equals(status);
+    }
+
+    /**
+     * Create pid file
+     *
+     * @param task DiagnosisTaskDO
+     */
+    public void record(DiagnosisTaskDO task) {
+        String url = getAgentUrl(task.getNodeId()) + "/monitor/v1/record";
+        HttpUtil.post(url, Map.of("taskId", task.getId()));
+    }
+
+    /**
+     * Calling the agent to stop collection
+     *
+     * @param task DiagnosisTaskDO
+     * @return boolean
+     */
+    public boolean stopMonitor(DiagnosisTaskDO task) {
+        String url = getAgentUrl(task.getNodeId()) + "/monitor/v1/stopMonitor";
+        String message = HttpUtil.post(url, Map.of("taskId", task.getId()));
+        return Boolean.parseBoolean(message);
+    }
+
+    /**
+     * Calling the agent to get status
+     *
+     * @param task DiagnosisTaskDO
+     * @return boolean
+     */
+    public boolean statusMonitor(DiagnosisTaskDO task) {
+        String url = getAgentUrl(task.getNodeId()) + "/monitor/v1/statusMonitor";
+        String message = HttpUtil.post(url, Map.of("taskId", task.getId()));
+        return Boolean.parseBoolean(message);
     }
 }

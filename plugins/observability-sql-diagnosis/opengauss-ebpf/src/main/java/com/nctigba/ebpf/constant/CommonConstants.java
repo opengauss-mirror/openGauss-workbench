@@ -50,7 +50,17 @@ public class CommonConstants {
     public static final String KILL = "kill -2 %s";
 
     /**
+     * Kill command
+     */
+    public static final String KILL_9 = "kill -9 %s";
+
+    /**
      * Database pid monitor command
      */
     public static final String DB_MONITOR = "ps -eLf |grep gaussdb|grep -v grep|awk '{print $4}'";
+
+    /**
+     * Check pid is exists
+     */
+    public static final String CHECK_PID = "ps -p %s >/dev/null && echo \"true\" || echo \"false\"";
 }

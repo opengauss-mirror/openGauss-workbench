@@ -13,45 +13,28 @@
  *  See the Mulan PSL v2 for more details.
  *  -------------------------------------------------------------------------
  *
- *  TaskStateEnum.java
+ *  ThresholdInfoVO.java
  *
  *  IDENTIFICATION
- *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/enums/TaskStateEnum.java
+ *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/model/dto/ThresholdInfoVO.java
  *
  *  -------------------------------------------------------------------------
  */
 
-package com.nctigba.observability.sql.enums;
+package com.nctigba.observability.sql.model.dto;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.nctigba.observability.sql.util.LocaleStringUtils;
+import lombok.Data;
+
+import java.util.List;
 
 /**
- * TaskState
+ * SetThresholdDTO
  *
  * @author luomeng
- * @since 2023/6/9
+ * @since 2024/1/30
  */
-public enum TaskStateEnum {
-    CREATE,
-    WAITING,
-    SQL_RUNNING,
-    RECEIVING,
-    DATABASE_CONNECT_ERROR,
-    SQL_PARSE_ERROR,
-    SQL_ERROR,
-    ERROR,
-    TIMEOUT_ERROR,
-    COLLECT_PID_ERROR,
-    FINISH;
-
-    /**
-     * Get task state
-     *
-     * @return String
-     */
-    @JsonValue
-    public String getValue() {
-        return LocaleStringUtils.format("TaskState." + this.name());
-    }
+@Data
+public class ThresholdUpdateDTO {
+    private String diagnosisType;
+    private List<ThresholdDTO> thresholds;
 }

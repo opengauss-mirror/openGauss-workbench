@@ -66,6 +66,7 @@ import com.nctigba.observability.sql.service.impl.point.sql.IndexAdvisor;
 import com.nctigba.observability.sql.service.impl.point.sql.ObjectInfoCheck;
 import com.nctigba.observability.sql.service.impl.point.sql.OnCpu;
 import com.nctigba.observability.sql.service.impl.point.sql.OsParam;
+import com.nctigba.observability.sql.util.EbpfUtils;
 import lombok.SneakyThrows;
 import org.junit.Before;
 import org.junit.Test;
@@ -157,6 +158,8 @@ public class TestTaskServiceImpl {
     private ParamInfoMapper paramInfoMapper;
     @Mock
     private NctigbaEnvMapper envMapper;
+    @Mock
+    private EbpfUtils ebpfUtils;
 
 
     @Before

@@ -69,6 +69,10 @@ insert into his_diagnosis_threshold_info(
     id,threshold_type,threshold,threshold_name,threshold_value,threshold_unit,threshold_detail,sort_no,diagnosis_type)
 values(13,'CPU','swapOut','{{i18n,history.threshold.swapOut.title}}','0','page',
        '{{i18n,history.threshold.swapOut.detail}}','12','history');
+insert into his_diagnosis_threshold_info(
+    id,threshold_type,threshold,threshold_name,threshold_value,threshold_unit,threshold_detail,sort_no,diagnosis_type)
+values(14,'CPU','randomPageCost','{{i18n,sql.threshold.randomPageCost.title}}','1.5','',
+       '{{i18n,sql.threshold.randomPageCost.detail}}','2','sql');
 
 INSERT INTO param_info values (1,'OS','net.ipv4.tcp_max_tw_buckets','表示同时保持time_wait状态的tcp/ip连接最大数量。如果超过所配置的取值，time_wait将立刻被释放并打印警告信息','10000','180000','数目','系统在同时所处理的最大 timewait sockets 数目。如果超过此数的话﹐time-wait socket 会被立即砍除并且显示警告信息。之所以要设定这个限制﹐纯粹为了抵御那些简单的 dos 攻击﹐不过﹐如果网络条件需要比默认值更多﹐则可以提高它(或许还要增加内存)。(事实上做nat的时候最好可以适当地增加该值)','ACTUALVALUE>=10000');
 INSERT INTO param_info values (2,'OS','net.ipv4.tcp_tw_reuse','允许将time-wait状态的sockets重新用于新的tcp连接','1','0','布尔值','表示是否允许重新应用处于time-  wait状态的socket用于新的tcp连接(这个对快速重启动某些服务,而启动后提示端口已经被使用的情形非常有帮助)','ACTUALVALUE==1');

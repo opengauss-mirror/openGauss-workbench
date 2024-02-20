@@ -25,7 +25,6 @@ package com.nctigba.observability.sql.history.core;
 
 import com.nctigba.observability.sql.mapper.HisThresholdMapper;
 import com.nctigba.observability.sql.model.entity.DiagnosisThresholdDO;
-import com.nctigba.observability.sql.model.query.ThresholdQuery;
 import com.nctigba.observability.sql.service.impl.core.ThresholdServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,23 +58,6 @@ public class TestThresholdServiceImpl {
         String diagnosisType = "sql";
         List<DiagnosisThresholdDO> list = service.select(diagnosisType);
         assertNotNull(list);
-    }
-
-    @Test
-    public void testInsert() {
-        service.insertOrUpdate(new ThresholdQuery());
-    }
-
-    @Test
-    public void testUpdate() {
-        ThresholdQuery query = new ThresholdQuery();
-        query.setId(1);
-        service.insertOrUpdate(query);
-    }
-
-    @Test
-    public void testDelete() {
-        service.delete(1);
     }
 
     @Test

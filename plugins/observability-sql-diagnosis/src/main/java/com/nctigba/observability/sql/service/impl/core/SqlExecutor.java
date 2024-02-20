@@ -23,15 +23,17 @@
 
 package com.nctigba.observability.sql.service.impl.core;
 
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.RandomUtil;
-import com.nctigba.observability.sql.enums.OptionEnum;
 import com.nctigba.observability.sql.constant.SqlConstants;
+import com.nctigba.observability.sql.enums.OptionEnum;
+import com.nctigba.observability.sql.enums.TaskStateEnum;
 import com.nctigba.observability.sql.mapper.DiagnosisTaskMapper;
 import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
 import com.nctigba.observability.sql.model.vo.OptionVO;
-import com.nctigba.observability.sql.enums.TaskStateEnum;
-import com.nctigba.observability.sql.service.impl.ClusterManager;
 import com.nctigba.observability.sql.service.TaskService;
+import com.nctigba.observability.sql.service.impl.ClusterManager;
+import com.nctigba.observability.sql.util.EbpfUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
@@ -58,6 +60,8 @@ public class SqlExecutor {
     @Autowired
     @Lazy
     private TaskService taskService;
+    @Autowired
+    private EbpfUtils ebpfUtils;
 
     /**
      * Execute sql
@@ -119,6 +123,15 @@ public class SqlExecutor {
             task.addRemarks("after sql caller");
             task.setState(TaskStateEnum.RECEIVING);
             mapper.updateById(task);
+            ThreadUtil.execAsync(() -> {
+                boolean isSuccess = ebpfUtils.stopMonitor(task);
+                if (isSuccess) {
+                    task.setCollectPidStatus(1);
+                } else {
+                    task.setCollectPidStatus(0);
+                }
+                mapper.updateById(task);
+            });
             taskService.explainAfter(task, rsList);
         } finally {
             mapper.updateById(task);

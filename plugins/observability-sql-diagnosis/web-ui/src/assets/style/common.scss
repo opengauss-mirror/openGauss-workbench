@@ -114,13 +114,16 @@
 
 // from
 .form {
+    .title-row{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        margin-bottom: 12px;
+    }
     .title {
         font-weight: 550 !important;
         line-height: 22px;
         margin-bottom: 0px;
-    }
-    .title:not(:first-child){
-        margin-top: 24px;
     }
 
 }
@@ -145,7 +148,7 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     .search-time-range {
         width: 300px;
     }

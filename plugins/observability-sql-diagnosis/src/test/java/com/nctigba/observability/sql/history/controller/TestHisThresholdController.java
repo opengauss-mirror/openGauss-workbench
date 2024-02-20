@@ -26,7 +26,6 @@ package com.nctigba.observability.sql.history.controller;
 import com.nctigba.observability.sql.constant.DiagnosisTypeConstants;
 import com.nctigba.observability.sql.controller.ThresholdController;
 import com.nctigba.observability.sql.model.entity.DiagnosisThresholdDO;
-import com.nctigba.observability.sql.model.query.ThresholdQuery;
 import com.nctigba.observability.sql.service.ThresholdService;
 import com.nctigba.observability.sql.util.LocaleStringUtils;
 import org.junit.Test;
@@ -40,7 +39,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -67,19 +65,5 @@ public class TestHisThresholdController {
         when(service.select(diagnosisType)).thenReturn(list);
         Object result = controller.select(diagnosisType);
         assertNotNull(result);
-    }
-
-    @Test
-    public void testInsertOrUpdate() {
-        ThresholdQuery thresholdQuery = mock(ThresholdQuery.class);
-        doNothing().when(service).insertOrUpdate(thresholdQuery);
-        controller.insertOrUpdate(thresholdQuery);
-    }
-
-    @Test
-    public void testDelete() {
-        int thresholdId = 1;
-        doNothing().when(service).delete(thresholdId);
-        controller.delete(thresholdId);
     }
 }
