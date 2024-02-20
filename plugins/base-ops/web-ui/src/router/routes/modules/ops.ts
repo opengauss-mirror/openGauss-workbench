@@ -83,7 +83,17 @@ const OPS: AppRouteRecordRaw = {
         requiresAuth: true,
         roles: ['*']
       }
-    }
+    },
+    {
+      path: '/ops/disasterClusterInstall',
+      name: 'dtClusterInstall',
+      component: () => import('@/views/ops/dtClusterInstall/index.vue'),
+      meta: {
+        title: '容灾集群安装',
+        requiresAuth: true,
+        roles: ['*']
+      }
+    },
   ]
 }
 
