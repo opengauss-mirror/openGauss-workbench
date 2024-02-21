@@ -57,7 +57,7 @@ const retry = () => {
 const downloadLog = () => {
   for (let key in logs.value) {
     const time = dayjs().format("YYYY-MM-DD_HH:mm:ss");
-    const filename = `disasterCluster_install_${key}_${time}.log`;
+    const filename = `${key}_${time}.log`;
 
     const blob = new Blob([logs.value[key]], { type: "text/plain" });
     const url = URL.createObjectURL(blob);

@@ -19,7 +19,7 @@
   </a-row>
 </template>
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from "vue";
+import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import "xterm/css/xterm.css";
 import { Terminal } from "xterm";
 import { FitAddon } from "@xterm/addon-fit";
@@ -38,6 +38,8 @@ const emit = defineEmits(["updateStatus"]);
 
 const logSockets = ref<Socket<any, any>[]>([]);
 const logTerms = ref<Terminal[]>([]);
+const primaryInstallRes = ref(STATUS.INSTALLING);
+const standbyInstallRes = ref(STATUS.INSTALLING);
 
 onMounted(() => {
   openLogSocket();
@@ -47,7 +49,26 @@ onBeforeUnmount(() => {
   destroySocketsAndterm();
 });
 
+watch(
+  () => `${primaryInstallRes.value}_${standbyInstallRes.value}`,
+  () => {
+    if (
+      primaryInstallRes.value === STATUS.INSTALLING ||
+      standbyInstallRes.value === STATUS.INSTALLING
+    ) {
+      return;
+    }
+    if (primaryInstallRes.value === STATUS.SUCCESS && standbyInstallRes.value === STATUS.SUCCESS) {
+      emit("updateStatus", STATUS.SUCCESS);
+    } else {
+      emit("updateStatus", STATUS.FAILURE);
+    }
+  }
+);
+
 const install = () => {
+  primaryInstallRes.value = STATUS.INSTALLING;
+  standbyInstallRes.value = STATUS.INSTALLING;
   destroySocketsAndterm();
   openLogSocket();
 };
@@ -57,7 +78,7 @@ const destroySocketsAndterm = () => {
   logTerms.value.forEach((x) => x.dispose());
 };
 
-const initLogSocket = (url: string, elId: string) => {
+const initLogSocket = (url: string, elId: string, res: any) => {
   const term = new Terminal({
     fontSize: 14,
     rows: 30,
@@ -80,13 +101,11 @@ const initLogSocket = (url: string, elId: string) => {
     if (messageData.indexOf("FINAL_EXECUTE_EXIT_CODE") > -1) {
       const flag = Number(messageData.split(":")[1]);
       if (flag === 0) {
-        emit("updateStatus", STATUS.SUCCESS);
-        logSocket.destroy();
-        term.dispose();
+        res.value = STATUS.SUCCESS;
       } else {
-        emit("updateStatus", STATUS.FAILURE);
-        logSocket.destroy();
+        res.value = STATUS.FAILURE;
       }
+      logSocket.destroy();
     }
   });
 
@@ -101,8 +120,16 @@ const initLogSocket = (url: string, elId: string) => {
 
 const openLogSocket = () => {
   Promise.all([
-    initLogSocket(props.installParams.primaryBusinessId, "dt-cluster-xtermLog_primary"),
-    initLogSocket(props.installParams.standbyBusinessId, "dt-cluster-xtermLog_standby"),
+    initLogSocket(
+      props.installParams.primaryBusinessId,
+      "dt-cluster-xtermLog_primary",
+      primaryInstallRes
+    ),
+    initLogSocket(
+      props.installParams.standbyBusinessId,
+      "dt-cluster-xtermLog_standby",
+      standbyInstallRes
+    ),
   ]).then(
     () => {
       return apiInstallDtCluster(props.installParams)

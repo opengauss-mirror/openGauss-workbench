@@ -10,7 +10,7 @@
           {{ $t("dtCluster.dtClusterName") }}
         </div>
         <div class="label-value">
-          {{ installParams.disasterClusterName }}
+          {{ installParams.clusterId }}
         </div>
       </div>
       <div class="flex-row mb-s">
@@ -82,7 +82,7 @@ const downloadLog = () => {
   }
 
   .label-value {
-    width: 100px;
+    width: 120px;
     text-align: left;
     white-space: nowrap;
     overflow: hidden;
