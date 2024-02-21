@@ -147,10 +147,10 @@ https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-
    gs_guc set -D /opt/software/openGauss/data/single_node -c "listen_addresses = '*'"
    ```
    上述命令中的`/opt/software/openGauss/data/single_node`为数据库节点的安装目录路径，此目录下包含有上述两个文件，请根据数据库的实际情况替换。此处参数配置的目的是使得数据库接受来自任意`ip`地址的连接请求，以便在外部服务器可以成功连接到数据库。
-4. 启动数据库\
-   执行如下命令启动数据库，此处的`/opt/software/openGauss/data/single_node`请按第三步的方法替换为实际路径
+4. 重启数据库\
+   执行如下命令重新启动数据库，使参数配置生效。此处的`/opt/software/openGauss/data/single_node`请按第三步的方法替换为实际路径
    ```shell
-   gs_ctl start -D /opt/software/openGauss/data/single_node
+   gs_ctl restart -D /opt/software/openGauss/data/single_node
    ```
 5. 连接数据库\
    执行如下命令连接数据库，此处`5432`为`openGauss`数据库默认端口，请根据实际情况替换
