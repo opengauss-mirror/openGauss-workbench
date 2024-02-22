@@ -634,6 +634,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @Transactional(rollbackFor = Exception.class)
     public CheckSummaryVO check(String clusterId,String rootPassword) {
         OpsClusterEntity clusterEntity = getById(clusterId);
+        if (clusterEntity.getVersionNum().equals("5.1.0")) {
+            throw new OpsException("Unsupported openGauss version: 5.1.0");
+        }
         if (Objects.isNull(clusterEntity)) {
             throw new OpsException("Cluster information cannot be empty");
         }
