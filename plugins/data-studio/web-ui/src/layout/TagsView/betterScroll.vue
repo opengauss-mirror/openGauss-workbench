@@ -46,7 +46,9 @@
 </script>
 <style scoped>
   .tags-scroll-wrap {
-    width: 100%;
+    /* width: 100%; */
+    width: calc(100% - 35px);
+    overflow: hidden;
   }
   .tags-scroll {
     display: inline-block;

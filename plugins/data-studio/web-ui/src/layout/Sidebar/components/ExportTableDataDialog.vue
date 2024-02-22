@@ -1,5 +1,5 @@
 <template>
-  <div class="export-dialog">
+  <div class="common-dialog-wrapper">
     <el-dialog
       v-model="visible"
       :title="title"
@@ -83,12 +83,10 @@
         </el-form>
       </div>
       <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
-          <el-button type="primary" @click="confirmForm">
-            {{ $t('button.confirm') }}
-          </el-button>
-        </span>
+        <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
+        <el-button type="primary" @click="confirmForm">
+          {{ $t('button.confirm') }}
+        </el-button>
       </template>
     </el-dialog>
   </div>
@@ -250,21 +248,15 @@
 </script>
 
 <style lang="scss" scoped>
-  .export-dialog {
-    :deep(.el-dialog__body) {
-      padding-top: 5px;
-      padding-bottom: 5px;
-    }
-    :deep(.el-select) {
-      width: 100%;
-    }
-    :deep(.el-input-number .el-input__inner) {
-      text-align: left;
-    }
-    :deep(.el-radio-group) {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-    }
+  :deep(.el-select) {
+    width: 100%;
+  }
+  :deep(.el-input-number .el-input__inner) {
+    text-align: left;
+  }
+  :deep(.el-radio-group) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
   }
 </style>

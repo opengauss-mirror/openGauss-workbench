@@ -35,7 +35,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.concurrent.ExecutionException;
 
 /**
  * ExportController
@@ -137,12 +136,10 @@ public class ExportController {
      * @param response response
      * @throws SQLException SQLException
      * @throws IOException IOException
-     * @throws ExecutionException ExecutionException
-     * @throws InterruptedException InterruptedException
      */
     @PostMapping(value = "/export/schema/ddl", produces = MediaType.APPLICATION_JSON_VALUE)
     public void exportSchemaDdl(@RequestBody ExportQuery request, HttpServletResponse response)
-            throws SQLException, IOException, ExecutionException, InterruptedException {
+            throws SQLException, IOException {
         exportService.exportSchemaDdl(request, response);
     }
 }

@@ -93,7 +93,7 @@
   import EnterParamsDialog from './EnterParamsDialog.vue';
   import CoverageRateDialog from './CoverageRateDialog.vue';
   import ImportFileTipsDialog from './ImportFileTipsDialog.vue';
-  import { ElMessage, ElMessageBox } from 'element-plus';
+  import { ElMessage, ElMessageBox, ElCheckbox } from 'element-plus';
   import createTemplate from './createTemplate';
   import { useRoute, useRouter } from 'vue-router';
   import WebSocketClass from '@/utils/websocket';
@@ -165,6 +165,8 @@
     barType: props.editorType,
   });
 
+  let isOpenCoverage = false;
+  const isRemenberNoAskOpenCoverage = ref(false);
   const showResult = ref(false);
   const id = 'terminal_' + uuid();
   const editorWrapper = ref<HTMLElement>();
@@ -239,7 +241,7 @@
     columns?: any[];
     data: any[];
   }
-  const tabList = ref<Array<TabType>>([]);
+  const tabList = shallowRef<Array<TabType>>([]);
   const tabValue = ref('home');
 
   const buildConnection = () => {
@@ -383,13 +385,33 @@
         });
       }
       if (res.type == 'CREATE_COVERAGE_RATE') {
-        ElMessageBox.confirm(result)
-          .then(() => {
-            handleCreateCoverageRate(true);
+        !isRemenberNoAskOpenCoverage.value &&
+          ElMessageBox({
+            type: 'warning',
+            boxType: 'confirm',
+            showCancelButton: true,
+            closeOnClickModal: false,
+            closeOnPressEscape: false,
+            cancelButtonText: t('button.cancel'),
+            message: () =>
+              h('div', null, [
+                h('div', t('message.willCreateCoverageRate')),
+                h(ElCheckbox, {
+                  modelValue: isRemenberNoAskOpenCoverage.value,
+                  'onUpdate:modelValue': (val: boolean) => {
+                    isRemenberNoAskOpenCoverage.value = val;
+                  },
+                  label: t('common.donotAskAgain'),
+                }),
+              ]),
           })
-          .catch(() => {
-            handleCreateCoverageRate(false);
-          });
+            .then(() => {
+              isOpenCoverage = true;
+              handleStartDebugContent();
+            })
+            .catch(() => {
+              isOpenCoverage = false;
+            });
       }
       if (res.type == 'PARAM_WINDOW') {
         const arr = result.map((item: { key: string | null; type: string }) => {
@@ -403,7 +425,7 @@
         enterParams.showParams = true;
       }
       if (res.type == 'TABLE') {
-        const { columns, data } = formatTableV2Data(res.data.column, result, { showIndex: true });
+        const { columns, data } = formatTableV2Data(res.data.column, result);
         const name = `${t('resultTab.result')}${tabList.value.length + 1}`;
         tabList.value.push({
           id: Date.now(),
@@ -627,6 +649,14 @@
   };
 
   const handleStartDebug = () => {
+    // If you don't remember 'isRemenberNoAskOpenCoverage' , then reset isOpenCoverage every time you debug
+    if (!isRemenberNoAskOpenCoverage.value) {
+      isOpenCoverage = false;
+    }
+    handleStartDebugContent();
+  };
+
+  const handleStartDebugContent = () => {
     editorRef.value.removeAllDiasbledBreakPoint(); // clear all disabled breakPoint
     showResult.value = false;
     tabList.value = [];
@@ -646,6 +676,7 @@
         ...commonWsParams.value,
         sql: editorRef.value.getValue(),
         breakPoints: editorRef.value.getAllLineDecorations(),
+        isCoverage: isOpenCoverage,
       });
     }
   };
@@ -747,17 +778,6 @@
         breakPoints: line,
         oldWindowName: ws.parentWindowName,
       });
-  };
-
-  const handleCreateCoverageRate = (status) => {
-    ws.instance.send({
-      operation: 'createCoverageRate',
-      ...commonWsParams.value,
-      isInPackage: ws.isInPackage,
-      sql: editorRef.value.getValue(),
-      inputParams: preInputParams.value,
-      isCoverage: status,
-    });
   };
 
   const loadTerminal = (txt) => {

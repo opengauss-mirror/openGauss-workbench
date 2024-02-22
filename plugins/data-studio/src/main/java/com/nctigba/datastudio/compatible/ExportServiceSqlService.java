@@ -30,7 +30,6 @@ import org.opengauss.admin.common.exception.CustomException;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.concurrent.ExecutionException;
 
 /**
  * ExportServiceSqlService
@@ -123,11 +122,9 @@ public interface ExportServiceSqlService {
      * @param request request
      * @param response response
      * @throws IOException IOException
-     * @throws ExecutionException ExecutionException
-     * @throws InterruptedException InterruptedException
+     * @throws SQLException SQLException
      */
-    default void exportSchemaDdl(ExportQuery request, HttpServletResponse response)
-            throws IOException, ExecutionException, InterruptedException {
+    default void exportSchemaDdl(ExportQuery request, HttpServletResponse response) throws IOException, SQLException {
         throw new CustomException(DebugUtils.getMessage());
     }
 }

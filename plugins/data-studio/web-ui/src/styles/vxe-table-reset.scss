@@ -1,0 +1,37 @@
+$vxe-table-column-padding-mini: 4px 0;
+$vxe-table-row-height-mini: 30px;
+$vxe-table-header-font-color: #909399;
+$vxe-font-color: #606266;
+
+
+@import 'vxe-table/styles/index.scss';
+
+html.dark {
+  --vxe-font-color: #f2f3f5;
+  --vxe-table-body-background-color: var(--el-table-tr-bg-color);
+  --vxe-table-row-hover-background-color: #262727;
+  --vxe-tooltip-light-background-color: var(--el-bg-color-overlay);
+  --vxe-input-border-color: var(--el-border-color-light);
+}
+
+.vxe-table--render-default.border--full .vxe-table--header-wrapper .vxe-header--row:last-child .vxe-header--gutter {
+  background: none;
+}
+
+/* 
+// if you want to hide scrollbar, but scrollbar will occupy certain width/height
+.vxe-table ::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  box-shadow: none;
+}
+.vxe-table:hover ::-webkit-scrollbar-thumb {
+  background-color: rgba(144, 147, 153, 0.3);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.2);
+}
+.vxe-table ::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+.vxe-table:hover ::-webkit-scrollbar-track {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+ */

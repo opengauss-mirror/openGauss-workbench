@@ -24,9 +24,9 @@
 package com.nctigba.datastudio.service.impl.debug;
 
 import com.nctigba.datastudio.base.WebSocketServer;
-import com.nctigba.datastudio.model.query.PublicParamQuery;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
 import com.nctigba.datastudio.model.entity.SqlHistoryDO;
+import com.nctigba.datastudio.model.query.PublicParamQuery;
 import com.nctigba.datastudio.service.impl.sql.SqlHistoryManagerServiceImpl;
 import com.nctigba.datastudio.utils.DebugUtils;
 import com.nctigba.datastudio.utils.LocaleStringUtils;
@@ -55,7 +55,6 @@ import static com.nctigba.datastudio.constants.CommonConstants.STATEMENT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.TURN_OFF_SQL;
 import static com.nctigba.datastudio.enums.MessageEnum.CLOSE_WINDOW;
-import static com.nctigba.datastudio.enums.MessageEnum.CREATE_COVERAGE_RATE;
 import static com.nctigba.datastudio.enums.MessageEnum.OPERATE_STATUS;
 import static com.nctigba.datastudio.enums.MessageEnum.TABLE;
 import static com.nctigba.datastudio.enums.MessageEnum.TEXT;
@@ -88,9 +87,7 @@ public class AsyncHelper {
             try (
                     ResultSet resultSet = statement.executeQuery(DebugUtils.prepareSql(paramReq))
             ) {
-                if (!paramReq.isCoverage()) {
-                    funcTask(webSocketServer, paramReq, resultSet);
-                }
+                funcTask(webSocketServer, paramReq, resultSet);
             } catch (SQLException | IOException e) {
                 webSocketServer.sendMessage(windowName, WINDOW, FIVE_HUNDRED, e.getMessage(), e.getStackTrace());
             }
@@ -115,14 +112,6 @@ public class AsyncHelper {
         closeWindow(webSocketServer, windowName, oid);
         statement.execute(String.format(TURN_OFF_SQL, oid));
         log.info("AsyncHelper oid: " + oid);
-
-        if (!paramReq.isCoverage() && !isAnonymousOid(paramReq)) {
-            closeConnection(webSocketServer, windowName, statement);
-            Map<String, String> map = new HashMap<>();
-            map.put(RESULT, LocaleStringUtils.transLanguageWs("1010", webSocketServer));
-            webSocketServer.sendMessage(windowName, CREATE_COVERAGE_RATE, SUCCESS, map);
-            return;
-        }
         closeConnection(webSocketServer, windowName, statement);
     }
 

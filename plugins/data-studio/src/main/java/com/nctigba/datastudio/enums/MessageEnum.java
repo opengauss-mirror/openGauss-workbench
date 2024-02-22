@@ -115,7 +115,7 @@ public enum MessageEnum {
     MESSAGE,
 
     /**
-     * create coverate rate
+     * create coverage rate
      */
     CREATE_COVERAGE_RATE,
 

@@ -140,7 +140,7 @@ public class TableDataServiceImpl implements TableDataService {
                 Statement statementCount = connection.createStatement();
                 ResultSet resultSetCount = statementCount.executeQuery(
                         tableObjectSQLService.get(comGetUuidType(request.getUuid()))
-                                .tableDataCountSQL(schema, request.getTableName()))
+                                .tableDataCountSQL(schema, tableName))
 
         ) {
             resultSetCount.next();

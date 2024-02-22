@@ -31,7 +31,8 @@ export default class WebSocketClass {
     const baseURL = import.meta.env.DEV
       ? `${import.meta.env.VITE_WS_BASE_URL}`
       : `${location.protocol == 'http:' ? 'ws:' : 'wss:'}//${location.host}`;
-    const url = `${baseURL}/ws/${import.meta.env.VITE_PLUGIN_NAME}/${sessionId}`;
+    const pluginName = import.meta.env.VITE_PLUGIN_NAME;
+    const url = `${baseURL}/ws/${pluginName ? pluginName + '/' : ''}${sessionId}`;
     this.ws = new WebSocket(url);
 
     this.ws.onopen = () => {

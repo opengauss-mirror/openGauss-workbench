@@ -35,10 +35,19 @@ export function getSchemaObjectList(data) {
   });
 }
 
-// getSchemaObjects. query the one type of [foreignTable, fun_pro, sequence, synonym, table, trigger...]
+// getSchemaObjects. query the one type of [ table, foreignTable, trigger, fun_pro, sequence, view, synonym ]
 export function getSchemaObjects(data) {
   return request({
     url: '/dataStudio/web/v1/metaData/schemaObjects',
+    method: 'get',
+    params: data,
+  });
+}
+
+// get count of schemaObjects. query all count of [ table, foreignTable, trigger, fun_pro, sequence, view, synonym ], such as {foreignTable: 0, function :0, sequence: 0, synonym: 0, table: 0, trigger: 0, view: 0}
+export function getSchemaObjectCount(data) {
+  return request({
+    url: '/dataStudio/web/v1/metaData/schemaObjectCount',
     method: 'get',
     params: data,
   });

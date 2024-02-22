@@ -135,7 +135,7 @@
 
   const getFinallyParams = () => {
     const generalValue = generalref.value.formValue;
-    const partitionValue = partitionRef.value.formValue;
+    const partitionValue = partitionRef.value?.formValue;
     const params = {
       ...commonParams,
       tableInfo: {
@@ -170,11 +170,11 @@
           attName: Array.isArray(item.columnName) ? item.columnName.join(',') : '',
           conType: Array.isArray(item.constrainType) ? item.constrainType[0] : null,
           nspName:
-            item.constrainType?.[0] == 'f' && item.constrainType[1] ? item.constrainType[1] : null, //fKey namespace
+            item.constrainType?.[0] == 'f' && item.constrainType[1] ? item.constrainType[1] : null, //foreign key namespace
           tbName:
-            item.constrainType?.[0] == 'f' && item.constrainType[2] ? item.constrainType[2] : null, //fKey tableName
+            item.constrainType?.[0] == 'f' && item.constrainType[2] ? item.constrainType[2] : null, //foreign key tableName
           colName:
-            item.constrainType?.[0] == 'f' && item.constrainType[3] ? item.constrainType[3] : null, //fKey colName
+            item.constrainType?.[0] == 'f' && item.constrainType[3] ? item.constrainType[3] : null, //foreign key colName
           constraintDef: item.expression,
           conDeferrable: item.isDeffered,
           description: item.description,
@@ -211,8 +211,8 @@
   };
 
   const handleSave = async () => {
-    const generalValid = generalref.value.validateForm;
-    const partitionValid = partitionRef.value.validateForm;
+    const generalValid = generalref.value?.validateForm;
+    const partitionValid = partitionRef.value?.validateForm;
     try {
       await Promise.all([generalValid(), dataMap.GeneralTab.isPartition ? partitionValid() : true]);
     } catch (error) {
@@ -242,8 +242,8 @@
   };
 
   const handleReset = () => {
-    generalref.value.resetFields();
-    partitionRef.value.resetFields();
+    generalref.value?.resetFields();
+    partitionRef.value?.resetFields();
     dataMap.GeneralTab.isPartition = false;
     dataMap.ColumnsTab.data = [];
     dataMap.ConstraintTab.data = [];

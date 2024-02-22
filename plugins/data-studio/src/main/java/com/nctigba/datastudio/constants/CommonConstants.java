@@ -410,9 +410,9 @@ public class CommonConstants {
     public static final String MIN_VALUE = "min_value";
 
     /**
-     * next val
+     * current val
      */
-    public static final String NEXT_VALUE = "nextval";
+    public static final String CURRENT_VALUE = "last_value";
 
     /**
      * is called

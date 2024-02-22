@@ -206,6 +206,7 @@ export const exportTableDdl = async (data) => {
   return await requestBlob({
     url: `/dataStudio/web/v1/export/table/ddl`,
     method: 'post',
+    responseType: 'blob',
     data,
   });
 };

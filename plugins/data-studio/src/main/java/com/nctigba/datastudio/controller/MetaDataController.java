@@ -90,6 +90,18 @@ public class MetaDataController {
     }
 
     /**
+     * get schema object count
+     *
+     * @param query query
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    @GetMapping(value = "/schemaObjectCount", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Integer> schemaObjectCount(DatabaseMetaArrayIdSchemaQuery query) throws SQLException {
+        return dbConnectionService.schemaObjectCount(query);
+    }
+
+    /**
      * schema list
      *
      * @param request request

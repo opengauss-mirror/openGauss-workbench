@@ -43,7 +43,6 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import static com.nctigba.datastudio.utils.DebugUtils.comGetUuidType;
 
@@ -119,8 +118,7 @@ public class ExportServiceImpl implements ExportService {
     }
 
     @Override
-    public void exportSchemaDdl(ExportQuery request, HttpServletResponse response)
-            throws IOException, ExecutionException, InterruptedException {
+    public void exportSchemaDdl(ExportQuery request, HttpServletResponse response) throws IOException, SQLException {
         exportServiceSqlService.get(comGetUuidType(request.getUuid())).exportSchemaDdl(request, response);
     }
 }

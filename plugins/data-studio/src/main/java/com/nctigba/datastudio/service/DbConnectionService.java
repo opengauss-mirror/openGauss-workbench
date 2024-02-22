@@ -98,6 +98,15 @@ public interface DbConnectionService {
     List<Map<String, Object>> schemaObjects(DatabaseMetaArrayIdSchemaQuery query) throws SQLException;
 
     /**
+     * get schema object list
+     *
+     * @param query query
+     * @return Map
+     * @throws SQLException SQLException
+     */
+    Map<String, Integer> schemaObjectCount(DatabaseMetaArrayIdSchemaQuery query) throws SQLException;
+
+    /**
      * add database connection
      *
      * @param request request

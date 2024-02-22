@@ -490,7 +490,7 @@
           const data = formatEditTableData({ columns, data: result, idKey, rowStatusKey });
           if (type == 'ConstraintTab') {
             data.forEach((item: any, index) => {
-              item.columnName = item.columnName?.split(',') || [];
+              item.columnName = item.columnName?.split(',') || []; // There may be multiple columns
               item.constrainType = result[index][6]
                 ? [result[index][2], result[index][6], result[index][7], result[index][8]]
                 : [result[index][2]];

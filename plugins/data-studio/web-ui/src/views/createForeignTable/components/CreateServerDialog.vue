@@ -67,15 +67,13 @@
         </el-form>
       </div>
       <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
-          <el-button type="primary" @click="testRemoteConnection">
-            {{ $t('foreignTable.testRemoteConnection') }}
-          </el-button>
-          <el-button type="primary" @click="confirmForm">
-            {{ $t('button.confirm') }}
-          </el-button>
-        </span>
+        <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
+        <el-button type="primary" @click="testRemoteConnection">
+          {{ $t('foreignTable.testRemoteConnection') }}
+        </el-button>
+        <el-button type="primary" @click="confirmForm">
+          {{ $t('button.confirm') }}
+        </el-button>
       </template>
     </el-dialog>
   </div>

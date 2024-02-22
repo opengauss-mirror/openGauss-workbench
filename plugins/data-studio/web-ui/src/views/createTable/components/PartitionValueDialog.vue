@@ -1,5 +1,5 @@
 <template>
-  <div class="value-dialog">
+  <div class="common-dialog-wrapper">
     <el-dialog
       v-model="visible"
       :title="$t('createTable.partition.definePartitionValue')"
@@ -33,12 +33,10 @@
         </el-form>
       </div>
       <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
-          <el-button type="primary" @click="confirmForm">
-            {{ $t('button.confirm') }}
-          </el-button>
-        </span>
+        <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
+        <el-button type="primary" @click="confirmForm">
+          {{ $t('button.confirm') }}
+        </el-button>
       </template>
     </el-dialog>
   </div>
@@ -116,16 +114,10 @@
 </script>
 
 <style lang="scss" scoped>
-  .value-dialog {
-    :deep(.el-dialog__body) {
-      padding-top: 5px;
-      padding-bottom: 5px;
-    }
-    :deep(.el-input-number .el-input__inner) {
-      text-align: left;
-    }
-    :deep(.el-form-item) {
-      margin-bottom: 0;
-    }
+  :deep(.el-input-number .el-input__inner) {
+    text-align: left;
+  }
+  :deep(.el-form-item) {
+    margin-bottom: 0;
   }
 </style>

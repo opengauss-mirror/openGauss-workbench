@@ -59,9 +59,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
@@ -76,18 +78,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
+import static com.nctigba.datastudio.constants.CommonConstants.CURRENT_VALUE;
 import static com.nctigba.datastudio.constants.CommonConstants.FUNCTION;
 import static com.nctigba.datastudio.constants.CommonConstants.IS_CALLED;
 import static com.nctigba.datastudio.constants.CommonConstants.IS_PACKAGE;
 import static com.nctigba.datastudio.constants.CommonConstants.MAX_VALUE;
 import static com.nctigba.datastudio.constants.CommonConstants.MIN_VALUE;
 import static com.nctigba.datastudio.constants.CommonConstants.NAME;
-import static com.nctigba.datastudio.constants.CommonConstants.NEXT_VALUE;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.OPENGAUSS;
 import static com.nctigba.datastudio.constants.CommonConstants.PRO_NAME;
@@ -101,11 +99,11 @@ import static com.nctigba.datastudio.constants.SqlConstants.COMMA;
 import static com.nctigba.datastudio.constants.SqlConstants.COUNT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.COURSE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.CREATE_SCHEMA_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.CUR_VALUE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.FETCH_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.FROM_KEYWORD_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.LEFT_BRACKET;
 import static com.nctigba.datastudio.constants.SqlConstants.LF;
-import static com.nctigba.datastudio.constants.SqlConstants.NEXT_VALUE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.POINT;
 import static com.nctigba.datastudio.constants.SqlConstants.PROC_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.QUERY_OID_BY_PACKAGE;
@@ -125,6 +123,8 @@ import static com.nctigba.datastudio.constants.SqlConstants.TABLE_DATA_SQL;
 @Slf4j
 @Service
 public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
+    private static final String ROOT_PATH = System.getProperty("user.dir");
+
     @Autowired
     private ConnectionConfig connectionConfig;
 
@@ -151,7 +151,15 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
     @Override
     public void exportTableDdl(ExportQuery request, HttpServletResponse response) throws SQLException, IOException {
         String fileName = getFileName(request.isDataFlag(), TABLE, request.getTableList());
-        DebugUtils.exportFile(fileName, getTableDdl(request), response);
+        String path = ROOT_PATH + File.separator + fileName;
+        log.info("ExportService exportTableDdl path: " + path);
+        try (
+                FileWriter fileWriter = new FileWriter(path);
+                BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+        ) {
+            getTableDdl(bufferedWriter, request);
+            DebugUtils.exportFile(fileName, path, response);
+        }
     }
 
     @Override
@@ -168,7 +176,7 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
         } else if (fileType.equals("Binary")) {
             fileName = getDataFileName(tableName) + ".bin";
         }
-        String path = System.getProperty("user.dir") + "\\" + fileName;
+        String path = ROOT_PATH + File.separator + fileName;
         log.info("ExportService exportTableData path: " + path);
 
         try (
@@ -195,11 +203,7 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
             }
         }
 
-        File file = new File(path);
-        if (file.exists()) {
-            boolean isDelete = file.delete();
-            log.info("ExportService exportTableData isDelete: " + isDelete);
-        }
+        DebugUtils.deleteFile(path);
         log.info("ExportService exportTableData end: ");
     }
 
@@ -207,13 +211,14 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
     public void importTableData(ExportQuery request) throws IOException, SQLException {
         log.info("ExportService importTableData request: " + request);
         MultipartFile multipartFile = request.getFile();
-        File file = new File(System.getProperty("user.dir") + File.separator + multipartFile.getName());
+        String path = ROOT_PATH + File.separator + multipartFile.getName();
+        File file = new File(path);
         multipartFile.transferTo(file);
         log.info("ExportService importTableData file: " + file);
 
         String fileType = request.getFileType();
         if (fileType.contains("Excel")) {
-            importExcel(request, file);
+            importExcel(request, file, path);
             return;
         }
 
@@ -228,10 +233,7 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
             }
         }
 
-        if (file.exists()) {
-            boolean isDelete = file.delete();
-            log.info("ExportService importTableData isDelete: " + isDelete);
-        }
+        DebugUtils.deleteFile(path);
         log.info("ExportService importTableData end: ");
     }
 
@@ -316,7 +318,7 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
         }
     }
 
-    private void importExcel(ExportQuery request, File file) throws SQLException, IOException {
+    private void importExcel(ExportQuery request, File file, String path) throws SQLException, IOException {
         String columnString = request.getColumnString();
         log.info("ExportService importExcel columnString: " + columnString);
 
@@ -376,10 +378,7 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
             statement.execute(sb.toString());
         }
 
-        if (file.exists()) {
-            boolean isDelete = file.delete();
-            log.info("ExportService importExcel isDelete: " + isDelete);
-        }
+        DebugUtils.deleteFile(path);
         log.info("ExportService importExcel end: ");
     }
 
@@ -467,122 +466,129 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
     }
 
     @Override
-    public void exportFunctionDdl(ExportQuery request, HttpServletResponse response)
-            throws SQLException, IOException {
+    public void exportFunctionDdl(ExportQuery request, HttpServletResponse response) throws SQLException, IOException {
         List<Object> list = new ArrayList<>();
         List<Map<String, Object>> functionMap = request.getFunctionMap();
         functionMap.forEach(item -> {
             list.add(item.get(OID));
         });
         String fileName = getFileName(false, FUNCTION, list);
-        DebugUtils.exportFile(fileName, getFunctionDdl(request), response);
+        String path = ROOT_PATH + File.separator + fileName;
+        log.info("ExportService exportFunctionDdl path: " + path);
+        try (
+                FileWriter fileWriter = new FileWriter(path);
+                BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+        ) {
+            getFunctionDdl(bufferedWriter, request);
+            DebugUtils.exportFile(fileName, path, response);
+        }
     }
 
     @Override
     public void exportViewDdl(ExportQuery request, HttpServletResponse response) throws SQLException, IOException {
         String fileName = getFileName(false, VIEW, request.getViewList());
-        DebugUtils.exportFile(fileName, getViewDdl(request), response);
+        String path = ROOT_PATH + File.separator + fileName;
+        log.info("ExportService exportViewDdl path: " + path);
+        try (
+                FileWriter fileWriter = new FileWriter(path);
+                BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+        ) {
+            getViewDdl(bufferedWriter, request);
+            DebugUtils.exportFile(fileName, path, response);
+        }
     }
 
     @Override
     public void exportSequenceDdl(ExportQuery request, HttpServletResponse response)
             throws SQLException, IOException {
         String fileName = getFileName(request.isDataFlag(), SEQUENCE, request.getSequenceList());
-        DebugUtils.exportFile(fileName, getSequenceDdl(request), response);
+        String path = ROOT_PATH + File.separator + fileName;
+        log.info("ExportService exportSequenceDdl path: " + path);
+        try (
+                FileWriter fileWriter = new FileWriter(path);
+                BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+        ) {
+            getSequenceDdl(bufferedWriter, request);
+            DebugUtils.exportFile(fileName, path, response);
+        }
     }
 
     @Override
     public void exportSchemaDdl(
             ExportQuery request,
-            HttpServletResponse response) throws IOException, ExecutionException, InterruptedException {
+            HttpServletResponse response) throws IOException, SQLException {
         log.info("ExportService exportSchemaDdl request: " + request);
-        String uuid = request.getUuid();
         boolean isDataFlag = request.isDataFlag();
         List<String> schemaList = request.getSchemaList();
-        StringBuilder sb = new StringBuilder();
-
-        for (String schema : schemaList) {
-            DatabaseMetaArrayIdSchemaQuery query = new DatabaseMetaArrayIdSchemaQuery();
-            query.setUuid(uuid);
-            query.setSchema(schema);
-            DataListDTO dataList = dbConnectionService.schemaObjectList(query).get(0);
-            log.info("ExportService exportSchemaDdl dataList: " + dataList);
-
-            List<String> tableList = parseList(dataList.getTable());
-            List<Map<String, Object>> funProList = dataList.getFun_pro();
-            List<String> viewList = parseList(dataList.getView());
-            List<String> sequenceList = parseList(dataList.getSequence());
-
-            ExportQuery exportQuery = new ExportQuery();
-            exportQuery.setDataFlag(isDataFlag);
-            exportQuery.setSchema(schema);
-            exportQuery.setUuid(uuid);
-            exportQuery.setTableList(tableList);
-            exportQuery.setFunctionMap(funProList);
-            exportQuery.setViewList(viewList);
-            exportQuery.setSequenceList(sequenceList);
-
-            sb.append(addHeader(false, schema, SCHEMA, schema))
-                    .append(String.format(CREATE_SCHEMA_SQL, DebugUtils.needQuoteName(schema)))
-                    .append(asyncExecute(exportQuery));
-            log.info("ExportService exportSchemaDdl sb: " + sb);
-        }
-
         String fileName = getFileName(isDataFlag, SCHEMA, schemaList);
-        DebugUtils.exportFile(fileName, sb.toString(), response);
-    }
+        String path = ROOT_PATH + File.separator + fileName;
+        log.info("ExportService exportSequenceDdl path: " + path);
 
-    private String asyncExecute(ExportQuery exportQuery) throws ExecutionException, InterruptedException {
-        ExecutorService executorService = Executors.newFixedThreadPool(20);
-        List<Future<String>> futureList = new ArrayList<>();
-        futureList.add(executorService.submit(() -> getTableDdl(exportQuery)));
-        futureList.add(executorService.submit(() -> getFunctionDdl(exportQuery)));
-        futureList.add(executorService.submit(() -> getViewDdl(exportQuery)));
-        futureList.add(executorService.submit(() -> getSequenceDdl(exportQuery)));
+        try (
+                FileWriter fileWriter = new FileWriter(path);
+                BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+        ) {
+            for (String schema : schemaList) {
+                DatabaseMetaArrayIdSchemaQuery query = new DatabaseMetaArrayIdSchemaQuery();
+                String uuid = request.getUuid();
+                query.setUuid(uuid);
+                query.setSchema(schema);
+                DataListDTO dataList = dbConnectionService.schemaObjectList(query).get(0);
+                log.info("ExportService exportSchemaDdl dataList: " + dataList);
 
-        StringBuilder sb = new StringBuilder();
-        for (Future<String> future : futureList) {
-            sb.append(future.get());
+                List<String> tableList = parseList(dataList.getTable());
+                List<Map<String, Object>> funProList = dataList.getFun_pro();
+                List<String> viewList = parseList(dataList.getView());
+                List<String> sequenceList = parseList(dataList.getSequence());
+
+                ExportQuery exportQuery = new ExportQuery();
+                exportQuery.setDataFlag(isDataFlag);
+                exportQuery.setSchema(schema);
+                exportQuery.setUuid(uuid);
+                exportQuery.setTableList(tableList);
+                exportQuery.setFunctionMap(funProList);
+                exportQuery.setViewList(viewList);
+                exportQuery.setSequenceList(sequenceList);
+
+                bufferedWriter.write(addHeader(false, schema, SCHEMA, schema));
+                bufferedWriter.write(String.format(CREATE_SCHEMA_SQL, DebugUtils.needQuoteName(schema)));
+                bufferedWriter.flush();
+
+                getTableDdl(bufferedWriter, exportQuery);
+                getFunctionDdl(bufferedWriter, exportQuery);
+                getViewDdl(bufferedWriter, exportQuery);
+                getSequenceDdl(bufferedWriter, exportQuery);
+                log.info("ExportService exportSchemaDdl end: ");
+            }
+            DebugUtils.exportFile(fileName, path, response);
         }
-        return sb.toString();
     }
 
-    private String getTableDdl(ExportQuery request) throws SQLException {
+    private void getTableDdl(BufferedWriter bufferedWriter, ExportQuery request) throws SQLException, IOException {
         log.info("ExportService getTableDdl request: " + request);
-        StringBuilder sb = new StringBuilder();
         String uuid = request.getUuid();
         String schema = request.getSchema();
 
-        try (
-                Connection connection = connectionConfig.connectDatabase(request.getUuid());
-                Statement statement = connection.createStatement()
-        ) {
-            List<String> tableList = request.getTableList();
-            for (String name : tableList) {
-                SelectDataQuery dto = new SelectDataQuery();
-                dto.setUuid(uuid);
-                dto.setSchema(schema);
-                dto.setTableName(name);
+        List<String> tableList = request.getTableList();
+        for (String name : tableList) {
+            SelectDataQuery dto = new SelectDataQuery();
+            dto.setUuid(uuid);
+            dto.setSchema(schema);
+            dto.setTableName(name);
 
-                String ddl = tableDataService.tableDdl(dto).get(RESULT);
-                sb.append(addHeader(false, name, TABLE, schema));
-                sb.append(ddl);
+            String ddl = tableDataService.tableDdl(dto).get(RESULT);
+            bufferedWriter.write(addHeader(false, name, TABLE, schema) + ddl);
+            bufferedWriter.newLine();
+            bufferedWriter.flush();
 
-                if (request.isDataFlag()) {
-                    String tableData = getTableData(statement, schema, name);
-                    if (StringUtils.isNotEmpty(tableData)) {
-                        sb.append(addHeader(true, name, TABLE, schema)).append(tableData);
-                    }
-                }
+            if (request.isDataFlag()) {
+                getTableData(bufferedWriter, uuid, schema, name);
             }
         }
-        log.info("ExportService getTableDdl sb: " + sb);
-        return sb.toString();
     }
 
-    private String getFunctionDdl(ExportQuery request) throws SQLException {
+    private void getFunctionDdl(BufferedWriter bufferedWriter, ExportQuery request) throws SQLException, IOException {
         log.info("ExportService getFunctionDdl request: " + request);
-        StringBuilder sb = new StringBuilder();
         String uuid = request.getUuid();
         String schema = request.getSchema();
 
@@ -629,17 +635,15 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
                 }
 
                 String ddl = functionSPService.functionDdl(dto);
-                sb.append(addHeader(false, name, FUNCTION, schema));
-                sb.append(ddl);
+                bufferedWriter.write(addHeader(false, name, FUNCTION, schema) + ddl);
+                bufferedWriter.flush();
             }
         }
-        log.info("ExportService getFunctionDdl sb: " + sb);
-        return sb.toString();
+        log.info("ExportService getFunctionDdl end: ");
     }
 
-    private String getViewDdl(ExportQuery request) throws SQLException {
+    private void getViewDdl(BufferedWriter bufferedWriter, ExportQuery request) throws SQLException, IOException {
         log.info("ExportService getViewDdl request: " + request);
-        StringBuilder sb = new StringBuilder();
         String uuid = request.getUuid();
         String schema = request.getSchema();
 
@@ -651,16 +655,14 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
             dto.setViewName(name);
 
             String ddl = viewService.returnViewDDL(dto);
-            sb.append(addHeader(false, name, VIEW, schema));
-            sb.append(ddl);
+            bufferedWriter.write(addHeader(false, name, VIEW, schema) + ddl);
+            bufferedWriter.flush();
         }
-        log.info("ExportService getViewDdl sb: " + sb);
-        return sb.toString();
+        log.info("ExportService getViewDdl end: ");
     }
 
-    private String getSequenceDdl(ExportQuery request) throws SQLException {
+    private void getSequenceDdl(BufferedWriter bufferedWriter, ExportQuery request) throws SQLException, IOException {
         log.info("ExportService getSequenceDdl request: " + request);
-        StringBuilder sb = new StringBuilder();
         String uuid = request.getUuid();
         String schema = request.getSchema();
 
@@ -672,16 +674,17 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
             dto.setSequenceName(name);
 
             String ddl = sequenceService.returnSequenceDDL(dto);
-            sb.append(addHeader(false, name, SEQUENCE, schema));
-            sb.append(ddl);
+            bufferedWriter.write(addHeader(false, name, SEQUENCE, schema) + ddl);
+            bufferedWriter.newLine();
+            bufferedWriter.flush();
 
             if (request.isDataFlag()) {
-                sb.append(addHeader(true, name, SEQUENCE, schema));
-                sb.append(getSequenceData(request, name));
+                bufferedWriter.write(addHeader(true, name, SEQUENCE, schema));
+                bufferedWriter.write(getSequenceData(request, name));
+                bufferedWriter.flush();
             }
         }
-        log.info("ExportService getSequenceDdl sb: " + sb);
-        return sb.toString();
+        log.info("ExportService getSequenceDdl end: ");
     }
 
     private List<String> parseList(List<Map<String, String>> listMap) {
@@ -730,85 +733,116 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
         return str;
     }
 
-    private String getTableData(Statement statement, String schema, String table) throws SQLException {
+    private void getTableData(
+            BufferedWriter bufferedWriter, String uuid, String schema, String table) throws SQLException, IOException {
         log.info("ExportService getTableData schema--table: " + schema + "--" + table);
         StringBuilder columnSb = new StringBuilder();
         String sch = DebugUtils.needQuoteName(schema);
         String tab = DebugUtils.needQuoteName(table);
-        columnSb.append(LF).append("INSERT INTO ").append(sch).append(POINT).append(tab).append(LEFT_BRACKET);
+        columnSb.append("INSERT INTO ").append(sch).append(POINT).append(tab).append(LEFT_BRACKET);
 
-        ResultSet resultSet = statement.executeQuery(String.format(TABLE_DATA_SQL, sch, tab));
-        List<String> columnList = new ArrayList<>();
-        ResultSetMetaData metaData = resultSet.getMetaData();
-        for (int i = 0; i < metaData.getColumnCount(); i++) {
-            String columnName = metaData.getColumnName(i + 1);
-            columnList.add(columnName);
-            columnSb.append(columnName);
-            if (i != metaData.getColumnCount() - 1) {
-                columnSb.append(COMMA);
-            } else {
-                columnSb.append(RIGHT_BRACKET).append(" VALUES ");
+        try (
+                Connection connection = connectionConfig.connectDatabase(uuid);
+                Statement statement = connection.createStatement();
+        ) {
+            int count = 0;
+            ResultSet countResult = statement.executeQuery(String.format(COUNT_SQL, sch, tab));
+            while (countResult.next()) {
+                count = countResult.getInt("count");
             }
-        }
-        log.info("ExportService getTableData columnList: " + columnList);
+            log.info("ExportService getTableData count: " + count);
+            if (count == 0) {
+                return;
+            }
+            bufferedWriter.write(addHeader(true, table, TABLE, schema));
 
-        StringBuilder sb = new StringBuilder();
-        while (resultSet.next()) {
-            sb.append(columnSb).append(LEFT_BRACKET);
-            for (int i = 0; i < columnList.size(); i++) {
-                String value = resultSet.getString(columnList.get(i));
-                int columnType = metaData.getColumnType(i + 1);
-                String columnTypeName = metaData.getColumnTypeName(i + 1);
-
-                sb.append(DebugUtils.typeChange(value, columnType, columnTypeName));
-                if (i != columnList.size() - 1) {
-                    sb.append(COMMA);
+            ResultSet columnResultSet = statement.executeQuery(String.format(TABLE_DATA_SQL + " limit 1;", sch, tab));
+            List<String> columnList = new ArrayList<>();
+            ResultSetMetaData metaData = columnResultSet.getMetaData();
+            for (int i = 0; i < metaData.getColumnCount(); i++) {
+                String columnName = metaData.getColumnName(i + 1);
+                columnList.add(columnName);
+                columnSb.append(columnName);
+                if (i != metaData.getColumnCount() - 1) {
+                    columnSb.append(COMMA);
                 } else {
-                    sb.append(RIGHT_BRACKET + SEMICOLON);
+                    columnSb.append(RIGHT_BRACKET).append(" VALUES ");
                 }
             }
+            log.info("ExportService getTableData columnList: " + columnList);
+
+            connection.setAutoCommit(false);
+            String timeStamp = new SimpleDateFormat("HHmmssSSS").format(new Date());
+            log.info("ExportService getTableData startTime: " + System.currentTimeMillis());
+            statement.execute(String.format(COURSE_SQL, "DS_" + timeStamp, String.format(TABLE_DATA_SQL, sch, tab)));
+
+            int size = count % 1000 == 0 ? count / 1000 : count / 1000 + 1;
+            log.info("ExportService getTableData size: " + size);
+            for (int s = 0; s < size; s++) {
+                StringBuilder sb = new StringBuilder();
+                ResultSet resultSet = statement.executeQuery(String.format(FETCH_SQL, 1000, "DS_" + timeStamp));
+                while (resultSet.next()) {
+                    sb.append(columnSb).append(LEFT_BRACKET);
+                    for (int i = 0; i < columnList.size(); i++) {
+                        String value = resultSet.getString(columnList.get(i));
+                        int columnType = metaData.getColumnType(i + 1);
+                        String columnTypeName = metaData.getColumnTypeName(i + 1);
+
+                        sb.append(DebugUtils.typeChange(value, columnType, columnTypeName));
+                        if (i != columnList.size() - 1) {
+                            sb.append(COMMA);
+                        } else {
+                            sb.append(RIGHT_BRACKET + SEMICOLON);
+                        }
+                    }
+                }
+
+                bufferedWriter.write(sb.toString());
+                bufferedWriter.newLine();
+                bufferedWriter.flush();
+            }
+            log.info("ExportService getTableData endTime: " + System.currentTimeMillis());
         }
-        log.info("ExportService getTableData sb: " + sb);
-        return sb.toString();
     }
 
     private String getSequenceData(ExportQuery request, String name) {
         log.info("ExportService getSequenceData request: " + request);
         String schema = DebugUtils.needQuoteName(request.getSchema());
-        String table = DebugUtils.needQuoteName(name);
+        String sequence = DebugUtils.needQuoteName(name);
         boolean isCalled = false;
-        long nextVal = 0;
+        long currentVal = 0;
         long maxValue = 0;
         long minValue = 0;
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            ResultSet resultSet = statement.executeQuery(String.format(SEQUENCE_SQL, schema + POINT + table));
+            ResultSet resultSet = statement.executeQuery(String.format(SEQUENCE_SQL, schema + POINT + sequence));
             while (resultSet.next()) {
                 maxValue = resultSet.getLong(MAX_VALUE);
                 minValue = resultSet.getLong(MIN_VALUE);
                 isCalled = resultSet.getBoolean(IS_CALLED);
             }
 
-            ResultSet nextResultSet = statement.executeQuery(String.format(NEXT_VALUE_SQL, schema + POINT + table));
+            ResultSet nextResultSet = statement.executeQuery(String.format(CUR_VALUE_SQL, schema + POINT + sequence));
             while (nextResultSet.next()) {
-                nextVal = nextResultSet.getInt(NEXT_VALUE);
+                currentVal = nextResultSet.getInt(CURRENT_VALUE);
             }
-            log.info("ExportService getSequenceData nextVal: " + nextVal);
+            log.info("ExportService getSequenceData nextVal: " + currentVal);
         } catch (SQLException e) {
             String msg = e.getMessage();
+            log.info("ExportService getSequenceData msg: " + msg);
             if (msg.contains("Sequence reached maximum value")) {
-                nextVal = maxValue;
+                currentVal = maxValue;
                 isCalled = true;
             }
             if (msg.contains("Sequence reached minimum value")) {
-                nextVal = minValue;
+                currentVal = minValue;
                 isCalled = true;
             }
         }
 
-        String ddl = String.format(SET_VALUE_SQL, table, nextVal, isCalled);
+        String ddl = String.format(SET_VALUE_SQL, sequence, currentVal, isCalled);
         log.info("ExportService getSequenceData ddl: " + ddl);
         return ddl;
     }

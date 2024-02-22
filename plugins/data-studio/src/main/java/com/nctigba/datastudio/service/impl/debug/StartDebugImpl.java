@@ -25,8 +25,8 @@ package com.nctigba.datastudio.service.impl.debug;
 
 import com.alibaba.fastjson.JSON;
 import com.nctigba.datastudio.base.WebSocketServer;
-import com.nctigba.datastudio.model.query.PublicParamQuery;
 import com.nctigba.datastudio.model.entity.OperateStatusDO;
+import com.nctigba.datastudio.model.query.PublicParamQuery;
 import com.nctigba.datastudio.service.OperationInterface;
 import com.nctigba.datastudio.utils.DebugUtils;
 import com.nctigba.datastudio.utils.LocaleStringUtils;
@@ -50,7 +50,9 @@ import static com.nctigba.datastudio.constants.CommonConstants.DEFINITION;
 import static com.nctigba.datastudio.constants.CommonConstants.FIVE_HUNDRED;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
+import static com.nctigba.datastudio.constants.SqlConstants.QUERY_COVERAGE_PARAM;
 import static com.nctigba.datastudio.constants.SqlConstants.QUERY_DEF_SQL;
+import static com.nctigba.datastudio.enums.MessageEnum.CREATE_COVERAGE_RATE;
 import static com.nctigba.datastudio.enums.MessageEnum.PARAM_WINDOW;
 import static com.nctigba.datastudio.enums.MessageEnum.WINDOW;
 
@@ -79,6 +81,18 @@ public class StartDebugImpl implements OperationInterface {
         if (statement == null) {
             statement = webSocketServer.getConnection(rootWindowName).createStatement();
             webSocketServer.setStatement(rootWindowName, statement);
+        }
+
+        try (
+                ResultSet resultSet = statement.executeQuery(QUERY_COVERAGE_PARAM);
+        ) {
+            while (resultSet.next()) {
+                String enableCoverage = resultSet.getString("setting");
+                if (enableCoverage.equals("off") && !paramReq.isCoverage()) {
+                    webSocketServer.sendMessage(windowName, CREATE_COVERAGE_RATE, SUCCESS, null);
+                    return;
+                }
+            }
         }
 
         String oid = paramReq.getOid();

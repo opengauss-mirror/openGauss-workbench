@@ -24,7 +24,7 @@
     defineProps<{
       offset: { top: number; left: number };
       show: boolean;
-      list: Menu[];
+      list?: Menu[];
     }>(),
     {
       offset: () => ({
@@ -71,6 +71,7 @@
   onMounted(() => {
     document.body.appendChild(proxy.$el);
     document.addEventListener('mousedown', clickDocumentHandler);
+    window.addEventListener('resize', clickDocumentHandler);
   });
   onBeforeUnmount(() => {
     let popperElm = proxy.$el;
@@ -78,6 +79,7 @@
       document.body.removeChild(popperElm);
     }
     document.removeEventListener('mousedown', clickDocumentHandler);
+    window.removeEventListener('resize', clickDocumentHandler);
   });
 </script>
 <style lang="scss" scoped>
@@ -85,6 +87,7 @@
     z-index: 2300;
     display: block;
     position: fixed;
+    color: initial;
     box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.12);
     &-enter,
     &-leave-to {

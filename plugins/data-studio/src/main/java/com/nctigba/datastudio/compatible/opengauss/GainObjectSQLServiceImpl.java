@@ -215,6 +215,22 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     }
 
     @Override
+    public String tableCountSql(String schema) {
+        String ddl;
+        ddl = "select count(1)" + LF
+                + "  from (select tbl.oid as oid, tbl.relname relname,"
+                + "         case when parttype='n' then 'n' else 'y' end as parttype  " + LF
+                + "         from pg_class tbl" + LF
+                + "         inner join pg_namespace ns on tbl.relnamespace = ns.oid" + LF
+                + "         where tbl.relkind = 'r'" + LF
+                + "           and ns.nspname = '" + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(schema))
+                + "' ) x" + LF
+                + " where has_table_privilege(x.oid, 'SELECT')";
+        log.info("splicingSequenceDDL response is: " + ddl);
+        return ddl;
+    }
+
+    @Override
     public String foreignTableSql(String schema) {
         String ddl;
         ddl = "select x.oid,relname as tablename,parttype,fdwname" + LF
@@ -235,6 +251,25 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     }
 
     @Override
+    public String foreignTableCountSql(String schema) {
+        String ddl;
+        ddl = "select count(1)" + LF
+                + "  from (select tbl.oid as oid, tbl.relname relname,fdwname,"
+                + "         case when parttype='n' then 'n' else 'y' end as parttype  " + LF
+                + "         from pg_class tbl" + LF
+                + "         inner join pg_namespace ns on tbl.relnamespace = ns.oid" + LF
+                + "         inner join pg_foreign_table pft on pft.ftrelid = tbl.relfilenode" + LF
+                + "         inner join pg_foreign_server pfs on pfs.oid = pft.ftserver" + LF
+                + "         inner join pg_foreign_data_wrapper pfdw on pfdw.oid = pfs.srvfdw" + LF
+                + "         where tbl.relkind = 'f'" + LF
+                + "           and ns.nspname = '" + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(schema))
+                + "' ) x" + LF
+                + " where has_table_privilege(x.oid, 'SELECT');";
+        log.info("splicingSequenceDDL response is: " + ddl);
+        return ddl;
+    }
+
+    @Override
     public String triggerSql(String schema) {
         String ddl;
         ddl = "select pt.oid, pt.tgname, pt.tgenabled, pc.relname, pc.relkind from pg_trigger pt " + LF
@@ -242,6 +277,18 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
                 + "left join pg_namespace pn on pn.nspowner = pc.relowner" + LF
                 + "where pn.nspname = '" + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(schema))
                 + "' order by pt.tgname";
+        log.info("triggerSql ddl is: " + ddl);
+        return ddl;
+    }
+
+    @Override
+    public String triggerCountSql(String schema) {
+        String ddl;
+        ddl = "select count(1) from pg_trigger pt " + LF
+                + "left join pg_class pc on pc.oid = pt.tgrelid " + LF
+                + "left join pg_namespace pn on pn.nspowner = pc.relowner" + LF
+                + "where pn.nspname = '" + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(schema))
+                + "';";
         log.info("triggerSql ddl is: " + ddl);
         return ddl;
     }
@@ -258,12 +305,34 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     }
 
     @Override
-    public String fun_prosSql(String schema) {
+    public String viewCountSql(String schema) {
+        String ddl;
+        ddl = "select count(1) from pg_class c INNER JOIN pg_namespace n "
+                + "ON n.oid = c.relnamespace and n.nspname = '"
+                + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(schema))
+                + "' where c.relkind in ('v','m" + "');";
+        log.info("splicingSequenceDDL response is: " + ddl);
+        return ddl;
+    }
+
+    @Override
+    public String funProSql(String schema) {
         String ddl;
         ddl = "SELECT pp.oid,pp.proname,pp.proargtypes,pp.propackageid,gp.pkgname FROM pg_proc pp "
                 + "left join gs_package gp on gp.oid = pp.propackageid WHERE pronamespace = "
                 + "(SELECT pg_namespace.oid FROM pg_namespace WHERE nspname = '"
                 + DebugUtils.containsSqlInjection(schema) + "') order by pp.proname";
+        log.info("splicingSequenceDDL response is: " + ddl);
+        return ddl;
+    }
+
+    @Override
+    public String funProCountSql(String schema) {
+        String ddl;
+        ddl = "SELECT count(1) FROM pg_proc pp "
+                + "left join gs_package gp on gp.oid = pp.propackageid WHERE pronamespace = "
+                + "(SELECT pg_namespace.oid FROM pg_namespace WHERE nspname = '"
+                + DebugUtils.containsSqlInjection(schema) + "');";
         log.info("splicingSequenceDDL response is: " + ddl);
         return ddl;
     }
@@ -281,6 +350,17 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     }
 
     @Override
+    public String sequenceCountSql(String schema) {
+        String ddl;
+        ddl = "select count(1) from" + LF
+                + "pg_class c INNER JOIN pg_namespace n ON n.oid = c.relnamespace " + LF
+                + "and n.nspname = '" + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(schema))
+                + "' where c.relkind = 'S';";
+        log.info("splicingSequenceDDL response is: " + ddl);
+        return ddl;
+    }
+
+    @Override
     public String synonymSql(String schema) {
         String ddl;
         ddl = "select pgs.oid,synname from PG_SYNONYM pgs, pg_namespace pgn" + LF
@@ -288,6 +368,17 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
                 + "     and pgn.nspname  ='"
                 + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(schema)) + "'" + LF
                 + " order by synname";
+        log.info("splicingSequenceDDL response is: " + ddl);
+        return ddl;
+    }
+
+    @Override
+    public String synonymCountSql(String schema) {
+        String ddl;
+        ddl = "select count(1) from PG_SYNONYM pgs, pg_namespace pgn" + LF
+                + "   where pgn.oid = pgs.synnamespace" + LF
+                + "     and pgn.nspname  ='"
+                + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(schema)) + "';";
         log.info("splicingSequenceDDL response is: " + ddl);
         return ddl;
     }
