@@ -95,4 +95,6 @@ public interface IHostService extends IService<OpsHostEntity> {
     Map<String,Object> monitor(String hostId, String businessId, String rootPassword);
 
     void updateHostOsVersion(OpsHostEntity opsHostEntity);
+
+    OpsHostEntity getMappedHostEntityById(String hostId);
 }

@@ -32,7 +32,7 @@ public class MigrationToolPortalDownloadInfoServiceImpl extends ServiceImpl<Migr
 
     @Override
     public List<MigrationToolPortalDownloadInfo> getPortalDownloadInfoList(String hostId) {
-        OpsHostEntity opsHostEntity = hostService.getById(hostId);
+        OpsHostEntity opsHostEntity = hostService.getMappedHostEntityById(hostId);
         if (StringUtils.isEmpty(opsHostEntity.getOsVersion())) {
             hostService.updateHostOsVersion(opsHostEntity);
         }

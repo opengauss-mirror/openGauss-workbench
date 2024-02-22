@@ -205,7 +205,7 @@ const setPathToStore = () => {
       cpuArchStr = cpuArchStr.replace('-', '_')
     }
     const temp =
-      getInstallOs(fileInfo.os) + '_' + cpuArchStr.toLocaleUpperCase()
+      fileInfo.os.toLocaleUpperCase() + '_' + cpuArchStr.toLocaleUpperCase()
     installStore.setInstallContext({
       packagePath: data.path,
       packageName: data.fileName,

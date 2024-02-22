@@ -28,6 +28,7 @@ import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.core.domain.model.ops.check.CheckSummaryVO;
+import org.opengauss.admin.common.enums.OsSupportMap;
 import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;
@@ -45,6 +46,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -245,8 +247,14 @@ public class OpsClusterController extends BaseController {
 
     @GetMapping("/env/{hostId}")
     public AjaxResult env(@PathVariable("hostId") String hostId,
-                          @RequestParam(value = "expectedOs", defaultValue = "CENTOS_X86_64") OpenGaussSupportOSEnum expectedOs,
+                          @RequestParam(value = "expectedOs", defaultValue = "centos_X86_64") String expectedOsStr,
                           @RequestParam(required = false) String rootPassword) {
+        int tmpIndex = expectedOsStr.indexOf("_");
+        OpenGaussSupportOSEnum expectedOs = OpenGaussSupportOSEnum.of(
+                expectedOsStr.substring(0, tmpIndex).toLowerCase(Locale.ENGLISH),
+                "",
+                expectedOsStr.substring(tmpIndex + 1).toLowerCase(Locale.ENGLISH)
+        );
         HostEnv hostEnv = opsClusterService.env(hostId, expectedOs, rootPassword);
         return AjaxResult.success(hostEnv);
     }
@@ -273,5 +281,13 @@ public class OpsClusterController extends BaseController {
     public AjaxResult threadPoolMonitor() {
         Map<String, Integer> res = opsClusterService.threadPoolMonitor();
         return AjaxResult.success(res);
+    }
+
+    /**
+     * return supported os name list
+     */
+    @GetMapping("/listSupportOsName")
+    public AjaxResult listSupportOsName() {
+        return AjaxResult.success(OsSupportMap.getSupportOsNameList());
     }
 }
