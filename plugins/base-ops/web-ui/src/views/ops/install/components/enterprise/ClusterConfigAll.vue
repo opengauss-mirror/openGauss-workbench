@@ -31,7 +31,7 @@
           <a-tab-pane
             v-for="(item, index) in data.form.nodes"
             :key="item.id"
-            :closable="data.form.nodes.length > (data.form.cluster.databaseKernelArch === DatabaseKernelArch.SHARING_STORAGE ? 2 : (data.form.cluster.isInstallCM ? 3 : 1)) && item.clusterRole !== ClusterRoleEnum.MASTER"
+            :closable="data.form.nodes.length > (data.form.cluster.databaseKernelArch === DatabaseKernelArch.SHARING_STORAGE ? 2 : (data.form.cluster.isInstallCM ? minNodeSize : 1)) && item.clusterRole !== ClusterRoleEnum.MASTER"
           >
             <template #title>
               {{ item.clusterRole === ClusterRoleEnum.MASTER ? $t('enterprise.ClusterConfig.else3') :
@@ -74,9 +74,6 @@ import { FormInstance } from '@arco-design/web-vue/es/form'
 import { useOpsStore } from '@/store'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
-import { arrayExpression, stringLiteral } from '@babel/types';
-import { nodeCenter } from '@antv/x6/lib/registry/node-anchor/node-center';
-import { hostListAll, hostUserListWithoutRoot, portUsed, pathEmpty, fileExist, multiPathQuery, hostPingById } from '@/api/ops'
 const { t } = useI18n()
 const installStore = useOpsStore()
 
@@ -93,7 +90,7 @@ const data = reactive<KeyValue>({
       tmpPath: '/opt/openGauss/tmp',
       omToolsPath: '/opt/openGauss/install/om',
       corePath: '/opt/openGauss/corefile',
-      port: '5432',
+      port: 5432,
       enableDCF: false,
       databaseUsername: '',
       databasePassword: '',
@@ -128,6 +125,15 @@ onMounted(() => {
 
 const installType = computed(() => installStore.getInstallConfig.installType)
 const isInstallCM = computed(() => installStore.getEnterpriseConfig.isInstallCM)
+const minNodeSize = computed(() => {
+  const ogVerNumStr = installStore.getInstallConfig.openGaussVersionNum
+  const ogVerNum = Number(ogVerNumStr.replaceAll('.', ''))
+  if (ogVerNum > 311) {
+    return 2
+  } else {
+    return 3
+  }
+})
 
 watch([() => data.form.cluster.databaseKernelArch, () => data.form.cluster.isInstallCM], (val) => {
   if (val[0] === DatabaseKernelArch.SHARING_STORAGE) {
@@ -140,8 +146,8 @@ watch([() => data.form.cluster.databaseKernelArch, () => data.form.cluster.isIns
     }
   } else {
     if (val[1]) {
-      if (data.form.nodes.length < 3) {
-        for (let i = 0; i <= (3 - data.form.nodes.length); i++) {
+      if (data.form.nodes.length < minNodeSize.value) {
+        for (let i = 0; i <= (minNodeSize.value - data.form.nodes.length); i++) {
           addNode(data.form.nodes.length - 1)
         }
       }
@@ -165,9 +171,9 @@ watch(() => data.form.cluster.installPath, (newValue) => {
     data.form.nodes.forEach((node) => {
       node.dataPath = dataPath;
       if (isInstallCM) {
-      const cmDataPath = newValue.endsWith('/') ? newValue + 'cm' : newValue + '/cm';
-      node.cmDataPath = cmDataPath;
-    }
+        const cmDataPath = newValue.endsWith('/') ? newValue + 'cm' : newValue + '/cm';
+        node.cmDataPath = cmDataPath;
+      }
     });
 
     const dssHome = newValue.endsWith('/') ? newValue + 'dss_home' : newValue + '/dss_home';
@@ -203,7 +209,7 @@ const addNode = (index: number, isMaster: boolean = false) => {
     installUsername: '',
     isCMMaster: false,
     cmDataPath: '/opt/openGauss/data/cmserver',
-    cmPort: '15300',
+    cmPort: 15300,
     dataPath: '/opt/openGauss/install/data/dn',
     azPriority: 1
   }
