@@ -109,9 +109,11 @@ public class InstallContext implements Cloneable {
 
             int nodeSize = CollUtil.isEmpty(enterpriseInstallConfig.getNodeConfigList()) ? 0 : enterpriseInstallConfig.getNodeConfigList().size();
             if (enterpriseInstallConfig.getDatabaseKernelArch() == DatabaseKernelArch.MASTER_SLAVE) {
-                if (clusterDeploy && enterpriseInstallConfig.getIsInstallCM() && nodeSize < 3) {
-                    throw new OpsException("In traditional master_slave cluster mode, at least three nodes needed to " +
-                            "be installed");
+                int ogVerNum = Integer.parseInt(openGaussVersionNum.replaceAll("\\.", ""));
+                int minNodeSize = ogVerNum > 311 ? 2 : 3;
+                if (clusterDeploy && enterpriseInstallConfig.getIsInstallCM() && nodeSize < minNodeSize) {
+                    throw new OpsException("In traditional master_slave cluster mode, at least "
+                    + minNodeSize + " nodes needed to be installed");
                 }
             }
 
