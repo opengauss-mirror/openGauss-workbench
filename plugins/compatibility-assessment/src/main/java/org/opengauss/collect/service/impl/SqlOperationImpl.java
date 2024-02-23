@@ -151,7 +151,7 @@ public class SqlOperationImpl implements SqlOperation {
         AssertUtil.isTrue(!config.isPresent(), "Host does not exist");
         Session session = JschUtil.obtainSession(config.get());
         // 获得文件路径
-        List<String> fileNames = JschUtil.getFileNamesByPath(session, filePath, false);
+        List<String> fileNames = JschUtil.getFileNamesByPath(session, filePath, true);
         List<File> files = new ArrayList<>();
         response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + "sql_stack.zip");
         try (ZipOutputStream zipOut = new ZipOutputStream(response.getOutputStream())) {
@@ -230,10 +230,18 @@ public class SqlOperationImpl implements SqlOperation {
     @Override
     public RespBean startAssessmentSql(Assessment assessment, String sqlInputType, Integer userId) {
         checkAssessment(assessment, sqlInputType);
-        // 创建一个执行环境 data/assess/fileName  目前是这个
+        // 创建一个执行环境 data/gs_assessment/fileName  目前是这个
         String envPath = Constant.ENV_PATH;
+        // 下载评估文件
+        String downCommand = String.format(Constant.DOWN_LOAD_PATH, Constant.ASSESS_VERSION, Constant.ASSESS_PATH,
+                Constant.ASSESS_VERSION);
+        boolean isSucc = CommandLineRunner.runCommand(downCommand, envPath, Constant.DOWN_TIME_OUT);
+        log.info("Download evaluation files---->{}", isSucc);
         // 推送评估文件到envPath
-        FileCopy.copyFilesToDirectory(Constant.FILE_NAMES, envPath);
+        if (!isSucc) {
+            log.info("Download evaluation file failed, start copying local resources");
+            FileCopy.copyFilesToDirectory(Constant.FILE_NAMES, envPath);
+        }
         // 获得系统上传文件路径
         String dataKitPath = getSystemPath(userId);
         AssertUtil.isTrue(StrUtil.isEmpty(dataKitPath), "Failed to obtain system path");
@@ -245,10 +253,10 @@ public class SqlOperationImpl implements SqlOperation {
             assessment.setFiledir(dataKitPath);
         }
         // 写assessment.properties path = assess/assessment.properties
-        writeAssess(assessment, envPath + Constant.ACT_PATH + Constant.ASSESS_PROPERTIES);
+        writeAssess(assessment, envPath + Constant.ASSESS_PATH + Constant.ASSESS_PROPERTIES);
         String command = getAssessCommand(sqlInputType);
         // 执行command  在真实路径下执行
-        String actPath = envPath + Constant.ACT_PATH;
+        String actPath = envPath + Constant.ASSESS_PATH;
         boolean isSuccess = CommandLineRunner.runCommand(command, actPath, Constant.TIME_OUT);
         AssertUtil.isTrue(!isSuccess, "Evaluation failed");
         long id = IdUtils.SNOWFLAKE.nextId();
@@ -357,7 +365,8 @@ public class SqlOperationImpl implements SqlOperation {
 
     @Override
     public RespBean sqlAssessInit() {
-        Optional<Assessment> optionalAssessment = Optional.ofNullable(assessmentCache.getIfPresent("assess"));
+        Optional<Assessment> optionalAssessment = Optional.ofNullable(assessmentCache
+                .getIfPresent(Constant.ASSESS_PATH));
         optionalAssessment.ifPresent(assessment -> {
             assessment.setMysqlPassword("");
             assessment.setOpengaussPassword("");

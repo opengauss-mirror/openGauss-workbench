@@ -33,10 +33,43 @@ public class Constant {
     /**
      * The file name required for compatibility evaluation
      */
-    public static final String[] FILE_NAMES = {"assess/assessment.properties",
-            "assess/compatibility-assessment-5.1.0.jar",
-            "assess/report.html",
-            "assess/start.sh"};
+    public static final String[] FILE_NAMES = {"assess_path/assessment.properties",
+            "assess_path/compatibility-assessment-" + Constant.ASSESS_VERSION + ".jar",
+            "assess_path/report.html",
+            "assess_path/start.sh"};
+
+    /**
+     * DOWN_LOAD_PATH
+     */
+    public static final String DOWN_LOAD_PATH = "curl -O https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest"
+            + "/tools/compatibility-assessment-%s.tar.gz" + Constant.CREATE_DIRECTORY
+            + Constant.DECOMPRESSION + Constant.INSPECT;
+
+    /**
+     * CREATE_DIRECTORY
+     */
+    public static final String CREATE_DIRECTORY = " && mkdir -p %s";
+
+    /**
+     * DECOMPRESSION
+     */
+    public static final String DECOMPRESSION = " && tar -zxf compatibility-assessment-%s.tar.gz -C"
+            + "assess_path --strip-components=1";
+
+    /**
+     * INSPECT
+     */
+    public static final String INSPECT = " && if [ $? -eq 0 ]; then echo execution succeeded; else echo failure; fi";
+
+    /**
+     * DOWN_TIME_OUT
+     */
+    public static final long DOWN_TIME_OUT = 5L;
+
+    /**
+     * ASSESS_VERSION
+     */
+    public static final String ASSESS_VERSION = "6.0.0";
 
     /**
      * assessMap
@@ -51,6 +84,11 @@ public class Constant {
      * ACT_PATH
      */
     public static final String ACT_PATH = "assess/";
+
+    /**
+     * ASSESS_PATH
+     */
+    public static final String ASSESS_PATH = "assess_path/";
 
     /**
      * LESS_THAN
@@ -98,7 +136,7 @@ public class Constant {
     /**
      * ASSESS_DOWNLOAD
      */
-    public static final String ASSESS_DOWNLOAD = "data/assess/report.html";
+    public static final String ASSESS_DOWNLOAD = "data/assess_path/report.html";
 
     /**
      * ASSESS_REPORT
@@ -164,11 +202,6 @@ public class Constant {
      * INSERTION_ATTACHNAME
      */
     public static final String INSERTION_ATTACHNAME_PATH = "stake/attach.jar";
-
-    /**
-     * ASSESS_JAR
-     */
-    public static final String ASSESS_JAR = "compatibility-assessment-5.1.0.jar";
 
     /**
      * ASSESS_PROPERTIES

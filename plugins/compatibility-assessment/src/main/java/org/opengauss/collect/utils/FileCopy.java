@@ -40,22 +40,29 @@ public class FileCopy {
     /**
      * copyFilesToDirectory
      *
-     * @param fileNames fileNames
+     * @param fileNames            fileNames
      * @param destinationDirectory destinationDirectory
      */
     public static void copyFilesToDirectory(String[] fileNames, String destinationDirectory) {
-        //  destinationDirectory  格式为/aa/bb/
+        // destinationDirectory 格式为 /aa/bb/
         for (String fileName : fileNames) {
             try {
                 // 读取资源文件
                 InputStream inputStream = FileCopy.class.getClassLoader().getResourceAsStream(fileName);
                 if (inputStream != null) {
-                    // 复制文件到指定目录
+                    // 检查目标文件是否已经存在
                     File destinationFile = new File(destinationDirectory + fileName);
-                    FileUtils.copyInputStreamToFile(inputStream, destinationFile);
+                    if (!destinationFile.exists()) {
+                        // 复制文件到指定目录
+                        FileUtils.copyInputStreamToFile(inputStream, destinationFile);
+                    } else {
+                        log.info("File " + fileName + " already exists in destination directory. Skipping.");
+                    }
+                } else {
+                    log.error("Failed to obtain resource for fileName: " + fileName);
                 }
             } catch (IOException e) {
-                log.error(e.getMessage());
+                log.error("Error copying file " + fileName + ": " + e.getMessage());
                 throw new ServiceException(e.getMessage());
             }
         }
