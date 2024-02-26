@@ -92,7 +92,7 @@ public class NodeAndCompDTO {
          */
         public static BinState getState(String s) {
             for (BinState state : BinState.values()) {
-                if (s.contains(state.code)) {
+                if (s.startsWith(state.code)) {
                     return state;
                 }
             }

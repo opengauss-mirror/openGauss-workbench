@@ -73,7 +73,8 @@ public class SyncSituationDTO {
         SyncSituationDTO dto = new SyncSituationDTO();
         dto.setClusterId(clusterId);
         Optional<OpsClusterNodeVO> nodeVO = clusterNodes.stream().filter(
-                n -> n.getPublicIp().equals(syncSituation.getHostIp())).findFirst();
+                n -> n.getPublicIp().equals(syncSituation.getHostIp()) ||
+                        n.getPrivateIp().equals(syncSituation.getHostIp())).findFirst();
         nodeVO.ifPresent(node -> dto.setNodeId(node.getNodeId()));
         dto.setHostIp(syncSituation.getHostIp());
         dto.setSync(syncSituation.getSync());
