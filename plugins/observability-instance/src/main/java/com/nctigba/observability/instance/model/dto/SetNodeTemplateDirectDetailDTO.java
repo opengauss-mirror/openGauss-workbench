@@ -40,4 +40,6 @@ public class SetNodeTemplateDirectDetailDTO {
     private String metricKey;
     @ApiModelProperty(value = "Scrape interval for this metric group", required = true)
     private String interval;
+    @ApiModelProperty(value = "is the metric open", required = true)
+    private Boolean isEnable;
 }

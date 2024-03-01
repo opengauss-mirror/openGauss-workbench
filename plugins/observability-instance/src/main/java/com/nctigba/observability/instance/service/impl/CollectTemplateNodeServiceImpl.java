@@ -157,6 +157,7 @@ public class CollectTemplateNodeServiceImpl
             newTemplateMetrics.setTemplateId(newTemplate.getId());
             newTemplateMetrics.setMetricsKey(z.getMetricKey());
             newTemplateMetrics.setInterval(z.getInterval());
+            newTemplateMetrics.setIsEnable(z.getIsEnable());
             collectTemplateMetricsMapper.insert(newTemplateMetrics);
         });
         return newTemplate.getId();
@@ -212,6 +213,7 @@ public class CollectTemplateNodeServiceImpl
                     CollectTemplateMetricsDO entity = new CollectTemplateMetricsDO();
                     entity.setMetricsKey(z);
                     entity.setInterval(CommonConstants.DEFAULT_SCRAPE_TIME);
+                    entity.setIsEnable(true);
                     defaultScrapeConfig.add(entity);
                 }
             });
@@ -229,6 +231,7 @@ public class CollectTemplateNodeServiceImpl
             List<PrometheusConfigNodeDetailDTO> configNodeDetails = new ArrayList<>();
             groupedByInterval.forEach((scrapInterval, entities) -> {
                 List<String> metricNames = entities.stream()
+                        .filter(CollectTemplateMetricsDO::getIsEnable)
                         .map(CollectTemplateMetricsDO::getMetricsKey)
                         .collect(Collectors.toList());
                 PrometheusConfigNodeDetailDTO detail = new PrometheusConfigNodeDetailDTO(metricNames, scrapInterval);

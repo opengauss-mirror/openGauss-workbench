@@ -635,6 +635,7 @@ export default {
     metricName: 'Metric Name',
     metricDes: 'Metric Description',
     scrapeInterval: 'Scrape Interval(s)',
+    metricEnable: 'Switch',
     chooseTemplate: 'Choose Template',
     templateName: 'Template Name',
     templateNow: 'Current Template:',

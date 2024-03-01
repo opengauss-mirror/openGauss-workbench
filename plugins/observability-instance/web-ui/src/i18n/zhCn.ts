@@ -614,6 +614,7 @@ export default {
     metricName: '指标名称',
     metricDes: '指标说明',
     scrapeInterval: '采集间隔(秒)',
+    metricEnable: '采集开关',
     chooseTemplate: '选择模板',
     templateName: '模板名称',
     templateNow: '当前模板：',

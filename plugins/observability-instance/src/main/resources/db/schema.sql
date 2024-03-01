@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS collect_template_metrics (
    update_by VARCHAR(64),
    update_time TIMESTAMP
 );
+ALTER TABLE collect_template_metrics ADD COLUMN is_enable BOOLEAN;
+UPDATE collect_template_metrics SET is_enable=true WHERE is_enable is null;
 CREATE TABLE IF NOT EXISTS cluster_switchover_record (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     cluster_id varchar(255),

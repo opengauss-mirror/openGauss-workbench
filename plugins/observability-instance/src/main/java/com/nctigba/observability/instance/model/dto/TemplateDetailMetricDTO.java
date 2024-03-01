@@ -37,4 +37,5 @@ public class TemplateDetailMetricDTO {
     private String metricGroupName;
     private String metricGroupDescription;
     private String interval;
+    private Boolean isEnable;
 }

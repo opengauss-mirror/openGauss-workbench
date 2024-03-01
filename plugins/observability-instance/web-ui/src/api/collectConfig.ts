@@ -16,6 +16,7 @@ export type TemplateDetailDetail = {
   interval: string
   time: String
   unit: String
+  isEnable: boolean
 }
 export type TemplateDetail = {
   templateId: number | null
@@ -39,6 +40,7 @@ export async function setTemplateNodes(param: templateNode): Promise<void | null
 export type TemplateNodeDirectDetail = {
   metricKey: String
   interval: string | null
+  isEnable: boolean | null
 }
 export interface TemplateNodeDirect {
   details: TemplateNodeDirectDetail[]
