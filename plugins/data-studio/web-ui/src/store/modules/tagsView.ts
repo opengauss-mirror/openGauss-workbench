@@ -157,7 +157,8 @@ export const useTagsViewStore = defineStore({
     },
     renameTagById(tagId: number | string, newName: string) {
       const tagView = this.visitedViews.find((item) => item.id == tagId);
-      tagView.fileName = tagView.title = newName;
+      tagView.fileName = encodeURIComponent(newName);
+      tagView.title = encodeURIComponent(`${newName}-${tagView.query.title}`);
       this.setVisitedViewsStorage();
     },
     getDebugChildViews(parentTagId: number | string) {

@@ -507,7 +507,7 @@ export const dateFormat = (date, fmt) => {
  * @param config example: { showIndex: true, indexName: 'No.', }
  * @returns Processed: columns,data
  * columns: [{title: 'col1', dataKey: 'col1', width: 150}...]
- * data: [{col1: 1, col1: 2, col1: 3}]
+ * data: [{col1: 1, col2: 2, col3: 3}]
  */
 interface FormatTableV2Options {
   showIndex?: boolean;
@@ -768,9 +768,9 @@ export const isBodyElement = (node: Element): boolean => {
   return node && node.nodeType == 1 && node.tagName.toLowerCase() == 'body';
 };
 
-export const findParentElement = (el: Element, parentClassName: string): undefined | Element => {
-  if (!el) return;
-  if (isBodyElement(el)) return;
+export const findParentElement = (el: Element | null, parentClassName: string): Element | null => {
+  if (!el) return null;
+  if (isBodyElement(el)) return null;
   if (el.classList.contains(parentClassName)) return el;
   return findParentElement(el.parentElement, parentClassName);
 };
@@ -838,7 +838,7 @@ export const downLoadURLBlob = async (url: string, fileName?: string): Promise<v
   URL.revokeObjectURL(eleA.href);
 };
 
-export const downLoadMyBlobType = (fileName: string, data: any): void => {
+export const downLoadMyBlobType = (fileName: string, data: BlobPart): void => {
   const blob = new Blob([data]);
   const tag = document.createElement('a');
   tag.href = window.URL.createObjectURL(blob);

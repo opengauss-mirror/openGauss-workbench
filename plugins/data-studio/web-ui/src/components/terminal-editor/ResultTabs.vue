@@ -54,18 +54,39 @@
           </template>
         </el-dropdown>
       </template>
+      <!-- tips:
+        vxe-table use Virtual Scrolling:
+        'height' must be 'auto'. Otherwise, the performance will be extremely poor and the browser will crash!
+        'max-height' is not necessary.
+       -->
       <div class="my-el-table-v2">
         <el-auto-resizer>
-          <template #default="{ height, width }">
-            <el-table-v2
-              :columns="item.columns"
+          <template #default>
+            <vxe-table
+              size="mini"
+              border
+              :empty-text="$t('common.noData')"
+              show-overflow
+              :resizable-config="{ minWidth: 30 }"
+              height="auto"
+              :min-height="50"
+              :row-config="{ isHover: true }"
+              :column-config="{ resizable: true }"
               :data="item.data"
-              :width="width"
-              :height="height"
-              fixed
-              :header-height="30"
-              :row-height="30"
-            />
+              :scroll-x="{ enabled: true }"
+              :scroll-y="{ enabled: true }"
+              :tooltipConfig="{ theme: 'light' }"
+            >
+              <vxe-column type="seq" title=" " width="60"></vxe-column>
+              <vxe-column
+                v-for="col in item.columns"
+                :key="col.key"
+                :field="col.key"
+                :title="col.title"
+                :min-width="col.width"
+                show-overflow
+              ></vxe-column>
+            </vxe-table>
           </template>
         </el-auto-resizer>
       </div>
@@ -75,7 +96,6 @@
 <script lang="ts" setup>
   import HistoryTable from './HistoryTable.vue';
   import { watchThrottled } from '@vueuse/core';
-  import { debounce } from '@/utils';
 
   interface messageType {
     id: number | string;
@@ -215,22 +235,8 @@
   .my-el-table-v2 {
     height: 100%;
   }
-  .el-table-v2 {
-    font-size: 12px;
-  }
-  :deep(.el-table-v2__main) {
-    border: var(--el-table-border);
-  }
-  :deep(.el-table-v2__row-cell, .el-table-v2__header-cell) {
-    border-right: var(--el-table-border);
-    &:last-child {
-      border-right: none;
-    }
-  }
-  :deep(.el-table-v2__header-cell) {
-    border-right: var(--el-table-border);
-    &:last-child {
-      border-right: none;
-    }
+
+  :deep(.vxe-table--render-default.border--full .vxe-table--header-wrapper) {
+    background: none;
   }
 </style>

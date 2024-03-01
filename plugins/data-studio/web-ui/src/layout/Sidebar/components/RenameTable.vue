@@ -1,5 +1,5 @@
 <template>
-  <div class="dialog">
+  <div class="common-dialog-wrapper">
     <el-dialog
       v-model="visible"
       :title="title"
@@ -22,12 +22,10 @@
         </el-form>
       </div>
       <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
-          <el-button type="primary" @click="confirmForm" :loading="loading">
-            {{ $t('button.confirm') }}
-          </el-button>
-        </span>
+        <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
+        <el-button type="primary" @click="confirmForm" :loading="loading">
+          {{ $t('button.confirm') }}
+        </el-button>
       </template>
     </el-dialog>
   </div>
@@ -146,14 +144,8 @@
 </script>
 
 <style lang="scss" scoped>
-  .dialog {
-    :deep(.el-dialog__body) {
-      padding-top: 5px;
-      padding-bottom: 5px;
-    }
-    :deep(.el-select) {
-      width: 100%;
-    }
+  :deep(.el-select) {
+    width: 100%;
   }
   .tips {
     margin-bottom: 5px;

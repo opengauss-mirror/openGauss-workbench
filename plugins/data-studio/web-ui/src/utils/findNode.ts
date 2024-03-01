@@ -12,6 +12,8 @@ const levelWeight = {
   public: 4,
   person: 4,
   tableCollect: 5,
+  foreignTableCollect: 5,
+  triggerCollect: 5,
   terminalCollect: 5,
   viewCollect: 5,
   synonymCollect: 5,

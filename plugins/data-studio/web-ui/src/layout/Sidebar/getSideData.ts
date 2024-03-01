@@ -1,8 +1,7 @@
 import { useAppStore } from '@/store/modules/app';
-import { useUserStore } from '@/store/modules/user';
 import { i18n } from '@/i18n/index';
 import { getDatabaseList } from '@/api/database';
-import { getSchemaList, getSchemaObjectList } from '@/api/metaData';
+import { getSchemaList, getSchemaObjects, getSchemaObjectCount } from '@/api/metaData';
 import { getUserRoleList } from '@/api/userRole';
 import { getTablespaceListApi } from '@/api/tablespace';
 
@@ -10,12 +9,97 @@ import { NodeEnum, FetchNode, ConnectInfo } from './types';
 
 const t = i18n.global.t;
 
+type schemaContentCollect =
+  | 'table'
+  | 'foreignTable'
+  | 'trigger'
+  | 'terminal'
+  | 'sequence'
+  | 'view'
+  | 'synonym';
+
+const getLocalType = (key: schemaContentCollect) => {
+  // Transform the type of the api to a local type
+  const obj = { label: '', type: '', childType: '' };
+  switch (key) {
+    case 'table':
+      obj.label = t('database.regular_table');
+      obj.type = 'tableCollect';
+      obj.childType = 'table';
+      break;
+    case 'foreignTable':
+      obj.label = t('database.foreign_table');
+      obj.type = 'foreignTableCollect';
+      obj.childType = 'foreignTable';
+      break;
+    case 'trigger':
+      obj.label = t('database.trigger');
+      obj.type = 'triggerCollect';
+      obj.childType = 'trigger';
+      break;
+    case 'terminal':
+      obj.label = t('database.function_process');
+      obj.type = 'terminalCollect';
+      obj.childType = 'terminal';
+      break;
+    case 'view':
+      obj.label = t('database.view');
+      obj.type = 'viewCollect';
+      obj.childType = 'view';
+      break;
+    case 'synonym':
+      obj.label = t('database.synonym');
+      obj.type = 'synonymCollect';
+      obj.childType = 'synonym';
+      break;
+    case 'sequence':
+      obj.label = t('database.sequence');
+      obj.type = 'sequenceCollect';
+      obj.childType = 'sequence';
+      break;
+  }
+  return obj;
+};
+const getI18nLocalType = (
+  key: schemaContentCollect,
+  oldLabel?: string, // If you want to get the count in old label
+  newCount?: string | number,
+) => {
+  const oldCountMatch = oldLabel?.match(/\((.*?)\)/);
+  return `${getLocalType(key).label}(${newCount ?? (oldCountMatch?.[1] || 0)})`;
+};
+
+const getFileType = (key) => {
+  return {
+    tableCollect: 'table',
+    foreignTableCollect: 'foreignTable',
+    triggerCollect: 'trigger',
+    terminalCollect: 'terminal',
+    sequenceCollect: 'sequence',
+    viewCollect: 'view',
+    synonymCollect: 'synonym',
+  }[key];
+};
+
+const getSchemaContentListCount = async (schema, uuid) => {
+  const res = await getSchemaObjectCount({ schema, uuid });
+  return {
+    table: res.table || 0,
+    foreignTable: res.foreignTable || 0,
+    trigger: res.trigger || 0,
+    terminal: res.function || 0,
+    sequence: res.sequence || 0,
+    view: res.view || 0,
+    synonym: res.synonym || 0,
+  };
+};
+
 const getRootChildCollectLabel = (
   type: 'databaseCollect' | 'userRoleCollect' | 'tablespaceCollect' | 'job',
   count = null,
   showCount = true,
 ) => {
-  const countText = showCount ? ` (${count || 0})` : '';
+  const countText = showCount ? `(${count || 0})` : '';
   return {
     databaseCollect: `${t('database.database')}${countText}`,
     userRoleCollect: `${t('userRole.name')}${countText}`,
@@ -162,11 +246,8 @@ const generateSchemaList = async (
   uuid,
   connectInfo,
 ) => {
-  const UserStore = useUserStore();
   const data = (await getSchemaList({
     uuid,
-    connectionName: connectInfo.name,
-    webUser: UserStore.userId,
   })) as unknown as FetchNode[];
   const schemaList = [];
   data.forEach((item) => {
@@ -200,105 +281,43 @@ const generateSchemaContentList = async (
   schemaName,
   connectInfo,
 ) => {
-  const UserStore = useUserStore();
-  const data = (await getSchemaObjectList({
-    connectionName: connectInfo.name,
-    webUser: UserStore.userId,
-    schema: schemaName,
-    uuid,
-  })) as unknown as FetchNode[];
+  const orderArray = [
+    'table',
+    'foreignTable',
+    'trigger',
+    'terminal',
+    'sequence',
+    'view',
+    'synonym',
+  ];
   const array = [];
-  if (data.length) {
-    const obj = data[0];
-    const order = ['table', 'foreignTable', 'trigger', 'fun_pro', 'sequence', 'view', 'synonym'];
-    let keys = Object.keys(obj);
-    keys = keys.sort((a, b) => {
-      return order.indexOf(a) - order.indexOf(b);
+  const countObj = await getSchemaContentListCount(schemaName, uuid);
+  orderArray.forEach((key: schemaContentCollect) => {
+    const { label, type } = getLocalType(key);
+    const keyId = `${parentId}_${key}`;
+    array.push({
+      id: keyId,
+      rootId,
+      parentId,
+      uuid,
+      label: getI18nLocalType(key, label, countObj[key]),
+      name: label,
+      type,
+      key,
+      connectInfo,
+      databaseId,
+      databaseName,
+      schemaId,
+      schemaName,
+      children: [],
+      isLeaf: false,
     });
-    // Running results 'keys' such as: ['schema_name', 'table', 'foreignTable', 'trigger', 'fun_pro', 'sequence', 'view', 'synonym']
-    keys.forEach((key) => {
-      if (!order.includes(key)) return;
-      const { label, type, childType } = getLocalType(key);
-      const keyId = `${parentId}_${key}`;
-      array.push({
-        id: keyId,
-        rootId,
-        parentId,
-        uuid,
-        label: `${label} (${obj[key]?.length || 0})`,
-        name: label,
-        type,
-        key,
-        connectInfo,
-        databaseId,
-        databaseName,
-        schemaId,
-        schemaName,
-        children: generateFileList(
-          obj[key],
-          childType,
-          rootId,
-          keyId,
-          uuid,
-          databaseId,
-          databaseName,
-          schemaId,
-          schemaName,
-          connectInfo,
-        ),
-        isLeaf: false,
-      });
-    });
-  }
+  });
   return array;
 };
 
-const getLocalType = (key) => {
-  // Transform the type of the api to a local type
-  const obj = { label: '', type: '', childType: '' };
-  switch (key) {
-    case 'table':
-      obj.label = t('database.regular_table');
-      obj.type = 'tableCollect';
-      obj.childType = 'table';
-      break;
-    case 'foreignTable':
-      obj.label = t('database.foreign_table');
-      obj.type = 'foreignTableCollect';
-      obj.childType = 'foreignTable';
-      break;
-    case 'trigger':
-      obj.label = t('database.trigger');
-      obj.type = 'triggerCollect';
-      obj.childType = 'trigger';
-      break;
-    case 'fun_pro':
-      obj.label = t('database.function_process');
-      obj.type = 'terminalCollect';
-      obj.childType = 'terminal';
-      break;
-    case 'view':
-      obj.label = t('database.view');
-      obj.type = 'viewCollect';
-      obj.childType = 'view';
-      break;
-    case 'synonym':
-      obj.label = t('database.synonym');
-      obj.type = 'synonymCollect';
-      obj.childType = 'synonym';
-      break;
-    case 'sequence':
-      obj.label = t('database.sequence');
-      obj.type = 'sequenceCollect';
-      obj.childType = 'sequence';
-      break;
-  }
-  return obj;
-};
-
-const generateFileList = (
-  array,
-  childType,
+const generateFileList = async (
+  type: schemaContentCollect,
   rootId,
   parentId,
   uuid,
@@ -308,7 +327,27 @@ const generateFileList = (
   schemaName,
   connectInfo,
 ) => {
+  if (
+    !['table', 'foreignTable', 'trigger', 'terminal', 'sequence', 'view', 'synonym'].includes(type)
+  )
+    return [];
+  const apiType = {
+    table: 'table',
+    foreignTable: 'foreignTable',
+    trigger: 'trigger',
+    terminal: 'function',
+    view: 'view',
+    synonym: 'synonym',
+    sequence: 'sequence',
+  };
+  // getSchemaContentListCount(schemaName, uuid);
+  const array = (await getSchemaObjects({
+    schema: schemaName,
+    uuid,
+    type: apiType[type],
+  })) as unknown as FetchNode[];
   if (!Array.isArray(array)) return [];
+  const { childType } = getLocalType(type);
   return array.map((item: FetchNode) => {
     return {
       id: `${parentId}_${item.oid}`,
@@ -392,6 +431,9 @@ export {
   generateDBList,
   generateSchemaList,
   generateSchemaContentList,
+  generateFileList,
   getLocalType,
+  getI18nLocalType,
+  getFileType,
   getRootChildCollectLabel,
 };

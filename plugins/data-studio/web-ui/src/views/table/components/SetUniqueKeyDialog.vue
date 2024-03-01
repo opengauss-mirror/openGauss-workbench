@@ -1,5 +1,5 @@
 <template>
-  <div class="set-unique-key-dialog">
+  <div class="common-dialog-wrapper">
     <el-dialog
       v-model="visible"
       :title="$t('table.customUniqueKey')"
@@ -45,12 +45,10 @@
         </el-form>
       </div>
       <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="visible = false">{{ $t('button.cancel') }}</el-button>
-          <el-button type="primary" @click="confirmForm">
-            {{ $t('button.confirm') }}
-          </el-button>
-        </span>
+        <el-button @click="visible = false">{{ $t('button.cancel') }}</el-button>
+        <el-button type="primary" @click="confirmForm">
+          {{ $t('button.confirm') }}
+        </el-button>
       </template>
     </el-dialog>
   </div>
@@ -151,13 +149,7 @@
 </script>
 
 <style lang="scss" scoped>
-  .set-unique-key-dialog {
-    :deep(.el-dialog__body) {
-      padding-top: 5px;
-      padding-bottom: 5px;
-    }
-    :deep(.el-select) {
-      width: 100%;
-    }
+  :deep(.el-select) {
+    width: 100%;
   }
 </style>

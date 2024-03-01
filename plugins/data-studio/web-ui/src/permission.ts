@@ -12,7 +12,7 @@ router.beforeEach(async (to, from, next) => {
   const AppStore = useAppStore(pinia);
   NProgress.start();
   if (typeof to.meta.title === 'string') {
-    document.title = to.meta.title || 'Openguass-Datastudio';
+    document.title = to.meta.title || 'DataStudio';
   }
   if (!['debugChild'].includes(to.name as string)) {
     AppStore.updateAppMounted(true);

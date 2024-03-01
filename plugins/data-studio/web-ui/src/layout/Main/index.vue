@@ -87,7 +87,7 @@
     flex-direction: column;
     width: 100%;
     box-sizing: border-box;
-    background: var(--el-bg-color-container);
+    background: var(--el-bg-color);
   }
   .keepalive-page {
     height: 100%;

@@ -74,7 +74,7 @@ public class DbConnectionController {
     @GetMapping(value = "/clusters", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<OpsClusterVO> allCluster() {
         List<OpsClusterVO> list = clusterManager.getAllOpsCluster();
-        log.info("cluster list is: " + list);
+        log.info("cluster list size is: " + list.size());
         return list;
     }
 

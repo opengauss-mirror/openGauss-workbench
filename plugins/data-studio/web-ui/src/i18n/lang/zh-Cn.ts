@@ -32,6 +32,8 @@ export default {
     selectAll: '全选',
     if: '？',
     colon: '：',
+    noData: '暂无数据',
+    donotAskAgain: '不再提示',
   },
   button: {
     confirm: '确定',
@@ -113,6 +115,8 @@ export default {
     willDelete: '是否删除：{name}',
     willEnable: '是否启用：{name}',
     willDisable: '是否禁用：{name}',
+    willCreateCoverageRate:
+      '参数 enable_proc_coverage 未打开，若需查看调试覆盖率信息，请在调试前联系数据库管理员打开记录开关。是否继续调试？',
   },
   week: {
     Sunday: '日',
@@ -218,7 +222,7 @@ export default {
     belongTips: '用GRANT赋权，表示当前用户/角色是该字段填写的用户/角色的成员',
     propertyList: '属性列表',
     create: {
-      tabs: ['常规', '成员属性', 'DDL预览'],
+      tabs: ['常规', '成员属性', 'SQL预览'],
     },
     privilegeItem: {
       superuser: '超级用户',
@@ -250,7 +254,7 @@ export default {
     maxStorage: '最大存储容量',
     unlimitedSize: '不限制大小',
     create: {
-      tabs: ['常规', 'DDL预览'],
+      tabs: ['常规', 'SQL预览'],
     },
   },
   connection: {
@@ -345,6 +349,18 @@ export default {
     ddl: '导出DDL',
     ddlData: '导出DDL和数据',
     tableData: '导出表数据',
+    batchDdl: '批量导出DDL',
+    batchDdlData: '批量导出DDL和数据',
+    specific: {
+      batchSchemaDdl: '批量导出模式DDL',
+      batchSchemaDdlData: '批量导出模式DDL和数据',
+      batchTableDdl: '批量导出表DDL',
+      batchTableDdlData: '批量导出表DDL和数据',
+      batchFunctionDdl: '批量导出函数/过程DDL',
+      batchViewDdl: '批量导出视图DDL',
+      batchSequenceDdl: '批量导出序列DDL',
+      batchSequenceDdlData: '批量导出序列DDL和数据',
+    },
   },
   windows: {
     list: '窗口列表',
@@ -435,11 +451,12 @@ export default {
     },
   },
   mode: {
+    schema: '模式',
     name: '模式名称',
     owner: '所有者',
   },
   createTable: {
-    tabs: ['常规', '列', '约束', '索引', '分区', 'DDL预览'],
+    tabs: ['常规', '列', '约束', '索引', '分区', 'SQL预览'],
     normal: '正常',
     column: '列',
     value: '值',
@@ -472,7 +489,7 @@ export default {
     editTableGuide: '编辑表数据向导',
     tablespace: '表空间',
     general: {
-      title: '一般',
+      title: '常规',
     },
     column: {
       title: '列',
@@ -604,7 +621,7 @@ export default {
     enableTrigger: '启用触发器',
     disableTrigger: '禁用触发器',
     create: {
-      tabs: ['常规', 'DDL预览'],
+      tabs: ['常规', 'SQL预览'],
     },
     general: {
       name: '触发器名称',
@@ -626,7 +643,7 @@ export default {
   },
   view: {
     title: '视图',
-    base: '基本',
+    base: '常规',
     preview: 'SQL预览',
     name: '名称',
     type: '类型',
@@ -635,7 +652,7 @@ export default {
     code: '代码',
   },
   sequence: {
-    base: '基本',
+    base: '常规',
     preview: 'SQL预览',
     name: '名称',
     increment: '增量',
@@ -650,7 +667,7 @@ export default {
     column: '列',
   },
   synonym: {
-    base: '基本',
+    base: '常规',
     preview: 'SQL预览',
     name: '名称',
     objectOwner: '对象所有者',

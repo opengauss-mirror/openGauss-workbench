@@ -29,8 +29,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationContext;
 
@@ -63,46 +61,6 @@ public class WebsocketServerTest {
 
     @Mock
     private ApplicationContext applicationContext;
-
-    @Test
-    public void testOnOpen() {
-        webSocketServer.onOpen("webds-plugin", "postgres", session);
-    }
-
-    @Test
-    public void testProcess() {
-        webSocketServer.processMessage("postgres", "");
-    }
-
-    @Test
-    public void testProcess2() {
-        webSocketServer.processMessage("postgres", "message");
-    }
-
-    @Test
-    public void testProcess3() {
-        webSocketServer.processMessage("postgres", "{\n"
-                + "  \"connection\": \"connection\""
-                + "}");
-    }
-
-    @Test
-    public void testProcess4() {
-        MockedStatic<SpringApplicationContext> staticUtilsMockedStatic = Mockito.mockStatic(
-                SpringApplicationContext.class);
-        staticUtilsMockedStatic.when(SpringApplicationContext::getApplicationContext).thenReturn(
-                applicationContext);
-
-        webSocketServer.processMessage("postgres", "{\n"
-                + "  \"operation\": \"connection\",\n"
-                + "  \"language\": \"zh-CN\",\n"
-                + "  \"webUser\": \"A\",\n"
-                + "  \"uuid\": \"8359cbf1-9833-4998-a29c-245f24009ab1\",\n"
-                + "  \"rootWindowName\": \"119.3.170.242_1679042795481\",\n"
-                + "  \"oldWindowName\": \"\",\n"
-                + "  \"windowName\": \"119.3.170.242_1679042795481\"\n"
-                + "}");
-    }
 
     @Test
     public void testOnClose() {

@@ -28,7 +28,6 @@ import com.nctigba.datastudio.model.query.ExportQuery;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.concurrent.ExecutionException;
 
 /**
  * ExportService
@@ -102,9 +101,7 @@ public interface ExportService {
      * @param request request
      * @param response response
      * @throws IOException IOException
-     * @throws ExecutionException ExecutionException
-     * @throws InterruptedException InterruptedException
+     * @throws SQLException SQLException
      */
-    void exportSchemaDdl(ExportQuery request, HttpServletResponse response)
-            throws IOException, ExecutionException, InterruptedException;
+    void exportSchemaDdl(ExportQuery request, HttpServletResponse response) throws IOException, SQLException;
 }

@@ -10,6 +10,7 @@ import AutoImport from 'unplugin-auto-import/vite';
 import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 
 import vueSetupExtend from 'vite-plugin-vue-setup-extend';
+import { createStyleImportPlugin, VxeTableResolve } from 'vite-plugin-style-import';
 
 function resolve(dir) {
   return path.join(__dirname, '.', dir);
@@ -34,6 +35,9 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       createSvgIconsPlugin({
         iconDirs: [path.resolve(process.cwd(), 'src/icons/svg')],
         symbolId: 'icon-[dir]-[name]',
+      }),
+      createStyleImportPlugin({
+        resolves: [VxeTableResolve()],
       }),
     ],
     css: {

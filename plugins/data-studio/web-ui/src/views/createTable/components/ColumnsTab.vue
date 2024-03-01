@@ -37,12 +37,7 @@
           v-bind="item.attributes"
           @change="handleChangeValue(scope.row, scope.column)"
         >
-          <el-option
-            v-for="op in dataTypeList"
-            :key="op.value"
-            :label="op.label"
-            :value="op.value"
-          />
+          <el-option v-for="op in dataTypeList" :key="op" :label="op" :value="op" />
         </el-select>
         <el-select
           v-else-if="
@@ -195,7 +190,7 @@
   };
   const fetchDataTypeList = async () => {
     const res = (await getDataTypeList({ uuid: props.commonParams.uuid })) as unknown as string[];
-    dataTypeList.value = res.map((item) => ({ value: item, label: item }));
+    dataTypeList.value = res;
   };
   const { handleChangeValue, handleSelectionChange, handleAddLine, handleRemoveLine } =
     useEditTabHooks({

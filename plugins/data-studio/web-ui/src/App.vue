@@ -57,10 +57,12 @@
   });
 
   onMounted(async () => {
-    // set init language(from platform)
-    const lang = localStorage.getItem('locale') == 'en-US' ? 'en-US' : 'zh-CN';
-    i18nLocale.value = lang;
-    AppStore.setLanguage(lang);
+    if (parent !== self) {
+      // set init language(from platform)
+      const lang = localStorage.getItem('locale') == 'en-US' ? 'en-US' : 'zh-CN';
+      i18nLocale.value = lang;
+      AppStore.setLanguage(lang);
+    }
     // set init theme(from platform)
     const isPlatformDarkTheme = localStorage.getItem('opengauss-theme')
       ? localStorage.getItem('opengauss-theme') == 'dark'

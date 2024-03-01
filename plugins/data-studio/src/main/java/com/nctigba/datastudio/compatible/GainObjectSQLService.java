@@ -108,12 +108,32 @@ public interface GainObjectSQLService {
     }
 
     /**
+     * table count sql
+     *
+     * @param schema schema
+     * @return List
+     */
+    default String tableCountSql(String schema) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
      * foreign table sql
      *
      * @param schema schema
      * @return List
      */
     default String foreignTableSql(String schema) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * foreign table count sql
+     *
+     * @param schema schema
+     * @return List
+     */
+    default String foreignTableCountSql(String schema) {
         throw new CustomException(DebugUtils.getMessage());
     }
 
@@ -128,6 +148,16 @@ public interface GainObjectSQLService {
     }
 
     /**
+     * trigger count sql
+     *
+     * @param schema schema
+     * @return List
+     */
+    default String triggerCountSql(String schema) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
      * view sql
      *
      * @param schema schema
@@ -138,12 +168,32 @@ public interface GainObjectSQLService {
     }
 
     /**
+     * view count sql
+     *
+     * @param schema schema
+     * @return String
+     */
+    default String viewCountSql(String schema) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
      * function sql
      *
      * @param schema schema
      * @return String
      */
-    default String fun_prosSql(String schema) {
+    default String funProSql(String schema) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * function count sql
+     *
+     * @param schema schema
+     * @return String
+     */
+    default String funProCountSql(String schema) {
         throw new CustomException(DebugUtils.getMessage());
     }
 
@@ -158,12 +208,32 @@ public interface GainObjectSQLService {
     }
 
     /**
+     * sequence count sql
+     *
+     * @param schema schema
+     * @return String
+     */
+    default String sequenceCountSql(String schema) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
      * synonym sql
      *
      * @param schema schema
      * @return String
      */
     default String synonymSql(String schema) {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * synonym count sql
+     *
+     * @param schema schema
+     * @return String
+     */
+    default String synonymCountSql(String schema) {
         throw new CustomException(DebugUtils.getMessage());
     }
 

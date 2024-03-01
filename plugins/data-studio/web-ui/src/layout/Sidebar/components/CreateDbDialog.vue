@@ -1,5 +1,5 @@
 <template>
-  <div class="db-dialog">
+  <div class="common-dialog-wrapper">
     <el-dialog
       v-model="visible"
       :title="props.type == 'create' ? $t('database.create') : $t('database.edit')"
@@ -70,12 +70,10 @@
         </el-form>
       </div>
       <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
-          <el-button type="primary" @click="confirmForm">
-            {{ $t('button.confirm') }}
-          </el-button>
-        </span>
+        <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
+        <el-button type="primary" @click="confirmForm">
+          {{ $t('button.confirm') }}
+        </el-button>
       </template>
     </el-dialog>
   </div>
@@ -202,16 +200,10 @@
 </script>
 
 <style lang="scss" scoped>
-  .db-dialog {
-    :deep(.el-dialog__body) {
-      padding-top: 5px;
-      padding-bottom: 5px;
-    }
-    :deep(.el-select) {
-      width: 100%;
-    }
-    :deep(.el-input-number .el-input__inner) {
-      text-align: left;
-    }
+  :deep(.el-select) {
+    width: 100%;
+  }
+  :deep(.el-input-number .el-input__inner) {
+    text-align: left;
   }
 </style>

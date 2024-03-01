@@ -40,6 +40,7 @@
       </div>
     </div>
     <div class="tags-view" ref="scrollContainer">
+      <WindowsManager />
       <better-scroll :options="{ scrollX: true, scrollY: false }" ref="bsScroll">
         <div class="tags-scroll-inner" ref="tabsWrap">
           <div
@@ -68,7 +69,10 @@
               @contextmenu.prevent="handleContextmenu($event, tag)"
             >
               <svg-icon :icon-class="tag.meta.icon" class-name="pre-icon" />
-              <div class="tags-view-item" :title="decodeURIComponent(tag.title)">
+              <div
+                class="tags-view-item single-line-omission"
+                :title="decodeURIComponent(tag.title)"
+              >
                 {{ decodeURIComponent(tag.fileName) }}
               </div>
               <el-icon
@@ -83,7 +87,7 @@
         </div>
       </better-scroll>
     </div>
-    <div class="context-menu" :style="contextMenu.menuStyles">
+    <ContextMenu v-model:show="contextMenu.visible" :offset="contextMenu.menuStyles">
       <ul v-if="contextMenu.visible" v-click-outside="handleClickContextMenuOutside">
         <li @click="refresh(contextTag)" v-if="isActive(contextTag) && contextTag.name == 'table'">
           {{ $t('windows.refresh') }}
@@ -95,7 +99,7 @@
         <li @click="closeOtherTab">{{ $t('windows.closeOtherTab') }}</li>
         <li @click="closeAllTabToLast">{{ $t('windows.closeAllTab') }}</li>
       </ul>
-    </div>
+    </ContextMenu>
     <RenameTagsDialog v-if="visibleRenameDialog" v-model="visibleRenameDialog" :tag="contextTag" />
   </div>
 </template>
@@ -107,6 +111,8 @@
   import { useRoute, useRouter } from 'vue-router';
   import SwitchDark from '@/components/SwitchTheme.vue';
   import RenameTagsDialog from './RenameTagsDialog.vue';
+  import WindowsManager from '@/components/WindowsManager.vue';
+  import ContextMenu from '@/components/ContextMenu/index.vue';
 
   import { useTagsViewStore } from '@/store/modules/tagsView';
   import { usePermissionStore } from '@/store/modules/permission';
@@ -354,8 +360,8 @@
 
   const contextMenu = reactive({
     menuStyles: {
-      top: '0',
-      left: '0',
+      top: 0,
+      left: 0,
     },
     visible: false,
   });
@@ -374,8 +380,8 @@
       contextTag.value = tag;
       event.preventDefault();
       const position = {
-        top: '50px',
-        left: event.x + 2 + 'px',
+        top: 50,
+        left: event.x + 2,
       };
       contextMenu.menuStyles = position;
       contextMenu.visible = true;
@@ -546,18 +552,11 @@
     position: relative;
     z-index: 2;
     white-space: nowrap;
+    max-width: 200px;
     .tags-inner {
       display: flex;
       align-items: center;
       white-space: nowrap;
-    }
-  }
-  .more {
-    background-color: $primaryColor;
-    color: white;
-    .tags-view-item {
-      display: flex;
-      align-items: center;
     }
   }
   .operation-icon-wrapper {

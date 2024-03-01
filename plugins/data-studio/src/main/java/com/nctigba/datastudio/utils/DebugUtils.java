@@ -33,15 +33,15 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
-import org.apache.poi.ss.formula.functions.T;
 import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.util.PGobject;
 import org.springframework.util.CollectionUtils;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -678,11 +678,12 @@ public class DebugUtils {
      * export file
      *
      * @param fileName fileName
-     * @param content  content
+     * @param path  path
      * @param response response
      * @throws IOException IOException
      */
-    public static void exportFile(String fileName, String content, HttpServletResponse response) throws IOException {
+    public static void exportFile(String fileName, String path, HttpServletResponse response) throws IOException {
+        log.info("ExportService exportFilePath fileName: " + fileName);
         response.reset();
         response.setContentType("application/octet-stream");
         response.setHeader("Content-Disposition", URLEncoder.encode(fileName, StandardCharsets.UTF_8));
@@ -690,15 +691,30 @@ public class DebugUtils {
         response.setCharacterEncoding("UTF-8");
 
         try (
-                InputStream inputStream = new ByteArrayInputStream(content.getBytes());
+                BufferedReader reader = new BufferedReader(new FileReader(path), 4096);
                 OutputStream outputStream = response.getOutputStream()
         ) {
-            byte[] bytes = new byte[1024];
-            int len;
-            while ((len = inputStream.read(bytes)) > 0) {
-                outputStream.write(bytes, 0, len);
+            String line;
+            while ((line = reader.readLine()) != null) {
+                outputStream.write(line.getBytes(StandardCharsets.UTF_8));
+                outputStream.write(System.lineSeparator().getBytes());
             }
             outputStream.flush();
+        }
+
+        deleteFile(path);
+    }
+
+    /**
+     * delete file
+     *
+     * @param path path
+     */
+    public static void deleteFile(String path) {
+        File file = new File(path);
+        if (file.exists()) {
+            boolean isDelete = file.delete();
+            log.info("ExportService exportFilePath isDelete: " + isDelete);
         }
     }
 
@@ -751,6 +767,20 @@ public class DebugUtils {
             paramReq = (PublicParamQuery) obj;
         }
         return (T) paramReq;
+    }
+
+    /**
+     * change type to integer
+     *
+     * @param obj obj
+     * @return Integer
+     */
+    public static Integer changeTypeToInteger(Object obj) {
+        int count = 0;
+        if (obj instanceof Long) {
+            count = Math.toIntExact((Long) obj);
+        }
+        return count;
     }
 
     /**
@@ -822,7 +852,6 @@ public class DebugUtils {
      * @return String
      */
     public static String typeChange(String value, int columnType, String columnTypeName) {
-        log.info("ExportService typeChange value: " + value);
         String newValue;
         switch (columnType) {
             case Types.NULL: {
@@ -861,7 +890,6 @@ public class DebugUtils {
                 break;
             }
         }
-        log.info("ExportService typeChange newValue: " + newValue);
         return newValue;
     }
 

@@ -1412,27 +1412,20 @@ public class SqlConstants {
     public static final String DROP_SCHEMA_SQL = "drop schema %s;";
 
     /**
+     * query coverage param
+     */
+    public static final String QUERY_COVERAGE_PARAM = "select setting from pg_settings "
+            + "where name = 'enable_proc_coverage';";
+
+    /**
      * his coverage oid sql
      */
-    public static final String HIS_COVERAGE_OID_SQL = "select ph.*, pp.proname from public.his_coverage ph "
-            + "left join pg_proc pp on pp.oid = ph.oid where ph.oid =%s order by cid desc;";
+    public static final String HIS_COVERAGE_OID_SQL = "select * from coverage.proc_coverage where pro_oid = %s;";
 
     /**
      * delete by id sql
      */
-    public static final String DELETE_BY_ID_SQL = "delete public.his_coverage where cid in ('%s');";
-
-    /**
-     * create coverage sql
-     */
-    public static final String CREATE_COVERAGE_SQL = "CREATE TABLE IF NOT EXISTS public.his_coverage( " + LF
-            + "oid BIGINT, cid BIGINT, coverageLines VARCHAR, remarkLines VARCHAR, " + LF
-            + "endTime BIGINT, sourceCode VARCHAR, params VARCHAR, canBreakLine VARCHAR);";
-
-    /**
-     * insert coverage sql
-     */
-    public static final String INSERT_COVERAGE_SQL = "insert into public.his_coverage VALUES(?,?,?,?,?,?,?,?);";
+    public static final String DELETE_BY_ID_SQL = "delete coverage.proc_coverage where coverage_id in (%s);";
 
     /**
      * sequence sql
@@ -1446,9 +1439,9 @@ public class SqlConstants {
     public static final String SET_VALUE_SQL = "SELECT pg_catalog.setVal('%s',%d,%b);";
 
     /**
-     * next value sql
+     * current value sql
      */
-    public static final String NEXT_VALUE_SQL = "SELECT pg_catalog.nextval('%s');";
+    public static final String CUR_VALUE_SQL = "select last_value from %s;";
 
     /**
      * count sql

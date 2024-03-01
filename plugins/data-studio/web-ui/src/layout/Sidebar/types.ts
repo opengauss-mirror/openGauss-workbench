@@ -26,6 +26,7 @@ type NodeType = `${NodeEnum}` | '';
 
 export interface Tree {
   id: string;
+  oid?: string;
   rootId: string;
   parentId: string;
   label: string;
@@ -94,5 +95,16 @@ export interface RefreshOptions {
   databaseName: string;
   schemaId: string;
   schema: string;
+  schemaContentCollectId: string;
   nodeId: string;
 }
+
+export type BatchExportType =
+  | 'schemaDDL'
+  | 'schemaDDLData'
+  | 'tableDDL'
+  | 'tableDDLData'
+  | 'functionDDL'
+  | 'viewDDL'
+  | 'sequenceDDL'
+  | 'sequenceDDLData';

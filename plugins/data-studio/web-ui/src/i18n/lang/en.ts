@@ -33,6 +33,8 @@ export default {
     selectAll: 'Select All',
     if: '?',
     colon: ':',
+    noData: 'No Data',
+    donotAskAgain: `Don't ask again`,
   },
   button: {
     confirm: 'Confirm',
@@ -119,6 +121,8 @@ export default {
     willDelete: 'Delete: {name}',
     willEnable: 'Enable: {name}',
     willDisable: 'Disable: {name}',
+    willCreateCoverageRate:
+      'The parameter enable_proc_coverage is not turned on. If you need to view debugging coverage information, please contact the database administrator to turn on the recording switch before debugging. Do you want to continue debugging?',
   },
   week: {
     Sunday: 'Sun',
@@ -225,7 +229,7 @@ export default {
       'Assign GRANT to indicate that the current user/role is a member of the user/role filled in this field',
     propertyList: 'property list',
     create: {
-      tabs: ['General', 'Member Properties', 'DDL Preview'],
+      tabs: ['General', 'Member Properties', 'SQL Preview'],
     },
     privilegeItem: {
       superuser: 'Superuser',
@@ -257,7 +261,7 @@ export default {
     maxStorage: 'Max Size',
     unlimitedSize: 'UnlimitedSize',
     create: {
-      tabs: ['General', 'DDL Preview'],
+      tabs: ['General', 'SQL Preview'],
     },
   },
   connection: {
@@ -352,6 +356,18 @@ export default {
     ddl: 'Export DDL',
     ddlData: 'Export DDL & Data',
     tableData: 'Export Table Data',
+    batchDdl: 'Batch Export DDL',
+    batchDdlData: 'Batch Export DDL & Data',
+    specific: {
+      batchSchemaDdl: 'Batch Export Schema DDL',
+      batchSchemaDdlData: 'Batch Export Schema DDL & Data',
+      batchTableDdl: 'Batch Export Table DDL',
+      batchTableDdlData: 'Batch Export Table DDL & Data',
+      batchFunctionDdl: 'Batch Export Function/Process DDL',
+      batchViewDdl: 'Batch Export View DDL',
+      batchSequenceDdl: 'Batch Export Sequence DDL',
+      batchSequenceDdlData: 'Batch Export Sequence DDL & Data',
+    },
   },
   windows: {
     list: 'Windows',
@@ -442,11 +458,12 @@ export default {
     },
   },
   mode: {
-    name: 'Mode Name',
+    schema: 'Schema',
+    name: 'Schema Name',
     owner: 'Owner',
   },
   createTable: {
-    tabs: ['General', 'Column', 'Constraint', 'Indexes', 'Parition', 'DDL Preview'],
+    tabs: ['General', 'Column', 'Constraint', 'Indexes', 'Parition', 'SQL Preview'],
     normal: 'NORMAL',
     column: 'Column',
     value: 'Value',
@@ -612,7 +629,7 @@ export default {
     enableTrigger: 'Enable Trigger',
     disableTrigger: 'Disable Trigger',
     create: {
-      tabs: ['General', 'DDL Preview'],
+      tabs: ['General', 'SQL Preview'],
     },
     general: {
       name: 'Trigger Name',
@@ -634,7 +651,7 @@ export default {
   },
   view: {
     title: 'View',
-    base: 'Base',
+    base: 'General',
     preview: 'SQL preview',
     name: 'Name',
     type: 'Type',
@@ -643,7 +660,7 @@ export default {
     code: 'Code',
   },
   sequence: {
-    base: 'Base',
+    base: 'General',
     preview: 'SQL preview',
     name: 'Name',
     increment: 'Increment',
@@ -658,7 +675,7 @@ export default {
     column: 'Column',
   },
   synonym: {
-    base: 'Base',
+    base: 'General',
     preview: 'SQL Preview',
     name: 'Name',
     objectOwner: 'Object Owner',

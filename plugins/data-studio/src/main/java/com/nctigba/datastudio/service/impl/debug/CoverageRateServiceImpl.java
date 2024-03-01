@@ -40,10 +40,14 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -52,21 +56,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.nctigba.datastudio.constants.CommonConstants.BEGIN;
-import static com.nctigba.datastudio.constants.CommonConstants.CAN_BREAK_LINE;
-import static com.nctigba.datastudio.constants.CommonConstants.CID;
-import static com.nctigba.datastudio.constants.CommonConstants.COVERAGE_LINES;
 import static com.nctigba.datastudio.constants.CommonConstants.END;
-import static com.nctigba.datastudio.constants.CommonConstants.END_TIME;
-import static com.nctigba.datastudio.constants.CommonConstants.OID;
-import static com.nctigba.datastudio.constants.CommonConstants.PARAMS;
-import static com.nctigba.datastudio.constants.CommonConstants.PRO_NAME;
-import static com.nctigba.datastudio.constants.CommonConstants.REMARK_LINES;
-import static com.nctigba.datastudio.constants.CommonConstants.SOURCECODE;
+import static com.nctigba.datastudio.constants.CommonConstants.T_STR;
 import static com.nctigba.datastudio.constants.CommonConstants.UNDERLINE;
 import static com.nctigba.datastudio.constants.SqlConstants.COMMA;
 import static com.nctigba.datastudio.constants.SqlConstants.DELETE_BY_ID_SQL;
@@ -202,7 +199,23 @@ public class CoverageRateServiceImpl implements CoverageRateService {
         String fileName = "函数覆盖率报告_" + request.getOid() + UNDERLINE + list.get(0).getName()
                 + UNDERLINE + System.currentTimeMillis() + ".html";
         log.info("CoverageRateServiceImpl export fileName: " + fileName);
-        DebugUtils.exportFile(fileName, html, response);
+
+        response.reset();
+        response.setContentType("application/octet-stream");
+        response.setHeader("Content-Disposition", URLEncoder.encode(fileName, StandardCharsets.UTF_8));
+        response.addHeader("Response-Type", "blob");
+        response.setCharacterEncoding("UTF-8");
+        try (
+                InputStream inputStream = new ByteArrayInputStream(html.getBytes(StandardCharsets.UTF_8));
+                OutputStream outputStream = response.getOutputStream()
+        ) {
+            byte[] bytes = new byte[1024];
+            int len;
+            while ((len = inputStream.read(bytes)) > 0) {
+                outputStream.write(bytes, 0, len);
+            }
+            outputStream.flush();
+        }
     }
 
     private List<CoverageRateDO> getCoverageList(ResultSet resultSet) throws SQLException {
@@ -210,34 +223,51 @@ public class CoverageRateServiceImpl implements CoverageRateService {
         int index = 1;
         while (resultSet.next()) {
             CoverageRateDO coverageRateDO = new CoverageRateDO();
-            String proName = resultSet.getString(PRO_NAME);
-            Long oid = resultSet.getLong(OID);
-            Long cid = resultSet.getLong(CID);
-            String coverageLines = resultSet.getString(COVERAGE_LINES);
-            String remarkLines = resultSet.getString(REMARK_LINES);
-            Long endTime = resultSet.getLong(END_TIME);
-            String sourcecode = resultSet.getString(SOURCECODE);
-            String params = resultSet.getString(PARAMS);
-            String canBreakLine = resultSet.getString(CAN_BREAK_LINE);
-
             coverageRateDO.setSerialNumber(index++);
+            String proName = resultSet.getString("pro_name");
             coverageRateDO.setName(proName);
-            coverageRateDO.setOid(oid);
-            coverageRateDO.setCid(cid);
-            int totalLine = canBreakLine.split(COMMA).length;
+            Long proOid = resultSet.getLong("pro_oid");
+            coverageRateDO.setOid(proOid);
+            Long coverageId = resultSet.getLong("coverage_id");
+            coverageRateDO.setCid(coverageId);
+
+            int totalLine = 0;
+            StringBuilder canBreakLine = new StringBuilder();
+            String proCanBreak = resultSet.getString("pro_canbreak");
+            String[] canBreakSplit = proCanBreak.substring(1, proCanBreak.length() - 1).split(COMMA);
+            for (int i = 0; i < canBreakSplit.length; i++) {
+                if (T_STR.equals(canBreakSplit[i])) {
+                    totalLine++;
+                    canBreakLine.append(i + 1).append(COMMA);
+                }
+            }
+            canBreakLine.deleteCharAt(canBreakLine.length() - 1);
+
+            int executeLine = 0;
+            StringBuilder coverageLines = new StringBuilder();
+            String coverage = resultSet.getString("coverage");
+            String[] coverageSplit = coverage.substring(1, proCanBreak.length() - 1).split(COMMA);
+            for (int i = 0; i < coverageSplit.length; i++) {
+                if ("1".equals(coverageSplit[i])) {
+                    executeLine++;
+                    coverageLines.append(i + 1).append(COMMA);
+                }
+            }
+            coverageLines.deleteCharAt(coverageLines.length() - 1);
+
             coverageRateDO.setTotalRows(totalLine);
-            int executeLine = coverageLines.split(COMMA).length;
             coverageRateDO.setExecutionRows(executeLine);
             BigDecimal divide = BigDecimal.valueOf(executeLine * 100L).divide(BigDecimal.valueOf(totalLine), 1,
                     RoundingMode.CEILING);
             coverageRateDO.setTotalCoverage(divide + "%");
-            coverageRateDO.setAllLineNumber(canBreakLine);
-            coverageRateDO.setExecutionLineNumber(coverageLines);
+            coverageRateDO.setAllLineNumber(canBreakLine.toString());
+            coverageRateDO.setExecutionLineNumber(coverageLines.toString());
             coverageRateDO.setExecutionCoverage(divide + "%");
-            coverageRateDO.setInputParams(params);
+            coverageRateDO.setInputParams("params");
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            coverageRateDO.setUpdateTime(df.format(endTime));
-            coverageRateDO.setSourcecode(sourcecode);
+            coverageRateDO.setUpdateTime(df.format(new Date()));
+            String proQuery = resultSet.getString("pro_querys");
+            coverageRateDO.setSourcecode(proQuery);
             log.info("CoverageRateServiceImpl getCoverageList coverageRateDO: " + coverageRateDO);
             list.add(coverageRateDO);
         }

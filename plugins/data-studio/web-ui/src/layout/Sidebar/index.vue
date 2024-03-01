@@ -3,11 +3,6 @@
     <Splitpanes class="default-theme" horizontal :dbl-click-splitter="false">
       <Pane>
         <div class="database-wrapper group-wrapper">
-          <div class="group-title-contain">
-            <div class="left">
-              <svg-icon icon-class="database" class-name="icon" /> {{ $t('database.list') }}
-            </div>
-          </div>
           <div class="group-search-contain">
             <el-input
               v-model="filterTreeText"
@@ -15,7 +10,7 @@
               :prefix-icon="Search"
             />
           </div>
-          <div class="group-main-contain">
+          <div class="group-main-contain" @scroll="treeContext.menuVisible = false">
             <el-tree
               :class="treeClass"
               ref="treeRef"
@@ -79,11 +74,7 @@
                 <span>{{ data.label }}</span>
               </template>
             </el-tree>
-            <div
-              class="context-menu"
-              :style="treeContext.MenuStyles"
-              v-click-outside="hideTreeContext"
-            >
+            <ContextMenu :offset="treeContext.MenuStyles" v-model:show="treeContext.menuVisible">
               <ul v-if="treeContext.rootVisible">
                 <li @click="openConnectInfo()"> {{ $t('connection.props') }} </li>
                 <li @click="openConnectDialog('edit')"> {{ $t('connection.edit') }} </li>
@@ -218,6 +209,18 @@
                 </li>
                 <li
                   :class="{ disabled: !treeContextDbStatus }"
+                  @click="treeContextDbStatus && handleBatchExport('schemaDDL')"
+                >
+                  {{ $t('export.specific.batchSchemaDdl') }}
+                </li>
+                <li
+                  :class="{ disabled: !treeContextDbStatus }"
+                  @click="treeContextDbStatus && handleBatchExport('schemaDDLData')"
+                >
+                  {{ $t('export.specific.batchSchemaDdlData') }}
+                </li>
+                <li
+                  :class="{ disabled: !treeContextDbStatus }"
                   @click="
                     treeContextDbStatus &&
                       refresh('database', {
@@ -230,17 +233,6 @@
                 </li>
               </ul>
               <ul v-if="treeContext.modeVisible">
-                <li
-                  @click="
-                    refresh('schema', {
-                      rootId: currentContextNodeData.connectInfo.id,
-                      databaseId: currentContextNodeData.databaseId,
-                      schemaId: currentContextNodeData.id,
-                    })
-                  "
-                >
-                  {{ $t('connection.refresh') }}
-                </li>
                 <li
                   @click="
                     !systemSchema.includes(currentContextNodeData.name) && handleSchema('edit')
@@ -259,30 +251,129 @@
                 </li>
                 <li @click="handleExport('modeDDL')"> {{ $t('export.ddl') }}</li>
                 <li @click="handleExport('modeDDLData')"> {{ $t('export.ddlData') }}</li>
+                <li
+                  @click="
+                    refresh('schema', {
+                      rootId: currentContextNodeData.connectInfo.id,
+                      databaseId: currentContextNodeData.databaseId,
+                      schemaId: currentContextNodeData.id,
+                    })
+                  "
+                >
+                  {{ $t('connection.refresh') }}
+                </li>
               </ul>
               <ul v-if="treeContext.terminalCollectVisible">
                 <li @click="hanldeCreate('function')"> {{ $t('create.function') }}</li>
                 <li @click="hanldeCreate('procedure')"> {{ $t('create.process') }}</li>
                 <li @click="hanldeCreate('sql')"> {{ $t('create.sql') }}</li>
                 <li @click="hanldeCreate('anonymous')"> {{ $t('create.anonymous') }}</li>
+                <li @click="handleBatchExport('functionDDL')">
+                  {{ $t('export.specific.batchFunctionDdl') }}
+                </li>
+                <li
+                  @click="
+                    refresh('terminalCollect', {
+                      rootId: currentContextNodeData.connectInfo.id,
+                      schemaContentCollectId: currentContextNodeData.id,
+                    })
+                  "
+                >
+                  {{ $t('connection.refresh') }}
+                </li>
               </ul>
               <ul v-if="treeContext.tableCollectVisible">
                 <li @click="hanldeCreateTable"> {{ $t('create.table') }}</li>
+                <li @click="handleBatchExport('tableDDL')">
+                  {{ $t('export.specific.batchTableDdl') }}
+                </li>
+                <li @click="handleBatchExport('tableDDLData')">
+                  {{ $t('export.specific.batchTableDdlData') }}
+                </li>
+                <li
+                  @click="
+                    refresh('tableCollect', {
+                      rootId: currentContextNodeData.connectInfo.id,
+                      schemaContentCollectId: currentContextNodeData.id,
+                    })
+                  "
+                >
+                  {{ $t('connection.refresh') }}
+                </li>
               </ul>
               <ul v-if="treeContext.foreignTableCollectVisible">
                 <li @click="hanldeCreateForeignTable"> {{ $t('create.foreignTable') }}</li>
+                <li
+                  @click="
+                    refresh('foreignTableCollect', {
+                      rootId: currentContextNodeData.connectInfo.id,
+                      schemaContentCollectId: currentContextNodeData.id,
+                    })
+                  "
+                >
+                  {{ $t('connection.refresh') }}
+                </li>
               </ul>
               <ul v-if="treeContext.triggerCollectVisible">
                 <li @click="hanldeCreateTrigger"> {{ $t('create.trigger') }}</li>
+                <li
+                  @click="
+                    refresh('triggerCollect', {
+                      rootId: currentContextNodeData.connectInfo.id,
+                      schemaContentCollectId: currentContextNodeData.id,
+                    })
+                  "
+                >
+                  {{ $t('connection.refresh') }}
+                </li>
               </ul>
               <ul v-if="treeContext.viewCollectVisible">
-                <li @click="showCreatDialog('view')"> {{ $t('create.view') }}</li>
+                <li @click="handleCreateView"> {{ $t('create.view') }}</li>
+                <li @click="handleBatchExport('viewDDL')">
+                  {{ $t('export.specific.batchViewDdl') }}
+                </li>
+                <li
+                  @click="
+                    refresh('viewCollect', {
+                      rootId: currentContextNodeData.connectInfo.id,
+                      schemaContentCollectId: currentContextNodeData.id,
+                    })
+                  "
+                >
+                  {{ $t('connection.refresh') }}
+                </li>
               </ul>
               <ul v-if="treeContext.sequenceCollectVisible">
-                <li @click="showCreatDialog('sequence')"> {{ $t('create.sequence') }}</li>
+                <li @click="handleCreateSequence"> {{ $t('create.sequence') }}</li>
+                <li @click="handleBatchExport('sequenceDDL')">
+                  {{ $t('export.specific.batchSequenceDdl') }}
+                </li>
+                <li @click="handleBatchExport('sequenceDDLData')">
+                  {{ $t('export.specific.batchSequenceDdlData') }}
+                </li>
+                <li
+                  @click="
+                    refresh('sequenceCollect', {
+                      rootId: currentContextNodeData.connectInfo.id,
+                      schemaContentCollectId: currentContextNodeData.id,
+                    })
+                  "
+                >
+                  {{ $t('connection.refresh') }}
+                </li>
               </ul>
               <ul v-if="treeContext.synonymCollectVisible">
-                <li @click="showCreatDialog('synonym')"> {{ $t('create.synonym') }}</li>
+                <li @click="handleCreateSynonym"> {{ $t('create.synonym') }}</li>
+                <li
+                  @click="
+                    refresh('synonymCollect', {
+                      rootId: currentContextNodeData.connectInfo.id,
+                      schemaContentCollectId: currentContextNodeData.id,
+                    })
+                  "
+                >
+                  {{ $t('connection.refresh') }}
+                </li>
               </ul>
               <ul v-if="treeContext.packageVisible">
                 <li @click="handleViewPackage(currentContextNodeData)">
@@ -370,39 +461,7 @@
               <ul v-if="treeContext.tablespaceVisible">
                 <li @click="deleteConfirm('tablespace')"> {{ $t('delete.tablespace') }}</li>
               </ul>
-            </div>
-          </div>
-        </div>
-      </Pane>
-      <Pane min-size="20" max-size="80" size="35">
-        <div class="windows-wrapper group-wrapper">
-          <div class="group-title-contain">
-            <div class="left">
-              <svg-icon icon-class="window" class-name="icon" /> {{ $t('windows.list') }}
-            </div>
-          </div>
-          <div class="group-search-contain">
-            <el-input
-              v-model="input2"
-              :placeholder="$t('windows.placeholder')"
-              :prefix-icon="Search"
-            />
-          </div>
-          <div class="group-main-contain">
-            <ul class="windows-list">
-              <li
-                v-for="tag in visitedViews"
-                :key="tag.path"
-                @click="routerGo(tag)"
-                :class="['windows-item', { home: tag.path == '/home', active: isActive(tag) }]"
-              >
-                <svg-icon :icon-class="tag.meta.icon" class-name="icon" />
-                <span class="name" v-if="tag.path == '/home'">{{ $t('windows.home') }}</span>
-                <span class="name" v-else :title="tag.title">
-                  {{ decodeURIComponent(tag.fileName) }}
-                </span>
-              </li>
-            </ul>
+            </ContextMenu>
           </div>
         </div>
       </Pane>
@@ -436,20 +495,6 @@
       v-model="viewDialog"
       :type="createViewType"
       :nodeData="currentContextNodeData"
-      @success="refreshSchemaByContext"
-    />
-    <CreateSynonymDialog
-      v-if="synonymDialog"
-      v-model="synonymDialog"
-      type="create"
-      :connectData="currentContextNodeData"
-      @success="refreshSchemaByContext"
-    />
-    <CreateSequenceDialog
-      v-if="sequenceDialog"
-      v-model="sequenceDialog"
-      type="create"
-      :connectData="currentContextNodeData"
       @success="refreshSchemaByContext"
     />
     <ExportTableDataDialog
@@ -501,6 +546,14 @@
       v-model="visibleSetDisconnectionDialog"
       :uuid="treeContextFindAvailableUuid"
     />
+    <BatchExportDialog
+      v-if="visibleBatchExportDialog"
+      v-model="visibleBatchExportDialog"
+      :type="batchExportProps.type"
+      :uuid="batchExportProps.uuid"
+      :database="batchExportProps.database"
+      :schema="batchExportProps.schema"
+    />
   </div>
 </template>
 
@@ -511,8 +564,6 @@
   import DbInfoDialog from './components/DbInfoDialog.vue';
   import CreateSchemaDialog from './components/CreateSchemaDialog.vue';
   import CreateViewDialog from '@/views/view/CreateViewDialog.vue';
-  import CreateSynonymDialog from '@/views/synonym/CreateSynonymDialog.vue';
-  import CreateSequenceDialog from '@/views/sequence/CreateSequenceDialog.vue';
   import ExportTableDataDialog from './components/ExportTableDataDialog.vue';
   import RenameTable from './components/RenameTable.vue';
   import UpdateTableDescription from './components/UpdateTableDescription.vue';
@@ -521,11 +572,12 @@
   import ImportTableDataDialog from '@/components/ImportTableDataDialog.vue';
   import ChangeUserPasswordDialog from './components/ChangeUserPasswordDialog.vue';
   import SetDisconnectionDialog from './components/SetDisconnectionDialog.vue';
+  import BatchExportDialog from './components/BatchExportDialog.vue';
+  import ContextMenu from '@/components/ContextMenu/index.vue';
   import { useRoute, useRouter } from 'vue-router';
   import { useAppStore, ConnectedDatabase } from '@/store/modules/app';
   import { useUserStore } from '@/store/modules/user';
   import { useTagsViewStore } from '@/store/modules/tagsView';
-  import vClickOutside from '@/directives/clickOutside';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
   import { loadingInstance, downLoadMyBlobType } from '@/utils';
   import { useI18n } from 'vue-i18n';
@@ -552,21 +604,21 @@
     generateDBList,
     generateSchemaList,
     generateSchemaContentList,
-    getLocalType,
+    generateFileList,
+    getI18nLocalType,
+    getFileType,
     getRootChildCollectLabel,
   } from './getSideData';
-  import { Tree, ConnectInfo, RefreshOptions, NodeData } from './types';
+  import { Tree, ConnectInfo, RefreshOptions, NodeData, BatchExportType } from './types';
   import { updateConnectInfo } from './sidebarUtils';
-  import { findNodesByType } from '@/utils/findNode';
+  import { findNodeById, findNodesByType } from '@/utils/findNode';
 
   const AppStore = useAppStore();
   const UserStore = useUserStore();
   const TagsViewStore = useTagsViewStore();
-  const route = useRoute();
   const router = useRouter();
   const treeRef = ref<InstanceType<typeof ElTree>>();
   const filterTreeText = ref<string>('');
-  const input2 = ref<string>('');
   const { t } = useI18n();
 
   /* There are the following types of nodeType:
@@ -599,8 +651,6 @@
   const showDbInfoDialog = ref(false);
   const showCreateSchemaDialog = ref(false);
   const viewDialog = ref(false);
-  const synonymDialog = ref(false);
-  const sequenceDialog = ref(false);
   const exportTableDialog = ref(false);
   const renameTableDialog = ref(false);
   const updateTableDescriptionDialog = ref(false);
@@ -609,6 +659,7 @@
   const visibleImportDialog = ref(false);
   const visibleChangePasswordDialog = ref(false);
   const visibleSetDisconnectionDialog = ref(false);
+  const visibleBatchExportDialog = ref(false);
   const tempConnectInfo: ConnectInfo = reactive({
     name: '',
     id: '',
@@ -667,17 +718,15 @@
     'db4ai',
   ]);
 
+  const batchExportProps = reactive({
+    type: '' as BatchExportType,
+    uuid: '',
+    database: '',
+    schema: '',
+  });
+
   const renameType = ref<'table' | 'trigger'>('table');
 
-  const isActive = (rou) => {
-    return rou.path === route.path;
-  };
-  const routerGo = (tag) => {
-    router.push({
-      path: tag.path,
-      query: tag.query,
-    });
-  };
   const findNode = ({
     rootId,
     databaseId,
@@ -784,6 +833,46 @@
         schemaNode.children = data;
         updateConnectListPersist();
         return resolve(data);
+      } catch (error) {
+        return resolve([]);
+      }
+    } else if (
+      [
+        'tableCollect',
+        'foreignTableCollect',
+        'triggerCollect',
+        'terminalCollect',
+        'sequenceCollect',
+        'viewCollect',
+        'synonymCollect',
+      ].includes(node.data?.type)
+    ) {
+      try {
+        const type = getFileType(node.data?.type);
+        const data = await generateFileList(
+          type,
+          node.data.rootId,
+          node.data.id,
+          node.data.uuid,
+          node.data.databaseId,
+          node.data.databaseName,
+          node.data.schemaId,
+          node.data.schemaName,
+          node.data.connectInfo,
+        );
+        const collectNode = findSchemaChildCollectById(
+          node.data.connectInfo.id,
+          node.data.databaseId,
+          node.data.schemaId,
+          node.data.id,
+        );
+        collectNode.label = getI18nLocalType(getFileType(collectNode.type), undefined, data.length);
+        collectNode.children = data as NodeData[];
+        updateConnectListPersist();
+        // Using setTimeout can reduce lag issues
+        setTimeout(() => {
+          return resolve(data);
+        }, 100);
       } catch (error) {
         return resolve([]);
       }
@@ -1104,7 +1193,14 @@
       | 'tablespaceCollect'
       | 'databaseCollect'
       | 'database'
-      | 'schema',
+      | 'schema'
+      | 'tableCollect'
+      | 'foreignTableCollect'
+      | 'triggerCollect'
+      | 'terminalCollect'
+      | 'sequenceCollect'
+      | 'viewCollect'
+      | 'synonymCollect',
     options: Partial<RefreshOptions> = {
       connectInfo: undefined,
       rootId: '',
@@ -1114,6 +1210,7 @@
       databaseName: '',
       schemaId: '',
       schema: '',
+      schemaContentCollectId: '',
       nodeId: '',
     },
   ) => {
@@ -1178,6 +1275,21 @@
       });
       schemaNode.children = [];
       nodeId = options.schemaId;
+    } else if (
+      [
+        'tableCollect',
+        'foreignTableCollect',
+        'triggerCollect',
+        'terminalCollect',
+        'sequenceCollect',
+        'viewCollect',
+        'synonymCollect',
+      ].includes(mode)
+    ) {
+      const rootData = findNode({ rootId: options.rootId });
+      const collectNode = findNodeById(rootData, options.schemaContentCollectId, mode);
+      collectNode.children = [];
+      nodeId = options.schemaContentCollectId;
     }
     let node = treeRef.value.getNode(options.nodeId || nodeId);
     if (node) {
@@ -1248,6 +1360,63 @@
       },
     });
     treeContext.userRoleCollectVisible = false;
+  };
+
+  const handleCreateSequence = () => {
+    const time = Date.now();
+    const connectInfo: any = currentContextNodeData.connectInfo;
+    router.push({
+      path: '/createSequence/' + time,
+      query: {
+        title: 'create_sequence',
+        fileName: 'create_sequence',
+        rootId: connectInfo.id,
+        connectInfoName: connectInfo.name,
+        connectInfoId: connectInfo.id,
+        uuid: treeContextFindAvailableUuid.value,
+        schema: currentContextNodeData.schemaName,
+        schemaContentCollectId: currentContextNodeData.id,
+      },
+    });
+    treeContext.sequenceCollectVisible = false;
+  };
+
+  const handleCreateSynonym = () => {
+    const time = Date.now();
+    const connectInfo: any = currentContextNodeData.connectInfo;
+    router.push({
+      path: '/createSynonym/' + time,
+      query: {
+        title: 'create_synonym',
+        fileName: 'create_synonym',
+        rootId: connectInfo.id,
+        connectInfoName: connectInfo.name,
+        connectInfoId: connectInfo.id,
+        uuid: treeContextFindAvailableUuid.value,
+        schema: currentContextNodeData.schemaName,
+        schemaContentCollectId: currentContextNodeData.id,
+      },
+    });
+    treeContext.synonymCollectVisible = false;
+  };
+
+  const handleCreateView = () => {
+    const time = Date.now();
+    const connectInfo: any = currentContextNodeData.connectInfo;
+    router.push({
+      path: '/createView/' + time,
+      query: {
+        title: 'create_view',
+        fileName: 'create_view',
+        rootId: connectInfo.id,
+        connectInfoName: connectInfo.name,
+        connectInfoId: connectInfo.id,
+        uuid: treeContextFindAvailableUuid.value,
+        schema: currentContextNodeData.schemaName,
+        schemaContentCollectId: currentContextNodeData.id,
+      },
+    });
+    treeContext.viewCollectVisible = false;
   };
 
   const handleCreateTablespace = () => {
@@ -1361,26 +1530,6 @@
       },
     });
     treeContext.terminalCollectVisible = false;
-  };
-
-  const showCreatDialog = (type: 'view' | 'synonym' | 'sequence') => {
-    switch (type) {
-      case 'view':
-        createViewType.value = 'create';
-        viewDialog.value = true;
-        treeContext.viewCollectVisible = false;
-        break;
-      case 'synonym':
-        synonymDialog.value = true;
-        treeContext.synonymCollectVisible = false;
-        break;
-      case 'sequence':
-        sequenceDialog.value = true;
-        treeContext.sequenceCollectVisible = false;
-        break;
-      default:
-        break;
-    }
   };
 
   const handleEditDb = () => {
@@ -1636,7 +1785,7 @@
             name: target.label,
             ...commonParams,
             title: `scheduled_task@${connectInfoName}`,
-            fileName: `scheduled_task@${connectInfoName}`,
+            fileName: `scheduled_task`,
             uuid: availableUuid,
           },
         });
@@ -1670,18 +1819,11 @@
     });
   };
 
-  const visitedViews = computed(() => {
-    return input2.value
-      ? TagsViewStore.visitedViews.filter((item) =>
-          decodeURIComponent(item.fileName).includes(input2.value),
-        )
-      : TagsViewStore.visitedViews;
-  });
-
   const treeContext = reactive({
+    menuVisible: false,
     MenuStyles: {
-      top: '0',
-      left: '0',
+      top: 0,
+      left: 0,
     },
     rootVisible: false,
     userRoleCollectVisible: false,
@@ -1721,6 +1863,7 @@
     return selectConnection?.connectedDatabase.filter((item) => item.isConnect)[0]?.uuid;
   });
   const hideTreeContext = () => {
+    treeContext.menuVisible = false;
     Object.keys(treeContext).forEach((key) => {
       if (key.indexOf('Visible') !== -1 && treeContext[key] === true) treeContext[key] = false;
     });
@@ -1729,8 +1872,8 @@
     const type = data.type;
     Object.assign(currentContextNodeData, data);
     treeContext.MenuStyles = {
-      top: event.y + 2 + 'px',
-      left: event.x + 2 + 'px',
+      top: event.y + 2,
+      left: event.x + 2,
     };
     hideTreeContext();
     const typeMap = {
@@ -1762,6 +1905,7 @@
     };
     if (Object.prototype.hasOwnProperty.call(typeMap, type) && !data.isInPackage) {
       treeContext[typeMap[type]] = true;
+      treeContext.menuVisible = true;
     }
   };
 
@@ -1820,7 +1964,6 @@
           api: exportSchemaDdl,
           params: {
             uuid,
-            schema: name,
             schemaList: [name],
           },
         },
@@ -1828,7 +1971,6 @@
           api: exportSchemaDdl,
           params: {
             uuid,
-            schema: name,
             dataFlag: true,
             schemaList: [name],
           },
@@ -1901,6 +2043,19 @@
     }
   };
 
+  const handleBatchExport = (type: BatchExportType) => {
+    hideTreeContext();
+    visibleBatchExportDialog.value = true;
+    Object.assign(batchExportProps, {
+      type,
+      uuid: currentContextNodeData.uuid,
+      database: ['schemaDDL', 'schemaDDLData'].includes(type)
+        ? currentContextNodeData.name
+        : currentContextNodeData.databaseName,
+      schema: currentContextNodeData.schemaName,
+    });
+  };
+
   const handleTableRename = () => {
     treeContext.tableVisible = false;
     renameType.value = 'table';
@@ -1967,7 +2122,7 @@
                 childCollect.children.forEach((dbItem) => {
                   dbItem.children.forEach((schemaItem) => {
                     schemaItem.children.forEach((type) => {
-                      type.label = `${getLocalType(type.key).label} (${type.children.length})`;
+                      type.label = getI18nLocalType(type.key, type.label);
                     });
                   });
                 });

@@ -10,7 +10,7 @@
     >
       <div class="dialog_body">
         <div class="tips">
-          {{ $t('windows.renameTerminalTips', { name: props.tag.fileName }) }}
+          {{ $t('windows.renameTerminalTips', { name: decodeURIComponent(props.tag.fileName) }) }}
         </div>
         <el-form :model="form" ref="ruleFormRef" :rules="rules" label-width="0px">
           <el-form-item prop="name">
@@ -77,7 +77,7 @@
   const confirmForm = () => {
     ruleFormRef.value.validate(async (valid) => {
       if (valid) {
-        TagsViewStore.renameTagById(props.tag.id, encodeURIComponent(form.name));
+        TagsViewStore.renameTagById(props.tag.id, form.name);
         ElMessage.success(`${t('message.editSuccess')}`);
         handleClose();
       }

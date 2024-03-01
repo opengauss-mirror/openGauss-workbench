@@ -35,6 +35,8 @@ import { dispatchEventStorage } from '@/utils';
 import { prevTokenPersist, userPersist } from '@/config';
 import { sidebarForage } from '@/utils/localforage';
 
+import useTable from './plugins/vxeTable';
+
 const prevToken = prevTokenPersist.storage.getItem(prevTokenPersist.key);
 const token = localStorage.getItem('opengauss-token');
 if (prevToken !== token) {
@@ -70,4 +72,4 @@ app.use(router);
 app.use(i18n);
 app.use(dispatchEventStorage);
 
-app.use(ElementPlus).mount('#app');
+app.use(ElementPlus).use(useTable).mount('#app');

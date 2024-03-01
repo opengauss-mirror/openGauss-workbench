@@ -40,6 +40,7 @@ import com.nctigba.datastudio.service.DbConnectionService;
 import com.nctigba.datastudio.service.MetaDataByJdbcService;
 import com.nctigba.datastudio.utils.ConnectionUtils;
 import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.ExecuteUtils;
 import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
@@ -248,7 +249,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
                     gainObjectSQLService.get(comGetUuidType(schema.getUuid()))
                             .viewSql(DebugUtils.needQuoteName(schema.getSchema())),
                     gainObjectSQLService.get(comGetUuidType(schema.getUuid()))
-                            .fun_prosSql(DebugUtils.needQuoteName(schema.getSchema())),
+                            .funProSql(DebugUtils.needQuoteName(schema.getSchema())),
                     gainObjectSQLService.get(comGetUuidType(schema.getUuid()))
                             .sequenceSql(DebugUtils.needQuoteName(schema.getSchema())),
                     gainObjectSQLService.get(comGetUuidType(schema.getUuid()))
@@ -292,6 +293,44 @@ public class DbConnectionServiceImpl implements DbConnectionService {
         return list;
     }
 
+    @Override
+    public Map<String, Integer> schemaObjectCount(DatabaseMetaArrayIdSchemaQuery query) throws SQLException {
+        log.info("DbConnectionServiceImpl schemaObjectCount query: " + query);
+        String uuid = query.getUuid();
+        if (!conMap.containsKey(uuid)) {
+            throw new CustomException(LocaleStringUtils.transLanguage("1004"));
+        }
+
+        Map<String, Integer> map = new HashMap<>();
+        ConnectionDTO connectionDTO = conMap.get(uuid);
+        try (
+                Connection connection = ConnectionUtils.connectGet(
+                        connectionDTO.getUrl(), connectionDTO.getDbUser(), connectionDTO.getDbPassword());
+        ) {
+            GainObjectSQLService service = gainObjectSQLService.get(comGetUuidType(uuid));
+            String schema = DebugUtils.needQuoteName(query.getSchema());
+            Object tableCount = ExecuteUtils.executeGetOne(connection, service.tableCountSql(schema));
+            Object funProCount = ExecuteUtils.executeGetOne(connection, service.funProCountSql(schema));
+            Object sequenceCount = ExecuteUtils.executeGetOne(connection, service.sequenceCountSql(schema));
+            Object viewCount = ExecuteUtils.executeGetOne(connection, service.viewCountSql(schema));
+            Object synonymCount = ExecuteUtils.executeGetOne(connection, service.synonymCountSql(schema));
+            Object foreignTableCount = ExecuteUtils.executeGetOne(connection, service.foreignTableCountSql(schema));
+            Object triggerCount = ExecuteUtils.executeGetOne(connection, service.triggerCountSql(schema));
+            map.put("table", DebugUtils.changeTypeToInteger(tableCount));
+            map.put("function", DebugUtils.changeTypeToInteger(funProCount));
+            map.put("sequence", DebugUtils.changeTypeToInteger(sequenceCount));
+            map.put("view", DebugUtils.changeTypeToInteger(viewCount));
+            map.put("synonym", DebugUtils.changeTypeToInteger(synonymCount));
+            map.put("foreignTable", DebugUtils.changeTypeToInteger(foreignTableCount));
+            map.put("trigger", DebugUtils.changeTypeToInteger(triggerCount));
+        }
+
+        connectionDTO.updateConnectionDTO(connectionDTO);
+        ConnectionMapDAO.setConMap(uuid, connectionDTO);
+        log.info("DbConnectionServiceImpl schemaObjectCount map: " + map);
+        return map;
+    }
+
     private List<Map<String, Object>> parseByType(
             DatabaseMetaArrayIdSchemaQuery query, String uuid, List<Map<String, Object>> list,
             Statement statement) throws SQLException {
@@ -305,7 +344,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
             case "function":
                 ResultSet functionTypeResultSet = statement.executeQuery(GET_TYPENAME_SQL);
                 Map<String, String> typeMap = parseTypeResultSet(functionTypeResultSet);
-                ResultSet functionResultSet = statement.executeQuery(service.fun_prosSql(schema));
+                ResultSet functionResultSet = statement.executeQuery(service.funProSql(schema));
                 list = parseFunctionResult(typeMap, functionResultSet);
                 break;
             case "sequence":
