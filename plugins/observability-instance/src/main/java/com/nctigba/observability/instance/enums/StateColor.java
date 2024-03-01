@@ -41,8 +41,8 @@ import lombok.RequiredArgsConstructor;
 public enum StateColor {
     GREEN("cluster.state.value.Normal", "cluster.node.state.Normal", "cluster.node.syncState.Streaming",
             "OS.bin.state.TASK_RUNNING"),
-    YELLOW("cluster.state.value.Degraded", "cluster.node.state.Need repair", "cluster.node.state.Starting",
-            "cluster.node.state.Wait promoting", "cluster.node.state.Promoting", "cluster.node.state.Demoting",
+    YELLOW("cluster.state.value.Degraded", "cluster.node.state.repair", "cluster.node.state.Starting",
+            "cluster.node.state.promoting", "cluster.node.state.Promoting", "cluster.node.state.Demoting",
             "cluster.node.state.Building", "cluster.node.state.Catchup", "cluster.node.state.Coredump",
             "cluster.node.syncState.Catchup", "OS.bin.state.TASK_INTERRUPTIBLE", "OS.bin.state.TASK_STOPPED",
             "OS.bin.state.TASK_TRACED", "OS.bin.state.TASK_UNINTERRUPTIBLE"),
