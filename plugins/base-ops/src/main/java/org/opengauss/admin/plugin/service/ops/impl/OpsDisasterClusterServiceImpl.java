@@ -38,6 +38,7 @@ import org.opengauss.admin.plugin.domain.entity.ops.OpsDisasterClusterEntity;
 import org.opengauss.admin.plugin.domain.model.ops.DisasterBody;
 import org.opengauss.admin.plugin.domain.model.ops.DisasterContext;
 import org.opengauss.admin.plugin.domain.model.ops.DisasterMonitor;
+import org.opengauss.admin.plugin.domain.model.ops.DisasterQueryResult;
 import org.opengauss.admin.plugin.domain.model.ops.JschResult;
 import org.opengauss.admin.plugin.domain.model.ops.OpsDisasterCluster;
 import org.opengauss.admin.plugin.domain.model.ops.OpsDisasterHost;
@@ -665,13 +666,12 @@ public class OpsDisasterClusterServiceImpl extends ServiceImpl<OpsDisasterCluste
     }
 
     private void activateSlaveResourceProtectAndSyncPair(String deviceManagerName, WsSession primaryWsSession,
-        WsSession standbyWsSession) throws InterruptedException {
+        WsSession standbyWsSession) throws InterruptedException, OpsException {
         OpsDeviceManagerEntity opsDeviceManagerEntity = opsDeviceManagerService.getById(deviceManagerName);
         opsDeviceManagerEntity.setPassword(encryptionUtils.decrypt(opsDeviceManagerEntity.getPassword()));
         Map<String, String> authenticateMap = DeviceManagerUtil.authenticate(opsDeviceManagerEntity);
-        String result = DeviceManagerUtil.queryPairInfo(opsDeviceManagerEntity, authenticateMap.get("deviceId"),
-            authenticateMap.get("iBaseToken"), authenticateMap.get("cookie"));
-        switch (result) {
+        DisasterQueryResult result = DeviceManagerUtil.queryPairInfo(opsDeviceManagerEntity, authenticateMap);
+        switch (result.getRunningStatus()) {
             case NORMAL_STATUS:
                 wsUtil.sendText(primaryWsSession, "REMOTE_REPLICATION_PAIR_STATUS_IS_NORMAL");
                 wsUtil.sendText(standbyWsSession, "REMOTE_REPLICATION_PAIR_STATUS_IS_NORMAL");
@@ -688,20 +688,34 @@ public class OpsDisasterClusterServiceImpl extends ServiceImpl<OpsDisasterCluste
                 wsUtil.sendText(standbyWsSession, "END_ACTIVATE_SLAVE_PROTECT");
                 wsUtil.sendText(primaryWsSession, "START_SYNC_REMOTE_REPLICATION_PAIR");
                 wsUtil.sendText(standbyWsSession, "START_SYNC_REMOTE_REPLICATION_PAIR");
-                DeviceManagerUtil.syncPair(opsDeviceManagerEntity, authenticateMap.get("deviceId"),
-                    authenticateMap.get("iBaseToken"), authenticateMap.get("cookie"));
+                DeviceManagerUtil.syncPair(opsDeviceManagerEntity, authenticateMap);
+                // 修改同步速率，缩短同步时间
+                DeviceManagerUtil.modifyReplicationParams(opsDeviceManagerEntity, authenticateMap);
                 int count = 0;
                 while (true) {
-                    String status = DeviceManagerUtil.queryPairInfo(opsDeviceManagerEntity,
-                        authenticateMap.get("deviceId"), authenticateMap.get("iBaseToken"),
-                        authenticateMap.get("cookie"));
-                    wsUtil.sendText(primaryWsSession,
-                        "Remote replication pair status is " + STATUS_MAP.getOrDefault(result, "Unknown"));
-                    wsUtil.sendText(standbyWsSession,
-                        "Remote replication pair status is " + STATUS_MAP.getOrDefault(result, "Unknown"));
-                    // 如果正常或者超过15s钟则跳出循环
-                    if (NORMAL_STATUS.equals(status) || count >= 3) {
+                    DisasterQueryResult queryResult = DeviceManagerUtil.queryPairInfo(opsDeviceManagerEntity,
+                        authenticateMap);
+                    if (!queryResult.getReplicationProgress().isEmpty()) {
+                        wsUtil.sendText(primaryWsSession,
+                                "Replication sync progress: " + queryResult.getReplicationProgress() + " %");
+                        wsUtil.sendText(standbyWsSession,
+                                "Replication sync progress: " + queryResult.getReplicationProgress() + " %");
+                    }
+
+                    if (NORMAL_STATUS.equals(queryResult.getRunningStatus())) {
+                        wsUtil.sendText(primaryWsSession,
+                                "Remote replication pair status is " + STATUS_MAP.getOrDefault(
+                                        queryResult.getRunningStatus(), "Unknown"));
+                        wsUtil.sendText(standbyWsSession,
+                                "Remote replication pair status is " + STATUS_MAP.getOrDefault(
+                                        queryResult.getRunningStatus(), "Unknown"));
+
                         break;
+                    }
+                    // 如果超过5000s钟则跳出循环
+                    if (count > 1000) {
+                        log.error("Replication dose not finished in 5000s, replication sync failed...");
+                        throw new OpsException("Replication sync failed");
                     }
                     count++;
                     Thread.sleep(5000);
@@ -711,8 +725,8 @@ public class OpsDisasterClusterServiceImpl extends ServiceImpl<OpsDisasterCluste
                 break;
             default:
                 throw new OpsException(
-                    "can't install,because the remote replication pair status is " + STATUS_MAP.getOrDefault(result,
-                        "unknown"));
+                    "can't install,because the remote replication pair status is " + STATUS_MAP.getOrDefault(
+                            result.getRunningStatus(), "unknown"));
         }
     }
 
@@ -737,10 +751,9 @@ public class OpsDisasterClusterServiceImpl extends ServiceImpl<OpsDisasterCluste
             opsDisasterClusterEntity.getPrimaryClusterDeviceManagerName());
         opsDeviceManagerEntity.setPassword(encryptionUtils.decrypt(opsDeviceManagerEntity.getPassword()));
         Map<String, String> authenticateMap = DeviceManagerUtil.authenticate(opsDeviceManagerEntity);
-        String result = DeviceManagerUtil.queryPairInfo(opsDeviceManagerEntity, authenticateMap.get("deviceId"),
-            authenticateMap.get("iBaseToken"), authenticateMap.get("cookie"));
+        DisasterQueryResult result = DeviceManagerUtil.queryPairInfo(opsDeviceManagerEntity, authenticateMap);
         // 先根据状态为同步时再进行switchover操作，如果非同步状态，则提示不能切换
-        if (!NORMAL_STATUS.equals(result)) {
+        if (!NORMAL_STATUS.equals(result.getRunningStatus())) {
             return AjaxResult.error("the remote replication pair status is abnormal, can't switchover");
         }
         // 主：gs_ddr -t switchover -m disaster_standby 备：gs_ddr -t switchover -m primary
@@ -770,8 +783,7 @@ public class OpsDisasterClusterServiceImpl extends ServiceImpl<OpsDisasterCluste
             // 在主deviceManager调用switchover
             wsUtil.sendText(primaryWsSession, "START_SWITCH_REMOTE_REPLICATION_PAIR");
             wsUtil.sendText(standbyWsSession, "START_SWITCH_REMOTE_REPLICATION_PAIR");
-            DeviceManagerUtil.switchMasterToSlave(opsDeviceManagerEntity, authenticateMap.get("deviceId"),
-                authenticateMap.get("iBaseToken"), authenticateMap.get("cookie"));
+            DeviceManagerUtil.switchMasterToSlave(opsDeviceManagerEntity, authenticateMap);
             wsUtil.sendText(primaryWsSession, "END_SWITCH_REMOTE_REPLICATION_PAIR");
             wsUtil.sendText(standbyWsSession, "END_SWITCH_REMOTE_REPLICATION_PAIR");
             // 主从第二步
@@ -936,8 +948,7 @@ public class OpsDisasterClusterServiceImpl extends ServiceImpl<OpsDisasterCluste
         Map<String, String> authenticateMap = DeviceManagerUtil.authenticate(opsDeviceManagerEntity);
         // 如果状态已经是分裂，直接调用取消从资源保护
         if (HAS_SPLIT_STATUS.equals(
-            DeviceManagerUtil.queryPairInfo(opsDeviceManagerEntity, authenticateMap.get("deviceId"),
-                authenticateMap.get("iBaseToken"), authenticateMap.get("cookie")))) {
+            DeviceManagerUtil.queryPairInfo(opsDeviceManagerEntity, authenticateMap))) {
             wsUtil.sendText(wsSession, "Remote replication pair had split");
             cancelSlaveResourceProtect(wsSession, opsDeviceManagerEntity, authenticateMap);
             return;
@@ -960,15 +971,14 @@ public class OpsDisasterClusterServiceImpl extends ServiceImpl<OpsDisasterCluste
         try {
             wsUtil.sendText(wsSession, "START_SPLIT_REMOTE_REPLICATION_PAIR");
             // 调用分裂
-            DeviceManagerUtil.splitPair(opsDeviceManagerEntity, authenticateMap.get("deviceId"),
-                authenticateMap.get("iBaseToken"), authenticateMap.get("cookie"));
+            DeviceManagerUtil.splitPair(opsDeviceManagerEntity, authenticateMap);
             int count = 0;
             while (true) {
-                String result = DeviceManagerUtil.queryPairInfo(opsDeviceManagerEntity, authenticateMap.get("deviceId"),
-                    authenticateMap.get("iBaseToken"), authenticateMap.get("cookie"));
-                wsUtil.sendText(wsSession, "Remote replication pair status is " + result);
-                // 如果已分裂或者超过3s钟则跳出循环
-                if (HAS_SPLIT_STATUS.equals(result) || count >= 3) {
+                DisasterQueryResult result = DeviceManagerUtil.queryPairInfo(opsDeviceManagerEntity,
+                        authenticateMap);
+                wsUtil.sendText(wsSession, "Remote replication pair status is " + result.getRunningStatus());
+                // 如果已分裂或者超过5s钟则跳出循环
+                if (HAS_SPLIT_STATUS.equals(result.getRunningStatus()) || count >= 5) {
                     break;
                 }
                 count++;

@@ -17,6 +17,7 @@ package org.opengauss.admin.plugin.utils;
 
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
@@ -38,6 +39,7 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsDeviceManagerEntity;
+import org.opengauss.admin.plugin.domain.model.ops.DisasterQueryResult;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -85,6 +87,16 @@ public class DeviceManagerUtil {
 
     private static final int LUN_READ_WRITE = 3;
 
+    @Getter
+    enum SyncSpeed {
+        LOW(1), MEDIUM(2), HIGH(3), VERY_HIGH(4);
+
+        private final int speed;
+        SyncSpeed(int speed) {
+            this.speed = speed;
+        }
+    }
+
     /**
      * authenticate by username and password
      *
@@ -127,65 +139,104 @@ public class DeviceManagerUtil {
      * query replication pair status
      *
      * @param deviceManagerEntity deviceManagerEntity
-     * @param deviceId deviceId
-     * @param iBaseToken iBaseToken
-     * @param cookie cookie
-     * @return String
+     * @param authenticateMap authenticateMap
+     * @return Object
      */
-    public static String queryPairInfo(OpsDeviceManagerEntity deviceManagerEntity, String deviceId,
-        String iBaseToken, String cookie) {
+    public static DisasterQueryResult queryPairInfo(OpsDeviceManagerEntity deviceManagerEntity,
+                                                    Map<String, String> authenticateMap) {
         // 组装header数据
         Map<String, String> headers = new HashMap<>();
-        headers.put("iBaseToken", iBaseToken);
-        headers.put("Cookie", cookie);
+        headers.put("iBaseToken", authenticateMap.get("iBaseToken"));
+        headers.put("Cookie", authenticateMap.get("cookie"));
         log.info("======start queryPairInfo======");
         JSONObject resultJson = send(
             String.format(QUERY_ACTIVATE_CANCEL_PAIR_URL, deviceManagerEntity.getHostIp(),
-                deviceManagerEntity.getPort(), deviceId, deviceManagerEntity.getPairId()), null, headers, GET_METHOD);
+                deviceManagerEntity.getPort(), authenticateMap.get("deviceId"), deviceManagerEntity.getPairId()),
+                null, headers, GET_METHOD);
         log.info("resultJson is {}", resultJson);
-        String result = "";
+        DisasterQueryResult queryResult = new DisasterQueryResult();
         if (!resultJson.isEmpty() && resultJson.getJSONObject("error").getInteger("code") != 0) {
             log.error("queryPairInfo failed, message is {}, suggestion is {}",
                 resultJson.getJSONObject("error").getString("description"),
                 resultJson.getJSONObject("error").getString("suggestion"));
-            return result;
+            return queryResult;
         }
-        // 解析取出所需内容
+        // 获取同步状态和进度
         if (!resultJson.isEmpty()) {
-            result = resultJson.getJSONObject("data").getString("RUNNINGSTATUS");
+            queryResult.setRunningStatus(resultJson.getJSONObject("data").getString("RUNNINGSTATUS"));
+            // REPLICATIONPROGRESS是条件返回，所以有可能为空
+            if (resultJson.getJSONObject("data").containsKey("REPLICATIONPROGRESS")) {
+                queryResult.setReplicationProgress(resultJson.getJSONObject("data").getString("REPLICATIONPROGRESS"));
+            } else {
+                queryResult.setReplicationProgress("");
+            }
+            queryResult.setReplicationProgress(resultJson.getJSONObject("data").getString("REPLICATIONPROGRESS"));
         }
-        log.info("======end queryPairInfo======, result is {}", result);
-        return result;
+        log.info("======end queryPairInfo======, status is {}", queryResult.getRunningStatus());
+        return queryResult;
     }
 
     /**
      * switch master to slave
      *
      * @param deviceManagerEntity deviceManagerEntity
-     * @param deviceId deviceId
-     * @param iBaseToken iBaseToken
-     * @param cookie cookie
+     * @param authenticateMap authenticateMap
      * @return boolean
      */
-    public static boolean switchMasterToSlave(OpsDeviceManagerEntity deviceManagerEntity, String deviceId,
-        String iBaseToken, String cookie) {
+    public static boolean switchMasterToSlave(OpsDeviceManagerEntity deviceManagerEntity,
+                                              Map<String, String> authenticateMap) {
         log.info("======start switchMasterToSlave======");
-        return sendRequest(deviceManagerEntity, deviceId, SWITCH_PAIR_URL, iBaseToken, cookie);
+        // 组装数据
+        JSONObject paramJson = new JSONObject();
+        paramJson.put("ID", deviceManagerEntity.getPairId());
+        return sendRequest(deviceManagerEntity, SWITCH_PAIR_URL, authenticateMap, paramJson);
     }
 
     /**
      * sync replication pair
      *
      * @param deviceManagerEntity deviceManagerEntity
-     * @param deviceId deviceId
-     * @param iBaseToken iBaseToken
-     * @param cookie cookie
+     * @param authenticateMap authenticateMap
      * @return boolean
      */
-    public static boolean syncPair(OpsDeviceManagerEntity deviceManagerEntity, String deviceId, String iBaseToken,
-        String cookie) {
+    public static boolean syncPair(OpsDeviceManagerEntity deviceManagerEntity,
+                                   Map<String, String> authenticateMap) {
         log.info("======start syncPair======");
-        return sendRequest(deviceManagerEntity, deviceId, SYNC_PAIR_URL, iBaseToken, cookie);
+        // 组装数据
+        JSONObject paramJson = new JSONObject();
+        paramJson.put("ID", deviceManagerEntity.getPairId());
+        return sendRequest(deviceManagerEntity, SYNC_PAIR_URL, authenticateMap, paramJson);
+    }
+
+    /**
+     * modify replication params
+     *
+     * @param deviceManagerEntity deviceManagerEntity
+     * @param authenticateMap authenticateMap
+     * @return boolean
+     */
+    public static boolean modifyReplicationParams(OpsDeviceManagerEntity deviceManagerEntity,
+                                                  Map<String, String> authenticateMap) {
+        log.info("======modify Replication Params======");
+        JSONObject paramJson = new JSONObject();
+        paramJson.put("ID", deviceManagerEntity.getPairId());
+        paramJson.put("SPEED", SyncSpeed.HIGH.getSpeed());
+        // 组装header数据
+        Map<String, String> headers = new HashMap<>();
+        headers.put("iBaseToken", authenticateMap.get("iBaseToken"));
+        headers.put("Cookie", authenticateMap.get("cookie"));
+        JSONObject resultJson = send(String.format(QUERY_ACTIVATE_CANCEL_PAIR_URL, deviceManagerEntity.getHostIp(),
+                deviceManagerEntity.getPort(), authenticateMap.get("deviceId"), deviceManagerEntity.getPairId()),
+                paramJson, headers, PUT_METHOD);
+        log.info("resultJson is {}", resultJson);
+        // 解析取出所需内容
+        if (!resultJson.isEmpty() && resultJson.getJSONObject("error").getInteger("code") != 0) {
+            log.error("slaveResourceProtect failed, message is {}, suggestion is {}",
+                    resultJson.getJSONObject("error").getString("description"),
+                    resultJson.getJSONObject("error").getString("suggestion"));
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -244,29 +295,27 @@ public class DeviceManagerUtil {
      * split replication pair
      *
      * @param deviceManagerEntity deviceManagerEntity
-     * @param deviceId deviceId
-     * @param iBaseToken iBaseToken
-     * @param cookie cookie
+     * @param authenticateMap authenticateMap
      * @return boolean
      */
-    public static boolean splitPair(OpsDeviceManagerEntity deviceManagerEntity, String deviceId, String iBaseToken,
-        String cookie) {
+    public static boolean splitPair(OpsDeviceManagerEntity deviceManagerEntity,
+                                    Map<String, String> authenticateMap) {
         log.info("======start splitPair======");
-        return sendRequest(deviceManagerEntity, deviceId, SPLIT_PAIR_URL, iBaseToken, cookie);
-    }
-
-    private static boolean sendRequest(OpsDeviceManagerEntity deviceManagerEntity, String deviceId, String url,
-        String iBaseToken, String cookie) {
         // 组装数据
         JSONObject paramJson = new JSONObject();
         paramJson.put("ID", deviceManagerEntity.getPairId());
+        return sendRequest(deviceManagerEntity, SPLIT_PAIR_URL, authenticateMap, paramJson);
+    }
+
+    private static boolean sendRequest(OpsDeviceManagerEntity deviceManagerEntity, String url,
+                                       Map<String, String> authenticateMap, JSONObject paramJson) {
         // 组装header数据
         Map<String, String> headers = new HashMap<>();
-        headers.put("iBaseToken", iBaseToken);
-        headers.put("Cookie", cookie);
+        headers.put("iBaseToken", authenticateMap.get("iBaseToken"));
+        headers.put("Cookie", authenticateMap.get("cookie"));
         JSONObject resultJson = send(
-            String.format(url, deviceManagerEntity.getHostIp(), deviceManagerEntity.getPort(), deviceId), paramJson,
-            headers, PUT_METHOD);
+            String.format(url, deviceManagerEntity.getHostIp(), deviceManagerEntity.getPort(), authenticateMap.get(
+                    "deviceId")), paramJson, headers, PUT_METHOD);
         log.info("resultJson is {}", resultJson);
         // 解析取出所需内容
         if (!resultJson.isEmpty() && resultJson.getJSONObject("error").getInteger("code") != 0) {
