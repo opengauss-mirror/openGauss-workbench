@@ -36,7 +36,7 @@ import java.util.List;
  */
 @Data
 public class InstalledAgentVO {
-    private String envId;
+    private String id;
     private String hostId;
     private String username;
     private String exporterPort;

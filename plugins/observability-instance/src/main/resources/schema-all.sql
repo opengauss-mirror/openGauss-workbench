@@ -7,3 +7,5 @@ CREATE TABLE public.nctigba_env (
 	port int8 NULL
 );
 ALTER TABLE public.nctigba_env ADD nodeid varchar NULL;
+ALTER TABLE public.nctigba_env ADD status varchar NULL;
+ALTER TABLE public.nctigba_env ADD update_time date NULL;

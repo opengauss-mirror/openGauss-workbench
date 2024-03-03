@@ -205,10 +205,11 @@ export default {
       irqContent: '硬件中断响应的CPU使用率',
       softirqContent: '软件中断响应的CPU使用率',
       stealContent: '当前运行在虚拟化环境下的虚拟CPU等待物理CPU资源的CPU使用率',
-      total1mLoadContent: '表示过去1分钟内系统的平均负载情况。它是指在运行队列（包括正在运行和等待CPU资源的进程）中平均活跃的进程数',
+      total1mLoadContent:
+        '表示过去1分钟内系统的平均负载情况。它是指在运行队列（包括正在运行和等待CPU资源的进程）中平均活跃的进程数',
       total5mLoadContent: '表示过去5分钟内系统的平均负载情况。同样，它也是指运行队列中平均活跃的进程数',
       total15mLoadContent: '表示过去15分钟内系统的平均负载情况。同样，它也是指运行队列中平均活跃的进程数',
-      coreNumContent: 'CPU核心线程数量'
+      coreNumContent: 'CPU核心线程数量',
     },
     memory: {
       memoryUse: '内存使用率',
@@ -253,11 +254,16 @@ export default {
       avgquContent: '平均请求队列长度',
       awaitContent: '处理I/O请求的平均时间，这包括队列中的等待时间和设备实际处理时间，以毫秒为单位',
       utilContent: '磁盘处理I/O的时间百分比',
-      iopsContent: '指磁盘设备每秒可以完成的输入/输出操作次数,它是一个衡量磁盘性能的重要指标，用于评估磁盘的读写速度和响应能力。每条折线图对应一个设备的IOPS',
-      rwSecondContent: '是衡量磁盘数据传输速度的指标,它表示在一秒钟内，磁盘可以读取或写入的字节数量。每条折线图对应一个设备的每秒读取或者写入字节量',
-      queueLengthContent: '指等待被处理的输入/输出请求在I/O设备（如磁盘）上排队的长度,它表示了系统中正在等待执行的I/O操作数量，包括待处理的读取和写入请求，可以用来评估系统负载和I/O设备的繁忙程度。每条折线图对应一个设备的I/O队列长度',
-      ioUsageContent: '指计算机系统中输入/输出（I/O）操作的利用率。它表示在一定时间内，系统对于执行I/O操作所花费的时间与总时间的比例，可以衡量系统的效率和性能。每条折线图对应一个设备的I/O使用率',
-      ioTimeContent: '指完成一个I/O操作所花费的平均时间,它表示从发起I/O请求到完成该请求的整个过程所需的平均时间。每条折线图对应一个设备的平均IO响应时间',
+      iopsContent:
+        '指磁盘设备每秒可以完成的输入/输出操作次数,它是一个衡量磁盘性能的重要指标，用于评估磁盘的读写速度和响应能力。每条折线图对应一个设备的IOPS',
+      rwSecondContent:
+        '是衡量磁盘数据传输速度的指标,它表示在一秒钟内，磁盘可以读取或写入的字节数量。每条折线图对应一个设备的每秒读取或者写入字节量',
+      queueLengthContent:
+        '指等待被处理的输入/输出请求在I/O设备（如磁盘）上排队的长度,它表示了系统中正在等待执行的I/O操作数量，包括待处理的读取和写入请求，可以用来评估系统负载和I/O设备的繁忙程度。每条折线图对应一个设备的I/O队列长度',
+      ioUsageContent:
+        '指计算机系统中输入/输出（I/O）操作的利用率。它表示在一定时间内，系统对于执行I/O操作所花费的时间与总时间的比例，可以衡量系统的效率和性能。每条折线图对应一个设备的I/O使用率',
+      ioTimeContent:
+        '指完成一个I/O操作所花费的平均时间,它表示从发起I/O请求到完成该请求的整个过程所需的平均时间。每条折线图对应一个设备的平均IO响应时间',
     },
     network: {
       in: '网络流量(流入)',
@@ -308,7 +314,7 @@ export default {
       shrContent: '进程共享的内存量',
       timeContent: '进程累计的CPU时间',
       userContent: '进程所属的用户名',
-      virtContent: '进程使用的虚拟内存量'
+      virtContent: '进程使用的虚拟内存量',
     },
     topThread: {
       cpuContent: '进程占用的CPU使用率',
@@ -325,7 +331,7 @@ export default {
       userContent: '进程所属的用户名',
       virtContent: '进程使用的虚拟内存量',
       sessionIDContent: '线程会话ID',
-      sqlIDContent: 'SQL语句的ID'
+      sqlIDContent: 'SQL语句的ID',
     },
   },
   instanceIndex: {
@@ -568,9 +574,25 @@ export default {
     continueUpload: '继续上传',
     // upload: '上传',
     uploadPath: '上传路径',
-    installServerAlert: '请先安装服务端！',
-    installedServerAlert: '只能安装一个服务端',
+    uninstallAlert: '请安装服务端和代理端，否则页面部分功能无法正常使用！',
+    installServerAlert: '请先安装二级服务端！',
+    installedServerAlert: '只能安装一个二级服务端',
     agentInfo: '代理信息',
+    start: '启动',
+    stop: '停止',
+    startSuccess: '启动成功',
+    startFail: '启动失败',
+    stopSuccess: '停止成功',
+    stopFail: '停止失败',
+    status: {
+      normal: '运行中',
+      unknown: '未知',
+      starting: '启动中',
+      stopping: '停止中',
+      manualStop: '手动停止',
+      errorThreadNotExists: '异常：进程不存在',
+      errorProgramUnhealthy: '异常：程序不健康',
+    },
     proxyRules: ['请选择物理机', '请输入Root用户密码', '请输入代理端口号', '请选择安装用户', '请输入数据存储天数'],
     collectorRules: [
       '请选择实例',
@@ -1171,6 +1193,6 @@ export default {
   },
   echart: {
     selectDataErrTip: '选择的时间范围必须大于1秒',
-    linkage: '图表联动'
+    linkage: '图表联动',
   },
 }

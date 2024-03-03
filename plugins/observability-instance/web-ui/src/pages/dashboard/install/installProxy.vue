@@ -71,12 +71,12 @@
               <template #append>{{ t('install.storageDaysUnit') }}</template>
             </el-input>
           </el-form-item>
-          <el-form-item :label="t('install.installMode')" prop="installMode">
+          <!-- <el-form-item :label="t('install.installMode')" prop="installMode">
             <el-radio-group v-model="formData.installMode">
               <el-radio label="online">{{ t('install.online') }}</el-radio>
               <el-radio label="offline">{{ t('install.offline') }}</el-radio>
             </el-radio-group>
-          </el-form-item>
+          </el-form-item> -->
           <div v-if="formData.installMode === 'offline'">
             <el-form-item label="Prometheus" style="margin-bottom: 0">
               <el-link :underline="false" @click="showUploadFile('node', formData.pkg)">{{
@@ -282,30 +282,21 @@ const install = async () => {
   let result = await connectionFormRef.value?.validate()
   if (!result) return
   started.value = true
-  restRequest
-    .get('/observability/v1/environment/prometheus', '')
-    .then((res) => {
-      if (!res || res.length === 0) {
-        ws.name = moment(new Date()).format('YYYYMMDDHHmmss') as string // websocket connection name
-        ws.sessionId = moment(new Date()).format('YYYYMMDDHHmmss') as string // websocket connection id
-        ws.instance = new WebSocketClass(ws.name, ws.sessionId, onWebSocketMessage)
-        sendData()
-      } else {
-        started.value = false
-        ElMessage({
-          showClose: true,
-          message: t('install.installedServerAlert'),
-          type: 'error',
-        })
-      }
-    })
-    .catch(() => {
-      started.value = false
-    })
-  // ws.name = moment(new Date()).format("YYYYMMDDHHmmss") as string; // websocket connection name
-  // ws.sessionId = moment(new Date()).format("YYYYMMDDHHmmss") as string; // websocket connection id
-  // ws.instance = new WebSocketClass(ws.name, ws.sessionId, onWebSocketMessage);
-  // sendData();
+  // restRequest
+  //   .get('/observability/v1/environment/prometheus', '')
+  //   .then((res) => {
+  //     ws.name = moment(new Date()).format('YYYYMMDDHHmmss') as string // websocket connection name
+  //     ws.sessionId = moment(new Date()).format('YYYYMMDDHHmmss') as string // websocket connection id
+  //     ws.instance = new WebSocketClass(ws.name, ws.sessionId, onWebSocketMessage)
+  //     sendData()
+  //   })
+  //   .catch(() => {
+  //     started.value = false
+  //   })
+  ws.name = moment(new Date()).format("YYYYMMDDHHmmss") as string; // websocket connection name
+  ws.sessionId = moment(new Date()).format("YYYYMMDDHHmmss") as string; // websocket connection id
+  ws.instance = new WebSocketClass(ws.name, ws.sessionId, onWebSocketMessage);
+  sendData();
 }
 const sendData = async () => {
   let sendData = {

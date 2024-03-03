@@ -71,15 +71,16 @@ public abstract class AbstractInstaller {
         return "aarch64".equals(str) ? "arm64" : "amd64";
     }
 
-    protected OpsHostUserEntity getUser(OpsHostEntity hostEntity, String username, String rootPassword,
-            List<Step> steps, int curr) {
-        var user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e -> {
-            return username.equals(e.getUsername());
-        }).findFirst().orElse(null);
-        if (user != null && steps != null) {
-            steps.get(curr).add("install.use", username);
-        }
-        return user;
+    /**
+     * getUser
+     *
+     * @param hostEntity OpsHostEntity
+     * @param username String
+     * @return OpsHostUserEntity
+     */
+    protected OpsHostUserEntity getUser(OpsHostEntity hostEntity, String username) {
+        return hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream().filter(e ->
+            username.equals(e.getUsername())).findFirst().orElse(null);
     }
 
     protected void addMsg(WsSession wsSession, List<Step> steps, int curr, String msg) {

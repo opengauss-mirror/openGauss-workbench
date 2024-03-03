@@ -101,6 +101,36 @@ public class SshSessionUtils implements AutoCloseable {
         }
     }
 
+    /**
+     * check dir is exist?
+     *
+     * @param path String
+     * @return boolean
+     * @throws IOException exception
+     */
+    public boolean checkDirExist(String path) throws IOException {
+        String result = execute("test -d " + path + "&& echo 1 || echo 0");
+        if (result.equals("1")) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * check file is exist?
+     *
+     * @param file string
+     * @return boolean
+     * @throws IOException exception
+     */
+    public boolean checkFileExist(String file) throws IOException {
+        String result = execute("test -e " + file + "&& echo 1 || echo 0");
+        if (result.equals("1")) {
+            return true;
+        }
+        return false;
+    }
+
     public String execute(command command) throws IOException {
         return execute(command.cmd, null);
     }

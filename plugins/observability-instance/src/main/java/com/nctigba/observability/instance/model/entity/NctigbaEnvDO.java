@@ -23,6 +23,7 @@
 
 package com.nctigba.observability.instance.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
@@ -32,6 +33,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
+
+import java.util.Date;
 
 @Data
 @Accessors(chain = true)
@@ -47,6 +50,9 @@ public class NctigbaEnvDO {
     String nodeid;
     @TableField(exist = false)
     OpsHostEntity host;
+    String status;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    Date updateTime;
 
     public envType type() {
         return envType.valueOf(type);
@@ -64,6 +70,7 @@ public class NctigbaEnvDO {
 
     public enum envType {
         PROMETHEUS,
+        PROMETHEUS_MAIN,
         NODE_EXPORTER,
         OPENGAUSS_EXPORTER,
         EXPORTER,
