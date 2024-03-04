@@ -119,8 +119,8 @@ const modify = (item: any) => {
   isShowModal.value = true;
 };
 
-const remove = (item: any) => {
-  apiDeleteDiskArray(item.name);
+const remove = async (item: any) => {
+  await apiDeleteDiskArray(item.name);
   getListData();
 };
 
