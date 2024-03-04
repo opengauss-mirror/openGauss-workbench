@@ -84,12 +84,12 @@ public class MetricsService {
             return PROM.get(DEFAULT);
         }
         var env = envMapper
-                .selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.PROMETHEUS));
+                .selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType,
+                    NctigbaEnvDO.envType.PROMETHEUS_MAIN));
         if (env == null) {
             throw new CustomException("Prometheus not found");
         }
-        var host = hostFacade.getById(env.getHostid());
-        String url = "http://" + host.getPublicIp() + ":" + env.getPort();
+        String url = "http://127.0.0.1:" + env.getPort();
         PROM.put(DEFAULT, url);
         return url;
     }

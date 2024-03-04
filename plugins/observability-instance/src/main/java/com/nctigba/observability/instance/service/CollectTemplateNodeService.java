@@ -69,9 +69,18 @@ public interface CollectTemplateNodeService extends IService<CollectTemplateNode
     /**
      * To update prometheus configs
      *
-     * @param configNodes Configs DTO
-     * @since 2023/12/1
+     * @param envPromId String
+     * @param configNodes List<PrometheusConfigNodeDTO>
+     * @param delNodeIds List<String>
      */
     @DS("private")
-    void setPrometheusConfig(List<PrometheusConfigNodeDTO> configNodes);
+    void setPrometheusConfig(String envPromId, List<PrometheusConfigNodeDTO> configNodes, List<String> delNodeIds);
+
+    /**
+     * To update prometheus configs
+     *
+     * @param nodeId String
+     * @param templateId String
+     */
+    void setNodePrometheusConfig(String nodeId, Integer templateId);
 }

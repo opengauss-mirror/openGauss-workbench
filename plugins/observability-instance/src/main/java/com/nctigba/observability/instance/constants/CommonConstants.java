@@ -63,4 +63,9 @@ public class CommonConstants {
      * Metric scrape default time
      */
     public static final String DEFAULT_SCRAPE_TIME = "15s";
+
+    /**
+     * status monitor cycle
+     */
+    public static final long MONITOR_CYCLE = 60L;
 }

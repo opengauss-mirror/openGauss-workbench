@@ -78,3 +78,15 @@ CREATE TABLE IF NOT EXISTS param_value_info (
     instance TEXT,
     actual_value TEXT
 );
+
+-- 2024-02-02 v6.0.0 agent n to n prometheus
+CREATE TABLE IF NOT EXISTS prom_agent_relation (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    env_prom_id varchar(100),
+    env_agent_id varchar(100),
+    region varchar(100) default 'default',
+    create_by VARCHAR(64),
+    create_time TIMESTAMP,
+    update_by VARCHAR(64),
+    update_time TIMESTAMP
+);

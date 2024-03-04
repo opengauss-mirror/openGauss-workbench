@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import com.nctigba.observability.instance.model.dto.PromInstallDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -112,8 +113,10 @@ class PrometheusServiceTest {
             util.when(() -> HttpUtil.get(anyString())).thenReturn("succ");
             down.when(() -> DownloadUtils.download(anyString(), anyString()))
                     .thenReturn(File.createTempFile("test", "tmp"));
-            prometheusService.install(new WsSession(null, "id"), "id", "",
-                    "name", "password", 9998, "storageDays");
+            PromInstallDTO promInstallParam = new PromInstallDTO();
+            promInstallParam.setHostId("id").setPath("").setPort(9998).setUsername("name")
+                .setStorageDays("storageDays");
+            prometheusService.install(new WsSession(null, "id"), promInstallParam);
             prometheusService.uninstall(new WsSession(null, "id"), "id");
         }
     }

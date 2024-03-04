@@ -39,6 +39,8 @@ import java.util.stream.Collectors;
 import com.nctigba.observability.instance.model.entity.AgentNodeRelationDO;
 import com.nctigba.observability.instance.model.vo.InstalledAgentVO;
 import com.nctigba.observability.instance.service.AgentNodeRelationService;
+import com.nctigba.observability.instance.service.ExporterInstallService;
+import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
@@ -82,6 +84,8 @@ public class EnvironmentController {
     private PrometheusService prometheusService;
     @Autowired
     private AgentNodeRelationService agentNodeRelationService;
+    @Autowired
+    private ExporterInstallService exporterInstallService;
 
     @GetMapping("/v1/environment/hostUser/{hostId}")
     public List<OpsHostUserEntity> hostUser(@PathVariable String hostId) {
@@ -102,11 +106,36 @@ public class EnvironmentController {
     @GetMapping("/v1/environment/prometheus")
     public List<NctigbaEnvDO> listPrometheus() {
         List<NctigbaEnvDO> env =
-                envMapper.selectList(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, envType.PROMETHEUS));
+            envMapper.selectList(Wrappers.<NctigbaEnvDO>lambdaQuery()
+                .eq(NctigbaEnvDO::getType, envType.PROMETHEUS)
+                .or(z -> z.eq(NctigbaEnvDO::getType, envType.PROMETHEUS_MAIN)));
         env.forEach(e -> {
+            if (!e.getType().equals(envType.PROMETHEUS.name())) {
+                return;
+            }
             e.setHost(hostFacade.getById(e.getHostid()));
         });
         return env;
+    }
+
+    /**
+     * getPromStatus
+     *
+     * @return AjaxResult
+     */
+    @GetMapping("/v1/prometheus/status")
+    public AjaxResult getPromStatus() {
+        return AjaxResult.success(prometheusService.getStatus());
+    }
+
+    /**
+     * getExportersStatus
+     *
+     * @return AjaxResult
+     */
+    @GetMapping("/v1/exporters/status")
+    public AjaxResult getExportersStatus() {
+        return AjaxResult.success(exporterInstallService.getStatus());
     }
 
     @GetMapping("/environment/api/v1/exporters")
@@ -120,7 +149,7 @@ public class EnvironmentController {
                         envType.EXPORTER)));
         result = envs.stream().map(env -> {
             InstalledAgentVO resultItem = new InstalledAgentVO();
-            resultItem.setEnvId(env.getId());
+            resultItem.setId(env.getId());
             resultItem.setHostId(env.getHostid());
             resultItem.setUsername(env.getUsername());
             resultItem.setExporterPort(String.valueOf(env.getPort()));
@@ -145,7 +174,7 @@ public class EnvironmentController {
         List<OpsClusterVO> clusters = clusterManager.getAllOpsCluster();
         result.forEach(installedAgentsVO -> {
             List<String> agentRelatedNodeIds = relations.stream()
-                    .filter(relationTemp -> relationTemp.getEnvId().equals(installedAgentsVO.getEnvId()))
+                    .filter(relationTemp -> relationTemp.getEnvId().equals(installedAgentsVO.getId()))
                     .map(z -> z.getNodeId()).collect(Collectors.toList());
 
             List<OpsClusterVO> relatedClusters = clusters.stream()
@@ -251,5 +280,53 @@ public class EnvironmentController {
         } catch (IllegalStateException | IOException e) {
             throw new org.opengauss.admin.common.exception.CustomException("merge fail", e);
         }
+    }
+
+    /**
+     * startup Prometheus
+     *
+     * @param id String
+     * @return AjaxResult
+     */
+    @PostMapping("/v1/prometheus/start")
+    public AjaxResult startProm(String id) {
+        prometheusService.start(id);
+        return AjaxResult.success();
+    }
+
+    /**
+     * stop Prometheus
+     *
+     * @param id String
+     * @return AjaxResult
+     */
+    @PostMapping("/v1/prometheus/stop")
+    public AjaxResult stopProm(String id) {
+        prometheusService.stop(id);
+        return AjaxResult.success();
+    }
+
+    /**
+     * startup exporter
+     *
+     * @param id String
+     * @return AjaxResult
+     */
+    @PostMapping("/v1/exporter/start")
+    public AjaxResult startExporter(String id) {
+        exporterInstallService.start(id);
+        return AjaxResult.success();
+    }
+
+    /**
+     * stop exporter
+     *
+     * @param id String
+     * @return AjaxResult
+     */
+    @PostMapping("/v1/exporter/stop")
+    public AjaxResult stopExporter(String id) {
+        exporterInstallService.stop(id);
+        return AjaxResult.success();
     }
 }

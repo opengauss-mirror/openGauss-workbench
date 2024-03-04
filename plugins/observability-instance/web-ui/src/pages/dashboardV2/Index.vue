@@ -3,7 +3,7 @@
     <el-container>
       <el-aside :width="isCollapse ? '0px' : '310px'">
         <div style="height: 13px"></div>
-        <Install style="margin-right: 10px" />
+        <Install style="margin-right: 10px" @isUninstallAgent="isUninstallAgent"/>
       </el-aside>
       <el-main style="position: relative; padding-top: 0px" class="padding-fix">
         <div class="page-header" style="padding-left: 20px">
@@ -163,6 +163,8 @@ import { tabKeys } from '@/pages/dashboardV2/common'
 import { uuid } from '@/shared'
 import { getNodeInfo } from '@/api/observability'
 import moment from 'moment'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 
 type Res =
   | [
@@ -331,6 +333,14 @@ const showInfo = () => {
 }
 const { data: nodeInfoData, run: loadNodeInfo, loading } = useRequest(getNodeInfo, { manual: true })
 watch(nodeInfoData, () => {}, { deep: true })
+
+const isUninstallAgent = () => {
+  ElMessage({
+      message: t('install.uninstallAlert'),
+      type: 'warning',
+    })
+    isCollapse.value = false
+}
 </script>
 
 <style scoped lang="scss">

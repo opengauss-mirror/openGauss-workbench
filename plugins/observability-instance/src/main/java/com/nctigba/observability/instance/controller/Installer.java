@@ -33,6 +33,7 @@ import javax.websocket.Session;
 
 import cn.hutool.json.JSONArray;
 import com.nctigba.observability.instance.model.dto.ExporterInstallDTO;
+import com.nctigba.observability.instance.model.dto.PromInstallDTO;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.opengauss.admin.common.core.handler.ops.cache.TaskManager;
 import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
@@ -83,13 +84,11 @@ public class Installer implements SocketExtract {
                 MessageSourceUtils.set(obj.getStr("language"));
                 switch (obj.getStr("key")) {
                     case "prometheus":
-                        prometheusService.install(session,
-                                obj.getStr("hostId"),
-                                obj.getStr("path"),
-                                obj.getStr("username"),
-                                obj.getStr("rootPassword", null),
-                                obj.getInt("port"),
-                                obj.getStr("storageDays"));
+                        PromInstallDTO promInstallParam = new PromInstallDTO();
+                        promInstallParam.setHostId(obj.getStr("hostId")).setPath(obj.getStr("path"))
+                            .setPort(obj.getInt("port")).setUsername(obj.getStr("username"))
+                            .setStorageDays(obj.getStr("storageDays"));
+                        prometheusService.install(session, promInstallParam);
                         break;
                     case "uninstall prometheus":
                         prometheusService.uninstall(session, obj.getStr("id"));

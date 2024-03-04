@@ -26,7 +26,6 @@ package com.nctigba.observability.instance.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.nctigba.observability.instance.model.AjaxResult;
-import com.nctigba.observability.instance.model.dto.PrometheusConfigNodeDTO;
 import com.nctigba.observability.instance.model.dto.SetNodeTemplateDirectDTO;
 import com.nctigba.observability.instance.model.vo.CollectTemplateListVO;
 import com.nctigba.observability.instance.service.CollectTemplateMetricsService;
@@ -42,7 +41,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -75,12 +73,7 @@ public class CollectConfigController {
     public AjaxResult setNodeTemplateDirect(
             @RequestBody SetNodeTemplateDirectDTO setNodeTemplateDirectDTO) {
         Integer templateId = collectTemplateNodeService.setNodeTemplateDirect(setNodeTemplateDirectDTO);
-
-        // setPrometheusConfig
-        List<PrometheusConfigNodeDTO> configNodes = collectTemplateNodeService.getNodePrometheusConfigParam(
-                templateId,
-                Arrays.asList(setNodeTemplateDirectDTO.getNodeId()));
-        collectTemplateNodeService.setPrometheusConfig(configNodes);
+        collectTemplateNodeService.setNodePrometheusConfig(setNodeTemplateDirectDTO.getNodeId(), templateId);
         return AjaxResult.success();
     }
 

@@ -24,6 +24,7 @@
 
 package com.nctigba.observability.instance.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
@@ -33,6 +34,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.observability.instance.constants.CommonConstants;
+import com.nctigba.observability.instance.mapper.PromAgentRelationMapper;
 import com.nctigba.observability.instance.model.dto.PrometheusConfigNodeDTO;
 import com.nctigba.observability.instance.model.dto.PrometheusConfigNodeDetailDTO;
 import com.nctigba.observability.instance.model.dto.SetNodeTemplateDTO;
@@ -47,6 +49,7 @@ import com.nctigba.observability.instance.mapper.CollectTemplateMapper;
 import com.nctigba.observability.instance.mapper.CollectTemplateMetricsMapper;
 import com.nctigba.observability.instance.mapper.CollectTemplateNodeMapper;
 import com.nctigba.observability.instance.mapper.NctigbaEnvMapper;
+import com.nctigba.observability.instance.model.entity.PromAgentRelationDO;
 import com.nctigba.observability.instance.service.AgentNodeRelationService;
 import com.nctigba.observability.instance.service.ClusterManager;
 import com.nctigba.observability.instance.service.CollectTemplateNodeService;
@@ -56,6 +59,7 @@ import com.nctigba.observability.instance.util.SshSessionUtils;
 import com.nctigba.observability.instance.util.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
@@ -107,6 +111,8 @@ public class CollectTemplateNodeServiceImpl
     ClusterManager clusterManager;
     @Autowired
     AgentNodeRelationService agentNodeRelationService;
+    @Autowired
+    private PromAgentRelationMapper promAgentRelationMapper;
 
     @Override
     @Transactional
@@ -126,23 +132,23 @@ public class CollectTemplateNodeServiceImpl
     private Integer deleteNodeOldTemplateAndBuildNewOne(SetNodeTemplateDirectDTO setNodeTemplateDirectDTO) {
         // get node template id
         List<Integer> templateIds = collectTemplateNodeMapper.selectList(
-                        new LambdaQueryWrapper<CollectTemplateNodeDO>()
-                                .eq(CollectTemplateNodeDO::getNodeId, setNodeTemplateDirectDTO.getNodeId()))
-                .stream()
-                .map(z -> z.getTemplateId())
-                .collect(Collectors.toList());
+                new LambdaQueryWrapper<CollectTemplateNodeDO>()
+                    .eq(CollectTemplateNodeDO::getNodeId, setNodeTemplateDirectDTO.getNodeId()))
+            .stream()
+            .map(z -> z.getTemplateId())
+            .collect(Collectors.toList());
 
         // if has template, delete template and template detail
         if (!templateIds.isEmpty()) {
             collectTemplateMapper.delete(
-                    new LambdaQueryWrapper<CollectTemplateDO>()
-                            .in(CollectTemplateDO::getId, templateIds));
+                new LambdaQueryWrapper<CollectTemplateDO>()
+                    .in(CollectTemplateDO::getId, templateIds));
             collectTemplateNodeMapper.delete(
-                    new LambdaQueryWrapper<CollectTemplateNodeDO>()
-                            .eq(CollectTemplateNodeDO::getNodeId, setNodeTemplateDirectDTO.getNodeId()));
+                new LambdaQueryWrapper<CollectTemplateNodeDO>()
+                    .eq(CollectTemplateNodeDO::getNodeId, setNodeTemplateDirectDTO.getNodeId()));
             collectTemplateMetricsMapper.delete(
-                    new LambdaQueryWrapper<CollectTemplateMetricsDO>()
-                            .in(CollectTemplateMetricsDO::getTemplateId, templateIds));
+                new LambdaQueryWrapper<CollectTemplateMetricsDO>()
+                    .in(CollectTemplateMetricsDO::getTemplateId, templateIds));
         }
 
         // build new template
@@ -231,7 +237,7 @@ public class CollectTemplateNodeServiceImpl
             List<PrometheusConfigNodeDetailDTO> configNodeDetails = new ArrayList<>();
             groupedByInterval.forEach((scrapInterval, entities) -> {
                 List<String> metricNames = entities.stream()
-                        .filter(CollectTemplateMetricsDO::getIsEnable)
+                    .filter(CollectTemplateMetricsDO::getIsEnable)
                         .map(CollectTemplateMetricsDO::getMetricsKey)
                         .collect(Collectors.toList());
                 PrometheusConfigNodeDetailDTO detail = new PrometheusConfigNodeDetailDTO(metricNames, scrapInterval);
@@ -245,50 +251,63 @@ public class CollectTemplateNodeServiceImpl
         return configNodes;
     }
 
+    /**
+     * To update prometheus configs
+     *
+     * @param envPromId String
+     * @param configNodes List<PrometheusConfigNodeDTO>
+     * @param delNodeIds List<String>
+     */
     @DS("private")
     @Override
-    public void setPrometheusConfig(List<PrometheusConfigNodeDTO> configNodes) {
+    public void setPrometheusConfig(String envPromId, List<PrometheusConfigNodeDTO> configNodes,
+                                    List<String> delNodeIds) {
         // is Prometheus installed and normal operation
-        var promEnv = envMapper
-                .selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.PROMETHEUS));
+        var promEnv = envMapper.selectById(envPromId);
         if (promEnv == null) {
             throw new TipsException("prometheus not exists");
         }
         if (StrUtil.isBlank(promEnv.getPath())) {
-            throw new TipsException("prometheus installing");
+            throw new TipsException("prometheus not exists");
         }
         // get prometheus host and user
         var promeHost = hostFacade.getById(promEnv.getHostid());
         var promUser = hostUserFacade.listHostUserByHostId(promEnv.getHostid()).stream()
-                .filter(p -> p.getUsername().equals(promEnv.getUsername())).findFirst()
-                .orElseThrow(() -> new RuntimeException(
-                        "The node information corresponding to the host is not found"));
+            .filter(p -> p.getUsername().equals(promEnv.getUsername())).findFirst()
+            .orElseThrow(() -> new RuntimeException(
+                "The node information corresponding to the host is not found"));
 
         try (var promSession = SshSessionUtils.connect(promeHost.getPublicIp(), promeHost.getPort(),
-                promEnv.getUsername(),
-                encryptionUtils.decrypt(promUser.getPassword()));) {
+            promEnv.getUsername(), encryptionUtils.decrypt(promUser.getPassword()))) {
             // download Prometheus config file
             var promYmlStr = promSession
-                    .execute("cat " + promEnv.getPath() + CommonConstants.PROMETHEUS_YML);
+                .execute("cat " + promEnv.getPath() + CommonConstants.PROMETHEUS_YML);
             var conf = YamlUtils.loadAs(promYmlStr, PrometheusService.prometheusConfig.class);
 
+            if (CollectionUtil.isNotEmpty(delNodeIds)) {
+                for (String delNodeId : delNodeIds) {
+                    conf.getScrape_configs().removeIf(
+                        oldConfigs -> oldConfigs.getJob_name().contains(delNodeId)
+                    );
+                }
+            }
             // loop related nodes
             for (PrometheusConfigNodeDTO z : configNodes) {
                 String nodeId = z.getNodeId();
                 AgentNodeRelationDO agentNodeRelationDO = agentNodeRelationService.getOne(
-                        new LambdaQueryWrapper<AgentNodeRelationDO>()
-                                .eq(AgentNodeRelationDO::getNodeId, nodeId), false);
+                    new LambdaQueryWrapper<AgentNodeRelationDO>()
+                        .eq(AgentNodeRelationDO::getNodeId, nodeId), false);
                 if (agentNodeRelationDO == null) {
                     throw new TipsException("Agent node relation not found for node :" + nodeId);
                 }
 
                 NctigbaEnvDO evnNode = envMapper.selectOne(
-                        Wrappers.<NctigbaEnvDO>lambdaQuery()
-                                .eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.EXPORTER)
-                                .eq(NctigbaEnvDO::getId, agentNodeRelationDO.getEnvId()));
+                    Wrappers.<NctigbaEnvDO>lambdaQuery()
+                        .eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.EXPORTER)
+                        .eq(NctigbaEnvDO::getId, agentNodeRelationDO.getEnvId()));
                 if (evnNode == null) {
                     throw new TipsException("Agent not found for node and env:" + nodeId + " "
-                            + agentNodeRelationDO.getEnvId());
+                        + agentNodeRelationDO.getEnvId());
                 }
 
                 // get node info
@@ -303,7 +322,7 @@ public class CollectTemplateNodeServiceImpl
                 }
                 // remove old configs
                 conf.getScrape_configs().removeIf(
-                        oldConfigs -> oldConfigs.getJob_name().contains(nodeId)
+                    oldConfigs -> oldConfigs.getJob_name().contains(nodeId)
                 );
 
                 // new staticConfigs
@@ -322,7 +341,7 @@ public class CollectTemplateNodeServiceImpl
 
                     // set params
                     job.setParams(Map.of("name[]", detail.getMetricNames().toArray(new String[0]),
-                            "nodeId", new String[]{z.getNodeId()}));
+                        "nodeId", new String[]{z.getNodeId()}));
 
                     conf.getScrape_configs().add(job);
                 });
@@ -335,7 +354,7 @@ public class CollectTemplateNodeServiceImpl
             // upload
             promSession.execute("rm " + promEnv.getPath() + CommonConstants.PROMETHEUS_YML);
             promSession.upload(prometheusConfigFile.getCanonicalPath(),
-                    promEnv.getPath() + CommonConstants.PROMETHEUS_YML);
+                promEnv.getPath() + CommonConstants.PROMETHEUS_YML);
             Files.delete(prometheusConfigFile.toPath());
         } catch (IOException e) {
             throw new TipsException(e);
@@ -350,5 +369,25 @@ public class CollectTemplateNodeServiceImpl
         if ("Lifecycle API is not enabled.".equals(res)) {
             throw new TipsException("Lifecycle API is not enabled.");
         }
+    }
+
+    @Override
+    public void setNodePrometheusConfig(String nodeId, Integer templateId) {
+        // setPrometheusConfig
+        List<AgentNodeRelationDO> agentNodeRelList = agentNodeRelationService.list(
+            Wrappers.<AgentNodeRelationDO>lambdaQuery().eq(AgentNodeRelationDO::getNodeId, nodeId));
+        if (CollectionUtil.isEmpty(agentNodeRelList)) {
+            throw new CustomException("agent-node-relation not found!");
+        }
+        String envAgentId = agentNodeRelList.get(0).getEnvId();
+        List<PromAgentRelationDO> promAgentRelList = promAgentRelationMapper.selectList(
+            Wrappers.<PromAgentRelationDO>lambdaQuery().eq(PromAgentRelationDO::getEnvAgentId, envAgentId));
+        if (CollectionUtil.isEmpty(promAgentRelList)) {
+            throw new CustomException("prometheus-agent-relation not found!");
+        }
+        String envPromId = promAgentRelList.get(0).getEnvPromId();
+        List<PrometheusConfigNodeDTO> configNodes = getNodePrometheusConfigParam(
+            templateId, Arrays.asList(nodeId));
+        setPrometheusConfig(envPromId, configNodes, null);
     }
 }

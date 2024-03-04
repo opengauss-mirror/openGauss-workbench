@@ -227,8 +227,11 @@ watch(res, (res: any) => {
 </script>
 
 <style scoped lang="scss">
-.el-link.el-link--primary {
-  color: var(--primary-6) !important;
+.el-link.el-link--primary::not(.is-disabled){
+    color: var(--primary-6) !important;
+}
+.el-link.el-link--primary.is-disabled{
+    color: var(--primary-3) !important;
 }
 .el-button {
   color: var(--color-text-2) !important;
