@@ -276,7 +276,7 @@ const form = reactive({
   installType: INSTALL_TYPE.ONLINE,
   pkgDownloadUrl: '',
   pkgName: '',
-  jarName: '',
+  jarName: 'portalControl-1.0-SNAPSHOT-exec.jar',
   kafkaBindId: '',
   pkgUploadPath: {}
 })
@@ -327,7 +327,6 @@ watch(
       form.pkgDownloadUrl = ''
       form.pkgName = ''
       form.pkgUploadPath = {}
-      form.jarName = ''
       packageInfos.value = []
       upload.fileList = []
     }
@@ -342,7 +341,6 @@ watch(
     for (let i = 0; i < pkgInfos.length; i++) {
       if (pkgInfos[i].portalPkgName === form.pkgName) {
         form.pkgDownloadUrl = pkgInfos[i].portalPkgDownloadUrl
-        form.jarName = pkgInfos[i].portalJarName
       }
     }
   }
@@ -378,7 +376,6 @@ const getHostUsers = () => {
     }
     form.pkgDownloadUrl = props.installInfo?.pkgDownloadUrl || form.pkgDownloadUrl
     form.pkgName = props.installInfo?.pkgName || form.pkgName
-    form.jarName = props.installInfo?.jarName || form.jarName
   })
 }
 
