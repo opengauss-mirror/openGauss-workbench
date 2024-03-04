@@ -38,7 +38,7 @@
       <a-row>
         <a-form-item field="name" :label="$t('diskArray.diskArrayName')" validate-trigger="blur">
           <a-input
-            v-model="data.name"
+            v-model.trim="data.name"
             max-length="50"
             validate-trigger="blur"
             :placeholder="$t('diskArray.inputName')"
@@ -47,14 +47,14 @@
         </a-form-item>
         <a-form-item field="hostIp" :label="$t('diskArray.hostIp')" validate-trigger="blur">
           <a-input
-            v-model="data.hostIp"
+            v-model.trim="data.hostIp"
             :placeholder="$t('diskArray.inputHostIp')"
             max-length="20"
           ></a-input>
         </a-form-item>
         <a-form-item field="port" :label="$t('diskArray.port')" validate-trigger="blur">
           <a-input
-            v-model="data.port"
+            v-model.trim="data.port"
             :placeholder="$t('diskArray.inputPort')"
             @change="onConnectionFieldChange"
             max-length="10"
@@ -62,7 +62,7 @@
         </a-form-item>
         <a-form-item field="userName" :label="$t('diskArray.username')" validate-trigger="blur">
           <a-input
-            v-model="data.userName"
+            v-model.trim="data.userName"
             :placeholder="$t('diskArray.inputUsername')"
             @change="onConnectionFieldChange"
             max-length="50"
@@ -84,7 +84,7 @@
         </a-form-item>
         <a-form-item field="pairId" :label="$t('diskArray.pairId')" validate-trigger="blur">
           <a-input
-            v-model="data.pairId"
+            v-model.trim="data.pairId"
             :placeholder="$t('diskArray.inputPairId')"
             max-length="256"
           ></a-input>

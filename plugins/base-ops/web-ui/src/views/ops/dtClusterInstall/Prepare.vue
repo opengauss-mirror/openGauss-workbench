@@ -22,7 +22,7 @@
         <a-col :span="9">
           <a-form-item field="name" :label="$t('dtCluster.dtClusterName')" validate-trigger="blur">
             <a-input
-              v-model="dtCluster.name"
+              v-model.trim="dtCluster.name"
               :placeholder="$t('dtCluster.inputDtClusterName')"
             ></a-input> </a-form-item
         ></a-col>
