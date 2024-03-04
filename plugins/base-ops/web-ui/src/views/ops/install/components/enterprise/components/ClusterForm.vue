@@ -223,6 +223,7 @@ import { onMounted } from 'vue'
 import { reactive } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { DatabaseKernelArch, ConnectTypeEnum } from '@/types/ops/install'
+import { ILLEGAL_REGEXP } from '../constant'
 const { t } = useI18n()
 
 const installStore = useOpsStore()
@@ -267,8 +268,16 @@ const formRules = computed(() => {
             }
 
             if (value.length > 20) {
+              console.log("clusterId length = ", value.length)
               cb(t('enterprise.ClusterConfig.5mpm3ku3jro0'))
               resolve(false)
+              return
+            }
+
+            if (ILLEGAL_REGEXP.test(value)) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3juw0'))
+              resolve(false)
+              return
             }
             const param = {
               name: value
@@ -384,7 +393,20 @@ const formRules = computed(() => {
       }
     ],
     port: [
-      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3j300') }
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3j300') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            // 校验数据库端口
+            if (value < 1024 || value > 65529) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jux0'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
     ],
     databaseUsername: [
       { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3j9s0') },

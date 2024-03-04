@@ -149,7 +149,7 @@ const formRules = computed(() => {
             if (props.type === MODAL_TYPE.UPDATE) {
               resolve(true);
             } else {
-              const regExp = /[|;&$><`\\!\n]/;
+              const regExp = /[\"\'{}()\[\]^%|,;&$><`\\\-!\n]/;
               if (regExp.test(value)) {
                 resolve(false);
                 cb(t("diskArray.illegalCharacters"));
