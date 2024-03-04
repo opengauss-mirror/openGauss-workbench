@@ -579,8 +579,13 @@
             "5mpm3ku3jso0": "In Cluster installing, host Ip should be different",
             "5mpm3ku3jto0": "In Cluster installing, installed user should be the same",
             "5mpm3ku3joo0": "Installation Package Path must be different with Installation directory",
-            "5mpm3ku3jro0": "The length of Cluster ID cannot exceed 20 characters",
+            "5mpm3ku3jro0": "The length of this field cannot exceed 20 characters",
             "5mpm3ku3jwo0": "In Cluster installing, CM port should be the same",
+            "5mpm3ku3juo0": "In Cluster installing, database port and CM port must be different",
+            "5mpm3ku3juw0": "Cluster id contains illegal character",
+            "5mpm3ku3juy0": "This field cannot contain only numbers",
+            "5mpm3ku3jux0": "The port value is invalid, please input port in range 1024~65529",
+            "5mpm3ku3jyx0": "The CM port and the database port cannot be the same",
             "else1": "Please enter numbers, letters or underscores",
             "else2": "The value cannot be pure space",
             "else3": "Master",
@@ -626,7 +631,11 @@
             "error7": "CM voting volume path is empty",
             "error8": "LUN path can not be the same",
             "error9": "Xlog volume name and xlog volume path is not corresponding",
-            "error10": "The number of xlog volume names must be equal to 1 or equal to the number of nodes"
+            "error10": "The number of xlog volume names must be equal to 1 or equal to the number of nodes",
+            "error11": "Xlog volume name and Dss volume name must be different",
+            "error12": "When there are multiple xlog volume names, the xlog volume names cannot be the same",
+            "error13": "Dss home must be different with database install path"
+
         },
         "EnvMonitor": {
             "else1": "One environment test failed, it is recommended to process and try again",

@@ -171,6 +171,7 @@ import { useI18n } from 'vue-i18n'
 import { ClusterRoleEnum, DatabaseKernelArch, ConnectTypeEnum } from '@/types/ops/install'
 import { watch } from 'vue'
 import { isTemplateElement } from '@babel/types'
+import { ILLEGAL_REGEXP } from '../constant'
 const { t } = useI18n()
 
 
@@ -249,12 +250,30 @@ const formRules = computed(() => {
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
+            
             if (!value.trim()) {
               cb(t('enterprise.ClusterConfig.test3'))
               resolve(false)
-            } else {
-              resolve(true)
+            } 
+            
+            if (value.length > 20) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jro0'))
+              resolve(false)
             }
+
+            
+            if (ILLEGAL_REGEXP.test(value)) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3juw0'))
+              resolve(false)
+            }
+
+            const numberRegExp = /^\d+$/;
+            if (numberRegExp.test(value)) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3juw0'))
+              resolve(false)
+            }
+
+            resolve(true)
           })
         }
       }
@@ -282,9 +301,25 @@ const formRules = computed(() => {
             if (!value.trim()) {
               cb(t('enterprise.ClusterConfig.test7'))
               resolve(false)
-            } else {
-              resolve(true)
+            } 
+
+            if (value.length > 20) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jro0'))
+              resolve(false)
             }
+
+            if (ILLEGAL_REGEXP.test(value)) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3juw0'))
+              resolve(false)
+            }
+
+            const numberRegExp = /^\d+$/;
+            if (numberRegExp.test(value)) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3juw0'))
+              resolve(false)
+            }
+
+            resolve(true)
           })
         }
       }
@@ -379,6 +414,16 @@ const validateLunPath = async () => {
       result = false
   }
 
+  if (props.formData.dssHome === props.clusterData.cluster.installPath) {
+    formRef.value?.setFields({
+      dssHome: {
+          status: 'error',
+          message: t('enterprise.EnterpriseInstall.error13')
+        }
+      })
+      result = false
+  }
+
   props.formData.xlogLunPath.forEach((path, index) => {
     if (path === props.formData.dssDataLunPath || path === props.formData.cmSharingLunPath ||
         path === props.formData.cmVotingLunPath) {
@@ -411,6 +456,34 @@ const validateLunPath = async () => {
         }
       })
       result = false
+  }
+
+  for (let i = 0; i < xlogVgNames.length; ++i) {
+    // xlog卷名不能和dss卷名相同
+    if (xlogVgNames[i] === props.formData.dssVgName) {
+      formRef.value?.setFields({
+      xlogVgName: {
+          status: 'error',
+          message: t('enterprise.EnterpriseInstall.error11')
+        }
+      })
+      result = false
+    }
+  }
+
+  if (xlogVgNames.length > 1) {
+    for (let i = 1; i < xlogVgNames.length; ++i) {
+    // xlog卷名之间不能相同
+      if (xlogVgNames[i] === xlogVgNames[0]) {
+        formRef.value?.setFields({
+        xlogVgName: {
+            status: 'error',
+            message: t('enterprise.EnterpriseInstall.error12')
+          }
+        })
+        result = false
+      }
+    }
   }
   return result
 }

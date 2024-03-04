@@ -351,31 +351,47 @@ const beforeConfirm = async (): Promise<boolean> => {
     loadingFunc.toLoading()
 
     if (refList.value.length > 1 && data.form.nodes.length === refList.value.length) {
-      for (let i = 1; i < refList.value.length; i++) {
-        if (data.form.nodes[i].hostId === data.form.nodes[0].hostId) {
-          refList.value[i].userDefineValidate("hostId", t('enterprise.ClusterConfig.5mpm3ku3jso0'))
-          data.activeTab = data.form.nodes[i].id;
-          validRes = false
-        }
-
-        if (data.form.nodes[i].installUsername !== data.form.nodes[0].installUsername) {
-          refList.value[i].userDefineValidate("installUserId", t('enterprise.ClusterConfig.5mpm3ku3jto0'))
-          data.activeTab = data.form.nodes[i].id;
-          validRes = false
-        }
-
-        if (data.form.cluster.isInstallCM) {
-          if (data.form.nodes[i].cmPort !== data.form.nodes[0].cmPort) {
-            refList.value[i].userDefineValidate("cmPort", t('enterprise.ClusterConfig.5mpm3ku3jwo0'))
-            data.activeTab = data.form.nodes[i].id;
+      for (let i = 0; i < refList.value.length - 1; i++) {
+        for (let j = i + 1; j < refList.value.length; j++) {
+          // 校验各个节点host不能相同
+          if (data.form.nodes[i].hostId === data.form.nodes[j].hostId) {
+            refList.value[j].userDefineValidate("hostId", t('enterprise.ClusterConfig.5mpm3ku3jso0'))
+            data.activeTab = data.form.nodes[j].id;
             validRes = false
           }
-        }
 
+          // 校验各个节点username必须相同
+          if (data.form.nodes[i].installUsername !== data.form.nodes[j].installUsername) {
+            refList.value[j].userDefineValidate("installUserId", t('enterprise.ClusterConfig.5mpm3ku3jto0'))
+            data.activeTab = data.form.nodes[j].id;
+            validRes = false
+          }
+
+          // 校验各个节点cm port不能相同
+          if (data.form.cluster.isInstallCM) {
+            if (data.form.nodes[i].cmPort !== data.form.nodes[j].cmPort) {
+              refList.value[j].userDefineValidate("cmPort", t('enterprise.ClusterConfig.5mpm3ku3jwo0'))
+              data.activeTab = data.form.nodes[j].id;
+              validRes = false
+            }
+          }
+        }
+      }
+
+      if (data.form.cluster.isInstallCM) {
+        console.log("data.form.node = ", data.form.nodes, data.form.cluster.port)
+        for (let i = 0; i < refList.value.length; i++)   {
+            // cm port和 database port不能相同
+            if (data.form.nodes[i].cmPort === data.form.cluster.port) {
+              refList.value[i].userDefineValidate("cmPort", t('enterprise.ClusterConfig.5mpm3ku3jyx0'))
+              data.activeTab = data.form.nodes[i].id;
+              validRes = false
+            }
+        }       
       }
     }
-  }
 
+  }
   // valid nodes form
   if (validRes) {
     const methodArr = []
@@ -419,6 +435,7 @@ const beforeConfirm = async (): Promise<boolean> => {
     loadingFunc.cancelLoading()
     return true
   }
+
   loadingFunc.cancelLoading()
   return false
 }

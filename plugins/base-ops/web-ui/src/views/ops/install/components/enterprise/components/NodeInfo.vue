@@ -204,7 +204,20 @@ const formRules = computed(() => {
     ],
     installUserId: [{ required: true, 'validate-trigger': 'change', message: t('enterprise.NodeConfig.5mpme7w6c5g0') }],
     cmPort: [
-      { required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6bko0') }
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6bko0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            // 校验CM端口
+            if (value < 1024 || value > 65529) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jux0'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
     ],
     cmDataPath: [
       { required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6c8s0') },
