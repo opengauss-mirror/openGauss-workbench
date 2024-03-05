@@ -23,6 +23,17 @@
 
 package com.nctigba.observability.log.config;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.ElasticsearchTransport;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
+import com.nctigba.observability.log.mapper.NctigbaEnvMapper;
+import com.nctigba.observability.log.model.entity.NctigbaEnvDO;
+import com.nctigba.observability.log.model.entity.NctigbaEnvDO.InstallType;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -36,53 +47,53 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.stereotype.Component;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
-import com.nctigba.observability.log.model.entity.NctigbaEnvDO;
-import com.nctigba.observability.log.model.entity.NctigbaEnvDO.type;
-import com.nctigba.observability.log.mapper.NctigbaEnvMapper;
-
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.json.jackson.JacksonJsonpMapper;
-import co.elastic.clients.transport.ElasticsearchTransport;
-import co.elastic.clients.transport.rest_client.RestClientTransport;
-
 @Component
+@Slf4j
 @EnableCaching
 public class ElasticsearchProvider {
-	@Autowired
-	private NctigbaEnvMapper envMapper;
-	@Autowired
-	@AutowiredType(Type.PLUGIN_MAIN)
-	private HostFacade hostFacade;
+    @Autowired
+    private NctigbaEnvMapper envMapper;
+    @Autowired
+    @AutowiredType(Type.PLUGIN_MAIN)
+    private HostFacade hostFacade;
 
-	@Cacheable(cacheNames = "elastic-clients")
-	public ElasticsearchClient client() {
-		var env = envMapper.selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, type.ELASTICSEARCH));
-		var host = hostFacade.getById(env.getHostid());
-		// Split ip when clustering
-		HttpHost[] httpHosts = { new HttpHost(host.getPublicIp(), env.getPort()) };
+    /**
+     * Elasticsearch clients
+     *
+     * @return ElasticsearchClient
+     */
+    @Cacheable(cacheNames = "elastic-clients")
+    public ElasticsearchClient client() {
+        var env = envMapper.selectOne(
+                Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, InstallType.ELASTICSEARCH));
+        var host = hostFacade.getById(env.getHostid());
+        // Split ip when clustering
+        HttpHost[] httpHosts = {new HttpHost(host.getPublicIp(), env.getPort())};
 
-		// Account and password authentication
-		final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-		credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("elastic", "changeme"));
+        // Account and password authentication
+        final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("elastic", "changeme"));
 
-		// Create the low-level client
-		RestClient restClient = RestClient.builder(httpHosts)
-				.setHttpClientConfigCallback(
-						httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider))
-				.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder.setConnectTimeout(100000).setSocketTimeout(100000))
-				.build();
+        // Create the low-level client
+        RestClient restClient = RestClient.builder(httpHosts)
+                .setHttpClientConfigCallback(
+                        httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider))
+                .setRequestConfigCallback(
+                        requestConfigBuilder -> requestConfigBuilder.setConnectTimeout(100000).setSocketTimeout(100000))
+                .build();
 
-		// Create the transport with a Jackson mapper
-		ElasticsearchTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
+        // Create the transport with a Jackson mapper
+        ElasticsearchTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
 
-		// And create the API client
-		return new ElasticsearchClient(transport);
-	}
+        // And create the API client
+        return new ElasticsearchClient(transport);
+    }
 
-	@CacheEvict(cacheNames = "elastic-clients")
-	public void clear() {
-	}
+    /**
+     * Clear cache
+     */
+    @CacheEvict(cacheNames = "elastic-clients")
+    public void clear() {
+        log.info("clear cache");
+    }
 }

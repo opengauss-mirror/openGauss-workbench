@@ -56,7 +56,7 @@ do
             shift
             ;;
         --cmLogPath)
-            sed -i 's#/opt/openGauss/log/omm/omm#'$2'#g' module/opengauss/**/manifest.yml
+            sed -i 's#/opt/openGauss/log/omm/omm/cm#'$2'#g' module/opengauss/**/manifest.yml
             shift
             ;;
 	--)

@@ -84,7 +84,7 @@
                     <span>{{ t('install.downloadSuggest') }}：</span><el-link :href="formData.url">{{ formData.url }}</el-link>
                 </div>
 
-                <el-upload v-model:file-list="fileList" drag :http-request="upload" :limit="1" :show-file-list="true" :on-exceed="handleExceed" :before-upload="uploadBefore">
+                <el-upload ref="uploadFile" v-model:file-list="fileList" drag :http-request="upload" :show-file-list="true" :on-exceed="handleExceed" :before-upload="uploadBefore">
                     <el-icon class="el-icon--upload"><plus /></el-icon>
                     <div class="el-upload__text">{{ t('install.uploadInfo') }}</div>
                 </el-upload>
@@ -153,6 +153,7 @@ const connectionFormRules = reactive<FormRules>({
     nodeId: [{ required: true, message: t("install.collectorRules[0]"), trigger: "blur" }],
     // rootPassword: [{ required: true, message: t("install.collectorRules[1]"), trigger: "blur" }],
     ogRunLogPath: [{ required: true, message: t("install.collectorRules[2]"), trigger: "blur" }],
+    cmLogPath: [{ required: true, message: t("install.collectorRules[8]"), trigger: "blur" }]
 });
 // cluster component
 const handleClusterValue = (val: any) => {
@@ -170,7 +171,8 @@ const getLogPath = (nodeId: string) => {
         nodeId
     }).then(res => {
         if(res) {
-            formData.ogRunLogPath = res;
+            formData.ogRunLogPath = res.ogRunLogPath;
+            formData.cmLogPath = res.cmLogPath;
         }
     })
 }
@@ -271,7 +273,7 @@ const onWebSocketMessage = (data: Array<any>) => {
 // action
 const back = () => {
     started.value = false;
-    dialogWith.value = '800px';
+    dialogWith.value = '500px';
     ws.instance.close();
     installData.value = [];
 };
@@ -321,8 +323,6 @@ const getInstallPath = () => {
     })
 }
 
-
-
 const showUpload = ref<boolean>(false);
 const fileList = ref<any[]>();
 const pgkName = ref<string>();
@@ -341,6 +341,7 @@ const showUploadFile = (_type: string, _pgkName: string) => {
     showUpload.value = true;
     pgkName.value = _pgkName;
 };
+const uploadFile = ref()
 const DEFAULT_SIZE = 15 * 1024 * 2024;
 const fileTotalSize = ref<number>(0);
 const chunkCurNum = ref<number>(0);
@@ -482,7 +483,18 @@ const retryUpload = async() => {
 const handleExceed: UploadProps['onExceed'] = (files, uploadFiles) => {
     fileList.value = files;
 };
-const uploadBefore = () => {
+const uploadBefore = (file: UploadRawFile) => {
+    let index = formData.pkg.indexOf(".tar.gz")
+    let startStr = formData.pkg.substring(0, index)
+    let endStr = formData.pkg.substring(index)
+    if (!file.name.startsWith(startStr) || !file.name.endsWith(endStr)) {
+        ElMessage({
+            message: t('install.fileMismatch') + formData.pkg,
+            type: 'error',
+        }); 
+        return false;
+    }
+    uploadFile.value.clearFiles()
     fileList.value = [];
     return true;
 };
