@@ -51,4 +51,9 @@ public class ThresholdConstants {
      * Swap in/out
      */
     public static final String SWAP_NUM = "swapNum";
+
+    /**
+     * Random Page Cost
+     */
+    public static final String RANDOM_PAGE_COST = "randomPageCost";
 }

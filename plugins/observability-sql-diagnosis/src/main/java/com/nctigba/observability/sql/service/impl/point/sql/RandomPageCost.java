@@ -24,12 +24,14 @@
 package com.nctigba.observability.sql.service.impl.point.sql;
 
 import com.nctigba.observability.sql.constant.SqlConstants;
+import com.nctigba.observability.sql.constant.ThresholdConstants;
 import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.DiagnosisResultMapper;
 import com.nctigba.observability.sql.mapper.DiagnosisTaskMapper;
 import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
 import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
 import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
+import com.nctigba.observability.sql.model.entity.DiagnosisThresholdDO;
 import com.nctigba.observability.sql.model.vo.AutoShowDataVO;
 import com.nctigba.observability.sql.model.vo.collection.DatabaseVO;
 import com.nctigba.observability.sql.model.vo.point.ShowData;
@@ -55,8 +57,6 @@ import java.util.List;
  */
 @Service
 public class RandomPageCost implements DiagnosisPointService<AutoShowDataVO> {
-    private static final String THRESHOLD_VALUE = "1.5";
-
     @Autowired
     private RandomPageCostItem item;
     @Autowired
@@ -84,6 +84,16 @@ public class RandomPageCost implements DiagnosisPointService<AutoShowDataVO> {
 
     @Override
     public AnalysisDTO analysis(DiagnosisTaskDO task, DataStoreService dataStoreService) {
+        HashMap<String, String> thresholdMap = new HashMap<>();
+        List<DiagnosisThresholdDO> thresholds = task.getThresholds();
+        for (DiagnosisThresholdDO threshold : thresholds) {
+            if (threshold.getThreshold().equals(ThresholdConstants.RANDOM_PAGE_COST)) {
+                thresholdMap.put(threshold.getThreshold(), threshold.getThresholdValue());
+            }
+        }
+        if (thresholdMap.isEmpty()) {
+            throw new HisDiagnosisException("fetch threshold data failed!");
+        }
         List<?> list = (List<?>) dataStoreService.getData(item).getCollectionData();
         List<DatabaseVO> databaseVOList = new ArrayList<>();
         list.forEach(data -> {
@@ -99,7 +109,7 @@ public class RandomPageCost implements DiagnosisPointService<AutoShowDataVO> {
         mapList.forEach(data -> {
             if (data instanceof HashMap) {
                 HashMap<?, ?> map = (HashMap<?, ?>) data;
-                if (!THRESHOLD_VALUE.equals(map.get("setting"))) {
+                if (!thresholdMap.get(ThresholdConstants.RANDOM_PAGE_COST).equals(map.get("setting"))) {
                     analysisDTO.setIsHint(DiagnosisResultDO.ResultState.SUGGESTIONS);
                 }
             }

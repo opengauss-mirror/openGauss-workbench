@@ -34,6 +34,9 @@ export const routes: RouteRecordRaw[] = [
           keepAlive: true,
           breadcrumb: ['app.menuName'],
         },
+        props: {
+          diagnosisType: 'history',
+        },
       },
       {
         path: '/vem/diagnosisTaskDetail/:id',

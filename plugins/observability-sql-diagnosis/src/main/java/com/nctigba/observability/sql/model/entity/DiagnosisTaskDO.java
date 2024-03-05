@@ -114,6 +114,8 @@ public class DiagnosisTaskDO {
     @TableField(value = "update_time", fill = FieldFill.UPDATE)
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
     Date updateTime = new Date();
+    @TableField("collect_pid_status")
+    Integer collectPidStatus;
 
     /**
      * Construction method

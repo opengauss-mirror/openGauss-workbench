@@ -24,7 +24,7 @@
 package com.nctigba.observability.sql.service;
 
 import com.nctigba.observability.sql.model.entity.DiagnosisThresholdDO;
-import com.nctigba.observability.sql.model.query.ThresholdQuery;
+import com.nctigba.observability.sql.model.dto.ThresholdUpdateDTO;
 
 import java.util.HashMap;
 import java.util.List;
@@ -45,18 +45,11 @@ public interface ThresholdService {
     List<DiagnosisThresholdDO> select(String diagnosisType);
 
     /**
-     * Insert or update threshold
+     * Update threshold
      *
-     * @param thresholdQuery Threshold data
+     * @param thresholdUpdateDTO Threshold data
      */
-    void insertOrUpdate(ThresholdQuery thresholdQuery);
-
-    /**
-     * Delete threshold
-     *
-     * @param id Primary key
-     */
-    void delete(int id);
+    void setThreshold(ThresholdUpdateDTO thresholdUpdateDTO);
 
     /**
      * Obtain the threshold value by the threshold name

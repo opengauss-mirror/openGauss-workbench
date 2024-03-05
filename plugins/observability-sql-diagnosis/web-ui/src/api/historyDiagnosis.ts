@@ -18,9 +18,21 @@ export type Threshold = {
   thresholdType: string
 }
 export async function getThresholds(diagnosisType: string): Promise<Threshold[]> {
-  return restRequest.get('/historyDiagnosis/api/v2/thresholds', {
+  return restRequest.get('/thresholds/api/v2/thresholds', {
     diagnosisType: diagnosisType !== undefined ? diagnosisType : 'history',
   })
+}
+
+export type ThresholdItem = {
+  thresholdKey: string
+  thresholdValue: string
+}
+export type ThresholdGlobalSetting = {
+  diagnosisType: string
+  thresholds: ThresholdItem[]
+}
+export async function setThresholds(data: ThresholdGlobalSetting): Promise<Boolean> {
+  return restRequest.post('/thresholds/api/v1/thresholds/action?action=setGlobalThresholds', data)
 }
 
 export interface DiagnosisParamConfig {
@@ -34,12 +46,17 @@ export interface DiagnosisParamThreshold {
 export interface DiagnosisParam {
   nodeId: string
   diagnosisType: string
-  hisDataStartTime: string
+  hisDataStartTime: string | null
   hisDataEndTime: string | null
+  dbName: string | null
+  clusterId: string | null
+  taskName: string | null
+  sql: string | null
+  sqlId: string | null
   configs: DiagnosisParamConfig[]
   thresholds: DiagnosisParamThreshold[]
 }
-export async function addTask(param: DiagnosisParam): Promise<Threshold[]> {
+export async function addTask(param: DiagnosisParam): Promise<any> {
   if (param.diagnosisType === undefined) param.diagnosisType = 'history'
   return restRequest.post('/historyDiagnosis/api/v2/tasks', param)
 }

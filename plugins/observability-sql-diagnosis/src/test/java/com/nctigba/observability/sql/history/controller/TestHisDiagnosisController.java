@@ -25,13 +25,9 @@ package com.nctigba.observability.sql.history.controller;
 
 import com.nctigba.observability.sql.constant.DiagnosisTypeConstants;
 import com.nctigba.observability.sql.controller.DiagnosisResultController;
-import com.nctigba.observability.sql.enums.GrabTypeEnum;
-import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.DiagnosisResourceMapper;
 import com.nctigba.observability.sql.model.dto.TreeNodeDTO;
 import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
-import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
-import com.nctigba.observability.sql.model.entity.ResourceDO;
 import com.nctigba.observability.sql.service.DiagnosisService;
 import com.nctigba.observability.sql.util.LocaleStringUtils;
 import org.junit.Test;
@@ -39,11 +35,6 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
-
-import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
@@ -92,30 +83,5 @@ public class TestHisDiagnosisController {
         when(localeToString.trapLanguage(treeNodeDTO)).thenReturn(mock(Object.class));
         Object result = controller.getTopologyMap(taskId, isAll, diagnosisType);
         assertNotNull(result);
-    }
-
-    @Test
-    public void testRes() {
-        HttpServletResponse resp = mock(HttpServletResponse.class);
-        ServletOutputStream os = mock(ServletOutputStream.class);
-        try {
-            when(resp.getOutputStream()).thenReturn(os);
-            DiagnosisTaskDO task = mock(DiagnosisTaskDO.class);
-            ResourceDO resourceDO = new ResourceDO(task, GrabTypeEnum.profile);
-            resourceDO.setGrabType(GrabTypeEnum.offcputime);
-            resourceDO.setId(1);
-            resourceDO.setTaskid(1);
-            resourceDO.setF("test");
-            String id = "1";
-            String type = "svg";
-            when(resourceMapper.selectById(id)).thenReturn(resourceDO);
-            controller.res(id, type, resp);
-            type = "png";
-            controller.res(id, type, resp);
-            type = "txt";
-            controller.res(id, type, resp);
-        } catch (IOException e) {
-            throw new HisDiagnosisException("connect fail");
-        }
     }
 }

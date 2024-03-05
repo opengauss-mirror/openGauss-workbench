@@ -161,7 +161,7 @@ public class OsLoad implements DiagnosisPointService<Object> {
                 dataList.add(data[2]);
             }
         } catch (IOException | ParseException e) {
-            throw new CustomException("sarQ:", e);
+            throw new CustomException("sarQ:" + e.getMessage());
         }
         ChartVO chartVO = new ChartVO();
         chartVO.setDataList(dataList);

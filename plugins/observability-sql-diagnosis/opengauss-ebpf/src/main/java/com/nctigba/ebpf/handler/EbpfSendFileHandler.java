@@ -43,76 +43,74 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class EbpfSendFileHandler {
-
     @Autowired
     UrlConfig urlConfig;
 
-
     /**
-     * data sendFile
+     * Monitor data sendFile
      *
-     * @param taskid taskid
-     * @param monitorType monitorType
+     * @param taskId      String
+     * @param monitorType String
      */
-    public void sendFile(String taskid, String monitorType) {
-        FileSystemResource file = null;
+    public void sendFile(String taskId, String monitorType) {
+        FileSystemResource file;
         HTTPUtils httpUtils = new HTTPUtils();
         String outputUrl = System.getProperty("user.dir") + "/output/";
         String httpUrl = urlConfig.getHttpUrl();
-        String url = httpUrl.substring(0, httpUrl.lastIndexOf(CommonConstants.SLASH) + 1) + taskid + httpUrl.substring(
+        String url = httpUrl.substring(0, httpUrl.lastIndexOf(CommonConstants.SLASH) + 1) + taskId + httpUrl.substring(
                 httpUrl.lastIndexOf(CommonConstants.SLASH));
         try {
             if (EbpfTypeConstants.PROFILE.equals(monitorType) || EbpfTypeConstants.OFFCPUTIME.equals(monitorType)
                     || EbpfTypeConstants.MEMLEAK.equals(monitorType)) {
-                if (new FileSystemResource(outputUrl + taskid + monitorType + FileTypeConstants.STACKS).contentLength()
-                        >= 1) {
-                    file = new FileSystemResource(outputUrl + taskid + monitorType + FileTypeConstants.SVG);
-                }
+                file = new FileSystemResource(outputUrl + taskId + monitorType + FileTypeConstants.SVG);
             } else {
-                file = new FileSystemResource(outputUrl + taskid + monitorType + FileTypeConstants.DEFAULT);
+                file = new FileSystemResource(outputUrl + taskId + monitorType + FileTypeConstants.DEFAULT);
             }
             boolean isFinish = httpUtils.httpUrlPost(url, file, monitorType);
+            log.info(monitorType + " is finish.");
             if (isFinish) {
-                if (file != null && file.exists()) {
-                    file.getFile().delete();
+                if (file.exists()) {
+                    boolean isSuccess = file.getFile().delete();
+                    log.info(file.getFilename() + " is delete:" + isSuccess);
                 }
                 if (EbpfTypeConstants.PROFILE.equals(monitorType) || EbpfTypeConstants.MEMLEAK.equals(monitorType)
                         || EbpfTypeConstants.OFFCPUTIME.equals(monitorType)) {
                     FileSystemResource stackFile = new FileSystemResource(
-                            outputUrl + taskid + monitorType + FileTypeConstants.STACKS);
+                            outputUrl + taskId + monitorType + FileTypeConstants.STACKS);
                     if (stackFile.exists()) {
-                        stackFile.getFile().delete();
+                        boolean isSuccess = stackFile.getFile().delete();
+                        log.info(stackFile.getFilename() + " is delete:" + isSuccess);
                     }
                 }
             }
         } catch (Exception e) {
-            throw new RuntimeException("fail to open file!");
+            log.error("failed:" + e.getMessage());
         }
     }
 
     /**
-     * data createSvg
+     * Convert data to SVG format
      *
-     * @param taskid taskid
-     * @param monitorType monitorType
+     * @param taskId      String
+     * @param monitorType String
      */
-    public void createSvg(String taskid, String monitorType) {
+    public void createSvg(String taskId, String monitorType) {
         String svgcmd = null;
         OSUtils osUtils = new OSUtils();
         String ebpfUrl = System.getProperty("user.dir") + "/output/";
         String fgUrl = urlConfig.getFgUrl();
         if (EbpfTypeConstants.PROFILE.equals(monitorType)) {
             svgcmd = "cd " + fgUrl + " &&./flamegraph.pl --title='On-CPU Time' "
-                    + ebpfUrl + taskid + monitorType + FileTypeConstants.STACKS + " > " + ebpfUrl + taskid + monitorType
+                    + ebpfUrl + taskId + monitorType + FileTypeConstants.STACKS + " > " + ebpfUrl + taskId + monitorType
                     + FileTypeConstants.SVG;
         } else if (EbpfTypeConstants.OFFCPUTIME.equals(monitorType)) {
             svgcmd = "cd " + fgUrl + " &&./flamegraph.pl --colors=io --title='Off-CPU Time' "
-                    + ebpfUrl + taskid + monitorType + FileTypeConstants.STACKS + " > " + ebpfUrl + taskid + monitorType
+                    + ebpfUrl + taskId + monitorType + FileTypeConstants.STACKS + " > " + ebpfUrl + taskId + monitorType
                     + FileTypeConstants.SVG;
         } else if (EbpfTypeConstants.MEMLEAK.equals(monitorType)) {
             svgcmd = "cd " + fgUrl
                     + " &&./flamegraph.pl --colors=mem --title='malloc() bytes Flame Graph' --countname=bytes "
-                    + ebpfUrl + taskid + monitorType + FileTypeConstants.STACKS + " > " + ebpfUrl + taskid + monitorType
+                    + ebpfUrl + taskId + monitorType + FileTypeConstants.STACKS + " > " + ebpfUrl + taskId + monitorType
                     + FileTypeConstants.SVG;
         }
         osUtils.exec(svgcmd);

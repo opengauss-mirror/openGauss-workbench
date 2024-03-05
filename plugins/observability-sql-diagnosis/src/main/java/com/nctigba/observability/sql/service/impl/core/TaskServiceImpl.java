@@ -58,6 +58,7 @@ import com.nctigba.observability.sql.service.DiagnosisPointService;
 import com.nctigba.observability.sql.service.TaskService;
 import com.nctigba.observability.sql.service.impl.ClusterManager;
 import com.nctigba.observability.sql.service.impl.collection.ebpf.EbpfCollectionItem;
+import com.nctigba.observability.sql.util.EbpfUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -115,6 +116,8 @@ public class TaskServiceImpl implements TaskService {
     private NctigbaEnvMapper envMapper;
     @Autowired
     private ParamInfoMapper paramInfoMapper;
+    @Autowired
+    private EbpfUtils ebpfUtils;
 
     @Override
     public Integer add(DiagnosisTaskDTO taskDTO) {
@@ -240,6 +243,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void start(int taskId) {
         DiagnosisTaskDO task = taskMapper.selectById(taskId);
+        ebpfUtils.record(task);
         task.setTaskStartTime(new Date());
         task.addRemarks("start running diagnosis");
         taskMapper.updateById(task);
@@ -413,9 +417,10 @@ public class TaskServiceImpl implements TaskService {
                             if (!"DatabaseParam".equals(pointName)) {
                                 DiagnosisResultDO result = new DiagnosisResultDO(
                                         task, analysisDTO, pointName, DiagnosisResultDO.PointState.SUCCEED);
-                                resultMapper.update(result, Wrappers.<DiagnosisResultDO>lambdaQuery().eq(
-                                                DiagnosisResultDO::getTaskId, result.getTaskId())
-                                        .eq(DiagnosisResultDO::getPointName, pointName));
+                                resultMapper.update(
+                                        result, Wrappers.<DiagnosisResultDO>lambdaQuery().eq(
+                                                        DiagnosisResultDO::getTaskId, result.getTaskId())
+                                                .eq(DiagnosisResultDO::getPointName, pointName));
                             }
                         } catch (Exception e) {
                             task.addRemarks("stop analysis " + pointName);
@@ -646,24 +651,36 @@ public class TaskServiceImpl implements TaskService {
         boolean isExplain = explainBeforeStart(task) || task.getSessionId() == 0L;
         HashMap<CollectionItem<?>, Integer> hashMap = getCollectionMap(options, isExplain);
         storeCollectionData(task, rsList, hashMap);
+        ExecutorService executor = ThreadUtil.newExecutor();
         for (DiagnosisPointService<?> pointService : pointServiceList) {
-            String pointName = getClassName(pointService);
-            List<String> option = pointService.getOption();
-            boolean isRun = isRun(option, options);
-            if (!CollectionUtils.isEmpty(option) && String.valueOf(OptionEnum.IS_EXPLAIN).equals(option.get(0))) {
-                task.addRemarks("start analysis:" + pointName);
-                if (!isExplain) {
-                    updateExplainChildNode(task, DiagnosisResultDO.PointState.NOT_SATISFIED_DIAGNOSIS);
-                    updateExplainRelatedNode(pointName, task, DiagnosisResultDO.PointState.NOT_SATISFIED_DIAGNOSIS);
-                } else if (isRun) {
-                    updateExplainChildNode(task, DiagnosisResultDO.PointState.NOT_MATCH_OPTION);
-                    updateExplainRelatedNode(pointName, task, DiagnosisResultDO.PointState.NOT_MATCH_OPTION);
-                } else {
-                    updateExplainChildNode(task, DiagnosisResultDO.PointState.SUCCEED);
-                    explainAnalysis(pointService, task, pointName);
+            executor.execute(() -> {
+                String pointName = getClassName(pointService);
+                List<String> option = pointService.getOption();
+                boolean isRun = isRun(option, options);
+                if (!CollectionUtils.isEmpty(option) && String.valueOf(OptionEnum.IS_EXPLAIN).equals(option.get(0))) {
+                    task.addRemarks("start analysis:" + pointName);
+                    if (!isExplain) {
+                        updateExplainChildNode(task, DiagnosisResultDO.PointState.NOT_SATISFIED_DIAGNOSIS);
+                        updateExplainRelatedNode(pointName, task, DiagnosisResultDO.PointState.NOT_SATISFIED_DIAGNOSIS);
+                    } else if (isRun) {
+                        updateExplainChildNode(task, DiagnosisResultDO.PointState.NOT_MATCH_OPTION);
+                        updateExplainRelatedNode(pointName, task, DiagnosisResultDO.PointState.NOT_MATCH_OPTION);
+                    } else {
+                        updateExplainChildNode(task, DiagnosisResultDO.PointState.SUCCEED);
+                        explainAnalysis(pointService, task, pointName);
+                    }
+                    task.addRemarks("stop analysis:" + pointName);
                 }
-                task.addRemarks("stop analysis:" + pointName);
+            });
+        }
+        executor.shutdown();
+        try {
+            boolean isFinish = executor.awaitTermination(5, TimeUnit.MINUTES);
+            if (isFinish) {
+                task.addRemarks("analysis finish");
             }
+        } catch (InterruptedException e) {
+            throw new HisDiagnosisException("Exception:" + e);
         }
         dataStoreService.clearData();
         task.addRemarks("***end analysis explain***");

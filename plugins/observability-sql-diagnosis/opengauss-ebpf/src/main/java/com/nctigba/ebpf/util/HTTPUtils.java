@@ -34,7 +34,14 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
 
 /**
  * http util
@@ -47,12 +54,52 @@ public class HTTPUtils {
     /**
      * http httpUrlPost
      *
-     * @param url file url
-     * @param file file
-     * @param type file type
+     * @param url  String
+     * @param file FileSystemResource
+     * @param type String
      * @return boolean
      */
-    public boolean httpUrlPost(String url, FileSystemResource file, String type) {
+    public boolean httpUrlPost(String url, FileSystemResource file,
+            String type) {
+        TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+            /**
+             * Get accepted issuers
+             *
+             * @return X509Certificate
+             */
+            public X509Certificate[] getAcceptedIssuers() {
+                return new X509Certificate[0];
+            }
+
+            /**
+             * Check client trusted
+             *
+             * @param certs  X509Certificate
+             * @param authType String
+             */
+            public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                log.info("Check client trusted");
+            }
+
+            /**
+             * Check server trusted
+             *
+             * @param certs  X509Certificate
+             * @param authType String
+             */
+            public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                log.info("Check server trusted");
+            }
+        }};
+        SSLContext sc = null;
+        try {
+            sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            log.error(e.getMessage());
+        }
+        HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+        HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
         final RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -65,28 +112,9 @@ public class HTTPUtils {
             log.info(type + ":" + response.getStatusCode() + ":" + response.getBody() + ":" + file.contentLength());
             return true;
         } catch (IOException e) {
-            log.info(e.getMessage());
+            log.error(e.getMessage());
             return true;
         }
-    }
-
-    /**
-     * http httpUrlPost
-     *
-     * @param url data url
-     * @param data data
-     * @param type data type
-     */
-    public void httpsSendDate(String url, String data, String type) {
-        final RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        MultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
-        map.add("type", type);
-        map.add("data", data);
-        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(map, headers);
-        ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
-        log.info(response.getStatusCode() + ":" + response.getBody() + ":" + data);
     }
 }
 

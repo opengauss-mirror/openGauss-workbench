@@ -60,6 +60,7 @@ export default defineConfig(({ command, mode }) => {
       proxy: {
         '^/sqlDiagnosis': 'http://192.168.110.31:9494/plugins/observability-sql-diagnosis',
         '^/historyDiagnosis': 'http://192.168.110.31:9494/plugins/observability-sql-diagnosis',
+        '^/thresholds': 'http://192.168.110.31:9494/plugins/observability-sql-diagnosis',
         '^/observability': 'http://192.168.110.31:9494/plugins/observability-instance',
         '^/encryption': 'http://192.168.110.31:9494',
       },

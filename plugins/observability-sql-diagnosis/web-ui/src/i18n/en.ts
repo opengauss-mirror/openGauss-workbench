@@ -25,6 +25,7 @@ export default {
     lastThreeHour: 'Last 3 hour',
     lastSixHour: 'Last 6 hour',
     cluterTitle: 'Cluster/Instance:',
+    saveSuccess: 'Save succeed！',
   },
   sqlDiagnosisPoints: {
     referSQL: 'Optimized Reference SQL',
@@ -388,8 +389,8 @@ export default {
       sessionId: 'Session ID',
       blockSessionID: 'Block Session ID',
       startTime: 'Start Time',
-      endTime: 'End Time'
-    }
+      endTime: 'End Time',
+    },
   },
   datasource: {
     paramAnalysis: 'Parameter diagnosis',
@@ -418,7 +419,7 @@ export default {
     detail: 'Slow Log Detail',
     ebpf: 'EBPF',
     track: 'SQL track',
-    addTrBtn: 'Create a task',
+    addTrBtn: 'New',
     searchPlaceholder: 'Task name or task type or SQL',
     addTaTitle: 'Add track task',
     trackDetail: 'Task detail',
@@ -664,8 +665,24 @@ export default {
     callbackPath: 'callback path',
     proxyRules: ['choose the machine please', 'input the password of root please', 'input the proxy port please'],
     collectorRules: ['choose the instance please', 'input the password of root please'],
+    start: 'start',
+    stop: 'stop',
+    restart: 'restart',
+    startSuccess: 'Start success',
+    startFail: 'Start failure',
+    stopSuccess: 'Stop success',
+    stopFail: 'Stop failure',
+    status: {
+      normal: 'Running',
+      unknown: 'Unknown',
+      starting: 'Starting',
+      stopping: 'Stopping',
+      manualStop: 'Manually Stopped',
+      errorThreadNotExists: 'Exception: Thread does not exist',
+      errorProgramUnhealthy: 'Exception: Program is unhealthy',
+    },
   },
   histroyDiagnosis: {
-    menuName: '历史数据诊断',
+    menuName: 'Historical Data Diagnostics',
   },
 }

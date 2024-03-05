@@ -24,11 +24,11 @@
 package com.nctigba.ebpf.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
-import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 
 
@@ -39,12 +39,13 @@ import java.nio.charset.Charset;
  * @since 2022/12/06 11:30
  */
 @Slf4j
+@Component
 public class OSUtils {
-
     /**
-     * exec os cmd
+     * Exec os cmd
      *
-     * @param cmd os cmd
+     * @param cmd String
+     * @return Object
      */
     public Object exec(String cmd) {
         try {
@@ -66,22 +67,16 @@ public class OSUtils {
     }
 
     /**
-     * exec os cmd
+     * Exec os cmd
      *
-     * @param cmd os cmd
+     * @param cmd String
      */
-    public String execCmd(String cmd) {
+    public void execCmd(String cmd) {
         try {
             String[] cmdA = {"/bin/sh", "-c", cmd};
-            Process process = Runtime.getRuntime().exec(cmdA);
-            Field pid = process.getClass().getDeclaredField("pid");
-            pid.setAccessible(true);
-
-
-            return String.valueOf(pid.getInt(process));
-        } catch (IOException | SecurityException | NullPointerException | IndexOutOfBoundsException | NoSuchFieldException | IllegalAccessException e) {
+            Runtime.getRuntime().exec(cmdA);
+        } catch (IOException | SecurityException | NullPointerException | IndexOutOfBoundsException e) {
             log.info(e.getMessage());
-            return "exec fail!";
         }
     }
 }

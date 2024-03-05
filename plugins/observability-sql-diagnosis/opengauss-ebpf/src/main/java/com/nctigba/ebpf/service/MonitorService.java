@@ -13,42 +13,52 @@
  *  See the Mulan PSL v2 for more details.
  *  -------------------------------------------------------------------------
  *
- *  FileTypeConstants.java
+ *  Monitor.java
  *
  *  IDENTIFICATION
- *  plugins/observability-sql-diagnosis/opengauss-ebpf/src/main/java/com/nctigba/ebpf/constant/FileTypeConstants.java
+ *  plugins/observability-sql-diagnosis/opengauss-ebpf/src/main/java/com/nctigba/ebpf/service/Monitor.java
  *
  *  -------------------------------------------------------------------------
  */
 
-package com.nctigba.ebpf.constant;
+package com.nctigba.ebpf.service;
 
 /**
- * <p>
- * file constants
- * </p>
+ * MonitorService
  *
- * @author luomeng@ncti-gba.cn
- * @since 2022/10/17 09:00
+ * @author luomeng
+ * @since 2024/2/22
  */
-public class FileTypeConstants {
+public interface MonitorService {
     /**
-     * Generate file names of .txt type
+     * Start monitor
+     *
+     * @param tid         String
+     * @param taskId      String
+     * @param monitorType String
      */
-    public static final String DEFAULT = ".txt";
+    void startMonitor(String tid, String taskId, String monitorType);
 
     /**
-     * Generate file names of .svg type
+     * Stop monitor
+     *
+     * @param taskId String
+     * @return boolean
      */
-    public static final String SVG = ".svg";
+    boolean stopMonitor(String taskId);
 
     /**
-     * Generate file names of .STACKS type
+     * Status monitor
+     *
+     * @param taskId String
+     * @return boolean
      */
-    public static final String STACKS = ".stacks";
+    boolean statusMonitor(String taskId);
 
     /**
-     * Generate file names of .pid type
+     * Record taskId
+     *
+     * @param taskId String
      */
-    public static final String PID = ".pid";
+    void record(String taskId);
 }

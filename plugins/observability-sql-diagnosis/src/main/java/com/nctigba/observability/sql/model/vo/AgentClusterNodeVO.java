@@ -13,45 +13,30 @@
  *  See the Mulan PSL v2 for more details.
  *  -------------------------------------------------------------------------
  *
- *  TaskStateEnum.java
+ *  LogClusterNodeVO.java
  *
  *  IDENTIFICATION
- *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/enums/TaskStateEnum.java
+ *  plugins/observability-log-search/src/main/java/com/nctigba/observability/log/model/vo/LogClusterNodeVO.java
  *
  *  -------------------------------------------------------------------------
  */
 
-package com.nctigba.observability.sql.enums;
+package com.nctigba.observability.sql.model.vo;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.nctigba.observability.sql.util.LocaleStringUtils;
+import lombok.Data;
 
 /**
- * TaskState
+ * LogClusterNodeVO
  *
  * @author luomeng
- * @since 2023/6/9
+ * @since 2024/1/25
  */
-public enum TaskStateEnum {
-    CREATE,
-    WAITING,
-    SQL_RUNNING,
-    RECEIVING,
-    DATABASE_CONNECT_ERROR,
-    SQL_PARSE_ERROR,
-    SQL_ERROR,
-    ERROR,
-    TIMEOUT_ERROR,
-    COLLECT_PID_ERROR,
-    FINISH;
-
-    /**
-     * Get task state
-     *
-     * @return String
-     */
-    @JsonValue
-    public String getValue() {
-        return LocaleStringUtils.format("TaskState." + this.name());
-    }
+@Data
+public class AgentClusterNodeVO {
+    private String nodeId;
+    private String hostId;
+    private String clusterRole;
+    private String publicIp;
+    private Integer dbPort;
+    private String id;
 }

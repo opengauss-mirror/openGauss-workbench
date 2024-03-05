@@ -1,7 +1,7 @@
 <template>
   <div class="search-form">
     <div class="filter">
-      <el-button type="primary" @click="handleModal">{{ $t('datasource.addTrBtn') }}</el-button>
+      <el-button type="primary" @click="addTask">{{ $t('datasource.addTrBtn') }}</el-button>
     </div>
     <div class="seperator"></div>
     <div class="filter">
@@ -13,24 +13,24 @@
       <el-select
         v-model="formData.dbName"
         clearable
-        style="width: 150px"
+        style="max-width: 150px"
         :placeholder="$t('datasource.selectDatabaseType')"
       >
         <el-option v-for="item in dbList" :key="item" :value="item" :label="item" />
       </el-select>
     </div>
     <div class="filter">
+      <span>{{ $t('datasource.createTime') }}&nbsp;</span>
+      <MyDatePicker v-model="formData.dateValue" type="datetimerange" :valueFormatToUTC="true" />
+    </div>
+    <div class="filter">
       <el-input
         v-model="formData.searchText"
         clearable
-        style="width: 180px"
+        style="max-width: 180px"
         :prefix-icon="Search"
         :placeholder="$t('datasource.searchPlaceholder')"
       />
-    </div>
-    <div class="filter">
-      <span>{{ $t('datasource.createTime') }}&nbsp;</span>
-      <MyDatePicker v-model="formData.dateValue" type="datetimerange" :valueFormatToUTC="true" />
     </div>
     <el-button type="primary" class="search-button" @click="handleQuery" :icon="Search">{{
       $t('app.query')
@@ -43,6 +43,11 @@
         :header-cell-style="{ 'text-align': 'center' }"
         style="width: 100%"
         :default-sort="{ prop: 'date', order: 'descending' }"
+        :header-cell-class-name="
+          () => {
+            return 'grid-header'
+          }
+        "
       >
         <el-table-column :label="$t('datasource.trackTable[0]')" width="160" align="center">
           <template #default="scope">
@@ -126,17 +131,6 @@
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
       />
-      <TrackAdd
-        :type="1"
-        v-if="addModel"
-        :show="addModel"
-        :dbName="formData.dbName"
-        :clusterId="formData.cluster"
-        :clusterList="clusterList"
-        :dbList="dbList"
-        @changeModal="changeModalCurrent"
-        @conveyFlag="bandleCovey"
-      />
     </div>
   </div>
 </template>
@@ -146,21 +140,11 @@ import dayjs from 'dayjs'
 import { Search } from '@element-plus/icons-vue'
 import 'element-plus/es/components/message-box/style/index'
 import { cloneDeep } from 'lodash-es'
-import TrackAdd from '@/pages/datasource/track/trackAdd.vue'
 import ogRequest from '@/request'
 import { useRequest } from 'vue-request'
 import { ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
-
-type Res =
-  | {
-      tableData: string[]
-      total: number
-      pageNum: number
-      records: string[]
-    }
-  | undefined
 
 type Rer =
   | [
@@ -180,12 +164,12 @@ const formData = reactive(cloneDeep(initFormData))
 const tableData = ref<Array<any>>([])
 const dbList = ref<Array<any>>([])
 const clusterList = ref<Array<any>[]>([])
-const addModel = ref(false)
 const page = reactive({
   currentPage: 1,
   pageSize: 10,
   total: 10,
 })
+const emit = defineEmits(['addTask'])
 
 const queryData = computed(() => {
   const { dateValue, searchText, dbName, cluster } = formData
@@ -205,20 +189,14 @@ const queryData = computed(() => {
   }
   return queryObj
 })
-const handleModal = () => {
-  addModel.value = true
-}
-const changeModalCurrent = (val: boolean) => {
-  addModel.value = val
-}
-const bandleCovey = (code: number) => {
-  page.currentPage = 1
-  requestData()
+const addTask = () => {
+  emit('addTask')
 }
 const handleQuery = () => {
   page.currentPage = 1
   requestData()
 }
+defineExpose({ handleQuery })
 
 const handleSizeChange = (val: number) => {
   page.currentPage = 1
@@ -313,8 +291,13 @@ const treeTransform = (arr: any) => {
   if (arr instanceof Array) {
     arr.forEach((item) => {
       obj.push({
-        label: item.clusterId ? item.clusterId : ((item.azName ? item.azName + '_' : '') + item.publicIp + ':' +
-                                     item.dbPort + (item.clusterRole ? '(' + item.clusterRole + ')' : '')),
+        label: item.clusterId
+          ? item.clusterId
+          : (item.azName ? item.azName + '_' : '') +
+            item.publicIp +
+            ':' +
+            item.dbPort +
+            (item.clusterRole ? '(' + item.clusterRole + ')' : ''),
         value: item.clusterId ? item.clusterId : item.nodeId,
         children: treeTransform(item.clusterNodes),
       })

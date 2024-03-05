@@ -35,7 +35,7 @@ public class EbpfTypeConstants {
     /**
      * Bcc stackcount command
      */
-    public static final String DEFAULT = "stackcount";
+    public static final String STACKCOUNT = "stackcount";
 
     /**
      * Bcc profile command

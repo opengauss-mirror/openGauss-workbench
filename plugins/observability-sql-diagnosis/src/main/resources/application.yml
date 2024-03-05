@@ -34,20 +34,20 @@ spring:
         max-active: 1
       datasource:
         embedded:
-          #url: jdbc:sqlite:data/observability-sql-diagnosis-data.db
-          #driverClassName: org.sqlite.JDBC
-          url: jdbc:intarkdb:data/observability-sql-diagnosis-data
-          driverClassName: org.intarkdb.IntarkdbJDBC
+          url: jdbc:sqlite:data/observability-sql-diagnosis-data.db
+          driverClassName: org.sqlite.JDBC
+          #url: jdbc:intarkdb:data/observability-sql-diagnosis-data
+          #driverClassName: org.intarkdb.IntarkdbJDBC
           init:
             schema: db/schema.sql
             data: db/data.sql
             continue-on-error: true
             separator: ";"
         instanceAgent:
-          #url: jdbc:sqlite:data/observability-sql-diagnosis-data.db
-          #driverClassName: org.sqlite.JDBC
-          url: jdbc:intarkdb:data/observability-instance-data
-          driverClassName: org.intarkdb.IntarkdbJDBC
+          url: jdbc:sqlite:data/observability-sql-diagnosis-data.db
+          driverClassName: org.sqlite.JDBC
+          #url: jdbc:intarkdb:data/observability-instance-data
+          #driverClassName: org.intarkdb.IntarkdbJDBC
 server.compression:
   enabled: true
   mime-types: application/javascript,text/css,application/json,application/xml,text/html,text/xml,text/plain

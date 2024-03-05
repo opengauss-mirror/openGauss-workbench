@@ -13,45 +13,39 @@
  *  See the Mulan PSL v2 for more details.
  *  -------------------------------------------------------------------------
  *
- *  TaskStateEnum.java
+ *  AgentExceptionVO.java
  *
  *  IDENTIFICATION
- *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/enums/TaskStateEnum.java
+ *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/model/vo/AgentExceptionVO.java
  *
  *  -------------------------------------------------------------------------
  */
 
-package com.nctigba.observability.sql.enums;
+package com.nctigba.observability.sql.model.vo;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.nctigba.observability.sql.util.LocaleStringUtils;
+import lombok.Data;
 
 /**
- * TaskState
+ * AgentExceptionVO
  *
  * @author luomeng
- * @since 2023/6/9
+ * @since 2024/1/17
  */
-public enum TaskStateEnum {
-    CREATE,
-    WAITING,
-    SQL_RUNNING,
-    RECEIVING,
-    DATABASE_CONNECT_ERROR,
-    SQL_PARSE_ERROR,
-    SQL_ERROR,
-    ERROR,
-    TIMEOUT_ERROR,
-    COLLECT_PID_ERROR,
-    FINISH;
+@Data
+public class AgentExceptionVO {
+    String exceptionInfo;
+    boolean isStatus;
 
     /**
-     * Get task state
+     * Set data
      *
-     * @return String
+     * @param isStatus Boolean value
+     * @param exceptionInfo Exception info
+     * @return AgentExceptionVO
      */
-    @JsonValue
-    public String getValue() {
-        return LocaleStringUtils.format("TaskState." + this.name());
+    public AgentExceptionVO setAgentStatus(boolean isStatus, String exceptionInfo) {
+        this.isStatus = isStatus;
+        this.exceptionInfo = exceptionInfo;
+        return this;
     }
 }
