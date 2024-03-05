@@ -235,6 +235,15 @@ const handleDelete = (val: any) => {
     // default first Master is Master
     data.form.nodes[0].isCMMaster = true
   }
+
+  const newRefObj :any= {}
+  for(let k in refObj.value) {
+    if (k !== val) {
+      newRefObj[k] = refObj.value[k];
+    }
+  }
+  refObj.value = newRefObj;
+
   nextTick(() => {
     data.activeTab = data.form.nodes[0].id
   })

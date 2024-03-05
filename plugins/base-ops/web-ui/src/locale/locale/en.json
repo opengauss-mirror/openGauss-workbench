@@ -680,7 +680,19 @@
             "5mpmb9e6r800": "no",
             "5mpmb9e6rcw0": "master",
             "5mpmb9e6rj80": "standby",
-            "5mpmb9e6rpo0": "cascade"
+            "5mpmb9e6rpo0": "cascade",
+            "5mpmb9e6rpp0": "Sharing Storage Info"
+        },
+        "SharingStorageConfig": {
+            "else1": "Dss home directory",
+            "else2": "Dss vg name",
+            "else3": "Dss data lun path",
+            "else4": "Xlog vg name",
+            "else5": "Xlog lun path",
+            "else6": "CM sharing lun path",
+            "else7": "CM voting lun path",
+            "else8": "Interconnect type",
+            "else9": "RDMA working config"
         },
         "NodeConfig": {
             "else1": "xlogPath",
