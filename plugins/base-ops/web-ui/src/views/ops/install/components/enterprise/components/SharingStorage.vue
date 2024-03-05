@@ -171,7 +171,7 @@ import { useI18n } from 'vue-i18n'
 import { ClusterRoleEnum, DatabaseKernelArch, ConnectTypeEnum } from '@/types/ops/install'
 import { watch } from 'vue'
 import { isTemplateElement } from '@babel/types'
-import { ILLEGAL_REGEXP } from '../constant'
+import { ILLEGAL_REGEXP, LINUX_PATH } from '../constant'
 const { t } = useI18n()
 
 
@@ -237,6 +237,9 @@ const formRules = computed(() => {
           return new Promise(resolve => {
             if (!value.trim()) {
               cb(t('enterprise.ClusterConfig.test1'))
+              resolve(false)
+            } else if (!LINUX_PATH.test(value)) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jvx0'))
               resolve(false)
             } else {
               resolve(true)

@@ -586,6 +586,7 @@
             "5mpm3ku3juy0": "This field cannot contain only numbers",
             "5mpm3ku3jux0": "The port value is invalid, please input port in range 1024~65529",
             "5mpm3ku3jyx0": "The CM port and the database port cannot be the same",
+            "5mpm3ku3jvx0": "The path format is incorrect",
             "else1": "Please enter numbers, letters or underscores",
             "else2": "The value cannot be pure space",
             "else3": "Master",

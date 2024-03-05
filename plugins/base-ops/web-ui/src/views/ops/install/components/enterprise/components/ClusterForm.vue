@@ -223,7 +223,7 @@ import { onMounted } from 'vue'
 import { reactive } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { DatabaseKernelArch, ConnectTypeEnum } from '@/types/ops/install'
-import { ILLEGAL_REGEXP } from '../constant'
+import { ILLEGAL_REGEXP, LINUX_PATH } from '../constant'
 const { t } = useI18n()
 
 const installStore = useOpsStore()
@@ -307,8 +307,12 @@ const formRules = computed(() => {
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
+            console.log("value11 = ", LINUX_PATH.test(value))
             if (!value.trim()) {
               cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else if (!LINUX_PATH.test(value)) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jvx0'))
               resolve(false)
             } else {
               resolve(true)
@@ -325,6 +329,9 @@ const formRules = computed(() => {
             if (!value.trim()) {
               cb(t('enterprise.ClusterConfig.else2'))
               resolve(false)
+            } else if (!LINUX_PATH.test(value)) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jvx0'))
+              resolve(false)
             } else {
               resolve(true)
             }
@@ -339,6 +346,9 @@ const formRules = computed(() => {
           return new Promise(resolve => {
             if (!value.trim()) {
               cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else if (!LINUX_PATH.test(value)) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jvx0'))
               resolve(false)
             } else {
               resolve(true)
@@ -355,6 +365,9 @@ const formRules = computed(() => {
             if (!value.trim()) {
               cb(t('enterprise.ClusterConfig.else2'))
               resolve(false)
+            } else if (!LINUX_PATH.test(value)) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jvx0'))
+              resolve(false)
             } else {
               resolve(true)
             }
@@ -370,6 +383,9 @@ const formRules = computed(() => {
             if (!value.trim()) {
               cb(t('enterprise.ClusterConfig.else2'))
               resolve(false)
+            } else if (!LINUX_PATH.test(value)) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jvx0'))
+              resolve(false)
             } else {
               resolve(true)
             }
@@ -384,6 +400,9 @@ const formRules = computed(() => {
           return new Promise(resolve => {
             if (!value.trim()) {
               cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else if (!LINUX_PATH.test(value)) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jvx0'))
               resolve(false)
             } else {
               resolve(true)
@@ -447,6 +466,9 @@ const formRules = computed(() => {
           return new Promise(resolve => {
             if (!value.trim()) {
               cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else if (!LINUX_PATH.test(value)) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jvx0'))
               resolve(false)
             } else {
               resolve(true)
