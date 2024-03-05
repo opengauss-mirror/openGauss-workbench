@@ -141,6 +141,85 @@
           </div>
         </div>
       </div>
+      <div
+        class="mb"
+        style="width: 50%;"
+        v-if="data.clusterInfo.databaseKernelArch === DatabaseKernelArch.SHARING_STORAGE"
+      >
+        <div class="item-node-top flex-between full-w"
+        >
+          <div class="flex-row">
+            <div class="label-color mr">{{ $t('enterprise.InstallPrompt.5mpmb9e6rpp0') }}</div>
+          </div>
+          <div class="flex-row">
+            <icon-down
+                class="label-color"
+                style="cursor: pointer;"
+                v-if="!data.sharingStorage.isShow"
+                @click="data.sharingStorage.isShow = true"
+              />
+              <icon-up
+                class="label-color"
+                style="cursor: pointer;"
+                v-else
+                @click="data.sharingStorage.isShow = false"
+              />
+          </div>
+        </div>
+        <div class="label-color item-node-center full-w flex-col-start"
+          v-show="data.sharingStorage.isShow"
+        >
+          <div class="flex-row">
+            <div class="lable-w">{{ $t('enterprise.SharingStorageConfig.else1') }}</div>
+            <div>{{ data.sharingStorage.dssHome }}</div>
+          </div>
+          <a-divider></a-divider>
+          <div class="flex-row">
+            <div class="lable-w">{{ $t('enterprise.SharingStorageConfig.else2') }}</div>
+            <div>{{ data.sharingStorage.dssVgName }}</div>
+          </div>
+          <a-divider></a-divider>
+          <div class="flex-row">
+            <div class="lable-w">{{ $t('enterprise.SharingStorageConfig.else3') }}</div>
+            <div>{{ data.sharingStorage.dssDataLunPath }}</div>
+          </div>
+          <a-divider></a-divider>
+          <div class="flex-row">
+            <div class="lable-w">{{ $t('enterprise.SharingStorageConfig.else4') }}</div>
+            <div>{{ data.sharingStorage.xlogVgName }}</div>
+          </div>
+          <a-divider></a-divider>
+          <div class="flex-row">
+            <div class="lable-w">{{ $t('enterprise.SharingStorageConfig.else5') }}</div>
+            <div>{{ data.sharingStorage.xlogLunPath }}</div>
+          </div>
+          <a-divider></a-divider>
+          <div class="flex-row">
+            <div class="lable-w">{{ $t('enterprise.SharingStorageConfig.else6') }}</div>
+            <div>{{ data.sharingStorage.cmSharingLunPath }}</div>
+          </div>
+          <a-divider></a-divider>
+          <div class="flex-row">
+            <div class="lable-w">{{ $t('enterprise.SharingStorageConfig.else7') }}</div>
+            <div>{{ data.sharingStorage.cmVotingLunPath }}</div>
+          </div>
+          <a-divider></a-divider>
+          <div class="flex-row">
+            <div class="lable-w">{{ $t('enterprise.SharingStorageConfig.else8') }}</div>
+            <div>{{ data.sharingStorage.interconnectType }}</div>
+          </div>
+          <div
+            class="full-w"
+            v-if="data.sharingStorage.interconnectType === ConnectTypeEnum.RDMA"
+          >
+            <a-divider></a-divider>
+            <div class="flex-row">
+              <div class="lable-w">{{ $t('enterprise.SharingStorageConfig.else9') }}</div>
+              <div>{{ data.sharingStorage.rdmaConfig }}</div>
+            </div> 
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -148,17 +227,19 @@
 import { useOpsStore } from '@/store'
 import { KeyValue } from '@/types/global'
 import { inject, onMounted, reactive, computed } from 'vue'
-import { ClusterRoleEnum } from '@/types/ops/install'
+import { ClusterRoleEnum, ConnectTypeEnum, DatabaseKernelArch} from '@/types/ops/install'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const installStore = useOpsStore()
 
 const data: {
   clusterInfo: KeyValue,
-  nodeData: KeyValue
+  nodeData: KeyValue,
+  sharingStorage: KeyValue
 } = reactive({
   clusterInfo: {},
-  nodeData: []
+  nodeData: [],
+  sharingStorage: {}
 })
 
 const loadingFunc = inject<any>('loading')
@@ -170,6 +251,7 @@ onMounted(() => {
   const storeEnterpriseData = installStore.getEnterpriseConfig
   const storeInstallData = installStore.getInstallConfig
   Object.assign(data.clusterInfo, {
+    databaseKernelArch: storeEnterpriseData.databaseKernelArch,
     clusterId: storeInstallData.clusterId,
     clusterName: storeInstallData.clusterName,
     installPath: storeEnterpriseData.installPath,
@@ -196,6 +278,20 @@ onMounted(() => {
     })
     data.nodeData.push(itemNode)
   })
+
+  Object.assign(data.sharingStorage, {
+    isShow: true,
+    dssHome: storeEnterpriseData.sharingStorageInstallConfig.dssHome,
+    dssVgName: storeEnterpriseData.sharingStorageInstallConfig.dssVgName,
+    dssDataLunPath: storeEnterpriseData.sharingStorageInstallConfig.dssDataLunPath,
+    xlogVgName: storeEnterpriseData.sharingStorageInstallConfig.xlogVgName,
+    xlogLunPath: storeEnterpriseData.sharingStorageInstallConfig.xlogLunPath,
+    cmSharingLunPath: storeEnterpriseData.sharingStorageInstallConfig.cmSharingLunPath,
+    cmVotingLunPath: storeEnterpriseData.sharingStorageInstallConfig.cmVotingLunPath,
+    interconnectType: storeEnterpriseData.sharingStorageInstallConfig.interconnectType,
+    rdmaConfig: storeEnterpriseData.sharingStorageInstallConfig.rdmaConfig
+  })
+
 })
 
 const getNodeData = () => {

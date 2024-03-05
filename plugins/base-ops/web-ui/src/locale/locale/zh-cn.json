@@ -681,7 +681,19 @@
             "5mpmb9e6r800": "否",
             "5mpmb9e6rcw0": "主",
             "5mpmb9e6rj80": "备",
-            "5mpmb9e6rpo0": "级联"
+            "5mpmb9e6rpo0": "级联",
+            "5mpmb9e6rpp0": "共享存储信息"
+        },
+        "SharingStorageConfig": {
+            "else1": "DSS实例目录",
+            "else2": "DSS共享卷名",
+            "else3": "DSS共享卷路径",
+            "else4": "Xlog卷名",
+            "else5": "Xlog卷路径",
+            "else6": "CM共享卷路径",
+            "else7": "CM投票卷路径",
+            "else8": "网络连接方式",
+            "else9": "RDMA网络配置"
         },
         "NodeConfig": {
             "else1": "xlog路径",
