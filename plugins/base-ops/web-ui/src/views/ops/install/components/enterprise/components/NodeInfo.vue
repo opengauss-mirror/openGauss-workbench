@@ -145,6 +145,7 @@ import HostTerminal from "@/views/ops/install/components/hostTerminal/HostTermin
 import { encryptPassword } from '@/utils/jsencrypt'
 import { useI18n } from 'vue-i18n'
 import { ClusterRoleEnum, DatabaseKernelArch } from '@/types/ops/install'
+import { LINUX_PATH } from '../constant'
 const { t } = useI18n()
 
 const installStore = useOpsStore()
@@ -227,6 +228,9 @@ const formRules = computed(() => {
             if (!value.trim()) {
               cb(t('enterprise.ClusterConfig.else2'))
               resolve(false)
+            } else if (!LINUX_PATH.test(value)) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jvx0'))
+              resolve(false)
             } else {
               resolve(true)
             }
@@ -241,6 +245,9 @@ const formRules = computed(() => {
           return new Promise(resolve => {
             if (!value.trim()) {
               cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else if (!LINUX_PATH.test(value)) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jvx0'))
               resolve(false)
             } else {
               resolve(true)

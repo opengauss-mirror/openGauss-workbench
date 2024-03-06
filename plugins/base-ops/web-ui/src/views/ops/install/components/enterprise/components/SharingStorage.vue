@@ -311,16 +311,23 @@ const formRules = computed(() => {
               resolve(false)
             }
 
-            if (ILLEGAL_REGEXP.test(value)) {
-              cb(t('enterprise.ClusterConfig.5mpm3ku3juw0'))
-              resolve(false)
-            }
+            const values = value.split(',');
 
-            const numberRegExp = /^\d+$/;
-            if (numberRegExp.test(value)) {
-              cb(t('enterprise.ClusterConfig.5mpm3ku3juw0'))
-              resolve(false)
+            for (const item of values) {
+              if (ILLEGAL_REGEXP.test(item.trim())) {
+                cb(t('enterprise.ClusterConfig.5mpm3ku3juw0'))
+                resolve(false)
+                return;
+              }
+
+              const numberRegExp = /^\d+$/;
+              if (numberRegExp.test(item.trim())) {
+                cb(t('enterprise.ClusterConfig.5mpm3ku3juw0'))
+                resolve(false)
+                return;
+              }
             }
+            
 
             resolve(true)
           })
