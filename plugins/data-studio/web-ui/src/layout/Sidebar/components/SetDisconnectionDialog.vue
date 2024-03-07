@@ -22,10 +22,10 @@
         hour, <span class="tips">{{ $t('siderbar.setDisconnectionTime.settingTips') }}2 ~ 24</span>
       </el-form>
       <template #footer>
+        <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
         <el-button type="primary" @click="handleConfirm">
           {{ $t('button.confirm') }}
         </el-button>
-        <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
       </template>
     </el-dialog>
   </div>

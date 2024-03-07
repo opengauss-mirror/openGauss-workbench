@@ -2,7 +2,7 @@
   <div class="dialog">
     <el-dialog
       v-model="visible"
-      :title="toSpacePascalCase($t('windows.renameTerminal'))"
+      :title="$t('windows.renameTerminal')"
       :width="500"
       align-center
       :close-on-click-modal="false"
@@ -20,10 +20,10 @@
       </div>
       <template #footer>
         <span class="dialog-footer">
+          <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
           <el-button type="primary" @click="confirmForm" :loading="loading">
             {{ $t('button.confirm') }}
           </el-button>
-          <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -32,7 +32,6 @@
 <script lang="ts" setup>
   import { ElMessage, FormInstance, FormRules } from 'element-plus';
   import { useI18n } from 'vue-i18n';
-  import { toSpacePascalCase } from '@/utils';
   import { useTagsViewStore } from '@/store/modules/tagsView';
 
   const TagsViewStore = useTagsViewStore();

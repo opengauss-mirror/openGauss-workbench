@@ -8,6 +8,17 @@
         >
           <font-icon :icon="item.enabled ? item.icon : item.disabledIcon" />
           <span class="funcion-name">{{ item.name }}</span>
+          <div
+            class="suffix-icon"
+            v-if="key == 'coverageRate' && props.options?.coverageRate?.warningText"
+            :title="
+              props.options.coverageRate.isI18n
+                ? $t('message.noOpenCoverageRate')
+                : props.options.coverageRate.warningText
+            "
+          >
+            <font-icon icon="Warning"></font-icon>
+          </div>
         </div>
       </div>
     </template>
@@ -31,6 +42,7 @@
     defineProps<{
       type: 'sql' | 'debug' | 'debugChild';
       status: Record<string, boolean>;
+      options?: Record<string, any>;
       editorReadOnly?: boolean;
       isGlobalEnable?: boolean;
     }>(),
@@ -271,6 +283,13 @@
       .font-icon {
         font-size: 15px;
         margin-right: 4px;
+      }
+      .suffix-icon {
+        display: inline-block;
+        vertical-align: middle;
+        .font-icon {
+          font-size: 20px;
+        }
       }
       &:hover {
         .funcion-name {

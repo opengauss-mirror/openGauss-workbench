@@ -60,35 +60,31 @@
         'max-height' is not necessary.
        -->
       <div class="my-el-table-v2">
-        <el-auto-resizer>
-          <template #default>
-            <vxe-table
-              size="mini"
-              border
-              :empty-text="$t('common.noData')"
-              show-overflow
-              :resizable-config="{ minWidth: 30 }"
-              height="auto"
-              :min-height="50"
-              :row-config="{ isHover: true }"
-              :column-config="{ resizable: true }"
-              :data="item.data"
-              :scroll-x="{ enabled: true }"
-              :scroll-y="{ enabled: true }"
-              :tooltipConfig="{ theme: 'light' }"
-            >
-              <vxe-column type="seq" title=" " width="60"></vxe-column>
-              <vxe-column
-                v-for="col in item.columns"
-                :key="col.key"
-                :field="col.key"
-                :title="col.title"
-                :min-width="col.width"
-                show-overflow
-              ></vxe-column>
-            </vxe-table>
-          </template>
-        </el-auto-resizer>
+        <vxe-table
+          size="mini"
+          border
+          :empty-text="$t('common.noData')"
+          show-overflow
+          :resizable-config="{ minWidth: 30 }"
+          height="auto"
+          :min-height="50"
+          :row-config="{ isHover: true }"
+          :column-config="{ resizable: true }"
+          :data="item.data"
+          :scroll-x="{ enabled: true }"
+          :scroll-y="{ enabled: true }"
+          :tooltipConfig="{ theme: 'light' }"
+        >
+          <vxe-column type="seq" title=" " width="60"></vxe-column>
+          <vxe-column
+            v-for="col in item.columns"
+            :key="col.key"
+            :field="col.key"
+            :title="col.title"
+            :min-width="col.width"
+            show-overflow
+          ></vxe-column>
+        </vxe-table>
       </div>
     </el-tab-pane>
   </el-tabs>

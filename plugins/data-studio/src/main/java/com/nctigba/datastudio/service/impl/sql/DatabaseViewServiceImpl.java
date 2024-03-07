@@ -53,7 +53,6 @@ import static com.nctigba.datastudio.constants.CommonConstants.NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.SCHEMA;
 import static com.nctigba.datastudio.constants.CommonConstants.SOURCECODE;
 import static com.nctigba.datastudio.constants.CommonConstants.TYPE;
-import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static com.nctigba.datastudio.utils.DebugUtils.comGetUuidType;
 import static java.lang.Math.ceil;
 
@@ -194,14 +193,15 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
     @Override
     public List<Map<String, String>> viewAttribute(DatabaseViewDdlDTO request) throws SQLException {
         log.info("DatabaseViewServiceImpl viewAttribute request: " + request);
-        String ddl = viewObjectSQLService.get(comGetUuidType(request.getUuid())).returnDatabaseViewDDL(request);
+        Map<String, Object> resultMap = viewObjectSQLService
+                .get(comGetUuidType(request.getUuid())).returnViewDDLData(request);
 
         Map<String, String> map1 = new HashMap<>();
         Map<String, String> map2 = new HashMap<>();
         Map<String, String> map3 = new HashMap<>();
         map1.put(LocaleStringUtils.transLanguage("17"), request.getViewName());
         map2.put(LocaleStringUtils.transLanguage("18"), request.getSchema());
-        map3.put(LocaleStringUtils.transLanguage("19"), ddl);
+        map3.put(LocaleStringUtils.transLanguage("19"), (String) resultMap.get("definition"));
 
         List<Map<String, String>> list = new ArrayList<>();
         list.add(map1);
@@ -218,7 +218,7 @@ public class DatabaseViewServiceImpl implements DatabaseViewService {
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement();
                 ResultSet resultSet = statement.executeQuery(viewObjectSQLService.get(
-                        comGetUuidType(request.getUuid()))
+                                comGetUuidType(request.getUuid()))
                         .getViewColumn(request.getSchema(), request.getViewName()))
         ) {
             Map<String, Object> map = DebugUtils.parseResultSet(resultSet);

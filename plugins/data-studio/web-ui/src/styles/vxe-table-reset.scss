@@ -18,6 +18,11 @@ html.dark {
   background: none;
 }
 
+.vxe-table--tooltip-content {
+  max-height: 350px;
+  overflow: auto;
+}
+
 /* 
 // if you want to hide scrollbar, but scrollbar will occupy certain width/height
 .vxe-table ::-webkit-scrollbar-thumb {

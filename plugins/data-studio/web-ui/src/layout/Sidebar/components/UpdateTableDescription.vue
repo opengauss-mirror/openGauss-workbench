@@ -2,7 +2,7 @@
   <div class="common-dialog-wrapper">
     <el-dialog
       v-model="visible"
-      :title="toSpacePascalCase($t('siderbar.table.setDescription'))"
+      :title="$t('siderbar.table.setDescription')"
       :width="500"
       align-center
       :close-on-click-modal="false"
@@ -33,7 +33,6 @@
   import { ElMessage, FormInstance, FormRules } from 'element-plus';
   import { useI18n } from 'vue-i18n';
   import { setTableComment } from '@/api/table';
-  import { toSpacePascalCase } from '@/utils';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
   import type { NodeData } from '../types';
 

@@ -117,6 +117,7 @@ export default {
     willDisable: '是否禁用：{name}',
     willCreateCoverageRate:
       '参数 enable_proc_coverage 未打开，若需查看调试覆盖率信息，请在调试前联系数据库管理员打开记录开关。是否继续调试？',
+    noOpenCoverageRate: '参数 enable_proc_coverage 未打开',
   },
   week: {
     Sunday: '日',

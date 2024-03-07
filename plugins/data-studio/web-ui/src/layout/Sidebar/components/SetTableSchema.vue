@@ -2,7 +2,7 @@
   <div class="common-dialog-wrapper">
     <el-dialog
       v-model="visible"
-      :title="toSpacePascalCase($t('siderbar.table.setSchema'))"
+      :title="$t('siderbar.table.setSchema')"
       :width="500"
       align-center
       :close-on-click-modal="false"
@@ -40,7 +40,6 @@
 <script lang="ts" setup>
   import { ElMessage, FormInstance, FormRules } from 'element-plus';
   import { useI18n } from 'vue-i18n';
-  import { toSpacePascalCase } from '@/utils';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
   import { setTableSchema } from '@/api/table';
   import { getSchemaList } from '@/api/metaData';

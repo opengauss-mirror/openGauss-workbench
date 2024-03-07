@@ -16,11 +16,11 @@
         </el-radio-group>
       </div>
       <template #footer>
-        <el-button type="primary" @click="handleOperation" :disabled="!ruleForm.radio">
-          {{ $t('button.confirm') }}
-        </el-button>
         <el-button @click="handleClose">
           {{ $t('button.cancel') }}
+        </el-button>
+        <el-button type="primary" @click="handleOperation" :disabled="!ruleForm.radio">
+          {{ $t('button.confirm') }}
         </el-button>
       </template>
     </el-dialog>
