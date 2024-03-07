@@ -390,6 +390,22 @@ public class PortalHandle {
         return Integer.parseInt(result.getResult().trim()) == 1;
     }
 
+    /**
+     * check whether the file exists
+     *
+     * @param host host ip
+     * @param port host port
+     * @param user install user
+     * @param pass install user password
+     * @param filePath file path
+     * @return boolean
+     */
+    public static boolean fileExists(String host, Integer port, String user, String pass, String filePath) {
+        JschResult result = ShellUtil.execCommandGetResult(host, port, user, pass,
+                "[ -f " + filePath + " ] && echo 1 || echo 0");
+        return Integer.parseInt(result.getResult().trim()) == 1;
+    }
+
     public static boolean checkWritePermission(String host, Integer port, String user, String pass, String path) {
         JschResult result = ShellUtil.execCommandGetResult(host, port, user, pass, "[ -d " + path + " ] && [ -w " + path + " ] && echo 1 || echo 0");
         return Integer.parseInt(result.getResult().trim()) == 1;

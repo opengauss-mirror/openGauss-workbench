@@ -1313,7 +1313,6 @@ ON COLUMN "public"."sys_setting"."upload_path" IS '文件上传目录';
 -- ----------------------------
 -- Records of sys_setting
 -- ----------------------------
-DELETE FROM "public"."sys_setting" WHERE ID = 1;
 INSERT INTO "public"."sys_setting" VALUES (1, 1, '/ops/files/', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/', 'PortalControl-6.0.0.tar.gz', 'portalControl-1.0-SNAPSHOT-exec.jar') ON DUPLICATE KEY UPDATE NOTHING;
 
 CREATE OR REPLACE FUNCTION add_user_field_func() RETURNS integer AS 'BEGIN

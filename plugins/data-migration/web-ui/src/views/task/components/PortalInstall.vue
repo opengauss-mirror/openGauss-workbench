@@ -206,7 +206,7 @@
               :show-file-list="true"
               :auto-upload="false"
               draggable
-              accept=".tar.gz"
+              accept=".gz"
               @before-remove="handleBeforeRemove"
               :show-retry-button="false"
               :show-cancel-button="false"

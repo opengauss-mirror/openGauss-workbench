@@ -786,16 +786,30 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         }
         // if delete file failed, do nothing
         if (onlyPkg != null && !onlyPkg) {
+            String kafkaInstallPath = migrationThirdPartySoftwareInstanceService.removeInstance(install.getHost());
+            if (StringUtils.isEmpty(kafkaInstallPath)) {
+                String propertiesPath = portalHome + "workspace/1/config/toolspath.properties";
+                boolean isPropertiesExists = PortalHandle.fileExists(opsHost.getPublicIp(), opsHost.getPort(),
+                        hostUser.getUsername(), password, propertiesPath);
+                if (isPropertiesExists) {
+                    String command = String.format("grep '^confluent.install.path' %sworkspace/1/config/"
+                            + "toolspath.properties | awk -F '=' '{print $2}' | tr -d ' '", portalHome);
+                    JschResult jschResult = ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(),
+                            hostUser.getUsername(), password, command);
+                    kafkaInstallPath = jschResult.isOk() ? jschResult.getResult().replaceAll("\\u000A", "") : "";
+                }
+            }
+            if (!StringUtils.isEmpty(kafkaInstallPath)) {
+                ShellUtil.execCommandGetResult(
+                        opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,
+                        "rm -rf  " + kafkaInstallPath + "confluent-5.5.1");
+            }
+
             ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, "rm -rf  " + realInstallPath + "portal");
             migrationHostPortalInstallHostService.updateStatus(hostId, PortalInstallStatus.NOT_INSTALL.getCode());
         }
         migrationHostPortalInstallHostService.clearPkgUploadPath(hostId);
         ShellUtil.rmFile(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, realInstallPath + install.getPkgName());
-        String kafkaInstallPath = migrationThirdPartySoftwareInstanceService.removeInstance(install.getHost());
-        if (!StringUtils.isEmpty(kafkaInstallPath)) {
-            ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,
-                    "rm -rf  " + kafkaInstallPath + "confluent-5.5.1");
-        }
         toolsParamService.removeByHostId(install.getRunHostId());
         return AjaxResult.success();
     }
@@ -865,7 +879,18 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
      * @param retryCount failed retry count
      */
     private void stopKafka(OpsHostEntity opsHost, OpsHostUserEntity hostUser, String password, String portalHome, String jarName, int retryCount) throws PortalInstallException {
-        JschResult result = ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, "java -Dpath=" + portalHome + " -Dorder=stop_kafka -Dskip=true -jar " + portalHome + jarName);
+        String jarPath = portalHome + jarName;
+        if (retryCount == 0) {
+            boolean isJatExists = PortalHandle.fileExists(opsHost.getPublicIp(), opsHost.getPort(),
+                    hostUser.getUsername(), password, jarPath);
+            if (!isJatExists) {
+                return;
+            }
+        }
+
+        JschResult result = ShellUtil.execCommandGetResult(
+                opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,
+                "java -Dpath=" + portalHome + " -Dorder=stop_kafka -Dskip=true -jar " + jarPath);
         if (!result.isOk()) {
             if (retryCount > 3) {
                 throw new PortalInstallException("Stop kafka failed after 3 retries: " + result.getResult());
