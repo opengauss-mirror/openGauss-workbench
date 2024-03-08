@@ -34,6 +34,10 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.nctigba.alert.monitor.model.validator.annotation.EnumInteger;
 import com.nctigba.alert.monitor.model.validator.annotation.EnumString;
 import com.nctigba.alert.monitor.constant.CommonConstants;
+import com.nctigba.alert.monitor.model.validator.annotation.NotBlankConditional;
+import com.nctigba.alert.monitor.model.validator.annotation.NotBlankSummary;
+import com.nctigba.alert.monitor.model.validator.annotation.NotNullConditional;
+import com.nctigba.alert.monitor.model.validator.annotation.NotNullSummary;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -54,6 +58,8 @@ import java.util.List;
 @Accessors(chain = true)
 @TableName("alert_template_rule")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@NotNullSummary
+@NotBlankSummary
 public class AlertTemplateRuleDO {
     @TableId
     @JsonProperty("templateRuleId")
@@ -99,9 +105,12 @@ public class AlertTemplateRuleDO {
     private String ruleName;
     @JsonSerialize(using = ToStringSerializer.class)
     private Long ruleId;
+    @NotNullConditional(conditionalField = "isRepeat", conditionalValues = {"1"})
     private Integer nextRepeat;
+    @NotBlankConditional(conditionalField = "isRepeat", conditionalValues = {"1"})
     @EnumString(values = {CommonConstants.SECOND, CommonConstants.MINUTE, CommonConstants.HOUR, CommonConstants.DAY})
     private String nextRepeatUnit;
+    @NotNullConditional(conditionalField = "isRepeat", conditionalValues = {"1"})
     private Integer maxRepeatCount;
     @NotNull(groups = LogRuleGroup.class)
     private Integer checkFrequency;

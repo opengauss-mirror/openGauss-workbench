@@ -303,13 +303,6 @@ watch(res, (res: any) => {
         resultCode.value.val = resultCodeJson[key]
       })
     }
-    let notifyType = formData.value.notifyType
-    if (notifyType) {
-      if (notifyType === 'webhook' || notifyType === 'SNMP') {
-        notifyType = 'thirdParty'
-      }
-      requestTemplateData(notifyType)
-    }
   } else {
     const msg = t("app.queryFail");
     ElMessage({
@@ -322,7 +315,7 @@ watch(res, (res: any) => {
 
 const { data: templateRes, run: requestTemplateData } = useRequest(
   (notifyTemplateType) => {
-    return request.get(`/api/v1/notifyTemplate/list`, { notifyTemplateType })
+    return request.get(`/api/v1/notifyTemplate/list`)
   },
   { manual: true }
 )
@@ -348,11 +341,6 @@ const notifyTypeChange = () => {
   formData.value.email = ''
   formData.value.personId = ''
   formData.value.deptId = ''
-  let templateType = formData.value.notifyType
-  if (templateType === 'webhook' || templateType === 'SNMP') {
-    templateType = 'thirdParty'
-  }
-  requestTemplateData(templateType)
 }
 
 const addHeader = () => {
@@ -508,6 +496,7 @@ const cancel = () => {
   emit("cancelNotifyWay")
 }
 onMounted(() => {
+  requestTemplateData()
   if (props.id) {
     requestData(props.id)
   }

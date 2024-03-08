@@ -33,6 +33,10 @@ import com.nctigba.alert.monitor.model.entity.AlertRuleDO;
 import com.nctigba.alert.monitor.model.entity.AlertRuleItemDO;
 import com.nctigba.alert.monitor.model.validator.annotation.EnumInteger;
 import com.nctigba.alert.monitor.model.validator.annotation.EnumString;
+import com.nctigba.alert.monitor.model.validator.annotation.NotBlankConditional;
+import com.nctigba.alert.monitor.model.validator.annotation.NotBlankSummary;
+import com.nctigba.alert.monitor.model.validator.annotation.NotNullConditional;
+import com.nctigba.alert.monitor.model.validator.annotation.NotNullSummary;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -52,6 +56,8 @@ import java.util.List;
 @Data
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@NotNullSummary
+@NotBlankSummary
 public class AlertRuleParamDTO {
     @JsonProperty("ruleId")
     @JsonSerialize(using = ToStringSerializer.class)
@@ -92,9 +98,12 @@ public class AlertRuleParamDTO {
     private String level;
     @NotBlank
     private String ruleName;
+    @NotNullConditional(conditionalField = "isRepeat", conditionalValues = {"1"})
     private Integer nextRepeat;
+    @NotBlankConditional(conditionalField = "isRepeat", conditionalValues = {"1"})
     @EnumString(values = {CommonConstants.SECOND, CommonConstants.MINUTE, CommonConstants.HOUR, CommonConstants.DAY})
     private String nextRepeatUnit;
+    @NotNullConditional(conditionalField = "isRepeat", conditionalValues = {"1"})
     private Integer maxRepeatCount;
     @NotNull(groups = AlertRuleDO.LogRuleGroup.class)
     private Integer checkFrequency;

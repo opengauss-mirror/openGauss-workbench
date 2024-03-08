@@ -15,8 +15,9 @@
         </el-breadcrumb-item>
       </el-breadcrumb>
     </div>
-    <el-form label-position="left" label-width="140" size="default" style="margin-top: 8px;">
-      <el-form-item :label="$t('AlertClusterNodeConf.selectedInstance') + ':'" style="margin-bottom: 10px !important;">
+    <el-form label-position="left" size="default" style="margin-top: 8px;">
+      <el-form-item style="margin-bottom: 10px !important;">
+        <span style="font-family: Source Han Sans CN;font-size: 14px;font-weight: bold;line-height: 22px;text-align: left;">{{$t('AlertClusterNodeConf.selectedInstance')}}：</span>
         <el-tag v-for="(item, index) in clusterNodeList0" :key="item.clusterNodeId" size="large" closable
           @close="closeTag(index)">{{ item.nodeName }}</el-tag>
       </el-form-item>
@@ -134,9 +135,9 @@
               </el-table-column>
               <el-table-column :label="$t('alertRule.table[7]')" fixed="right">
                 <template #default="scope">
-                  <el-button link type="primary" size="small" @click.prevent="editRule(scope.row)">
+                  <el-link :underline="false" type="primary" size="small" @click.prevent="editRule(scope.row)">
                     {{ t('app.edit') }}
-                  </el-button>
+                  </el-link>
                 </template>
               </el-table-column>
             </el-table>

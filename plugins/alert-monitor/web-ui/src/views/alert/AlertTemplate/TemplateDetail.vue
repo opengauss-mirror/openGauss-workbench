@@ -65,10 +65,10 @@
           </el-table-column>
           <el-table-column :label="$t('alertRule.table[7]')" fixed="right">
             <template #default="scope">
-              <el-button link type="primary" size="small"
+              <el-link :underline="false" type="primary" size="small"
                 @click.prevent="edit(scope.row.templateRuleId, scope.row.ruleId)">
                 {{ t('app.edit') }}
-              </el-button>
+              </el-link>
             </template>
           </el-table-column>
           <!-- <el-table-column prop="ruleContent" :label="$t('alertRule.table[6]')" /> -->

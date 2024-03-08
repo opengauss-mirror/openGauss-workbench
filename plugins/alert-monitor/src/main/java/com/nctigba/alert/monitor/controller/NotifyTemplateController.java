@@ -50,30 +50,60 @@ public class NotifyTemplateController extends BaseController {
     @Autowired
     private NotifyTemplateService notifyTemplateService;
 
+    /**
+     * getListPage
+     *
+     * @param notifyTemplateName String
+     * @param notifyTemplateType String
+     * @return TableDataInfo
+     */
     @GetMapping
     public TableDataInfo getListPage(String notifyTemplateName, String notifyTemplateType) {
         Page page = notifyTemplateService.getListPage(notifyTemplateName, notifyTemplateType, startPage());
         return getDataTable(page);
     }
 
+    /**
+     * getlist
+     *
+     * @return list
+     */
     @GetMapping("/list")
-    public AjaxResult getList(String notifyTemplateType) {
-        List<NotifyTemplateDO> list = notifyTemplateService.getList(notifyTemplateType);
+    public AjaxResult getList() {
+        List<NotifyTemplateDO> list = notifyTemplateService.getList();
         return AjaxResult.success(list);
     }
 
+    /**
+     * getById
+     *
+     * @param id long
+     * @return AjaxResult
+     */
     @GetMapping("/{id}")
     public AjaxResult getById(@PathVariable Long id) {
         NotifyTemplateDO notifyTemplateDO = notifyTemplateService.getById(id);
         return AjaxResult.success(notifyTemplateDO);
     }
 
+    /**
+     * save
+     *
+     * @param notifyTemplateDO entity
+     * @return AjaxResult
+     */
     @PostMapping
     public AjaxResult saveTemplate(@Validated @RequestBody NotifyTemplateDO notifyTemplateDO) {
         notifyTemplateService.saveTemplate(notifyTemplateDO);
         return AjaxResult.success();
     }
 
+    /**
+     * delete by id
+     *
+     * @param id long
+     * @return AjaxResult
+     */
     @DeleteMapping("/{id}")
     public AjaxResult delById(@PathVariable Long id) {
         notifyTemplateService.delById(id);

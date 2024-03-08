@@ -42,10 +42,10 @@
             <el-table-column prop="templateName" :label="$t('alertTemplate.table[0]')" />
             <el-table-column :label="$t('alertTemplate.table[1]')">
               <template #default="scope">
-                <el-button link type="primary" size="small" @click="editTemplate(scope.row.id)">{{
-                  $t('app.edit') }}</el-button>
-                <el-button link type="primary" size="small" @click="delTemplate(scope.row.id)">{{
-                  $t('app.delete') }}</el-button>
+                <el-link :underline="false" type="primary" style="margin-right: 10px" size="small" @click="editTemplate(scope.row.id)">{{
+                  $t('app.edit') }}</el-link>
+                <el-link :underline="false" type="primary" size="small" @click="delTemplate(scope.row.id)">{{
+                  $t('app.delete') }}</el-link>
               </template>
             </el-table-column>
           </el-table>

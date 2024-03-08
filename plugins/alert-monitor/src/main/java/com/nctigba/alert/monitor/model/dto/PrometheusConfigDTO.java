@@ -58,6 +58,7 @@ public class PrometheusConfigDTO implements Serializable {
     private List<String> ruleFiles;
     @JsonProperty("scrape_configs")
     private List<Job> scrapeConfigs;
+    private List<RemoteRead> remote_read;
 
     @Data
     public static class Global implements Serializable {
@@ -147,5 +148,11 @@ public class PrometheusConfigDTO implements Serializable {
             Job job = (Job) obj;
             return job.getJobName().equals(this.jobName);
         }
+    }
+
+    @Data
+    public static class RemoteRead implements Serializable {
+        private String url;
+        private Boolean read_recent;
     }
 }

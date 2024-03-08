@@ -6,8 +6,8 @@
       </div>
       <div class="seperator"></div>
       <div class="filter">
-        <span>{{ $t('notifyWay.notifyType') }}</span>
-        <el-select v-model="formData.notifyType" style="width: 100px;margin: 5px;" @change="changeNotifyType" clearable>
+        <span>{{ $t('notifyWay.notifyType') }}：</span>
+        <el-select v-model="formData.notifyType" style="width: 150px;" @change="changeNotifyType" clearable>
           <el-option v-for="item in templateTypeList" :key="item.value" :value="item.value" :label="item.name" />
         </el-select>
       </div>
@@ -49,12 +49,12 @@
           </el-table-column>
           <el-table-column :label="$t('app.operate')" width="120" fixed="right">
             <template #default="scope">
-              <el-button link type="primary" size="small" @click="editTemplate(scope.row.id)">{{
+              <el-link :underline="false" type="primary" size="small" style="margin-right: 10px" @click="editTemplate(scope.row.id)">{{
                 $t('app.edit')
-              }}</el-button>
-              <el-button link type="primary" size="small" @click="delTemplate(scope.row.id)">{{
+              }}</el-link>
+              <el-link :underline="false" type="primary" size="small" @click="delTemplate(scope.row.id)">{{
                 $t('app.delete')
-              }}</el-button>
+              }}</el-link>
             </template>
           </el-table-column>
         </el-table>

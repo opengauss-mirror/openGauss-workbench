@@ -1633,3 +1633,13 @@ CREATE TABLE IF NOT EXISTS public.alert_record_detail (
 );
 alter table "public"."notify_message" rename column record_id to record_ids;
 alter table "public"."notify_message" ALTER COLUMN record_ids TYPE text;
+
+-- 2024-03-08
+update alert_rule set is_repeat = 0 where id in (1,2,3,7,8,9,10,12,13,14,15) and is_repeat = 1;
+update alert_rule set rule_content = '故障描述：$'||'{nodeName}的CPU使用率超过95%，当前使用率为$'||'{value}'||chr(10)||'处理建议：请检查主机上占用CPU高的进程' where id = 1;
+update alert_rule set rule_content = '故障描述：$'||'{nodeName}上存在磁盘分区使用率超过90%'||chr(10)||'处理建议：请清理不必要的磁盘文件' where id = 3;
+update alert_rule set rule_content = '故障描述：$'||'{nodeName}无法连接'||chr(10)||'处理建议：请检查主机是否正常运行,SSH服务是否正常运行' where id = 24;
+update alert_rule set rule_content = '故障描述：$'||'{nodeName}上每秒网络错包数超过5个,实际值：$'||'{value}'||chr(10)||'处理建议：请检查网络配置' where
+id = 33;
+update alert_rule set rule_content = '故障描述：$'||'{nodeName}上存在磁盘分区读写IO延迟超过10ms'||chr(10)||'处理建议：请检查硬件配置' where id = 34;
+update alert_rule set rule_content = '故障描述：$'||'{nodeName}上存在磁盘分区inodes使用率超过90%'||chr(10)||'处理建议：请清理不必要的磁盘文件' where id = 36;

@@ -62,8 +62,8 @@ public class EnvironmentServiceImpl implements EnvironmentService {
      * check Prometheus is exist
      */
     public void checkPrometheus() {
-        List<NctigbaEnvDO> env = envMapper
-            .selectList(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, NctigbaEnvDO.Type.PROMETHEUS));
+        List<NctigbaEnvDO> env = envMapper.selectList(Wrappers.<NctigbaEnvDO>lambdaQuery()
+                .eq(NctigbaEnvDO::getType, NctigbaEnvDO.Type.PROMETHEUS_MAIN));
         if (CollectionUtil.isEmpty(env)) {
             throw new ServiceException("the promethues is uninstall");
         }

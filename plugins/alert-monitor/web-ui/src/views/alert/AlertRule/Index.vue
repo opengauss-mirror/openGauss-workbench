@@ -16,14 +16,14 @@
       </div>
       <div class="seperator"></div>
       <div class="filter">
-        <span>{{ $t('alertRule.ruleType') }}&nbsp;</span>
-        <el-select v-model="formData.ruleType" :placeholder="$t('alertRule.selectRuleType')" clearable @change="search">
+        <span>{{ $t('alertRule.ruleType') }}：</span>
+        <el-select v-model="formData.ruleType" :placeholder="$t('alertRule.selectRuleType')" clearable @change="search" style="width: 150px">
           <el-option v-for="item in ruleTypeList" :key="item" :value="item" :label="$t(`alertRule.${item}`)" />
         </el-select>
       </div>
       <div class="filter">
-        <span>{{ $t('alertRule.level') }}&nbsp;</span>
-        <el-select v-model="formData.level" :placeholder="$t('alertRule.selectLevelType')" style="max-width: 100px"
+        <span>{{ $t('alertRule.level') }}：</span>
+        <el-select v-model="formData.level" :placeholder="$t('alertRule.selectLevelType')" style="width: 150px"
           clearable @change="search">
           <el-option v-for="item in levelList" :key="item" :value="item" :label="$t(`alertRule.${item}`)" />
         </el-select>
@@ -81,15 +81,15 @@
           <el-table-column prop="ruleContent" :label="$t('alertRule.table[6]')" min-width="200" />
           <el-table-column :label="$t('alertRule.table[7]')" width="150" fixed="right">
             <template #default="scope">
-              <el-button link type="primary" size="small" @click="showDetail(scope.row.ruleId)">{{
+              <el-link :underline="false" type="primary" size="small" style="margin-right: 10px" @click="showDetail(scope.row.ruleId)">{{
                 $t('app.view')
-              }}</el-button>
-              <el-button link type="primary" size="small" @click="edit(scope.row.ruleId)">{{
+              }}</el-link>
+              <el-link :underline="false" type="primary" size="small" style="margin-right: 10px" @click="edit(scope.row.ruleId)">{{
                 $t('app.edit')
-              }}</el-button>
-              <el-button link type="primary" size="small" @click="del(scope.row.ruleId)">{{
+              }}</el-link>
+              <el-link :underline="false" type="primary" size="small" @click="del(scope.row.ruleId)">{{
                 $t('app.delete')
-              }}</el-button>
+              }}</el-link>
             </template>
           </el-table-column>
         </el-table>

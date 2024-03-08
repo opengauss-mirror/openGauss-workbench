@@ -48,6 +48,9 @@ const init = () => {
             right: '18%',
             top: 'middle',
             orient: 'vertical',
+            icon: 'roundRect',
+            itemWidth: 10,
+            itemHeight: 10,
             textStyle: {
                 color: theme === 'dark' ? '#d4d4d4' : '#1d212a',
                 fontSize: 10

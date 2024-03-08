@@ -378,9 +378,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             Wrappers.<AlertTemplateRuleItemDO>lambdaQuery().eq(AlertTemplateRuleItemDO::getTemplateRuleId,
                 templateRuleId));
         List<AlertRelationDTO> relationDtoList = new ArrayList<>();
-        NctigbaEnvDO promEnv = envMapper
-            .selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, NctigbaEnvDO.Type.PROMETHEUS));
-        OpsHostEntity opsHostEntity = hostFacade.getById(promEnv.getHostid());
+        NctigbaEnvDO promEnv = envMapper.selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery()
+                .eq(NctigbaEnvDO::getType, NctigbaEnvDO.Type.PROMETHEUS_MAIN));
         for (AlertTemplateRuleItemDO templateRuleItem : templateRuleItems) {
             String ruleExpName = templateRuleItem.getRuleExpName();
             AlertRuleItemSrcDO ruleItemSrc = ruleItemSrcMapper.selectList(
@@ -406,7 +405,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             relationDto.setMinTime(minTime).setMaxTime(maxTime);
             String ruleExp = templateRuleItem.getRuleExp();
             ruleExp = ruleExp.replace("${instances}", alertRecordDO.getClusterNodeId());
-            Number[][] datas = prometheusService.queryRange(opsHostEntity.getPublicIp(), promEnv.getPort().toString(),
+            Number[][] datas = prometheusService.queryRange(CommonConstants.LOCAL_IP, promEnv.getPort().toString(),
                 ruleExp, minTime, maxTime);
             relationDto.setDatas(datas).setLimitValue(templateRuleItem.getLimitValue());
             relationDtoList.add(relationDto);

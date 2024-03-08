@@ -221,4 +221,9 @@ public class CommonConstants {
      * jdbc protocol
      */
     public static final String JDBC_OPENGAUSS = "jdbc:opengauss://";
+
+    /**
+     * local ip
+     */
+    public static final String LOCAL_IP = "127.0.0.1";
 }

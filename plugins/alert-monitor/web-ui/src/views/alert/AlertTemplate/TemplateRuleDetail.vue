@@ -36,45 +36,45 @@
           style="margin-bottom: 5px;">
           <span v-if="formData.ruleType === 'log'">
             <div style="width: 100%;">
-              <span style="margin: 5px;">{{ $t('alertRule.ruleItemNum') }}:</span><el-input v-model="item.ruleMark"
-                disabled style="width: 40px;margin: 5px;height: 32px;"></el-input>
+              <span style="margin: 5px;">{{ $t('alertRule.ruleItemNum') }}</span><el-input v-model="item.ruleMark"
+                disabled style="width: 40px;margin: 5px 24px 5px 4px;height: 32px;"></el-input>
             </div>
             <div style="width: 100%;">
-              <span style="margin: 5px 0 10px 5px;">{{ $t('alertRule.blockWord') }}:</span><el-input
-                v-model="item.keyword" disabled style="width: 400px;margin: 5px;height: 32px;"></el-input>
-              <span style="margin: 5px 0 10px 5px;">{{ $t('alertRule.happen') }}:</span>
-              <el-select v-model="item.operate" disabled style="width: 70px;margin: 5px;">
+              <span style="margin: 5px 5px 10px 5px;">{{ $t('alertRule.blockWord') }}</span><el-input
+                v-model="item.keyword" disabled style="width: 400px;margin: 5px 4px;height: 32px;"></el-input>
+              <span style="margin: 5px 5px 10px 4px;">{{ $t('alertRule.happen') }}</span>
+              <el-select v-model="item.operate" disabled style="width: 70px;margin: 5px 4px;">
                 <el-option v-for="item0 in compareSymbolList" :key="item0" :value="item0" :label="item0" />
               </el-select>
-              <el-input v-model="item.limitValue" class="request" style="width: 100px;margin: 5px;height: 32px;"></el-input>
-              <span style="width: 50px;margin: 5px;">{{ $t('alertRule.logUnit') }}</span>
+              <el-input v-model="item.limitValue" class="request" style="width: 100px;margin: 5px 12px 5px 4px;height: 32px;"></el-input>
+              <!-- <span style="width: 50px;margin: 5px;">{{ $t('alertRule.logUnit') }}</span> -->
             </div>
             <div style="width: 100%;">
-              <span style="margin: 5px 0 10px 5px;">{{ $t('alertRule.blockWord') }}:</span><el-input
-                v-model="item.blockWord" disabled style="width: 600px;margin: 5px;height: 32px;"></el-input>
+              <span style="margin: 5px 0 10px 5px;">{{ $t('alertRule.blockWord') }}</span><el-input
+                v-model="item.blockWord" disabled style="width: 600px;margin: 5px 5px 10px 5px;height: 32px;"></el-input>
             </div>
           </span>
           <span v-else>
             <span style="margin: 5px;">{{ $t('alertRule.ruleItemNum') }}:</span><el-input v-model="item.ruleMark" disabled
-              style="width: 40px;margin: 5px;height: 32px;"></el-input>
-            <span style="margin: 5px 0 10px 5px;">{{ $t('alertRule.ruleItemExp') }}:</span>
-            <el-select v-model="item.ruleExpName" disabled style="width: 130px;margin: 5px 0 5px 5px;">
+              style="width: 40px;margin: 5px 24px 5px 5px;height: 32px;"></el-input>
+            <span style="margin: 5px 10px 10px 5px;">{{ $t('alertRule.ruleItemExp') }}:</span>
+            <el-select v-model="item.ruleExpName" disabled style="width: 130px;margin: 5px 4px 5px 5px;">
               <el-option v-for="item0 in ruleItemSrcList" :key="item0.name" :value="item0.name"
               :label="i18n.global.locale.value === 'zhCn' && item0.nameZh ? item0.nameZh : item0.nameEn ? item0.nameEn : $t(`alertRule.${item0.name}`)" />
             </el-select>
             <el-input v-for="(val, key) in item.params" v-model="item.params[key]"
-              style="width: 120px;margin: 5px 2px;height: 32px;" disabled :key="key"></el-input>
+              style="width: 120px;margin: 5px 4px;height: 32px;" disabled :key="key"></el-input>
             <!-- <el-select v-model="item.action" disabled style="width: 150px;margin: 5px;">
               <el-option v-for="item0 in item.ruleItemExpSrcList" :key="item0.id" :value="item0.action"
                 :label="$t(`alertRule.${item0.action}Action`)" />
             </el-select> -->
             <el-select v-if="item.showLimitValue !== 0" v-model="item.operate" disabled
-              style="width: 70px;margin: 5px;">
+              style="width: 70px;margin: 5px 4px;">
               <el-option v-for="item0 in compareSymbolList" :key="item0" :value="item0" :label="item0" />
             </el-select>
-            <el-input v-if="item.showLimitValue !== 0" class="request" v-model="item.limitValue"
-              style="width: 100px;margin: 5px;height: 32px;"></el-input>
-            <span v-if="item.unit" style="width: 50px;margin: 5px;">{{ item.unit }}</span>
+            <el-input v-if="item.showLimitValue !== 0" v-model="item.limitValue"
+              style="width: 100px;margin: 5px 4px;height: 32px;"></el-input>
+            <span v-if="item.unit" style="width: 50px;margin: 5px 4px;">{{ item.unit }}</span>
           </span>
         </el-row>
       </el-form-item>
@@ -410,8 +410,14 @@ const checkIsRepeat = (rule: any, value: any, callback: any) => {
   if (formData.value.isRepeat !== 0 && formData.value.isRepeat !== 1) {
     callback(new Error(t('alertRule.isRepeatTip')))
   }
+  if (!formData.value.nextRepeat) {
+    callback(new Error(t('alertRule.nextRepeatIsNotEmpty')))
+  }
   if (formData.value.nextRepeat && !/^\d+$/.test(formData.value.nextRepeat)) {
     callback(new Error(t('alertRule.nextRepeatIsNum')))
+  }
+  if (!formData.value.maxRepeatCount) {
+    callback(new Error(t('alertRule.maxRepeatCountIsNotEmpty')))
   }
   if (formData.value.maxRepeatCount && !/^\d+$/.test(formData.value.maxRepeatCount)) {
     callback(new Error(t('alertRule.maxRepeatCountIsNum')))
