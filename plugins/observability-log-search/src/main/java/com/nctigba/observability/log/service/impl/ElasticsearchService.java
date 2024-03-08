@@ -355,6 +355,9 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
             if (StrUtil.isBlank(status)) {
                 oldVersionAdapter(env);
             }
+            if (env.getUpdateTime() == null) {
+                env.setUpdateTime(new Date());
+            }
             boolean isTimeout = new Date().getTime() - env.getUpdateTime().getTime() > 3 * MONITOR_CYCLE * 1000L;
             boolean isDuring =
                     (AgentStatusEnum.STARTING.getStatus().equals(status) || AgentStatusEnum.STOPPING.getStatus().equals(
@@ -381,12 +384,12 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
     private void oldVersionAdapter(NctigbaEnvDO env) {
         try (SshSession session = connect(env);
              InputStream in = loader.getResource("run_elasticsearch.sh").getInputStream()) {
-            session.upload(in, env.getPath() + SRC + "/run_elasticsearch.sh");
-            String pid = session.execute("lsof -ti :" + env.getPort());
+            session.upload(in, env.getPath() + "/run_elasticsearch.sh");
+            String pid = session.execute("source /etc/profile && lsof -ti :" + env.getPort());
             if (pid != null && !"".equals(pid)) {
                 File pidFile = File.createTempFile("elasticsearch", ".pid");
                 FileUtil.appendUtf8String(pid, pidFile);
-                session.upload(pidFile.getCanonicalPath(), env.getPath() + SRC + "/elasticsearch.pid");
+                session.upload(pidFile.getCanonicalPath(), env.getPath() + "/elasticsearch.pid");
             }
         } catch (IOException e) {
             throw new CustomException(e.getMessage());
