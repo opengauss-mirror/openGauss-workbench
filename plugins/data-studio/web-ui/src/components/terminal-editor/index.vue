@@ -7,6 +7,7 @@
           <FunctionBar
             :type="sqlData.barType"
             :status="sqlData.barStatus"
+            :options="functionBarOptions"
             :editorReadOnly="sqlData.readOnly"
             :isGlobalEnable="isGlobalEnable"
             @compile="handleCompile"
@@ -86,7 +87,7 @@
 </template>
 
 <script lang="ts" setup name="TerminalEditor">
-  import FunctionBar from '@/components/FunctionBar.vue';
+  import FunctionBar from './FunctionBar.vue';
   import AceEditor from '@/components/AceEditor.vue';
   import DebugPane from './DebugPane.vue';
   import ResultTabs from './ResultTabs.vue';
@@ -153,6 +154,12 @@
       stepOut: true,
     },
   };
+  const functionBarOptions = reactive({
+    coverageRate: {
+      warningText: '',
+      isI18n: true,
+    },
+  });
   const sqlData = reactive<{
     sqlText: string;
     readOnly: boolean;
@@ -394,7 +401,7 @@
             closeOnPressEscape: false,
             cancelButtonText: t('button.cancel'),
             message: () =>
-              h('div', null, [
+              h('div', { style: { paddingTop: '20px' } }, [
                 h('div', t('message.willCreateCoverageRate')),
                 h(ElCheckbox, {
                   modelValue: isRemenberNoAskOpenCoverage.value,
@@ -407,9 +414,13 @@
           })
             .then(() => {
               isOpenCoverage = true;
+              functionBarOptions.coverageRate.warningText = isRemenberNoAskOpenCoverage.value
+                ? 'message.noOpenCoverageRate'
+                : '';
               handleStartDebugContent();
             })
             .catch(() => {
+              isRemenberNoAskOpenCoverage.value = false;
               isOpenCoverage = false;
             });
       }

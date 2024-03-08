@@ -12,7 +12,6 @@ declare module 'vue' {
     DebugPane: typeof import('./src/components/terminal-editor/DebugPane.vue')['default']
     EnterParamsDialog: typeof import('./src/components/terminal-editor/EnterParamsDialog.vue')['default']
     FontIcon: typeof import('./src/components/FontIcon.vue')['default']
-    FunctionBar: typeof import('./src/components/FunctionBar.vue')['default']
     LangButton: typeof import('./src/components/LangButton.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

@@ -50,10 +50,10 @@
         </el-table-column>
       </el-table>
       <template #footer>
+        <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
         <el-button type="primary" @click="handleConfirm">
           {{ $t('button.confirm') }}
         </el-button>
-        <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -157,7 +157,9 @@
     }
     try {
       loading.value = loadingInstance();
-      list.value = (await api(params)) as unknown as FetchNode[];
+      let data = (await api(params)) as unknown as FetchNode[];
+      data.forEach((item) => delete item.children);
+      list.value = data;
     } finally {
       loading.value.close();
     }

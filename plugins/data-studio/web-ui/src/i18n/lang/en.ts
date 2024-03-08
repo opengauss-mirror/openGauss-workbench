@@ -123,6 +123,7 @@ export default {
     willDisable: 'Disable: {name}',
     willCreateCoverageRate:
       'The parameter enable_proc_coverage is not turned on. If you need to view debugging coverage information, please contact the database administrator to turn on the recording switch before debugging. Do you want to continue debugging?',
+    noOpenCoverageRate: 'The parameter enable_proc_coverage is not turned on',
   },
   week: {
     Sunday: 'Sun',

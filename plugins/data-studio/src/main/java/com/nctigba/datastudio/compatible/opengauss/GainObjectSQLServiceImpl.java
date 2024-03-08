@@ -329,10 +329,17 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     @Override
     public String funProCountSql(String schema) {
         String ddl;
-        ddl = "SELECT count(1) FROM pg_proc pp "
-                + "left join gs_package gp on gp.oid = pp.propackageid WHERE pronamespace = "
-                + "(SELECT pg_namespace.oid FROM pg_namespace WHERE nspname = '"
-                + DebugUtils.containsSqlInjection(schema) + "');";
+        ddl = "select sum(count) as count from ("
+                + "  select count(distinct propackageid) FROM pg_proc pp "
+                + "  left join gs_package gp on gp.oid = pp.propackageid WHERE pronamespace = "
+                + "  (SELECT pg_namespace.oid FROM pg_namespace WHERE nspname = '"
+                + DebugUtils.containsSqlInjection(schema) + "') and pp.propackageid != 0 "
+                + "  union all\n"
+                + "  select count(1) FROM pg_proc pp\n"
+                + "  left join gs_package gp on gp.oid = pp.propackageid WHERE pronamespace = "
+                + "  (SELECT pg_namespace.oid FROM pg_namespace WHERE nspname = '"
+                + DebugUtils.containsSqlInjection(schema) + "') and pp.propackageid = 0 "
+                + ");";
         log.info("splicingSequenceDDL response is: " + ddl);
         return ddl;
     }
@@ -386,7 +393,7 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     @Override
     public String baseTypeListSQL() {
         String ddl;
-        ddl = "select pg_catalog.format_type(typ.oid,typ.typtypmod) as type" + LF
+        ddl = "select distinct(pg_catalog.format_type(typ.oid,typ.typtypmod)) as type" + LF
                 + "from pg_type typ left join pg_description des on (typ.oid = des.objoid) " + LF
                 + "where typ.typnamespace in (select oid from pg_namespace where nspname in " + LF
                 + "('information_schema', 'pg_catalog'))" + LF

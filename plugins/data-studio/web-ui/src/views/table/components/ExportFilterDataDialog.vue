@@ -16,8 +16,8 @@
       </el-radio-group>
     </div>
     <template #footer>
-      <el-button type="primary" @click="confirm">{{ $t('button.confirm') }}</el-button>
       <el-button @click="cancel">{{ $t('button.cancel') }}</el-button>
+      <el-button type="primary" @click="confirm">{{ $t('button.confirm') }}</el-button>
     </template>
   </el-dialog>
 </template>

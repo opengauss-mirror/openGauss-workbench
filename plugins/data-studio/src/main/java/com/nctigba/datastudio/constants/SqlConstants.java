@@ -656,7 +656,7 @@ public class SqlConstants {
     public static final String GET_VIEW_COLUMN_SQL = "select pa.attname as name, "
             + "format_type(pa.atttypid, atttypmod) AS type, pa.attnotnull as notnull "
             + "from pg_attribute pa left join pg_class pc on pa.attrelid = pc.oid "
-            + "left join pg_namespace pn on pc.relowner = pn.nspowner "
+            + "left join pg_namespace pn on pc.relnamespace = pn.oid  "
             + "where pn.nspname = '%s' and pc.relname = '%s' order by pa.attnum;";
 
     /**
