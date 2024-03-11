@@ -458,6 +458,9 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
             if (StrUtil.isBlank(status)) {
                 oldVersionAdapter(env);
             }
+            if (env.getUpdateTime() == null) {
+                env.setUpdateTime(new Date());
+            }
             boolean isTimeout = new Date().getTime() - env.getUpdateTime().getTime() > 3 * MONITOR_CYCLE * 1000L;
             boolean isDuring =
                     (AgentStatusEnum.STARTING.getStatus().equals(status) || AgentStatusEnum.STOPPING.getStatus().equals(
@@ -538,21 +541,21 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
     }
 
     private void checkHealthStatus(NctigbaEnvDO env) {
+        String cmd = "cd " + env.getPath()
+                + " && grep -qE \"Connection to backoff\\(elasticsearch\\"
+                + "(http://[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+:[0-9]+\\)\\) established\" filebeat.log "
+                + "&& echo \"true\" || echo \"false\" ";
         try (SshSession session = connect(env)) {
-            for (int i = 0; i < 10; i++) {
-                ThreadUtil.sleep(3000L);
-                String testRun = session.execute("cd " + env.getPath()
-                        + " && grep -qE \"Connection to backoff" + File.separator + "(elasticsearch" + File.separator
-                        + "(http://[0-9]+" + File.separator + ".[0-9]+" + File.separator + ".[0-9]+" + File.separator
-                        + ".[0-9]+:[0-9]+" + File.separator + ")" + File.separator + ") established\" filebeat.log "
-                        + "&& echo \"true\" || echo \"false\" ");
+            for (int i = 0; i < 30; i++) {
+                ThreadUtil.sleep(10000L);
+                String testRun = session.execute(cmd);
                 if (testRun.contains("true")) {
                     break;
                 } else {
-                    if (i == 9) {
+                    if (i == 29) {
                         env.setEnvStatus(AgentStatusEnum.ERROR_PROGRAM_UNHEALTHY.getStatus());
                         envMapper.updateById(env);
-                        throw new CustomException("filebeat is not healthy:" + testRun);
+                        throw new CustomException("filebeat is not healthy:" + testRun + cmd);
                     }
                 }
             }
