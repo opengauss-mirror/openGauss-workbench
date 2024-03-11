@@ -87,11 +87,20 @@ public class Installer implements SocketExtract {
                         PromInstallDTO promInstallParam = new PromInstallDTO();
                         promInstallParam.setHostId(obj.getStr("hostId")).setPath(obj.getStr("path"))
                             .setPort(obj.getInt("port")).setUsername(obj.getStr("username"))
-                            .setStorageDays(obj.getStr("storageDays"));
+                            .setStorageDays(obj.getStr("storageDays")).setEnvId(obj.getStr("envId"))
+                            .setType(obj.getStr("type"));
                         prometheusService.install(session, promInstallParam);
                         break;
                     case "uninstall prometheus":
                         prometheusService.uninstall(session, obj.getStr("id"));
+                        break;
+                    case "reinstall prometheus":
+                        PromInstallDTO promInstall = new PromInstallDTO();
+                        promInstall.setHostId(obj.getStr("hostId")).setPath(obj.getStr("path"))
+                            .setPort(obj.getInt("port")).setUsername(obj.getStr("username"))
+                            .setStorageDays(obj.getStr("storageDays")).setEnvId(obj.getStr("envId"))
+                            .setType(obj.getStr("type"));
+                        prometheusService.reinstall(session, promInstall);
                         break;
                     case "exporter":
                         ExporterInstallDTO exporterInstallDTO = new ExporterInstallDTO();

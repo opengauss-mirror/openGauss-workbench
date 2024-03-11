@@ -352,7 +352,6 @@ public class CollectTemplateNodeServiceImpl
             FileUtil.appendUtf8String(YamlUtils.dump(conf), prometheusConfigFile);
 
             // upload
-            promSession.execute("rm " + promEnv.getPath() + CommonConstants.PROMETHEUS_YML);
             promSession.upload(prometheusConfigFile.getCanonicalPath(),
                 promEnv.getPath() + CommonConstants.PROMETHEUS_YML);
             Files.delete(prometheusConfigFile.toPath());

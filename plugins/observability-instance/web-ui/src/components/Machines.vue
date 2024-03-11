@@ -27,12 +27,14 @@ const props = withDefaults(
     notClearable?: boolean
     autoSelectFirst?: boolean
     disabled?: boolean
+    initValue: string
   }>(),
   {
     width: '',
     notClearable: false,
     autoSelectFirst: false,
     disabled: false,
+    initValue: ''
   }
 )
 const emit = defineEmits(['change', 'loaded'])
@@ -45,6 +47,9 @@ const selectMachine = (val: string[]) => {
 }
 
 onMounted(() => {
+  if (props.initValue) {
+    machineValue.value = props.initValue
+  }
   clusterData()
 })
 const { data: rer, run: clusterData } = useRequest(
@@ -58,7 +63,7 @@ watch(rer, (rer) => {
   if (rer.length) {
     machineList.value = rer
     emit('loaded')
-    if (props.autoSelectFirst && machineList.value.length > 0) {
+    if (props.autoSelectFirst && machineList.value.length > 0 && !machineValue.value) {
       machineValue.value = machineList.value[0].hostId
       emit('change', machineValue.value)
     }
