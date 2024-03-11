@@ -28,7 +28,7 @@
             :show-file-list="true"
             :auto-upload="false"
             draggable
-            accept=".tar.gz"
+            accept=".gz"
             @success="handleUploadSuccess"
             @error="handleUploadError"
             @before-remove="handleBeforeRemove"
