@@ -225,9 +225,9 @@ public class JschUtil {
     /**
      * getFileNamesByPath
      *
-     * @param session session
+     * @param session   session
      * @param linuxPath linuxPath
-     * @param isSql isSql
+     * @param isSql     isSql
      * @return List<String> list
      */
     public static List<String> getFileNamesByPath(Session session, String linuxPath, boolean isSql) {
@@ -244,10 +244,7 @@ public class JschUtil {
             // Add the names of .sql and .txt files to the list
             for (ChannelSftp.LsEntry entry : entries) {
                 String filename = entry.getFilename();
-                if (isSql && filename.endsWith(".sql")) {
-                    fileNames.add(filename);
-                }
-                if (!isSql && (filename.endsWith(".sql") || filename.endsWith(".txt"))) {
+                if (isSql && filename.endsWith(".attach")) {
                     fileNames.add(filename);
                 }
             }
