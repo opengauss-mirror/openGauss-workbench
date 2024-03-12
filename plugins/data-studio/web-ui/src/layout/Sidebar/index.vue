@@ -2001,6 +2001,7 @@
             functionMap: [
               {
                 oid,
+                name,
                 isPackage: fileType === 'package',
               },
             ],

@@ -53,6 +53,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.QUERY_COVERAGE_PARAM;
 import static com.nctigba.datastudio.constants.SqlConstants.QUERY_DEF_SQL;
 import static com.nctigba.datastudio.enums.MessageEnum.CREATE_COVERAGE_RATE;
+import static com.nctigba.datastudio.enums.MessageEnum.DISCONNECTION;
 import static com.nctigba.datastudio.enums.MessageEnum.PARAM_WINDOW;
 import static com.nctigba.datastudio.enums.MessageEnum.WINDOW;
 
@@ -92,6 +93,13 @@ public class StartDebugImpl implements OperationInterface {
                     webSocketServer.sendMessage(windowName, CREATE_COVERAGE_RATE, SUCCESS, null);
                     return;
                 }
+            }
+        } catch (SQLException e) {
+            if (e.getMessage().contains("FATAL: terminating connection due to administrator command")) {
+                webSocketServer.sendMessage(windowName, DISCONNECTION,
+                        LocaleStringUtils.transLanguageWs("1004", webSocketServer), paramReq.getUuid());
+                webSocketServer.setStatement(rootWindowName, null);
+                return;
             }
         }
 

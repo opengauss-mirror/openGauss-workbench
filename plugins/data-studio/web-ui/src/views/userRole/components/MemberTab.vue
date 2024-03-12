@@ -156,6 +156,7 @@
 <style lang="scss" scoped>
   .rule-form {
     overflow-x: hidden;
+    width: 100%;
   }
   :deep(.el-select) {
     width: 100%;

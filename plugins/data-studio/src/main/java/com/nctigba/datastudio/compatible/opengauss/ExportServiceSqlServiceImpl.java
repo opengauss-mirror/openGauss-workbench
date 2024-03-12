@@ -470,7 +470,7 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
         List<Object> list = new ArrayList<>();
         List<Map<String, Object>> functionMap = request.getFunctionMap();
         functionMap.forEach(item -> {
-            list.add(item.get(OID));
+            list.add(item.get(NAME) + UNDERLINE + item.get(OID));
         });
         String fileName = getFileName(false, FUNCTION, list);
         String path = ROOT_PATH + File.separator + fileName;
