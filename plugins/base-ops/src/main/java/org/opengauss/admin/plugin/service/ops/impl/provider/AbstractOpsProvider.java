@@ -168,7 +168,7 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
                                      OpenGaussSupportOSEnum expectedOs) {
         boolean dependencyCorrect = false;
         String[] dependencyPackageNames = {"libaio-devel", "flex", "bison", "ncurses-devel", "glibc-devel",
-                "patch", "redhat-lsb-core", "readline-devel", "lsscsi"};
+                "patch", "readline-devel"};
         try {
             JschResult jschResult = jschUtil.executeCommand(SshCommandConstants.DEPENDENCY, rootSession);
             List<String> dependencyPackages = Arrays.stream(dependencyPackageNames).map(

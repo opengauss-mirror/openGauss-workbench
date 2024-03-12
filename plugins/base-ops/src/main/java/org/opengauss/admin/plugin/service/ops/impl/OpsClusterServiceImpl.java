@@ -117,7 +117,7 @@ import java.util.stream.Collectors;
 @Service
 public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClusterEntity> implements IOpsClusterService {
     private static String[] dependencyPackageNames = {"libaio-devel", "flex", "bison", "ncurses-devel", "glibc-devel",
-            "patch", "redhat-lsb-core", "readline-devel"};
+            "patch", "readline-devel"};
 
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
@@ -3130,21 +3130,21 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
                     int suggestedNum = 2;
                     if (cpuCoreNum < suggestedNum) {
-                        cpuFrequencyProperty.setStatus(HostEnvStatusEnum.ERROR);
+                        cpuFrequencyProperty.setStatus(HostEnvStatusEnum.WARMING);
                         cpuFrequencyProperty.setStatusMessage("min 2.0GHz");
                     }
                 } catch (Exception e) {
                     log.error("Parse command response error", e);
-                    cpuFrequencyProperty.setStatus(HostEnvStatusEnum.ERROR);
+                    cpuFrequencyProperty.setStatus(HostEnvStatusEnum.WARMING);
                     cpuFrequencyProperty.setStatusMessage("min 2.0GHz");
                 }
             } else {
-                cpuFrequencyProperty.setStatus(HostEnvStatusEnum.ERROR);
+                cpuFrequencyProperty.setStatus(HostEnvStatusEnum.WARMING);
                 cpuFrequencyProperty.setStatusMessage("min 2.0GHz");
             }
         } catch (IOException e) {
             log.error("Parse command response error：", e);
-            cpuFrequencyProperty.setStatus(HostEnvStatusEnum.ERROR);
+            cpuFrequencyProperty.setStatus(HostEnvStatusEnum.WARMING);
             cpuFrequencyProperty.setStatusMessage("min 2.0GHz");
         }
         return cpuFrequencyProperty;
