@@ -402,8 +402,12 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
         }
         if (data.getIsOnly() != null) {
             if (data.getIsOnly()) {
-                String unique = String.format(CONSTRAINT_UNIQUE_SQL, schema, tableName,
-                        tableName + "_" + column + "_key", column);
+                String uniqueKey = tableName;
+                if (tableName.startsWith("\"") && tableName.endsWith("\"")) {
+                    uniqueKey = tableName.substring(1, tableName.length() - 1) + "_" + column + "_key";
+                    uniqueKey = DebugUtils.needQuoteName(uniqueKey);
+                }
+                String unique = String.format(CONSTRAINT_UNIQUE_SQL, schema, tableName, uniqueKey, column);
                 list.add(unique);
             } else {
                 String uniqueKey = getConname(String.format(CONSTRAINT_TABLE_COLUMN_SQL, schema, tableName,
@@ -596,7 +600,8 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
         } else if (tableUnderlyingInfoQuery.getFillingFactor() != 100) {
             cteate.append(String.format(WITH_SQL, FILLFACTOR_SQL, tableUnderlyingInfoQuery.getFillingFactor()));
         }
-        cteate.append(String.format(TABLESPACE_SQL, tableUnderlyingInfoQuery.getTableSpace())).append(
+        cteate.append(String.format(TABLESPACE_SQL,
+                DebugUtils.needQuoteName(tableUnderlyingInfoQuery.getTableSpace()))).append(
                 getPartitionSQL(request.getPartitionInfo())).append(LF).append(SEMICOLON);
         StringBuilder indexComment = new StringBuilder();
         for (var index : request.getIndexs()) {
@@ -652,7 +657,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
             } else if (request.getConType().equals("p")) {
                 partition.append(String.format(PRIMARY_KEY_SQL, request.getConName(), request.getAttName()));
             } else if (request.getConType().equals("c")) {
-                partition.append(String.format(CHECK_SQL, request.getConName(), request.getAttName()));
+                partition.append(String.format(CHECK_SQL, request.getConName(), request.getConstraintDef()));
             } else if (request.getConType().equals("f")) {
                 partition.append(
                         String.format(FOREIGN_KEY_SQL, request.getConName(), request.getAttName(), request.getNspName(),

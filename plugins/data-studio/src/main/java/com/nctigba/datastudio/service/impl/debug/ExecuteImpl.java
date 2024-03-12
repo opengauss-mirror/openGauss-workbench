@@ -51,6 +51,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.QUERY_DEF_SQL;
 import static com.nctigba.datastudio.enums.MessageEnum.CONFIRM;
+import static com.nctigba.datastudio.enums.MessageEnum.DISCONNECTION;
 import static com.nctigba.datastudio.enums.MessageEnum.PARAM_WINDOW;
 
 /**
@@ -95,6 +96,13 @@ public class ExecuteImpl implements OperationInterface {
                 }
             }
             log.info("execute definition: " + definition);
+        } catch (SQLException e) {
+            if (e.getMessage().contains("FATAL: terminating connection due to administrator command")) {
+                webSocketServer.sendMessage(windowName, DISCONNECTION,
+                        LocaleStringUtils.transLanguageWs("1004", webSocketServer), paramReq.getUuid());
+                webSocketServer.setStatement(rootWindowName, null);
+                return;
+            }
         }
 
         if (!DebugUtils.replaceLine(paramReq.getSql()).equals(DebugUtils.replaceLine(definition))

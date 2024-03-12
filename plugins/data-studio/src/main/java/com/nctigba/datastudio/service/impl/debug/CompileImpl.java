@@ -47,6 +47,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.OID;
 import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
 import static com.nctigba.datastudio.constants.CommonConstants.SUCCESS;
 import static com.nctigba.datastudio.constants.SqlConstants.QUERY_OID_SQL;
+import static com.nctigba.datastudio.enums.MessageEnum.DISCONNECTION;
 import static com.nctigba.datastudio.enums.MessageEnum.MESSAGE;
 import static com.nctigba.datastudio.enums.MessageEnum.NEW_FILE;
 import static com.nctigba.datastudio.enums.MessageEnum.REFRESH_SCHEMA;
@@ -94,6 +95,13 @@ public class CompileImpl implements OperationInterface {
         ) {
             while (resultSetOld.next()) {
                 oldOidList.add(resultSetOld.getString(OID));
+            }
+        } catch (SQLException e) {
+            if (e.getMessage().contains("FATAL: terminating connection due to administrator command")) {
+                webSocketServer.sendMessage(windowName, DISCONNECTION,
+                        LocaleStringUtils.transLanguageWs("1004", webSocketServer), paramReq.getUuid());
+                webSocketServer.setStatement(rootWindowName, null);
+                return;
             }
         }
 
