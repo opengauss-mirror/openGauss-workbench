@@ -25,11 +25,11 @@
         <el-input v-model="formData.notifyTemplateName" :placeholder="$t('notifyTemplate.templateNamePlaceholder')"
           :disabled="disabled"></el-input>
       </el-form-item>
-      <el-form-item :label="$t('notifyTemplate.templateType')" prop="notifyTemplateType">
-        <el-select v-model="formData.notifyTemplateType" :disabled="disabled" style="width: 100px;margin: 5px;">
+      <!-- <el-form-item :label="$t('notifyTemplate.templateType')" prop="notifyTemplateType">
+        <el-select v-model="formData.notifyTemplateType" :disabled="disabled" style="width: 200px;">
           <el-option v-for="item in templateTypeList" :key="item.value" :value="item.value" :label="item.name" />
         </el-select>
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item :label="$t('notifyTemplate.templateDesc')" prop="notifyTemplateDesc">
         <el-input v-model="formData.notifyTemplateDesc" :placeholder="$t('notifyTemplate.templateDescPlaceholder')"
           :disabled="disabled"></el-input>
@@ -115,7 +115,7 @@ const disabled = ref<boolean>(true)
 const initFormData = {
   id: '',
   notifyTemplateName: '',
-  notifyTemplateType: '',
+  // notifyTemplateType: '',
   notifyTemplateDesc: '',
   notifyTitle: '',
   notifyContent: ''
@@ -136,9 +136,9 @@ const formRules = reactive<FormRules>({
   notifyTemplateName: [
     { required: true, message: t('notifyTemplate.templateNamePlaceholder'), trigger: 'blur' },
   ],
-  notifyTemplateType: [
-    { required: true, message: t('notifyTemplate.templateTypePlaceholder'), trigger: 'blur' },
-  ],
+  // notifyTemplateType: [
+  //   { required: true, message: t('notifyTemplate.templateTypePlaceholder'), trigger: 'blur' },
+  // ],
   notifyTitle: [
     { required: true, message: t('notifyTemplate.notifyTitlePlaceholder'), trigger: 'blur' },
   ],

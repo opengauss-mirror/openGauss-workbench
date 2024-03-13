@@ -79,9 +79,9 @@ public class NotifyTemplateControllerTest {
     @Test
     public void testGetList() {
         List<NotifyTemplateDO> list = new ArrayList<>();
-        when(notifyTemplateService.getList(anyString())).thenReturn(list);
-        AjaxResult result = notifyTemplateController.getList("");
-        verify(notifyTemplateService, times(1)).getList(anyString());
+        when(notifyTemplateService.getList()).thenReturn(list);
+        AjaxResult result = notifyTemplateController.getList();
+        verify(notifyTemplateService, times(1)).getList();
         assertEquals(list, result.get("data"));
     }
 

@@ -60,9 +60,8 @@ public class NotifyTemplateServiceImpl extends ServiceImpl<NotifyTemplateMapper,
     public Page getListPage(String notifyTemplateName, String notifyTemplateType, Page page) {
         return this.page(page,
                 Wrappers.<NotifyTemplateDO>lambdaQuery().like(StrUtil.isNotBlank(notifyTemplateName),
-                        NotifyTemplateDO::getNotifyTemplateName, notifyTemplateName).eq(
-                        StrUtil.isNotBlank(notifyTemplateType), NotifyTemplateDO::getNotifyTemplateType,
-                        notifyTemplateType).eq(NotifyTemplateDO::getIsDeleted, CommonConstants.IS_NOT_DELETE)
+                        NotifyTemplateDO::getNotifyTemplateName, notifyTemplateName)
+                    .eq(NotifyTemplateDO::getIsDeleted, CommonConstants.IS_NOT_DELETE)
                     .orderByDesc(NotifyTemplateDO::getId));
     }
 
@@ -91,9 +90,8 @@ public class NotifyTemplateServiceImpl extends ServiceImpl<NotifyTemplateMapper,
     }
 
     @Override
-    public List<NotifyTemplateDO> getList(String notifyTemplateType) {
+    public List<NotifyTemplateDO> getList() {
         return this.list(Wrappers.<NotifyTemplateDO>lambdaQuery().eq(NotifyTemplateDO::getIsDeleted,
-                CommonConstants.IS_NOT_DELETE).eq(StrUtil.isNotBlank(notifyTemplateType),
-                NotifyTemplateDO::getNotifyTemplateType, notifyTemplateType).orderByDesc(NotifyTemplateDO::getId));
+                CommonConstants.IS_NOT_DELETE).orderByDesc(NotifyTemplateDO::getId));
     }
 }

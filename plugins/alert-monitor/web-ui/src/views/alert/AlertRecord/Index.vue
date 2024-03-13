@@ -4,17 +4,21 @@
       <div class="icon"></div>
       <div class="title">{{ t('alertRecord.title') }}</div>
       <div class="seperator"></div>
-      <div class="alert-title">{{ t('alertRecord.title') }} </div>
-      <div class="alert-seperator">&nbsp;/</div>
+      <!-- <div class="alert-title">{{ t('alertRecord.title') }} </div> -->
+      <el-breadcrumb separator="/" style="flex-grow: 1">
+        <el-breadcrumb-item>
+          {{ t('alertRecord.title') }}
+        </el-breadcrumb-item>
+      </el-breadcrumb>
     </div>
     <div class="search-form">
       <div class="filter">
-        <el-icon color="#F56C6C" style="margin-right: 5px">
+        <el-icon size="20" color="#E41D1D" style="margin-top: 3px;margin-right: 5px">
           <Bell />
         </el-icon>
-        <span>{{ $t(`alertRecord.alertTotal`) }}：{{ statisticsData.totalNum }}</span>
-        <span style="margin-left: 24px;">{{ $t(`alertRecord.unread`) }}：{{ statisticsData.unReadNum }}</span>
-        <span style="margin-left: 24px;">{{ $t(`alertRecord.read`) }}：{{ statisticsData.readNum }}</span>
+        <span>{{ $t(`alertRecord.alertTotal`) }}：<span style="font-weight: bold">{{ statisticsData.totalNum }}</span></span>
+        <span style="margin-left: 24px;">{{ $t(`alertRecord.unread`) }}：<span style="font-weight: bold">{{ statisticsData.unReadNum }}</span></span>
+        <span style="margin-left: 24px;">{{ $t(`alertRecord.read`) }}：<span style="font-weight: bold">{{ statisticsData.readNum }}</span></span>
       </div>
       <div class="seperator"></div>
       <div class="filter" style="margin-right: 20px">
@@ -55,7 +59,7 @@
         </div>
         <div class="seperator"></div>
         <div class="filter">
-          <span>{{ $t('alertRecord.recordStatus') }}:&nbsp;</span>
+          <span>{{ $t('alertRecord.recordStatus') }}：</span>
           <el-checkbox-group v-model="formData.recordStatus" @change="changeRecordStatus" size="large">
             <el-checkbox label="0">{{ $t(`alertRecord.unread`) }}</el-checkbox>
             <el-checkbox label="1">{{ $t(`alertRecord.read`) }}</el-checkbox>
@@ -63,7 +67,7 @@
           <el-divider direction="vertical" />
         </div>
         <div class="filter">
-          <span>{{ $t('alertRecord.alertStatus') }}:&nbsp;</span>
+          <span>{{ $t('alertRecord.alertStatus') }}：</span>
           <el-checkbox-group v-model="formData.alertStatus" @change="changeAlertStatus" size="large">
             <el-checkbox label="0">{{ $t(`alertRecord.alerting`) }}</el-checkbox>
             <el-checkbox label="1">{{ $t(`alertRecord.alerted`) }}</el-checkbox>
@@ -71,7 +75,7 @@
           <el-divider direction="vertical" />
         </div>
         <div class="filter">
-          <span>{{ $t('alertRecord.level') }}:&nbsp;</span>
+          <span>{{ $t('alertRecord.level') }}：</span>
           <el-checkbox-group v-model="formData.alertLevel" @change="changeLevel" size="large">
             <el-checkbox label="serious">{{ $t(`alertRule.serious`) }}</el-checkbox>
             <el-checkbox label="warn">{{ $t(`alertRule.warn`) }}</el-checkbox>
@@ -122,8 +126,8 @@
         </el-table-column>
         <el-table-column :label="$t('alertRecord.table[13]')" fixed="right">
           <template #default="scope">
-            <el-button link type="primary" size="small" @click="showDetail(scope.row.id)">{{ $t('app.view')
-            }}</el-button>
+            <el-link :underline="false" type="primary" size="small" @click="showDetail(scope.row.id)">{{ $t('app.view')
+            }}</el-link>
           </template>
         </el-table-column>
       </el-table>

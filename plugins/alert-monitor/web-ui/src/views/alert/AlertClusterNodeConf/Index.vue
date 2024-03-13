@@ -33,10 +33,10 @@
         <el-table-column prop="templateName" :label="t('AlertClusterNodeConf.table[3]')" />
         <el-table-column :label="t('AlertClusterNodeConf.table[4]')">
           <template #default="scope">
-            <el-button link type="primary" size="small" @click="editClusterNodeConf(scope.row)">{{
-              t('AlertClusterNodeConf.confBtn') }}</el-button>
-              <el-button link type="primary" size="small" @click="unbindClusterNodeConf(scope.row)">{{
-              t('AlertClusterNodeConf.unbindConfBtn') }}</el-button>
+            <el-link :underline="false" type="primary" style="margin-right: 10px" @click="editClusterNodeConf(scope.row)">{{
+              t('AlertClusterNodeConf.confBtn') }}</el-link>
+              <el-link :underline="false" type="primary" @click="unbindClusterNodeConf(scope.row)">{{
+              t('AlertClusterNodeConf.unbindConfBtn') }}</el-link>
           </template>
         </el-table-column>
       </el-table>

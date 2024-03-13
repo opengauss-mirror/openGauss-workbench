@@ -46,7 +46,7 @@ public class AlertApplicationRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         try {
             prometheusService.initPrometheusConfig();
-        } catch (ServiceException e) {
+        } catch (ServiceException | IllegalStateException e) {
             log.warn("init prometheus configuration fail: ", e.getMessage());
         }
     }

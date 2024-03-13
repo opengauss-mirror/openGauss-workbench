@@ -105,7 +105,7 @@ public class AlertRuleController extends BaseController {
      * @return AjaxResult.success()
      */
     @PostMapping
-    public AjaxResult saveRule(@RequestBody @Validated AlertRuleParamDTO alertRule) {
+    public AjaxResult saveRule(@Validated @RequestBody AlertRuleParamDTO alertRule) {
         Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
         String errorMsg = MessageSourceUtils.get("validateFail");
         if (alertRule.getRuleType().equals(CommonConstants.INDEX_RULE)) {

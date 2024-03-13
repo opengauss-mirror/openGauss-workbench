@@ -4,28 +4,32 @@
       <div class="icon"></div>
       <div class="title">{{ t('alertRecord.detailTitle') }}</div>
       <div class="seperator"></div>
-      <div class="alert-title">{{ t('alertRecord.title') }} </div>
-      <div class="alert-seperator">&nbsp;/&nbsp;</div>
-      <div class="alert-title">{{ t('alertRecord.detailTitle') }} </div>
+      <!-- <div class="alert-title">{{ t('alertRecord.title') }} </div>
+      <div class="alert-seperator">&nbsp;/&nbsp;</div> -->
+      <el-breadcrumb separator="/" style="flex-grow: 1">
+        <el-breadcrumb-item>
+          {{ t('alertRecord.detailTitle') }}
+        </el-breadcrumb-item>
+      </el-breadcrumb>
     </div>
 
     <el-row style="margin-top: 8px;">
       <el-col :span="8">
         <div class="record-detail">
           <div style="display: flex">
-            <el-icon size="18" color="red" style="margin-top: 12px; margin-left: 12px">
+            <el-icon size="20" color="#E41D1D" style="margin-top: 14px;">
               <Bell />
             </el-icon>
             <h5 class="title">{{ t('alertRecord.alertInstance') }}</h5>
           </div>
           <div>
-            <div style="margin-bottom: 5px !important;margin-left: 5px;">
+            <div style="margin-bottom: 4px !important;">
               <span>{{$t('alertRecord.clusterName')}}：</span><span>{{ formData.clusterId }}</span>
             </div>
-            <div style="margin-bottom: 5px !important;margin-left: 5px;">
+            <div style="margin-bottom: 4px !important;">
               <span>{{$t('alertRecord.IPAndPort')}}：</span><span>{{ formData.hostIpAndPort }}</span>
             </div>
-            <div style="margin-bottom: 5px !important;margin-left: 5px;">
+            <div style="margin-bottom: 4px !important;">
               <span>{{$t('alertRecord.nodeRole')}}：</span><span>{{ formData.nodeRole }}</span>
             </div>
           </div>
@@ -34,25 +38,25 @@
       <el-col :span="8">
         <div class="record-detail">
           <div style="display: flex">
-            <el-icon size="18" color="red" style="margin-top: 12px; margin-left: 12px">
+            <el-icon size="20" color="#E41D1D" style="margin-top: 14px;">
               <Bell />
             </el-icon>
             <h5 class="title">{{ t('alertRecord.alertRule') }}</h5>
           </div>
           <div style="position: relative">
-            <div style="margin-bottom: 5px !important;margin-left: 5px;">
+            <div style="margin-bottom: 4px !important;">
               <span>{{$t('alertRule.ruleName')}}：</span><span>{{ formData.templateRuleName }}</span>
             </div>
-            <div style="margin-bottom: 5px !important;margin-left: 5px;">
+            <div style="margin-bottom: 4px !important;">
               <span>{{$t('alertRecord.table[6]')}}：</span><span>{{ formData.level }}</span>
             </div>
-            <div style="margin-bottom: 5px !important;margin-left: 5px;">
+            <div style="margin-bottom: 4px !important;">
               <span>{{$t('alertRecord.table[3]')}}：</span><span>{{ formData.templateName }}</span>
             </div>
-            <div style="margin-bottom: 5px !important;margin-left: 5px;">
+            <div style="margin-bottom: 4px !important;">
               <span>{{$t('alertRecord.table[11]')}}：</span><span>{{ formData.notifyWayNames }}</span>
             </div>
-            <div style="margin-bottom: 5px !important;margin-left: 5px;display: flex;">
+            <div style="margin-bottom: 4px !important;display: flex;">
               <span style="white-space: nowrap;">{{$t('alertRecord.alertContent')}}：</span><span style="white-space: pre-wrap;">{{ formData.alertContent }}</span>
             </div>
           </div>
@@ -61,22 +65,22 @@
       <el-col :span="8">
         <div class="record-detail">
           <div style="display: flex">
-            <el-icon size="18" color="red" style="margin-top: 12px; margin-left: 12px">
+            <el-icon size="20" color="#E41D1D" style="margin-top: 14px;">
               <Bell />
             </el-icon>
-            <h5 class="title">{{ t('alertRecord.alertStatus') }}</h5>
+            <h5  class="title">{{ t('alertRecord.alertStatus') }}</h5>
           </div>
           <div>
-            <div style="margin-bottom: 5px !important;margin-left: 5px;">
+            <div style="margin-bottom: 4px !important;">
               <span>{{$t('alertRecord.table[7]')}}：</span><span>{{ formData.startTime }}</span>
             </div>
-            <div style="margin-bottom: 5px !important;margin-left: 5px;">
+            <div style="margin-bottom: 4px !important;">
               <span>{{$t('alertRecord.table[8]')}}：</span><span>{{ formData.endTime }}</span>
             </div>
-            <div style="margin-bottom: 5px !important;margin-left: 5px;">
+            <div style="margin-bottom: 4px !important;">
               <span>{{$t('alertRecord.table[9]')}}：</span><span>{{ durationFormat(formData.duration) }}</span>
             </div>
-            <div style="margin-bottom: 5px !important;margin-left: 5px;">
+            <div style="margin-bottom: 4px !important;">
               <span>{{$t('alertRecord.table[12]')}}：</span><span><el-switch v-model="formData.recordStatus" :active-value="1" :inactive-value="0" @change="markAs" /></span>
             </div>
           </div>
@@ -86,7 +90,7 @@
     <div class="alert-table" style="margin-top: 8px;" v-if="formData.templateRuleType === 'index'">
       <div class="page-header" style="padding: 7px;">
         <div class="icon"></div>
-        <div class="title" style="font-size: 14px;font-weight: 500;">{{ t('alertRecord.alertRelationView') }}</div>
+        <div class="title" style="font-size: 14px;font-weight: 500;margin: 0 4px !important">{{ t('alertRecord.alertRelationView') }}</div>
       </div>
       <div v-for="(item, index) in relationDatas" style="width: 100%; height: 200px;margin-top: 20px;" :key="index">
           <div style="margin: 10px">{{item.name}}</div>
@@ -394,16 +398,12 @@ onMounted(() => {
   border-radius: 2px;
   margin: 5px;
   height: 220px;
-  overflow: auto
-}
+  overflow: auto;
+  padding-left: 12px;
 
-.title {
-  font-style: 'normal';
-  font-weight: 'bold';
-  font-size: 14px;
-  line-height: 22px;
-  margin: 12px;
-  margin-left: 2px;
+  .title {
+    margin: 12px 0 4px 4px !important;
+  }
 }
 
 .content {

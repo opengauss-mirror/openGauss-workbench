@@ -130,7 +130,6 @@ ALTER TABLE "alert_rule_item" ADD COLUMN "block_word" text;
 COMMENT ON COLUMN "alert_rule_item"."keyword" IS '关键字，多个用逗号分隔';
 COMMENT ON COLUMN "alert_rule_item"."block_word" IS '屏蔽词，多个用逗号分隔';
 ALTER TABLE alert_rule_item ALTER COLUMN rule_exp_param TYPE text;
-alter table alert_rule_item ALTER COLUMN rule_exp TYPE text;
 
 
 CREATE TABLE IF NOT EXISTS "alert_rule_item_param" (
@@ -313,7 +312,6 @@ ALTER TABLE "alert_template_rule_item" ADD COLUMN "block_word" text;
 COMMENT ON COLUMN "alert_template_rule_item"."keyword" IS '关键字，多个用逗号分隔';
 COMMENT ON COLUMN "alert_template_rule_item"."block_word" IS '屏蔽词，多个用逗号分隔';
 ALTER TABLE alert_template_rule_item ALTER COLUMN rule_exp_param TYPE text;
-alter table alert_template_rule_item ALTER COLUMN rule_exp TYPE text;
 
 CREATE TABLE alert_template_rule_item_param (
     id int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -654,9 +652,6 @@ INSERT into alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_va
  rule_item_desc,is_deleted,create_time,update_time,action,rule_exp_param)
   VALUES (8,8,'A','tablespaceSize','>',500,'MB','pg_tablespace_size{name=~"${name}",instance=~"${instances}"}',
   '表空间容量超过500MB',0,'2023-08-07 15:45:20.02',null,'normal','{"name":"postgres"}') ;
-update alert_rule_item set rule_exp = 'pg_tablespace_size{instance=~"${instances}"}', rule_exp_param = '' where id =
-8;
-
 
  INSERT into alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
   VALUES (9,'慢sql运行时间监控','serious','index','A','${nodeName}的一些sql运行时间超过10秒',0,'s',1,0,null,null,'firing','1',
@@ -719,7 +714,7 @@ INSERT into alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_va
 
 
  -- 2023-11-20
-update notify_way set email = '' where id = 1 and email = 'xxxx@xxx.com';
+update notify_way set email = '' where id = 1;
 
 delete from alert_rule where id = 11;
 delete from alert_rule_item where id in (11,21);
@@ -729,6 +724,8 @@ COMMENT ON COLUMN "alert_rule_item_src"."alert_params" IS '告警参数，用于
 ALTER TABLE "alert_rule_item_src" ADD COLUMN "name_zh" varchar(100);
 ALTER TABLE "alert_rule_item_src" ADD COLUMN "name_en" varchar(100);
 ALTER TABLE "alert_rule_item_src" ADD COLUMN "analysis_bean_name" varchar(200);
+
+alter table "alert_rule_item" ALTER COLUMN rule_exp TYPE text;
 
 delete from alert_rule_item_src where id = 18;
 delete from alert_rule_item_exp_src where id = 45;
@@ -821,7 +818,6 @@ INSERT into alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_va
  VALUES (26,26,'A','activeSessionGtCpuCore','',null,'%','sum(pg_state_activity_group_count{state="active",
  instance=~"${instances}"}) by (instance) > count(agent_cpu_seconds_total{mode="system",instance=~"${instances}"}) by (instance)',
  '活动会话数大于CPU核数',0,now(),null,'normal') ;
- update public.alert_rule_item set unit = '%' where id = 26;
 
 --每秒死锁数
 insert into alert_rule_item_src(id,name,name_zh,name_en,unit,params,create_time,alert_params) values (74,
@@ -866,8 +862,6 @@ INSERT into alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_va
  VALUES (29,29,'A','dbReplicationSlotDelay','>',1,'MB',
  'pg_replication_slots_delay_lsn{instance=~"${instances}"}[2m]',
 '主库复制槽延迟大于1MB',0,now(),null,'normal') ;
-update alert_rule_item set rule_exp = 'pg_replication_slots_delay_lsn{instance=~"${instances}"}/1024/1024' where id =
-29;
 
 -- 锁阻塞时间
 insert into alert_rule_item_src(id,name,name_zh,name_en,unit,params,create_time,alert_params,analysis_bean_name) values (77,
@@ -933,10 +927,6 @@ INSERT into alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_va
  'rate(agent_network_receive_errors_total{instance=~"${instances}"}[5m]) + rateagent_network_transmit_errors_total{instance=~"${instances}"}[5m])',
  '网络每秒错包数量大于5',0,now(),null,'normal') ;
 
-update public.alert_rule_item_exp_src set exp = 'rate(agent_network_receive_errors_total{instance=~"${instances}"}[5m])+rate(agent_network_transmit_errors_total{instance=~"${instances}"}[5m])' where id = 80;
-
-update public.alert_rule_item set rule_exp = 'rate(agent_network_receive_errors_total{instance=~"${instances}"}[5m]) + rate(agent_network_transmit_errors_total{instance=~"${instances}"}[5m])' where id = 33;
-
 -- 磁盘IO读写延迟
 insert into alert_rule_item_src(id,name,name_zh,name_en,unit,params,create_time) values (81,
 'IOLatency','磁盘IO读写延迟','Disk I/O read-write latency','','',now()) ;
@@ -982,7 +972,7 @@ insert into alert_rule_item_src(id,name,name_zh,name_en,unit,params,create_time,
 insert into alert_rule_item_exp_src(id,rule_item_src_id,action,operate,limit_value,exp,show_limit_value,
 create_time) values(83,83,'normal','',null,
 '100 - pg_tablespace_size{instance=~"${instances}"}/pg_tablespace_spcmaxsize{instance=~"${instances}"} * 100',1,now()) ;
- update alert_rule_item_src set analysis_bean_name = 'remainTablespaceAnalysisService' where id = 83;
+ update alert_rule_item_src set analysis_bean_name = 'remaint8ablespaceAnalysisService' where id = 83;
 
 INSERT into alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (37,'剩余表空间不足告警','serious','index','A','故障描述：${nodeName}上存在表空间剩余空间不足10%\n处理建议：请清理不必要的磁盘文件',
@@ -1319,3 +1309,12 @@ CREATE TABLE IF NOT EXISTS alert_record_detail (
 );
 alter table "notify_message" rename column record_id to record_ids;
 alter table "notify_message" ALTER COLUMN record_ids TYPE text;
+
+-- 2024-03-08
+update alert_rule set is_repeat = 0 where id in (1,2,3,7,8,9,10,12,13,14,15) and is_repeat = 1;
+update alert_rule set rule_content = '故障描述：${nodeName}的CPU使用率超过95%，当前使用率为${value}\n处理建议：请检查主机上占用CPU高的进程' where id = 1;
+update alert_rule set rule_content = '故障描述：${nodeName}上存在磁盘分区使用率超过90%\n处理建议：请清理不必要的磁盘文件' where id = 3;
+update alert_rule set rule_content = '故障描述：${nodeName}无法连接\n处理建议：请检查主机是否正常运行,SSH服务是否正常运行' where id = 24;
+update alert_rule set rule_content = '故障描述：${nodeName}上每秒网络错包数超过5个,实际值：${value}\n处理建议：请检查网络配置' where id = 33;
+update alert_rule set rule_content = '故障描述：${nodeName}上存在磁盘分区读写IO延迟超过10ms\n处理建议：请检查硬件配置' where id = 34;
+update alert_rule set rule_content = '故障描述：${nodeName}上存在磁盘分区inodes使用率超过90%\n处理建议：请清理不必要的磁盘文件' where id = 36;

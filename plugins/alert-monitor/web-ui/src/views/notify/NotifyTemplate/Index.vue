@@ -15,13 +15,13 @@
         <el-button type="primary" @click="addTemplate">{{ $t('app.add') }}</el-button>
       </div>
       <div class="seperator"></div>
-      <div class="filter">
-        <span>{{ $t('notifyTemplate.templateType') }}</span>
-        <el-select v-model="formData.notifyTemplateType" style="width: 100px;margin: 5px;" @change="changeTemplateType"
+      <!-- <div class="filter">
+        <span>{{ $t('notifyTemplate.templateType') }}：</span>
+        <el-select v-model="formData.notifyTemplateType" style="width: 150px;" @change="changeTemplateType"
           clearable>
           <el-option v-for="item in templateTypeList" :key="item.value" :value="item.value" :label="item.name" />
         </el-select>
-      </div>
+      </div> -->
       <div class="filter">
         <el-input v-model="formData.notifyTemplateName" style="width: 200px" @keyup.enter="search"
           :placeholder="$t('notifyTemplate.templateNamePlaceholder')">
@@ -36,11 +36,11 @@
         <el-table size="small" :data="tableDatas" style="width: 100%" header-cell-class-name="grid-header" border>
           <el-table-column :label="$t('notifyTemplate.templateName')" prop="notifyTemplateName" width="100">
           </el-table-column>
-          <el-table-column :label="$t('notifyTemplate.templateType')" prop="notifyTemplateType" width="100">
+          <!-- <el-table-column :label="$t('notifyTemplate.templateType')" prop="notifyTemplateType" width="100">
             <template #default="scope">
               <span>{{ $t(`notifyTemplate.${scope.row.notifyTemplateType}`) }}</span>
             </template>
-          </el-table-column>
+          </el-table-column> -->
           <el-table-column :label="$t('notifyTemplate.notifyTitle')" prop="notifyTitle" width="100">
           </el-table-column>
           <el-table-column :label="$t('notifyTemplate.notifyContent')" prop="notifyContent" min-width="200">
@@ -59,12 +59,12 @@
           </el-table-column>
           <el-table-column :label="$t('app.operate')" width="120" fixed="right">
             <template #default="scope">
-              <el-button link type="primary" size="small" @click="editTemplate(scope.row.id)">{{
+              <el-link :underline="false" type="primary" size="small" style="margin-right: 10px" @click="editTemplate(scope.row.id)">{{
                 $t('app.edit')
-              }}</el-button>
-              <el-button link type="primary" size="small" @click="delTemplate(scope.row.id)">{{
+              }}</el-link>
+              <el-link :underline="false" type="primary" size="small" @click="delTemplate(scope.row.id)">{{
                 $t('app.delete')
-              }}</el-button>
+              }}</el-link>
             </template>
           </el-table-column>
         </el-table>

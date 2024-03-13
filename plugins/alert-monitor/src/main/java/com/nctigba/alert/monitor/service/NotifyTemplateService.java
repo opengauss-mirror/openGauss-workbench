@@ -35,11 +35,34 @@ import java.util.List;
  * @description
  */
 public interface NotifyTemplateService extends IService<NotifyTemplateDO> {
+    /**
+     * page
+     *
+     * @param notifyTemplateName String
+     * @param notifyTemplateType String
+     * @param page Page
+     * @return Page
+     */
     Page getListPage(String notifyTemplateName, String notifyTemplateType, Page page);
 
+    /**
+     * save
+     *
+     * @param notifyTemplateDO entity
+     */
     void saveTemplate(NotifyTemplateDO notifyTemplateDO);
 
+    /**
+     * delById
+     *
+     * @param id long
+     */
     void delById(Long id);
 
-    List<NotifyTemplateDO> getList(String notifyTemplateType);
+    /**
+     * getList
+     *
+     * @return list
+     */
+    List<NotifyTemplateDO> getList();
 }

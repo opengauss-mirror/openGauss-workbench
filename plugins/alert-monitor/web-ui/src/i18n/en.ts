@@ -101,6 +101,8 @@ export default {
     isSilenceTip: 'Please set whether to enable silence mode',
     silenceTimeTip: 'Please select the silence period',
     notifyWayTip: 'Please select the notify way',
+    nextRepeatIsNotEmpty: 'The repeat cycle is not empty',
+    maxRepeatCountIsNotEmpty: 'The maximum repeat count is not empty',
     nextRepeatIsNum: 'The repeat cycle should be an integer',
     maxRepeatCountIsNum: 'The maximum repeat count should be an integer',
     isRepeat: 'Yes',

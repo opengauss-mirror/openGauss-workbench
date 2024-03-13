@@ -135,7 +135,7 @@ public class NotifyTemplateServiceImplTest {
     public void testGetList() {
         List<NotifyTemplateDO> list = new ArrayList<>();
         when(baseMapper.selectList(any())).thenReturn(list);
-        List<NotifyTemplateDO> resultList = notifyTemplateService.getList(anyString());
+        List<NotifyTemplateDO> resultList = notifyTemplateService.getList();
         verify(baseMapper, times(1)).selectList(any());
         assertEquals(list, resultList);
     }
