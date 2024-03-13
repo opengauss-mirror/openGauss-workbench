@@ -66,6 +66,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.enums.ops.DeployTypeEnum;
+import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
@@ -188,21 +189,22 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
     public JSONObject nodes(String clusterId) {
         OpsClusterVO cluster = clusterManager.getOpsClusterVOById(clusterId);
         ClusterHealthStateDTO stateCache = getClusterHealthState(clusterId, cluster);
-        List<OpsClusterNodeVO> clusterNodes = cluster.getClusterNodes();
         List<SyncSituationDTO> nodeSyncSituationDTOList = new CopyOnWriteArrayList<>();
         // get standby nodes
-        getClusterStandbyNodes(nodeSyncSituationDTOList, cluster);
+        if (cluster.getClusterNodes().size() != 1) {
+            getClusterStandbyNodes(nodeSyncSituationDTOList, cluster);
+        }
         // check
         checkPrimaryNode(cluster, stateCache, nodeSyncSituationDTOList);
         // get cm、om state
-        HashMap<String, Map<String, String>> cmAndOmState = getCmAndOmState(clusterNodes);
+        HashMap<String, Map<String, String>> cmAndOmState = getCmAndOmState(cluster);
         List<JSONObject> list = nodeSyncSituationDTOList.stream().map(syn -> {
             NodeAndCompDTO com = new NodeAndCompDTO();
             com.setCmAgentState(
-                    cmAndOmState.get("cmAgent").getOrDefault(syn.getHostIp(), NodeAndCompDTO.BinState.STOP.getCode()));
+                    cmAndOmState.get("cmAgent").getOrDefault(syn.getNodeId(), NodeAndCompDTO.BinState.STOP.getCode()));
             com.setCmServerState(
-                    cmAndOmState.get("cmServer").getOrDefault(syn.getHostIp(), NodeAndCompDTO.BinState.STOP.getCode()));
-            com.setOmMonitorState(cmAndOmState.get("omMonitor").getOrDefault(syn.getHostIp(),
+                    cmAndOmState.get("cmServer").getOrDefault(syn.getNodeId(), NodeAndCompDTO.BinState.STOP.getCode()));
+            com.setOmMonitorState(cmAndOmState.get("omMonitor").getOrDefault(syn.getNodeId(),
                     NodeAndCompDTO.BinState.STOP.getCode()));
             JSONObject jsonObject = new JSONObject();
             jsonObject.putAll(BeanUtil.beanToMap(syn));
@@ -218,19 +220,26 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
         return res;
     }
 
-    private HashMap<String, Map<String, String>> getCmAndOmState(List<OpsClusterNodeVO> clusterNodes) {
+    private HashMap<String, Map<String, String>> getCmAndOmState(OpsClusterVO cluster) {
         ConcurrentHashMap<String, String> cmServer = new ConcurrentHashMap<>();
         ConcurrentHashMap<String, String> cmAgent = new ConcurrentHashMap<>();
         ConcurrentHashMap<String, String> omMonitor = new ConcurrentHashMap<>();
-        CountDownLatch countDownLatch = ThreadUtil.newCountDownLatch(clusterNodes.size());
-        for (OpsClusterNodeVO clusterNode : clusterNodes) {
+        CountDownLatch countDownLatch = ThreadUtil.newCountDownLatch(cluster.getClusterNodes().size());
+        for (OpsClusterNodeVO clusterNode : cluster.getClusterNodes()) {
             ThreadUtil.execute(() -> {
                 try {
-                    execute(cmServer, cmAgent, omMonitor, clusterNode);
+                    execute(cmServer, cmAgent, omMonitor, clusterNode, cluster.getEnvPath());
                 } finally {
                     countDownLatch.countDown();
                 }
             });
+        }
+        try {
+            if (!countDownLatch.await(10, TimeUnit.SECONDS)) {
+                throw new InstanceException("Exceeding the specified time to get the state of CM and OM");
+            }
+        } catch (InterruptedException e) {
+            throw new CustomException(e.getMessage());
         }
         HashMap<String, Map<String, String>> map = new HashMap<>();
         map.put("cmServer", cmServer);
@@ -240,7 +249,7 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
     }
 
     private void execute(Map<String, String> cmServer, Map<String, String> cmAgent, Map<String, String> omMonitor,
-                         OpsClusterNodeVO clusterNode) {
+                         OpsClusterNodeVO clusterNode, String envPath) {
         SshSessionUtils sshSession = null;
         try {
             sshSession = getSshSession(clusterNode);
@@ -248,56 +257,59 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
             log.error(e.getMessage(), e);
         }
         if (sshSession == null) {
-            cmServer.put(clusterNode.getPublicIp(), "Unknown");
-            cmAgent.put(clusterNode.getPublicIp(), "Unknown");
-            omMonitor.put(clusterNode.getPublicIp(), "Unknown");
+            cmServer.put(clusterNode.getNodeId(), "Unknown");
+            cmAgent.put(clusterNode.getNodeId(), "Unknown");
+            omMonitor.put(clusterNode.getNodeId(), "Unknown");
             return;
         }
-        String executeRes = null;
+        String executeRes = "";
+        String gaussHome = "";
+        String command = "source " + envPath + " && ps -aux | grep \"cm_agent\\|cm_server\\|om_monitor\"";
         try {
-            executeRes = sshSession.execute("ps -aux | grep \"cm_agent\\|cm_server\\|om_monitor\" | grep -v grep");
+            gaussHome = sshSession.execute("source " + envPath + " && echo $GAUSSHOME");
+            executeRes = sshSession.execute(command);
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         }
-        if (executeRes == null) {
-            cmServer.put(clusterNode.getPublicIp(), "Unknown");
-            cmAgent.put(clusterNode.getPublicIp(), "Unknown");
-            omMonitor.put(clusterNode.getPublicIp(), "Unknown");
+        cmServer.put(clusterNode.getNodeId(), "stop");
+        cmAgent.put(clusterNode.getNodeId(), "stop");
+        omMonitor.put(clusterNode.getNodeId(), "stop");
+        String[] binMessage = executeRes.split(StrUtil.LF);
+        if (binMessage.length == 2) {
             return;
         }
-        String[] binMessage = executeRes.split(StrUtil.LF);
         for (String bin : binMessage) {
             String[] s = bin.replaceAll(" +", " ").split(" ");
-            if (bin.contains("cm_agent")) {
-                cmAgent.put(clusterNode.getPublicIp(), s[7]);
+            if ((gaussHome + "/bin/cm_agent").equals(s[10])) {
+                cmAgent.put(clusterNode.getNodeId(), s[7]);
                 continue;
             }
-            if (bin.contains("cm_server")) {
-                cmServer.put(clusterNode.getPublicIp(), s[7]);
+            if ((gaussHome + "/bin/cm_server").equals(s[10])) {
+                cmServer.put(clusterNode.getNodeId(), s[7]);
                 continue;
             }
-            if (bin.contains("om_monitor")) {
-                omMonitor.put(clusterNode.getPublicIp(), s[7]);
+            if ((gaussHome + "/bin/om_monitor").equals(s[10])) {
+                omMonitor.put(clusterNode.getNodeId(), s[7]);
             }
         }
     }
 
-    private static void checkPrimaryNode(OpsClusterVO cluster, ClusterHealthStateDTO stateCache,
+    private void checkPrimaryNode(OpsClusterVO cluster, ClusterHealthStateDTO stateCache,
                                          List<SyncSituationDTO> retList) {
         if (retList.size() == cluster.getClusterNodes().size()) {
             return;
         }
-        Set<String> standbySet = retList.stream().map(SyncSituationDTO::getHostIp).collect(Collectors.toSet());
+        Set<String> standbySet = retList.stream().map(SyncSituationDTO::getNodeId).collect(Collectors.toSet());
         for (OpsClusterNodeVO clusterNode : cluster.getClusterNodes()) {
-            if (!standbySet.contains(clusterNode.getPublicIp())) {
+            if (!standbySet.contains(clusterNode.getNodeId())) {
                 SyncSituationDTO dto = new SyncSituationDTO();
                 dto.setClusterId(cluster.getClusterId());
                 dto.setNodeId(clusterNode.getNodeId());
                 dto.setHostIp(clusterNode.getPublicIp());
-                dto.setNodeName(stateCache.getNodeName().get(clusterNode.getPublicIp()));
+                dto.setNodeName(stateCache.getNodeName().getOrDefault(clusterNode.getNodeId(),"Unknown"));
                 dto.setLocalAddr(clusterNode.getPublicIp() + ":" + clusterNode.getDbPort());
-                dto.setRole(stateCache.getNodeRole().getOrDefault(clusterNode.getPublicIp(), "Unknown"));
-                dto.setNodeState(stateCache.getNodeState().getOrDefault(clusterNode.getPublicIp(), "Unknown"));
+                dto.setRole(stateCache.getNodeRole().getOrDefault(clusterNode.getNodeId(), "Unknown"));
+                dto.setNodeState(stateCache.getNodeState().getOrDefault(clusterNode.getNodeId(), "Unknown"));
                 retList.add(0, dto);
             }
         }
@@ -305,29 +317,27 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
 
     private List<NodeRelationDTO> relation(OpsClusterVO cluster, ClusterHealthStateDTO stateCache) {
         List<OpsClusterNodeVO> clusterNodes = cluster.getClusterNodes();
-        Map<String, OpsClusterNodeVO> ipNodeMap = clusterNodes.stream().collect(
-                Collectors.toMap(OpsClusterNodeVO::getPublicIp, a -> a));
         ArrayList<NodeRelationDTO> retList = new ArrayList<>();
-        HashSet<String> allAliveNodeIpSet = new HashSet<>();
+        HashSet<String> allAliveNodeIdSet = new HashSet<>();
         for (OpsClusterNodeVO node : clusterNodes) {
-            if ("Primary".equalsIgnoreCase(stateCache.getNodeRole().get(node.getPublicIp()))) {
+            if ("Primary".equalsIgnoreCase(stateCache.getNodeRole().get(node.getNodeId()))) {
                 // Standby
                 List<NodeRelationDTO> standbyList = clustersMapper.relation(node.getNodeId());
-                standbyList.forEach(standby -> standby.setNodeId(ipNodeMap.get(standby.getHostIp()).getNodeId()));
+                standbyList.forEach(standby -> setNodeId(clusterNodes, standby));
                 NodeRelationDTO primary = getDefaultRelationDto(node, standbyList);
                 // Cascade Standby
-                addCascadeStandby(ipNodeMap, allAliveNodeIpSet, standbyList);
+                addCascadeStandby(clusterNodes, allAliveNodeIdSet, standbyList);
                 retList.add(primary);
-                allAliveNodeIpSet
-                        .addAll(standbyList.stream().map(NodeRelationDTO::getHostIp).collect(Collectors.toList()));
-                allAliveNodeIpSet.add(primary.getHostIp());
+                allAliveNodeIdSet
+                        .addAll(standbyList.stream().map(NodeRelationDTO::getNodeId).collect(Collectors.toList()));
+                allAliveNodeIdSet.add(primary.getNodeId());
             }
         }
 
         // check
-        if (allAliveNodeIpSet.size() != clusterNodes.size()) {
+        if (allAliveNodeIdSet.size() != clusterNodes.size()) {
             for (OpsClusterNodeVO node : clusterNodes) {
-                if (!allAliveNodeIpSet.contains(node.getPublicIp())) {
+                if (!allAliveNodeIdSet.contains(node.getNodeId())) {
                     retList.add(getDefaultRelationDto(node, new ArrayList<>()));
                 }
             }
@@ -335,17 +345,23 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
         return retList;
     }
 
-    private void addCascadeStandby(Map<String, OpsClusterNodeVO> ipNodeMap, HashSet<String> allAliveNodeIpSet,
+    private void setNodeId(List<OpsClusterNodeVO> clusterNodes, NodeRelationDTO standby) {
+        Optional<OpsClusterNodeVO> vo = clusterNodes.stream().filter(n ->
+                standby.getHostIp().equals(n.getPublicIp()) || standby.getHostIp().equals(
+                        n.getPrivateIp())).findFirst();
+        vo.ifPresent(v -> standby.setNodeId(v.getNodeId()));
+    }
+
+    private void addCascadeStandby(List<OpsClusterNodeVO> clusterNodes, HashSet<String> allAliveNodeIpSet,
                                    List<NodeRelationDTO> standbyList) {
         for (NodeRelationDTO standby : standbyList) {
             List<NodeRelationDTO> cascadeStandbyList =
                     clustersMapper.relation(standby.getNodeId());
             if (!cascadeStandbyList.isEmpty()) {
-                cascadeStandbyList.forEach(cascade ->
-                        cascade.setNodeId(ipNodeMap.get(standby.getHostIp()).getNodeId()));
+                cascadeStandbyList.forEach(cascade -> setNodeId(clusterNodes, cascade));
                 standby.setChildren(cascadeStandbyList);
                 allAliveNodeIpSet.addAll(cascadeStandbyList.stream().map(
-                                NodeRelationDTO::getHostIp)
+                                NodeRelationDTO::getNodeId)
                         .collect(Collectors.toList()));
             }
         }
@@ -381,7 +397,9 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
             });
         }
         try {
-            countDown.await(10, TimeUnit.SECONDS);
+            if (!countDown.await(10, TimeUnit.SECONDS)) {
+                throw new InstanceException("Exceeding the specified time to refresh all cluster state");
+            }
         } catch (InterruptedException e) {
             throw new InstanceException(e.getMessage(), e);
         }
@@ -413,7 +431,9 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
             });
         }
         try {
-            countDownLatch.await(10, TimeUnit.SECONDS);
+            if (!countDownLatch.await(10, TimeUnit.SECONDS)) {
+                throw new InstanceException("Exceeding the specified time to get standby nodes of cluster");
+            }
         } catch (InterruptedException e) {
             throw new InstanceException(e.getMessage(), e);
         }
@@ -625,7 +645,7 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
     }
 
     @SuppressWarnings("unchecked")
-    private static void getTodayResult(HashMap<String, Object> metricsNodes,
+    private void getTodayResult(HashMap<String, Object> metricsNodes,
                                        List<Pair<String, Future<Map<String, Object>>>> futureList, List<Date> time) {
         List<Date> todayTimeLine = new ArrayList<>();
         for (Pair<String, Future<Map<String, Object>>> futurePair : futureList) {
@@ -656,7 +676,7 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
     }
 
     @SuppressWarnings("unchecked")
-    private static void getHistoryResult(HashMap<String, Object> metricsNodes,
+    private void getHistoryResult(HashMap<String, Object> metricsNodes,
                                          List<Pair<String, Future<Map<String, Object>>>> futureList, List<Date> time) {
         for (Pair<String, Future<Map<String, Object>>> futurePair : futureList) {
             Map<String, Object> history = null;
@@ -676,7 +696,7 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
         }
     }
 
-    private static void getMetricsNodes(HashMap<String, Object> metricsNodes,
+    private void getMetricsNodes(HashMap<String, Object> metricsNodes,
                                         Pair<String, Future<Map<String, Object>>> future, Map<String, Object> nodeRes) {
         for (Map.Entry<String, Object> nodeMetrics : nodeRes.entrySet()) {
             if (!metricsNodes.containsKey(nodeMetrics.getKey())) {
@@ -693,13 +713,13 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
         List<OpsClusterNodeVO> clusterNodes = cluster.getClusterNodes();
         List<SyncSituationDTO> standbyList = new ArrayList<>();
         for (OpsClusterNodeVO clusterNode : clusterNodes) {
-            if ("Primary".equalsIgnoreCase(stateCache.getNodeRole().get(clusterNode.getPublicIp()))) {
+            if ("Primary".equalsIgnoreCase(stateCache.getNodeRole().get(clusterNode.getNodeId()))) {
                 List<SyncSituationDelayDTO> syncSituations = clustersMapper.getSyncSituation(clusterNode.getNodeId());
                 syncSituations.forEach(s -> {
                     SyncSituationDTO standby = getDefaultSituationDto(s, clusterNodes, cluster.getClusterId());
-                    standby.setNodeName(stateCache.getNodeName().get(standby.getHostIp()));
-                    standby.setRole(stateCache.getNodeRole().get(standby.getHostIp()));
-                    standby.setNodeState(stateCache.getNodeState().get(standby.getHostIp()));
+                    standby.setNodeName(stateCache.getNodeName().get(standby.getNodeId()));
+                    standby.setRole(stateCache.getNodeRole().get(standby.getNodeId()));
+                    standby.setNodeState(stateCache.getNodeState().get(standby.getNodeId()));
                     standby.setPrimaryAddr(clusterNode.getPublicIp() + ":" + clusterNode.getDbPort());
                     standby.setLocalAddr(standby.getHostIp() + ":" + clusterNode.getDbPort());
                     standbyList.add(standby);
@@ -711,33 +731,47 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
         retList.addAll(standbyList);
     }
 
-    private static void checkStandbyNode(OpsClusterVO cluster, ClusterHealthStateDTO stateCache,
+    private void checkStandbyNode(OpsClusterVO cluster, ClusterHealthStateDTO stateCache,
                                          List<SyncSituationDTO> standbyList) {
         // check, the cluster might not have a primary node (pending...) or disconnect
-        ArrayList<String> allNodeIp = new ArrayList<>();
+        ArrayList<String> allNodeId = new ArrayList<>();
         for (Map.Entry<String, String> entry : stateCache.getNodeRole().entrySet()) {
             if (!"Primary".equals(entry.getValue())) {
-                allNodeIp.add(entry.getKey());
+                allNodeId.add(entry.getKey());
             }
+        }
+        if (standbyList.isEmpty() && cluster.getClusterNodes().size() != 1) {
+            for (OpsClusterNodeVO clusterNode : cluster.getClusterNodes()) {
+                SyncSituationDTO dto = new SyncSituationDTO();
+                dto.setClusterId(cluster.getClusterId());
+                dto.setNodeId(clusterNode.getNodeId());
+                dto.setHostIp(clusterNode.getPublicIp());
+                dto.setNodeName(clusterNode.getHostname());
+                dto.setLocalAddr(clusterNode.getPublicIp() + ":" + clusterNode.getHostPort());
+                dto.setRole(stateCache.getNodeRole().getOrDefault(clusterNode.getNodeId(), "Unknown"));
+                dto.setNodeState("Unknown");
+                standbyList.add(dto);
+            }
+            return;
         }
         Optional<OpsClusterNodeVO> primary = cluster.getClusterNodes().stream().filter(clusterNode ->
                 "Primary".equalsIgnoreCase(stateCache.getNodeRole().get(clusterNode.getPublicIp()))).findFirst();
-        if (standbyList.size() != allNodeIp.size()) {
-            Set<String> standbyIps = standbyList.stream().map(SyncSituationDTO::getHostIp).collect(Collectors.toSet());
-            for (String ip : allNodeIp) {
-                if (!standbyIps.contains(ip)) {
+        if (standbyList.size() != allNodeId.size()) {
+            Set<String> standbyNodeId =
+                    standbyList.stream().map(SyncSituationDTO::getNodeId).collect(Collectors.toSet());
+            for (String nodeId : allNodeId) {
+                if (!standbyNodeId.contains(nodeId)) {
                     SyncSituationDTO dto = new SyncSituationDTO();
-                    dto.setHostIp(ip);
                     dto.setPrimaryAddr(primary.map(opsClusterNodeVO ->
                             opsClusterNodeVO.getPublicIp() + ":" + opsClusterNodeVO.getDbPort()).orElse(null)
                     );
                     dto.setClusterId(cluster.getClusterId());
-                    dto.setNodeId(cluster.getClusterNodes().stream().filter(node -> node.getPublicIp().equals(ip))
-                            .findFirst().get().getNodeId());
-                    dto.setNodeName(stateCache.getNodeName().get(ip));
-                    dto.setLocalAddr(ip + ":" + cluster.getClusterNodes().get(0).getDbPort());
-                    dto.setRole(stateCache.getNodeRole().getOrDefault(ip, "Unknown"));
-                    dto.setNodeState(stateCache.getNodeState().getOrDefault(ip, "Unknown"));
+                    dto.setNodeId(nodeId);
+                    dto.setNodeName(stateCache.getNodeName().get(nodeId));
+                    dto.setLocalAddr(cluster.getClusterNodes().stream().filter(n -> n.getNodeId().equals(nodeId))
+                            .findFirst().get().getPublicIp() + ":" + cluster.getClusterNodes().get(0).getDbPort());
+                    dto.setRole(stateCache.getNodeRole().getOrDefault(nodeId, "Unknown"));
+                    dto.setNodeState(stateCache.getNodeState().getOrDefault(nodeId, "Unknown"));
                     standbyList.add(dto);
                 }
             }
@@ -762,7 +796,7 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
             CLUSTER_STATE_CACHE.put(cluster.getClusterId(), new ClusterHealthStateDTO());
             return;
         }
-        ClusterHealthStateDTO healthState = getHealthState(sshSession, cluster.getEnvPath());
+        ClusterHealthStateDTO healthState = getHealthState(sshSession, cluster);
         CLUSTER_STATE_CACHE.put(cluster.getClusterId(), healthState);
     }
 
@@ -782,8 +816,8 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
                 encryptionUtils.decrypt(userEntity.getPassword()));
     }
 
-    private ClusterHealthStateDTO getHealthState(SshSessionUtils sshSession, String envPath) {
-        String command = "source " + envPath + " && gs_om -t status --detail";
+    private ClusterHealthStateDTO getHealthState(SshSessionUtils sshSession, OpsClusterVO clusterVO) {
+        String command = "source " + clusterVO.getEnvPath() + " && gs_om -t status --detail";
         String result = null;
         try {
             result = sshSession.execute(command);
@@ -797,7 +831,7 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
         Map<String, String> cmState = new HashMap<>(1);
         int cmIndex = result.indexOf("CMServer State");
         if (cmIndex > 0) {
-            cmState(result, cmState, cmIndex);
+            cmState(result, cmState, cmIndex, clusterVO);
         }
         res.setCmState(cmState);
         int clusterStateIndex = result.indexOf("cluster_state");
@@ -810,24 +844,31 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
         res.setClusterState(clusterState);
         int datanodeStateIndex = result.indexOf("Datanode State");
         if (datanodeStateIndex > 0) {
-            nodeState(result, datanodeStateIndex, res);
+            nodeState(result, datanodeStateIndex, res, clusterVO);
         }
         return res;
     }
 
-    private static void cmState(String result, Map<String, String> cmState, int cmIndex) {
+    private void cmState(String result, Map<String, String> cmState, int cmIndex, OpsClusterVO clusterVO) {
         int splitIndex = result.indexOf("------------------", cmIndex);
         String dataNodeStateStr = result.substring(splitIndex);
         String[] dataNode = dataNodeStateStr.split(StrUtil.LF);
         for (String s : dataNode) {
             String[] s1 = s.replaceAll(" +", " ").split(" ");
             if (s1.length == 6) {
-                cmState.put(s1[2], s1[5].trim());
+                //key: nodeId
+                String nodeId = clusterVO.getClusterNodes().stream().filter(node ->
+                                s1[2].equals(node.getPublicIp()) || s1[2].equals(node.getPrivateIp()))
+                        .findFirst().orElseThrow(() ->
+                                new InstanceException("clusterId:" + clusterVO.getClusterId() + " ip:" + s1[2] +
+                                        " not found in database")).getNodeId();
+                cmState.put(nodeId, s1[5].trim());
             }
         }
     }
 
-    private static void nodeState(String result, int datanodeStateIndex, ClusterHealthStateDTO res) {
+    private void nodeState(String result, int datanodeStateIndex, ClusterHealthStateDTO res,
+                           OpsClusterVO clusterVO) {
         Map<String, String> nodeState = new HashMap<>(1);
         Map<String, String> nodeRole = new HashMap<>(1);
         Map<String, String> nodeName = new HashMap<>(1);
@@ -841,9 +882,21 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
             if (s1.length == 1) {
                 continue;
             }
-            nodeState.put(s1[2], s1[s1.length - 1]);
-            nodeRole.put(s1[2], s1[6]);
-            nodeName.put(s1[2], s1[1]);
+            if (s1.length >= 9) {
+                role = s1[7];
+            }
+            if (s1.length == 8) {
+                role = s1[6];
+            }
+            //key: nodeId
+            String nodeId = clusterVO.getClusterNodes().stream().filter(node ->
+                            s1[2].equals(node.getPublicIp()) || s1[2].equals(node.getPrivateIp()))
+                    .findFirst().orElseThrow(() ->
+                            new InstanceException("clusterId:" + clusterVO.getClusterId() + " ip:" + s1[2] +
+                                    " not found in database")).getNodeId();
+            nodeState.put(nodeId, s1[s1.length - 1]);
+            nodeRole.put(nodeId, role);
+            nodeName.put(nodeId, s1[1]);
         }
         res.setNodeState(nodeState);
         res.setNodeRole(nodeRole);

@@ -65,12 +65,7 @@ public class ClusterStateDTO {
         dto.setDesc(state);
         Optional<Map.Entry<String, String>> primary = stateCache.getNodeRole().entrySet().stream().filter(
                 en -> en.getValue().equals("Primary")).findFirst();
-        if (primary.isPresent()) {
-            String primaryIp = primary.get().getKey();
-            OpsClusterNodeVO nodeVO = clusterVO.getClusterNodes().stream().filter(
-                    node -> node.getPublicIp().equals(primaryIp)).findFirst().get();
-            dto.setPrimaryNodeId(nodeVO.getNodeId());
-        }
+        primary.ifPresent(stringStringEntry -> dto.setPrimaryNodeId(stringStringEntry.getKey()));
         return dto;
     }
 

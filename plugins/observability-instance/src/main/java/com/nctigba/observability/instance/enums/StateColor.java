@@ -40,16 +40,15 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public enum StateColor {
     GREEN("cluster.state.value.Normal", "cluster.node.state.Normal", "cluster.node.syncState.Streaming",
-            "OS.bin.state.TASK_RUNNING"),
+            "OS.bin.state.TASK_RUNNING", "OS.bin.state.TASK_UNINTERRUPTIBLE", "OS.bin.state.TASK_INTERRUPTIBLE"),
     YELLOW("cluster.state.value.Degraded", "cluster.node.state.repair", "cluster.node.state.Starting",
             "cluster.node.state.promoting", "cluster.node.state.Promoting", "cluster.node.state.Demoting",
             "cluster.node.state.Building", "cluster.node.state.Catchup", "cluster.node.state.Coredump",
-            "cluster.node.syncState.Catchup", "OS.bin.state.TASK_INTERRUPTIBLE", "OS.bin.state.TASK_STOPPED",
-            "OS.bin.state.TASK_TRACED", "OS.bin.state.TASK_UNINTERRUPTIBLE"),
+            "cluster.node.syncState.Catchup", "OS.bin.state.TASK_STOPPED", "OS.bin.state.TASK_TRACED"),
     RED("cluster.state.value.Unavailable", "cluster.node.state.Unknown", "OS.bin.state.EXIT_ZOMBIE",
-            "OS.bin.state.EXIT_DEAD", "OS.bin.state.STOP", "cluster.node.state.Exception",
+            "OS.bin.state.EXIT_DEAD","cluster.node.state.Exception",
             "cluster.node.syncState.Delay", "cluster.node.state.stopped"),
-    GREY("cluster.state.value.Unknown", "OS.bin.state.UNKNOWN", "cluster.node.syncState.Unknown");
+    GREY("cluster.state.value.Unknown", "OS.bin.state.UNKNOWN", "OS.bin.state.STOP", "cluster.node.syncState.Unknown");
 
     private String[] state;
 

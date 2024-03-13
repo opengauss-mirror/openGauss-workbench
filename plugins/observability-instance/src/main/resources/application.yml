@@ -34,7 +34,7 @@ spring:
         remove-abandoned: true
         remove-abandoned-timeout-millis: 300000
         log-abandoned: true
-        max-active: 20
+        max-active: 50
       datasource:
         embedded:
           #url: jdbc:sqlite:data/observability-instance-data.db
