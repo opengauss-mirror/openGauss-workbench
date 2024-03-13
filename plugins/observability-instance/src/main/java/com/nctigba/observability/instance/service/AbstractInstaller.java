@@ -26,7 +26,9 @@ package com.nctigba.observability.instance.service;
 import java.net.http.WebSocket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import cn.hutool.core.util.StrUtil;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
@@ -41,7 +43,7 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
 import com.nctigba.observability.instance.model.entity.NctigbaEnvDO;
 import com.nctigba.observability.instance.mapper.NctigbaEnvMapper;
-import com.nctigba.observability.instance.service.AbstractInstaller.Step.status;
+import com.nctigba.observability.instance.service.AbstractInstaller.Step.Status;
 import com.nctigba.observability.instance.util.MessageSourceUtils;
 
 import cn.hutool.json.JSONUtil;
@@ -52,6 +54,8 @@ import lombok.experimental.Accessors;
 public abstract class AbstractInstaller {
     public static final String TAR = ".tar.gz";
     public static final String ZIP = ".zip";
+    protected ThreadLocal<WsSessionStep> wsSessionStepTl = new ThreadLocal<>();
+
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     protected HostFacade hostFacade;
@@ -66,6 +70,12 @@ public abstract class AbstractInstaller {
     @Autowired
     @AutowiredType(Type.PLUGIN_MAIN)
     protected WsUtil wsUtil;
+
+    protected void initWsSessionStepTl(WsSession wsSession, List<Step> steps) {
+        WsSessionStep wsSessionStep = new WsSessionStep();
+        wsSessionStep.setWsSession(wsSession).setSteps(steps);
+        wsSessionStepTl.set(wsSessionStep);
+    }
 
     public static String arch(String str) {
         return "aarch64".equals(str) ? "arm64" : "amd64";
@@ -83,16 +93,93 @@ public abstract class AbstractInstaller {
             username.equals(e.getUsername())).findFirst().orElse(null);
     }
 
+    /**
+     * addMsg
+     */
+    protected  void sendMsg(Status status, String msg, Object... objs) {
+        WsSessionStep wsSessionStep = wsSessionStepTl.get();
+        if (wsSessionStep == null) {
+            return;
+        }
+        WsSession wsSession = wsSessionStep.getWsSession();
+        List<Step> steps = wsSessionStep.getSteps();
+        if (status != null) {
+            steps.get(wsSessionStep.getCurr().get()).setState(status);
+        }
+        if (StrUtil.isNotBlank(msg)) {
+            steps.get(wsSessionStep.getCurr().get()).add(msg, objs);
+        }
+        wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+    }
+
+    /**
+     * addMsg
+     *
+     * @param wsSession WsSession
+     * @param steps steps
+     * @param curr curr
+     * @param msg msg
+     */
     protected void addMsg(WsSession wsSession, List<Step> steps, int curr, String msg) {
         steps.get(curr).add(msg);
         wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
     }
 
+    /**
+     * skip step
+     */
+    protected void skipStep() {
+        WsSessionStep wsSessionStep = wsSessionStepTl.get();
+        if (wsSessionStep == null) {
+            return;
+        }
+        WsSession wsSession = wsSessionStep.getWsSession();
+        List<Step> steps = wsSessionStep.getSteps();
+        AtomicInteger curr = wsSessionStep.getCurr();
+        steps.get(curr.get()).setState(Status.SKIP);
+        int cur = wsSessionStep.getCurr().incrementAndGet();
+        steps.get(cur).setState(Status.DOING);
+        wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+    }
     protected int skipStep(WsSession wsSession, List<Step> steps, int curr) {
-        steps.get(curr).setState(status.SKIP);
+        steps.get(curr).setState(Status.SKIP);
         curr++;
-        sendMsg(wsSession, steps, curr, status.DOING);
+        sendMsg(wsSession, steps, curr, Status.DOING);
         return curr;
+    }
+
+    /**
+     * next step
+     */
+    protected void nextStep() {
+        WsSessionStep wsSessionStep = wsSessionStepTl.get();
+        if (wsSessionStep == null) {
+            return;
+        }
+        WsSession wsSession = wsSessionStep.getWsSession();
+        List<Step> steps = wsSessionStep.getSteps();
+        AtomicInteger curr = wsSessionStep.getCurr();
+        steps.get(curr.get()).setState(Status.DONE);
+        int cur = wsSessionStep.getCurr().incrementAndGet();
+        steps.get(cur).setState(Status.DOING);
+        wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+    }
+
+    /**
+     * skip all and done
+     */
+    protected void done() {
+        WsSessionStep wsSessionStep = wsSessionStepTl.get();
+        if (wsSessionStep == null) {
+            return;
+        }
+        WsSession wsSession = wsSessionStep.getWsSession();
+        List<Step> steps = wsSessionStep.getSteps();
+        while (wsSessionStep.getCurr().get() < steps.size() - 1) {
+            skipStep();
+        }
+        steps.get(wsSessionStep.getCurr().get()).setState(Status.DONE);
+        wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
     }
 
     /**
@@ -100,16 +187,16 @@ public abstract class AbstractInstaller {
      * {@link WebSocket}
      */
     protected int nextStep(WsSession wsSession, List<Step> steps, int curr) {
-        steps.get(curr).setState(status.DONE);
+        steps.get(curr).setState(Status.DONE);
         curr++;
-        sendMsg(wsSession, steps, curr, status.DOING);
+        sendMsg(wsSession, steps, curr, Status.DOING);
         return curr;
     }
 
     /**
      * change current step to {@code DONE}, send to {@link WebSocket}
      */
-    protected synchronized void sendMsg(WsSession wsSession, List<Step> steps, int curr, status state) {
+    protected synchronized void sendMsg(WsSession wsSession, List<Step> steps, int curr, Status state) {
         steps.get(curr).setState(state);
         wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
     }
@@ -125,24 +212,33 @@ public abstract class AbstractInstaller {
     @NoArgsConstructor
     public static class Step {
         String name;
-        status state = status.TODO;
-        List<String> msg = new ArrayList<>();
+        Status state = Status.TODO;
+        List<String> msgs = new ArrayList<>();
 
         public Step(String name) {
             this.name = MessageSourceUtils.get(name);
         }
 
-        public void add(String e, Object... objs) {
-            e = MessageSourceUtils.get(e, objs);
-            msg.add(e);
+        public void add(String msg, Object... objs) {
+            msg = MessageSourceUtils.get(msg, objs);
+            msgs.add(msg);
         }
 
-        public enum status {
+        public enum Status {
             TODO,
             DOING,
             DONE,
             SKIP,
             ERROR
         }
+    }
+
+    @Data
+    @Accessors(chain = true)
+    @NoArgsConstructor
+    public static class WsSessionStep {
+        private WsSession wsSession;
+        private List<Step> steps;
+        private AtomicInteger curr = new AtomicInteger(0);
     }
 }

@@ -4,7 +4,6 @@
       <div style="white-space: nowrap">{{ $t("app.autoRefresh") }}:</div>
       <el-select v-model="autoRefreshTime" style="width: 130px; margin: 0 4px">
         <el-option :value="99999999" label="NO-AUTO" />
-        <el-option :value="1" label="1s" />
         <el-option :value="15" label="15s" />
         <el-option :value="30" label="30s" />
         <el-option :value="60" label="60s" />

@@ -23,10 +23,12 @@
 
 package com.nctigba.observability.instance.service;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -35,6 +37,7 @@ import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +53,8 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.json.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.nctigba.observability.instance.service.allocate.AllocatorService;
+import com.nctigba.observability.instance.model.dto.AllocateServerDTO;
 import com.nctigba.observability.instance.enums.AgentStatusEnum;
 import com.nctigba.observability.instance.mapper.PromAgentRelationMapper;
 import com.nctigba.observability.instance.model.dto.PromInstallDTO;
@@ -62,6 +67,10 @@ import com.nctigba.observability.instance.model.vo.AgentStatusVO;
 import com.nctigba.observability.instance.util.CommonUtils;
 import com.nctigba.observability.instance.util.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.io.FileUtils;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.opengauss.admin.common.exception.CustomException;
@@ -75,14 +84,13 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.model.entity.NctigbaEnvDO;
 import com.nctigba.observability.instance.model.entity.NctigbaEnvDO.envType;
-import com.nctigba.observability.instance.service.AbstractInstaller.Step.status;
+import com.nctigba.observability.instance.service.AbstractInstaller.Step.Status;
 import com.nctigba.observability.instance.util.SshSessionUtils;
 import com.nctigba.observability.instance.util.SshSessionUtils.command;
 
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
-import cn.hutool.json.JSONUtil;
 import lombok.Data;
 
 @Service
@@ -90,12 +98,11 @@ import lombok.Data;
 public class PrometheusService extends AbstractInstaller {
     public static final String PATH = "https://github.com/prometheus/prometheus/releases/download/v2.42.0/";
     public static final String NAME = "prometheus-2.42.0.linux-";
-    private static final String CLASSPATH_SCRIPT = "classpath:sh/";
+    private static final String MAIN_INSTALL_PATH = "data/prometheus-main";
     private static final String RUN_SCRIPT = "run_prometheus.sh";
+    private static final String SCRIPT_PATH = "classpath:sh/" + RUN_SCRIPT;
     private static final String LOCAL_IP = "127.0.0.1";
-
-    private List<Step> installSteps;
-    private List<Step> uninstallSteps;
+    private static final String RULE_PATH = "rules/";
 
     @Autowired
     private ResourcePatternResolver resourcePatternResolver;
@@ -105,60 +112,334 @@ public class PrometheusService extends AbstractInstaller {
     private AgentNodeRelationService agentNodeRelationService;
     @Autowired
     private CollectTemplateNodeService collectTemplateNodeService;
+    @Autowired
+    private AllocatorService allocatorService;
 
+    public void installMainProm() {
+        List<NctigbaEnvDO> mainPromList=
+            envMapper.selectList(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType,
+                NctigbaEnvDO.envType.PROMETHEUS_MAIN));
+        NctigbaEnvDO mainEnv = new NctigbaEnvDO();
+        if (CollectionUtil.isNotEmpty(mainPromList)) {
+            mainEnv = mainPromList.get(0);
+        }
+        try {
+            // install the main Prometheus
+            Path path = Path.of(MAIN_INSTALL_PATH);
+            if (Files.exists(path)) {
+                Files.createDirectories(path);
+            }
+            Resource resource = getMainInstallPkg();
+            if (StrUtil.isBlank(mainEnv.getId())) {
+                int port = checkPortAndGet(9090, 9099);
+                String filename = resource.getFilename();
+                String promDir = path.toAbsolutePath() + "/" + filename.substring(0, filename.length() - TAR.length());
+                mainEnv.setPort(port).setPath(promDir)
+                    .setType(NctigbaEnvDO.envType.PROMETHEUS_MAIN);
+            }
+            if (!Files.exists(Path.of(mainEnv.getPath()))) {
+                // install
+                uploadMainProm(resource, path);
+                uploadMainScript(mainEnv.getPath(), mainEnv.getPort(), false);
+                chmodFile(mainEnv.getPath());
+            }
+            if (StrUtil.isBlank(mainEnv.getId())) {
+                // save env
+                envMapper.insert(mainEnv);
+            }
+            AgentExceptionVO agentExceptionVO = checkPidStatus(mainEnv);
+            if (!agentExceptionVO.isUpStatus()) {
+                // startup
+                CommonUtils.processCommand(new File(mainEnv.getPath()), "/bin/sh", RUN_SCRIPT, "start");
+            }
+            checkHealthStatus(mainEnv);
+            List<NctigbaEnvDO> secondEnvList = envMapper.selectList(
+                Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.PROMETHEUS));
+            if (CollectionUtil.isEmpty(secondEnvList)) {
+                return;
+            }
+            secondEnvList.forEach(item -> item.setHost(hostFacade.getById(item.getHostid())));
+            updateMainPromConfig(mainEnv.getPath(), mainEnv.getPort(), secondEnvList, null);
+        } catch (IOException | InterruptedException | CustomException e) {
+            throw new CustomException(e.getMessage(),e);
+        }
+    }
+
+    private void uploadMainScript(String promDir, int port, boolean isForce)
+        throws IOException, InterruptedException {
+        Resource startSh = resourcePatternResolver.getResource(SCRIPT_PATH);
+        String target = promDir + (promDir.endsWith("/") ? "" : "/") + startSh.getFilename();
+        if (Files.exists(Path.of(target))) {
+            if (!isForce) {
+                return;
+            }
+            Files.delete(Path.of(promDir + "/" + startSh.getFilename()));
+        }
+        try (InputStream inputStream = startSh.getInputStream();
+             BufferedReader bufferedReader =
+                 new BufferedReader(new InputStreamReader(inputStream, Charset.defaultCharset()))) {
+            StringBuilder strBuilder = new StringBuilder();
+            String line = null;
+            Map<String, Object> paramMap = new HashMap<>();
+            paramMap.put("port", port);
+            paramMap.put("storageDays", "7d");
+            while ((line = bufferedReader.readLine()) != null) {
+                strBuilder.append(CommonUtils.parseText(line, paramMap));
+                strBuilder.append(System.lineSeparator());
+            }
+            ByteArrayInputStream inStream =
+                new ByteArrayInputStream(strBuilder.toString().getBytes(Charset.defaultCharset()));
+            File file = new File(promDir, startSh.getFilename());
+            inStream.transferTo(new FileOutputStream(file));
+            inStream.close();
+        }
+    }
+
+    private void chmodFile(String file) throws IOException, InterruptedException {
+        ProcessBuilder processBuilder = new ProcessBuilder();
+        if (Files.isDirectory(Path.of(file))) {
+            processBuilder.command("chmod", "-R", "777", file);
+        } else {
+            processBuilder.command("chmod", "777", file);
+        }
+        Process process = processBuilder.start();
+        boolean isExit = process.waitFor(2L, TimeUnit.SECONDS);
+        if (!isExit) {
+            throw new CustomException("chmod 777 fail!");
+        }
+    }
+
+    private void uploadMainProm(Resource resource, Path targetPath) {
+        try (InputStream fi = resource.getInputStream();
+             BufferedInputStream bi = new BufferedInputStream(fi);
+             GzipCompressorInputStream gzi = new GzipCompressorInputStream(bi);
+             TarArchiveInputStream ti = new TarArchiveInputStream(gzi)) {
+            ArchiveEntry entry;
+            while ((entry = ti.getNextEntry()) != null) {
+                Path targetDirResolved = targetPath.resolve(entry.getName());
+                Path newPath = targetDirResolved.normalize();
+
+                if (entry.isDirectory()) {
+                    Files.createDirectories(newPath);
+                } else {
+                    Path parent = newPath.getParent();
+                    if (parent != null && Files.notExists(parent)) {
+                        Files.createDirectories(parent);
+                    }
+                    Files.copy(ti, newPath, StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+            throw new CustomException("install fail");
+        }
+    }
+
+    private int checkPortAndGet(int formPort, int maxPort) throws IOException, InterruptedException {
+        int port = formPort;
+        // Is the port in use
+        boolean isUsed = true;
+        while (port <= maxPort) {
+            String result = CommonUtils.processCommand("/bin/sh", "-c",
+                "netstat -tuln | grep :" + port + " && echo true || echo false");
+            isUsed = result.contains("true");
+            if (isUsed) {
+                port++;
+                continue;
+            }
+            break;
+        }
+        if (isUsed) {
+            port = formPort;
+        }
+        return port;
+    }
+
+    private Resource getMainInstallPkg() throws IOException {
+        String archStr = System.getProperty("os.arch");
+        Resource[] resources =
+            resourcePatternResolver.getResources("classpath*:pkg/prometheus-**-" + archStr + TAR);
+        if (resources.length == 0) {
+            throw new CustomException("The Prometheus install package is not exist");
+        }
+        return resources[0];
+    }
+
+    /**
+     * install
+     *
+     * @param wsSession WsSession
+     * @param promInstall PromInstallDTO
+     */
     public void install(WsSession wsSession, PromInstallDTO promInstall) {
-        initInstallSteps();
-        int curr = 0;
+        initWsSessionStepTl(wsSession, initInstallSteps());
+        install(promInstall);
+        wsSessionStepTl.remove();
+    }
+
+    /**
+     * install
+     *
+     * @param promInstall PromInstallDTO
+     */
+    public void install(PromInstallDTO promInstall) {
         String path = promInstall.getPath();
-        if (!path.endsWith(File.separator)) {
-            path += File.separator;
+        if (StrUtil.isNotBlank(path) && path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
             promInstall.setPath(path);
         }
         try {
-            curr = nextStep(wsSession, installSteps, curr); // step2 check env
+            if (envType.PROMETHEUS_MAIN.name().equals(promInstall.getType())) {
+                updateMainPromInstall(promInstall);
+                return;
+            }
+            boolean isNewInstall = StrUtil.isBlank(promInstall.getEnvId());
+            nextStep(); // step2 check env
             List<NctigbaEnvDO> nctigbaEnvList = envMapper.selectList(
                 Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, envType.PROMETHEUS));
-            if (CollectionUtil.isNotEmpty(nctigbaEnvList)) {
-                throw new CustomException("The second Prometheus is exists,please refresh");
+            if (CollectionUtil.isNotEmpty(nctigbaEnvList)
+                && (isNewInstall || !nctigbaEnvList.get(0).getId().equals(promInstall.getEnvId()))) {
+                throw new CustomException("The second server is exists,please refresh");
             }
-            OpsHostEntity hostEntity = hostFacade.getById(promInstall.getHostId());
-            if (hostEntity == null) {
-                throw new RuntimeException(CommonConstants.HOST_NOT_FOUND);
+            if (!isNewInstall) {
+                updateSecondPromInstall(promInstall);
+                return;
             }
-            // check main Prometheus and Get it
-            NctigbaEnvDO mainEnv = checkMainPromAndGet();
-            curr = nextStep(wsSession, installSteps, curr); // step3 check host
-            installSteps.get(curr).add("install.use", promInstall.getUsername()); // step3.n install user
-            try (SshSessionUtils sshSession = connect(promInstall.getHostId(), promInstall.getUsername())) {
-                curr = nextStep(wsSession, installSteps, curr); // step4 install Prometheus
-                NctigbaEnvDO env = new NctigbaEnvDO().setHostid(promInstall.getHostId()).setPort(promInstall.getPort())
-                    .setUsername(promInstall.getUsername()).setType(envType.PROMETHEUS).setHost(hostEntity);
-                installProm(sshSession, wsSession, env, promInstall, curr);
-                // run Prometheus script
-                curr = nextStep(wsSession, installSteps, curr); // step5 startup prometheus
-                sshSession.executeNoWait("cd " + env.getPath() + " && sh " + RUN_SCRIPT + " start");
-                updatePromMainConfig(mainEnv.getPath(), mainEnv.getPort(), hostEntity.getPublicIp(),
-                    promInstall.getPort());
-                // Circular waiting for Prometheus API connectivity
-                curr = nextStep(wsSession, installSteps, curr); // step6 check prom status
-                checkHealthStatus(env);
-                reallocatePromAgentConfig(); // Reassign agent
-                curr = nextStep(wsSession, installSteps, curr); // step7 done
-                sendMsg(wsSession, installSteps, curr, status.DONE);
-            }
+            secondPromInstall(promInstall);
         } catch (Exception e) {
-            installSteps.get(curr).setState(status.ERROR).add(e.getMessage());
-            wsUtil.sendText(wsSession, JSONUtil.toJsonStr(installSteps));
+            sendMsg(Status.ERROR, e.getMessage());
             var sw = new StringWriter();
             try (var pw = new PrintWriter(sw);) {
                 e.printStackTrace(pw);
             }
-            wsUtil.sendText(wsSession, sw.toString());
+            sendMsg(null, sw.toString());
         }
     }
 
-    private void initInstallSteps() {
-        installSteps = Arrays.asList(
+    private void updateSecondPromInstall(PromInstallDTO promInstall) throws IOException {
+        NctigbaEnvDO env = getPromEnvInfo(promInstall.getEnvId());
+        String storageDays = "";
+        String param = env.getParam();
+        if (StrUtil.isNotBlank(param)) {
+            JSONObject pJson = new JSONObject(param);
+            storageDays = pJson.getStr("storageDays");
+        }
+        if (promInstall.getPort().equals(env.getPort()) && promInstall.getStorageDays().equals(storageDays)) {
+            done();
+            return;
+        }
+        NctigbaEnvDO oldEnv = new NctigbaEnvDO();
+        BeanUtil.copyProperties(env, oldEnv);
+        // check main Prometheus and Get it
+        NctigbaEnvDO mainEnv = checkMainPromAndGet();
+        nextStep(); // step3 check host
+        sendMsg(null, "install.use", env.getUsername()); // step3.n install user
+        try (SshSessionUtils sshSession = connect(env.getHostid(), env.getUsername())) {
+            nextStep(); // step4 install Prometheus
+            // check new port
+            if (!promInstall.getPort().equals(env.getPort())) {
+                sshSession.testPortCanUse(promInstall.getPort());
+            }
+            AgentExceptionVO agentExceptionVO = checkPidStatus(env);
+            if (agentExceptionVO.isUpStatus()) {
+                sendMsg(null, "prominstall.stopServer");
+                stopProm(env);
+            }
+            // update script
+            Map<String, Object> paramMap = new HashMap<>();
+            paramMap.put("port", promInstall.getPort());
+            paramMap.put("storageDays", promInstall.getStorageDays());
+            uploadSecondScript(sshSession, env.getPath(), paramMap);
+            //update env
+            JSONObject paramJson = new JSONObject();
+            paramJson.putOpt("storageDays", promInstall.getStorageDays());
+            env.setPort(promInstall.getPort()).setParam(paramJson.toString());
+            envMapper.updateById(env);
+            // step5 startup prometheus
+            nextStep();
+            sendMsg(null, "prominstall.startServer");
+            startProm(env);
+            updateMainPromConfig(mainEnv.getPath(), mainEnv.getPort(), Arrays.asList(env), Arrays.asList(oldEnv));
+            // Circular waiting for Prometheus API connectivity
+            nextStep(); // step6 check prom status
+            checkHealthStatus(env);
+            nextStep(); // step7 done
+            sendMsg(Status.DONE, "");
+        }
+    }
+
+    private void secondPromInstall(PromInstallDTO promInstall) throws IOException {
+        // check main Prometheus and Get it
+        NctigbaEnvDO mainEnv = checkMainPromAndGet();
+        nextStep(); // step3 check host
+        OpsHostEntity hostEntity = hostFacade.getById(promInstall.getHostId());
+        if (hostEntity == null) {
+            throw new RuntimeException(CommonConstants.HOST_NOT_FOUND);
+        }
+        sendMsg(null, "install.use", promInstall.getUsername()); // step3.n install user
+        try (SshSessionUtils sshSession = connect(promInstall.getHostId(), promInstall.getUsername())) {
+            nextStep(); // step4 install Prometheus
+            JSONObject param = new JSONObject();
+            param.putOpt("storageDays", promInstall.getStorageDays());
+            NctigbaEnvDO env = new NctigbaEnvDO().setHostid(promInstall.getHostId()).setPort(promInstall.getPort())
+                .setUsername(promInstall.getUsername()).setType(envType.PROMETHEUS).setHost(hostEntity)
+                .setParam(param.toString());
+            installSecondProm0(sshSession, env, promInstall);
+            // run Prometheus script
+            nextStep(); // step5 startup prometheus
+            sshSession.executeNoWait("cd " + env.getPath() + " && sh " + RUN_SCRIPT + " start");
+            updateMainPromConfig(mainEnv.getPath(), mainEnv.getPort(), Arrays.asList(env), null);
+            // Circular waiting for Prometheus API connectivity
+            nextStep(); // step6 check prom status
+            checkHealthStatus(env);
+            promAlloc();
+            nextStep(); // step7 done
+            sendMsg(Status.DONE, "");
+        }
+    }
+
+    private void updateMainPromInstall(PromInstallDTO promInstall) throws IOException, InterruptedException {
+        nextStep(); // step2 check env
+        if (StrUtil.isBlank(promInstall.getEnvId())) {
+            throw new CustomException("The main Prometheus is not exist!");
+        }
+        NctigbaEnvDO env = envMapper.selectById(promInstall.getEnvId());
+        if (env == null) {
+            throw new CustomException("The main Prometheus is not exist!");
+        }
+        if (env.getPort().equals(promInstall.getPort())) {
+            done();
+            return;
+        }
+        nextStep(); // step3 check host
+        skipStep(); // skip check host, and next to install Prometheus(update script)
+        // check new port
+        String result = CommonUtils.processCommand("/bin/sh", "-c",
+            "netstat -tuln | grep :" + promInstall.getPort() + " && echo true || echo false");
+        boolean isUsed = result.contains("true");
+        if (isUsed) {
+            throw new CustomException("The port is used:" + promInstall.getPort());
+        }
+        AgentExceptionVO agentExceptionVO = checkPidStatus(env);
+        if (agentExceptionVO.isUpStatus()) {
+            sendMsg(null, "prominstall.stopServer");
+            stopProm(env);
+        }
+        uploadMainScript(env.getPath(), promInstall.getPort(), true);
+        env.setPort(promInstall.getPort());
+        envMapper.updateById(env);
+        sendMsg(null, "prominstall.updatePort");
+        nextStep();
+        startProm(env);
+        sendMsg(null, "prominstall.startServer");
+        nextStep(); // step6 check prom status
+        checkHealthStatus(env);
+        nextStep(); // step7 done
+        sendMsg(Status.DONE, "");
+    }
+
+    private List<Step> initInstallSteps() {
+        return Arrays.asList(
             new Step("prominstall.step1"),
             new Step("prominstall.step2"),
             new Step("prominstall.step3"),
@@ -168,8 +449,8 @@ public class PrometheusService extends AbstractInstaller {
             new Step("prominstall.step7"));
     }
 
-    private void initUninstallSteps() {
-        uninstallSteps = Arrays.asList(
+    private List<Step> initUninstallSteps() {
+        return Arrays.asList(
             new Step("promuninstall.step1"),
             new Step("promuninstall.step2"),
             new Step("promuninstall.step3"),
@@ -177,8 +458,19 @@ public class PrometheusService extends AbstractInstaller {
             new Step("promuninstall.step5"));
     }
 
-    private void installProm(SshSessionUtils sshSession, WsSession wsSession, NctigbaEnvDO env,
-                            PromInstallDTO promInstall, int curr) throws IOException {
+    private List<Step> initReinstallSteps() {
+        return Arrays.asList(
+            new Step("prominstall.step1"),
+            new Step("prominstall.step2"),
+            new Step("prominstall.step8"),
+            new Step("prominstall.step4"),
+            new Step("prominstall.step5"),
+            new Step("prominstall.step6"),
+            new Step("prominstall.step7"));
+    }
+
+    private void installSecondProm0(SshSessionUtils sshSession, NctigbaEnvDO env, PromInstallDTO promInstall)
+        throws IOException {
         sshSession.testPortCanUse(env.getPort());
         String path = promInstall.getPath();
         boolean isDirExist = sshSession.checkDirExist(path);
@@ -187,23 +479,26 @@ public class PrometheusService extends AbstractInstaller {
         }
 
         Resource resource = getPromInstallPkg(sshSession);
-        boolean isFileExist = sshSession.checkFileExist(path + "/" + resource.getFilename());
+        String filename = resource.getFilename();
+        boolean isFileExist = sshSession.checkFileExist(path + "/" + filename);
         if (!isFileExist) {
-            sshSession.upload(resource.getInputStream(), path + "/" + resource.getFilename());
-            addMsg(wsSession, installSteps, curr, "prominstall.uploadsuccess");
+            sshSession.upload(resource.getInputStream(), path + "/" + filename);
+            sendMsg(null, "prominstall.uploadsuccess");
         } else {
-            addMsg(wsSession, installSteps, curr, "prominstall.pkgexists");
+            sendMsg(null, "prominstall.pkgexists");
+        }
+        String promDir = path + "/" + filename.substring(0, filename.length() - TAR.length());
+        isFileExist = sshSession.checkDirExist(promDir);
+        if (isFileExist) {
+            throw new CustomException("The directory is exist: " + promDir);
         }
         // Extract file
         sshSession.execute("cd " + path + " && " + command.TAR.parse(resource.getFilename()));
 
-        String filename = resource.getFilename();
-        String promDir = path + filename.substring(0, filename.length() - TAR.length());
-
         Map<String, Object> paramMap = new HashMap<>();
         paramMap.put("port", env.getPort());
         paramMap.put("storageDays", promInstall.getStorageDays());
-        uploadScript(sshSession, promDir, paramMap);
+        uploadSecondScript(sshSession, promDir, paramMap);
         // save env
         env.setPath(promDir);
         envMapper.insert(env);
@@ -213,12 +508,11 @@ public class PrometheusService extends AbstractInstaller {
         NctigbaEnvDO nctigbaEnvDO = envMapper.selectOne(
             Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, envType.PROMETHEUS_MAIN));
         if (nctigbaEnvDO == null) {
-            throw new CustomException("The main Prometheus is not exists!");
+            throw new CustomException("The main server is not exists!");
         }
-        String promMainPath = nctigbaEnvDO.getPath();
-        AgentExceptionVO agentException = checkMainPromPidStatus(promMainPath);
+        AgentExceptionVO agentException = checkPidStatus(nctigbaEnvDO);
         if (!agentException.isUpStatus()) {
-            throw new CustomException("Main Prometheus error: " + agentException.getExceptionInfo());
+            throw new CustomException("The main Prometheus error: " + agentException.getExceptionInfo());
         }
         return nctigbaEnvDO;
     }
@@ -233,9 +527,9 @@ public class PrometheusService extends AbstractInstaller {
         return resources[0];
     }
 
-    private void uploadScript(SshSessionUtils sshSession, String promDir, Map<String, Object> paramMap)
+    private void uploadSecondScript(SshSessionUtils sshSession, String promDir, Map<String, Object> paramMap)
         throws IOException {
-        Resource startSh = resourcePatternResolver.getResource(CLASSPATH_SCRIPT + RUN_SCRIPT);
+        Resource startSh = resourcePatternResolver.getResource(SCRIPT_PATH);
         try (InputStream inputStream = startSh.getInputStream();
              BufferedReader bufferedReader =
                 new BufferedReader(new InputStreamReader(inputStream, Charset.defaultCharset()))) {
@@ -247,17 +541,13 @@ public class PrometheusService extends AbstractInstaller {
             }
             ByteArrayInputStream inStream =
                 new ByteArrayInputStream(strBuilder.toString().getBytes(Charset.defaultCharset()));
-            sshSession.upload(inStream, promDir + "/" + startSh.getFilename());
+            String target = promDir + (promDir.endsWith("/") ? "" : "/") + startSh.getFilename();
+            sshSession.upload(inStream, target);
             inStream.close();
         }
     }
 
-    /**
-     * reallocatePromAgentConfig
-     *
-     * @throws IOException exception
-     */
-    public void reallocatePromAgentConfig() {
+    private void promAlloc() throws IOException {
         List<NctigbaEnvDO> envPromList = envMapper.selectList(
             Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, envType.PROMETHEUS.name())
                 .and(q -> q.isNull(NctigbaEnvDO::getStatus)
@@ -269,122 +559,153 @@ public class PrometheusService extends AbstractInstaller {
             Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, envType.EXPORTER.name())
                 .and(q -> q.isNull(NctigbaEnvDO::getStatus)
                     .or().eq(NctigbaEnvDO::getStatus, AgentStatusEnum.NORMAL.getStatus())));
-
-        Map<String, Integer> promAgentCountMap = preAlloc(envPromList, envAgentList);
-        Map<String, List<String>> promAgentMap = doAlloc(envPromList, envAgentList, promAgentCountMap);
-
-        // Update secondary Prometheus configuration file
-        updatePromsConfig(promAgentMap);
-    }
-
-    private Map<String, Integer> preAlloc(List<NctigbaEnvDO> envPromList, List<NctigbaEnvDO> envAgentList) {
-        int agentTotal = envAgentList.size();
-        int promTotal = envPromList.size();
-        int per = agentTotal / promTotal;
-        int rest = agentTotal % promTotal;
-        Map<String, Integer> promAgentCountMap = new HashMap<>();
-        // Allocate number of agents for Prometheus
-        for (NctigbaEnvDO nctigbaEnvDO : envPromList) {
-            if (rest == 0) {
-                promAgentCountMap.put(nctigbaEnvDO.getId(), per);
-            } else {
-                promAgentCountMap.put(nctigbaEnvDO.getId(), per + 1);
-                rest--;
-            }
+        if (CollectionUtil.isEmpty(envAgentList)) {
+            removePromConfig(envPromList);
+            return;
         }
-        return promAgentCountMap;
-    }
-
-    private Map<String, List<String>> doAlloc(List<NctigbaEnvDO> envPromList, List<NctigbaEnvDO> envAgentList,
-                                            Map<String, Integer> promAgentCountMap) {
-        List<String> envPromIdList = envPromList.stream().map(item -> item.getId()).collect(Collectors.toList());
-        List<PromAgentRelationDO> list = promAgentRelationMapper.selectList(null);
-        List<PromAgentRelationDO> promAgentRelList = list.stream().filter(
-            item -> envPromIdList.contains(item.getEnvPromId())).collect(Collectors.toList());
-        List<String> existEnvAgentIds =
-            promAgentRelList.stream().map(item -> item.getEnvAgentId()).collect(Collectors.toList());
-        List<String> unallocEnvAgentIds =
-            envAgentList.stream().filter(item -> !existEnvAgentIds.contains(item.getId()))
-                .map(item -> item.getId()).collect(Collectors.toList());
-        Map<String, List<String>> promAgentMap = promAgentRelList.stream().collect(
-            Collectors.groupingBy(PromAgentRelationDO::getEnvPromId,
-                Collectors.mapping(PromAgentRelationDO::getEnvAgentId, Collectors.toList())));
-        // Based on the allocation quantity, identify Prometheus instances lacking agents and move surplus agents
-        // from over-allocated Prometheus instances to the pool for reassignment
-        List<String> unallocEnvPromIds = new ArrayList<>();
-        for (NctigbaEnvDO nctigbaEnvDO : envPromList) {
-            List<String> list1 = promAgentMap.getOrDefault(nctigbaEnvDO.getId(), new ArrayList<>());
-            Integer count = promAgentCountMap.get(nctigbaEnvDO.getId());
-            if (list1.size() == count) {
-                continue;
-            }
-            if (list1.size() < count) {
-                unallocEnvPromIds.add(nctigbaEnvDO.getId());
-                continue;
-            }
-            List<String> list2 = list1.subList(0, count);
-            List<String> list3 = list1.subList(count, list1.size());
-            promAgentMap.replace(nctigbaEnvDO.getId(), list2);
-            unallocEnvAgentIds.addAll(list3);
-        }
-        // Supplement Prometheus instances lacking agents
-        int index = 0;
-        for (String unallocEnvPromId : unallocEnvPromIds) {
-            List<String> list1 = promAgentMap.getOrDefault(unallocEnvPromId, new ArrayList<>());
-            Integer count = promAgentCountMap.get(unallocEnvPromId);
-            if (unallocEnvAgentIds.size() <= index + count - list1.size()) {
-                list1.addAll(unallocEnvAgentIds.subList(index, unallocEnvAgentIds.size()));
-                promAgentMap.put(unallocEnvPromId, list1);
-                break;
-            }
-            list1.addAll(unallocEnvAgentIds.subList(index, index + count - list1.size()));
-            promAgentMap.put(unallocEnvPromId, list1);
-            index += count - list1.size();
-        }
-        return promAgentMap;
-    }
-
-    private void updatePromsConfig(Map<String, List<String>> promAgentMap) {
-        for (Map.Entry<String, List<String>> promAgent : promAgentMap.entrySet()) {
-            String envPromId = promAgent.getKey();
-            List<String> envAgentIds = promAgent.getValue();
-            // Determine if configuration update is needed
+        List<AllocateServerDTO> promServerList = envPromList.stream().map(item -> {
+            OpsHostEntity host = hostFacade.getById(item.getHostid());
+            return new AllocateServerDTO().setId(item.getId()).setIp(host.getPublicIp()).setPort(item.getPort());
+        }).collect(Collectors.toList());
+        allocatorService.init(promServerList);
+        List<AllocateServerDTO> agentServerList = envAgentList.stream().map(item -> {
+            OpsHostEntity host = hostFacade.getById(item.getHostid());
+            return new AllocateServerDTO().setId(item.getId()).setIp(host.getPublicIp()).setPort(item.getPort());
+        }).collect(Collectors.toList());
+        Map<String, List<String>> map = allocatorService.alloc(agentServerList);
+        for (String promId : map.keySet()) {
+            List<String> agentIds = map.get(promId);
             List<PromAgentRelationDO> promAgentRels = promAgentRelationMapper.selectList(
-                Wrappers.<PromAgentRelationDO>lambdaQuery().eq(PromAgentRelationDO::getEnvPromId, envPromId));
-            if (CollectionUtil.isEmpty(envAgentIds) && CollectionUtil.isEmpty(promAgentRels)) {
-                continue;
-            }
+                Wrappers.<PromAgentRelationDO>lambdaQuery().eq(PromAgentRelationDO::getEnvPromId, promId));
             List<String> oldEnvAgentIds = promAgentRels.stream().map(item -> item.getEnvAgentId()).collect(
                 Collectors.toList());
-            if (CollectionUtil.containsAll(oldEnvAgentIds, envAgentIds)
-                && CollectionUtil.containsAll(envAgentIds, oldEnvAgentIds)) {
+            NctigbaEnvDO envProm = envPromList.stream().filter(
+                item -> item.getId().equals(promId)).findFirst().get();
+            clearNotExistPromConf(envProm, oldEnvAgentIds);
+            updatePromConf(promId, oldEnvAgentIds, agentIds);
+        }
+    }
+
+    private void clearNotExistPromConf(NctigbaEnvDO envProm, List<String> envExistAgentIds) throws IOException {
+        try (SshSessionUtils session = connect(envProm.getHostid(), envProm.getUsername())){
+            String promYmlStr = session.execute("cat " + envProm.getPath() + CommonConstants.PROMETHEUS_YML);
+            prometheusConfig promCofig = YamlUtils.loadAs(promYmlStr, prometheusConfig.class);
+            List<prometheusConfig.job> scrapeConfigs = promCofig.getScrape_configs();
+            if (CollectionUtil.isEmpty(scrapeConfigs)) {
+                return;
+            }
+            if (CollectionUtil.isEmpty(envExistAgentIds)) {
+                promCofig.setScrape_configs(new ArrayList<>());
+            } else {
+                List<AgentNodeRelationDO> list = agentNodeRelationService.list(
+                    Wrappers.<AgentNodeRelationDO>lambdaQuery().in(AgentNodeRelationDO::getEnvId, envExistAgentIds));
+                List<String> nodeIds = list.stream().map(item -> item.getNodeId()).collect(Collectors.toList());
+                List<prometheusConfig.job> newScrapeConf = scrapeConfigs.stream().filter(item -> {
+                    for (String nodeId : nodeIds) {
+                        if (item.getJob_name().startsWith(nodeId)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }).collect(Collectors.toList());
+                if (CollectionUtil.containsAll(newScrapeConf, scrapeConfigs)) {
+                    return;
+                }
+                promCofig.setScrape_configs(newScrapeConf);
+            }
+            File prom = File.createTempFile("prom", ".tmp");
+            FileUtil.appendUtf8String(YamlUtils.dump(promCofig), prom);
+            // upload
+            session.execute("rm " + envProm.getPath() + CommonConstants.PROMETHEUS_YML);
+            session.upload(prom.getCanonicalPath(), envProm.getPath() + CommonConstants.PROMETHEUS_YML);
+            Files.delete(prom.toPath());
+            OpsHostEntity promeHost = hostFacade.getById(envProm.getHostid());
+            String url = "http://" + promeHost.getPublicIp() + ":" + envProm.getPort() + "/-/reload";
+            HttpUtil.post(url, "");
+        }
+    }
+
+    private void updatePromConf(String promId, List<String> oldEnvAgentIds, List <String> newEnvAgentIds) {
+        if (CollectionUtil.containsAll(newEnvAgentIds, oldEnvAgentIds)
+            && CollectionUtil.containsAll(oldEnvAgentIds, newEnvAgentIds)) {
+            return;
+        }
+        List<String> addEnvAgentIds = newEnvAgentIds.stream().filter(item -> !oldEnvAgentIds.contains(item)).collect(
+            Collectors.toList());
+        List<PrometheusConfigNodeDTO> addConfigNodes = getAddConfigNodes(addEnvAgentIds);
+        List<String> delEnvAgentIds = oldEnvAgentIds.stream().filter(item -> !newEnvAgentIds.contains(item)).collect(
+            Collectors.toList());
+        List<String> delNodeIds = getDelNodeIds(delEnvAgentIds);
+        collectTemplateNodeService.setPrometheusConfig(promId, addConfigNodes, delNodeIds);
+        if (CollectionUtil.isNotEmpty(delEnvAgentIds)) {
+            promAgentRelationMapper.delete(Wrappers.<PromAgentRelationDO>lambdaQuery()
+                .in(PromAgentRelationDO::getEnvAgentId, delEnvAgentIds)
+                .eq(PromAgentRelationDO::getEnvPromId, promId));
+        }
+        if (CollectionUtil.isNotEmpty(addEnvAgentIds)) {
+            for (String addEnvAgentId : addEnvAgentIds) {
+                PromAgentRelationDO relation = new PromAgentRelationDO();
+                relation.setEnvAgentId(addEnvAgentId).setEnvPromId(promId).setCreateTime(new Date());
+                promAgentRelationMapper.insert(relation);
+            }
+        }
+    }
+
+    private void removePromConfig(List<NctigbaEnvDO> envPromList) throws IOException {
+        for (NctigbaEnvDO env : envPromList) {
+            List<PromAgentRelationDO> promAgentRelList = promAgentRelationMapper.selectList(
+                Wrappers.<PromAgentRelationDO>lambdaQuery().eq(PromAgentRelationDO::getEnvPromId, env.getId()));
+            if (CollectionUtil.isEmpty(promAgentRelList)) {
                 continue;
             }
+            clearNotExistPromConf(env, null);
+            List<Integer> ids = promAgentRelList.stream().map(item -> item.getId()).collect(Collectors.toList());
+            promAgentRelationMapper.deleteBatchIds(ids);
+        }
+    }
 
-            // Update secondary Prometheus configuration
-            List<String> addEnvAgentIds = envAgentIds.stream().filter(item -> !oldEnvAgentIds.contains(item)).collect(
-                Collectors.toList());
-            List<PrometheusConfigNodeDTO> addConfigNodes = getAddConfigNodes(addEnvAgentIds);
+    /**
+     * alloc prom config when increment an agent
+     * @param envAgent NctigbaEnvDO
+     */
+    public void incAgentAlloc(NctigbaEnvDO envAgent) {
+        List<NctigbaEnvDO> envPromList = envMapper.selectList(
+            Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, envType.PROMETHEUS.name())
+                .and(q -> q.isNull(NctigbaEnvDO::getStatus)
+                    .or().eq(NctigbaEnvDO::getStatus, AgentStatusEnum.NORMAL.getStatus())));
+        if (CollectionUtil.isEmpty(envPromList)) {
+            return;
+        }
+        List<AllocateServerDTO> promServerList = envPromList.stream().map(item -> {
+            OpsHostEntity host = hostFacade.getById(item.getHostid());
+            return new AllocateServerDTO().setId(item.getId()).setIp(host.getPublicIp()).setPort(item.getPort());
+        }).collect(Collectors.toList());
+        allocatorService.init(promServerList);
+        AllocateServerDTO agentServer = new AllocateServerDTO().setIp(envAgent.getId())
+            .setIp(envAgent.getHost().getPublicIp()).setPort(envAgent.getPort());
+        String promId = allocatorService.getAllocatorId(agentServer);
+        List<PrometheusConfigNodeDTO> addConfigNodes = getAddConfigNodes(Arrays.asList(envAgent.getId()));
+        collectTemplateNodeService.setPrometheusConfig(promId, addConfigNodes, null);
+        PromAgentRelationDO relation = new PromAgentRelationDO();
+        relation.setEnvAgentId(envAgent.getId()).setEnvPromId(promId).setCreateTime(new Date());
+        promAgentRelationMapper.insert(relation);
+    }
 
-            List<String> delEnvAgentIds = oldEnvAgentIds.stream().filter(item -> !envAgentIds.contains(item)).collect(
-                Collectors.toList());
-            List<String> delNodeIds = getDelNodeIds(delEnvAgentIds);
-
-            collectTemplateNodeService.setPrometheusConfig(envPromId, addConfigNodes, delNodeIds);
-
-            // Update the database by deleting first and then adding
-            if (CollectionUtil.isNotEmpty(delEnvAgentIds)) {
-                promAgentRelationMapper.delete(Wrappers.<PromAgentRelationDO>lambdaQuery()
-                    .in(PromAgentRelationDO::getEnvAgentId, delEnvAgentIds)
-                    .eq(PromAgentRelationDO::getEnvPromId, envPromId));
-            }
-            if (CollectionUtil.isNotEmpty(addEnvAgentIds)) {
-                for (String addEnvAgentId : addEnvAgentIds) {
-                    PromAgentRelationDO relation = new PromAgentRelationDO();
-                    relation.setEnvAgentId(addEnvAgentId).setEnvPromId(envPromId).setCreateTime(new Date());
-                    promAgentRelationMapper.insert(relation);
-                }
-            }
+    /**
+     * del prom config when decrement an agent
+     *
+     * @param envAgent NctigbaEnvDO
+     */
+    public void decAgentAlloc(NctigbaEnvDO envAgent) {
+        List<PromAgentRelationDO> promAgentRels = promAgentRelationMapper.selectList(
+            Wrappers.<PromAgentRelationDO>lambdaQuery().eq(PromAgentRelationDO::getEnvAgentId, envAgent.getId()));
+        if (CollectionUtil.isEmpty(promAgentRels)) {
+            return;
+        }
+        for (PromAgentRelationDO promAgentRel : promAgentRels) {
+            List<String> delNodeIds = getDelNodeIds(Arrays.asList(envAgent.getId()));
+            collectTemplateNodeService.setPrometheusConfig(promAgentRel.getEnvPromId(), new ArrayList<>(), delNodeIds);
+            promAgentRelationMapper.deleteById(promAgentRel);
         }
     }
 
@@ -423,10 +744,10 @@ public class PrometheusService extends AbstractInstaller {
         return delNodeIds;
     }
 
-    private void updatePromMainConfig(String path, int port, String secondPromIp, int secondPromPort)
-        throws IOException {
+    private void updateMainPromConfig(String path, int port, List<NctigbaEnvDO> secondPromList,
+                                    List<NctigbaEnvDO> delList) throws IOException {
         try(ByteArrayOutputStream os = new ByteArrayOutputStream()) {
-            Path configPath = Path.of(path + "/prometheus.yml");
+            Path configPath = Path.of(path + CommonConstants.PROMETHEUS_YML);
             Files.copy(configPath, os);
             Map map = YamlUtils.get().loadAs(new ByteArrayInputStream(os.toByteArray()), Map.class);
             prometheusConfig prometheusConfig = new prometheusConfig();
@@ -435,12 +756,25 @@ public class PrometheusService extends AbstractInstaller {
             if (CollectionUtil.isEmpty(remoteReadList)) {
                 remoteReadList = new ArrayList<>();
             }
-            String url = "http://" + secondPromIp + ":" + secondPromPort + "/api/v1/read";
-            prometheusConfig.remoteRead rr = new prometheusConfig.remoteRead();
-            rr.setUrl(url);
-            rr.setRead_recent(true);
-            if (!remoteReadList.contains(rr)) {
-                remoteReadList.add(rr);
+            if (CollectionUtil.isNotEmpty(delList)) {
+                for (NctigbaEnvDO env : delList) {
+                    String url = "http://" + env.getHost().getPublicIp() + ":" + env.getPort() + "/api/v1/read";
+                    prometheusConfig.remoteRead rr = new prometheusConfig.remoteRead();
+                    rr.setUrl(url);
+                    rr.setRead_recent(true);
+                    if (remoteReadList.contains(rr)) {
+                        remoteReadList.remove(rr);
+                    }
+                }
+            }
+            for (NctigbaEnvDO env : secondPromList) {
+                String url = "http://" + env.getHost().getPublicIp() + ":" + env.getPort() + "/api/v1/read";
+                prometheusConfig.remoteRead rr = new prometheusConfig.remoteRead();
+                rr.setUrl(url);
+                rr.setRead_recent(true);
+                if (!remoteReadList.contains(rr)) {
+                    remoteReadList.add(rr);
+                }
             }
             prometheusConfig.setRemote_read(remoteReadList);
             String config = YamlUtils.dump(prometheusConfig);
@@ -497,43 +831,54 @@ public class PrometheusService extends AbstractInstaller {
             e.setHost(hostFacade.getById(e.getHostid()));
         });
         for (NctigbaEnvDO env : envList) {
-            String status = env.getStatus();
-            if (StrUtil.isBlank(status)) {
-                oldVersionAdapter(env);
-            }
-            if (AgentStatusEnum.MANUAL_STOP.getStatus().equals(status)) {
-                continue;
-            }
-            long updateTime = env.getUpdateTime() != null ? env.getUpdateTime().getTime()
-                : new Date().getTime() - 3 * CommonConstants.MONITOR_CYCLE * 1000L - 1000L;
-            boolean isTimeout = new Date().getTime() - updateTime > 3 * CommonConstants.MONITOR_CYCLE * 1000L;
-            if ((AgentStatusEnum.STARTING.getStatus().equals(status) || AgentStatusEnum.STOPPING.getStatus().equals(
-                    status)) && !isTimeout) {
-                continue;
-            }
             try {
+                String status = env.getStatus();
+                if (StrUtil.isBlank(status) && envType.PROMETHEUS.name().equals(env.getType())) {
+                    oldVersionAdapter(env);
+                }
+                if (AgentStatusEnum.MANUAL_STOP.getStatus().equals(status)) {
+                    continue;
+                }
+                long updateTime = env.getUpdateTime() != null ? env.getUpdateTime().getTime()
+                    : new Date().getTime() - 3 * CommonConstants.MONITOR_CYCLE * 1000L - 1000L;
+                boolean isTimeout = new Date().getTime() - updateTime > 3 * CommonConstants.MONITOR_CYCLE * 1000L;
+                if ((AgentStatusEnum.STARTING.getStatus().equals(status) || AgentStatusEnum.STOPPING.getStatus().equals(
+                        status)) && !isTimeout) {
+                    continue;
+                }
                 AgentExceptionVO check = checkPidStatus(env);
                 if (!check.isUpStatus()) {
                     startProm(env);
+                    if (envType.PROMETHEUS.name().equals(env.getType())) {
+                        promAlloc();
+                    }
                 } else {
                     checkHealthStatus(env);
                 }
-            } catch (CustomException e) {
+            } catch (CustomException | IOException e) {
                 log.error(e.getMessage());
             }
         }
     }
 
     private void oldVersionAdapter(NctigbaEnvDO env) {
-        try (SshSessionUtils session = connect(env.getHostid(), env.getUsername());
-            InputStream in =
-                resourcePatternResolver.getResource(CLASSPATH_SCRIPT + RUN_SCRIPT).getInputStream()) {
-            String result = session.execute(
-                " [ -e " + env.getPath() + "/" + RUN_SCRIPT + " ] && echo true || echo false");
+        try (SshSessionUtils session = connect(env.getHostid(), env.getUsername())) {
+            String target = env.getPath() + (env.getPath().endsWith("/") ? "" : "/") + RUN_SCRIPT;
+            String result = session.execute(" [ -e " + target + " ] && echo true || echo false");
             if (result.equals("false")) {
-                session.upload(in, env.getPath() + "/" + RUN_SCRIPT);
+                Map<String, Object> paramMap = new HashMap<>();
+                paramMap.put("port", env.getPort());
+                String storageDays = "15d";
+                if (StrUtil.isNotBlank(env.getParam())) {
+                    JSONObject paramJson = new JSONObject(env.getParam());
+                    storageDays = StrUtil.isNotBlank(paramJson.getStr("storageDays"))
+                        ? paramJson.getStr("storageDays") : storageDays;
+                }
+                paramMap.put("storageDays", storageDays);
+                uploadSecondScript(session, env.getPath(), paramMap);
             }
-            String pid = session.execute("lsof -ti :" + env.getPort());
+            String pid = session.execute("ss -tulpn | grep :" + env.getPort() + " | awk '{print $7}' "
+                + "| awk -F \",\" '{print $2}' | awk -F \"=\" '{print $2}'");
             if (StrUtil.isNotBlank(pid)) {
                 File pidFile = File.createTempFile("prometheus", ".pid");
                 FileUtil.appendUtf8String(pid, pidFile);
@@ -550,64 +895,53 @@ public class PrometheusService extends AbstractInstaller {
      * @param env NctigbaEnvDO
      */
     private void startProm(NctigbaEnvDO env) {
-        if (envType.PROMETHEUS_MAIN.name().equals(env.getType())) {
-            startMainProm(env);
-        } else {
-            startSecondProm(env);
+        AgentExceptionVO check = checkPidStatus(env);
+        if (check.isUpStatus()) {
+            throw new CustomException(check.getExceptionInfo());
         }
-        checkHealthStatus(env);
-        if (envType.PROMETHEUS.name().equals(env.getType())) {
-            reallocatePromAgentConfig();
-        }
-    }
-
-    private void startMainProm(NctigbaEnvDO env) {
         try {
-            String result = CommonUtils.processCommand("/bin/sh", "-c",
-                "netstat -tuln | grep :" + env.getPort().toString() + " && echo true || echo false");
-            if (result.contains("true")) {
-                throw new CustomException("port is exists!");
+            if (envType.PROMETHEUS_MAIN.name().equals(env.getType())) {
+                String result = CommonUtils.processCommand("/bin/sh", "-c",
+                    "netstat -tuln | grep :" + env.getPort().toString() + " && echo true || echo false");
+                if (result.contains("true")) {
+                    throw new CustomException("port is exists!");
+                }
+                result = CommonUtils.processCommand("/bin/sh", "-c", "[ -e " + env.getPath() + " ] && echo true || echo "
+                    + "false");
+                if (result.contains("false")) {
+                    throw new CustomException("package is not exists!");
+                }
+                env.setStatus(AgentStatusEnum.STARTING.getStatus()).setUpdateTime(new Date());
+                envMapper.updateById(env);
+                CommonUtils.processCommand(new File(env.getPath()), "/bin/sh", RUN_SCRIPT, "start");
+            } else {
+                try (SshSessionUtils session = connect(env.getHostid(), env.getUsername())) {
+                    String message = session.execute(
+                        "netstat -tuln | grep -q " + env.getPort() + " && echo 'true' || echo 'false'");
+                    if (message.contains("true")) {
+                        env.setStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus()).setUpdateTime(new Date());
+                        envMapper.updateById(env);
+                        throw new CustomException("port is exists!");
+                    }
+                    String pkgPath = session.execute("[ -e " + env.getPath() + " ] && echo 'true' || echo 'false'");
+                    if (pkgPath.contains("false")) {
+                        env.setStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus()).setUpdateTime(new Date());
+                        envMapper.updateById(env);
+                        throw new CustomException("package is not exists!");
+                    }
+                    env.setStatus(AgentStatusEnum.STARTING.getStatus()).setUpdateTime(new Date());
+                    envMapper.updateById(env);
+                    String command = "cd " + env.getPath() + " && sh " + RUN_SCRIPT + " start";
+                    session.executeNoWait(command);
+                }
             }
-            result = CommonUtils.processCommand("/bin/sh", "-c", "[ -e " + env.getPath() + " ] && echo true || echo "
-                + "false");
-            if (result.contains("false")) {
-                throw new CustomException("package is not exists!");
-            }
-            env.setStatus(AgentStatusEnum.STARTING.getStatus()).setUpdateTime(new Date());
-            envMapper.updateById(env);
-            CommonUtils.processCommand(new File(env.getPath()), "/bin/sh", RUN_SCRIPT, "start");
         } catch (IOException | InterruptedException | CustomException e) {
             log.error(e.getMessage());
             env.setStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus()).setUpdateTime(new Date());
             envMapper.updateById(env);
             throw new CustomException(e.getMessage());
         }
-    }
-
-    private void startSecondProm(NctigbaEnvDO env) {
-        try (SshSessionUtils session = connect(env.getHostid(), env.getUsername())) {
-            String message = session.execute(
-                "netstat -tuln | grep -q " + env.getPort() + " && echo 'true' || echo 'false'");
-            if (message.contains("true")) {
-                env.setStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus()).setUpdateTime(new Date());
-                envMapper.updateById(env);
-                throw new CustomException("port is exists!");
-            }
-            String pkgPath = session.execute("[ -e " + env.getPath() + " ] && echo 'true' || echo 'false'");
-            if (pkgPath.contains("false")) {
-                env.setStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus()).setUpdateTime(new Date());
-                envMapper.updateById(env);
-                throw new CustomException("package is not exists!");
-            }
-            env.setStatus(AgentStatusEnum.STARTING.getStatus()).setUpdateTime(new Date());
-            envMapper.updateById(env);
-            String command = "cd " + env.getPath() + " && sh " + RUN_SCRIPT + " start";
-            session.executeNoWait(command);
-        } catch (IOException | RuntimeException e) {
-            env.setStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus()).setUpdateTime(new Date());
-            envMapper.updateById(env);
-            throw new CustomException("exec failed:" + e.getMessage());
-        }
+        checkHealthStatus(env);
     }
 
     private void stopProm(NctigbaEnvDO env) {
@@ -649,15 +983,13 @@ public class PrometheusService extends AbstractInstaller {
         }
         env.setStatus(AgentStatusEnum.MANUAL_STOP.getStatus()).setUpdateTime(new Date());
         envMapper.updateById(env);
-        if (envType.PROMETHEUS.name().equals(env.getType())) {
-            reallocatePromAgentConfig();
-        }
     }
 
     private void killPid(NctigbaEnvDO env) {
         if (envType.PROMETHEUS_MAIN.name().equals(env.getType())) {
             try {
-                String pid = CommonUtils.processCommand("/bin/sh", "-c", "lsof -t -i " + env.getPort().toString());
+                String pid = CommonUtils.processCommand("/bin/sh", "-c", "ss -tulpn | grep :" + env.getPort()
+                    + " | awk '{print $7}' | awk -F \",\" '{print $2}' | awk -F \"=\" '{print $2}'");
                 if (StrUtil.isBlank(pid)) {
                     env.setStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus()).setUpdateTime(new Date());
                     envMapper.updateById(env);
@@ -669,7 +1001,8 @@ public class PrometheusService extends AbstractInstaller {
             }
         } else {
             try (SshSessionUtils session = connect(env.getHostid(), env.getUsername())) {
-                String pid = session.execute("lsof -t -i " + env.getPort());
+                String pid = session.execute("ss -tulpn | grep :" + env.getPort() + " | awk '{print $7}' "
+                    + "| awk -F \",\" '{print $2}' | awk -F \"=\" '{print $2}'");
                 if (StrUtil.isBlank(pid)) {
                     env.setStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus()).setUpdateTime(new Date());
                     envMapper.updateById(env);
@@ -685,36 +1018,23 @@ public class PrometheusService extends AbstractInstaller {
         envMapper.updateById(env);
     }
 
-
     private AgentExceptionVO checkPidStatus(NctigbaEnvDO env) {
-        if (envType.PROMETHEUS_MAIN.name().equals(env.getType())) {
-            return checkMainPromPidStatus(env.getPath());
-        } else {
-            return checkSecondPromPidStatus(env.getHostid(), env.getUsername(), env.getPath());
-        }
-    }
-
-    private AgentExceptionVO checkMainPromPidStatus(String path) {
         AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
         try {
-            String result = CommonUtils.processCommand(new File(path), "/bin/sh", RUN_SCRIPT, "status");
-            if (StrUtil.isBlank(result)) {
-                result = "Run the script(run_prometheus.sh) fail!";
+            if (envType.PROMETHEUS_MAIN.name().equals(env.getType())) {
+                String result = CommonUtils.processCommand(new File(env.getPath()), "/bin/sh", RUN_SCRIPT, "status");
+                if (StrUtil.isBlank(result)) {
+                    result = "Run the script(run_prometheus.sh) fail!";
+                }
+                agentExceptionVO.setAgentStatus(result.contains("Prometheus is running with PID:"), result);
+            } else {
+                try (SshSessionUtils session = connect(env.getHostid(), env.getUsername())) {
+                    String cd = "cd " + env.getPath() + " && ";
+                    String message = session.execute(cd + " sh " + RUN_SCRIPT + " status");
+                    agentExceptionVO.setAgentStatus(message.contains("Prometheus is running with PID"), message);
+                }
             }
-            agentExceptionVO.setAgentStatus(result.contains("Prometheus is running with PID:"), result);
         } catch (IOException | InterruptedException | NullPointerException e) {
-            agentExceptionVO.setAgentStatus(false, "exec failed:" + e.getMessage());
-        }
-        return agentExceptionVO;
-    }
-
-    private AgentExceptionVO checkSecondPromPidStatus(String hostid, String username, String path) {
-        AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
-        try (SshSessionUtils session = connect(hostid, username)) {
-            String cd = "cd " + path + " && ";
-            String message = session.execute(cd + " sh " + RUN_SCRIPT + " status");
-            agentExceptionVO.setAgentStatus(message.contains("Prometheus is running with PID"), message);
-        } catch (IOException | RuntimeException e) {
             agentExceptionVO.setAgentStatus(false, "exec failed:" + e.getMessage());
         }
         return agentExceptionVO;
@@ -725,7 +1045,7 @@ public class PrometheusService extends AbstractInstaller {
      *
      * @param env NctigbaEnvDO
      */
-    public void checkHealthStatus(NctigbaEnvDO env) {
+    private void checkHealthStatus(NctigbaEnvDO env) {
         for (int i = 0; i < 11; i++) {
             try {
                 String publicIp = "";
@@ -767,6 +1087,13 @@ public class PrometheusService extends AbstractInstaller {
     public void start(String id) {
         NctigbaEnvDO env = getPromEnvInfo(id);
         startProm(env);
+        try {
+            if (envType.PROMETHEUS.name().equals(env.getType())) {
+                promAlloc();
+            }
+        } catch (IOException e) {
+            throw new CustomException(e.getMessage());
+        }
     }
 
     /**
@@ -777,6 +1104,14 @@ public class PrometheusService extends AbstractInstaller {
     public void stop(String id) {
         NctigbaEnvDO env = getPromEnvInfo(id);
         stopProm(env);
+        try {
+            if (envType.PROMETHEUS.name().equals(env.getType())) {
+                // realloc
+                promAlloc();
+            }
+        } catch (IOException e) {
+            throw new CustomException(e.getMessage());
+        }
     }
 
     private NctigbaEnvDO getPromEnvInfo(String id) {
@@ -788,6 +1123,128 @@ public class PrometheusService extends AbstractInstaller {
             env.setHost(hostFacade.getById(env.getHostid()));
         }
         return env;
+    }
+
+    /**
+     * reinstall
+     *
+     * @param wsSession WsSession
+     * @param promInstall PromInstallDTO
+     */
+    public void reinstall(WsSession wsSession, PromInstallDTO promInstall) {
+        initWsSessionStepTl(wsSession, initReinstallSteps());
+        reinstall(promInstall);
+    }
+
+    /**
+     * reinstall
+     *
+     * @param promInstall PromInstallDTO
+     */
+    public void reinstall(PromInstallDTO promInstall) {
+        try {
+            nextStep();
+            if (!envType.PROMETHEUS_MAIN.name().equals(promInstall.getType())) {
+                throw new CustomException("only the main Prometheus allow to reinstall");
+            }
+            if (StrUtil.isBlank(promInstall.getEnvId())) {
+                throw new CustomException("The main Prometheus is not exist!");
+            }
+            NctigbaEnvDO env = envMapper.selectById(promInstall.getEnvId());
+            if (env == null) {
+                throw new CustomException("The main Prometheus is not exist!");
+            }
+            nextStep();
+            AgentExceptionVO agentExceptionVO = checkPidStatus(env);
+            if (agentExceptionVO.isUpStatus()) {
+                sendMsg(null, "prominstall.stopServer");
+                stopProm(env);
+            }
+            prometheusConfig mainPromConf = getMainPromConf(env.getPath());
+            transferRuleConfig(env.getPath() + CommonConstants.SLASH + RULE_PATH, RULE_PATH, false);
+            sendMsg(null, "prominstall.clearFolder");
+            clearInstallFolder(env);
+            envMapper.deleteById(env);
+            nextStep();
+            Path path = Path.of(MAIN_INSTALL_PATH);
+            if (!Files.exists(path)) {
+                Files.createDirectories(path);
+            }
+            String promDir = wsInstallMain(promInstall, mainPromConf);
+            env = new NctigbaEnvDO().setPath(promDir).setPort(promInstall.getPort()).setType(envType.PROMETHEUS_MAIN);
+            envMapper.insert(env);
+            nextStep();
+            startProm(env);
+            sendMsg(null, "prominstall.startServer");
+            nextStep(); // step6 check prom status
+            checkHealthStatus(env);
+            nextStep(); // step7 done
+            sendMsg(Status.DONE, "");
+        } catch (Exception e) {
+            sendMsg(Status.ERROR, e.getMessage());
+            var sw = new StringWriter();
+            try (var pw = new PrintWriter(sw);) {
+                e.printStackTrace(pw);
+            }
+            sendMsg(null, sw.toString());
+        }
+    }
+
+    private void transferRuleConfig(String fromPath, String toPath, boolean isDelFromPath) throws IOException {
+        Path fromPath0 = Paths.get(fromPath);
+        if (!Files.exists(fromPath0)) {
+            return;
+        }
+        Path toPath0 = Paths.get(toPath);
+        if (Files.exists(toPath0)) {
+            FileUtil.del(toPath0);
+        }
+        Files.createDirectories(toPath0);
+        Files.walk(fromPath0).forEach(file -> {
+            try {
+                Files.copy(file, toPath0.resolve(fromPath0.relativize(file)), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                throw new CustomException(e.getMessage());
+            }
+        });
+        if (isDelFromPath) {
+            FileUtil.del(fromPath0);
+        }
+    }
+
+    private prometheusConfig getMainPromConf(String path) throws IOException {
+        prometheusConfig promConfig = new prometheusConfig();
+        try(ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+            Path configPath = Path.of(path + CommonConstants.PROMETHEUS_YML);
+            Files.copy(configPath, os);
+            Map map = YamlUtils.get().loadAs(new ByteArrayInputStream(os.toByteArray()), Map.class);
+            BeanUtil.copyProperties(map, promConfig);
+        }
+        return promConfig;
+    }
+
+    private String wsInstallMain(PromInstallDTO promInstall, prometheusConfig promconfig) throws IOException, InterruptedException {
+        Resource resource = getMainInstallPkg();
+        String filename = resource.getFilename().substring(0, resource.getFilename().length() - TAR.length());
+        String installPath = "";
+        String promDir = "";
+        if (promInstall.getPath().endsWith(filename)) {
+            installPath = promInstall.getPath().substring(0, promInstall.getPath().length() - filename.length());
+            promDir = promInstall.getPath();
+        } else {
+            installPath = promInstall.getPath();
+            promDir = promInstall.getPath() + "/" + filename;
+        }
+        uploadMainProm(resource, Path.of(installPath));
+        uploadMainScript(promDir, promInstall.getPort(), false);
+        String config = YamlUtils.dump(promconfig);
+        try (InputStream inConfig = new ByteArrayInputStream(config.getBytes(Charset.defaultCharset()))) {
+            Files.copy(inConfig,
+                Paths.get(promDir + "/prometheus.yml"), StandardCopyOption.REPLACE_EXISTING);
+        }
+        transferRuleConfig(RULE_PATH, promDir + CommonConstants.SLASH + RULE_PATH, true);
+        chmodFile(promDir);
+        return promDir;
     }
 
     /**
@@ -892,54 +1349,89 @@ public class PrometheusService extends AbstractInstaller {
         }
     }
 
+    /**
+     * uninstall
+     *
+     * @param wsSession WsSession
+     * @param id String
+     */
     public void uninstall(WsSession wsSession, String id) {
-        initUninstallSteps();
-        // @formatter:on
-        var curr = 0;
+        initWsSessionStepTl(wsSession, initUninstallSteps());
+        uninstall(id);
+    }
 
+    /**
+     * uninstall
+     *
+     * @param id String
+     */
+    public void uninstall(String id) {
         try {
-            curr = nextStep(wsSession, uninstallSteps, curr);
-            var env = envMapper.selectById(id);
-            if (env == null)
-                throw new RuntimeException("id not found");
-
+            nextStep();
+            NctigbaEnvDO env = envMapper.selectById(id);
+            if (env == null) {
+                throw new CustomException("env is not found");
+            }
             if (envType.PROMETHEUS_MAIN.equals(env.getType())) {
                 throw new CustomException("The main Prometheus can not uninstall!");
             }
 
-            curr = nextStep(wsSession, uninstallSteps, curr);
+            nextStep();
             OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
             if (hostEntity == null) {
                 throw new RuntimeException(CommonConstants.HOST_NOT_FOUND);
             }
             env.setHost(hostEntity);
-            if (StrUtil.isBlank(env.getStatus())) {
+            if (StrUtil.isBlank(env.getStatus()) && envType.PROMETHEUS.name().equals(env.getType())) {
                 oldVersionAdapter(env);
             }
 
-            curr = nextStep(wsSession, uninstallSteps, curr);
-            AgentExceptionVO agentException = checkSecondPromPidStatus(env.getHostid(), env.getUsername(),
-                env.getPath());
+            nextStep();
+            AgentExceptionVO agentException = checkPidStatus(env);
             if (agentException.isUpStatus()) {
-                curr = nextStep(wsSession, uninstallSteps, curr);
+                nextStep();
                 try (SshSessionUtils session = connect(env.getHostid(), env.getUsername())) {
                     String command = "cd " + env.getPath() + " && sh " + RUN_SCRIPT + " stop";
                     session.executeNoWait(command);
-                    reallocatePromAgentConfig();
                 }
+                NctigbaEnvDO mainEnv = envMapper.selectOne(
+                    Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, envType.PROMETHEUS_MAIN));
+                AgentExceptionVO check = checkPidStatus(mainEnv);
+                if (check.isUpStatus()) {
+                    updateMainPromConfig(mainEnv.getPath(), mainEnv.getPort(), new ArrayList<>(),
+                        Arrays.asList(env));
+                }
+                promAlloc();
             } else {
-                curr = skipStep(wsSession, uninstallSteps, curr);
+                skipStep();
             }
+            clearInstallFolder(env);
             envMapper.deleteById(id);
-            sendMsg(wsSession, uninstallSteps, curr, status.DONE);
+            sendMsg(Status.DONE, "");
         } catch (Exception e) {
-            uninstallSteps.get(curr).setState(status.ERROR).add(e.getMessage());
-            wsUtil.sendText(wsSession, JSONUtil.toJsonStr(uninstallSteps));
+            sendMsg(Status.ERROR, e.getMessage());
             var sw = new StringWriter();
             try (var pw = new PrintWriter(sw);) {
                 e.printStackTrace(pw);
             }
-            wsUtil.sendText(wsSession, sw.toString());
+            sendMsg(null, sw.toString());
+        }
+    }
+
+    private void clearInstallFolder(NctigbaEnvDO env) throws IOException {
+        if (envType.PROMETHEUS_MAIN.name().equals(env.getType())) {
+            if (StrUtil.isNotBlank(env.getPath()) && Files.exists(Path.of(env.getPath()))) {
+                FileUtils.deleteDirectory(new File(env.getPath()));
+            }
+        } else {
+            try (SshSessionUtils session = connect(env.getHostid(), env.getUsername())) {
+                String command = "[ -e " + env.getPath() + " ] && echo 'true' || echo 'false'";
+                String result = session.execute(command);
+                if (StrUtil.isNotBlank(env.getPath()) && !result.contains("false")) {
+                    String cd = "cd " + env.getPath() + " && ";
+                    session.execute(cd + "rm -rf " + env.getPath());
+                }
+            }
         }
     }
 }

@@ -104,6 +104,15 @@
                 <div class="item">
                   <div class="label">{{ data.label }}</div>
                   <div class="btns">
+                    <el-link
+                      v-if="data.type === 'PROMETHEUS_MAIN'"
+                      type="primary"
+                      style="margin-right: 5px"
+                      @click="
+                        showReinstallProxy(node)
+                      "
+                      >{{ $t('install.reinstallBtn') }}
+                    </el-link>
                     <el-link type="primary" style="margin-right: 5px" @click="startProxy(data.id)" v-if="showStarting(data, proxyNodeStatusMap)"
                       :disabled="proxyNodeStatusMap[data.id].loading || !canStart(data, proxyNodeStatusMap)">{{
                       t('install.start')
@@ -112,7 +121,7 @@
                       :disabled="proxyNodeStatusMap[data.id].loading || !canStop(data, proxyNodeStatusMap)">{{
                       t('install.stop')
                     }}</el-link>
-                    <el-link style="margin-right: 5px" type="primary" @click="showEditCollector(node)">
+                    <el-link style="margin-right: 5px" type="primary" @click="showEditProxy(node)">
                       {{ $t('app.edit') }}
                     </el-link>
                     <el-link
@@ -153,6 +162,9 @@
     <InstallProxy
       v-if="installProxyShown"
       :show="installProxyShown"
+      :node="proxyNode"
+      :editing="isProxyEdit"
+      :isReinstall="isReinstall"
       @changeModal="changeModalInstallProxy"
       @installed="proxyInstalled()"
     />
@@ -248,7 +260,11 @@ const agentEdited = () => {
 
 // install proxy
 const installProxyShown = ref(false)
+const proxyNode = ref('')
+const isProxyEdit = ref<boolean>(false)
+const isReinstall = ref<boolean>(false)
 const showInstallProxy = () => {
+  isReinstall.value = false
   restRequest
       .get('/observability/v1/environment/prometheus', {})
       .then(function (res) {
@@ -261,7 +277,20 @@ const showInstallProxy = () => {
           return;
         }
         installProxyShown.value = true
+        isProxyEdit.value = false
       })
+}
+const showEditProxy = (node: any) => {
+  isReinstall.value = false
+  proxyNode.value = node.data
+  installProxyShown.value = true
+  isProxyEdit.value = true
+}
+const showReinstallProxy = (node: any) => {
+  proxyNode.value = node.data
+  installProxyShown.value = true
+  isProxyEdit.value = true
+  isReinstall.value = true
 }
 const changeModalInstallProxy = (val: boolean) => {
   installProxyShown.value = val

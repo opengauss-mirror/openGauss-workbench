@@ -12,8 +12,8 @@
         <div>
           <el-steps direction="vertical" :active="doingIndex">
             <el-step v-for="item in installData" :key="item.name" :title="item.name">
-              <template #description v-if="item.msg">
-                <div v-for="msg in item.msg">
+              <template #description v-if="item.msgs">
+                <div v-for="msg in item.msgs">
                   <b>{{ msg }}</b>
                 </div>
                 <el-input v-if="item.error" v-model="item.error" :rows="5" type="textarea" readonly />

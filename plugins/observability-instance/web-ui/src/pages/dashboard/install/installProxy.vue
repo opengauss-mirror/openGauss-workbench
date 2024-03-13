@@ -2,7 +2,7 @@
   <div class="dialog">
     <el-dialog
       :width="dialogWith"
-      :title="t('install.installProxy')"
+      :title="isReinstall ? t('install.reinstallProxy') : editing ? t('install.editProxy') : t('install.installProxy')"
       v-model="visible"
       :close-on-click-modal="false"
       draggable
@@ -13,7 +13,7 @@
           <el-steps direction="vertical" :active="doingIndex">
             <el-step v-for="item in installData" :key="item.name" :title="item.name">
               <template #description>
-                <div v-for="msg in item.msg" :key="msg">
+                <div v-for="msg in item.msgs" :key="msg">
                   <b>{{ msg }}</b>
                 </div>
                 <el-input v-if="item.error" v-model="item.error" :rows="5" type="textarea" readonly />
@@ -24,17 +24,19 @@
       </div>
       <div class="dialog-content" v-loading="started" v-show="installData.length === 0">
         <el-form :model="formData" :rules="connectionFormRules" ref="connectionFormRef">
-          <el-form-item :label="t('install.machine')" prop="nodeId">
+          <el-form-item :label="t('install.machine')" prop="nodeId" v-if="!editing || formData.type === 'PROMETHEUS'">
             <Machines
-              width="300"
+              width="200"
               @change="changeMachine"
+              :disabled="editing"
+              :initValue="formData.nodeId"
               autoSelectFirst
               notClearable
-              style="width: 300px; margin: 0 4px"
+              style="width: 200px; margin: 0 4px"
             />
           </el-form-item>
-          <el-form-item :label="t('install.installUser')" prop="username">
-            <el-select v-model="formData.username" style="width: 300px; margin: 0 4px">
+          <el-form-item :label="t('install.installUser')" prop="username" v-if="!editing || formData.type === 'PROMETHEUS'">
+            <el-select v-model="formData.username" style="width: 200px; margin: 0 4px" :disabled="editing">
               <el-option
                 v-for="item in hostUserList"
                 :key="item.hostUserId"
@@ -51,7 +53,7 @@
             <el-input-number
               @click.stop="() => {}"
               class="left-align"
-              style="width: 300px; margin: 0 4px"
+              style="width: 200px; margin: 0 4px"
               v-model="formData.port"
               :min="0"
               :max="65535"
@@ -60,12 +62,12 @@
             </el-input-number>
           </el-form-item>
           <el-form-item :label="t('install.installPath')" prop="path">
-            <el-input v-model="formData.path" style="width: 300px; margin: 0 4px" />
+            <el-input v-model="formData.path" style="width: 200px; margin: 0 4px" :disabled="editing" />
           </el-form-item>
-          <el-form-item :label="t('install.storageDays')" prop="storageDays">
+          <el-form-item :label="t('install.storageDays')" prop="storageDays" v-if="!editing || formData.type === 'PROMETHEUS'">
             <el-input
               v-model="formData.storageDays"
-              style="width: 300px; margin: 0 4px"
+              style="width: 200px; margin: 0 4px"
               @input="allNumber(formData.storageDays)"
             >
               <template #append>{{ t('install.storageDaysUnit') }}</template>
@@ -104,7 +106,7 @@
         <div v-if="installData.length === 0">
           <el-button style="padding: 5px 20px" @click="handleCancelModel">{{ $t('app.cancel') }}</el-button>
           <el-button :loading="started" style="padding: 5px 20px" type="primary" @click="install">
-            {{ $t('install.install') }}
+            {{ isReinstall ? $t('install.reinstall') : $t('install.install') }}
           </el-button>
         </div>
         <div v-else-if="installData.length != 0 && installData[installData.length - 2].state === 'DONE'">
@@ -150,6 +152,17 @@
         </div>
       </div>
     </el-dialog>
+    <el-dialog v-model="tipVisible" :title="t('install.tip')">
+      <div class="dialog-content">{{t('install.reinstallMainServerTip')}}</div>
+      <template #footer>
+        <div>
+          <el-button style="padding: 5px 20px" @click="tipVisible = false">{{ $t('app.cancel') }}</el-button>
+          <el-button :loading="started" style="padding: 5px 20px" type="primary" @click="tipConfirm">
+            {{ $t('app.confirm') }}
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -169,8 +182,15 @@ const visible = ref(false)
 const props = withDefaults(
   defineProps<{
     show: boolean
+    editing?: boolean
+    node?: any,
+    title: string
+    isReinstall: boolean
   }>(),
-  {}
+  {
+    title: '',
+    isReinstall: false
+  }
 )
 watch(
   () => props.show,
@@ -194,6 +214,8 @@ const initFormData = {
   url: '',
   fileList: [],
   uploadPath: '',
+  envId: '',
+  type: ''
 }
 const ROOT_USER = 'root'
 const hostUserList = ref<any[]>()
@@ -247,7 +269,14 @@ const getPkgInfo = (hostId: string) => {
 const getHostUserList = (hostId: string) => {
   restRequest.get(`/observability/v1/environment/hostUser/${hostId}`).then((res) => {
     if (Array.isArray(res)) {
-      hostUserList.value = res
+      hostUserList.value = res || []
+      if (!formData.username) {
+        return
+      }
+      let userList = hostUserList.value.filter(item => item.username === formData.username) || []
+      if (userList.length === 0) {
+        formData.username = ''
+      }
     }
   })
 }
@@ -260,6 +289,9 @@ const getInstallPath = () => {
 }
 
 const allNumber = (value: any) => {
+  if (!value || !value.trim()) {
+    return
+  }
   formData.storageDays = value.replace(/[^\d]/g, '')
   if (formData.storageDays < 1) {
     formData.storageDays = 1
@@ -278,32 +310,36 @@ const ws = reactive({
   sessionId: '',
   instance: null,
 })
+const tipVisible = ref<boolean>(false)
+const tipConfirm = () => {
+  tipVisible.value = false
+  createWsAndSendData()
+}
 const install = async () => {
   let result = await connectionFormRef.value?.validate()
   if (!result) return
+  if (props.isReinstall) {
+    tipVisible.value = true
+  } else {
+    createWsAndSendData()
+  }
+}
+const createWsAndSendData = () => {
   started.value = true
-  // restRequest
-  //   .get('/observability/v1/environment/prometheus', '')
-  //   .then((res) => {
-  //     ws.name = moment(new Date()).format('YYYYMMDDHHmmss') as string // websocket connection name
-  //     ws.sessionId = moment(new Date()).format('YYYYMMDDHHmmss') as string // websocket connection id
-  //     ws.instance = new WebSocketClass(ws.name, ws.sessionId, onWebSocketMessage)
-  //     sendData()
-  //   })
-  //   .catch(() => {
-  //     started.value = false
-  //   })
   ws.name = moment(new Date()).format("YYYYMMDDHHmmss") as string; // websocket connection name
   ws.sessionId = moment(new Date()).format("YYYYMMDDHHmmss") as string; // websocket connection id
   ws.instance = new WebSocketClass(ws.name, ws.sessionId, onWebSocketMessage);
   sendData();
 }
 const sendData = async () => {
+  let key = props.isReinstall ? 'reinstall prometheus' : 'prometheus'
   let sendData = {
-    key: 'prometheus',
+    key,
+    envId: formData.envId,
     hostId: formData.nodeId,
     username: formData.username,
     installMode: formData.installMode,
+    type: formData.type,
     // rootPassword: encryptPwd,
     path: formData.path,
     port: formData.port,
@@ -334,14 +370,14 @@ const onWebSocketMessage = (data: Array<any>) => {
 // action
 const back = () => {
   started.value = false
-  dialogWith.value = '500px'
+  dialogWith.value = '400px'
   ws.instance.close()
   installData.value = []
 }
 
 // list Data
 const installData = ref<Array<any>>([])
-const dialogWith = ref<string>('500px')
+const dialogWith = ref<string>('400px')
 const doingIndex = computed(() => {
   for (let index = 0; index < installData.value.length; index++) {
     const element = installData.value[index]
@@ -539,7 +575,21 @@ const uploadBefore = () => {
   return true
 }
 onMounted(() => {
-  getInstallPath()
+  if (!props.editing) {
+    getInstallPath()
+  } else {
+    formData.envId = props.node?.id
+    formData.nodeId = props.node?.hostid
+    formData.path = props.node?.path
+    formData.port = props.node?.port
+    formData.username = props.node?.username
+    formData.type = props.node?.type
+    let param = props.node?.param
+    if (param) {
+      let paramJson = JSON.parse(param)
+      formData.storageDays = paramJson.storageDays.substring(0, paramJson.storageDays.length - 1)
+    }
+  }
 })
 onBeforeUnmount(() => {
   if (ws.instance) ws.instance.close()

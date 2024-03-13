@@ -51,6 +51,7 @@ public class NctigbaEnvDO {
     @TableField(exist = false)
     OpsHostEntity host;
     String status;
+    String param;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     Date updateTime;
 

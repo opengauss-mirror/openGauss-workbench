@@ -42,12 +42,13 @@ import com.nctigba.observability.instance.model.entity.NctigbaEnvDO.envType;
 import com.nctigba.observability.instance.exception.TipsException;
 import com.nctigba.observability.instance.model.vo.AgentExceptionVO;
 import com.nctigba.observability.instance.model.vo.AgentStatusVO;
-import com.nctigba.observability.instance.service.AbstractInstaller.Step.status;
+import com.nctigba.observability.instance.service.AbstractInstaller.Step.Status;
 import com.nctigba.observability.instance.util.CommonUtils;
 import com.nctigba.observability.instance.util.DownloadUtils;
 import com.nctigba.observability.instance.util.SshSessionUtils;
 import com.nctigba.observability.instance.util.SshSessionUtils.command;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
@@ -99,17 +100,32 @@ public class ExporterInstallService extends AbstractInstaller {
     @Autowired
     PrometheusService prometheusService;
 
+    /**
+     * install
+     *
+     * @param wsSession WsSession
+     * @param exporterInstallDTO ExporterInstallDTO
+     */
     public void install(WsSession wsSession, ExporterInstallDTO exporterInstallDTO) {
-        var steps = Arrays.asList(new Step("exporterinstall.step1"), new Step("exporterinstall.step2"),
+        List<Step> steps = Arrays.asList(new Step("exporterinstall.step1"), new Step("exporterinstall.step2"),
                 new Step("exporterinstall.step3"), new Step("exporterinstall.step4"),
                 new Step("exporterinstall.step5"), new Step("exporterinstall.step6"),
                 new Step("exporterinstall.step7"));
-        int curr = 0;
+        initWsSessionStepTl(wsSession, steps);
+        install(exporterInstallDTO);
+    }
 
-        curr = nextStep(wsSession, steps, curr);
+    /**
+     * install
+     *
+     * @param exporterInstallDTO ExporterInstallDTO
+     */
+    public AjaxResult install(ExporterInstallDTO exporterInstallDTO) {
+        nextStep();
         String path = exporterInstallDTO.getPath();
-        if (!path.endsWith(File.separator)) {
-            path += File.separator;
+        if (StrUtil.isNotBlank(path) && path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+            exporterInstallDTO.setPath(path);
         }
         NctigbaEnvDO expEnv = null;
         try {
@@ -121,7 +137,7 @@ public class ExporterInstallService extends AbstractInstaller {
                 throw new CustomException("prometheus not exists");
             }
 
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             // get host data
             OpsHostEntity hostEntity = hostFacade.getById(exporterInstallDTO.getHostId());
             if (hostEntity == null) {
@@ -129,11 +145,11 @@ public class ExporterInstallService extends AbstractInstaller {
             }
             // get user data
             OpsHostUserEntity user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream()
-                    .filter(e -> exporterInstallDTO.getUsername().equals(e.getUsername())).findFirst()
-                    .orElseThrow(() -> new CustomException("user not found"));
+                .filter(e -> exporterInstallDTO.getUsername().equals(e.getUsername())).findFirst()
+                .orElseThrow(() -> new CustomException("user not found"));
 
             try (SshSessionUtils session = SshSessionUtils.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
-                    user.getUsername(), encryptionUtils.decrypt(user.getPassword()))) {
+                user.getUsername(), encryptionUtils.decrypt(user.getPassword()))) {
                 // check agent port
                 Integer httpPort = exporterInstallDTO.getHttpPort();
                 Boolean isNewInstall = StrUtil.isBlank(exporterInstallDTO.getEnvId());
@@ -141,26 +157,25 @@ public class ExporterInstallService extends AbstractInstaller {
                     session.testPortCanUse(httpPort);
                 } else {
                     Boolean isAgentAlive = agentService.isAgentAlive(hostEntity.getPublicIp(),
-                                    String.valueOf(exporterInstallDTO.getHttpPort()));
+                        String.valueOf(exporterInstallDTO.getHttpPort()));
                     if (!isAgentAlive) {
                         throw new TipsException("agentNotAlive");
                     }
                 }
 
-                curr = nextStep(wsSession, steps, curr);
-
+                nextStep();
                 if (isNewInstall) {
                     // check existed,get installed data (same host id and same port)
                     List<NctigbaEnvDO> expEnvs = envMapper.selectList(
-                            Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getHostid, exporterInstallDTO.getHostId())
-                                    .eq(NctigbaEnvDO::getType, envType.EXPORTER).eq(NctigbaEnvDO::getPort, httpPort));
+                        Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getHostid, exporterInstallDTO.getHostId())
+                            .eq(NctigbaEnvDO::getType, envType.EXPORTER).eq(NctigbaEnvDO::getPort, httpPort));
                     if (expEnvs.size() > 0) {
-                        addMsg(wsSession, steps, curr, "exporter exists");
-                        return;
+                        sendMsg(null, "exporter exists");
+                        return AjaxResult.success("exporter exists");
                     }
                     expEnv = new NctigbaEnvDO().setHostid(exporterInstallDTO.getHostId()).setPort(httpPort)
-                                    .setUsername(exporterInstallDTO.getUsername()).setType(envType.EXPORTER)
-                                    .setPath(path);
+                        .setUsername(exporterInstallDTO.getUsername()).setType(envType.EXPORTER)
+                        .setPath(path);
                 } else {
                     expEnv = envMapper.selectById(exporterInstallDTO.getEnvId());
                     if (expEnv == null) {
@@ -171,9 +186,8 @@ public class ExporterInstallService extends AbstractInstaller {
                 // install exporter java programe
                 if (isNewInstall) {
                     uploadExporter(session, path);
-
-                    String java = getJavaVersion(wsSession, expEnv, steps, curr);
-                    addMsg(wsSession, steps, curr, java);
+                    String java = getJavaVersion(expEnv);
+                    sendMsg(null, java);
                     // upload run_agent.sh
                     Map<String, Object> paramMap = new HashMap<>();
                     paramMap.put("port", httpPort);
@@ -182,13 +196,13 @@ public class ExporterInstallService extends AbstractInstaller {
 
                     // 保存env和agentNodeRelation
                     // set success,insert data
-                    curr = nextStep(wsSession, steps, curr);
+                    nextStep();
                     if (isNewInstall) {
                         envMapper.insert(expEnv);
                     }
                     updateAgentNodeRel(expEnv.getId(), exporterInstallDTO.getNodeIds());
                     // run script
-                    curr = nextStep(wsSession, steps, curr);
+                    nextStep();
                     // exec
                     session.executeNoWait("cd " + path + " && sh run_agent.sh start");
                     session.execute("cd " + path + " && " + "rm -rf application.yml");
@@ -199,41 +213,45 @@ public class ExporterInstallService extends AbstractInstaller {
                 expEnv.setHost(hostEntity);
                 checkHealthStatus(expEnv);
                 // 重新分配agent
-                prometheusService.reallocatePromAgentConfig();
-                curr = nextStep(wsSession, steps, curr);
-                sendMsg(wsSession, steps, curr, status.DONE);
+                prometheusService.incAgentAlloc(expEnv);
+                nextStep();
+                sendMsg(Status.DONE, "");
             }
+            return AjaxResult.success();
         } catch (Exception e) {
-            e.printStackTrace();
-            if (expEnv != null) envMapper.deleteById(expEnv);
-            steps.get(curr).setState(status.ERROR).add(e.getMessage());
-            wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+            if (expEnv != null) {
+                envMapper.deleteById(expEnv);
+            }
+            sendMsg(Status.ERROR, e.getMessage());
             var sw = new StringWriter();
             try (var pw = new PrintWriter(sw);) {
                 e.printStackTrace(pw);
             }
-            wsUtil.sendText(wsSession, sw.toString());
+            sendMsg(null, sw.toString());
+            return AjaxResult.error(e.getMessage() + ":" + sw);
         }
     }
 
     public void uninstall(WsSession wsSession, String envId) {
-        var steps = new ArrayList<Step>();
+        List<Step> steps = new ArrayList<Step>();
         steps.add(new Step("exporteruninstall.step1"));
+        steps.add(new Step("exporteruninstall.step2"));
+        steps.add(new Step("exporteruninstall.step3"));
+        steps.add(new Step("exporteruninstall.step4"));
         steps.add(new Step("exporteruninstall.step10"));
-        var curr = 0;
+        initWsSessionStepTl(wsSession, steps);
 
         try {
-            uninstallExporter(wsSession, steps, curr, envId);
-            curr = steps.size() - 1;
-            sendMsg(wsSession, steps, curr, status.DONE);
+            uninstallExporter(envId);
+            nextStep();
+            sendMsg(Status.DONE, "");
         } catch (Exception e) {
-            steps.get(curr).setState(status.ERROR).add(e.getMessage());
-            wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+            sendMsg(Status.ERROR, e.getMessage());
             var sw = new StringWriter();
             try (var pw = new PrintWriter(sw);) {
                 e.printStackTrace(pw);
             }
-            wsUtil.sendText(wsSession, sw.toString());
+            sendMsg(null, sw.toString());
         }
     }
 
@@ -245,7 +263,8 @@ public class ExporterInstallService extends AbstractInstaller {
              OutputStream out = new FileOutputStream(f)) {
             IoUtil.copy(in, out);
         }
-        session.upload(f.getCanonicalPath(), path + EXPORTER_NAME);
+        String path0 = path.endsWith("/") ? path : (path + "/");
+        session.upload(f.getCanonicalPath(), path0 + EXPORTER_NAME);
         Files.delete(f.toPath());
     }
 
@@ -263,7 +282,8 @@ public class ExporterInstallService extends AbstractInstaller {
             }
             ByteArrayInputStream inStream =
                 new ByteArrayInputStream(strBuilder.toString().getBytes(Charset.defaultCharset()));
-            sshSession.upload(inStream, path + startSh.getFilename());
+            String target = path + (path.endsWith("/") ? "" : "/") + startSh.getFilename();
+            sshSession.upload(inStream, target);
             inStream.close();
         }
     }
@@ -388,14 +408,18 @@ public class ExporterInstallService extends AbstractInstaller {
         return;
     }
 
-    private void uninstallExporter(WsSession wsSession, ArrayList<Step> steps, int curr, String envId) {
+    /**
+     * uninstallExporter
+     *
+     * @param envId String
+     */
+    public AjaxResult uninstallExporter(String envId) {
         // get exporter info
         List<NctigbaEnvDO> exporterList = envMapper.selectList(
                 Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, envType.EXPORTER)
                         .eq(NctigbaEnvDO::getId, envId));
-        log.error("exporterList:" + exporterList);
         if (CollectionUtil.isEmpty(exporterList)) {
-            return;
+            return AjaxResult.error("exporter is not exist!");
         }
         NctigbaEnvDO exporterEnv = exporterList.get(0);
         // check host
@@ -403,42 +427,41 @@ public class ExporterInstallService extends AbstractInstaller {
         if (expHostEntity == null) {
             throw new CustomException(CommonConstants.HOST_NOT_FOUND);
         }
-        steps.add(steps.size() - 1, new Step("exporteruninstall.step2"));
-        steps.add(steps.size() - 1, new Step("exporteruninstall.step3"));
-        steps.add(steps.size() - 1, new Step("exporteruninstall.step4"));
-        curr = nextStep(wsSession, steps, curr);
+        nextStep();
         exporterEnv.setHost(expHostEntity);
         if (StrUtil.isBlank(exporterEnv.getStatus())) {
             oldVersionAdapter(exporterEnv);
         }
         try {
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             AgentExceptionVO agentException = checkPidStatus(exporterEnv);
             if (agentException.isUpStatus()) {
-                curr = nextStep(wsSession, steps, curr);
+                nextStep();
                 try (SshSessionUtils session = connect(exporterEnv.getHostid(), exporterEnv.getUsername())) {
                     String command = "cd " + exporterEnv.getPath() + " && sh run_agent.sh stop";
                     session.executeNoWait(command);
                     checkHealthStatus(exporterEnv);
-                    prometheusService.reallocatePromAgentConfig();
+                    prometheusService.decAgentAlloc(exporterEnv);
                 }
             } else {
-                curr = skipStep(wsSession, steps, curr);
+                skipStep();
             }
+            clearInstallFolder(exporterEnv);
             envMapper.deleteById(envId);
-            sendMsg(wsSession, steps, curr, status.DONE);
+            sendMsg(Status.DONE, "");
+            return AjaxResult.success();
         } catch (Exception e) {
-            steps.get(curr).setState(status.ERROR).add(e.getMessage());
-            wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+            sendMsg(Status.ERROR, e.getMessage());
             var sw = new StringWriter();
             try (var pw = new PrintWriter(sw);) {
                 e.printStackTrace(pw);
             }
-            wsUtil.sendText(wsSession, sw.toString());
+            sendMsg(null, sw.toString());
+            return AjaxResult.error(e.getMessage() + ": " + sw);
         }
     }
 
-    private String getJavaVersion(WsSession wsSession, NctigbaEnvDO env, List<Step> steps, int curr) {
+    private String getJavaVersion(NctigbaEnvDO env) {
         String java = "java";
         try (SshSessionUtils session = connect(env.getHostid(), env.getUsername())) {
             String javaVersion =
@@ -456,7 +479,7 @@ public class ExporterInstallService extends AbstractInstaller {
             if (jdkIsExists.contains("true")) {
                 return "/etc/jdk8/bin/java";
             }
-            addMsg(wsSession, steps, curr, "java not found, downloading");
+            sendMsg(null, "java not found, downloading");
             String arch = session.execute(command.ARCH);
             String v = "aarch64".equals(arch) ? "aarch64" : "x64";
             String tar = MessageFormat.format(JDKPKG, v);
@@ -475,7 +498,7 @@ public class ExporterInstallService extends AbstractInstaller {
             if (isDownload) {
                 File f = DownloadUtils.download(JDK + tar, "pkg/" + tar);
                 pkg = new NctigbaEnvDO().setPath(f.getCanonicalPath()).setType(NctigbaEnvDO.envType.AGENT_PKG);
-                addMsg(wsSession, steps, curr, "agent.install.downloadsuccess");
+                sendMsg(null, "agent.install.downloadsuccess");
                 save(pkg);
             }
             session.upload(pkg.getPath(), tar);
@@ -515,21 +538,21 @@ public class ExporterInstallService extends AbstractInstaller {
             e.setHost(hostFacade.getById(e.getHostid()));
         });
         for (NctigbaEnvDO env : envList) {
-            String status = env.getStatus();
-            if (StrUtil.isBlank(status)) {
-                oldVersionAdapter(env);
-            }
-            if (AgentStatusEnum.MANUAL_STOP.getStatus().equals(status)) {
-                continue;
-            }
-            long updateTime = env.getUpdateTime() != null ? env.getUpdateTime().getTime()
-                : new Date().getTime() - 3 * CommonConstants.MONITOR_CYCLE * 1000L - 1000L;
-            boolean isTimeout = new Date().getTime() - updateTime > 3 * CommonConstants.MONITOR_CYCLE * 1000L;
-            if ((AgentStatusEnum.STARTING.getStatus().equals(status) || AgentStatusEnum.STOPPING.getStatus().equals(
-                    status)) && !isTimeout) {
-                continue;
-            }
             try {
+                String status = env.getStatus();
+                if (StrUtil.isBlank(status)) {
+                    oldVersionAdapter(env);
+                }
+                if (AgentStatusEnum.MANUAL_STOP.getStatus().equals(status)) {
+                    continue;
+                }
+                long updateTime = env.getUpdateTime() != null ? env.getUpdateTime().getTime()
+                    : new Date().getTime() - 3 * CommonConstants.MONITOR_CYCLE * 1000L - 1000L;
+                boolean isTimeout = new Date().getTime() - updateTime > 3 * CommonConstants.MONITOR_CYCLE * 1000L;
+                if ((AgentStatusEnum.STARTING.getStatus().equals(status) || AgentStatusEnum.STOPPING.getStatus().equals(
+                        status)) && !isTimeout) {
+                    continue;
+                }
                 AgentExceptionVO check = checkPidStatus(env);
                 if (!check.isUpStatus()) {
                     startExporter(env);
@@ -574,6 +597,10 @@ public class ExporterInstallService extends AbstractInstaller {
     }
 
     private void startExporter(NctigbaEnvDO env) {
+        AgentExceptionVO check = checkPidStatus(env);
+        if (check.isUpStatus()) {
+            throw new CustomException(check.getExceptionInfo());
+        }
         try (SshSessionUtils session = connect(env.getHostid(), env.getUsername())) {
             String message = session.execute(
                 "netstat -tuln | grep -q " + env.getPort() + " && echo 'true' || echo 'false'");
@@ -593,7 +620,7 @@ public class ExporterInstallService extends AbstractInstaller {
             String command = "cd " + env.getPath() + " && sh run_agent.sh start";
             session.executeNoWait(command);
 
-            prometheusService.reallocatePromAgentConfig();
+            prometheusService.incAgentAlloc(env);
         } catch (IOException | RuntimeException e) {
             env.setStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus()).setUpdateTime(new Date());
             envMapper.updateById(env);
@@ -625,7 +652,7 @@ public class ExporterInstallService extends AbstractInstaller {
         try (SshSessionUtils session = connect(env.getHostid(), env.getUsername())) {
             String command = "cd " + env.getPath() + " && sh run_agent.sh stop";
             session.executeNoWait(command);
-            prometheusService.reallocatePromAgentConfig();
+            prometheusService.decAgentAlloc(env);
         } catch (IOException e) {
             env.setStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus()).setUpdateTime(new Date());
             envMapper.updateById(env);
@@ -643,7 +670,8 @@ public class ExporterInstallService extends AbstractInstaller {
 
     private void killPid(NctigbaEnvDO env) {
         try (SshSessionUtils session = connect(env.getHostid(), env.getUsername())) {
-            String pid = session.execute("lsof -t -i " + env.getPort());
+            String pid = session.execute("ss -tulpn | grep :" + env.getPort() + " | awk '{print $7}' "
+                + "| awk -F \",\" '{print $2}' | awk -F \"=\" '{print $2}'");
             if (StrUtil.isBlank(pid)) {
                 env.setStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus()).setUpdateTime(new Date());
                 envMapper.updateById(env);
@@ -688,18 +716,35 @@ public class ExporterInstallService extends AbstractInstaller {
     }
 
     private void oldVersionAdapter(NctigbaEnvDO env) {
-        try (SshSessionUtils session = connect(env.getHostid(), env.getUsername());
-            InputStream in = loader.getResource("classpath:sh/run_agent.sh").getInputStream()) {
+        try (SshSessionUtils session = connect(env.getHostid(), env.getUsername())) {
+            String target = env.getPath() + (env.getPath().endsWith("/") ? "" : "/") + "run_agent.sh";
             String result = session.execute(
-                " [ -e " + env.getPath() + "/run_agent.sh ] && echo true || echo false");
+                " [ -e " + target + " ] && echo true || echo false");
             if (result.equals("false")) {
-                session.upload(in, env.getPath() + "/run_agent.sh");
+                // upload run_agent.sh
+                Map<String, Object> paramMap = new HashMap<>();
+                paramMap.put("port", env.getPort());
+                paramMap.put("java", getJavaVersion(env));
+                uploadScript(session, env.getPath(), paramMap);
             }
-            String pid = session.execute("lsof -ti :" + env.getPort());
+            String pid = session.execute("ss -tulpn | grep :" + env.getPort() + " | awk '{print $7}' "
+                + "| awk -F \",\" '{print $2}' | awk -F \"=\" '{print $2}'");
             if (StrUtil.isNotBlank(pid)) {
                 File pidFile = File.createTempFile("agent", ".pid");
                 FileUtil.appendUtf8String(pid, pidFile);
                 session.upload(pidFile.getCanonicalPath(), env.getPath() + "/agent.pid");
+            }
+        } catch (IOException e) {
+            throw new CustomException(e.getMessage());
+        }
+    }
+
+    private void clearInstallFolder(NctigbaEnvDO env) {
+        try (SshSessionUtils session = connect(env.getHostid(), env.getUsername())) {
+            String pkgPath = session.execute("[ -e " + env.getPath() + " ] && echo 'true' || echo 'false'");
+            if (StrUtil.isNotBlank(env.getPath()) && !pkgPath.contains("false")) {
+                String cd = "cd " + env.getPath() + " && ";
+                session.execute(cd + "rm -rf " + env.getPath());
             }
         } catch (IOException e) {
             throw new CustomException(e.getMessage());

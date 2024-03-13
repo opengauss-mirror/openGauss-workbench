@@ -34,9 +34,11 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 public class PromInstallDTO {
+    private String envId; // envId
     private String hostId;
     private String path;
     private String username;
     private Integer port;
     private String storageDays;
+    private String type;
 }

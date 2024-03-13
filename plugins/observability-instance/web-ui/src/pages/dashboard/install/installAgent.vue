@@ -14,7 +14,7 @@
           <el-steps direction="vertical" :active="doingIndex">
             <el-step v-for="item in installData" :key="item.name" :title="item.name">
               <template #description>
-                <div v-for="msg in item.msg" :key="msg">
+                <div v-for="msg in item.msgs" :key="msg">
                   <b>{{ msg }}</b>
                 </div>
                 <el-input v-if="item.error" v-model="item.error" :rows="5" type="textarea" readonly />
@@ -179,7 +179,14 @@ const changeMachine = (val: any) => {
 const getHostUserList = (hostId: string) => {
   restRequest.get(`/observability/v1/environment/hostUser/${hostId}`).then((res) => {
     if (Array.isArray(res)) {
-      hostUserList.value = res
+      hostUserList.value = res || []
+      if (!formData.username) {
+        return
+      }
+      let userList = hostUserList.value.filter(item => item.username === formData.username) || []
+      if (userList.length === 0) {
+        formData.username = ''
+      }
     }
   })
 }

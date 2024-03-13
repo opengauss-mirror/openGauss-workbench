@@ -26,7 +26,6 @@
             <div>{{ $t('app.autoRefreshFor') }}</div>
             <el-select v-model="innerRefreshTime" style="width: 100px; margin: 0 4px" @change="updateTimerInner">
               <el-option :value="99999999" label="NO-AUTO" />
-              <el-option :value="1" label="1s" />
               <el-option :value="15" label="15s" />
               <el-option :value="30" label="30s" />
               <el-option :value="60" label="60s" />
