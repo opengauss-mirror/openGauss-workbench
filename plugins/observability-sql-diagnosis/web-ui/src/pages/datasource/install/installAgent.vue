@@ -21,19 +21,19 @@
             <div class="dialog-content" v-loading="started" v-show="installData.length === 0">
                 <el-form :model="formData" :rules="connectionFormRules" ref="connectionFormRef">
                     <el-form-item :label="t('install.collectInstance')" prop="nodeId">
-                        <ClusterCascader width="200" instanceValueKey="nodeId" @getCluster="handleClusterValue" autoSelectFirst notClearable />
+                        <ClusterCascader width="300" instanceValueKey="nodeId" @getCluster="handleClusterValue" autoSelectFirst notClearable />
                     </el-form-item>
                     <el-form-item :label="t('install.rootPWD')" prop="rootPassword">
-                        <el-input v-model="formData.rootPassword" show-password style="width: 200px; margin: 0 4px" />
+                        <el-input v-model="formData.rootPassword" show-password style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.proxyPort')" prop="port">
-                        <el-input v-model="formData.port" style="width: 200px; margin: 0 4px" />
+                        <el-input v-model="formData.port" style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.callbackPath')" prop="callbackPath">
-                        <el-input v-model="formData.callbackPath" style="width: 200px; margin: 0 4px" />
+                        <el-input v-model="formData.callbackPath" style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.installPath')" prop="path">
-                        <el-input v-model="formData.path" style="width: 200px; margin: 0 4px" />
+                        <el-input v-model="formData.path" style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                 </el-form>
             </div>
@@ -86,6 +86,8 @@ const connectionFormRules = reactive<FormRules>({
     nodeId: [{ required: true, message: t('install.collectorRules[0]'), trigger: 'blur' }],
     rootPassword: [{ required: true, message: t('install.collectorRules[1]'), trigger: 'blur' }],
     port: [{ required: true, message: t('install.proxyRules[2]'), trigger: 'blur' }],
+    callbackPath: [{ required: true, message: t('install.proxyRules[3]'), trigger: 'blur' }],
+    path: [{ required: true, message: t('install.proxyRules[4]'), trigger: 'blur' }],
 })
 // cluster component
 const handleClusterValue = (val: any) => {
@@ -143,14 +145,14 @@ const onWebSocketMessage = (data: Array<any>) => {
 // action
 const back = () => {
     started.value = false
-    dialogWith.value = '400px'
+    dialogWith.value = '500px'
     ws.instance.close()
     installData.value = []
 }
 
 // list Data
 const installData = ref<Array<any>>([])
-const dialogWith = ref<string>('400px')
+const dialogWith = ref<string>('500px')
 const doingIndex = computed(() => {
     for (let index = 0; index < installData.value.length; index++) {
         const element = installData.value[index]

@@ -40,4 +40,4 @@ osconfig:
   cpuAvgLoad: top -d 1
   vmstat1: vmstat 1
   iostatX1: iostat -x 1
-  cpuCoreNum: cat /proc/cpuinfo；cat /proc/cpuinfo | grep "cpu cores" | awk '{cores += $4} END {print cores}'
+  cpuCoreNum: cat /proc/cpuinfo | grep "cpu cores" | awk '{cores += $4} END {print cores}'

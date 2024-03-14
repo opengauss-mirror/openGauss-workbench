@@ -46,7 +46,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -64,6 +63,8 @@ import java.util.regex.Pattern;
  */
 @Service
 public class OsLoad implements DiagnosisPointService<Object> {
+    private static final double THRESHOLD_VALUE = 16.0d;
+
     private static final Pattern CHARSET_REG = Pattern.compile("\\b\\d{2}/\\d{2}/\\d{4}\\b");
 
     @Autowired
@@ -96,17 +97,18 @@ public class OsLoad implements DiagnosisPointService<Object> {
         AnalysisDTO analysisDTO = new AnalysisDTO();
         analysisDTO.setPointType(DiagnosisResultDO.PointType.DIAGNOSIS);
         analysisDTO.setIsHint(DiagnosisResultDO.ResultState.NO_ADVICE);
-        Object coreNumObj = dataStoreService.getData(cpuCoreCountItem).getCollectionData();
-        int coreNum = getCoreNumByFile(coreNumObj);
         ChartVO chartVO = getChartDataByFile(file);
         List<String> dataList = chartVO.getDataList();
-        dataList.forEach(f -> {
-            BigDecimal load = new BigDecimal(f);
-            BigDecimal num = new BigDecimal(coreNum * 2);
-            if (load.compareTo(num) > 0) {
+        double totalLoad = 0.0d;
+        for (String data : dataList) {
+            totalLoad += Double.parseDouble(data);
+        }
+        if (dataList.size() > 0) {
+            double averageLoad = totalLoad / dataList.size();
+            if (averageLoad > THRESHOLD_VALUE) {
                 analysisDTO.setIsHint(DiagnosisResultDO.ResultState.SUGGESTIONS);
             }
-        });
+        }
         ChartShowDataYDataVO chartData = new ChartShowDataYDataVO();
         chartData.setName(LocaleStringUtils.format("OsLoad.name"));
         chartData.setData(dataList);
@@ -167,26 +169,6 @@ public class OsLoad implements DiagnosisPointService<Object> {
         chartVO.setDataList(dataList);
         chartVO.setTimeList(timeList);
         return chartVO;
-    }
-
-    private int getCoreNumByFile(Object coreNumObj) {
-        MultipartFile coreNumFile = null;
-        if (coreNumObj instanceof MultipartFile) {
-            coreNumFile = (MultipartFile) coreNumObj;
-        }
-        int coreNum = 0;
-        if (coreNumFile != null && !coreNumFile.isEmpty()) {
-            try (var reader = new BufferedReader(
-                    new InputStreamReader(coreNumFile.getInputStream(), StandardCharsets.UTF_8))) {
-                while (reader.ready()) {
-                    var line = reader.readLine();
-                    coreNum = Integer.parseInt(line);
-                }
-            } catch (IOException e) {
-                throw new CustomException("cpuCoreNum:", e);
-            }
-        }
-        return coreNum;
     }
 
     @Override

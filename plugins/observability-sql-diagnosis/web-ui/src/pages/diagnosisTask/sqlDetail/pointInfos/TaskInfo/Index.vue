@@ -78,6 +78,29 @@
         <el-input v-model="taskData.pointData.remarks" :rows="8" type="textarea" :input-style="'fontSize:14px'" />
       </div>
     </el-tab-pane>
+    <el-tab-pane :label="$t('historyDiagnosis.taskInfo.thresholdsRemark')">
+      <el-table
+          :table-layout="'auto'"
+          :data="taskData.pointData.thresholds"
+          :span-method="objectSpanMethod"
+          style="width: 100%"
+          :border="true"
+          :header-cell-class-name="
+              () => {
+                  return 'grid-header'
+              }
+          "
+      >
+          <el-table-column prop="thresholdType" :label="$t('historyDiagnosis.kind')" width="180" />
+          <el-table-column prop="thresholdName" :label="$t('historyDiagnosis.thresholdsName')" width="180" />
+          <el-table-column prop="thresholdValue" :label="$t('historyDiagnosis.thresholdsConfig')" width="180">
+              <template #default="scope">
+                  {{ scope.row.thresholdValue }}{{ scope.row.thresholdUnit ? scope.row.thresholdUnit : '' }}
+              </template>
+          </el-table-column>
+          <el-table-column prop="thresholdName" :label="$t('historyDiagnosis.thresholdsRemark')" />
+      </el-table>
+  </el-tab-pane>
   </el-tabs>
 </template>
 
@@ -85,6 +108,7 @@
 import { getPointData } from '@/api/historyDiagnosis'
 import { useRequest } from 'vue-request'
 import moment from 'moment'
+import type { TableColumnCtx } from 'element-plus'
 
 const props = withDefaults(
   defineProps<{
@@ -151,6 +175,39 @@ watch(
     requestData()
   }
 )
+
+interface SpanMethodProps {
+    row: any
+    column: TableColumnCtx<any>
+    rowIndex: number
+    columnIndex: number
+}
+const objectSpanMethod = ({ row, column, rowIndex, columnIndex }: SpanMethodProps) => {
+    if (columnIndex === 0) {
+        let span = culRowspan(rowIndex)
+        return {
+            rowspan: span,
+            colspan: span > 0 ? 1 : 0,
+        }
+    }
+}
+const culRowspan = (rowIndex: number) => {
+    let count = 0
+    if (taskData.value.pointData.thresholds.length === 0) return 0
+    if (
+        rowIndex === 0 ||
+        taskData.value.pointData.thresholds[rowIndex].thresholdType !==
+            taskData.value.pointData.thresholds[rowIndex - 1].thresholdType
+    ) {
+        count = 1
+        for (let index = rowIndex + 1; index < taskData.value.pointData.thresholds.length; index++) {
+            const element = taskData.value.pointData.thresholds[index]
+            if (element.thresholdType === taskData.value.pointData.thresholds[rowIndex].thresholdType) count++
+            else break
+        }
+    }
+    return count
+}
 
 onMounted(() => {
   typeId.value = props.nodesType

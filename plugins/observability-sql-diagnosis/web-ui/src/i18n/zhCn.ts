@@ -137,7 +137,7 @@ export default {
     collectInstance: '采集实例',
     collectProxy: '采集代理',
     callbackPath: '回调路径',
-    proxyRules: ['请选择物理机', '请输入Root用户密码', '请输入代理端口号'],
+    proxyRules: ['请选择物理机', '请输入Root用户密码', '请输入代理端口号', '请输入代理回调路径', '请输入代理安装目录'],
     collectorRules: ['请选择实例', '请输入Root用户密码'],
     start: '启动',
     stop: '停止',

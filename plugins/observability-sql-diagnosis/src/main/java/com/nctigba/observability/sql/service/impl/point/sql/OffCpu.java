@@ -32,6 +32,7 @@ import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.DiagnosisResourceMapper;
 import com.nctigba.observability.sql.model.dto.TaskResultDTO;
 import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
+import com.nctigba.observability.sql.model.dto.point.FunctionTableDTO;
 import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
 import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
 import com.nctigba.observability.sql.model.entity.ResourceDO;
@@ -41,6 +42,7 @@ import com.nctigba.observability.sql.service.DataStoreService;
 import com.nctigba.observability.sql.service.DiagnosisPointService;
 import com.nctigba.observability.sql.service.impl.collection.ebpf.OffCpuItem;
 import com.nctigba.observability.sql.util.LocaleStringUtils;
+import com.nctigba.observability.sql.util.PointUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -66,6 +68,8 @@ public class OffCpu implements DiagnosisPointService<Object> {
     private OffCpuItem item;
     @Autowired
     private DiagnosisResourceMapper resourceMapper;
+    @Autowired
+    private PointUtils utils;
 
     @Override
     public List<String> getOption() {
@@ -89,6 +93,17 @@ public class OffCpu implements DiagnosisPointService<Object> {
         if (obj instanceof MultipartFile) {
             file = (MultipartFile) obj;
         }
+        AnalysisDTO analysisDTO = new AnalysisDTO();
+        analysisDTO.setPointType(DiagnosisResultDO.PointType.DIAGNOSIS);
+        if (file == null) {
+            analysisDTO.setIsHint(DiagnosisResultDO.ResultState.NO_ADVICE);
+            return analysisDTO;
+        }
+        FunctionTableDTO table = utils.fileToTable(file);
+        if (table.getData().size() == 0) {
+            analysisDTO.setIsHint(DiagnosisResultDO.ResultState.NO_ADVICE);
+            return analysisDTO;
+        }
         ResourceDO resourceDO;
         try {
             Scanner scanner = new Scanner(file.getInputStream(), StandardCharsets.UTF_8);
@@ -109,8 +124,6 @@ public class OffCpu implements DiagnosisPointService<Object> {
         for (TaskResultDTO taskResultDTO : list) {
             f.addChild(taskResultDTO.getBearing(), taskResultDTO.toFrame());
         }
-        AnalysisDTO analysisDTO = new AnalysisDTO();
-        analysisDTO.setPointType(DiagnosisResultDO.PointType.DIAGNOSIS);
         analysisDTO.setIsHint(DiagnosisResultDO.ResultState.SUGGESTIONS);
         analysisDTO.setPointData(f);
         return analysisDTO;

@@ -29,6 +29,7 @@ import com.nctigba.observability.sql.enums.OptionEnum;
 import com.nctigba.observability.sql.enums.ResultTypeEnum;
 import com.nctigba.observability.sql.model.dto.TaskResultDTO;
 import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
+import com.nctigba.observability.sql.model.dto.point.FunctionTableDTO;
 import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
 import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
 import com.nctigba.observability.sql.model.vo.FrameVO;
@@ -37,20 +38,12 @@ import com.nctigba.observability.sql.service.DataStoreService;
 import com.nctigba.observability.sql.service.DiagnosisPointService;
 import com.nctigba.observability.sql.service.impl.collection.ebpf.ProfileItem;
 import com.nctigba.observability.sql.util.LocaleStringUtils;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
-import org.opengauss.admin.common.exception.CustomException;
+import com.nctigba.observability.sql.util.PointUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -64,6 +57,8 @@ import java.util.Map;
 public class HotFunction implements DiagnosisPointService<Object> {
     @Autowired
     private ProfileItem item;
+    @Autowired
+    private PointUtils utils;
 
     @Override
     public List<String> getOption() {
@@ -87,7 +82,7 @@ public class HotFunction implements DiagnosisPointService<Object> {
         if (obj instanceof MultipartFile) {
             file = (MultipartFile) obj;
         }
-        TableData table = getTableData(file);
+        FunctionTableDTO table = utils.fileToTable(file);
         List<TaskResultDTO> list = getResultData(task, table);
         FrameVO f = new FrameVO();
         for (TaskResultDTO taskResultDTO : list) {
@@ -100,44 +95,7 @@ public class HotFunction implements DiagnosisPointService<Object> {
         return analysisDTO;
     }
 
-    private TableData getTableData(MultipartFile file) {
-        String[] keys = {"name", CommonConstants.SAMPLES, "ratio"};
-        TableData table = new TableData(keys);
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
-            while (reader.ready()) {
-                var line = reader.readLine();
-                if (StringUtils.isBlank(line)) {
-                    continue;
-                }
-                if (line.contains("<title>")) {
-                    String functionData = line.substring(line.indexOf("<title>") + 7, line.lastIndexOf("</title>"));
-                    String functionName = functionData.substring(
-                            0, functionData.lastIndexOf(CommonConstants.LEFT_BRACKET) - 1);
-                    if ("all".equals(functionName)) {
-                        continue;
-                    }
-                    String samples = functionData.substring(
-                            functionData.lastIndexOf(CommonConstants.LEFT_BRACKET) + 1,
-                            functionData.indexOf("samples,") - 1).replace(",", "");
-                    String ratio = functionData.substring(
-                            functionData.indexOf("samples,") + 9,
-                            functionData.lastIndexOf(CommonConstants.RIGHT_BRACKET));
-                    String[] datas = {functionName, samples, ratio};
-                    var map = new HashMap<String, String>();
-                    for (int i = 0; i < table.getColumns().size(); i++) {
-                        map.put(keys[i], datas[i]);
-                    }
-                    table.addData(map);
-                }
-            }
-            return table;
-        } catch (IOException e) {
-            throw new CustomException("onCpu err", e);
-        }
-    }
-
-    private List<TaskResultDTO> getResultData(DiagnosisTaskDO task, TableData table) {
+    private List<TaskResultDTO> getResultData(DiagnosisTaskDO task, FunctionTableDTO table) {
         List<TaskResultDTO> list = new ArrayList<>();
         if (table.getData().size() > 1) {
             table.getData().sort((o1, o2) -> {
@@ -175,38 +133,5 @@ public class HotFunction implements DiagnosisPointService<Object> {
     @Override
     public Object getShowData(int taskId) {
         return null;
-    }
-
-    /**
-     * TableData
-     *
-     * @author xx
-     * @since 2023/6/9
-     */
-    @Data
-    @NoArgsConstructor
-    public static class TableData {
-        private List<Map<String, String>> columns = new ArrayList<>();
-        private List<Map<String, String>> data = new ArrayList<>();
-
-        /**
-         * Table data
-         *
-         * @param keys info
-         */
-        public TableData(String[] keys) {
-            for (String key : keys) {
-                columns.add(Map.of("key", key, CommonConstants.TITLE, key));
-            }
-        }
-
-        /**
-         * Add data
-         *
-         * @param map info
-         */
-        public void addData(Map<String, String> map) {
-            data.add(map);
-        }
     }
 }

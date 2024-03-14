@@ -25,6 +25,7 @@ package com.nctigba.observability.sql.history.point.sql;
 
 import com.nctigba.observability.sql.constant.TestTxtConstants;
 import com.nctigba.observability.sql.enums.OptionEnum;
+import com.nctigba.observability.sql.model.dto.point.FunctionTableDTO;
 import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
 import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
 import com.nctigba.observability.sql.model.vo.DataStoreVO;
@@ -33,6 +34,7 @@ import com.nctigba.observability.sql.service.DataStoreService;
 import com.nctigba.observability.sql.service.CollectionItem;
 import com.nctigba.observability.sql.service.impl.collection.ebpf.OffCpuItem;
 import com.nctigba.observability.sql.service.impl.point.sql.ColdFunction;
+import com.nctigba.observability.sql.util.PointUtils;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
@@ -62,6 +64,8 @@ public class TestColdFunction {
     private OffCpuItem item;
     @Mock
     private DataStoreService dataStoreService;
+    @Mock
+    private PointUtils utils;
     @InjectMocks
     private ColdFunction pointService;
 
@@ -91,10 +95,11 @@ public class TestColdFunction {
         byte[] content = ioTraceData.getBytes(StandardCharsets.UTF_8);
         MockMultipartFile file = new MockMultipartFile("file", originalFilename, contentType, content);
         when(config.getCollectionData()).thenReturn(file);
+        when(utils.fileToTable(file)).thenReturn(mock(FunctionTableDTO.class));
         DiagnosisTaskDO task = new DiagnosisTaskDO();
         task.setId(1);
         AnalysisDTO result = pointService.analysis(task, dataStoreService);
-        Assertions.assertEquals(DiagnosisResultDO.ResultState.SUGGESTIONS, result.getIsHint());
+        Assertions.assertEquals(DiagnosisResultDO.ResultState.NO_ADVICE, result.getIsHint());
         Assertions.assertEquals(DiagnosisResultDO.PointType.DISPLAY, result.getPointType());
         assertNotNull(result);
     }

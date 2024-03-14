@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * SqlExecute
@@ -103,10 +104,23 @@ public class SqlExecutor {
                     }
                     return false;
                 });
-                String diagnosisSql = isExplain ? "explain analyze " + task.getSql() : task.getSql();
-                try (var stmt = conn.createStatement(); var rs = stmt.executeQuery(diagnosisSql)) {
-                    while (rs.next()) {
-                        rsList.add(rs.getString(1));
+                String checkSql = task.getSql().toUpperCase(Locale.ROOT);
+                boolean isCreate = checkSql.startsWith("CREATE");
+                boolean isUpdate = checkSql.startsWith("UPDATE");
+                boolean isInsert = checkSql.startsWith("INSERT");
+                boolean isDelete = checkSql.startsWith("DELETE");
+                boolean isModify = ((isUpdate || isDelete || isInsert) && !isExplain);
+                boolean isAnalysisExplain = isCreate || isModify;
+                if (isAnalysisExplain) {
+                    try (var stmt = conn.createStatement()) {
+                        stmt.execute(task.getSql());
+                    }
+                } else {
+                    String diagnosisSql = isExplain ? "explain analyze " + task.getSql() : task.getSql();
+                    try (var stmt = conn.createStatement(); var rs = stmt.executeQuery(diagnosisSql)) {
+                        while (rs.next()) {
+                            rsList.add(rs.getString(1));
+                        }
                     }
                 }
                 task.addRemarks("results:" + rsList.size());
@@ -130,9 +144,15 @@ public class SqlExecutor {
                 } else {
                     task.setCollectPidStatus(0);
                 }
+                task.addRemarks("agent pid status:" + isSuccess);
                 mapper.updateById(task);
             });
-            taskService.explainAfter(task, rsList);
+            if (task.getPid() != null) {
+                taskService.explainAfter(task, rsList);
+            } else {
+                task.setState(TaskStateEnum.ERROR);
+                mapper.updateById(task);
+            }
         } finally {
             mapper.updateById(task);
         }

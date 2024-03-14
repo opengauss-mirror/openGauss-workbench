@@ -26,10 +26,12 @@ package com.nctigba.observability.sql.util;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.nctigba.observability.sql.constant.CommonConstants;
 import com.nctigba.observability.sql.constant.PrometheusConstants;
 import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.HisThresholdMapper;
 import com.nctigba.observability.sql.model.dto.point.AspAnalysisDTO;
+import com.nctigba.observability.sql.model.dto.point.FunctionTableDTO;
 import com.nctigba.observability.sql.model.entity.DiagnosisThresholdDO;
 import com.nctigba.observability.sql.model.vo.collection.DatabaseVO;
 import com.nctigba.observability.sql.model.vo.collection.PrometheusVO;
@@ -52,14 +54,22 @@ import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectBody;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import net.sf.jsqlparser.util.TablesNamesFinder;
+import org.apache.commons.lang3.StringUtils;
+import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -514,5 +524,77 @@ public class PointUtils {
         } catch (NumberFormatException e) {
             return false;
         }
+    }
+
+    /**
+     * File to table
+     *
+     * @param file MultipartFile
+     * @return FunctionTableDTO
+     */
+    public FunctionTableDTO fileToTable(MultipartFile file) {
+        String[] keys = {"name", CommonConstants.SAMPLES, "ratio"};
+        FunctionTableDTO table = new FunctionTableDTO(keys);
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+            while (reader.ready()) {
+                var line = reader.readLine();
+                if (StringUtils.isBlank(line)) {
+                    continue;
+                }
+                if (line.contains("<title>")) {
+                    String functionData = line.substring(line.indexOf("<title>") + 7, line.lastIndexOf("</title>"));
+                    String functionName = functionData.substring(
+                            0, functionData.lastIndexOf(CommonConstants.LEFT_BRACKET) - 1);
+                    if ("all".equals(functionName)) {
+                        continue;
+                    }
+                    String samples = functionData.substring(
+                            functionData.lastIndexOf(CommonConstants.LEFT_BRACKET) + 1,
+                            functionData.indexOf("samples,") - 1).replace(",", "");
+                    String ratio = functionData.substring(
+                            functionData.indexOf("samples,") + 9,
+                            functionData.lastIndexOf(CommonConstants.RIGHT_BRACKET));
+                    String[] datas = {functionName, samples, ratio};
+                    var map = new HashMap<String, String>();
+                    for (int i = 0; i < table.getColumns().size(); i++) {
+                        map.put(keys[i], datas[i]);
+                    }
+                    table.addData(map);
+                }
+            }
+            return table;
+        } catch (IOException e) {
+            throw new CustomException("file to table error:", e);
+        }
+    }
+
+    /**
+     * Get threshold value
+     *
+     * @param thresholds    List
+     * @param thresholdName String
+     * @return HashMap
+     */
+    public String getThresholdValue(List<?> thresholds, String thresholdName) {
+        String value = null;
+        for (Object threshold : thresholds) {
+            if (threshold instanceof LinkedHashMap) {
+                if (((HashMap<?, ?>) threshold).get("threshold").equals(thresholdName)) {
+                    value = ((HashMap<?, ?>) threshold).get("thresholdValue").toString();
+                    break;
+                }
+            } else {
+                if (threshold instanceof DiagnosisThresholdDO
+                        && ((DiagnosisThresholdDO) threshold).getThreshold().equals(thresholdName)) {
+                    value = ((DiagnosisThresholdDO) threshold).getThresholdValue();
+                    break;
+                }
+            }
+        }
+        if (value == null) {
+            throw new HisDiagnosisException("fetch threshold data failed!");
+        }
+        return value;
     }
 }

@@ -75,6 +75,7 @@ public class TestSqlExecutor {
             when(statement.executeQuery(any())).thenReturn(resultSet);
             when(resultSet.next()).thenReturn(true, true, false);
             DiagnosisTaskDO task = mock(DiagnosisTaskDO.class);
+            when(task.getSql()).thenReturn("select 1");
             sqlExecutor.executeSql(task);
         } catch (SQLException e) {
             throw new HisDiagnosisException("connect fail");
@@ -92,6 +93,7 @@ public class TestSqlExecutor {
             when(statement.executeQuery(any())).thenReturn(resultSet);
             when(resultSet.next()).thenReturn(false);
             DiagnosisTaskDO task = mock(DiagnosisTaskDO.class);
+            when(task.getSql()).thenReturn("select 1");
             sqlExecutor.executeSql(task);
         } catch (SQLException e) {
             throw new HisDiagnosisException("connect fail");

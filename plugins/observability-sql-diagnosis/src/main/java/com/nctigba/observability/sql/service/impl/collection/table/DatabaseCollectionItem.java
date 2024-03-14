@@ -61,7 +61,9 @@ public abstract class DatabaseCollectionItem implements CollectionItem<Object> {
         String during = map.get(ThresholdConstants.DURING);
         String sql = getDatabaseSql();
         if (during != null && getDatabaseSql().contains("duration")) {
-            LocalTime time = LocalTime.ofSecondOfDay(Integer.parseInt(during));
+            boolean isOutOfRange = Integer.parseInt(during) < 0 || Integer.parseInt(during) > 86399;
+            LocalTime time = isOutOfRange ? LocalTime.ofSecondOfDay(0) : LocalTime.ofSecondOfDay(
+                    Integer.parseInt(during));
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
             String formattedTime = time.format(formatter);
             sql = sql.replace("duration", formattedTime);
@@ -98,7 +100,9 @@ public abstract class DatabaseCollectionItem implements CollectionItem<Object> {
         String during = map.get(ThresholdConstants.DURING);
         String sql = getDatabaseSql();
         if (during != null && getDatabaseSql().contains("duration")) {
-            LocalTime time = LocalTime.ofSecondOfDay(Integer.parseInt(during));
+            boolean isOutOfRange = Integer.parseInt(during) < 0 || Integer.parseInt(during) > 86399;
+            LocalTime time = isOutOfRange ? LocalTime.ofSecondOfDay(0) : LocalTime.ofSecondOfDay(
+                    Integer.parseInt(during));
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
             String formattedTime = time.format(formatter);
             sql = sql.replace("duration", formattedTime);

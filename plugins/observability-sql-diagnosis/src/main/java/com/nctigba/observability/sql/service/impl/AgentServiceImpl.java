@@ -23,11 +23,13 @@
 
 package com.nctigba.observability.sql.service.impl;
 
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.observability.sql.enums.AgentStatusEnum;
 import com.nctigba.observability.sql.model.entity.NctigbaEnvDO;
@@ -65,6 +67,21 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.nctigba.observability.sql.constant.CommonConstants.DIRECTORY_IS_EMPTY;
+import static com.nctigba.observability.sql.constant.CommonConstants.DIRECTORY_IS_EXIST;
+import static com.nctigba.observability.sql.constant.CommonConstants.FILE_IS_EXIST;
+import static com.nctigba.observability.sql.constant.CommonConstants.INSTALL_FLAME_GRAPH;
+import static com.nctigba.observability.sql.constant.CommonConstants.JDK_VERSION;
+import static com.nctigba.observability.sql.constant.CommonConstants.MKDIR_FILE;
+import static com.nctigba.observability.sql.constant.CommonConstants.MV_FILE;
+import static com.nctigba.observability.sql.constant.CommonConstants.PORT_IS_EXIST;
+import static com.nctigba.observability.sql.constant.CommonConstants.PORT_PID;
+import static com.nctigba.observability.sql.constant.CommonConstants.PYTHON_VERSION;
+import static com.nctigba.observability.sql.constant.CommonConstants.RM_FILE;
+import static com.nctigba.observability.sql.constant.CommonConstants.TAR_FILE;
+import static com.nctigba.observability.sql.constant.CommonConstants.UNZIP_VERSION;
+import static com.nctigba.observability.sql.constant.CommonConstants.YUM_INSTALL;
+
 /**
  * AgentServiceImpl
  *
@@ -79,6 +96,15 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
     private static final String JDK = "https://mirrors.huaweicloud.com/kunpeng/archive/compiler/bisheng_jdk/";
     private static final String JDKPKG = "bisheng-jdk-8u392-linux-{0}.tar.gz";
     private static final long MONITOR_CYCLE = 60L;
+    private static final String BCC_PATH = "/usr/share/bcc/tools";
+    private static final String FLAME_GRAPH_PATH = "/opt/software";
+    private static final String JAR_NAME = "opengauss-ebpf-1.0.0-SNAPSHOT";
+    private static final String JDK_PATH = "/etc/jdk8/bin/java";
+    private static final String STOP_AGENT = "cd %s && sh run_agent.sh stop";
+    private static final String START_AGENT = "cd %s && sh run_agent.sh start";
+    private static final String CHECK_AGENT = "cd %s && sh run_agent.sh status";
+    private static final long MILLISECOND = 1000L;
+    private static final int TIMEOUT = 3;
 
     @Autowired
     private ResourceLoader loader;
@@ -115,6 +141,9 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
             if (StrUtil.isBlank(callbackPath)) {
                 throw new CustomException("callback host null");
             }
+            if (StrUtil.isBlank(path)) {
+                throw new CustomException("install path null");
+            }
             var node = clusterManager.getOpsNodeById(nodeId);
             var hostId = node.getHostId();
             var env = envMapper.selectOne(
@@ -128,38 +157,37 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
             }
             env = new NctigbaEnvDO().setHostid(hostId).setNodeid(nodeId).setPort(port).setUsername(AGENT_USER)
                     .setType(NctigbaEnvDO.envType.AGENT);
-            env.setParam(callbackPath);
+            env.setParam("{\"callbackPath\":\"" + callbackPath + "\"}");
             env.setPath(path);
             try (var session = connect(env, rootPassword)) {
-                String message = session.execute(
-                        "netstat -tuln | grep -q " + env.getPort() + " && echo \"true\" || echo \"false\"");
+                String message = session.execute(String.format(PORT_IS_EXIST, env.getPort()));
                 if (message.contains("true")) {
                     throw new CustomException("port is exists");
                 }
-                String installPath = session.execute("[ -e " + path + " ] && echo 'true' || echo 'false'");
+                String installPath = session.execute(String.format(DIRECTORY_IS_EXIST, path));
                 if (installPath.contains("false")) {
-                    session.execute("mkdir -p " + path);
+                    session.execute(String.format(MKDIR_FILE, path));
                 } else {
-                    String fileIsEmpty = session.execute("[ ! -z " + path + " ] && echo 'true' || echo 'false'");
-                    if (fileIsEmpty.contains("false")) {
+                    String fileIsEmpty = session.execute(String.format(DIRECTORY_IS_EMPTY, path));
+                    if (fileIsEmpty.startsWith("/")) {
                         throw new CustomException("The installation folder is not empty!");
                     }
                 }
                 curr = nextStep(wsSession, steps, curr);
                 // step2
-                if (!session.test("unzip -v")) {
-                    session.execute("yum install -y unzip zip");
+                if (!session.test(UNZIP_VERSION)) {
+                    session.execute(String.format(YUM_INSTALL, "unzip zip"));
                 }
-                var python_v = session.execute("python --version");
+                var python_v = session.execute(PYTHON_VERSION);
                 if (!python_v.toLowerCase().startsWith("python ")) {
                     throw new CustomException("python version err, curr:" + python_v);
                 }
                 addMsg(wsSession, steps, curr, python_v);
                 // bcc-tool
-                if (!session.test(Command.STAT.parse("/usr/share/bcc/tools"))) {
+                if (!session.test(Command.STAT.parse(BCC_PATH))) {
                     for (int i = 0; i < 3; i++) {
                         try {
-                            session.execute("yum -y install bcc-tools");
+                            session.execute(String.format(YUM_INSTALL, "bcc-tools"));
                             break;
                         } catch (Exception e) {
                             if (i == 2) {
@@ -177,17 +205,17 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                      var out = new FileOutputStream(graph)) {
                     IoUtil.copy(in, out);
                 }
-                session.execute("mkdir -p /opt/software");
-                session.execute("rm -rf /opt/software/FlameGraph*");
-                session.upload(graph.getCanonicalPath(), "/opt/software/FlameGraph.zip");
-                session.execute("cd /opt/software && unzip FlameGraph.zip && cd FlameGraph && chmod +x flamegraph.pl");
+                session.execute(String.format(MKDIR_FILE, FLAME_GRAPH_PATH));
+                session.execute(String.format(RM_FILE, FLAME_GRAPH_PATH + "/FlameGraph*"));
+                session.upload(graph.getCanonicalPath(), FLAME_GRAPH_PATH + "/FlameGraph.zip");
+                session.execute(String.format(INSTALL_FLAME_GRAPH, FLAME_GRAPH_PATH));
                 // jdk version
                 String jdkVersion = getJavaVersion(env, rootPassword);
                 addMsg(wsSession, steps, curr, jdkVersion);
                 curr = nextStep(wsSession, steps, curr);
                 // step3
                 // upload
-                File f = File.createTempFile("opengauss-ebpf-1.0.0-SNAPSHOT", ".jar");
+                File f = File.createTempFile(JAR_NAME, ".jar");
                 try (var in = loader.getResource(NAME).getInputStream(); var out = new FileOutputStream(f)) {
                     IoUtil.copy(in, out);
                 }
@@ -249,9 +277,8 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                 new Step("agent.uninstall.step5"));
         // @formatter:on
         var curr = 0;
-
+        // step1
         try {
-            curr = nextStep(wsSession, steps, curr);
             var node = clusterManager.getOpsNodeById(nodeId);
             var env = envMapper.selectOne(
                     Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.AGENT)
@@ -264,11 +291,19 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                 throw new CustomException("host not found");
             }
             env.setHost(hostEntity);
+            if (StrUtil.isBlank(env.getStatus())) {
+                oldVersionAdapter(env, rootPassword);
+            }
+            // step2
             curr = nextStep(wsSession, steps, curr);
-            execStopCmd(env, rootPassword);
+            uninstallAgent(env, rootPassword);
+            // step3
             curr = nextStep(wsSession, steps, curr);
             clearInstallFolder(env, rootPassword);
+            // step4
+            curr = nextStep(wsSession, steps, curr);
             envMapper.deleteById(env);
+            // step5
             sendMsg(wsSession, steps, curr, status.DONE);
         } catch (Exception e) {
             steps.get(curr).setState(status.ERROR).add(e.getMessage());
@@ -281,11 +316,25 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
         }
     }
 
+    private void oldVersionAdapter(NctigbaEnvDO env, String rootPwd) {
+        try (SshSessionUtils session = connect(env, rootPwd);
+             InputStream in = loader.getResource("run_agent.sh").getInputStream()) {
+            session.upload(in, env.getPath() + "/run_agent.sh");
+            String pid = session.execute(String.format(PORT_PID, env.getPort()));
+            if (pid != null && !"".equals(pid)) {
+                File pidFile = File.createTempFile("agent", ".pid");
+                FileUtil.appendUtf8String(pid, pidFile);
+                session.upload(pidFile.getCanonicalPath(), env.getPath() + "/agent.pid");
+            }
+        } catch (IOException e) {
+            throw new CustomException(e.getMessage());
+        }
+    }
+
     private String getJavaVersion(NctigbaEnvDO env, String rootPwd) {
         String java = "java";
         try (SshSessionUtils session = connect(env, rootPwd)) {
-            String javaVersion = session.execute(
-                    "source /etc/profile && java -version 2>&1 | awk -F '\"' '/version/ {print $2}'");
+            String javaVersion = session.execute(JDK_VERSION);
             log.info("jdk version is:" + javaVersion);
             if (!StrUtil.isBlank(javaVersion)) {
                 String[] parts = javaVersion.split("\\.");
@@ -295,10 +344,9 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                     return java;
                 }
             }
-            String jdkIsExists = session.execute(
-                    "[ -f /etc/jdk8/bin/java ] && echo 'true' || echo 'false'");
+            String jdkIsExists = session.execute(String.format(FILE_IS_EXIST, JDK_PATH));
             if (jdkIsExists.contains("true")) {
-                return "/etc/jdk8/bin/java";
+                return JDK_PATH;
             }
             String arch = session.execute(Command.ARCH);
             String v = "aarch64".equals(arch) ? "aarch64" : "x64";
@@ -309,8 +357,7 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
             if (pkg == null) {
                 isDownload = true;
             } else {
-                String fileIsExists = session.execute(
-                        "[ -f " + pkg.getPath() + " ] && echo 'true' || echo 'false'");
+                String fileIsExists = session.execute(String.format(FILE_IS_EXIST, pkg.getPath()));
                 if (fileIsExists.contains("false")) {
                     isDownload = true;
                 }
@@ -321,10 +368,10 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                 save(pkg);
             }
             session.upload(pkg.getPath(), tar);
-            session.execute("tar zxvf " + tar + " -C /etc/");
-            session.execute("mv /etc/bisheng-jdk1.8.0_392 /etc/jdk8");
-            session.execute("rm -rf " + tar);
-            java = "/etc/jdk8/bin/java";
+            session.execute(String.format(TAR_FILE, tar, "/etc/"));
+            session.execute(String.format(MV_FILE, "/etc/bisheng-jdk1.8.0_392", "/etc/jdk8"));
+            session.execute(String.format(RM_FILE, tar));
+            java = JDK_PATH;
         } catch (IOException e) {
             throw new CustomException("exec failed:" + e.getMessage());
         }
@@ -333,10 +380,9 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
 
     private void clearInstallFolder(NctigbaEnvDO env, String rootPwd) {
         try (SshSessionUtils session = connect(env, rootPwd)) {
-            String pkgPath = session.execute("[ -e " + env.getPath() + " ] && echo 'true' || echo 'false'");
+            String pkgPath = session.execute(String.format(DIRECTORY_IS_EXIST, env.getPath()));
             if (env.getPath() != null && !pkgPath.contains("false")) {
-                String cd = "cd " + env.getPath() + " && ";
-                session.execute(cd + "rm -rf " + env.getPath());
+                session.execute(String.format(RM_FILE, env.getPath()));
             }
         } catch (IOException e) {
             throw new CustomException(e.getMessage());
@@ -346,6 +392,9 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
     @Override
     public void start(String id, String rootPwd) {
         NctigbaEnvDO env = getAgentInfo(id);
+        if (StrUtil.isBlank(env.getStatus())) {
+            oldVersionAdapter(env, rootPwd);
+        }
         startAgent(env, rootPwd);
         checkHealthStatus(env);
     }
@@ -378,6 +427,9 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
     @Override
     public void stop(String id, String rootPwd) {
         NctigbaEnvDO env = getAgentInfo(id);
+        if (StrUtil.isBlank(env.getStatus())) {
+            oldVersionAdapter(env, rootPwd);
+        }
         stopAgent(env, rootPwd);
     }
 
@@ -386,6 +438,8 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
         if (!check.isStatus()) {
             if (check.getExceptionInfo().contains("No such file or directory")) {
                 killPid(env, rootPwd);
+                env.setEnvStatus(AgentStatusEnum.MANUAL_STOP.getStatus());
+                envMapper.updateById(env);
                 return;
             } else if (check.getExceptionInfo().contains("root password error")) {
                 throw new CustomException(check.getExceptionInfo());
@@ -395,9 +449,32 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                 throw new CustomException(check.getExceptionInfo());
             }
         }
+        stopping(env, rootPwd);
+    }
+
+    private void uninstallAgent(NctigbaEnvDO env, String rootPwd) {
+        AgentExceptionVO check = checkPidStatus(env, rootPwd);
+        if (!check.isStatus()) {
+            if (check.getExceptionInfo().contains("No such file or directory")) {
+                killPid(env, rootPwd);
+                env.setEnvStatus(AgentStatusEnum.MANUAL_STOP.getStatus());
+                envMapper.updateById(env);
+                return;
+            } else if (check.getExceptionInfo().contains("root password error")) {
+                throw new CustomException(check.getExceptionInfo());
+            } else {
+                env.setEnvStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus());
+                envMapper.updateById(env);
+                return;
+            }
+        }
+        stopping(env, rootPwd);
+    }
+
+    private void stopping(NctigbaEnvDO env, String rootPwd) {
         env.setEnvStatus(AgentStatusEnum.STOPPING.getStatus());
         envMapper.updateById(env);
-        check = execStopCmd(env, rootPwd);
+        AgentExceptionVO check = execStopCmd(env, rootPwd);
         if (!check.isStatus()) {
             env.setEnvStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus());
             envMapper.updateById(env);
@@ -415,7 +492,7 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
 
     private void killPid(NctigbaEnvDO env, String rootPwd) {
         try (SshSessionUtils session = connect(env, rootPwd)) {
-            var pid = session.execute(Command.PS.parse("elasticsearch"));
+            String pid = session.execute(String.format(PORT_PID, env.getPort()));
             if (StrUtil.isNotBlank(pid) && NumberUtil.isLong(pid)) {
                 session.execute(Command.KILL.parse(pid));
             }
@@ -429,15 +506,22 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
         List<AgentStatusVO> list = envMapper.selectStatusByType(NctigbaEnvDO.envType.AGENT.name());
         list.forEach(f -> {
             String status = f.getStatus();
-            boolean isStop = AgentStatusEnum.MANUAL_STOP.getStatus().equals(status);
-            boolean isRunning =
-                    AgentStatusEnum.STARTING.getStatus().equals(status) || AgentStatusEnum.STOPPING.getStatus().equals(
-                            status);
-            boolean isRunTimeout = isRunning
-                    && new Date().getTime() - f.getUpdateTime().getTime() > 3 * MONITOR_CYCLE * 1000L;
-            boolean isTimeout = new Date().getTime() - f.getUpdateTime().getTime() > MONITOR_CYCLE * 1000L;
-            if (!isStop && !isRunTimeout && isTimeout) {
+            Date updateTime = f.getUpdateTime();
+            if (StrUtil.isBlank(status) || updateTime == null) {
                 f.setStatus(AgentStatusEnum.UNKNOWN.getStatus());
+            } else {
+                boolean isStop = AgentStatusEnum.MANUAL_STOP.getStatus().equals(status);
+                boolean isRunning =
+                        AgentStatusEnum.STARTING.getStatus().equals(status)
+                                || AgentStatusEnum.STOPPING.getStatus().equals(
+                                status);
+                boolean isRunTimeout = isRunning
+                        && new Date().getTime() - f.getUpdateTime().getTime() > TIMEOUT * MONITOR_CYCLE * MILLISECOND;
+                boolean isTimeout = new Date().getTime() - f.getUpdateTime().getTime() > MONITOR_CYCLE * MILLISECOND;
+                boolean isNormalTimeout = !isStop && !isRunning && isTimeout;
+                if (isNormalTimeout || isRunTimeout) {
+                    f.setStatus(AgentStatusEnum.UNKNOWN.getStatus());
+                }
             }
         });
         return list;
@@ -453,7 +537,11 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
         envList.forEach(e -> e.setHost(hostFacade.getById(e.getHostid())));
         for (NctigbaEnvDO env : envList) {
             String status = env.getStatus();
-            boolean isTimeout = new Date().getTime() - env.getUpdateTime().getTime() > 3 * MONITOR_CYCLE * 1000L;
+            if (env.getUpdateTime() == null) {
+                env.setUpdateTime(new Date());
+            }
+            boolean isTimeout =
+                    new Date().getTime() - env.getUpdateTime().getTime() > TIMEOUT * MONITOR_CYCLE * MILLISECOND;
             boolean isDuring =
                     (AgentStatusEnum.STARTING.getStatus().equals(status) || AgentStatusEnum.STOPPING.getStatus().equals(
                             status)) && !isTimeout;
@@ -481,12 +569,15 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
             while ((line = reader.readLine()) != null) {
                 fileContent.append(line).append(System.getProperty("line.separator"));
                 if (lineNumber == 5) {
+                    Object param = env.getParam();
+                    String callbackPath = param instanceof JSONObject ? ((JSONObject) param).get(
+                            "callbackPath").toString() : "";
                     fileContent.append("JAVA_VERSION=\"").append(jdkVersion).append(
                                     "\"").append(System.getProperty("line.separator"))
                             .append("JAR_NAME=\"").append(NAME).append("\"").append(
                                     System.getProperty("line.separator"))
-                            .append("CALLBACK_URL=\"").append(env.getParam()).append("\"").append(
-                                    System.getProperty("line.separator"))
+                            .append("CALLBACK_URL=\"").append(callbackPath)
+                            .append("\"").append(System.getProperty("line.separator"))
                             .append("PORT=").append(env.getPort()).append(System.getProperty("line.separator"));
                 }
                 lineNumber++;
@@ -501,8 +592,7 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
     private AgentExceptionVO checkPidStatus(NctigbaEnvDO env, String rootPwd) {
         AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
         try (SshSessionUtils session = connect(env, rootPwd)) {
-            String cd = "cd " + env.getPath() + " && ";
-            String message = session.execute(cd + " sh run_agent.sh status");
+            String message = session.execute(String.format(CHECK_AGENT, env.getPath()));
             agentExceptionVO.setAgentStatus(message.contains("Agent is running with PID"), message);
         } catch (IOException | RuntimeException e) {
             agentExceptionVO.setAgentStatus(false, "exec failed:" + e.getMessage());
@@ -511,18 +601,12 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
     }
 
     private boolean getHealthStatus(NctigbaEnvDO env) {
-        for (int i = 0; i < 10; i++) {
-            ThreadUtil.sleep(1000L);
-            try {
-                if (utils.getStatus(env)) {
-                    break;
-                }
-            } catch (Exception e) {
-                log.error(e.getMessage());
+        try {
+            if (utils.getStatus(env)) {
+                return true;
             }
-            if (i == 9) {
-                return false;
-            }
+        } catch (Exception e) {
+            return false;
         }
         return true;
     }
@@ -551,12 +635,11 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
     private AgentExceptionVO checkRunningEnvironment(NctigbaEnvDO env, String rootPwd) {
         AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
         try (SshSessionUtils session = connect(env, rootPwd)) {
-            String message = session.execute(
-                    "netstat -tuln | grep -q " + env.getPort() + " && echo \"true\" || echo \"false\"");
+            String message = session.execute(String.format(PORT_IS_EXIST, env.getPort()));
             if (message.contains("true")) {
                 return agentExceptionVO.setAgentStatus(false, "port is exists!");
             }
-            String pkgPath = session.execute("[ -e " + env.getPath() + " ] && echo 'true' || echo 'false'");
+            String pkgPath = session.execute(String.format(DIRECTORY_IS_EXIST, env.getPath()));
             if (pkgPath.contains("false")) {
                 return agentExceptionVO.setAgentStatus(false, "package is not exists!");
             }
@@ -570,8 +653,7 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
     private AgentExceptionVO execStartCmd(NctigbaEnvDO env, String rootPwd) {
         AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
         try (SshSessionUtils session = connect(env, rootPwd)) {
-            String cd = "cd " + env.getPath() + " && ";
-            session.executeNoWait(cd + " sh run_agent.sh start");
+            session.executeNoWait(String.format(START_AGENT, env.getPath()));
         } catch (IOException | RuntimeException e) {
             agentExceptionVO.setAgentStatus(false, "exec failed:" + e.getMessage());
             return agentExceptionVO;
@@ -583,8 +665,7 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
     private AgentExceptionVO execStopCmd(NctigbaEnvDO env, String rootPwd) {
         AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
         try (SshSessionUtils session = connect(env, rootPwd)) {
-            String cd = "cd " + env.getPath() + " && ";
-            session.execute(cd + "sh run_agent.sh stop");
+            session.execute(String.format(STOP_AGENT, env.getPath()));
         } catch (IOException | RuntimeException e) {
             agentExceptionVO.setAgentStatus(false, "exec failed:" + e.getMessage());
             return agentExceptionVO;

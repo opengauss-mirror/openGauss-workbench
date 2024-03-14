@@ -5,7 +5,7 @@
             v-model="cluster"
             :options="clusterList"
             @change="getClusterValue"
-            style="max-width: 200px"
+            style="max-width: 100%"
             :style="{ width: width ? width + 'px' : 'auto' }"
             :clearable="!notClearable"
         />

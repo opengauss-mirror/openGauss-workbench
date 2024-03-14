@@ -58,4 +58,76 @@ public class CommonConstants {
      */
     public static final String DATABASE_NAME = "data/diagnosisData/";
 
+    /**
+     * Check if the port exists
+     */
+    public static final String PORT_IS_EXIST = "source /etc/profile && lsof -ti :%s && echo 'true' || echo 'false'";
+
+    /**
+     * Get pid by port
+     */
+    public static final String PORT_PID = "ss -tulpn | grep ':%s\\s' | awk '{print $7}' | awk -F \",\" '{print $2}' "
+            + "| awk -F \"=\" '{print $2}'";
+
+    /**
+     * Check if the directory exists
+     */
+    public static final String DIRECTORY_IS_EXIST = "[ -e %s ] && echo 'true' || echo 'false'";
+
+    /**
+     * Check if the folder is empty
+     */
+    public static final String DIRECTORY_IS_EMPTY = "find %s -mindepth 1 -print -quit 2>/dev/null";
+
+    /**
+     * Check if the file exists
+     */
+    public static final String FILE_IS_EXIST = "[ -f %s ] && echo 'true' || echo 'false'";
+
+    /**
+     * Unzip version
+     */
+    public static final String UNZIP_VERSION = "unzip -v";
+
+    /**
+     * Python version
+     */
+    public static final String PYTHON_VERSION = "python --version";
+
+    /**
+     * Yum install
+     */
+    public static final String YUM_INSTALL = "yum -y install %s";
+
+    /**
+     * Mkdir file
+     */
+    public static final String MKDIR_FILE = "mkdir -p %s";
+
+    /**
+     * Remove file
+     */
+    public static final String RM_FILE = "rm -rf %s";
+
+    /**
+     * Install FlameGraph
+     */
+    public static final String INSTALL_FLAME_GRAPH = "cd %s && unzip FlameGraph.zip && cd FlameGraph "
+            + "&& chmod +x flamegraph.pl";
+
+    /**
+     * Java version
+     */
+    public static final String JDK_VERSION = "source /etc/profile && java -version 2>&1 "
+            + "| awk -F '\"' '/version/ {print $2}'";
+
+    /**
+     * Tar file
+     */
+    public static final String TAR_FILE = "tar zxvf %s -C %s";
+
+    /**
+     * Mv file
+     */
+    public static final String MV_FILE = "mv %s %s";
 }
