@@ -26,7 +26,7 @@
           </div>
           <a-divider></a-divider>
           <div class="flex-row">
-            <div class="lable-w">{{ $t('enterprise.InstallPrompt.else6') }}:</div>
+            <div class="lable-w">{{ $t('simple.InstallConfig.else6') }}:</div>
             <div>{{ data.clusterInfo.installPackagePath }}</div>
           </div>
           <a-divider></a-divider>
@@ -216,7 +216,7 @@
             <div class="flex-row">
               <div class="lable-w">{{ $t('enterprise.SharingStorageConfig.else9') }}</div>
               <div>{{ data.sharingStorage.rdmaConfig }}</div>
-            </div> 
+            </div>
           </div>
         </div>
       </div>
