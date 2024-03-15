@@ -8,5 +8,5 @@ CREATE TABLE public.nctigba_env (
 );
 ALTER TABLE public.nctigba_env ADD nodeid varchar NULL;
 ALTER TABLE public.nctigba_env ADD status varchar NULL;
-ALTER TABLE public.nctigba_env ADD timestamp(6) NULL;
+ALTER TABLE public.nctigba_env ADD update_time timestamp NULL;
 ALTER TABLE public.nctigba_env ADD param varchar NULL;

@@ -28,6 +28,9 @@ import com.baomidou.dynamic.datasource.annotation.DS;
 import com.nctigba.observability.instance.model.entity.CollectTemplateMetricsDO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
+import org.opengauss.admin.system.domain.SysRoleMenu;
+
+import java.util.List;
 
 /**
  * <p>
@@ -39,5 +42,10 @@ import org.apache.ibatis.annotations.Mapper;
 @DS("embedded")
 @Mapper
 public interface CollectTemplateMetricsMapper extends BaseMapper<CollectTemplateMetricsDO> {
-
+    /**
+     * Add collect template matrics in batches
+     *
+     * @param collectTemplateMetricsDOS CollectTemplateMetricsList
+     */
+    public int insertBatchTemplateMetrics(List<CollectTemplateMetricsDO> collectTemplateMetricsDOS);
 }

@@ -303,7 +303,7 @@ const nodeRef = ref<any>(null)
 onMounted(() => {
   if (!props.editing) getInstallPath()
   else {
-    formData.envId = props.node?.envId
+    formData.envId = props.node?.id
     formData.path = props.node?.path
     formData.httpPort = props.node?.exporterPort
     formData.username = props.node?.username
