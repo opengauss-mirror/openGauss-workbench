@@ -1072,3 +1072,6 @@ COMMENT ON COLUMN "sys_plugin_logo"."plugin_id" IS '插件ID';
 COMMENT ON COLUMN "sys_plugin_logo"."logo_path" IS 'logo路径';
 
 update "sys_menu" set menu_name = '服务器管理', menu_en_name = 'server', order_num = 2 where menu_id = 203;
+
+ALTER TABLE ops_host ADD COLUMN os_version varchar(255);
+COMMENT ON COLUMN "public"."ops_host"."os_version" IS '操作系统版本';

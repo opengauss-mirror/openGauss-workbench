@@ -114,7 +114,8 @@ public class WebhookServiceImpl implements CommunicationService {
         if (StrUtil.isNotBlank(body)) {
             Map map = new HashMap();
             map.put("notifyTitle", notifyTitle);
-            map.put("notifyContent", StringEscapeUtils.escapeJson(notifyContent));
+            map.put("notifyContent",
+                StringEscapeUtils.escapeJson(notifyContent));
             post = post.body(TextParserUtils.parse(body, map));
         }
         String result = post.execute().body();

@@ -504,6 +504,9 @@ CREATE TABLE IF NOT EXISTS "nctigba_env" (
 	port int8 NULL,
 	nodeid varchar NULL
 );
+ALTER TABLE public.nctigba_env ADD status varchar NULL;
+ALTER TABLE public.nctigba_env ADD update_time timestamp NULL;
+ALTER TABLE public.nctigba_env ADD param varchar NULL;
 
 INSERT into alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (1,'CPU使用率过高','warn','index','A','${nodeName}的CPU使用率超过90%',2,'m',1,0,null,null,'firing,recover','1',null,0,'2023-04-26 08:30:22.02',null);
@@ -1312,9 +1315,87 @@ alter table "notify_message" ALTER COLUMN record_ids TYPE text;
 
 -- 2024-03-08
 update alert_rule set is_repeat = 0 where id in (1,2,3,7,8,9,10,12,13,14,15) and is_repeat = 1;
-update alert_rule set rule_content = '故障描述：${nodeName}的CPU使用率超过95%，当前使用率为${value}\n处理建议：请检查主机上占用CPU高的进程' where id = 1;
-update alert_rule set rule_content = '故障描述：${nodeName}上存在磁盘分区使用率超过90%\n处理建议：请清理不必要的磁盘文件' where id = 3;
-update alert_rule set rule_content = '故障描述：${nodeName}无法连接\n处理建议：请检查主机是否正常运行,SSH服务是否正常运行' where id = 24;
-update alert_rule set rule_content = '故障描述：${nodeName}上每秒网络错包数超过5个,实际值：${value}\n处理建议：请检查网络配置' where id = 33;
-update alert_rule set rule_content = '故障描述：${nodeName}上存在磁盘分区读写IO延迟超过10ms\n处理建议：请检查硬件配置' where id = 34;
-update alert_rule set rule_content = '故障描述：${nodeName}上存在磁盘分区inodes使用率超过90%\n处理建议：请清理不必要的磁盘文件' where id = 36;
+update alert_rule set rule_content = '故障描述：${nodeName}的CPU使用率超过95%，当前使用率为${value}
+处理建议：请检查主机上占用CPU高的进程' where id = 1;
+update alert_rule set rule_content = '故障描述：${nodeName}上存在磁盘分区使用率超过90%
+处理建议：请清理不必要的磁盘文件' where id = 3;
+update alert_rule set rule_content = '故障描述：${nodeName}无法连接
+处理建议：请检查主机是否正常运行,SSH服务是否正常运行' where id = 24;
+update alert_rule set rule_content = '故障描述：${nodeName}上每秒网络错包数超过5个,实际值：${value}
+处理建议：请检查网络配置' where id = 33;
+update alert_rule set rule_content = '故障描述：${nodeName}上存在磁盘分区读写IO延迟超过10ms
+处理建议：请检查硬件配置' where id = 34;
+update alert_rule set rule_content = '故障描述：${nodeName}上存在磁盘分区inodes使用率超过90%
+处理建议：请清理不必要的磁盘文件' where id = 36;
+update alert_rule set rule_content = '故障描述：位于${hostIp}上的数据库:postgres无法正常连接
+处理建议：请检查数据库进程是否正常' where id = 21;
+update alert_rule set rule_content = '故障描述：位于${nodeName}上数据库CPU使用率超过95%，当前使用率为${value}
+处理建议：请检查数据库的运行状态' where id = 23;
+update alert_rule set rule_content = '故障描述：${nodeName}的连接使用率超过90%,当前使用率为${value}%
+处理建议：请检查数据库连接' where id = 25;
+update alert_rule set rule_content = '故障描述：故障描述：${nodeName}数据库的活动会话数过多，当前值为：${value}
+处理建议：请检查数据库会话' where id = 26;
+update alert_rule set rule_content = '故障描述：${nodeName}每秒死锁数过多，当前值为：${value}
+处理建议：请检查业务SQL，避免死锁' where id = 27;
+update alert_rule set rule_content = '故障描述：位于${nodeName}上的${datname}每秒回滚数大于50，当前值为：${value}
+处理建议：请检查业务SQL，避免不必要的回滚' where id = 28;
+update alert_rule set rule_content = '故障描述：位于${nodeName}上的${slot_name}延迟大于1MB,当前值：${value}
+处理建议：请检查复制状态或者网络' where id = 29;
+update alert_rule set rule_content = '故障描述：${nodeName}上存在锁阻塞时间超过10S的事务
+处理建议：请检查会话及业务逻辑' where id = 30;
+update alert_rule set rule_content = '故障描述：${nodeName}上存在持续时间超过30S的事务
+处理建议：请检查会话及业务逻辑' where id = 31;
+update alert_rule set rule_content = '故障描述：${nodeName}上存在持续时间超过30S的2PC事务
+处理建议：请检查会话及业务逻辑' where id = 32;
+update alert_rule set rule_content = '故障描述：${hostname}上每秒网络错包数超过5个,实际值：${value}
+处理建议：请检查网络配置' where id = 33;
+update alert_rule set rule_content = '故障描述：${nodeName}上存在表空间剩余空间不足10%
+处理建议：请清理不必要的磁盘文件' where id = 37;
+update alert_rule set rule_content = '故障描述：${nodeName}上存在大事务，内存使用量超过512MB
+处理建议：请检查并在必要时终止大事务' where id = 38;
+update alert_rule set rule_content = '故障描述：${nodeName}的数据库日志出现FATAL错误
+处理建议：请确认错误内容是否影响数据库运行' where id = 39;
+update alert_rule set rule_content = '故障描述：${nodeName}主机的操作系统日志出现错误
+处理建议：请确认错误内容是否影响数据库运行' where id = 40;
+update alert_rule set rule_content = '故障描述：${nodeName}发生自动切换
+处理建议：请确认数据是否有丢失，是否影响业务' where id = 41;
+update alert_rule set rule_content = '故障描述：${nodeName}升主失败
+处理建议：请检查高可用组件日志，以及数据库运行日志' where id = 43;
+update alert_rule set rule_content = '故障描述：${cluster}中的{nodeIp}节点CM功能异常
+处理建议：请检查集群状态' where id = 45;
+update alert_rule set rule_content = '故障描述：${nodeName}运行时coredump
+处理建议：请检查数据库日志确认coredump原因' where id = 46;
+update alert_rule set rule_content = '故障描述：${cluster}中的{nodeIp}节点丢失
+处理建议：请检查集群状态' where id = 47;
+update alert_rule set rule_content = '故障描述：${nodeName}和备节点间的xlog差异超过1MB，实际值：${value}
+处理建议：请检查主备同步状态' where id = 49;
+update alert_rule set rule_content = '故障描述：${nodeName}pg_data所在磁盘:${filesystemPath}使用率超过90%，实际使用率：${value}
+处理建议：请清理不必要的文件' where id = 50;
+update alert_rule set rule_content = '故障描述：${nodeName}xlog所在磁盘:${filesystemPath}使用率超过90%，实际使用率：${value}
+处理建议：请清理不必要的文件' where id = 51;
+update alert_rule set rule_content = '故障描述：${nodeName}pglog所在磁盘:${filesystemPath}使用率超过90%，实际使用率：${value}
+处理建议：请清理不必要的文件' where id = 52;
+update alert_rule set rule_content = '故障描述：${nodeName}归档日志所在磁盘:${filesystemPath}使用率超过90%，实际使用率：${value}
+处理建议：请清理不必要的文件' where id = 53;
+update alert_rule set rule_content = '故障描述：${nodeName}CM日志所在磁盘:${filesystemPath}使用率超过90%，实际使用率：${value}
+处理建议：请清理不必要的文件' where id = 54;
+update alert_rule set rule_content = '${nodeName}的主机内存使用率超过90%，实际使用率：${value}
+处理建议：请确认并终止消耗内存的进程' where id = 2;
+update alert_rule set rule_content = '故障描述：${nodeName}pg_replslot目录占用空间超过1GB，实际大小：${value}
+处理建议：请检查主备复制状态，清理不必要的文件' where id = 55;
+update alert_rule set rule_content = '故障描述：${nodeName}每分钟查询SQL数量超过180000，实际值：${value}
+处理建议：请检查操作系统负载及调整业务，避免宕机' where id = 56;
+update alert_rule set rule_content = '故障描述：${nodeName}每分钟更新SQL数量超过60000，实际值：${value}
+处理建议：请检查操作系统负载及调整业务，避免宕机' where id = 57;
+update alert_rule set rule_content = '故障描述：${nodeName}每分钟插入SQL数量超过60000，实际值：${value}
+处理建议：请检查操作系统负载及调整业务，避免宕机' where id = 58;
+update alert_rule set rule_content = '故障描述：${nodeName}每分钟删除SQL数量超过60000，实际值：${value}
+处理建议：请检查操作系统负载及调整业务，避免宕机' where id = 59;
+update notify_template set notify_content = '告警信息','告警时间：${alertTime}
+告警等级：${level}
+告警实例：${nodeName}
+主机IP：${hostIp}
+告警内容：${content}' where id = 1;
+
+create INDEX idx_alert_template_rule_template_id on alert_template_rule(template_id);
+create INDEX idx_alert_template_rule_item_template_rule_id on alert_template_rule_item(template_rule_id);

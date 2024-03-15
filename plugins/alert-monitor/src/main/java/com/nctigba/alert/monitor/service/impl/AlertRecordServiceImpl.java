@@ -167,13 +167,16 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         List<String> clusterNodeIdList = records.stream().map(item -> item.getClusterNodeId()).collect(
             Collectors.toList());
         List<OpsClusterNodeEntity> opsClusterNodeEntities = clusterNodeService.listByIds(clusterNodeIdList);
-        List<String> hostIds = opsClusterNodeEntities.stream().map(item -> item.getHostId()).collect(
-            Collectors.toList());
-        List<String> clusterIds = opsClusterNodeEntities.stream().map(item -> item.getClusterId()).collect(
-            Collectors.toList());
-        List<OpsHostEntity> opsHostEntities = hostFacade.listByIds(hostIds);
-        List<OpsClusterEntity> opsClusterEntities = clusterService.listByIds(clusterIds);
-
+        List<OpsHostEntity> opsHostEntities = new ArrayList<>();
+        List<OpsClusterEntity> opsClusterEntities = new ArrayList<>();
+        if (CollectionUtil.isNotEmpty(opsClusterNodeEntities)) {
+            List<String> hostIds = opsClusterNodeEntities.stream().map(item -> item.getHostId()).collect(
+                Collectors.toList());
+            List<String> clusterIds = opsClusterNodeEntities.stream().map(item -> item.getClusterId()).collect(
+                Collectors.toList());
+            opsHostEntities = hostFacade.listByIds(hostIds);
+            opsClusterEntities = clusterService.listByIds(clusterIds);
+        }
         List<AlertRecordDTO> list = new ArrayList<>();
         for (AlertRecordDO record : records) {
             list.add(alertRecordToDto(record, opsClusterNodeEntities, opsHostEntities, opsClusterEntities));

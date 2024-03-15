@@ -292,7 +292,7 @@ const { data: ruleDetail, run: requestData } = useRequest(
 watch(ruleDetail, (ruleDetail: any) => {
   if (ruleDetail && ruleDetail.code === 200) {
     formData.value = ruleDetail.data
-    ruleContent.value = formData.value?.ruleContent
+    ruleContent.value = formData.value.ruleContent
     if (formData.value.alertRuleItemList && formData.value.alertRuleItemList.length > 0) {
       ruleMarkList.value = formData.value.alertRuleItemList.map((item: any) => item.ruleMark)
       formData.value.alertRuleItemList.forEach((item: any) => {

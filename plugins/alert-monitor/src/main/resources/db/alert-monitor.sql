@@ -697,6 +697,9 @@ CREATE TABLE IF NOT EXISTS "public"."nctigba_env" (
 	port int8 NULL,
 	nodeid varchar NULL
 );
+ALTER TABLE public.nctigba_env ADD status varchar NULL;
+ALTER TABLE public.nctigba_env ADD update_time timestamp NULL;
+ALTER TABLE public.nctigba_env ADD param varchar NULL;
 
 INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (1,'CPU使用率过高','warn','index','A','$'||'{nodeName}的CPU使用率超过90%',2,'m',1,0,null,null,'firing,recover','1',null,0,'2023-04-26 08:30:22.02',null) ON DUPLICATE KEY UPDATE NOTHING;
@@ -1643,3 +1646,6 @@ update alert_rule set rule_content = '故障描述：$'||'{nodeName}上每秒网
 id = 33;
 update alert_rule set rule_content = '故障描述：$'||'{nodeName}上存在磁盘分区读写IO延迟超过10ms'||chr(10)||'处理建议：请检查硬件配置' where id = 34;
 update alert_rule set rule_content = '故障描述：$'||'{nodeName}上存在磁盘分区inodes使用率超过90%'||chr(10)||'处理建议：请清理不必要的磁盘文件' where id = 36;
+
+create INDEX idx_alert_template_rule_template_id on public.alert_template_rule(template_id);
+create INDEX idx_alert_template_rule_item_template_rule_id on public.alert_template_rule_item(template_rule_id);
