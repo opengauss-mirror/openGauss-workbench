@@ -303,7 +303,11 @@ const data = reactive<KeyValue>({
   validVisible: false,
 
   installStepNum: 1,
-  currentStatus: 'process'
+  currentStatus: 'process',
+
+  installContext: {
+    installPackagePath: '/ops/files'
+  }
 })
 
 // websocket
@@ -335,6 +339,7 @@ const formRules = computed(() => {
 
 onMounted(() => {
   getHostList()
+  getSystemUploadPath()
 })
 
 onBeforeUnmount(() => {
@@ -557,8 +562,7 @@ const exeInstall = async (socket: Socket<any, any>, businessId: string, term: Te
       openGaussVersion: OpenGaussVersionEnum.MINIMAL_LIST,
       openGaussVersionNum: data.form.install.packageVersionNum,
       installMode: InstallModeEnum.OFF_LINE,
-      installPackagePath: '/ops/files',
-      // installPackagePath: 'E:/hw/installPackage/download/',
+      installPackagePath: data.installContext.installPackagePath,
       deployType: DeployTypeEnum.SINGLE_NODE,
       clusterId: 'MINI_' + new Date().getTime(),
       clusterName: '',
@@ -669,6 +673,16 @@ const getHostList = () => {
     }
   }).finally(() => {
     data.hostLoading = false
+  })
+}
+
+const getSystemUploadPath = () => {
+  getSysUploadPath().then((res: KeyValue) => {
+    if (Number(res.code) === 200) {
+      data.installContext.installPackagePath = res.data
+    } else {
+      Message.error('Failed to obtain the system upload path')
+    }
   })
 }
 
