@@ -68,6 +68,7 @@ public class BaseController {
      */
     protected Page startPage() {
         Page page = new Page<>();
+        page.setSize(15);
         PageDomain pageDomain = TableSupport.buildPageRequest();
         Integer pageNum = pageDomain.getPageNum();
         Integer pageSize = pageDomain.getPageSize();
