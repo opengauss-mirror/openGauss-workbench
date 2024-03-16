@@ -100,23 +100,115 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
     @Override
     public void install(InstallContext installContext) {
         log.info("Start installing Enterprise Edition");
+        boolean isInstallSucc = true;
+        try {
+            doInstall(installContext);
 
-        doInstall(installContext);
+            OpsClusterContext opsClusterContext = new OpsClusterContext();
+            OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
+            List<OpsClusterNodeEntity> opsClusterNodeEntities =
+                    installContext.getEnterpriseInstallConfig().toOpsClusterNodeEntityList();
+            opsClusterContext.setOpsClusterEntity(opsClusterEntity);
+            opsClusterContext.setOpsClusterNodeEntityList(opsClusterNodeEntities);
 
-        OpsClusterContext opsClusterContext = new OpsClusterContext();
-        OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
-        List<OpsClusterNodeEntity> opsClusterNodeEntities =
-                installContext.getEnterpriseInstallConfig().toOpsClusterNodeEntityList();
-        opsClusterContext.setOpsClusterEntity(opsClusterEntity);
-        opsClusterContext.setOpsClusterNodeEntityList(opsClusterNodeEntities);
+            wsUtil.sendText(installContext.getRetSession(), "CREATE_REMOTE_USER");
+            createEnterpriseRemoteUser(installContext, opsClusterContext, jschUtil, encryptionUtils);
 
-        wsUtil.sendText(installContext.getRetSession(), "CREATE_REMOTE_USER");
-        createEnterpriseRemoteUser(installContext, opsClusterContext, jschUtil, encryptionUtils);
+            wsUtil.sendText(installContext.getRetSession(), "SAVE_INSTALL_CONTEXT");
+            saveContext(installContext);
+            wsUtil.sendText(installContext.getRetSession(), "FINISH");
+            log.info("The installation is complete");
+        } catch (OpsException e) {
+            log.error("install failed：", e);
+            isInstallSucc = false;
+            throw new OpsException("The installation is failed.");
+        } finally {
+            if (!isInstallSucc) {
+                cleanResource(installContext);
+            }
+        }
+    }
 
-        wsUtil.sendText(installContext.getRetSession(), "SAVE_INSTALL_CONTEXT");
-        saveContext(installContext);
-        wsUtil.sendText(installContext.getRetSession(), "FINISH");
-        log.info("The installation is complete");
+    private String prepareCleanClusterDir(InstallContext installContext) {
+        String delCmd = "";
+        try{
+            // remove intall path software
+            String installPackagePathPath = installContext.getEnterpriseInstallConfig().getInstallPackagePath();
+            log.info("install package path : {}", installPackagePathPath);
+
+            String delInstallPath = MessageFormat.format(SshCommandConstants.DEL_FILE, installPackagePathPath + "/*");
+            log.info("delete install package path : {}", delInstallPath);
+            String installDataPath = installContext.getEnterpriseInstallConfig().getInstallPath();
+            String delAppPath = MessageFormat.format(SshCommandConstants.DEL_FILE, installDataPath);
+            log.info("delete app path : {}", delAppPath);
+            String delTmpPath = MessageFormat.format(SshCommandConstants.DEL_FILE,
+                    installContext.getEnterpriseInstallConfig().getTmpPath());
+            log.info("delete tmp path : {}", delTmpPath);
+            String delOmPath = MessageFormat.format(SshCommandConstants.DEL_FILE,
+                    installContext.getEnterpriseInstallConfig().getOmToolsPath());
+            log.info("delete om path : {}", delOmPath);
+            delCmd = delInstallPath + " || echo \"delInstallPath failed\"; "
+                    + delAppPath + " || echo \"delAppPath failed\"; "
+                    + delTmpPath + " || echo \"delTmpPath failed\"; "
+                    + delOmPath + " || echo \"delOmPath failed\"; ";
+            if (installContext.getEnterpriseInstallConfig().getDatabaseKernelArch() ==
+                    DatabaseKernelArch.SHARING_STORAGE) {
+                String dssHome = installContext.getEnterpriseInstallConfig().
+                        getSharingStorageInstallConfig().getDssHome();
+                String delDssHome = MessageFormat.format(SshCommandConstants.DEL_FILE, dssHome);
+                delCmd += delDssHome +  " || echo \"delDssHome failed\"; ";
+            }
+
+            EnterpriseInstallNodeConfig masterNodeConfig = installContext.getEnterpriseInstallConfig().
+                    getNodeConfigList()
+                    .stream().filter(nodeConfig -> nodeConfig.getClusterRole() == ClusterRoleEnum.MASTER)
+                    .findFirst().orElseThrow(() -> new OpsException("Master node information not found"));
+            String delDataPath = MessageFormat.format(SshCommandConstants.DEL_FILE, masterNodeConfig.getDataPath());
+            delCmd += delDataPath +  " || echo \"delDataPath failed\"; ";
+            if (installContext.getEnterpriseInstallConfig().getIsInstallCM()) {
+                String delCmPath = MessageFormat.format(SshCommandConstants.DEL_FILE, masterNodeConfig.getCmDataPath());
+                delCmd += delCmPath +  " || echo \"delCmPath failed\"; ";
+
+            }
+            return delCmd;
+        } catch (OpsException e) {
+            log.error("delete cmd : {}", delCmd);
+            return delCmd;
+        }
+    }
+
+    private void cleanResource(InstallContext installContext) {
+        String delCmd = prepareCleanClusterDir(installContext);
+        for (HostInfoHolder hostInfoHolder : installContext.getHostInfoHolders()) {
+            OpsHostEntity hostEntity = hostInfoHolder.getHostEntity();
+            Session currentRoot = loginWithUser(jschUtil, encryptionUtils,
+                    installContext.getHostInfoHolders(), true, hostEntity.getHostId(), null);
+            try {
+                JschResult jschResult = jschUtil.executeCommand(delCmd, currentRoot);
+                if (0 != jschResult.getExitCode()) {
+                    log.error("remove install path failed, exit code: {}, error message: {}",
+                            jschResult.getExitCode(),
+                            jschResult.getResult());
+                }
+
+            } catch (OpsException | IOException | InterruptedException e) {
+                log.error("remove install path failed：", e);
+            }
+
+            // remove env file
+            String delEnvFile = MessageFormat.format(SshCommandConstants.DEL_FILE, installContext.getEnvPath());
+            try {
+                JschResult jschResult = jschUtil.executeCommand(delEnvFile, currentRoot);
+                if (0 != jschResult.getExitCode()) {
+                    log.error("remove env file failed, exit code: {}, error message: {}", jschResult.getExitCode(),
+                            jschResult.getResult());
+                }
+            } catch (OpsException | IOException | InterruptedException e) {
+                log.error("remove env file failed：", e);
+            }
+            currentRoot.disconnect();
+        }
+        log.error("clean resource success");
     }
 
     private void removeSoftLinkAll(UnInstallContext unInstallContext) {
