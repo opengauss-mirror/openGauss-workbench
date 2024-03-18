@@ -140,8 +140,10 @@
     nextRunDate: [
       {
         required: true,
-        message: t('rules.empty', [t('job.dialog.nextRunDate')]),
         trigger: 'change',
+        validator: (rule, value, callback) => {
+          value ? callback() : callback(new Error(t('rules.empty', [t('job.dialog.nextRunDate')])));
+        },
       },
     ],
   });
@@ -154,7 +156,7 @@
 
   const handleOpen = async () => {
     if (props.type == 'create') {
-      form.databaseUuid = availDatabaseList.value.find((item) => item.uuid == props.uuid)?.uuid;
+      form.databaseUuid = availDatabaseList.value.find((item) => item.uuid == props.uuid)?.uuid; // set default database
     }
     if (props.type == 'edit') {
       try {
@@ -191,7 +193,7 @@
             await createJobApi(params);
           } else {
             const params = {
-              uuid: form.databaseUuid,
+              uuid: props.uuid,
               jobId: props.jobId,
               jobContent: editorRef.value.getValue(),
               nextRunDate: form.nextRunDate,
