@@ -155,6 +155,7 @@ public class CollectTemplateNodeServiceImpl
         CollectTemplateDO newTemplate = new CollectTemplateDO();
         newTemplate.setName("Template for Node " + setNodeTemplateDirectDTO.getNodeId());
         collectTemplateMapper.insert(newTemplate);
+        List<CollectTemplateMetricsDO> toInsertMetrics = new ArrayList<>();
         setNodeTemplateDirectDTO.getDetails().forEach(z -> {
             if (StrUtil.isBlank(z.getInterval())) {
                 return;
@@ -164,8 +165,11 @@ public class CollectTemplateNodeServiceImpl
             newTemplateMetrics.setMetricsKey(z.getMetricKey());
             newTemplateMetrics.setInterval(z.getInterval());
             newTemplateMetrics.setIsEnable(z.getIsEnable());
-            collectTemplateMetricsMapper.insert(newTemplateMetrics);
+            toInsertMetrics.add(newTemplateMetrics);
         });
+        if(!toInsertMetrics.isEmpty()){
+            collectTemplateMetricsMapper.insertBatchTemplateMetrics(toInsertMetrics);
+        }
         return newTemplate.getId();
     }
 
