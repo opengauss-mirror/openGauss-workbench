@@ -130,7 +130,7 @@
     <CreateJobDialog
       v-model="visibleCreate"
       :type="dialogType"
-      :uuid="uuid"
+      :uuid="targetUuid"
       :jobId="targetJobId"
       :rootId="rootId"
       @success="getList"
@@ -156,6 +156,8 @@
   const visibleCreate = ref(false);
   const rootId = route.params.rootId as string;
   const uuid = computed(() => AppStore.getConnectionOneAvailableUuid(rootId));
+  const availDatabaseList = computed(() => AppStore.getConnectedDatabaseByRootId(rootId));
+  const targetUuid = ref('');
   const targetJobId = ref('');
   const dialogType = ref<'create' | 'edit'>('create');
   const statusMap = computed(() => ({
@@ -199,6 +201,10 @@
   };
 
   const handleEdit = (row) => {
+    const databaseUuid = availDatabaseList.value.find(
+      (item) => item.name == row.databaseName,
+    )?.uuid;
+    targetUuid.value = databaseUuid || uuid.value;
     targetJobId.value = row.jobId;
     dialogType.value = 'edit';
     visibleCreate.value = true;
@@ -208,13 +214,17 @@
     if (!uuid.value) {
       return ElMessage.error(t('message.noConnectionAvailable'));
     }
+    targetUuid.value = uuid.value;
     visibleCreate.value = true;
     dialogType.value = 'create';
   };
   const handleRemove = (row) => {
     ElMessageBox.confirm(t('message.willDelete', { name: row.jobId })).then(async () => {
+      const databaseUuid = availDatabaseList.value.find(
+        (item) => item.name == row.databaseName,
+      )?.uuid;
       await deleteJobApi({
-        uuid: uuid.value,
+        uuid: databaseUuid || uuid.value,
         jobId: row.jobId,
       });
       ElMessage.success(t('message.deleteSuccess'));
@@ -223,8 +233,11 @@
   };
   const handleEnable = (row) => {
     ElMessageBox.confirm(t('message.willEnable', { name: row.jobId })).then(async () => {
+      const databaseUuid = availDatabaseList.value.find(
+        (item) => item.name == row.databaseName,
+      )?.uuid;
       await setEnableJobApi({
-        uuid: uuid.value,
+        uuid: databaseUuid || uuid.value,
         jobId: row.jobId,
       });
       ElMessage.success(t('message.enabledSuccess'));
@@ -233,8 +246,11 @@
   };
   const handleDisable = (row) => {
     ElMessageBox.confirm(t('message.willDisable', { name: row.jobId })).then(async () => {
+      const databaseUuid = availDatabaseList.value.find(
+        (item) => item.name == row.databaseName,
+      )?.uuid;
       await setDisableJobApi({
-        uuid: uuid.value,
+        uuid: databaseUuid || uuid.value,
         jobId: row.jobId,
       });
       ElMessage.success(t('message.disabledSuccess'));
