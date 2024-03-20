@@ -65,6 +65,19 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.nctigba.observability.log.constants.CommonConstants.DIRECTORY_IS_EMPTY;
+import static com.nctigba.observability.log.constants.CommonConstants.DIRECTORY_IS_EXIST;
+import static com.nctigba.observability.log.constants.CommonConstants.FILE_IS_EXIST;
+import static com.nctigba.observability.log.constants.CommonConstants.MAX_MAP_COUNT;
+import static com.nctigba.observability.log.constants.CommonConstants.MILLISECOND;
+import static com.nctigba.observability.log.constants.CommonConstants.MKDIR_FILE;
+import static com.nctigba.observability.log.constants.CommonConstants.MONITOR_CYCLE;
+import static com.nctigba.observability.log.constants.CommonConstants.PORT_IS_EXIST;
+import static com.nctigba.observability.log.constants.CommonConstants.PORT_PID;
+import static com.nctigba.observability.log.constants.CommonConstants.RM_FILE;
+import static com.nctigba.observability.log.constants.CommonConstants.TIMEOUT;
+import static com.nctigba.observability.log.constants.CommonConstants.U_LIMIT;
+
 /**
  * ElasticsearchService
  *
@@ -93,7 +106,9 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
      * Es SRC
      */
     public static final String SRC = "elasticsearch-" + VERSION;
-    private static final long MONITOR_CYCLE = 60L;
+    private static final String STOP_ELASTICSEARCH = "cd %s && sh run_elasticsearch.sh stop";
+    private static final String START_ELASTICSEARCH = "cd %s && sh run_elasticsearch.sh start";
+    private static final String CHECK_ELASTICSEARCH = "cd %s && sh run_elasticsearch.sh status";
 
     @Autowired
     private ResourceLoader loader;
@@ -143,27 +158,26 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
             try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
                     installDTO.getUsername(),
                     encryptionUtils.decrypt(user.getPassword()))) {
-                String message = session.execute(
-                        "netstat -tuln | grep -q " + env.getPort() + " && echo 'true' || echo 'false'");
+                String message = session.execute(String.format(PORT_IS_EXIST, env.getPort()));
                 if (message.contains("true")) {
                     throw new CustomException("port is exists");
                 }
-                String installPath = session.execute("[ -e " + path + " ] && echo 'true' || echo 'false'");
+                String installPath = session.execute(String.format(DIRECTORY_IS_EXIST, path));
                 if (installPath.contains("false")) {
-                    session.execute("mkdir -p " + path);
+                    session.execute(String.format(MKDIR_FILE, path));
                 } else {
-                    String fileIsEmpty = session.execute("[ ! -z " + path + " ] && echo 'true' || echo 'false'");
-                    if (fileIsEmpty.contains("false")) {
+                    String fileIsEmpty = session.execute(String.format(DIRECTORY_IS_EMPTY, path));
+                    if (fileIsEmpty.startsWith("/")) {
                         throw new CustomException("The installation folder is not empty!");
                     }
                 }
-                var vm = session.execute("/usr/sbin/sysctl -n vm.max_map_count");
+                var vm = session.execute(MAX_MAP_COUNT);
                 if (NumberUtil.parseInt(vm) < 262144) {
                     throw new CustomException(
                             "please set vm.max_map_count to upper than 262144, command:echo vm.max_map_count = 262144 "
                                     + ">> /etc/sysctl.conf &&sysctl -p");
                 }
-                String configCheck = session.execute("ulimit -n");
+                String configCheck = session.execute(U_LIMIT);
                 if (NumberUtil.parseInt(configCheck) < 65535) {
                     throw new CustomException(
                             "please set max file descriptors increase to at least [65535],command:echo * soft nofile "
@@ -185,8 +199,7 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
                 if (pkg == null) {
                     isDownload = true;
                 } else {
-                    String fileIsExists = session.execute(
-                            "[ -f " + pkg.getPath() + " ] && echo 'true' || echo 'false'");
+                    String fileIsExists = session.execute(String.format(FILE_IS_EXIST, pkg.getPath()));
                     if (fileIsExists.contains("false")) {
                         isDownload = true;
                     }
@@ -228,7 +241,7 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
                                 + "xpack.security.http.ssl.enabled: false" + System.lineSeparator()
                                 + "xpack.security.transport.ssl.enabled: false", elasticConfigFile);
                 // @formatter:on
-                session.execute("mkdir -p " + path + SRC + "/config");
+                session.execute(String.format(MKDIR_FILE, path + SRC + "/config"));
                 session.upload(elasticConfigFile.getAbsolutePath(), path + SRC + "/config/elasticsearch.yml");
                 Files.delete(elasticConfigFile.toPath());
                 // jvm config
@@ -276,28 +289,29 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
                 new Step("elastic.uninstall.step4"),
                 new Step("elastic.uninstall.step5"));
         // @formatter:on
+        // step1
         var curr = 0;
         try {
-            curr = nextStep(wsSession, steps, curr);
             var env = envMapper.selectById(id);
             if (env == null) {
                 throw new CustomException("id not found");
             }
-            curr = nextStep(wsSession, steps, curr);
             OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
             if (hostEntity == null) {
                 throw new CustomException("host not found");
             }
             env.setHost(hostEntity);
-            uninstallElasticsearch(env);
+            // step2
             curr = nextStep(wsSession, steps, curr);
-            AgentExceptionVO check = checkPidStatus(env);
-            if (check.isStatus()) {
-                throw new CustomException("pid cannot be killed");
-            }
+            uninstallElasticsearch(env);
+            // step3
+            curr = nextStep(wsSession, steps, curr);
             clearInstallFolder(env);
+            // step4
+            curr = nextStep(wsSession, steps, curr);
             envMapper.deleteById(id);
             provider.clear();
+            // step5
             sendMsg(wsSession, steps, curr, status.DONE);
         } catch (Exception e) {
             steps.get(curr).setState(status.ERROR).add(e.getMessage());
@@ -328,15 +342,22 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
         List<AgentStatusVO> list = envMapper.selectStatusByType(InstallType.ELASTICSEARCH.name());
         list.forEach(f -> {
             String status = f.getStatus();
-            boolean isStop = AgentStatusEnum.MANUAL_STOP.getStatus().equals(status);
-            boolean isRunning =
-                    AgentStatusEnum.STARTING.getStatus().equals(status) || AgentStatusEnum.STOPPING.getStatus().equals(
-                            status);
-            boolean isRunTimeout = isRunning
-                    && new Date().getTime() - f.getUpdateTime().getTime() > 3 * MONITOR_CYCLE * 1000L;
-            boolean isTimeout = new Date().getTime() - f.getUpdateTime().getTime() > MONITOR_CYCLE * 1000L;
-            if (StrUtil.isBlank(status) || (!isStop && !isRunTimeout && isTimeout)) {
+            Date updateTime = f.getUpdateTime();
+            if (StrUtil.isBlank(status) || updateTime == null) {
                 f.setStatus(AgentStatusEnum.UNKNOWN.getStatus());
+            } else {
+                boolean isStop = AgentStatusEnum.MANUAL_STOP.getStatus().equals(status);
+                boolean isRunning =
+                        AgentStatusEnum.STARTING.getStatus().equals(status)
+                                || AgentStatusEnum.STOPPING.getStatus().equals(
+                                status);
+                boolean isRunTimeout = isRunning
+                        && new Date().getTime() - f.getUpdateTime().getTime() > TIMEOUT * MONITOR_CYCLE * MILLISECOND;
+                boolean isTimeout = new Date().getTime() - f.getUpdateTime().getTime() > MONITOR_CYCLE * MILLISECOND;
+                boolean isNormalTimeout = !isStop && !isRunning && isTimeout;
+                if (isNormalTimeout || isRunTimeout) {
+                    f.setStatus(AgentStatusEnum.UNKNOWN.getStatus());
+                }
             }
         });
         return list;
@@ -358,7 +379,8 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
             if (env.getUpdateTime() == null) {
                 env.setUpdateTime(new Date());
             }
-            boolean isTimeout = new Date().getTime() - env.getUpdateTime().getTime() > 3 * MONITOR_CYCLE * 1000L;
+            boolean isTimeout =
+                    new Date().getTime() - env.getUpdateTime().getTime() > TIMEOUT * MONITOR_CYCLE * MILLISECOND;
             boolean isDuring =
                     (AgentStatusEnum.STARTING.getStatus().equals(status) || AgentStatusEnum.STOPPING.getStatus().equals(
                             status)) && !isTimeout;
@@ -369,7 +391,6 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
             AgentExceptionVO check = checkPidStatus(env);
             if (!check.isStatus()) {
                 startElasticsearch(env);
-                continue;
             }
             if (getHealthStatus(env)) {
                 status = AgentStatusEnum.NORMAL.getStatus();
@@ -385,7 +406,7 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
         try (SshSession session = connect(env);
              InputStream in = loader.getResource("run_elasticsearch.sh").getInputStream()) {
             session.upload(in, env.getPath() + "/run_elasticsearch.sh");
-            String pid = session.execute("source /etc/profile && lsof -ti :" + env.getPort());
+            String pid = session.execute(String.format(PORT_PID, env.getPort()));
             if (pid != null && !"".equals(pid)) {
                 File pidFile = File.createTempFile("elasticsearch", ".pid");
                 FileUtil.appendUtf8String(pid, pidFile);
@@ -422,6 +443,8 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
         if (!check.isStatus()) {
             if (check.getExceptionInfo().contains("No such file or directory")) {
                 killPid(env);
+                env.setEnvStatus(AgentStatusEnum.MANUAL_STOP.getStatus());
+                envMapper.updateById(env);
                 return;
             } else {
                 env.setEnvStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus());
@@ -467,7 +490,7 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
 
     private void killPid(NctigbaEnvDO env) {
         try (SshSession session = connect(env)) {
-            var pid = session.execute(command.PS.parse("elasticsearch"));
+            String pid = session.execute(String.format(PORT_PID, env.getPort()));
             if (StrUtil.isNotBlank(pid) && NumberUtil.isLong(pid)) {
                 session.execute(command.KILL.parse(pid));
             }
@@ -479,8 +502,7 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
     private AgentExceptionVO checkPidStatus(NctigbaEnvDO env) {
         AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
         try (SshSession session = connect(env)) {
-            String cd = "cd " + env.getPath() + " && ";
-            String message = session.execute(cd + " sh run_elasticsearch.sh status");
+            String message = session.execute(String.format(CHECK_ELASTICSEARCH, env.getPath()));
             agentExceptionVO.setAgentStatus(message.contains("Elasticsearch is running with PID"), message);
         } catch (IOException | RuntimeException e) {
             agentExceptionVO.setAgentStatus(false, "exec failed:" + e.getMessage());
@@ -489,16 +511,10 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
     }
 
     private boolean getHealthStatus(NctigbaEnvDO env) {
-        for (int i = 0; i < 10; i++) {
-            ThreadUtil.sleep(1000L);
-            try {
-                HttpUtil.get("http://" + env.getHost().getPublicIp() + ":" + env.getPort());
-                break;
-            } catch (Exception e) {
-                if (i == 9) {
-                    return false;
-                }
-            }
+        try {
+            HttpUtil.get("http://" + env.getHost().getPublicIp() + ":" + env.getPort());
+        } catch (Exception e) {
+            return false;
         }
         return true;
     }
@@ -524,12 +540,11 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
     private AgentExceptionVO checkRunningEnvironment(NctigbaEnvDO env) {
         AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
         try (SshSession session = connect(env)) {
-            String message = session.execute(
-                    "netstat -tuln | grep -q " + env.getPort() + " && echo 'true' || echo 'false'");
+            String message = session.execute(String.format(PORT_IS_EXIST, env.getPort()));
             if (message.contains("true")) {
                 return agentExceptionVO.setAgentStatus(false, "port is exists!");
             }
-            String pkgPath = session.execute("[ -e " + env.getPath() + " ] && echo 'true' || echo 'false'");
+            String pkgPath = session.execute(String.format(DIRECTORY_IS_EXIST, env.getPath()));
             if (pkgPath.contains("false")) {
                 return agentExceptionVO.setAgentStatus(false, "package is not exists!");
             }
@@ -543,8 +558,7 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
     private AgentExceptionVO execStartCmd(NctigbaEnvDO env) {
         AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
         try (SshSession session = connect(env)) {
-            String cd = "cd " + env.getPath() + " && ";
-            session.executeNoWait(cd + " sh run_elasticsearch.sh start");
+            session.executeNoWait(String.format(START_ELASTICSEARCH, env.getPath()));
         } catch (IOException | RuntimeException e) {
             agentExceptionVO.setAgentStatus(false, "exec failed:" + e.getMessage());
             return agentExceptionVO;
@@ -556,8 +570,7 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
     private AgentExceptionVO execStopCmd(NctigbaEnvDO env) {
         AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
         try (SshSession session = connect(env)) {
-            String cd = "cd " + env.getPath() + " && ";
-            session.execute(cd + "sh run_elasticsearch.sh stop");
+            session.execute(String.format(STOP_ELASTICSEARCH, env.getPath()));
         } catch (IOException | RuntimeException e) {
             agentExceptionVO.setAgentStatus(false, "exec failed:" + e.getMessage());
             return agentExceptionVO;
@@ -592,10 +605,11 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
 
     private void clearInstallFolder(NctigbaEnvDO env) {
         try (SshSession session = connect(env)) {
-            String pkgPath = session.execute("[ -e " + env.getPath() + " ] && echo 'true' || echo 'false'");
+            int index = env.getPath().lastIndexOf("/");
+            String path = env.getPath().substring(0, index);
+            String pkgPath = session.execute(String.format(DIRECTORY_IS_EXIST, path));
             if (env.getPath() != null && !pkgPath.contains("false")) {
-                String cd = "cd " + env.getPath() + " && ";
-                session.execute(cd + "rm -rf " + env.getPath());
+                session.execute(String.format(RM_FILE, path));
             }
         } catch (IOException e) {
             throw new CustomException(e.getMessage());

@@ -34,6 +34,7 @@ import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.util.ObjectBuilder;
 import com.nctigba.observability.log.config.ElasticsearchProvider;
+import com.nctigba.observability.log.constants.CommonConstants;
 import com.nctigba.observability.log.model.query.EsSearchQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -397,6 +398,6 @@ public class EsLogSearchUtils {
      */
     public Function<Highlight.Builder, ObjectBuilder<Highlight>> highlight() {
         return f -> f.fields(
-                "message", m -> m.preTags("<span style=\"background-color: yellow\">").postTags("</span>"));
+                "message", m -> m.preTags(CommonConstants.PRE_TAGS).postTags(CommonConstants.POST_TAGS));
     }
 }

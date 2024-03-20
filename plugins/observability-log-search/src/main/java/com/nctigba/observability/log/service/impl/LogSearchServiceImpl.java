@@ -231,17 +231,12 @@ public class LogSearchServiceImpl implements LogSearchService {
                         if (!CollectionUtils.isEmpty(highlightData) && !CollectionUtils.isEmpty(
                                 highlightData.get(CommonConstants.MESSAGE))) {
                             List<String> data = highlightData.get(CommonConstants.MESSAGE);
-                            String highlightStr = String.join("", data);
-                            String[] highlights = highlightStr.split("<span style=\"background-color: yellow\">");
                             String messageStr = message.toString();
-                            for (String s : highlights) {
-                                if (!s.contains("</span>")) {
-                                    continue;
-                                }
-                                String targetStr = s.substring(0, s.indexOf("</span>"));
-                                messageStr = messageStr.replace(
-                                        targetStr,
-                                        "<span style=\"background-color: yellow\">" + targetStr + "</span>");
+                            for (String highlightStr : data) {
+                                String targetStr = highlightStr.replace(CommonConstants.PRE_TAGS, "")
+                                        .replace(CommonConstants.POST_TAGS, "");
+                                messageStr = messageStr.replace(targetStr, highlightStr);
+
                             }
                             logDetailInfoDTO.setLogData(messageStr);
                         } else {

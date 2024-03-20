@@ -67,6 +67,20 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.nctigba.observability.log.constants.CommonConstants.CP_FILE;
+import static com.nctigba.observability.log.constants.CommonConstants.DIRECTORY_IS_EMPTY;
+import static com.nctigba.observability.log.constants.CommonConstants.DIRECTORY_IS_EXIST;
+import static com.nctigba.observability.log.constants.CommonConstants.FILEBEAT_HEALTH_STATUS;
+import static com.nctigba.observability.log.constants.CommonConstants.FILE_IS_EXIST;
+import static com.nctigba.observability.log.constants.CommonConstants.MILLISECOND;
+import static com.nctigba.observability.log.constants.CommonConstants.MKDIR_FILE;
+import static com.nctigba.observability.log.constants.CommonConstants.MONITOR_CYCLE;
+import static com.nctigba.observability.log.constants.CommonConstants.PID_PATH;
+import static com.nctigba.observability.log.constants.CommonConstants.RM_FILE;
+import static com.nctigba.observability.log.constants.CommonConstants.RM_F_FILE;
+import static com.nctigba.observability.log.constants.CommonConstants.TAR_XVF_FILE;
+import static com.nctigba.observability.log.constants.CommonConstants.TIMEOUT;
+
 /**
  * FilebeatService
  *
@@ -85,7 +99,11 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
      * Filebeat file name
      */
     public static final String NAME = "filebeat-8.3.3-linux-";
-    private static final long MONITOR_CYCLE = 60L;
+    private static final String STOP_FILEBEAT = "cd %s && sh run_filebeat.sh stop";
+    private static final String START_FILEBEAT = "cd %s && sh run_filebeat.sh start";
+    private static final String CHECK_FILEBEAT = "cd %s && sh run_filebeat.sh status";
+    private static final String CONF_FILE_NAME = "filebeat_conf";
+    private static final String FILE_TYPE = ".tar.gz";
 
     @Autowired
     @AutowiredType(Type.PLUGIN_MAIN)
@@ -153,11 +171,11 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
             }
             try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
                     user.getUsername(), encryptionUtils.decrypt(user.getPassword()))) {
-                String installPath = session.execute("[ -e " + path + " ] && echo 'true' || echo 'false'");
+                String installPath = session.execute(String.format(DIRECTORY_IS_EXIST, path));
                 if (installPath.contains("false")) {
-                    session.execute("mkdir -p " + path);
+                    session.execute(String.format(MKDIR_FILE, path));
                 } else {
-                    String fileIsEmpty = session.execute("[ ! -z " + path + " ] && echo 'true' || echo 'false'");
+                    String fileIsEmpty = session.execute(String.format(DIRECTORY_IS_EMPTY, path));
                     if (fileIsEmpty.contains("false")) {
                         throw new CustomException("The installation folder is not empty!");
                     }
@@ -192,8 +210,7 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                 if (pkg == null) {
                     isDownload = true;
                 } else {
-                    String fileIsExists = session.execute(
-                            "[ -f " + pkg.getPath() + " ] && echo 'true' || echo 'false'");
+                    String fileIsExists = session.execute(String.format(FILE_IS_EXIST, pkg.getPath()));
                     if (fileIsExists.contains("false")) {
                         isDownload = true;
                     }
@@ -215,18 +232,18 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                     session.upload(in, path + name + "/run_filebeat.sh");
                 }
                 // filebeat_conf
-                File f = File.createTempFile("filebeat_conf", ".tar.gz");
-                try (var in = loader.getResource("filebeat_conf.tar.gz").getInputStream();
+                File f = File.createTempFile(CONF_FILE_NAME, FILE_TYPE);
+                try (var in = loader.getResource(CONF_FILE_NAME + FILE_TYPE).getInputStream();
                      var out = new FileOutputStream(f)) {
                     IoUtil.copy(in, out);
                 }
-                session.upload(f.getCanonicalPath(), path + "filebeat_conf.tar.gz");
+                session.upload(f.getCanonicalPath(), path + CONF_FILE_NAME + FILE_TYPE);
                 Files.delete(f.toPath());
-                session.execute("cd " + path + " && tar -xvf filebeat_conf.tar.gz");
+                session.execute("cd " + path + " && " + String.format(TAR_XVF_FILE, CONF_FILE_NAME + FILE_TYPE));
                 var esHost = hostFacade.getById(esEnv.getHostid());
                 var cluster = clusterManager.getOpsClusterByNodeId(nodeId);
                 // @formatter:off
-                session.execute("cd " + path + "filebeat_conf && sh conf.sh"
+                session.execute("cd " + path + CONF_FILE_NAME + " && sh conf.sh"
                         + " --eshost " + esHost.getPublicIp() + ":" + esEnv.getPort()
                         + " --nodeid " + opsClusterNodeEntity.getClusterNodeId()
                         + " --clusterid " + cluster.getClusterId()
@@ -246,10 +263,9 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                         + (StrUtil.isNotBlank(obj.getStr("cmLogPath")) ? " --cmLogPath "
                         + StrUtil.removeSuffix(obj.getStr("cmLogPath"), "/") : ""));
                 // @formatter:on
-                session.execute("cp -fr " + path + "filebeat_conf/* " + path + name + "/");
-                session.execute("rm -rf " + path + "filebeat_conf");
-                session.execute("rm -f " + path + "filebeat_conf.tar.gz");
-
+                session.execute(String.format(CP_FILE, path + CONF_FILE_NAME + "/*", path + name + "/"));
+                session.execute(String.format(RM_FILE, path + CONF_FILE_NAME));
+                session.execute(String.format(RM_F_FILE, path + CONF_FILE_NAME + FILE_TYPE));
             }
             envMapper.insert(env);
             curr = nextStep(wsSession, steps, curr);
@@ -289,9 +305,8 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                 new Step("filebeat.uninstall.step5"));
         // @formatter:on
         var curr = 0;
-
+        // step1
         try {
-            curr = nextStep(wsSession, steps, curr);
             var node = clusterManager.getOpsNodeById(nodeId);
             var env = envMapper.selectOne(
                     Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, InstallType.FILEBEAT)
@@ -299,16 +314,21 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
             if (env == null) {
                 throw new CustomException("filebeat not found");
             }
-            curr = nextStep(wsSession, steps, curr);
             OpsHostEntity hostEntity = hostFacade.getById(node.getHostId());
             if (hostEntity == null) {
                 throw new CustomException("host not found");
             }
             env.setHost(hostEntity);
+            // step2
+            curr = nextStep(wsSession, steps, curr);
             uninstallFilebeat(env);
+            // step3
             curr = nextStep(wsSession, steps, curr);
             clearInstallFolder(env);
+            // step4
+            curr = nextStep(wsSession, steps, curr);
             envMapper.deleteById(env);
+            // step5
             sendMsg(wsSession, steps, curr, status.DONE);
         } catch (Exception e) {
             steps.get(curr).setState(status.ERROR).add(e.getMessage());
@@ -323,10 +343,11 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
 
     private void clearInstallFolder(NctigbaEnvDO env) {
         try (SshSession session = connect(env)) {
-            String pkgName = session.execute("find " + env.getPath());
-            if (env.getPath() != null && !pkgName.contains("No such file or directory")) {
-                String cd = "cd " + env.getPath() + " && ";
-                session.execute(cd + "rm -rf " + env.getPath());
+            int index = env.getPath().lastIndexOf("/");
+            String path = env.getPath().substring(0, index);
+            String pkgPath = session.execute(String.format(DIRECTORY_IS_EXIST, path));
+            if (env.getPath() != null && !pkgPath.contains("false")) {
+                session.execute(String.format(RM_FILE, path));
             }
         } catch (IOException e) {
             throw new CustomException(e.getMessage());
@@ -386,6 +407,8 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
         if (!check.isStatus()) {
             if (check.getExceptionInfo().contains("No such file or directory")) {
                 killPid(env);
+                env.setEnvStatus(AgentStatusEnum.MANUAL_STOP.getStatus());
+                envMapper.updateById(env);
                 return;
             } else {
                 env.setEnvStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus());
@@ -431,15 +454,22 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
         List<AgentStatusVO> list = envMapper.selectStatusByType(InstallType.FILEBEAT.name());
         list.forEach(f -> {
             String status = f.getStatus();
-            boolean isStop = AgentStatusEnum.MANUAL_STOP.getStatus().equals(status);
-            boolean isRunning =
-                    AgentStatusEnum.STARTING.getStatus().equals(status) || AgentStatusEnum.STOPPING.getStatus().equals(
-                            status);
-            boolean isRunTimeout = isRunning
-                    && new Date().getTime() - f.getUpdateTime().getTime() > 3 * MONITOR_CYCLE * 1000L;
-            boolean isTimeout = new Date().getTime() - f.getUpdateTime().getTime() > MONITOR_CYCLE * 1000L;
-            if (StrUtil.isBlank(status) || (!isStop && !isRunTimeout && isTimeout)) {
+            Date updateTime = f.getUpdateTime();
+            if (StrUtil.isBlank(status) || updateTime == null) {
                 f.setStatus(AgentStatusEnum.UNKNOWN.getStatus());
+            } else {
+                boolean isStop = AgentStatusEnum.MANUAL_STOP.getStatus().equals(status);
+                boolean isRunning =
+                        AgentStatusEnum.STARTING.getStatus().equals(status)
+                                || AgentStatusEnum.STOPPING.getStatus().equals(
+                                status);
+                boolean isRunTimeout = isRunning
+                        && new Date().getTime() - f.getUpdateTime().getTime() > TIMEOUT * MONITOR_CYCLE * MILLISECOND;
+                boolean isTimeout = new Date().getTime() - f.getUpdateTime().getTime() > MONITOR_CYCLE * MILLISECOND;
+                boolean isNormalTimeout = !isStop && !isRunning && isTimeout;
+                if (isNormalTimeout || isRunTimeout) {
+                    f.setStatus(AgentStatusEnum.UNKNOWN.getStatus());
+                }
             }
         });
         return list;
@@ -461,7 +491,8 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
             if (env.getUpdateTime() == null) {
                 env.setUpdateTime(new Date());
             }
-            boolean isTimeout = new Date().getTime() - env.getUpdateTime().getTime() > 3 * MONITOR_CYCLE * 1000L;
+            boolean isTimeout =
+                    new Date().getTime() - env.getUpdateTime().getTime() > TIMEOUT * MONITOR_CYCLE * MILLISECOND;
             boolean isDuring =
                     (AgentStatusEnum.STARTING.getStatus().equals(status) || AgentStatusEnum.STOPPING.getStatus().equals(
                             status)) && !isTimeout;
@@ -472,7 +503,6 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
             AgentExceptionVO check = checkPidStatus(env);
             if (!check.isStatus()) {
                 startFilebeat(env);
-                continue;
             }
             if (getHealthStatus(env)) {
                 status = AgentStatusEnum.NORMAL.getStatus();
@@ -493,7 +523,7 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
             List<String> pidList = StrUtil.split(nodePid, '\n');
             String currentPid = null;
             for (String pid : pidList) {
-                var path = session.execute("ls -l /proc/" + pid + "|grep cwd|awk '{print $11}'");
+                var path = session.execute(String.format(PID_PATH, pid));
                 if (path.startsWith(env.getPath())) {
                     currentPid = pid;
                     break;
@@ -526,8 +556,7 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
     private AgentExceptionVO checkPidStatus(NctigbaEnvDO env) {
         AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
         try (SshSession session = connect(env)) {
-            String cd = "cd " + env.getPath() + " && ";
-            String message = session.execute(cd + " sh run_filebeat.sh status");
+            String message = session.execute(String.format(CHECK_FILEBEAT, env.getPath()));
             agentExceptionVO.setAgentStatus(message.contains("Filebeat is running with PID"), message);
         } catch (IOException | RuntimeException e) {
             agentExceptionVO.setAgentStatus(false, "exec failed:" + e.getMessage());
@@ -541,21 +570,17 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
     }
 
     private void checkHealthStatus(NctigbaEnvDO env) {
-        String cmd = "cd " + env.getPath()
-                + " && grep -qE \"Connection to backoff\\(elasticsearch\\"
-                + "(http://[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+:[0-9]+\\)\\) established\" filebeat.log "
-                + "&& echo \"true\" || echo \"false\" ";
         try (SshSession session = connect(env)) {
             for (int i = 0; i < 30; i++) {
                 ThreadUtil.sleep(10000L);
-                String testRun = session.execute(cmd);
+                String testRun = session.execute("cd " + env.getPath() + " && " + FILEBEAT_HEALTH_STATUS);
                 if (testRun.contains("true")) {
                     break;
                 } else {
                     if (i == 29) {
                         env.setEnvStatus(AgentStatusEnum.ERROR_PROGRAM_UNHEALTHY.getStatus());
                         envMapper.updateById(env);
-                        throw new CustomException("filebeat is not healthy:" + testRun + cmd);
+                        throw new CustomException("filebeat is not healthy:" + testRun + FILEBEAT_HEALTH_STATUS);
                     }
                 }
             }
@@ -571,7 +596,7 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
     private AgentExceptionVO checkRunningEnvironment(NctigbaEnvDO env) {
         AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
         try (SshSession session = connect(env)) {
-            String pkgPath = session.execute("[ -e " + env.getPath() + " ] && echo 'true' || echo 'false'");
+            String pkgPath = session.execute(String.format(DIRECTORY_IS_EXIST, env.getPath()));
             if (pkgPath.contains("false")) {
                 return agentExceptionVO.setAgentStatus(false, "package is not exists!");
             }
@@ -585,8 +610,7 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
     private AgentExceptionVO execStartCmd(NctigbaEnvDO env) {
         AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
         try (SshSession session = connect(env)) {
-            String cd = "cd " + env.getPath() + " && ";
-            session.executeNoWait(cd + " sh run_filebeat.sh start");
+            session.executeNoWait(String.format(START_FILEBEAT, env.getPath()));
         } catch (IOException | RuntimeException e) {
             agentExceptionVO.setAgentStatus(false, "exec failed:" + e.getMessage());
             return agentExceptionVO;
@@ -598,8 +622,7 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
     private AgentExceptionVO execStopCmd(NctigbaEnvDO env) {
         AgentExceptionVO agentExceptionVO = new AgentExceptionVO();
         try (SshSession session = connect(env)) {
-            String cd = "cd " + env.getPath() + " && ";
-            session.execute(cd + "sh run_filebeat.sh stop");
+            session.execute(String.format(STOP_FILEBEAT, env.getPath()));
         } catch (IOException | RuntimeException e) {
             agentExceptionVO.setAgentStatus(false, "exec failed:" + e.getMessage());
             return agentExceptionVO;

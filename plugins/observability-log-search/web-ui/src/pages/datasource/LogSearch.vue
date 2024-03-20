@@ -119,14 +119,17 @@
                         </el-table-column>
                         <el-table-column :label="$t('datasource.logSearchTable[3]')" header-align="center">
                             <template #default="scope">
-                                <span v-if="scope.row.logData && scope.row.logData.length > 300">
-                                    <el-popover width="700px" trigger="hover" :content="scope.row.logData" popper-class="sql-popover-tip">
+                                <span v-if="scope.row.logData && isOverLimit(scope.row.logData, 300)">
+                                    <el-popover width="700px" trigger="hover" popper-class="sql-popover-tip">
+                                        <template #default>
+                                            <span v-html="scope.row.logData"></span>
+                                        </template>
                                         <template #reference>
-                                            <span v-html="showHighLightWord(scope.row.logData.substr(0, 300)) + '...'"></span>
+                                            <span v-html="showLimitWord(scope.row.logData, 300) + '...'"></span>
                                         </template>
                                     </el-popover>
                                 </span>
-                                <span v-else v-html="showHighLightWord(scope.row.logData)"></span>
+                                <span v-else v-html="scope.row.logData"></span>
                             </template>
                         </el-table-column>
                         <el-table-column :label="$t('datasource.logSearchTable[4]')" header-align="center" prop="logClusterId" width="100" >
@@ -294,6 +297,51 @@ const showHighLightWord = (val: string) => {
     });
 };
 
+const isOverLimit = (words: string, maxLength: number) => {
+    if (!words || words.length <= maxLength) {
+        return false
+    }
+    const str = words.replace(/<span[^>]*>|<\/span>/g, '');
+    if (!str || str.length <= maxLength) {
+        return false
+    }
+    return true
+}
+
+const showLimitWord = (words: string, maxLength: number) => {
+    let result = '';
+    let count = 0;
+    let isInTag = false;
+    let isPre = false;
+    let n = words.length
+    for (let i = 0; i < n; i++) {
+        if (words[i] === '<') {
+            if (words[i+1] === 's' && words[i+2] === 'p' && words[i+3] === 'a' && words[i+4] === 'n') {
+                isInTag = true;
+                isPre = true;
+            }
+            if (words[i+1] === '/' && words[i+2] === 's' && words[i+3] === 'p' && words[i+4] === 'a' && words[i+5] === 'n' && words[i+6] === '>') {
+                isInTag = true;
+                isPre = false;
+            }
+        } else if (words[i] === '>') {
+            isInTag = false;
+        } else {
+            if (!isInTag) {
+                count++;
+            }
+        }
+        result += words[i];
+        if (count === maxLength) {
+            break;
+        }
+    }
+    if (isPre) {
+        result += '</span>'
+    }
+    return result
+}
+
 // cluster data
 type Rer =
     | [
@@ -370,9 +418,6 @@ const mouseLeave = (event: any) => {
 const showContextCount = ref<boolean>(false);
 const router = useRouter();
 const gotoNewLogSearch = () => {
-    formData.searchText = '';
-    formData.dateValue = [];
-    formData.contextCount = 20;
     if (process.env.mode === 'production') {
         window.$wujie?.props.methods.jump({
             name: `Static-pluginObservability-log-searchVemLog`,
@@ -388,6 +433,9 @@ const gotoNewLogSearch = () => {
             },
         });
     } else {
+        formData.searchText = '';
+        formData.dateValue = [];
+        formData.contextCount = 20;
         router.push({
             path: `/vem/log`,
             query: {
