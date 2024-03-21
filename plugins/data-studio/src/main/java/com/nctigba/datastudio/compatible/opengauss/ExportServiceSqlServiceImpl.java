@@ -792,7 +792,7 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
                         if (i != columnList.size() - 1) {
                             sb.append(COMMA);
                         } else {
-                            sb.append(RIGHT_BRACKET + SEMICOLON);
+                            sb.append(RIGHT_BRACKET + SEMICOLON).append(LF);
                         }
                     }
                 }

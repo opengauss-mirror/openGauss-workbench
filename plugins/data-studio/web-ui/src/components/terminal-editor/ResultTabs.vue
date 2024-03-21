@@ -64,7 +64,7 @@
           size="mini"
           border
           :empty-text="$t('common.noData')"
-          show-overflow
+          :show-overflow="isInFrame ? 'title' : 'tooltip'"
           :resizable-config="{ minWidth: 30 }"
           height="auto"
           :min-height="50"
@@ -82,7 +82,6 @@
             :field="col.key"
             :title="col.title"
             :min-width="col.width"
-            show-overflow
           ></vxe-column>
         </vxe-table>
       </div>
@@ -121,6 +120,7 @@
     set: (val) => emit('update:tabValue', val),
   });
   const isInHistory = computed(() => tabValue.value === 'history');
+  const isInFrame = ref(self !== parent);
 
   watchThrottled(
     isInHistory,

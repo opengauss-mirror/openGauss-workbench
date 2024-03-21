@@ -43,6 +43,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
@@ -779,6 +780,9 @@ public class DebugUtils {
         int count = 0;
         if (obj instanceof Long) {
             count = Math.toIntExact((Long) obj);
+        } else if (obj instanceof BigDecimal) {
+            BigDecimal bigDecimal = (BigDecimal) obj;
+            count = bigDecimal.intValue();
         }
         return count;
     }
