@@ -202,6 +202,7 @@
           functionMap: selections.map((item) => {
             return {
               oid: item.oid,
+              name: item.name,
               isPackage: item.isPackage,
             };
           }),

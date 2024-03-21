@@ -660,6 +660,8 @@
   };
 
   const handleStartDebug = () => {
+    tabList.value = [];
+    tabValue.value = 'home';
     // If you don't remember 'isRemenberNoAskOpenCoverage' , then reset isOpenCoverage every time you debug
     if (!isRemenberNoAskOpenCoverage.value) {
       isOpenCoverage = false;

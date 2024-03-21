@@ -661,7 +661,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
             } else if (request.getConType().equals("f")) {
                 partition.append(
                         String.format(FOREIGN_KEY_SQL, request.getConName(), request.getAttName(), request.getNspName(),
-                                request.getTbName(), request.getColName()));
+                                DebugUtils.needQuoteName(request.getTbName()), request.getColName()));
             } else if (request.getConType().equals("s")) {
                 partition.append(String.format(PARTIAL_CLUSTER_KEY_SQL, request.getConName(), request.getAttName()));
             }
