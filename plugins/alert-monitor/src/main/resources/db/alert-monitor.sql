@@ -772,6 +772,8 @@ insert into public.alert_rule_item_exp_src(id,rule_item_src_id,action,operate,li
 create_time) values(16,6,'normal','',null,
 'max(rate(agent_network_receive_bytes_total{instance=~"$'||'{instances}"}[2m]))) by (instance)/1024/1024',
 1,now()) ON DUPLICATE KEY UPDATE NOTHING;
+update public.alert_rule_item_exp_src set exp = 'max(rate(agent_network_receive_bytes_total{instance=~"$'||'{instances}"}[2m])) by (instance)/1024/1024'
+where id = 16;
 
 insert into public.alert_rule_item_src(id,name,unit,params,create_time) values (7,'networkTransmitRate',
 'MB/s','',now()) ON DUPLICATE KEY UPDATE NOTHING;
