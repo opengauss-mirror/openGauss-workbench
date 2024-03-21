@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.nctigba.observability.instance.model.vo.PgStatActivityVO;
+import com.nctigba.observability.instance.model.vo.StatementHistoryVO;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.stereotype.Service;
@@ -74,7 +76,7 @@ public class TopSQLService {
      * @return TopSQL list
      */
     @Ds("id")
-    public List<Map<String, Object>> topSQLList(TopSQLListQuery topSQLListReq) {
+    public List<StatementHistoryVO> topSQLList(TopSQLListQuery topSQLListReq) {
         topSqlListPreCheck();
         return topSqlMapper.historyTopsqlList(topSQLListReq);
     }
@@ -86,7 +88,7 @@ public class TopSQLService {
      * @return TopSQL list
      */
     @Ds
-    public List<Map<String, Object>> topSQLNow(String id) {
+    public List<PgStatActivityVO> topSQLNow(String id) {
         return topSqlMapper.currentTopsqlList();
     }
 

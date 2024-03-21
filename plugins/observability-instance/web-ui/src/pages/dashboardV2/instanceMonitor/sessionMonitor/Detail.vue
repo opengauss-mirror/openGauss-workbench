@@ -401,11 +401,7 @@ watch(
     if (sessionResultWrapper?.value?.code !== 200 && sessionResultWrapper?.value?.code !== '200') {
       tips.value = sessionResultWrapper?.value?.msg
     }
-
-    console.log('DEBUG: sessionResultWrapper', sessionResultWrapper)
-
-    let sessionResult = sessionResultWrapper?.value?.data
-    console.log('DEBUG: sessionResult', sessionResult)
+    let sessionResult = sessionResultWrapper?.value
 
     innerRefreshDoneTime.value = moment(new Date()).format('HH:mm:ss')
 

@@ -6,8 +6,9 @@ PORT="${port}"
 STORAGEDAYS="${storageDays}"
 
 start() {
-  nohup ./prometheus --config.file=prometheus.yml  --web.enable-lifecycle --web.listen-address=:$PORT --storage.tsdb.retention.time=$STORAGEDAYS > prometheus.log 2>&1 &
-  echo $! > $PID_FILE
+  ./prometheus --config.file=prometheus.yml  --web.enable-lifecycle --web.listen-address=:$PORT --storage.tsdb.retention.time=$STORAGEDAYS > prometheus.log 2>&1 &
+  prometheus_pid=$(ps aux | grep "config.file=prometheus.yml" | grep "web.listen-address=:$PORT" |grep "storage.tsdb.retention.time=$STORAGEDAYS" | grep -v grep | awk '{print $2}')
+  echo $prometheus_pid > $PID_FILE
   echo "Prometheus started."
 }
 

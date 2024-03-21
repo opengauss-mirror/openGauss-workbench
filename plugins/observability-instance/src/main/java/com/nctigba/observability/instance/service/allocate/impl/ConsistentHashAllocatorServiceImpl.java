@@ -45,22 +45,25 @@ import java.util.TreeMap;
  */
 @Service
 public class ConsistentHashAllocatorServiceImpl implements AllocatorService {
-    private SortedMap<Integer, AllocateServerDTO> alloctorMap = new TreeMap<>();
+    private ThreadLocal<SortedMap<Integer, AllocateServerDTO>> alloctorMapTL = new ThreadLocal<>();
 
     @Override
     public void init(List<AllocateServerDTO> allocators) {
         if (CollectionUtil.isEmpty(allocators)) {
             return;
         }
+        SortedMap<Integer, AllocateServerDTO> map = new TreeMap<>();
         for (AllocateServerDTO allocator : allocators) {
             String addr = allocator.getIp() + ":" + allocator.getPort();
             Integer hashcode = addr.hashCode();
-            alloctorMap.put(hashcode, allocator);
+            map.put(hashcode, allocator);
         }
+        alloctorMapTL.set(map);
     }
 
     @Override
     public String getAllocatorId(AllocateServerDTO recipient) {
+        SortedMap<Integer, AllocateServerDTO> alloctorMap = alloctorMapTL.get();
         if (CollectionUtil.isEmpty(alloctorMap)) {
             return "";
         }
@@ -90,6 +93,17 @@ public class ConsistentHashAllocatorServiceImpl implements AllocatorService {
             }
             map.get(id).add(server.getId());
         }
+        remove();
         return map;
+    }
+
+    /**
+     * remove
+     */
+    @Override
+    public void remove() {
+        if (CollectionUtil.isNotEmpty(alloctorMapTL.get())) {
+            alloctorMapTL.remove();
+        }
     }
 }

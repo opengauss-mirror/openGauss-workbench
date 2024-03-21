@@ -64,6 +64,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -362,8 +363,8 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrDO> {
             clusterOpsProviderManager.provider(clusterEntity.getVersion(), null)
                 .orElseThrow(() -> new OpsException(CommonConstants.CURRENT_VERSION_NOT_SUPPORT))
                 .enableWdrSnapshot(session, clusterEntity, opsClusterNodeEntities, WdrScopeEnum.CLUSTER, null);
-
-            String wdrPath = "/home/" + userEntity.getUsername();
+            String wdrPath = "/home/" + userEntity.getUsername() + "/wdr";
+            jschUtil.executeCommand("mkdir -p " + wdrPath, clusterEntity.getEnvPath(), session, null);
             String wdrName = "WDR-" + StrUtil.uuid() + ".html";
             doGenerate(wdrPath, wdrName, startId, endId, WdrScopeEnum.NODE, type, session, clusterEntity.getPort(),
                 clusterEntity.getEnvPath());
@@ -380,6 +381,8 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrDO> {
             opsWdrDO.setHostId(hostId);
             opsWdrDO.setNodeId(nodeEntity.getClusterNodeId());
             save(opsWdrDO);
+        } catch (IOException | InterruptedException e) {
+            throw new OpsException(e.getMessage());
         } finally {
             if (Objects.nonNull(session) && session.isConnected()) {
                 session.disconnect();
@@ -414,8 +417,8 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrDO> {
             clusterOpsProviderManager.provider(clusterEntity.getVersion(), null)
                 .orElseThrow(() -> new OpsException(CommonConstants.CURRENT_VERSION_NOT_SUPPORT))
                 .enableWdrSnapshot(session, clusterEntity, opsClusterNodeEntities, WdrScopeEnum.CLUSTER, null);
-
-            String wdrPath = "/home/" + userEntity.getUsername();
+            String wdrPath = "/home/" + userEntity.getUsername() + "/wdr";
+            jschUtil.executeCommand("mkdir -p " + wdrPath, clusterEntity.getEnvPath(), session, null);
             String wdrName = "WDR-" + StrUtil.uuid() + ".html";
             doGenerate(wdrPath, wdrName, startId, endId, WdrScopeEnum.CLUSTER, type, session, clusterEntity.getPort(),
                 clusterEntity.getEnvPath());
@@ -433,6 +436,8 @@ public class OpsWdrService extends ServiceImpl<OpsWdrMapper, OpsWdrDO> {
             opsWdrDO.setUserId(userEntity.getHostUserId());
             opsWdrDO.setNodeId(masterNodeEntity.getClusterNodeId());
             save(opsWdrDO);
+        } catch (IOException | InterruptedException e) {
+            throw new OpsException(e.getMessage());
         } finally {
             if (Objects.nonNull(session) && session.isConnected()) {
                 session.disconnect();

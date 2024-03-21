@@ -94,6 +94,8 @@ export default {
       transTotalQtyContent: 'Total number of transaction commits and rollbacks per second in the database',
       queryQtyContent: 'Amount of SQL data queried per second in the database workload',
     },
+    noneRole: 'none',
+    noneRoleName: 'None role',
   },
   clusterMonitor: {
     clusterMonitor: 'Cluster Monitor',
@@ -591,6 +593,8 @@ export default {
     installServerAlert: 'please install the second server first!',
     installedServerAlert: 'it is only allow to install a second server!',
     reinstallMainServerTip: 'Are you going to uninstall the main Prometheus first, then install it again, do you want to continue?',
+    uninstallSecondServerTip: 'Uninstalling will remove the entire directory of the server installation path, and historical data will also be cleared. Are you sure you want to continue?',
+    uninstallAgentTip: 'Uninstalling will remove the entire directory of the agent installation path. Are you sure you want to continue?',
     agentInfo: 'Agent Info',
     start: 'start',
     stop: 'stop',

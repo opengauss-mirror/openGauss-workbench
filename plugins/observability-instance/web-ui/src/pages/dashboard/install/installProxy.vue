@@ -32,11 +32,11 @@
               :initValue="formData.nodeId"
               autoSelectFirst
               notClearable
-              style="width: 200px; margin: 0 4px"
+              style="width: 300px; margin: 0 4px"
             />
           </el-form-item>
           <el-form-item :label="t('install.installUser')" prop="username" v-if="!editing || formData.type === 'PROMETHEUS'">
-            <el-select v-model="formData.username" style="width: 200px; margin: 0 4px" :disabled="editing">
+            <el-select v-model="formData.username" style="width: 300px; margin: 0 4px" :disabled="editing">
               <el-option
                 v-for="item in hostUserList"
                 :key="item.hostUserId"
@@ -46,14 +46,11 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item :label="t('install.rootPWD')" prop="rootPassword" v-if="formData.username === ROOT_USER">
-            <el-input v-model="formData.rootPassword" show-password style="width: 200px; margin: 0 4px" />
-          </el-form-item>
           <el-form-item :label="t('install.proxyPort')" prop="port">
             <el-input-number
               @click.stop="() => {}"
               class="left-align"
-              style="width: 200px; margin: 0 4px"
+              style="width: 300px; margin: 0 4px"
               v-model="formData.port"
               :min="0"
               :max="65535"
@@ -62,12 +59,12 @@
             </el-input-number>
           </el-form-item>
           <el-form-item :label="t('install.installPath')" prop="path">
-            <el-input v-model="formData.path" style="width: 200px; margin: 0 4px" :disabled="editing" />
+            <el-input v-model="formData.path" style="width: 300px; margin: 0 4px" :disabled="editing" />
           </el-form-item>
           <el-form-item :label="t('install.storageDays')" prop="storageDays" v-if="!editing || formData.type === 'PROMETHEUS'">
             <el-input
               v-model="formData.storageDays"
-              style="width: 200px; margin: 0 4px"
+              style="width: 300px; margin: 0 4px"
               @input="allNumber(formData.storageDays)"
             >
               <template #append>{{ t('install.storageDaysUnit') }}</template>
@@ -370,14 +367,14 @@ const onWebSocketMessage = (data: Array<any>) => {
 // action
 const back = () => {
   started.value = false
-  dialogWith.value = '400px'
+  dialogWith.value = '500px'
   ws.instance.close()
   installData.value = []
 }
 
 // list Data
 const installData = ref<Array<any>>([])
-const dialogWith = ref<string>('400px')
+const dialogWith = ref<string>('500px')
 const doingIndex = computed(() => {
   for (let index = 0; index < installData.value.length; index++) {
     const element = installData.value[index]

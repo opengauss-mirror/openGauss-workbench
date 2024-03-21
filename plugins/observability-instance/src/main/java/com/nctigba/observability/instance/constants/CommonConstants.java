@@ -68,4 +68,19 @@ public class CommonConstants {
      * status monitor cycle
      */
     public static final long MONITOR_CYCLE = 60L;
+
+    /**
+     * Check if the port exists
+     */
+    public static final String PORT_IS_EXIST = "source /etc/profile && lsof -ti :%s && echo 'true' || echo 'false'";
+
+    /**
+     * Get pid by port
+     */
+    public static final String PORT_PID = "netstat -tupln | grep ':%s\\s' | awk '{print $7}' | awk -F '/' '{print $1}'";
+
+    /**
+     * Check if the directory exists
+     */
+    public static final String DIRECTORY_IS_EXIST = "[ -e %s ] && echo 'true' || echo 'false'";
 }

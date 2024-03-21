@@ -126,6 +126,8 @@ export default {
       replayDelay: '回放延迟',
       searchNodeName: '搜索节点名称',
     },
+    noneRole: '无',
+    noneRoleName: '无角色',
   },
   instanceMonitor: {
     instanceMonitor: '实例监控',
@@ -582,6 +584,8 @@ export default {
     installServerAlert: '请先安装二级服务端！',
     installedServerAlert: '只能安装一个二级服务端',
     reinstallMainServerTip: '即将先卸载一级Prometheus,再安装一级Prometheus,是否继续？',
+    uninstallSecondServerTip: '卸载将删除服务端安装路径的整个目录，历史数据也会被清空，是否确认继续？',
+    uninstallAgentTip: '卸载将删除代理器安装路径的整个目录，是否确认继续？',
     agentInfo: '代理信息',
     start: '启动',
     stop: '停止',

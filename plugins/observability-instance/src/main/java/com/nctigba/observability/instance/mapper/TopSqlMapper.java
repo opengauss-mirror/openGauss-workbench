@@ -27,6 +27,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.nctigba.observability.instance.model.vo.PgStatActivityVO;
+import com.nctigba.observability.instance.model.vo.StatementHistoryVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.opengauss.util.PSQLException;
@@ -49,7 +51,7 @@ public interface TopSqlMapper {
             + "backend_start ,xact_start ,state_change ,waiting,enqueue,state ,resource_pool,query_id ,query ,"
             + "connection_info,trace_id from pg_stat_activity where query_start is not null and unique_sql_id != 0 "
             + "and duration != 0 order by (now() - query_start) desc limit 10")
-    List<Map<String, Object>> currentTopsqlList();
+    List<PgStatActivityVO> currentTopsqlList();
 
     /**
      * history top sql list
@@ -62,7 +64,7 @@ public interface TopSqlMapper {
             + "from dbe_perf.statement_history where debug_query_id != 0 "
             + "and finish_time >= #{startTimeTime} and finish_time <= #{finishTimeTime} order by ${orderField} desc,"
             + "execution_time desc,cpu_time desc,db_time desc limit 10")
-    List<Map<String, Object>> historyTopsqlList(TopSQLListQuery topSQLListReq);
+    List<StatementHistoryVO> historyTopsqlList(TopSQLListQuery topSQLListReq);
 
     /**
      * sql detail

@@ -118,7 +118,11 @@
               </el-table-column>
               <el-table-column prop="nodeName" :label="$t('clusterMonitor.detail.instance.nodeName')" />
               <el-table-column prop="localAddr" :label="$t('clusterMonitor.detail.instance.ipPort')" width="140" />
-              <el-table-column prop="role" :label="$t('clusterMonitor.detail.instance.role')" width="60" />
+              <el-table-column prop="role" :label="$t('clusterMonitor.detail.instance.role')" width="60">
+                <template #default="scope">
+                  <div align="center">{{scope.row.role ? scope.row.role : $t('clusterMonitor.noneRole')}}</div>
+                </template>
+              </el-table-column>
               <el-table-column
                 prop="nodeState.value"
                 :label="$t('clusterMonitor.detail.instance.nodeStatus')"
@@ -147,7 +151,7 @@
                   </div>
                 </template>
               </el-table-column>
-              <el-table-column prop="cmAgentState.value" label="CM_agent" width="80">
+              <el-table-column prop="cmAgentState.value" label="CM_agent" width="100">
                 <template #default="scope">
                   <div class="state-row">
                     <div class="state" :class="[scope.row.cmAgentState?.color?.toLowerCase()]"></div>
@@ -847,6 +851,9 @@ const drawTopology = () => {
       return obj.nodeId === nodeId
     })
     hoverNode.value = node
+    if (hoverNode.value && !hoverNode.value.role) {
+      hoverNode.value.role = t('clusterMonitor.noneRole')
+    }
     let nodePosition = network.getPositions([nodeId])[nodeId]
     let canvasX = nodePosition.x
     let canvasY = nodePosition.y
@@ -869,7 +876,7 @@ const getUrl = (nodeId: String) => {
   })
   if (!node) return
 
-  let nodeRole = node.role
+  let nodeRole = node.role ? node.role : t('clusterMonitor.noneRoleName')
   let cmServerStateColor = node.cmServerState.color.toLowerCase()
   let omMonitorStateColor = node.omMonitorState.color.toLowerCase()
   let cmAgentStateColor = node.cmAgentState.color.toLowerCase()
@@ -930,7 +937,7 @@ const getUrl = (nodeId: String) => {
     '      margin-right: 4px;' +
     '  }' +
     '  .point.green {' +
-    '    background: var(--green, #ffa53c);' +
+    '    background: var(--green, #37c461);' +
     '    box-shadow: 0px 1px 3px 0px #52c41a;' +
     '  }' +
     '  .point.yellow {' +

@@ -26,6 +26,7 @@ package com.nctigba.observability.instance.mapper;
 import java.util.List;
 import java.util.Map;
 
+import com.nctigba.observability.instance.model.vo.ThreadWaitStatusVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
@@ -114,7 +115,7 @@ public interface DbConfigMapper {
             + "coalesce(locktag_decode(locktag), ' ') tag from pg_stat_activity a "
             + "left join dbe_perf.THREAD_WAIT_STATUS s on a.sessionid = s.sessionid "
             + "where state = 'active' and a.pid <> pg_backend_pid()")
-    List<Map<String, Object>> waitEvents();
+    List<ThreadWaitStatusVO> waitEvents();
 
     /**
      * waitEvents total

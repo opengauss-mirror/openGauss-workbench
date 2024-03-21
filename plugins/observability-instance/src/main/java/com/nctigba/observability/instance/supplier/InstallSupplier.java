@@ -4,7 +4,10 @@ import com.gitee.starblues.annotation.Supplier;
 import com.nctigba.observability.instance.model.dto.ExporterInstallDTO;
 import com.nctigba.observability.instance.service.ExporterInstallService;
 import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.io.IOException;
 
 /**
  * InstallSupplier
@@ -23,6 +26,11 @@ public class InstallSupplier {
 
     @Supplier.Method("agent-uninstall")
     public AjaxResult agentUninstall(String envId) {
-        return exporterInstallService.uninstallExporter(envId);
+        try {
+            exporterInstallService.uninstallExporter(envId);
+            return AjaxResult.success();
+        } catch (IOException | CustomException e) {
+            return AjaxResult.error(e.getMessage());
+        }
     }
 }

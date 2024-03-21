@@ -38,4 +38,9 @@ public interface AllocatorService {
     void init(List<AllocateServerDTO> allocators);
     String getAllocatorId(AllocateServerDTO recipient);
     Map<String, List<String>> alloc(List<AllocateServerDTO> recipients);
+
+    /**
+     * remove
+     */
+    void remove();
 }

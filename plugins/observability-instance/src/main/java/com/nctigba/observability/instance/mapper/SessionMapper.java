@@ -26,6 +26,8 @@ package com.nctigba.observability.instance.mapper;
 import java.util.List;
 import java.util.Map;
 
+import com.nctigba.observability.instance.model.vo.BlockTreeVO;
+import com.nctigba.observability.instance.model.vo.PgStatActivityVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
@@ -156,7 +158,7 @@ public interface SessionMapper {
             + "                  on position( a1.prefix_id in '/'||array_to_string(a0.pathid,'/')||'/' ) >0 "
             + "     left outer join pg_stat_activity a2 " + "                  on a0.id = a2.sessionid "
             + "order by '/'||array_to_string(a0.pathid,'/'),a0.depth;")
-    List<Map<String, Object>> blockTree();
+    List<BlockTreeVO> blockTree();
 
     /**
      * simpleStatistic
@@ -188,7 +190,7 @@ public interface SessionMapper {
             + "'WorkloadMonitor','WDRSnapshot','JobScheduler','PercentileJob','statement flush thread','Asp',"
             + "'ApplyLauncher') and application_name not like 'DataKit%' "
             + "and now()-xact_start > interval '30 SECOND' " + "ORDER BY xact_start;")
-    List<Map<String, Object>> longTxc();
+    List<PgStatActivityVO> longTxc();
 
     /**
      *  longTxcTotal
