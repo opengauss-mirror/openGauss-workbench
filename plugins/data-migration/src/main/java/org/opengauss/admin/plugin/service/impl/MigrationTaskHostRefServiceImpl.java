@@ -537,6 +537,17 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         physicalInstallParams.setRunPassword(hostUser.getPassword());
         physicalInstallParams.setInstallPath(realInstallPath);
         physicalInstallParams.setJarName(install.getJarName());
+        if (!StringUtils.isEmpty(install.getPkgName())) {
+            try {
+                String versionNumber = install.getPkgName().split("-")[1];
+                String signVersion = "6.0.0";
+                if (versionNumber.compareTo(signVersion) > 0) {
+                    physicalInstallParams.setJarName("portalControl-" + versionNumber + "-exec.jar");
+                }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                log.error("Failed to obtain the portal version number by parsing the installation package name.");
+            }
+        }
         physicalInstallParams.setPkgName(install.getPkgName());
         physicalInstallParams.setInstallStatus(PortalInstallStatus.INSTALLING.getCode());
         physicalInstallParams.setInstallType(install.getInstallType());
@@ -796,7 +807,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                             + "toolspath.properties | awk -F '=' '{print $2}' | tr -d ' '", portalHome);
                     JschResult jschResult = ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(),
                             hostUser.getUsername(), password, command);
-                    kafkaInstallPath = jschResult.isOk() ? jschResult.getResult().replaceAll("\\u000A", "") : "";
+                    kafkaInstallPath = jschResult.isOk() ? jschResult.getResult().trim() : "";
                 }
             }
             if (!StringUtils.isEmpty(kafkaInstallPath)) {

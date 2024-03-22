@@ -1038,14 +1038,14 @@ COMMENT ON COLUMN "sys_setting"."portal_pkg_name" IS 'portal的安装包名称';
 COMMENT ON COLUMN "sys_setting"."portal_jar_name" IS 'portal的jar名称';
 
 UPDATE "sys_setting" SET portal_pkg_download_url = 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/';
-UPDATE "sys_setting" SET portal_pkg_name = 'PortalControl-5.1.1.tar.gz';
-UPDATE "sys_setting" SET portal_jar_name = 'portalControl-1.0-SNAPSHOT-exec.jar';
+UPDATE "sys_setting" SET portal_pkg_name = 'PortalControl-6.0.0rc1.tar.gz';
+UPDATE "sys_setting" SET portal_jar_name = 'portalControl-6.0.0.rc1-exec.jar';
 
 -- ----------------------------
 -- Records of sys_setting
 -- ----------------------------
 DELETE FROM "sys_setting" WHERE ID = 1;
-INSERT INTO "sys_setting" VALUES (1, 1, '/ops/files/', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/', 'PortalControl-5.1.1.tar.gz', 'portalControl-1.0-SNAPSHOT-exec.jar');
+INSERT INTO "sys_setting" VALUES (1, 1, '/ops/files/', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/', 'PortalControl-6.0.0rc1.tar.gz', 'portalControl-6.0.0rc1-exec.jar');
 
 delete from "sys_menu" where menu_id = 202;
 update "sys_menu" set menu_name = '实例管理', order_num = 1 where menu_id = 201;

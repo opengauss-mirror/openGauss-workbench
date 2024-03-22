@@ -975,9 +975,15 @@ host_os_info varchar(255)[][] := ARRAY[[''centos'', ''7''],
 BEGIN
     FOR i IN 1..array_length(pkg_version, 1) LOOP
         FOR row_i IN 1..array_length(host_os_info, 1) LOOP
-            INSERT INTO "public"."tb_migration_tool_portal_download_info" ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
-                VALUES (num, host_os_info[row_i][1], host_os_info[row_i][2], host_cpu_arch[row_i], concat(''https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/'', host_os_info[row_i][1], host_os_info[row_i][2], ''/''), concat(''PortalControl-'', pkg_version[i], ''-'', host_cpu_arch[row_i], ''.tar.gz''), ''portalControl-1.0-SNAPSHOT-exec.jar'')
-                ON DUPLICATE KEY UPDATE NOTHING;
+            IF pkg_version[i] > ''5.1.1'' THEN
+                INSERT INTO "public"."tb_migration_tool_portal_download_info" ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
+                    VALUES (num, host_os_info[row_i][1], host_os_info[row_i][2], host_cpu_arch[row_i], concat(''https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/'', host_os_info[row_i][1], host_os_info[row_i][2], ''/''), concat(''PortalControl-'', pkg_version[i], ''-'', host_cpu_arch[row_i], ''.tar.gz''), concat(''portalControl-'', pkg_version[i], ''-exec.jar''))
+                    ON DUPLICATE KEY UPDATE NOTHING;
+            ELSE
+                INSERT INTO "public"."tb_migration_tool_portal_download_info" ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
+                    VALUES (num, host_os_info[row_i][1], host_os_info[row_i][2], host_cpu_arch[row_i], concat(''https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/'', host_os_info[row_i][1], host_os_info[row_i][2], ''/''), concat(''PortalControl-'', pkg_version[i], ''-'', host_cpu_arch[row_i], ''.tar.gz''), ''portalControl-1.0-SNAPSHOT-exec.jar'')
+                    ON DUPLICATE KEY UPDATE NOTHING;
+            END IF;
             num := num + 1;
         END LOOP;
     END LOOP;
@@ -985,6 +991,6 @@ END;
 '
 LANGUAGE plpgsql;
 
-SELECT init_tb_migration_tool_portal_download_info_data_fuc(ARRAY['6.0.0', '5.1.1', '5.1.0']);
+SELECT init_tb_migration_tool_portal_download_info_data_fuc(ARRAY['6.0.0rc1', '5.1.1', '5.1.0']);
 
 DROP FUNCTION init_tb_migration_tool_portal_download_info_data_fuc;

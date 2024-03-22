@@ -23,7 +23,7 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 ```
 ## 下载链接
 
-https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-6.0.0.tar.gz
+https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-6.0.0-RC1.tar.gz
 
 ## 说明
 1. 插件需要安装在平台上运行，因此需要先将平台项目安装部署后，再将其他插件项目打包安装使用。
@@ -37,9 +37,9 @@ https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-
 
 ## 安装步骤
 1. 解压安装包\
-   通过下载链接或编译代码获取安装包`Datakit-6.0.0.tar.gz`，解压安装包至`datakit`安装目录下，例如安装目录为`/path/datakit_server`时，解压目录如下:
+   通过下载链接或编译代码获取安装包`Datakit-6.0.0-RC1.tar.gz`，解压安装包至`datakit`安装目录下，例如安装目录为`/path/datakit_server`时，解压目录如下:
    ```shell
-   $ tar -zxvf Datakit-6.0.0.tar.gz -C /path/datakit_server
+   $ tar -zxvf Datakit-6.0.0-RC1.tar.gz -C /path/datakit_server
    ./application-temp.yml
    ./doc/
    ./doc/datasync-mysql-README.md
@@ -54,20 +54,20 @@ https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-
    ./doc/compatibility-assessment-README.md
    ./doc/openGauss-tools-monitor-README.md
    ./doc/base-ops-README.md
-   ./openGauss-datakit-6.0.0.jar
+   ./openGauss-datakit-6.0.0-RC1.jar
    ./run.sh
    ./visualtool-plugin/
-   ./visualtool-plugin/webds-plugin-6.0.0-repackage.jar
-   ./visualtool-plugin/compatibility-assessment-6.0.0-repackage.jar
-   ./visualtool-plugin/observability-instance-6.0.0-repackage.jar
-   ./visualtool-plugin/observability-sql-diagnosis-6.0.0-repackage.jar
-   ./visualtool-plugin/observability-log-search-6.0.0-repackage.jar
-   ./visualtool-plugin/monitor-tools-6.0.0-repackage.jar
-   ./visualtool-plugin/data-migration-6.0.0-repackage.jar
-   ./visualtool-plugin/alert-monitor-6.0.0-repackage.jar
-   ./visualtool-plugin/datakit-demo-plugin-6.0.0-repackage.jar
-   ./visualtool-plugin/datasync-mysql-6.0.0-repackage.jar
-   ./visualtool-plugin/base-ops-6.0.0-repackage.jar
+   ./visualtool-plugin/webds-plugin-6.0.0-RC1-repackage.jar
+   ./visualtool-plugin/compatibility-assessment-6.0.0-RC1-repackage.jar
+   ./visualtool-plugin/observability-instance-6.0.0-RC1-repackage.jar
+   ./visualtool-plugin/observability-sql-diagnosis-6.0.0-RC1-repackage.jar
+   ./visualtool-plugin/observability-log-search-6.0.0-RC1-repackage.jar
+   ./visualtool-plugin/monitor-tools-6.0.0-RC1-repackage.jar
+   ./visualtool-plugin/data-migration-6.0.0-RC1-repackage.jar
+   ./visualtool-plugin/alert-monitor-6.0.0-RC1-repackage.jar
+   ./visualtool-plugin/datakit-demo-plugin-6.0.0-RC1-repackage.jar
+   ./visualtool-plugin/datasync-mysql-6.0.0-RC1-repackage.jar
+   ./visualtool-plugin/base-ops-6.0.0-RC1-repackage.jar
    ```
 2. 创建新目录\
    在`datakit`安装目录下，创建新的目录`config`, `files`, `ssl`, `logs`
