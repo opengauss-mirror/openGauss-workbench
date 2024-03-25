@@ -15,7 +15,7 @@
         <java.version>11</java.version>
         <spring-brick.version>3.1.0</spring-brick.version>
         <spring-boot.version>2.5.6</spring-boot.version>
-        <admin.version>6.0.0</admin.version>
+        <admin.version>6.0.0-RC1</admin.version>
         <velocity.version>2.2</velocity.version>
         <knife4j.version>3.0.3</knife4j.version>
         <druid.version>1.2.16</druid.version>

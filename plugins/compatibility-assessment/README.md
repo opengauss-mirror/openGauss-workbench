@@ -36,7 +36,7 @@ maven版本：3.6.3及以上
   #编译打包
   mvn clean package -Dmaven.test.skip
 
-- 打包完成后在compatibility-assessment/target目录中找到compatibility-assessment-5.1.1-repackage.jar即为插件安装包。
+- 打包完成后在compatibility-assessment/target目录中找到compatibility-assessment-6.0.0-RC1-repackage.jar即为插件安装包。
 
 - 打开并登陆openGauss一体化平台，点击插件管理-安装插件，将上诉步骤获得的安装包上传并安装。
 

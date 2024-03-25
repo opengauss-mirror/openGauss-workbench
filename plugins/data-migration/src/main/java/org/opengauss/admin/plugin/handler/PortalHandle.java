@@ -75,6 +75,16 @@ public class PortalHandle {
      */
     public static boolean checkInstallStatusAndUpdate(MigrationHostPortalInstall installParams, String runPassword) {
         String portalHome = installParams.getInstallPath() + "portal/";
+        JschResult getPortalInstallFileJarPath = ShellUtil.execCommandGetResult(installParams.getHost(),
+                installParams.getPort(), installParams.getRunUser(), runPassword,
+                "ls " + portalHome + "portalControl-*-exec.jar");
+        if (getPortalInstallFileJarPath.isOk()) {
+            String jarName = getPortalInstallFileJarPath.getResult().substring(
+                    getPortalInstallFileJarPath.getResult().lastIndexOf("/") + 1);
+            installParams.setJarName(jarName);
+        } else {
+            log.error("Failed to obtain the jar package from the installation directory " + portalHome + ".");
+        }
         JschResult existsPortalInstallFileResult = ShellUtil.execCommandGetResult(installParams.getHost(),
                 installParams.getPort(), installParams.getRunUser(), runPassword,
                 "[ -f " + portalHome + installParams.getJarName() + " ] && echo 1 || echo 0");
