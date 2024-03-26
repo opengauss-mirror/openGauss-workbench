@@ -75,7 +75,7 @@ public class SystemConfig {
      * upload path
      */
     public static String getUploadPath() {
-        return getStoragePath() + "/upload";
+        return getStoragePath() + "/upload/";
     }
 
     /**
