@@ -961,6 +961,8 @@ COMMENT ON COLUMN "public"."tb_migration_tool_portal_download_info"."portal_jar_
 -- Records of tb_migration_tool_portal_download_info
 -- ----------------------------
 
+DELETE FROM "public"."tb_migration_tool_portal_download_info" WHERE "portal_pkg_name" LIKE 'PortalControl-6.0.0-%';
+
 CREATE OR REPLACE FUNCTION init_tb_migration_tool_portal_download_info_data_fuc(pkg_version varchar(255)[]) RETURNS void AS '
 DECLARE
 host_os_info varchar(255)[][] := ARRAY[[''centos'', ''7''],
