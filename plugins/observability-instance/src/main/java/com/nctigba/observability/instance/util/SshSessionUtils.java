@@ -85,7 +85,7 @@ public class SshSessionUtils implements AutoCloseable {
      */
     public void testPortCanUse(int port) throws IOException {
         try {
-            execute("netstat -tuln | grep " + port);
+            execute("netstat -tuln | grep ':" + port + "\\s'");
         } catch (CustomException e) {
             return;
         }
@@ -109,7 +109,22 @@ public class SshSessionUtils implements AutoCloseable {
      * @throws IOException exception
      */
     public boolean checkDirExist(String path) throws IOException {
-        String result = execute("test -d " + path + "&& echo 1 || echo 0");
+        String result = execute("test -d " + path + " && echo 1 || echo 0");
+        if (result.equals("1")) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * check dir is not empty
+     *
+     * @param path String
+     * @return boolean
+     * @throws IOException exception
+     */
+    public boolean isDirNotEmpty(String path) throws IOException {
+        String result = execute("ls -A " + path + " && echo 1 || echo 0");
         if (result.equals("1")) {
             return true;
         }
@@ -124,7 +139,7 @@ public class SshSessionUtils implements AutoCloseable {
      * @throws IOException exception
      */
     public boolean checkFileExist(String file) throws IOException {
-        String result = execute("test -e " + file + "&& echo 1 || echo 0");
+        String result = execute("test -e " + file + " && echo 1 || echo 0");
         if (result.equals("1")) {
             return true;
         }

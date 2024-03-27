@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.nctigba.observability.instance.model.vo.BlockTreeVO;
+import com.nctigba.observability.instance.model.vo.PgStatActivityVO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -86,12 +88,12 @@ public class SessionService {
     }
 
     @Ds
-    public List<Map<String, Object>> detailBlockTree(String id, String sessionid) {
-        List<Map<String, Object>> queryList = sessionMapper.blockTree();
+    public List<BlockTreeVO> detailBlockTree(String id, String sessionid) {
+        List<BlockTreeVO> queryList = sessionMapper.blockTree();
         if (StringUtils.isNotEmpty(sessionid)) {
-            Set<String> treeIdSet = queryList.stream().filter(obj -> obj.get("pathid").toString().contains(sessionid))
-                    .map(obj -> obj.get("tree_id").toString()).collect(Collectors.toSet());
-            queryList = queryList.stream().filter(obj -> treeIdSet.contains(obj.get("tree_id").toString()))
+            Set<String> treeIdSet = queryList.stream().filter(obj -> obj.getPathid().contains(sessionid))
+                    .map(obj -> obj.getTreeId()).collect(Collectors.toSet());
+            queryList = queryList.stream().filter(obj -> treeIdSet.contains(obj.getTreeId()))
                     .collect(Collectors.toList());
         }
         return toTreeData(queryList);
@@ -103,7 +105,7 @@ public class SessionService {
     }
 
     @Ds
-    public List<Map<String, Object>> longTxc(String id) {
+    public List<PgStatActivityVO> longTxc(String id) {
         return sessionMapper.longTxc();
     }
 
@@ -130,22 +132,19 @@ public class SessionService {
             "unchecked",
             "rawtypes"
     })
-    private List<Map<String, Object>> toTreeData(List<Map<String, Object>> list) {
+    private List<BlockTreeVO> toTreeData(List<BlockTreeVO> list) {
         // Classify by parentid
-        Map<Long, Map<String, Object>> map = new HashMap<>();
-        List<Map<String, Object>> result = new ArrayList<>();
-        for (Map<String, Object> object : list) {
-            object.put("children", new ArrayList<>());
-            map.put(Long.valueOf(object.get("id").toString()), object);
-            Long parentId = Long.valueOf(object.get("parentid").toString());
+        Map<Long, BlockTreeVO> map = new HashMap<>();
+        List<BlockTreeVO> result = new ArrayList<>();
+        for (BlockTreeVO blockTree : list) {
+            blockTree.setChildren(new ArrayList<>());
+            map.put(blockTree.getId(), blockTree);
+            Long parentId = blockTree.getParentid();
             if (parentId == 0) {
-                result.add(object);
+                result.add(blockTree);
                 continue;
             }
-            Object children = map.get(parentId).get("children");
-            if (children instanceof List) {
-                ((List) children).add(object);
-            }
+            map.get(parentId).getChildren().add(blockTree);
         }
         return result;
     }

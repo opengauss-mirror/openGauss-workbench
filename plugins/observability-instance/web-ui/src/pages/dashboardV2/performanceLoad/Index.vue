@@ -252,19 +252,19 @@
           <el-table-column label="SQLID" width="150">
             <template #default="scope">
               <el-link type="primary" @click="gotoTopsqlDetail(scope.row.query_id)">
-                {{ scope.row.query_id }}
+                {{ scope.row.queryId }}
               </el-link>
             </template>
           </el-table-column>
           <el-table-column prop="datname" :label="$t('instanceIndex.dbName')" width="90" />
           <el-table-column prop="usename" :label="$t('instanceIndex.userName')" width="96" />
           <el-table-column
-            prop="application_name"
+            prop="applicationName"
             :label="$t('instanceIndex.appName')"
             width="110"
             show-overflow-tooltip
           />
-          <el-table-column prop="query_start" :label="$t('instanceIndex.startTime')" width="110">
+          <el-table-column prop="queryStart" :label="$t('instanceIndex.startTime')" width="110">
             <template #default="scope">
               {{ moment(scope.query_start).format('MM-DD HH:mm:ss') }}
             </template>
@@ -322,18 +322,18 @@
             </template>
           </el-table-column>
           <el-table-column
-            prop="backend_start"
+            prop="backendStart"
             :label="$t('session.blockSessions.sessionStartTime')"
-            :formatter="(r:any) => dateFormat(r.backend_start, 'MM-DD HH:mm:ss')"
+            :formatter="(r:any) => dateFormat(r.backendStart, 'MM-DD HH:mm:ss')"
             width="110"
           />
-          <el-table-column prop="wait_status" :label="$t('session.blockSessions.waitState')" width="100" />
-          <el-table-column prop="wait_event" :label="$t('session.blockSessions.waitEvent')" width="100" />
+          <el-table-column prop="waitStatus" :label="$t('session.blockSessions.waitState')" width="100" />
+          <el-table-column prop="waitEvent" :label="$t('session.blockSessions.waitEvent')" width="100" />
           <el-table-column prop="lockmode" :label="$t('session.blockSessions.waitLockMode')" width="120" />
           <el-table-column prop="datname" :label="$t('session.blockSessions.dbName')" width="110" />
           <el-table-column prop="usename" :label="$t('session.blockSessions.userName')" width="90" />
-          <el-table-column prop="client_addr" :label="$t('session.blockSessions.clientIP')" width="120" />
-          <el-table-column prop="application_name" :label="$t('session.blockSessions.appName')" />
+          <el-table-column prop="clientAddr" :label="$t('session.blockSessions.clientIP')" width="120" />
+          <el-table-column prop="applicationName" :label="$t('session.blockSessions.appName')" />
         </el-table>
       </el-tab-pane>
       <el-tab-pane :label="$t('session.trans.longTransaction')" :name="2">
@@ -369,15 +369,15 @@
           <el-table-column prop="usename" :label="$t('session.trans.userName')" width="100" />
           <el-table-column prop="datname" :label="$t('session.trans.dbName')" width="100" />
           <el-table-column
-            prop="application_name"
+            prop="applicationName"
             :label="$t('session.trans.appName')"
             width="130"
             show-overflow-tooltip
           />
-          <el-table-column prop="client_addr" :label="$t('session.trans.clientAddr')" width="120" />
+          <el-table-column prop="clientAddr" :label="$t('session.trans.clientAddr')" width="120" />
           <el-table-column prop="query" label="SQL" show-overflow-tooltip />
-          <el-table-column prop="xact_start" :label="$t('session.trans.txStart')" width="140" />
-          <el-table-column prop="xact_duration" :label="$t('session.trans.txDuration')" width="100" />
+          <el-table-column prop="xactStart" :label="$t('session.trans.txStart')" width="140" />
+          <el-table-column prop="xactDuration" :label="$t('session.trans.txDuration')" width="100" />
           <el-table-column prop="state" :label="$t('session.trans.sessionState')" width="100" />
         </el-table>
       </el-tab-pane>
@@ -406,12 +406,12 @@
                 <el-option v-for="item in waitEventList" :key="item" :value="item" :label="item" />
               </el-select>
               <el-select v-model="waitEventForm.field" style="width: 100px; margin: 0 4px" clearable @change="changeWaitEventField">
-                <el-option value="db_name" :label="$t('session.waitEventTab.dbName')" />
-                <el-option value="thread_name" :label="$t('session.waitEventTab.threadName')" />
+                <el-option value="dbName" :label="$t('session.waitEventTab.dbName')" />
+                <el-option value="threadName" :label="$t('session.waitEventTab.threadName')" />
                 <el-option value="tid" :label="$t('session.waitEventTab.tid')" />
                 <el-option value="sessionid" :label="$t('session.waitEventTab.sessionid')" />
-                <el-option value="block_sessionid" :label="$t('session.waitEventTab.blockSessionid')" />
-                <el-option value="query_id" :label="$t('session.waitEventTab.queryId')" />
+                <el-option value="blockSessionid" :label="$t('session.waitEventTab.blockSessionid')" />
+                <el-option value="queryId" :label="$t('session.waitEventTab.queryId')" />
                 <el-option value="lockmode" :label="$t('session.waitEventTab.lockmode')" />
                 <el-option value="tag" :label="$t('session.waitEventTab.locktag')" />
               </el-select>
@@ -444,13 +444,13 @@
   wait_event: string
   -->
           <el-table-column
-            prop="db_name"
+            prop="dbName"
             :label="$t('session.waitEventTab.dbName')"
             width="130"
             show-overflow-tooltip
           />
           <el-table-column
-            prop="thread_name"
+            prop="threadName"
             :label="$t('session.waitEventTab.threadName')"
             width="130"
             show-overflow-tooltip
@@ -465,20 +465,20 @@
           </el-table-column>
           <el-table-column :label="$t('session.waitEventTab.blockSessionid')" width="140" show-overflow-tooltip>
             <template #default="scope">
-              <el-link type="primary" class="top-sql-table-id" @click="gotoSessionDetail(scope.row.block_sessionid)">
-                {{ scope.row.block_sessionid }}
+              <el-link type="primary" class="top-sql-table-id" @click="gotoSessionDetail(scope.row.blockSessionid)">
+                {{ scope.row.blockSessionid }}
               </el-link>
             </template>
           </el-table-column>
           <el-table-column :label="$t('session.waitEventTab.queryId')" width="140">
             <template #default="scope">
-              <el-link type="primary" @click="gotoTopsqlDetail(scope.row.query_id)">
-                {{ scope.row.query_id }}
+              <el-link type="primary" @click="gotoTopsqlDetail(scope.row.queryId)">
+                {{ scope.row.queryId }}
               </el-link>
             </template>
           </el-table-column>
-          <el-table-column prop="wait_status" :label="$t('session.waitEventTab.waitStatus')" width="100" show-overflow-tooltip />
-          <el-table-column prop="wait_event" :label="$t('session.waitEventTab.waitEvent')" width="100" show-overflow-tooltip />
+          <el-table-column prop="waitStatus" :label="$t('session.waitEventTab.waitStatus')" width="100" show-overflow-tooltip />
+          <el-table-column prop="waitEvent" :label="$t('session.waitEventTab.waitEvent')" width="100" show-overflow-tooltip />
           <el-table-column prop="lockmode" :label="$t('session.waitEventTab.lockmode')" width="100" show-overflow-tooltip />
           <el-table-column prop="tag" :label="$t('session.waitEventTab.locktag')" show-overflow-tooltip />
         </el-table>
@@ -869,10 +869,10 @@ watch(instanceId, () => {
 
 const changeWaitEventForm = () => {
   waitEventTable.value = waitEventTableSrc.value.filter(item => {
-    if (waitEventForm.value.waitStatus && item.wait_status !== waitEventForm.value.waitStatus) {
+    if (waitEventForm.value.waitStatus && item.waitStatus !== waitEventForm.value.waitStatus) {
       return false;
     }
-    if (waitEventForm.value.waitEvent && item.wait_event !== waitEventForm.value.waitEvent) {
+    if (waitEventForm.value.waitEvent && item.waitEvent !== waitEventForm.value.waitEvent) {
       return false;
     }
     if (waitEventForm.value.field && waitEventForm.value.fieldValue && item[waitEventForm.value.field].toString().indexOf(waitEventForm.value.fieldValue) === -1) {

@@ -25,7 +25,7 @@
       <div class="dialog-content" v-loading="started" v-show="installData.length === 0">
         <el-form :model="formData" :rules="connectionFormRules" ref="connectionFormRef">
           <el-form-item :label="t('install.agentInfo')" prop="envId">
-            <el-input readonly v-model="formData.label" style="width: 200px; margin: 0 4px" />
+            <el-input readonly v-model="formData.label" style="width: 300px; margin: 0 4px" />
           </el-form-item>
           <!-- <el-form-item :label="t('install.rootPWD')" prop="rootPassword">
                         <el-input v-model="formData.rootPassword" show-password style="width: 200px; margin: 0 4px" />
@@ -49,6 +49,18 @@
         <div v-else>
           <el-button style="padding: 5px 20px" @click="handleCancelModel">{{ $t('app.cancel') }}</el-button>
           <el-button style="padding: 5px 20px" @click="back">{{ $t('app.back') }}</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="tipVisible" :title="t('install.tip')">
+      <div class="dialog-content">{{t('install.uninstallAgentTip')}}</div>
+      <template #footer>
+        <div>
+          <el-button style="padding: 5px 20px" @click="tipVisible = false">{{ $t('app.cancel') }}</el-button>
+          <el-button :loading="started" style="padding: 5px 20px" type="primary" @click="tipConfirm">
+            {{ $t('app.confirm') }}
+          </el-button>
         </div>
       </template>
     </el-dialog>
@@ -106,15 +118,23 @@ const ws = reactive({
   sessionId: '',
   instance: null,
 })
+const tipVisible = ref<boolean>(false)
+
 const install = async () => {
   let result = await connectionFormRef.value?.validate()
   if (!result) return
+  tipVisible.value = true
+}
+
+const tipConfirm = () => {
+  tipVisible.value = false
   started.value = true
   ws.name = moment(new Date()).format('YYYYMMDDHHmmss') as string // websocket connection name
   ws.sessionId = moment(new Date()).format('YYYYMMDDHHmmss') as string // websocket connection id
   ws.instance = new WebSocketClass(ws.name, ws.sessionId, onWebSocketMessage)
   sendData()
 }
+
 const sendData = async () => {
   const sendData = {
     key: 'uninstall exporter',
@@ -142,14 +162,14 @@ const onWebSocketMessage = (data: Array<any>) => {
 // action
 const back = () => {
   started.value = false
-  dialogWith.value = '400px'
+  dialogWith.value = '500px'
   ws.instance.close()
   installData.value = []
 }
 
 // list Data
 const installData = ref<Array<any>>([])
-const dialogWith = ref<string>('400px')
+const dialogWith = ref<string>('500px')
 const doingIndex = computed(() => {
   for (let index = 0; index < installData.value.length; index++) {
     const element = installData.value[index]

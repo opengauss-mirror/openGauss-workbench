@@ -44,7 +44,7 @@
               @change="changeMachine"
               :autoSelectFirst="!editing"
               notClearable
-              style="width: 200px; margin: 0 4px"
+              style="width: 300px; margin: 0 4px"
             />
           </el-form-item>
           <el-form-item :label="t('install.installUser')" prop="username">

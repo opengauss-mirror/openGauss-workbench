@@ -63,7 +63,7 @@ public class AgentStatusVO {
         boolean isRunTimeout = isRunning
             && new Date().getTime() - updateTime0 > 3 * CommonConstants.MONITOR_CYCLE * 1000L;
         boolean isTimeout = new Date().getTime() - updateTime0 > CommonConstants.MONITOR_CYCLE * 1000L;
-        if (StrUtil.isBlank(status0) || (!isStop && !isRunTimeout && isTimeout)) {
+        if (StrUtil.isBlank(status0) || (!isStop && !isRunTimeout && isTimeout) || isRunTimeout) {
             agentStatus.setStatus(AgentStatusEnum.UNKNOWN.getStatus());
         } else {
             agentStatus.setStatus(status0);

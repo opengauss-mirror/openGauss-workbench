@@ -12,33 +12,33 @@
       <el-table :data="data.tableData" border>
         <el-table-column label="SQLID" width="150">
           <template #default="scope">
-            <el-link type="primary" @click="gotoTopsqlDetail(scope.row.debug_query_id)">
-              {{ scope.row.debug_query_id }}
+            <el-link type="primary" @click="gotoTopsqlDetail(scope.row.debugQueryId)">
+              {{ scope.row.debugQueryId }}
             </el-link>
           </template>
         </el-table-column>
         <el-table-column
           :label="$t('sql.dbName')"
-          prop="db_name"
+          prop="dbName"
           width="90"
           show-overflow-tooltip
         ></el-table-column>
         <el-table-column
           :label="$t('sql.schemaName')"
-          prop="schema_name"
+          prop="schemaName"
           width="100"
           show-overflow-tooltip
         >
         </el-table-column>
         <el-table-column
           :label="$t('sql.userName')"
-          prop="user_name"
+          prop="userName"
           width="80"
           show-overflow-tooltip
         ></el-table-column>
         <el-table-column
           :label="$t('sql.applicationName')"
-          prop="application_name"
+          prop="applicationName"
           width="100"
           show-overflow-tooltip
         >
@@ -46,34 +46,38 @@
         <el-table-column prop="query" label="SQL" show-overflow-tooltip />
         <el-table-column
           :label="$t('sql.startTime')"
-          :formatter="(r: any) => moment(r.start_time).format('YYYY-MM-DD HH:mm:ss')"
+          prop="startTime"
           width="140"
         >
         </el-table-column>
         <el-table-column
           :label="$t('sql.finishTime')"
-          :formatter="(r: any) => moment(r.finish_time).format('YYYY-MM-DD HH:mm:ss')"
+          prop="finishTime"
           width="140"
         >
         </el-table-column>
         <el-table-column
           :label="$t('sql.dbTime')"
-          prop="db_time"
+          prop="dbTime"
+          :formatter="(r: any) => Math.round(r.dbTime / 1000)"
           width="80"
         ></el-table-column>
         <el-table-column
           :label="$t('sql.cpuTime')"
-          prop="cpu_time"
+          prop="cpuTime"
+          :formatter="(r: any) => Math.round(r.cpuTime / 1000)"
           width="90"
         ></el-table-column>
         <el-table-column
           :label="$t('sql.excutionTime')"
-          prop="execution_time"
+          prop="executionTime"
+          :formatter="(r: any) => Math.round(r.executionTime / 1000)"
           width="90"
         ></el-table-column>
         <el-table-column
           label="IO_TIME(ms)"
-          prop="data_io_time"
+          prop="dataIoTime"
+          :formatter="(r: any) => Math.round(r.dataIoTime / 1000)"
           width="80"
         ></el-table-column>
       </el-table>
