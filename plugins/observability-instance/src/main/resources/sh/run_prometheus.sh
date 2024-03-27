@@ -7,9 +7,17 @@ STORAGEDAYS="${storageDays}"
 
 start() {
   ./prometheus --config.file=prometheus.yml  --web.enable-lifecycle --web.listen-address=:$PORT --storage.tsdb.retention.time=$STORAGEDAYS > prometheus.log 2>&1 &
-  prometheus_pid=$(ps aux | grep "config.file=prometheus.yml" | grep "web.listen-address=:$PORT" |grep "storage.tsdb.retention.time=$STORAGEDAYS" | grep -v grep | awk '{print $2}')
-  echo $prometheus_pid > $PID_FILE
-  echo "Prometheus started."
+  count=0
+  while [ $count -lt 100 ]; do
+    prometheus_pid=$(ps aux | grep "config.file=prometheus.yml" | grep "web.listen-address=:$PORT" | grep "storage.tsdb.retention.time=$STORAGEDAYS" | grep -v grep | awk '{print $2}')
+    if [ -n "$prometheus_pid" ]; then
+      echo $prometheus_pid > $PID_FILE
+      echo "Prometheus started. pid is $prometheus_pid"
+      break
+    fi
+    sleep 0.1
+    count=$((count+1))
+  done
 }
 
 stop() {

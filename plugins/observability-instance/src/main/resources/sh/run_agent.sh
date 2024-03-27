@@ -7,9 +7,17 @@ PORT="${port}"
 
 start() {
   nohup $JAVA -jar instance-exporter.jar --server.port=$PORT > instance-exporter.log &
-  agent_pid=$(ps aux | grep "instance-exporter.jar" | grep "server.port=$PORT" | grep -v grep | awk '{print $2}')
-  echo $agent_pid > $PID_FILE
-  echo "Agent started."
+  count=0
+  while [ $count -lt 100 ]; do
+    agent_pid=$(ps aux | grep "instance-exporter.jar" | grep "server.port=$PORT" | grep -v grep | awk '{print $2}')
+    if [ -n "$agent_pid" ]; then
+      echo $agent_pid > $PID_FILE
+      echo "Agent started. pid is $agent_pid"
+      break
+    fi
+    sleep 0.1
+    count=$((count+1))
+  done
 }
 
 stop() {
