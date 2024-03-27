@@ -36,7 +36,9 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gitee.starblues.bootstrap.PluginContextHolder;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.gitee.starblues.spring.environment.EnvironmentProvider;
 import com.nctigba.alert.monitor.config.property.AlertProperty;
 import com.nctigba.alert.monitor.config.property.AlertmanagerProperty;
 import com.nctigba.alert.monitor.constant.CommonConstants;
@@ -91,6 +93,9 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class PrometheusServiceImpl implements PrometheusService {
+    private final String AND = " and ";
+    private final String OR = " or ";
+
     private NctigbaEnvDO env;
     private List<AlertConfigDO> alertConfigList;
 
@@ -171,7 +176,13 @@ public class PrometheusServiceImpl implements PrometheusService {
         alertmanager.setPathPrefix(pathPrefix);
         alertmanager.setApiVersion(apiVersion);
         alertmanager.setStaticConfigs(staticConfigs);
-        alertmanager.setScheme("http");
+        String http = "http";
+        EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();
+        if (environmentProvider != null) {
+            Boolean bool = environmentProvider.getBoolean("server.ssl.enabled");
+            http = bool != null && bool ? "https" : "http";
+        }
+        alertmanager.setScheme(http);
         alertmanager.setIsFollowRedirects(true);
         alertmanager.setTimeout("10s");
         alertmanager.setIsEnableHttp2(true);
@@ -383,6 +394,7 @@ public class PrometheusServiceImpl implements PrometheusService {
         Map configMap = new ObjectMapper().convertValue(config, HashMap.class);
         uploadConfigFile(configMap, dir, fileName);
     }
+
     private AlertRuleConfigDTO.Group createRuleGroup(AlertTemplateRuleDO alertTemplateRuleDO, String instances) {
         List<AlertTemplateRuleItemDO> alertTemplateRuleItemDOS = alertTemplateRuleDO.getAlertRuleItemList();
         if (CollectionUtil.isEmpty(alertTemplateRuleItemDOS)) {
@@ -391,12 +403,7 @@ public class PrometheusServiceImpl implements PrometheusService {
                     alertTemplateRuleDO.getId()));
         }
         String ruleExpComb = alertTemplateRuleDO.getRuleExpComb();
-        for (AlertTemplateRuleItemDO alertTemplateRuleItemDO : alertTemplateRuleItemDOS) {
-            ruleExpComb = ruleExpComb.replace(alertTemplateRuleItemDO.getRuleMark(),
-                alertTemplateRuleItemDO.getRuleExp() + " " + alertTemplateRuleItemDO.getOperate()
-                    + alertTemplateRuleItemDO.getLimitValue());
-        }
-        ruleExpComb = ruleExpComb.replaceAll("\\$\\{instances\\}", instances);
+        ruleExpComb = parseRuleExpComb(ruleExpComb, alertTemplateRuleItemDOS, instances);
         AlertRuleConfigDTO.Group group = new AlertRuleConfigDTO.Group();
         String name = "rule_" + alertTemplateRuleDO.getId();
         group.setName(name);
@@ -418,6 +425,62 @@ public class PrometheusServiceImpl implements PrometheusService {
         rules.add(rule);
         group.setRules(rules);
         return group;
+    }
+
+    private String parseRuleExpComb(String ruleExpComb, List<AlertTemplateRuleItemDO> alertTemplateRuleItemDOS,
+                                    String instances) {
+        int position = 0;
+        int start = 0;
+        boolean isAnd = false;
+        String ruleExp = "";
+        while (ruleExpComb.indexOf(AND, position) > -1 || ruleExpComb.indexOf(OR, position) > -1) {
+            String key = "";
+            int andIdx = ruleExpComb.indexOf(AND, position);
+            int orIdx = ruleExpComb.indexOf(OR, position);
+            if (andIdx == -1) {
+                position = orIdx;
+                key = OR;
+            } else if (ruleExpComb.indexOf(OR, position) == -1) {
+                position = andIdx;
+                key = AND;
+            } else if (andIdx < orIdx) {
+                position = andIdx;
+                key = AND;
+            } else {
+                position = orIdx;
+                key = OR;
+            }
+            String ruleMark = ruleExpComb.substring(start, position);
+            AlertTemplateRuleItemDO alertTemplateRuleItemDO =
+                alertTemplateRuleItemDOS.stream().filter(item -> item.getRuleMark().equals(ruleMark.trim()))
+                    .findFirst().orElse(null);
+            if (alertTemplateRuleItemDO == null) {
+                continue;
+            }
+            ruleExp += subRuleExp(isAnd, alertTemplateRuleItemDO.getRuleExp(), alertTemplateRuleItemDO.getOperate(),
+                alertTemplateRuleItemDO.getLimitValue()) + key;
+            start = position + key.length();
+            if (key.equals(AND)) {
+                isAnd = true;
+            } else {
+                isAnd = false;
+            }
+            position++;
+        }
+        String ruleMark = ruleExpComb.substring(start);
+        if (StrUtil.isNotBlank(ruleMark)) {
+            AlertTemplateRuleItemDO alertTemplateRuleItemDO =
+                alertTemplateRuleItemDOS.stream().filter(item -> item.getRuleMark().equals(ruleMark.trim()))
+                    .findFirst().orElse(null);
+            ruleExp += subRuleExp(isAnd, alertTemplateRuleItemDO.getRuleExp(), alertTemplateRuleItemDO.getOperate(),
+                alertTemplateRuleItemDO.getLimitValue());
+        }
+        ruleExp = ruleExp.replaceAll("\\$\\{instances\\}", instances);
+        return ruleExp;
+    }
+
+    private String subRuleExp(Boolean isAnd, String ruleExp, String operate, String limitValue) {
+        return (isAnd ? "on(instance) " : "") + ruleExp + (StrUtil.isNotBlank(operate) ? (operate + limitValue) : "");
     }
 
     /**

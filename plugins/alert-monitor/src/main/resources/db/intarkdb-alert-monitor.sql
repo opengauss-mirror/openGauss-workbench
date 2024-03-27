@@ -574,6 +574,8 @@ insert into alert_rule_item_exp_src(id,rule_item_src_id,action,operate,limit_val
 create_time) values(16,6,'normal','',null,
 'max(rate(agent_network_receive_bytes_total{instance=~"${instances}"}[2m]))) by (instance)/1024/1024',
 1,now()) ;
+update public.alert_rule_item_exp_src set exp = 'max(rate(agent_network_receive_bytes_total{instance=~"$'||'{instances}"}[2m])) by (instance)/1024/1024'
+where id = 16;
 
 insert into alert_rule_item_src(id,name,unit,params,create_time) values (7,'networkTransmitRate',
 'MB/s','',now()) ;
@@ -717,7 +719,7 @@ INSERT into alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_va
 
 
  -- 2023-11-20
-update notify_way set email = '' where id = 1;
+update notify_way set email = '' where id = 1 and email = 'xxxx@xxx.com';;
 
 delete from alert_rule where id = 11;
 delete from alert_rule_item where id in (11,21);
@@ -865,6 +867,8 @@ INSERT into alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_va
  VALUES (29,29,'A','dbReplicationSlotDelay','>',1,'MB',
  'pg_replication_slots_delay_lsn{instance=~"${instances}"}[2m]',
 '主库复制槽延迟大于1MB',0,now(),null,'normal') ;
+update alert_rule_item set rule_exp = 'pg_replication_slots_delay_lsn{instance=~"${instances}"}/1024/1024' where id =
+29;
 
 -- 锁阻塞时间
 insert into alert_rule_item_src(id,name,name_zh,name_en,unit,params,create_time,alert_params,analysis_bean_name) values (77,
@@ -921,6 +925,7 @@ insert into alert_rule_item_src(id,name,name_zh,name_en,unit,params,create_time)
 insert into alert_rule_item_exp_src(id,rule_item_src_id,action,operate,limit_value,exp,show_limit_value,
 create_time) values(80,80,'normal','',null,
 'rate(agent_network_receive_errors_total{instance=~"${instances}"}[5m])+ rateagent_network_transmit_errors_total{instance=~"${instances}"}[5m])',1,now());
+update alert_rule_item_exp_src set exp = 'rate(agent_network_receive_errors_total{instance=~"${instances}"}[5m])+rate(agent_network_transmit_errors_total{instance=~"${instances}"}[5m])' where id = 80;
 
 INSERT into alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (33,'每秒网络错误包过高告警','warn','index','A','故障描述：${hostname}上每秒网络错包数超过5个,实际值：${value}\n处理建议：请检查网络配置',
@@ -929,6 +934,8 @@ INSERT into alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_va
  VALUES (33,33,'A','netErrPacketRate','>',5,'',
  'rate(agent_network_receive_errors_total{instance=~"${instances}"}[5m]) + rateagent_network_transmit_errors_total{instance=~"${instances}"}[5m])',
  '网络每秒错包数量大于5',0,now(),null,'normal') ;
+  update alert_rule_item set rule_exp = 'rate(agent_network_receive_errors_total{instance=~"${instances}"}[5m]) + rate(agent_network_transmit_errors_total{instance=~"${instances}"}[5m])' where id = 33;
+
 
 -- 磁盘IO读写延迟
 insert into alert_rule_item_src(id,name,name_zh,name_en,unit,params,create_time) values (81,
@@ -975,7 +982,7 @@ insert into alert_rule_item_src(id,name,name_zh,name_en,unit,params,create_time,
 insert into alert_rule_item_exp_src(id,rule_item_src_id,action,operate,limit_value,exp,show_limit_value,
 create_time) values(83,83,'normal','',null,
 '100 - pg_tablespace_size{instance=~"${instances}"}/pg_tablespace_spcmaxsize{instance=~"${instances}"} * 100',1,now()) ;
- update alert_rule_item_src set analysis_bean_name = 'remaint8ablespaceAnalysisService' where id = 83;
+ update alert_rule_item_src set analysis_bean_name = 'remainTablespaceAnalysisService' where id = 83;
 
 INSERT into alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (37,'剩余表空间不足告警','serious','index','A','故障描述：${nodeName}上存在表空间剩余空间不足10%\n处理建议：请清理不必要的磁盘文件',
