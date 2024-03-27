@@ -217,7 +217,6 @@ public class TriggerSqlServiceImpl implements TriggerSqlService {
                 }
             }
             map.put("columnList", columnList);
-
             Map<String, Map<String, Object>> resultMap = new HashMap<>();
             resultMap.put(RESULT, map);
             log.info("TriggerSqlServiceImpl query map: " + resultMap);

@@ -1534,8 +1534,9 @@ public class SqlConstants {
     /**
      * query trigger sql
      */
-    public static final String QUERY_TRIGGER_SQL = "select pc.oid, pt.tgname, pt.tgenabled, pc.relkind, "
-            + "pc.relname,pt.tgtype, pt.tgattr, pp.proname, pt.tgqual, pd.description "
+    public static final String QUERY_TRIGGER_SQL = "select pt.oid as toid,pc.oid, pt.tgname, pt.tgenabled, pc.relkind, "
+            + "pc.relname,pt.tgtype, pt.tgattr, pp.proname, regexp_replace(substring(pg_get_triggerdef(pt.oid) from "
+            + "'WHEN \\(\\(.*\\)\\)'), '^WHEN \\(\\((.*)\\)\\)$', '\\1') AS tgqual, pd.description "
             + "from pg_trigger pt "
             + "left join pg_class pc on pc.oid = pt.tgrelid "
             + "left join pg_proc pp on pp.oid = pt.tgfoid "
@@ -1598,7 +1599,8 @@ public class SqlConstants {
     /**
      * query job sql
      */
-    public static final String QUERY_JOB_SQL = "select pj.job_id, what as job_content, next_run_date, interval "
+    public static final String QUERY_JOB_SQL = "select pj.job_id, what as job_content, "
+            + "to_char(next_run_date,'yyyy-MM-dd HH24:mi:ss')  as next_run_date, interval "
             + "from pg_job pj left join pg_job_proc pjp on pj.job_id = pjp.job_id where pj.job_id = %s;";
 
     /**
