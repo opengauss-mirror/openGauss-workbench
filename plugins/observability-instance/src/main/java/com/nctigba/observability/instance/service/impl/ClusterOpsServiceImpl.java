@@ -882,12 +882,6 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
             if (s1.length == 1) {
                 continue;
             }
-            if (s1.length >= 9) {
-                role = s1[7];
-            }
-            if (s1.length == 8) {
-                role = s1[6];
-            }
             //key: nodeId
             String nodeId = clusterVO.getClusterNodes().stream().filter(node ->
                             s1[2].equals(node.getPublicIp()) || s1[2].equals(node.getPrivateIp()))
@@ -895,7 +889,7 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
                             new InstanceException("clusterId:" + clusterVO.getClusterId() + " ip:" + s1[2] +
                                     " not found in database")).getNodeId();
             nodeState.put(nodeId, s1[s1.length - 1]);
-            nodeRole.put(nodeId, role);
+            nodeRole.put(nodeId, s1[6]);
             nodeName.put(nodeId, s1[1]);
         }
         res.setNodeState(nodeState);

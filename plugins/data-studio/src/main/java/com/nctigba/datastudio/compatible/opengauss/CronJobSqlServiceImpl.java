@@ -142,7 +142,7 @@ public class CronJobSqlServiceImpl implements CronJobSqlService {
                 Connection connection = connectionConfig.connectDatabase(request.getUuid())
         ) {
             String sql = String.format(CREATE_JOB_SQL, request.getJobContent().replace("'", "\""),
-                    request.getNextRunDate(), request.getInterval());
+                    request.getNextRunDate(), request.getInterval().replace("'", "''"));
             ExecuteUtils.execute(connection, sql);
         }
     }
@@ -154,7 +154,8 @@ public class CronJobSqlServiceImpl implements CronJobSqlService {
                 Connection connection = connectionConfig.connectDatabase(request.getUuid())
         ) {
             String sql = String.format(UPDATE_JOB_SQL, request.getJobId(),
-                    request.getNextRunDate(), request.getInterval(), request.getJobContent());
+                    request.getNextRunDate(), request.getInterval().replace("'", "''"),
+                    request.getJobContent());
             ExecuteUtils.execute(connection, sql);
         }
     }
