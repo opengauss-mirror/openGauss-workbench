@@ -530,9 +530,11 @@ const stopProxy = (id: string) => {
         }
         .btns {
             align-items: center;
+            position: absolute;
             display: none;
             padding-left: 5px;
             padding-right: 4px;
+            right: 0;
         }
     }
     .btn-group {
@@ -551,6 +553,7 @@ const stopProxy = (id: string) => {
     flex-direction: row;
     justify-content: flex-end;
     flex-grow: 1;
+    background-color: #F2F3F5;
 }
 .show-hide:hover .label {
     flex-shrink: 1;

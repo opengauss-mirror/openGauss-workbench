@@ -174,6 +174,13 @@ const getHostUserList = (hostId: string) => {
     ogRequest.get(`/observability/v1/environment/hostUser/${hostId}`).then(res => {
         if(Array.isArray(res)) {
             hostUserList.value = res
+            if (!formData.username) {
+                return
+            }
+            let userList = hostUserList.value.filter(item => item.username === formData.username) || []
+            if (userList.length === 0) {
+                formData.username = ''
+            }
         }
     })
 }

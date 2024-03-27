@@ -14,12 +14,6 @@ processors:
       GREEDYDATA: |-
         (.|
         |	)*
-- pipeline:
-    name: '{< IngestPipeline "pipeline-log" >}'
-    if: ctx.separator != ','
-- pipeline:
-    name: '{< IngestPipeline "pipeline-csv" >}'
-    if: ctx.separator == ','
 - set:
     field: clusterId
     value: gba-cluster

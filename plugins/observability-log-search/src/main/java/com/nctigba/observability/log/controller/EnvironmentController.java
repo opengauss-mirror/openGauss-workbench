@@ -70,6 +70,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.nctigba.observability.log.constants.CommonConstants.DIRECTORY_IS_EXIST;
+
 @RestController
 @RequestMapping("/observability/v1/environment")
 public class EnvironmentController {
@@ -160,6 +162,10 @@ public class EnvironmentController {
             boolean isEnvApart = envPath != null && !"".equals(envPath);
             String cmLogPathCommand = isEnvApart ? "source " + envPath + " && echo $GAUSSLOG/cm" : "echo $GAUSSLOG/cm";
             cmLogPath = session.execute(cmLogPathCommand);
+            String cmDirIsExists = session.execute(String.format(DIRECTORY_IS_EXIST, cmLogPath));
+            if (cmDirIsExists.contains("false")) {
+                cmLogPath = "";
+            }
         } catch (IOException e) {
             throw new CustomException("connect failed:" + e.getMessage());
         }
