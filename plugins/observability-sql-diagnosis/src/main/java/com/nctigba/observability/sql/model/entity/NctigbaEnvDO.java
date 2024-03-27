@@ -23,11 +23,13 @@
 
 package com.nctigba.observability.sql.model.entity;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.nctigba.observability.sql.handler.JacksonJsonWithClassTypeHandler;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -48,7 +50,8 @@ public class NctigbaEnvDO {
     String nodeid;
     @TableField(exist = false)
     OpsHostEntity host;
-    String param;
+    @TableField(value = "param", typeHandler = JacksonJsonWithClassTypeHandler.class)
+    JSON param;
     String status;
     @TableField("update_time")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
@@ -94,6 +97,17 @@ public class NctigbaEnvDO {
     public NctigbaEnvDO setEnvStatus(String status) {
         this.status = status;
         this.updateTime = new Date();
+        return this;
+    }
+
+    /**
+     * Set data
+     *
+     * @param param String
+     * @return NctigbaEnvDO
+     */
+    public NctigbaEnvDO setParam(String param) {
+        this.param = JSON.parseObject(param);
         return this;
     }
 

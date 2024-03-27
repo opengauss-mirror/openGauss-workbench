@@ -172,13 +172,11 @@ public class MonitorServiceImpl implements MonitorService {
         if (files != null) {
             for (File file : files) {
                 if (file.getName().contains("delete") || file.length() == 0) {
-                    return;
+                    continue;
                 }
                 boolean isAllStop = stopMonitorAndSendData(file);
-                log.info("pid is kill:" + isAllStop);
                 if (isAllStop) {
                     try {
-                        log.info(file.getCanonicalPath());
                         osUtils.execCmd("rm -f " + file.getCanonicalPath());
                     } catch (IOException e) {
                         log.error("Delete file failed:" + e.getMessage());

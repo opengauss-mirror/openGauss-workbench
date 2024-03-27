@@ -48,7 +48,7 @@ public class ThresholdConstants {
                     + "threshold_value,threshold_unit,threshold_detail,sort_no,diagnosis_type) ";
 
     /**
-     * Swap in/out
+     * Swap in/out num
      */
     public static final String SWAP_NUM = "swapNum";
 

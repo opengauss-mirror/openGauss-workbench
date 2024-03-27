@@ -18,10 +18,10 @@
             <div class="dialog-content" v-loading="started" v-show="installData.length === 0">
                 <el-form :model="formData" :rules="connectionFormRules" ref="connectionFormRef">
                     <el-form-item :label="t('install.collectInstance')" prop="nodeId">
-                        <el-input readonly v-model="formData.label" style="width: 200px; margin: 0 4px" />
+                        <el-input readonly v-model="formData.label" style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.rootPWD')" prop="rootPassword">
-                        <el-input v-model="formData.rootPassword" show-password style="width: 200px; margin: 0 4px" />
+                        <el-input v-model="formData.rootPassword" show-password style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                 </el-form>
             </div>
@@ -124,14 +124,14 @@ const onWebSocketMessage = (data: Array<any>) => {
 // action
 const back = () => {
     started.value = false
-    dialogWith.value = '400px'
+    dialogWith.value = '500px'
     ws.instance.close()
     installData.value = []
 }
 
 // list Data
 const installData = ref<Array<any>>([])
-const dialogWith = ref<string>('400px')
+const dialogWith = ref<string>('500px')
 const doingIndex = computed(() => {
     for (let index = 0; index < installData.value.length; index++) {
         const element = installData.value[index]

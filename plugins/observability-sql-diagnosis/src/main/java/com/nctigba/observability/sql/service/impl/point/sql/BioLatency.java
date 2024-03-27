@@ -112,7 +112,11 @@ public class BioLatency implements DiagnosisPointService<Object> {
         AnalysisDTO analysisDTO = new AnalysisDTO();
         analysisDTO.setPointData(f);
         analysisDTO.setPointType(DiagnosisResultDO.PointType.DIAGNOSIS);
-        analysisDTO.setIsHint(DiagnosisResultDO.ResultState.SUGGESTIONS);
+        if (heatMap.size() > 0) {
+            analysisDTO.setIsHint(DiagnosisResultDO.ResultState.SUGGESTIONS);
+        } else {
+            analysisDTO.setIsHint(DiagnosisResultDO.ResultState.NO_ADVICE);
+        }
         return analysisDTO;
     }
 

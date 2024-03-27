@@ -90,21 +90,15 @@ public class CpuAnalysis implements DiagnosisPointService<Object> {
         }
         List<TaskResultDTO> list = getResultData(task, file);
         AnalysisDTO analysisDTO = new AnalysisDTO();
-        if (!CollectionUtils.isEmpty(list)) {
-            FrameVO f = new FrameVO();
-            for (TaskResultDTO taskResultDTO : list) {
-                f.addChild(taskResultDTO.getBearing(), taskResultDTO.toFrame());
-            }
-            analysisDTO.setPointData(f);
-            Object data = f.getData();
-            if (data instanceof LineChartVO && ((LineChartVO) data).getSeries().size() > 0) {
-                analysisDTO.setIsHint(DiagnosisResultDO.ResultState.SUGGESTIONS);
-            } else {
-                analysisDTO.setIsHint(DiagnosisResultDO.ResultState.NO_ADVICE);
-            }
-        } else {
-            analysisDTO.setIsHint(DiagnosisResultDO.ResultState.NO_ADVICE);
+        analysisDTO.setIsHint(DiagnosisResultDO.ResultState.NO_ADVICE);
+        if (CollectionUtils.isEmpty(list)) {
+            return analysisDTO;
         }
+        FrameVO f = new FrameVO();
+        for (TaskResultDTO taskResultDTO : list) {
+            f.addChild(taskResultDTO.getBearing(), taskResultDTO.toFrame());
+        }
+        analysisDTO.setPointData(f);
         analysisDTO.setPointType(DiagnosisResultDO.PointType.CENTER);
         return analysisDTO;
     }

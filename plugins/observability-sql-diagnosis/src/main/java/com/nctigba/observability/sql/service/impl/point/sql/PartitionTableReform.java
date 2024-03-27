@@ -91,6 +91,22 @@ public class PartitionTableReform implements DiagnosisPointService<Object> {
         if (!task.getSql().contains("from")) {
             return analysisDTO;
         }
+        List<String> rsList = new ArrayList<>();
+        List<?> rsObject = (List<?>) dataStoreService.getData(item).getCollectionData();
+        rsObject.forEach(obj -> {
+            if (obj instanceof String) {
+                rsList.add((String) obj);
+            }
+        });
+        StringBuilder sb = new StringBuilder();
+        rsList.forEach(data -> {
+            if (data != null) {
+                sb.append(data);
+            }
+        });
+        if (!sb.toString().contains("Seq Scan on") || sb.toString().contains("Partitioned Seq Scan on")) {
+            return analysisDTO;
+        }
         String sql = String.format(SqlConstants.PARTITION_TABLE_REFORM, pointUtils.getTableName(task.getSql()));
         try (Connection conn = clusterManager.getConnectionByNodeId(task.getNodeId());
              java.sql.Statement st = conn.createStatement()) {

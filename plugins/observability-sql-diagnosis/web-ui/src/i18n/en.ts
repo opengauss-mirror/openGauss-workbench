@@ -663,7 +663,7 @@ export default {
     collectInstance: 'collect instance',
     collectProxy: 'collect proxy',
     callbackPath: 'callback path',
-    proxyRules: ['choose the machine please', 'input the password of root please', 'input the proxy port please'],
+    proxyRules: ['choose the machine please', 'input the password of root please', 'input the proxy port please', 'input the proxy callback path', 'input the proxy install path'],
     collectorRules: ['choose the instance please', 'input the password of root please'],
     start: 'start',
     stop: 'stop',

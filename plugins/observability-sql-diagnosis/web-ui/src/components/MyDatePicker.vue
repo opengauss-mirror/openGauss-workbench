@@ -82,7 +82,7 @@ const dateValue = computed({
                 ? val.map((item) => dayjs(item).tz(dayjs.tz.guess()).format())
                 : dayjs(val).tz(dayjs.tz.guess()).format()
         } else if (val && props.valueFormatToUTC) {
-            value = Array.isArray(val) ? val.map((item) => dayjs(item).utc().format()) : dayjs(val).utc().format()
+            value = Array.isArray(val) ? val.map((item) => dayjs(item).utc().format("YYYY-MM-DDTHH:mm:ss") + 'Z') : (dayjs(val).utc().format('YYYY-MM-DDTHH:mm:ss') + 'Z')
         } else if (val && !props.valueFormatToISO && !props.valueFormatToUTC) {
             let fmt: string
             switch (props.type) {

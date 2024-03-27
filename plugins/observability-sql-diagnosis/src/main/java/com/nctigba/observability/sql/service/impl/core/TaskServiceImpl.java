@@ -243,7 +243,6 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void start(int taskId) {
         DiagnosisTaskDO task = taskMapper.selectById(taskId);
-        ebpfUtils.record(task);
         task.setTaskStartTime(new Date());
         task.addRemarks("start running diagnosis");
         taskMapper.updateById(task);
@@ -274,15 +273,25 @@ public class TaskServiceImpl implements TaskService {
             }
             ThreadUtil.execAsync(() -> sqlExecutor.executeSql(task));
             for (int i = 0; i < 50; i++) {
-                if (task.getSessionId() == null) {
-                    ThreadUtil.sleep(500L);
+                if (task.getSessionId() != null) {
+                    break;
                 }
+                ThreadUtil.sleep(500L);
             }
             task.addRemarks("execute SQL while starting diagnosis");
             Integer pid = obtainPid(task);
             task.addRemarks("get pid:" + pid);
             task.setPid(pid);
             setDebugQueryId(task);
+            if (isAgent) {
+                ThreadUtil.execAsync(() -> {
+                    try {
+                        ebpfUtils.record(task);
+                    } catch (Exception e) {
+                        task.addRemarks("Agent request error:" + e.getMessage());
+                    }
+                });
+            }
             taskMapper.updateById(task);
         }
         HashMap<String, String> pointMap = obtainAllPoint(task.getDiagnosisType());
@@ -351,6 +360,7 @@ public class TaskServiceImpl implements TaskService {
                 } catch (Exception e) {
                     task.addRemarks("call ebpf error:" + e);
                     taskMapper.updateById(task);
+                    updateResult(item, sb, task, e.getMessage());
                 }
             }
             String itemName = getClassName(item);
@@ -659,7 +669,7 @@ public class TaskServiceImpl implements TaskService {
                 boolean isRun = isRun(option, options);
                 if (!CollectionUtils.isEmpty(option) && String.valueOf(OptionEnum.IS_EXPLAIN).equals(option.get(0))) {
                     task.addRemarks("start analysis:" + pointName);
-                    if (!isExplain) {
+                    if (isExplain) {
                         updateExplainChildNode(task, DiagnosisResultDO.PointState.NOT_SATISFIED_DIAGNOSIS);
                         updateExplainRelatedNode(pointName, task, DiagnosisResultDO.PointState.NOT_SATISFIED_DIAGNOSIS);
                     } else if (isRun) {
@@ -728,7 +738,7 @@ public class TaskServiceImpl implements TaskService {
             boolean isRun = isRun(option, options);
             List<CollectionItem<?>> params = pointService.getSourceDataKeys();
             if (!CollectionUtils.isEmpty(option) && String.valueOf(OptionEnum.IS_EXPLAIN).equals(option.get(0))) {
-                if (!isExplain || isRun) {
+                if (isExplain || isRun) {
                     continue;
                 }
                 params.forEach(f -> {
@@ -789,7 +799,6 @@ public class TaskServiceImpl implements TaskService {
         List<DataStoreVO> list = new ArrayList<>();
         DataStoreVO config = generateCollectData(task.getDiagnosisType(), pointName, file);
         list.add(config);
-        task.addRemarks("collectionItem:" + list.get(0).getCollectionItem().getClass().getName());
         dataStoreService.storeData(list);
         long size = file == null || file.isEmpty() ? 0 : file.getSize();
         log.info("bccTest:" + pointName + ":" + size);
@@ -1002,8 +1011,7 @@ public class TaskServiceImpl implements TaskService {
         }
         var env = envMapper.selectOne(
                 Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getNodeid, task.getNodeId()).eq(
-                        NctigbaEnvDO::getType,
-                        NctigbaEnvDO.envType.AGENT));
+                        NctigbaEnvDO::getType, NctigbaEnvDO.envType.AGENT));
         return env != null;
     }
 
@@ -1057,6 +1065,13 @@ public class TaskServiceImpl implements TaskService {
 
     private Integer obtainPid(DiagnosisTaskDO task) {
         task.addRemarks("sessionId:" + task.getSessionId());
+        List<OptionVO> options = databaseOption(task);
+        boolean isExplain = options.stream().anyMatch(f -> {
+            if (String.valueOf(OptionEnum.IS_EXPLAIN).equals(f.getOption())) {
+                return f.getIsCheck();
+            }
+            return false;
+        });
         Integer lwpid = null;
         try (var conn = clusterManager.getConnectionByNodeId(task.getNodeId())) {
             var watch = new StopWatch();
@@ -1064,15 +1079,19 @@ public class TaskServiceImpl implements TaskService {
             // catch pid
             while (lwpid == null) {
                 var stmt = conn.createStatement();
-                var rs = stmt.executeQuery("SELECT b.lwpid from pg_stat_activity a,dbe_perf.os_threads b "
+                String sql = task.getSql().lastIndexOf(";") > -1 ? task.getSql().substring(
+                        0, task.getSql().length() - 1) : task.getSql();
+                String taskSql = isExplain ? "explain analyze " + sql : sql;
+                String getPidSql = "SELECT b.lwpid from pg_stat_activity a,dbe_perf.os_threads b "
                         + "where a.state != 'idle' and a.pid=b.pid and a.sessionid = '" + task.getSessionId()
-                        + "'");
+                        + "' and a.query = '" + taskSql + "';";
+                var rs = stmt.executeQuery(getPidSql);
                 if (rs.next()) {
                     lwpid = rs.getInt(1);
                 }
                 watch.stop();
                 watch.start();
-                if (watch.getTaskCount() > 10000) {
+                if (watch.getTaskCount() > 1000) {
                     break;
                 }
                 if (lwpid == null) {
