@@ -1472,10 +1472,15 @@ public class PrometheusService extends AbstractInstaller {
                 FileUtils.deleteDirectory(new File(env.getPath()));
             }
         } else {
+            if (StrUtil.isBlank(env.getPath())) {
+                return;
+            }
             try (SshSessionUtils session = connect(env.getHostid(), env.getUsername())) {
-                if (StrUtil.isNotBlank(env.getPath()) && session.checkDirExist(env.getPath())) {
-                    String cd = "cd " + env.getPath() + " && ";
-                    session.execute(cd + "rm -rf " + env.getPath());
+                int index = env.getPath().lastIndexOf("/");
+                String path = env.getPath().substring(0, index);
+                if (StrUtil.isNotBlank(path) && session.checkDirExist(path)) {
+                    String cd = "cd " + path + " && ";
+                    session.execute(cd + "rm -rf " + path);
                 }
             }
         }

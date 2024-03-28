@@ -755,7 +755,7 @@ public class ExporterInstallService extends AbstractInstaller {
                 }
                 File pidFile = File.createTempFile("agent", ".pid");
                 FileUtil.appendUtf8String(pid, pidFile);
-                session.upload(pidFile.getCanonicalPath(), env.getPath() + "/agent.pid");
+                session.upload(pidFile.getCanonicalPath(), env.getPath() + "/instance-exporter.pid");
             }
         } catch (IOException e) {
             throw new CustomException(e.getMessage());
