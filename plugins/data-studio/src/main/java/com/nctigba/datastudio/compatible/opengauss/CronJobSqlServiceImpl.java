@@ -117,8 +117,6 @@ public class CronJobSqlServiceImpl implements CronJobSqlService {
         log.info("CronJobSqlServiceImpl query sql: " + sql);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
-                Statement statement = connection.createStatement();
-                ResultSet resultSet = statement.executeQuery(sql)
         ) {
             List<String> keyList = new ArrayList<>() {
                 {
