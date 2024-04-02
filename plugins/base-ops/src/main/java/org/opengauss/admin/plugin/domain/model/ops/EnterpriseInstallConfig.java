@@ -71,11 +71,6 @@ public class EnterpriseInstallConfig implements ClusterInstallConfig {
 
     private List<EnterpriseInstallNodeConfig> nodeConfigList;
 
-    /**
-     * AZ Name
-     */
-    private String azName;
-
     @Override
     public void checkConfig() {
         if (StrUtil.isEmpty(installPath)) {
