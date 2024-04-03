@@ -111,7 +111,6 @@ export interface EnterpriseInstallNodeConfig {
   hostname: string;
   installUserId: string;
   installUsername: string;
-  azId: string;
   azName: string;
   isCMMaster: boolean;
   cmDataPath: string;
@@ -133,8 +132,6 @@ export interface EnterpriseInstallConfig { // eslint-disable-line
   databaseUsername: string;
   databasePassword: string;
   isInstallCM: boolean,
-  azId: string;
-  azName: string;
   nodeConfigList: EnterpriseInstallNodeConfig[];
 }
 

@@ -146,27 +146,6 @@
           key="1"
         >
           <a-form-item
-            field="azId"
-            :label="$t('enterprise.NodeConfig.5mpme7w6aj40')"
-            validate-trigger="change"
-          >
-            <a-select
-              :loading="azData.azListLoading"
-              v-model="data.azId"
-              :placeholder="$t('enterprise.NodeConfig.5mpme7w6ap00')"
-              @change="azChange"
-              @popup-visible-change="azPopChange"
-            >
-              <a-option
-                v-for="item in azData.azList"
-                :key="item.azId"
-                :value="item.azId"
-              >{{
-                item.name
-              }}</a-option>
-            </a-select>
-          </a-form-item>
-          <a-form-item
             field="logPath"
             :label="$t('enterprise.ClusterConfig.5mpm3ku3i6s0')"
             validate-trigger="blur"
@@ -217,7 +196,7 @@ import { KeyValue } from '@/types/global'
 import { useOpsStore } from '@/store'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { PropType, ref, computed, defineProps, watch } from 'vue'
-import { hasName, azListAll } from '@/api/ops'
+import { hasName } from '@/api/ops'
 import { useI18n } from 'vue-i18n'
 import { onMounted } from 'vue'
 import { reactive } from 'vue'
@@ -243,16 +222,6 @@ const data = computed({
   set: (val) => {
     emits(`update:formData`, val)
   }
-})
-
-const azData = reactive<KeyValue>({
-  azListLoading: false,
-  azObj: {},
-  azList: []
-})
-
-onMounted(() => {
-  getAZList()
 })
 
 const formRules = computed(() => {
@@ -477,7 +446,6 @@ const formRules = computed(() => {
         }
       }
     ],
-    azId: [{ required: true, 'validate-trigger': 'change', message: t('enterprise.NodeConfig.5mpme7w6ap00') }],
     "sharingStorageInstallConfig.dssHome": [
       { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.test1') },
       {
@@ -596,39 +564,6 @@ const formRules = computed(() => {
 })
 
 // methods
-
-const getAZList = () => {
-  azData.azListLoading = true
-  azListAll().then((res: KeyValue) => {
-    if (Number(res.code) === 200) {
-      azData.azList = []
-      azData.azList = res.data
-      res.data.forEach((item: KeyValue) => {
-        azData.azObj[item.azId] = item.name
-      })
-      data.value.azId = res.data[0].azId
-      data.value.azName = res.data[0].name
-    } else {
-      Message.error('Failed to obtain the AZ list data')
-    }
-  }).finally(() => {
-    azData.azListLoading = false
-  })
-}
-
-const azPopChange = (val: any) => {
-  if (val) {
-    getAZList()
-  }
-}
-
-const azChange = () => {
-  if (data.value.azId) {
-    if (azData.azObj[data.value.azId]) {
-      data.value.azName = azData.azObj[data.value.azId]
-    }
-  }
-}
 
 const isInstallCMChange = (val: boolean) => {
   if (!val) {

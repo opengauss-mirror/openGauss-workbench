@@ -97,8 +97,6 @@ const data = reactive<KeyValue>({
       isInstallCM: false,
       isEnvSeparate: true,
       envPath: '',
-      azId: '',
-      azName: '',
       sharingStorageInstallConfig: {
         dssHome: '',
         dssVgName: 'data',
@@ -211,6 +209,7 @@ const addNode = (index: number, isMaster: boolean = false) => {
     cmDataPath: '/opt/openGauss/data/cmserver',
     cmPort: 15300,
     dataPath: '/opt/openGauss/install/data/dn',
+    azName: '',
     azPriority: 1
   }
   if (isMaster) {
@@ -396,7 +395,7 @@ const beforeConfirm = async (): Promise<boolean> => {
               data.activeTab = data.form.nodes[i].id;
               validRes = false
             }
-        }       
+        }
       }
     }
 

@@ -118,6 +118,27 @@
         />
       </a-form-item>
       <a-form-item
+        field="azName"
+        :label="$t('enterprise.NodeConfig.5mpme7w6aj40')"
+        validate-trigger="change"
+      >
+        <a-select
+          :loading="azData.azListLoading"
+          v-model="form.azId"
+          :placeholder="$t('enterprise.NodeConfig.5mpme7w6ap00')"
+          @change="azChange"
+          @popup-visible-change="azPopChange"
+        >
+          <a-option
+            v-for="item in azData.azList"
+            :key="item.azId"
+            :value="item.azId"
+          >{{
+              item.name
+            }}</a-option>
+        </a-select>
+      </a-form-item>
+      <a-form-item
         field="azPriority"
         :label="$t('enterprise.NodeConfig.else7')"
         v-if="installType !== 'import'"
@@ -140,7 +161,7 @@ import { useOpsStore } from '@/store'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { PropType, ref, computed, defineProps, inject, reactive, onMounted } from 'vue'
 import { Message } from '@arco-design/web-vue'
-import { hostListAll, hostUserListWithoutRoot, portUsed, pathEmpty, fileExist, multiPathQuery, hostPingById } from '@/api/ops'
+import { hostListAll, hostUserListWithoutRoot, portUsed, pathEmpty, fileExist, multiPathQuery, hostPingById,azListAll } from '@/api/ops'
 import HostTerminal from "@/views/ops/install/components/hostTerminal/HostTerminal.vue";
 import { encryptPassword } from '@/utils/jsencrypt'
 import { useI18n } from 'vue-i18n'
@@ -166,6 +187,7 @@ const props = defineProps({
 
 onMounted(() => {
   getHostList()
+  getAZList()
 })
 
 const emits = defineEmits([`update:formData`, 'installUser'])
@@ -175,7 +197,11 @@ const form = computed({
     emits(`update:formData`, val)
   }
 })
-
+const azData = reactive<KeyValue>({
+  azListLoading: false,
+  azObj: {},
+  azList: []
+})
 const data = reactive<KeyValue>({
   hostListLoading: false,
   hostList: [],
@@ -256,6 +282,7 @@ const formRules = computed(() => {
         }
       }
     ],
+    azName: [{ required: true, 'validate-trigger': 'change', message: t('enterprise.NodeConfig.5mpme7w6ap00') }],
     azPriority: [{ required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.else6') }]
   }
 })
@@ -589,6 +616,39 @@ const formValidate = async (): Promise<KeyValue> => {
     res: validResult
   }
   return result
+}
+
+const getAZList = () => {
+  azData.azListLoading = true
+  azListAll().then((res: KeyValue) => {
+    if (Number(res.code) === 200) {
+      azData.azList = []
+      azData.azList = res.data
+      res.data.forEach((item: KeyValue) => {
+        azData.azObj[item.azId] = item.name
+      })
+      form.value.azId = res.data[0].azId
+      form.value.azName = res.data[0].name
+    } else {
+      Message.error('Failed to obtain the AZ list data')
+    }
+  }).finally(() => {
+    azData.azListLoading = false
+  })
+}
+
+const azPopChange = (val: any) => {
+  if (val) {
+    getAZList()
+  }
+}
+
+const azChange = () => {
+  if (form.value.azId) {
+    if (azData.azObj[form.value.azId]) {
+      form.value.azName = azData.azObj[form.value.azId]
+    }
+  }
 }
 
 const dataValidate = async (): Promise<KeyValue> => {

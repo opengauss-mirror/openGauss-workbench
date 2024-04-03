@@ -876,7 +876,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
 
         Element azName = document.createElement("PARAM");
         azName.setAttribute("name", "azName");
-        azName.setAttribute("value", enterpriseInstallConfig.getAzName());
+        azName.setAttribute("value", enterpriseInstallNodeConfig.getAzName());
         device.appendChild(azName);
 
         Element azPriority = document.createElement("PARAM");

@@ -76,6 +76,8 @@ public class EnterpriseInstallNodeConfig {
 
     private String dataPath;
 
+    private String azName;
+
     private String azPriority;
 
     public void checkConfig() {
