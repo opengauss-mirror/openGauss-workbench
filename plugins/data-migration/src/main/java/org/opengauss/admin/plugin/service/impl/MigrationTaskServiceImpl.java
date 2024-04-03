@@ -627,10 +627,12 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         LambdaQueryWrapper<TbMigrationTaskGlobalToolsParam> toolsParamQueryWrapper = new LambdaQueryWrapper<>();
         toolsParamQueryWrapper.isNotNull(TbMigrationTaskGlobalToolsParam::getParamChangeValue);
         toolsParamQueryWrapper.eq(TbMigrationTaskGlobalToolsParam::getPortalHostID, task.getRunHostId());
-        toolsParamQueryWrapper.eq(TbMigrationTaskGlobalToolsParam::getDeleteFlag,
-                TbMigrationTaskGlobalToolsParam.DeleteFlagEnum.USED.getDeleteFlag());
-        toolsParamQueryWrapper.ne(TbMigrationTaskGlobalToolsParam::getNewParamFlag,
-                TbMigrationTaskGlobalToolsParam.NewParamFlagEnum.NEW_PARAM.getNewParamFlag());
+        toolsParamQueryWrapper.and(record -> record.eq(TbMigrationTaskGlobalToolsParam::getDeleteFlag,
+                        TbMigrationTaskGlobalToolsParam.DeleteFlagEnum.USED.getDeleteFlag())
+                .or().isNull(TbMigrationTaskGlobalToolsParam::getDeleteFlag));
+        toolsParamQueryWrapper.and(record -> record.ne(TbMigrationTaskGlobalToolsParam::getNewParamFlag,
+                        TbMigrationTaskGlobalToolsParam.NewParamFlagEnum.NEW_PARAM.getNewParamFlag())
+                .or().isNull(TbMigrationTaskGlobalToolsParam::getNewParamFlag));
         List<TbMigrationTaskGlobalToolsParam> toolsParams = toolsParamService.list(toolsParamQueryWrapper);
 
         toolsParams.forEach(toolsParam -> {
