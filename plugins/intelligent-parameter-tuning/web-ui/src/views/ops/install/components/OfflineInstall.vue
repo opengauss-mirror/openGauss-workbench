@@ -143,6 +143,19 @@
     field="runningTime"
     :label="$t('install.Offline.5mpn60ejri25')"
   >
+    <template #label>
+      <span>{{t('install.Offline.5mpn60ejri25')}}</span>
+      <a-tooltip
+      :content-style="{ color: '#1d212a' }"
+      background-color="#fff7e8"
+      :content="$t('install.Online.8mpn82ejri24')"
+      position="right"
+    >
+      <icon-question-circle-fill
+        :style="{ 'margin-left': '5px', color: '#ff7d00', 'font-size': '16px' }"
+      />
+    </a-tooltip>
+    </template>
     <a-input
       v-model="formSysbench.runningTime"
       :placeholder="$t('install.Offline.7mpn60ejri25')"

@@ -463,6 +463,12 @@ public class TuningServiceImpl implements TuningService {
         String res = JschUtil.executeCommand(session, command);
         String message = String.format("Execute command:%s The result is:%s", command, res);
         if (res.contains(FixedTuning.SUCCESS_INSTALL)) {
+            // The set command requires restarting the database
+            if (command.contains("set")) {
+                String reStart = String.format(FixedTuning.DATABASE_COMMAND_RESTART, config.getOpengaussNodePath());
+                String restartResult = JschUtil.executeCommand(session, reStart);
+                log.info("The result of restarting the database is-->{}", restartResult);
+            }
             return RespBean.success("success", message);
         } else {
             return RespBean.error(message);
