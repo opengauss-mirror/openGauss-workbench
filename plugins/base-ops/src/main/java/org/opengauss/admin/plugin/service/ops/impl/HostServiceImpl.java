@@ -152,6 +152,9 @@ public class HostServiceImpl implements IHostService {
                 new OpsException("Failed to establish connection with host"));
         try {
             return fileExist(rootSession,file);
+        } catch (OpsException e) {
+            log.error("Failed to find file",e);
+            return false;
         } finally {
             if (Objects.nonNull(rootSession) && rootSession.isConnected()){
                 rootSession.disconnect();
