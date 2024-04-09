@@ -75,12 +75,17 @@ public interface ToolsParamsLog {
     String NEW_PARAM_PREFIX = "new.";
 
     /**
-     * The constant new.
+     * The constant desc.
+     */
+    String NEW_DESC_PREFIX = "desc.";
+
+    /**
+     * The constant start.
      */
     String START = "start";
 
     /**
-     * The constant new.
+     * The constant end.
      */
     String END = "end";
 }
