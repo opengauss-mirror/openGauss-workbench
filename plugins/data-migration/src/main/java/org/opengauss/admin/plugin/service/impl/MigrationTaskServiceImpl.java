@@ -45,6 +45,7 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static org.opengauss.admin.plugin.constants.ToolsParamsLog.NEW_DESC_PREFIX;
 import static org.opengauss.admin.plugin.constants.ToolsParamsLog.NEW_PARAM_PREFIX;
 
 /**
@@ -659,6 +660,8 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                             + "." + toolsParam.getParamKey(),
                     aroundApostrophe(toolsParam.getParamChangeValue() == null ? toolsParam.getParamValue()
                             : toolsParam.getParamChangeValue()));
+            toolsParamsMap.put(NEW_DESC_PREFIX + toolsParam.getConfigId() + "." + toolsParam.getParamValueType()
+                    + "." + toolsParam.getParamKey(), aroundApostrophe(toolsParam.getParamDesc()));
         });
     }
 
