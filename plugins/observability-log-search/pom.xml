@@ -105,13 +105,6 @@
 			<groupId>org.opengauss</groupId>
 			<artifactId>opengauss-jdbc</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.intarkdb</groupId>
-			<artifactId>IntarkDB-jdbc</artifactId>
-			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/../../lib/intarkdb-jdbc-1.0.0.1.jar</systemPath>
-		</dependency>
 		<!-- elastic search java client -->
 		<dependency>
 			<groupId>co.elastic.clients</groupId>
@@ -358,6 +351,11 @@
 						<provider>ncti-gba</provider>
 						<description>Intelligent OPS</description>
 					</pluginInfo>
+					<loadMainResourcePattern>
+						<includes>
+							<include>org.intarkdb.**</include>
+						</includes>
+					</loadMainResourcePattern>
 				</configuration>
 				<executions>
 					<execution>

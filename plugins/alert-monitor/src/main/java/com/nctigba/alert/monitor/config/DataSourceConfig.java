@@ -24,9 +24,12 @@
 package com.nctigba.alert.monitor.config;
 
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
+import com.baomidou.dynamic.datasource.creator.DruidDataSourceCreator;
+import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
 import com.gitee.starblues.bootstrap.PluginContextHolder;
 import com.gitee.starblues.spring.environment.EnvironmentProvider;
 import com.nctigba.alert.monitor.enums.DbDataLocationEnum;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.jdbc.init.DataSourceScriptDatabaseInitializer;
@@ -48,19 +51,21 @@ import java.util.Optional;
  */
 @Configuration
 public class DataSourceConfig {
+    @Autowired
+    DruidDataSourceCreator druidDataSourceCreator;
+
     @Bean
     @ConfigurationProperties(prefix = "spring.datasource")
     @Profile("!dev")
     public DataSource dataSource() {
         EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();
         // read config from dataKit platform
-        String url = environmentProvider.getString("spring.datasource.url");
-        String username = environmentProvider.getString("spring.datasource.username");
-        String password = environmentProvider.getString("spring.datasource.password");
-        String driverClassName = environmentProvider.getString("spring.datasource.driver-class-name");
-
-        DataSource primary = DataSourceBuilder.create().driverClassName(driverClassName).url(url).username(username)
-                .password(password).build();
+        DataSourceProperty primaryProperty = new DataSourceProperty();
+        primaryProperty.setUrl(environmentProvider.getString("spring.datasource.url"));
+        primaryProperty.setUsername(environmentProvider.getString("spring.datasource.username"));
+        primaryProperty.setPassword(environmentProvider.getString("spring.datasource.password"));
+        primaryProperty.setDriverClassName(environmentProvider.getString("spring.datasource.driver-class-name"));
+        DataSource primary = druidDataSourceCreator.doCreateDataSource(primaryProperty);
         DynamicRoutingDataSource dataSource = new DynamicRoutingDataSource();
         dataSource.addDataSource("primary", primary);
         dataSource.setPrimary("primary");

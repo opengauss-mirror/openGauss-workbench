@@ -13,6 +13,21 @@ spring:
   datasource:
     dynamic:
       strict: false #Strictly match the data source, default is false. When set to true and no specified data source is matched, an exception will be thrown. When set to false, the default data source will be used.
+      druid:
+        test-while-idle: false
+        test-on-borrow: true
+        validation-query: "select 1"
+        validation-query-timeout: 10000
+        connection-error-retry-attempts: 3
+        break-after-acquire-failure: true
+        time-between-connect-error-millis: 60000
+        max-wait: 300000
+        connection-properties:
+          ApplicationName: DataKit Alert Monitor
+        remove-abandoned: true
+        remove-abandoned-timeout-millis: 300000
+        log-abandoned: true
+        max-active: 50
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss

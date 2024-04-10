@@ -270,10 +270,13 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
         if (CollectionUtil.isEmpty(templateRuleIds)) {
             return;
         }
-        alertTemplateRuleItemMapper.update(null,
-            new LambdaUpdateWrapper<AlertTemplateRuleItemDO>().set(AlertTemplateRuleItemDO::getIsDeleted,
-                CommonConstants.IS_DELETE).set(AlertTemplateRuleItemDO::getUpdateTime, LocalDateTime.now()).in(
-                AlertTemplateRuleItemDO::getTemplateRuleId, templateRuleIds).eq(
-                AlertTemplateRuleItemDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+        for (Long templateRuleId : templateRuleIds) {
+            alertTemplateRuleItemMapper.update(null,
+                    new LambdaUpdateWrapper<AlertTemplateRuleItemDO>()
+                            .set(AlertTemplateRuleItemDO::getIsDeleted, CommonConstants.IS_DELETE)
+                            .set(AlertTemplateRuleItemDO::getUpdateTime, LocalDateTime.now())
+                            .eq(AlertTemplateRuleItemDO::getTemplateRuleId, templateRuleId)
+                            .eq(AlertTemplateRuleItemDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+        }
     }
 }

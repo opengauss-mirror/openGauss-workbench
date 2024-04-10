@@ -15,6 +15,21 @@ spring:
   datasource:
     dynamic:
       strict: false #Strictly match data sources,Default false. true:Throw exception when the specified data source is not matched,false:Use default data source
+      druid:
+        test-while-idle: false
+        test-on-borrow: true
+        validation-query: "select 1"
+        validation-query-timeout: 10000
+        connection-error-retry-attempts: 3
+        break-after-acquire-failure: true
+        time-between-connect-error-millis: 60000
+        max-wait: 300000
+        connection-properties:
+          ApplicationName: DataKit Log Search
+        remove-abandoned: true
+        remove-abandoned-timeout-millis: 300000
+        log-abandoned: true
+        max-active: 50
   sql:
     init:
       mode: always

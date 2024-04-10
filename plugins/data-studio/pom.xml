@@ -38,13 +38,6 @@
 			<version>3.39.3.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.intarkdb</groupId>
-			<artifactId>IntarkDB-jdbc</artifactId>
-			<version>1.0</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/../../lib/intarkdb-jdbc-1.0.0.1.jar</systemPath>
-		</dependency>
-		<dependency>
 			<groupId>org.opengauss</groupId>
 			<artifactId>opengauss-jdbc</artifactId>
 			<version>3.0.0</version>
@@ -239,6 +232,11 @@
 						<provider>ncti-gba</provider>
 						<description>业务开发</description>
 					</pluginInfo>
+					<loadMainResourcePattern>
+						<includes>
+							<include>org.intarkdb.**</include>
+						</includes>
+					</loadMainResourcePattern>
 				</configuration>
 				<executions>
 					<execution>

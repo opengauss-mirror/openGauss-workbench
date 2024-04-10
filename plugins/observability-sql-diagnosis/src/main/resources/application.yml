@@ -31,20 +31,46 @@ spring:
         remove-abandoned: true
         remove-abandoned-timeout-millis: 300000
         log-abandoned: true
-        max-active: 1
+        max-active: 50
       datasource:
-        embedded:
-          #url: jdbc:sqlite:data/observability-sql-diagnosis-data.db
+        diagnosisSources:
+          #url: jdbc:sqlite:data/diagnosisSources.db
           #driverClassName: org.sqlite.JDBC
           url: jdbc:intarkdb:data/observability-sql-diagnosis-data
           driverClassName: org.intarkdb.IntarkdbJDBC
           init:
-            schema: db/schema.sql
-            data: db/data.sql
+            schema: db/diagnosisSources.sql
+            continue-on-error: true
+            separator: ";"
+        hisDiagnosisTaskInfo:
+          #url: jdbc:sqlite:data/hisDiagnosisTaskInfo.db
+          #driverClassName: org.sqlite.JDBC
+          url: jdbc:intarkdb:data/observability-sql-diagnosis-data
+          driverClassName: org.intarkdb.IntarkdbJDBC
+          init:
+            schema: db/hisDiagnosisTaskInfo.sql
+            continue-on-error: true
+            separator: ";"
+        hisDiagnosisThresholdInfo:
+          #url: jdbc:sqlite:data/hisDiagnosisThresholdInfo.db
+          #driverClassName: org.sqlite.JDBC
+          url: jdbc:intarkdb:data/observability-sql-diagnosis-data
+          driverClassName: org.intarkdb.IntarkdbJDBC
+          init:
+            schema: db/hisDiagnosisThresholdInfo.sql
+            continue-on-error: true
+            separator: ";"
+        paramInfo:
+          #url: jdbc:sqlite:data/paramInfo.db
+          #driverClassName: org.sqlite.JDBC
+          url: jdbc:intarkdb:data/observability-sql-diagnosis-data
+          driverClassName: org.intarkdb.IntarkdbJDBC
+          init:
+            schema: db/paramInfo.sql
             continue-on-error: true
             separator: ";"
         instanceAgent:
-          #url: jdbc:sqlite:data/observability-sql-diagnosis-data.db
+          #url: jdbc:sqlite:data/observability-instance-data.db
           #driverClassName: org.sqlite.JDBC
           url: jdbc:intarkdb:data/observability-instance-data
           driverClassName: org.intarkdb.IntarkdbJDBC

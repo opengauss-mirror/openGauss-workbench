@@ -35,6 +35,6 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 2023/6/9
  */
 @Mapper
-@DS("embedded")
+@DS("hisDiagnosisThresholdInfo")
 public interface HisThresholdMapper extends BaseMapper<DiagnosisThresholdDO> {
 }

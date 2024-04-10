@@ -48,8 +48,7 @@ CREATE TABLE IF NOT EXISTS "modeling_data_flow" (
     "visitor" varchar(1024),
     "input_fileds" varchar(512),
     "output_fields" varchar(512),
-    "operator_content_auto_save" text,
-    "db_name" VARCHAR(255)
+    "operator_content_auto_save" text
     )
 ;
 COMMENT ON COLUMN "modeling_data_flow"."name" IS '数据流名称';
@@ -415,3 +414,24 @@ CREATE TABLE IF NOT EXISTS "ops_olk" (
     "create_time" TIMESTAMP NULL DEFAULT NULL,
     "dad_install_password" TEXT NULL DEFAULT NULL
     );
+
+CREATE TABLE IF NOT EXISTS "ops_device_manager" (
+    "name" varchar(64) NOT NULL PRIMARY KEY,
+    "host_ip" varchar(64) ,
+    "port" varchar(5) ,
+    "user_name" varchar(64) ,
+    "password" varchar(256) ,
+    "pair_id" varchar(256) 
+    )
+;
+
+CREATE TABLE IF NOT EXISTS "ops_disaster_cluster" (
+    "cluster_id" varchar(255) NOT NULL PRIMARY KEY,
+    "primary_cluster_id" varchar(255) ,
+    "primary_cluster_device_manager_name" varchar(64) ,
+    "standby_cluster_id" varchar(255) ,
+    "standby_cluster_device_manager_name" varchar(64) ,
+    "primary_json_path" varchar(255) ,
+    "standby_json_path" varchar(255) 
+    )
+;
