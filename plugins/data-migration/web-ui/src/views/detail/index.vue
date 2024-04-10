@@ -606,7 +606,7 @@ const parselogParameter = (content) => {
     if(obj.increment_param.mysql.result === 0){
         result = result + t('detail.index.5qtkk97a2e29')
     } else if(obj.increment_param.mysql.result === 1){
-      result = result + t('detail.index.5qtkk97a2e30') + obj.increment_param.mysql.binlog_error + t('detail.index.5qtkk97a2e35')
+      result = result + t('detail.index.5qtkk97a2e30') + obj.increment_param.mysql.actualParam  + t('detail.index.5qtkk97a2e57')  + obj.increment_param.mysql.expectedParam+ t('detail.index.5qtkk97a2e35')
     }else{
       result = result + t('detail.index.5qtkk97a2e31')
    }
@@ -615,7 +615,7 @@ const parselogParameter = (content) => {
     if(obj.reverse_param.opengauss.result === 0){
       result = result + t('detail.index.5qtkk97a2e32')
     } else if(obj.reverse_param.opengauss.result === 1){
-      result = result + t('detail.index.5qtkk97a2e33') + obj.reverse_param.opengauss.binlog_error + t('detail.index.5qtkk97a2e35')
+      result = result + t('detail.index.5qtkk97a2e33') + obj.reverse_param.opengauss.binlog_error + t('detail.index.5qtkk97a2e57') + obj.reverse_param.opengauss.binlog + t('detail.index.5qtkk97a2e35')
     }else{
       result = result + t('detail.index.5qtkk97a2e34')
     }
