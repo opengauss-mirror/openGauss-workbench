@@ -168,5 +168,8 @@ https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-
 7. 所有配置完成，保持`openGauss`数据库服务启动
 
 ## 参与开发
-插件开发请参考 openGauss-datakit/doc 目录下的开发手册
-新增插件请勿必更新build.sh脚本，保证可以一键编译
+开发环境搭建参考 [开发环境搭建](https://gitee.com/opengauss/openGauss-workbench/tree/master/openGauss-datakit/doc/DataKit%20Dev%20Setup.md)
+
+插件开发请参考`openGauss-datakit/doc`目录下的开发手册
+
+新增插件请务必更新`build.sh`脚本，保证可以一键编译
