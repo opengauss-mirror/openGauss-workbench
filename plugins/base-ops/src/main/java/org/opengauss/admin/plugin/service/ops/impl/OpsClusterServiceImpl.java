@@ -380,7 +380,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     private String getOS(Session rootSession) {
-        String command = "cat /etc/os-release | grep ID= | head -n 1 | awk -F '=' '{print $2}' | sed 's/\\\"//g'";
+        String command = "cat /etc/os-release | grep -oP '^ID=.*' | awk -F '=' '{print $2}' | sed 's/\\\"//g'";
         try {
             JschResult jschResult = jschUtil.executeCommand(command, rootSession);
             if (jschResult.getExitCode() != 0) {

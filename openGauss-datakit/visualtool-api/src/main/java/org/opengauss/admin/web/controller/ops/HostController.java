@@ -32,6 +32,7 @@ import org.opengauss.admin.common.core.domain.model.ops.HostBody;
 import org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO;
 import org.opengauss.admin.common.core.domain.model.ops.host.SSHBody;
 import org.opengauss.admin.common.core.page.TableDataInfo;
+import org.opengauss.admin.common.enums.OsSupportMap;
 import org.opengauss.admin.system.service.ops.IHostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -111,5 +112,10 @@ public class HostController extends BaseController {
     @GetMapping("/monitor")
     public AjaxResult monitor(@RequestParam String hostId, @RequestParam String businessId, @RequestParam(value = "rootPassword",required = false) String rootPassword){
         return AjaxResult.success(hostService.monitor(hostId,businessId,rootPassword));
+    }
+
+    @GetMapping("/listSupportOsName")
+    public AjaxResult listSupportOsName() {
+        return AjaxResult.success(OsSupportMap.getSupportOsNameList());
     }
 }

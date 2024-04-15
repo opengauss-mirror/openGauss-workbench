@@ -49,6 +49,7 @@ import org.opengauss.admin.common.core.handler.ops.cache.SSHChannelManager;
 import org.opengauss.admin.common.core.handler.ops.cache.TaskManager;
 import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
 import org.opengauss.admin.common.core.vo.HostInfoVo;
+import org.opengauss.admin.common.enums.OsSupportMap;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.ops.JschUtil;
 import org.opengauss.admin.common.utils.ops.WsUtil;
@@ -644,4 +645,20 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         return getOne(queryWrapper, false);
     }
 
+    /**
+     * return os entity mapped
+     */
+    public OpsHostEntity getMappedHostEntityById(String hostId){
+        OpsHostEntity opsHostEntity = getById(hostId);
+        OsSupportMap osMapEnum = OsSupportMap.of(
+                opsHostEntity.getOs(),
+                opsHostEntity.getOsVersion(),
+                opsHostEntity.getCpuArch()
+        );
+
+        opsHostEntity.setOs(osMapEnum.getOs());
+        opsHostEntity.setOsVersion(osMapEnum.getOsVersion());
+
+        return opsHostEntity;
+    }
 }

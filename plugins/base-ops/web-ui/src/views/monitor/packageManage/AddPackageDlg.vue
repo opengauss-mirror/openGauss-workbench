@@ -175,7 +175,7 @@ import {
   delPkgTar,
   editPackage,
   getSysUploadPath,
-  hasPkgName
+  hasPkgName, listSupportOsName
 } from '@/api/ops'
 import { FileItem, Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
@@ -206,6 +206,8 @@ const data = reactive<KeyValue>({
   },
   rules: {},
   osList: [],
+  centosBasedSet: [],
+  openEulerBasedSet: [],
   cpuArchList: [],
   packageVersionList: [],
   typeList: [],
@@ -304,10 +306,10 @@ const osChange = () => {
   if (data.formData.os === OS.All) {
     data.cpuArchList = [{ label: CpuArch.NOARCH, value: CpuArch.NOARCH }]
     data.formData.cpuArch = CpuArch.NOARCH
-  } else if (data.formData.os === OS.CENTOS) {
+  } else if (data.centosBasedSet.includes(data.formData.os)) {
     data.cpuArchList = [{ label: CpuArch.X86_64, value: CpuArch.X86_64 }]
     data.formData.cpuArch = CpuArch.X86_64
-  } else if (data.formData.os === OS.OPEN_EULER) {
+  } else if (data.openEulerBasedSet.includes(data.formData.os)) {
     data.cpuArchList = [
       { label: CpuArch.X86_64, value: CpuArch.X86_64 },
       { label: CpuArch.AARCH64, value: CpuArch.AARCH64 }
@@ -366,7 +368,7 @@ const getPackageName = () => {
   let result = 'openGauss-'
   if (data.formData.packageVersion === OpenGaussVersionEnum.LITE) {
     result = result + 'Lite-' + data.formData.packageVersionNum + '-'
-    if (data.formData.os === 'centos') {
+    if (data.centosBasedSet.includes(data.formData.os)) {
       result += 'CentOS-' + data.formData.cpuArch + '.tar.gz'
     } else {
       result += 'openEuler-' + data.formData.cpuArch + '.tar.gz'
@@ -375,14 +377,14 @@ const getPackageName = () => {
     data.formData.packageVersion === OpenGaussVersionEnum.MINIMAL_LIST
   ) {
     result = result + data.formData.packageVersionNum + '-'
-    if (data.formData.os === OS.CENTOS) {
+    if (data.centosBasedSet.includes(data.formData.os)) {
       result += 'CentOS-64bit.tar.bz2'
     } else {
       result += 'openEuler-64bit.tar.bz2'
     }
   } else {
     result = result + data.formData.packageVersionNum + '-'
-    if (data.formData.os === OS.CENTOS) {
+    if (data.centosBasedSet.includes(data.formData.os)) {
       result += 'CentOS-64bit-all.tar.gz'
     } else {
       result += 'openEuler-64bit-all.tar.gz'
@@ -459,10 +461,17 @@ const getSystemSetting = () => {
 }
 
 const initData = () => {
-  data.osList = [
-    { label: OS.CENTOS, value: OS.CENTOS },
-    { label: OS.OPEN_EULER, value: OS.OPEN_EULER }
-  ]
+  data.osList = []
+  listSupportOsName().then((res) => {
+    data.centosBasedSet = res.data.centosBasedSet
+    data.openEulerBasedSet = res.data.openEulerBasedSet
+    for (let os of data.centosBasedSet) {
+      data.osList.push({ label: os, value: os })
+    }
+    for (let os of data.openEulerBasedSet) {
+      data.osList.push({ label: os, value: os })
+    }
+  })
   data.typeList = [
     { label: 'OpenGauss', value: PackageType.OPENGAUSS },
     { label: 'Zookeeper', value: PackageType.ZOOKEEPER },
@@ -609,12 +618,13 @@ const handleUploadSuccess = (file: FileItem) => {
 }
 
 const generateName = () => {
+  let os = data.openEulerBasedSet.includes(data.formData.os) ? 'openEuler' : 'centos'
   if (
     data.type === 'create' &&
     !data.isNameDirty &&
     data.formData.packageVersionNum
   ) {
-    let name = `${data.formData.type}-${data.formData.os}-${data.formData.cpuArch}`
+    let name = `${data.formData.type}-${os}-${data.formData.cpuArch}`
     if (data.formData.type === PackageType.OPENGAUSS) {
       name += `-${data.formData.packageVersion}`
     }

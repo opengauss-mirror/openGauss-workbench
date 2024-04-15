@@ -25,6 +25,7 @@ package org.opengauss.admin.plugin.enums.ops;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.opengauss.admin.common.enums.OsSupportMap;
 import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
 
 /**
@@ -47,18 +48,15 @@ public enum OpenGaussSupportOSEnum {
     private String omPackagePostfix;
 
     public static OpenGaussSupportOSEnum of(String osInfo, String osVersionInfo, String cpuArchInfo) {
-        if ("centos".equalsIgnoreCase(osInfo) && "x86_64".equalsIgnoreCase(cpuArchInfo)){
+        OsSupportMap osMapEnum = OsSupportMap.of(osInfo, osVersionInfo, cpuArchInfo);
+        if (osMapEnum == OsSupportMap.CENTOS_7_X86_64) {
             return CENTOS_X86_64;
         }
 
-        if ("openEuler".equalsIgnoreCase(osInfo) && "aarch64".equalsIgnoreCase(cpuArchInfo)){
-            return OPENEULER_AARCH64;
-        }
-
-        if ("openEuler".equalsIgnoreCase(osInfo) && "x86_64".equalsIgnoreCase(cpuArchInfo)){
+        if ("x86_64".equalsIgnoreCase(osMapEnum.getCpuArch())) {
             return OPENEULER_X86_64;
         }
-        return CENTOS_X86_64;
+        return OPENEULER_AARCH64;
     }
 
     public boolean match(String os,String cpuArch) {

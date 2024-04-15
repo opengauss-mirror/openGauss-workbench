@@ -430,3 +430,7 @@ export const batchSetGucSetting = (data: KeyValue) => {
 export const listEnterpriseCluster = () => {
   return axios.get('/opsCluster/listEnterpriseCluster')
 }
+
+export const listSupportOsName = () => {
+  return axios.get('/opsCluster/listSupportOsName')
+}

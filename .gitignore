@@ -344,6 +344,7 @@ docs/_book
 dist/
 npm-debug.log
 yarn-error.log
+**/resources/resources
 
 ### WebStorm+all ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
