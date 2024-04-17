@@ -63,7 +63,7 @@ public enum OsSupportMap {
             return CENTOS_7_X86_64;
         }
 
-        if (osBasedSet.isOpenEuler(osInfo)) {
+        if (osBasedSet.isOpenEuler(osInfo.toLowerCase())) {
             // openEuler系os默认映射成openEuler20
             if ("x86_64".equalsIgnoreCase(cpuArchInfo)) {
                 return OPENEULER_20_X86_64;

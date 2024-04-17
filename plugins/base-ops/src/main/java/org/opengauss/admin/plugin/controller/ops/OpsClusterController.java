@@ -251,9 +251,9 @@ public class OpsClusterController extends BaseController {
                           @RequestParam(required = false) String rootPassword) {
         int tmpIndex = expectedOsStr.indexOf("_");
         OpenGaussSupportOSEnum expectedOs = OpenGaussSupportOSEnum.of(
-                expectedOsStr.substring(0, tmpIndex).toLowerCase(Locale.ENGLISH),
+                expectedOsStr.substring(0, tmpIndex),
                 "",
-                expectedOsStr.substring(tmpIndex + 1).toLowerCase(Locale.ENGLISH)
+                expectedOsStr.substring(tmpIndex + 1)
         );
         HostEnv hostEnv = opsClusterService.env(hostId, expectedOs, rootPassword);
         return AjaxResult.success(hostEnv);
