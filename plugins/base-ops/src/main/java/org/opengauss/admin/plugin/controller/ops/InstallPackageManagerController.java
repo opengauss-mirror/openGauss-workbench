@@ -118,7 +118,8 @@ public class InstallPackageManagerController extends BaseController {
                 .eq(Objects.nonNull(packageVersion), OpsPackageManagerEntity::getPackageVersion, Objects.nonNull(packageVersion) ? packageVersion.name() : null)
                 .eq(StrUtil.isNotEmpty(packageVersionNum), OpsPackageManagerEntity::getPackageVersionNum, packageVersionNum)
                 .eq(StrUtil.isNotEmpty(type), OpsPackageManagerEntity::getType, type)
-                .orderByDesc(OpsPackageManagerEntity::getCreateTime);
+                .isNotNull(OpsPackageManagerEntity::getPackageUrl)
+                .orderByDesc(OpsPackageManagerEntity::getPackageVersionNum);
         List<OpsPackageManagerEntity> list = opsPackageManagerService.list(queryWrapper);
         return AjaxResult.success(list);
     }
