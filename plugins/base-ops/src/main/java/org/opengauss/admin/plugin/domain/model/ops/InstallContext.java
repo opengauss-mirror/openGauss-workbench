@@ -26,6 +26,7 @@ package org.opengauss.admin.plugin.domain.model.ops;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.enums.ops.DeployTypeEnum;
@@ -42,6 +43,7 @@ import java.util.Objects;
  * @author lhf
  * @date 2022/8/4 22:56
  **/
+@Slf4j
 @Data
 public class InstallContext implements Cloneable {
 
@@ -109,11 +111,16 @@ public class InstallContext implements Cloneable {
 
             int nodeSize = CollUtil.isEmpty(enterpriseInstallConfig.getNodeConfigList()) ? 0 : enterpriseInstallConfig.getNodeConfigList().size();
             if (enterpriseInstallConfig.getDatabaseKernelArch() == DatabaseKernelArch.MASTER_SLAVE) {
-                int ogVerNum = Integer.parseInt(openGaussVersionNum.replaceAll("\\.", ""));
-                int minNodeSize = ogVerNum > 311 ? 2 : 3;
-                if (clusterDeploy && enterpriseInstallConfig.getIsInstallCM() && nodeSize < minNodeSize) {
-                    throw new OpsException("In traditional master_slave cluster mode, at least "
-                    + minNodeSize + " nodes needed to be installed");
+                try {
+                    String[] splitVersionNums = openGaussVersionNum.split("[_-]");
+                    int ogVerNum = Integer.parseInt(splitVersionNums[0].replaceAll("\\.", ""));
+                    int minNodeSize = ogVerNum > 311 ? 2 : 3;
+                    if (clusterDeploy && enterpriseInstallConfig.getIsInstallCM() && nodeSize < minNodeSize) {
+                        throw new OpsException("In traditional master_slave cluster mode, at least "
+                                + minNodeSize + " nodes needed to be installed");
+                    }
+                } catch (NumberFormatException | ArrayIndexOutOfBoundsException | NullPointerException e) {
+                    log.error("Parsing the openGauss version number failed.");
                 }
             }
 

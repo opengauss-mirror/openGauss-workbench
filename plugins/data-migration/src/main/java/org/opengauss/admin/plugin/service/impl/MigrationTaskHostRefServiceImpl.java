@@ -536,18 +536,9 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         physicalInstallParams.setHostUserId(hostUser.getHostUserId());
         physicalInstallParams.setRunPassword(hostUser.getPassword());
         physicalInstallParams.setInstallPath(realInstallPath);
+        checkPkgName(install);
+        checkJarName(install);
         physicalInstallParams.setJarName(install.getJarName());
-        if (!StringUtils.isEmpty(install.getPkgName())) {
-            try {
-                String versionNumber = install.getPkgName().split("-")[1];
-                String signVersion = "6.0.0";
-                if (versionNumber.compareTo(signVersion) > 0) {
-                    physicalInstallParams.setJarName("portalControl-" + versionNumber + "-exec.jar");
-                }
-            } catch (ArrayIndexOutOfBoundsException e) {
-                log.error("Failed to obtain the portal version number by parsing the installation package name.");
-            }
-        }
         physicalInstallParams.setPkgName(install.getPkgName());
         physicalInstallParams.setInstallStatus(PortalInstallStatus.INSTALLING.getCode());
         physicalInstallParams.setInstallType(install.getInstallType());
@@ -908,6 +899,40 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             }
             log.error("stop kafka failed {} times, try again", retryCount);
             stopKafka(opsHost, hostUser, password, portalHome, jarName, ++retryCount);
+        }
+    }
+
+    /**
+     * @param install install information
+     */
+    private void checkPkgName(MigrationHostPortalInstall install) {
+        String pkgName = install.getPkgName();
+        if (!StringUtils.isEmpty(pkgName)) {
+            int index = pkgName.indexOf("PortalControl");
+            if (index != -1) {
+                install.setPkgName(pkgName.substring(index));
+            } else {
+                log.error("The portal package name does not contain 'PortalControl'. Please check.");
+            }
+        }
+    }
+
+    /**
+     * @param install install information
+     */
+    private void checkJarName(MigrationHostPortalInstall install) {
+        String pkgName = install.getPkgName();
+        if (!StringUtils.isEmpty(pkgName)) {
+            String[] parts = pkgName.split("-");
+            if (parts.length > 1) {
+                String versionNumber = parts[1];
+                String signVersion = "6.0.0";
+                if (versionNumber.compareTo(signVersion) > 0) {
+                    install.setJarName("portalControl-" + versionNumber + "-exec.jar");
+                }
+            } else {
+                log.error("Failed to obtain the portal version number by parsing the installation package name.");
+            }
         }
     }
 }
