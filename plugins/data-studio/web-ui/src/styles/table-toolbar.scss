@@ -1,14 +1,17 @@
 .table-toolbar {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   flex-shrink: 0;
-  flex-wrap: wrap;
   padding: 5px 0;
   background: var(--el-bg-color-bar);
   .toolbar-left,
   .toolbar-right {
     display: flex;
     flex-wrap: wrap;
+  }
+  .toolbar-right {
+    justify-content: center;
   }
   .tool-item-wrapper {
     display: flex;

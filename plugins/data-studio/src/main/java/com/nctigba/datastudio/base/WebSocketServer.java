@@ -26,6 +26,7 @@ package com.nctigba.datastudio.base;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gitee.starblues.annotation.Extract;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
@@ -155,10 +156,14 @@ public class WebSocketServer implements SocketExtract {
      * @throws IOException IOException
      */
     public synchronized void sendMessage(
-            String sessionId, MessageEnum type, String code, String message, Object obj) throws IOException {
+            String sessionId, MessageEnum type, String code, String message, Object obj) {
         WebDsResult result = WebDsResult.ok(type.toString(), message).addData(obj);
         result.setCode(code);
-        wsFacade.sendMessage(WEBDS_PLUGIN, sessionId, objectMapper.writeValueAsString(result));
+        try {
+            wsFacade.sendMessage(WEBDS_PLUGIN, sessionId, objectMapper.writeValueAsString(result));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -170,7 +175,7 @@ public class WebSocketServer implements SocketExtract {
      * @param obj       obj
      * @throws IOException IOException
      */
-    public void sendMessage(String sessionId, MessageEnum type, String message, Object obj) throws IOException {
+    public void sendMessage(String sessionId, MessageEnum type, String message, Object obj) {
         log.info("sendMessage sessionId: " + sessionId + ",type:" + type);
         sendMessage(sessionId, type, TWO_HUNDRED, message, obj);
     }

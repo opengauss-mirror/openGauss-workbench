@@ -3,9 +3,9 @@
     <div class="top">
       <div>{{ $t('table.sort.title') + $t('common.colon') }}</div>
       <el-table class="compact-table" :data="tableData" ref="sortTableRef">
-        <el-table-column type="selection" width="40" />
-        <el-table-column prop="name" :label="t('table.column.title')" min-width="100" />
-        <el-table-column :label="t('table.sort.title')" width="70">
+        <el-table-column type="selection" width="30" />
+        <el-table-column prop="name" :label="t('table.column.title')" min-width="80" />
+        <el-table-column :label="t('table.sort.title')" width="65">
           <template #default="{ row }">
             <el-dropdown trigger="click">
               <span class="dropdown-link">
@@ -104,7 +104,7 @@
 
 <style lang="scss" scoped>
   .data-asider {
-    width: 300px;
+    width: 340px;
     height: 100%;
     padding: 0 10px;
     display: flex;

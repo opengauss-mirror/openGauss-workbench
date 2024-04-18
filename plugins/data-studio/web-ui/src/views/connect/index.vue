@@ -13,7 +13,7 @@
         ref="tableRef"
         :data="tableList"
         border
-        :height="410"
+        :height="430"
         highlight-current-row
         @current-change="handleCurrentChange"
       >
@@ -178,6 +178,9 @@
           <el-button type="primary" @click="resetForm(ruleFormRef)">
             {{ $t('button.reset') }}
           </el-button>
+          <el-button type="primary" @click="testConnection(ruleFormRef)">
+            {{ $t('connection.testConnection') }}
+          </el-button>
           <el-button type="primary" @click="confirmForm(ruleFormRef)">
             {{ $t('button.confirm') }}
           </el-button>
@@ -195,6 +198,7 @@
     getAllCluster,
     getDataLinkList,
     deleteDataLinkList,
+    testConnectionApi,
   } from '@/api/connect';
   import { ElMessage, ElMessageBox, ElTable, FormInstance, FormRules } from 'element-plus';
   import { ArrowDown, View, Hide, Search } from '@element-plus/icons-vue';
@@ -414,6 +418,22 @@
     }
   };
 
+  const testConnection = async (formEl: FormInstance | undefined) => {
+    if (!formEl) return;
+    await formEl.validate(async (valid) => {
+      if (valid) {
+        const params = {
+          ...form,
+          port: String(form.port),
+          password: Crypto.encrypt(form.password),
+          webUser: UserStore.userId,
+          connectionid: props.uuid || undefined,
+        };
+        const time = await testConnectionApi(params);
+        ElMessage.success(t('message.testConnectionSuccess', { time }));
+      }
+    });
+  };
   const confirmForm = async (formEl: FormInstance | undefined) => {
     if (!formEl) return;
     await formEl.validate(async (valid) => {
@@ -421,9 +441,6 @@
     });
   };
   const resetForm = (formEl: FormInstance | undefined) => {
-    Object.assign(connectListInfo, {
-      listCurrentRow: {},
-    });
     showNameFilter.value = false;
     showInfoFilter.value = false;
     infoFilterInput.value = '';
@@ -532,12 +549,15 @@
     padding-right: 80px;
   }
   :deep(.el-table) {
-    width: 580px;
+    flex: 1;
     .el-table__cell {
       .cell {
         padding: 0 8px;
       }
     }
+  }
+  :deep(.el-form) {
+    width: 320px;
   }
   :deep(.source-column) {
     .cell {

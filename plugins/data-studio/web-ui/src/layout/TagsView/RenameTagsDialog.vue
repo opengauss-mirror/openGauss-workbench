@@ -10,7 +10,7 @@
     >
       <div class="dialog_body">
         <div class="tips">
-          {{ $t('windows.renameTerminalTips', { name: decodeURIComponent(props.tag.fileName) }) }}
+          {{ $t('windows.renameTerminalTips', { name: decodeURIComponent(props.tag.showName) }) }}
         </div>
         <el-form :model="form" ref="ruleFormRef" :rules="rules" label-width="0px">
           <el-form-item prop="name">

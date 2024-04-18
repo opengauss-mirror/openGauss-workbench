@@ -69,7 +69,7 @@ public class CloseSqlImpl implements OperationInterface {
             }
             webSocketServer.sendMessage(windowName, TEXT,
                     LocaleStringUtils.transLanguageWs("2004", webSocketServer), null);
-        } catch (SQLException | IOException e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }

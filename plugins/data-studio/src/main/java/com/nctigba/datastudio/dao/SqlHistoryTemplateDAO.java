@@ -30,6 +30,7 @@ import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.jdbc.UncategorizedSQLException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -66,6 +67,17 @@ public class SqlHistoryTemplateDAO implements ApplicationRunner {
                         + " lock boolean,"
                         + " webUser varchar(20)"
                         + ");");
+        String[] sqlList = {
+                "alter table sqlHistory add column errMes varchar(512);",
+                "alter table sqlHistory add column updateCount integer;"
+        };
+        for (String s : sqlList) {
+            try {
+                jdbcTemplate.execute(s);
+            } catch (UncategorizedSQLException e) {
+                continue;
+            }
+        }
     }
 
     /**
@@ -74,7 +86,8 @@ public class SqlHistoryTemplateDAO implements ApplicationRunner {
      * @param sqlHistoryDOList sqlHistoryDOList
      */
     public void insertTable(List<SqlHistoryDO> sqlHistoryDOList) {
-        String sql = "insert into sqlHistory(startTime, success, sql, executeTime, lock, webUser) values(?,?,?,?,?,?)";
+        String sql = "insert into sqlHistory(startTime, success, sql, executeTime, lock, webUser, errMes, updateCount) "
+                + "values(?,?,?,?,?,?,?,?)";
         int[] counts = jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
@@ -84,6 +97,8 @@ public class SqlHistoryTemplateDAO implements ApplicationRunner {
                 ps.setString(4, sqlHistoryDOList.get(i).getExecuteTime());
                 ps.setBoolean(5, sqlHistoryDOList.get(i).isLock());
                 ps.setString(6, sqlHistoryDOList.get(i).getWebUser());
+                ps.setString(7, sqlHistoryDOList.get(i).getErrMes());
+                ps.setInt(8, sqlHistoryDOList.get(i).getUpdateCount());
             }
 
             @Override
@@ -129,7 +144,8 @@ public class SqlHistoryTemplateDAO implements ApplicationRunner {
     public List<SqlHistoryDO> queryTable(SqlHistoryDO sqlHistoryDO) {
         log.info("SqlHistoryTemplate queryTable sqlHistoryDO: " + sqlHistoryDO);
         List<SqlHistoryDO> list = jdbcTemplate.query(
-                "select id, startTime, success, sql, executeTime, lock, webUser from sqlHistory where webUser = '"
+                "select id, startTime, success, sql, executeTime, lock, webUser, errMes, updateCount "
+                        + "from sqlHistory where webUser = '"
                         + sqlHistoryDO.getWebUser() + "' order by lock desc, startTime desc;",
                 new BeanPropertyRowMapper<>(SqlHistoryDO.class));
         return list;

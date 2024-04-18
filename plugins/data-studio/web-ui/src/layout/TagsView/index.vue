@@ -18,15 +18,10 @@
             :label="item.label"
           ></el-option>
         </el-select>
-        <div class="operation-icon-wrapper" :title="t('connection.new')">
-          <svg class="operation-icon" aria-hidden="true" @click="openConnectDialog">
-            <use xlink:href="#icon-icon_newlink"></use>
-          </svg>
-        </div>
-        <div class="operation-icon-wrapper" :title="t('create.terminal')">
-          <svg class="operation-icon" aria-hidden="true" @click="createTerminal">
-            <use xlink:href="#icon-icon_newserve"></use>
-          </svg>
+        <div v-show="AppStore.currentTerminalInfo?.uuid">
+          <el-button type="primary" @click="createTerminal" size="small" style="margin-left: 5px">
+            {{ $t('create.terminal') }}
+          </el-button>
         </div>
       </div>
       <div class="right">
@@ -60,7 +55,9 @@
               @contextmenu.prevent="contextMenu.visible = false"
             >
               <svg-icon :icon-class="tag.meta.icon" class-name="pre-icon" />
-              <div class="tags-view-item">{{ $t('windows.home') }}</div>
+              <div class="tags-view-item" :title="getTagMultiTitle(tag)">
+                {{ $t('windows.home') }}
+              </div>
             </div>
             <div
               v-else
@@ -69,11 +66,8 @@
               @contextmenu.prevent="handleContextmenu($event, tag)"
             >
               <svg-icon :icon-class="tag.meta.icon" class-name="pre-icon" />
-              <div
-                class="tags-view-item single-line-omission"
-                :title="decodeURIComponent(tag.title)"
-              >
-                {{ decodeURIComponent(tag.fileName) }}
+              <div class="tags-view-item single-line-omission" :title="getTagMultiTitle(tag)">
+                {{ decodeURIComponent(tag.showName) }}
               </div>
               <el-icon
                 v-if="!isAffix(tag)"
@@ -94,6 +88,9 @@
         </li>
         <li @click="renameTerminal" v-if="contextTag.name == 'createTerminal'">
           {{ $t('windows.renameTerminal') }}
+        </li>
+        <li @click="createSameTerminal(contextTag)" v-if="contextTag.name == 'createTerminal'">
+          {{ $t('create.terminal') }}
         </li>
         <li @click="closeCurrentTab">{{ $t('windows.closeCurrentTab') }}</li>
         <li @click="closeOtherTab">{{ $t('windows.closeOtherTab') }}</li>
@@ -123,6 +120,7 @@
   import path from 'path-browserify';
   import { handleEventQueueProcedure, updateEventQueue } from '@/hooks/saveData';
   import { refreshRunningTags, deleteRunningTag } from '@/hooks/tagRunning';
+  import getTagMultiTitleArr from './getTagMultiTitleArr';
 
   const route = useRoute();
   const router = useRouter();
@@ -358,6 +356,19 @@
     });
   }
 
+  const getTagMultiTitle = (tag) => {
+    const arr = getTagMultiTitleArr(tag);
+    return arr.reduce((pre, cur, index) => {
+      const curValue =
+        cur.key == 'windows.terminal' && tag.name == 'home' ? t('windows.home') : cur.value;
+      const curStr = `${t(cur.key)}${t('common.colon')}${curValue}`;
+      return index > 0
+        ? `${pre}
+${curStr}`
+        : curStr;
+    }, '');
+  };
+
   const contextMenu = reactive({
     menuStyles: {
       top: 0,
@@ -427,6 +438,27 @@
   const renameTerminal = () => {
     contextMenu.visible = false;
     visibleRenameDialog.value = true;
+  };
+
+  const createSameTerminal = (tag) => {
+    contextMenu.visible = false;
+    const { connectInfoName, rootId, dbname, uuid } = tag.query;
+    const terminalNum = TagsViewStore.maxTerminalNum + 1;
+    const title = `${dbname}@${connectInfoName}(${terminalNum})`;
+    const time = Date.now();
+    router.push({
+      path: '/createTerminal/' + time,
+      query: {
+        title,
+        fileName: title,
+        rootId,
+        connectInfoName,
+        uuid,
+        dbname,
+        terminalNum,
+        time,
+      },
+    });
   };
 
   onMounted(() => {

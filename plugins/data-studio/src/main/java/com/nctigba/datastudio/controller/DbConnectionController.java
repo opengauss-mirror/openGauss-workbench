@@ -176,4 +176,14 @@ public class DbConnectionController {
     public Integer getTimeLength(@RequestParam(value = "uuid") String uuid) {
         return dbConnectionService.getTimeLength(uuid);
     }
+
+    /**
+     * test connection
+     * @param request request
+     * @return time
+     */
+    @PostMapping(value = "/connection/test", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Long test(@RequestBody DbConnectionCreateDTO request) {
+        return dbConnectionService.test(request);
+    }
 }

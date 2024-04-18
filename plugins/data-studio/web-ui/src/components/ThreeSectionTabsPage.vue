@@ -3,8 +3,8 @@
     <div class="tabs">
       <slot name="tabs" />
     </div>
-    <div class="tabs-container">
-      <slot name="tabs-container" />
+    <div class="center-container">
+      <slot name="center-container" />
     </div>
     <div class="page-button" v-if="slots['page-bottom-button']">
       <slot name="page-bottom-button" />
@@ -34,7 +34,7 @@
       font-weight: normal;
     }
   }
-  .tabs-container {
+  .center-container {
     flex: 1;
     display: flex;
     flex-basis: auto;

@@ -65,6 +65,16 @@ export const useAppStore = defineStore({
         return prev.concat(cur.connectedDatabase.filter((item) => item.isConnect));
       }, []);
     },
+    connectedRootInfo(state) {
+      const info = {};
+      state.connectListMap.forEach((item) => {
+        if (item.connectedDatabase.length) {
+          const { id, ...args } = item;
+          info[id] = args;
+        }
+      });
+      return info;
+    },
     lastestConnectDatabase(): LastestConnectDatabase {
       return this.connectedDatabase.sort((a, b) => b.connectTime - a.connectTime)[0] || {};
     },

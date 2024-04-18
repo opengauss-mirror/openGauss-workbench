@@ -11,8 +11,7 @@
     <div>
       {{ $t('table.export.chooseFormat') }}
       <el-radio-group v-model="fileType">
-        <el-radio label="Excel(xlsx)">Excel(xlsx)</el-radio>
-        <el-radio label="Excel(xls)">Excel(xls)</el-radio>
+        <el-radio v-for="item in fileTypeList" :key="item" :label="item">{{ item }}</el-radio>
       </el-radio-group>
     </div>
     <template #footer>
@@ -55,10 +54,11 @@
   });
 
   const loading = ref(null);
-  const fileType = ref('Excel(xlsx)');
+  const fileTypeList = ref(['Excel(xlsx)', 'Excel(xls)']);
+  const fileType = ref(fileTypeList.value[0]);
 
   const resetForm = () => {
-    fileType.value = 'Excel(xlsx)';
+    fileType.value = fileTypeList.value[0];
   };
   const confirm = async () => {
     visible.value = false;

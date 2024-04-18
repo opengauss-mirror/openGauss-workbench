@@ -3,7 +3,7 @@
     :model="form"
     class="rule-form"
     ref="ruleFormRef"
-    label-width="110px"
+    label-width="auto"
     label-position="left"
     :label-suffix="$t('common.colon')"
   >
@@ -25,7 +25,7 @@
               :value="item.name"
             />
           </el-select>
-          <el-tooltip v-else effect="light">
+          <el-tooltip v-else effect="light" :disabled="!form.role.length">
             <template #content>
               <div v-for="(item, key) in form.role" :key="key"> {{ item }} <br /> </div>
             </template>
@@ -52,7 +52,7 @@
               :value="item.name"
             />
           </el-select>
-          <el-tooltip v-else effect="light">
+          <el-tooltip v-else effect="light" :disabled="!form.administrator.length">
             <template #content>
               <div v-for="(item, key) in form.administrator" :key="key"> {{ item }} <br /> </div>
             </template>

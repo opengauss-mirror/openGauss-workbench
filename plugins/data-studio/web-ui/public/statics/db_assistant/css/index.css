@@ -4,7 +4,6 @@
 
 .buttontitlearea {
   height: 25px;
-  width: 350px;
   padding: 0px 20px 0px 20px;
 }
 
@@ -67,15 +66,11 @@ p {
   padding: 0px 20px 0px 20px;
 }
 
-.grammar_content_title {
-  width: 350px;
-}
-
 /* Style of input box */
 .keywordselect {
   font-size: 10px;
   line-height: 14px;
-  width: 224px;
+  width: calc(100% - 80px);
   height: 19px;
   border: 1px solid var(--el-border-color);
   background: none;
@@ -114,7 +109,7 @@ p {
   overflow: auto;
   left: 95px;
   top: 63px;
-  width: 221px !important;
+  width: calc(100% - 125px);
 }
 .keyInfoStyle td {
   padding: 2px 7px;
@@ -122,7 +117,7 @@ p {
 
 .grammar-font {
   height: 14px;
-  width: 55px;
+  width: 70px;
   font-size: 14px;
   line-height: 14px;
   align-items: center;

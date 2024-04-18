@@ -1,7 +1,7 @@
 <!-- Copyright(c) vue-admin-perfect(zouzhibin). -->
 <template>
   <div class="main-container-wrapper">
-    <Splitpanes class="default-theme" :dbl-click-splitter="false">
+    <Splitpanes class="default-theme main-container-split" :dbl-click-splitter="false">
       <Pane min-size="20" max-size="40" size="20">
         <Sidebar class="sidebar-container" />
       </Pane>
@@ -65,5 +65,8 @@
   :deep(.el-divider--vertical) {
     height: 100%;
     margin: 0px 0px;
+  }
+  .main-container-split > :deep(.splitpanes__splitter) {
+    border-left: none !important;
   }
 </style>

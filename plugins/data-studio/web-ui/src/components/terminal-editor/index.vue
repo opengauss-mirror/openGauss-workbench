@@ -333,6 +333,18 @@
     });
   };
 
+  const insertBlankLine = () => {
+    // This requires that each execution result message must have a blank line.
+    // Starting from the second execution
+    if (msgData.value.length) {
+      msgData.value.push({
+        id: Date.now(),
+        label: '',
+        text: '<br/>',
+      });
+    }
+  };
+
   interface Message {
     code: string;
     data?: any;
@@ -583,7 +595,16 @@
       return;
     } else {
       loading.value?.close();
-      ElMessageBox.alert(res.msg, t('common.error'));
+      ElMessageBox.alert(res.msg, t('common.error'), {
+        dangerouslyUseHTMLString: true,
+      });
+      const d = new Date();
+      res.msg &&
+        msgData.value.push({
+          id: d.getTime(),
+          label: `[${dateFormat(d, 'yyyy-MM-dd hh:mm:ss.S')}]`,
+          text: `[ERROR] ${res.msg}`,
+        });
       props.editorType == 'sql' && getButtonStatus();
     }
   };
@@ -614,6 +635,7 @@
       schema: ws.schema,
       isPackage: ws.isPackage,
     });
+    insertBlankLine();
     getButtonStatus();
   };
 
@@ -645,6 +667,7 @@
         sql: editorRef.value.getSelectionValue() || editorRef.value.getValue(),
       });
     }
+    insertBlankLine();
   };
 
   const handleStop = () => {
@@ -666,6 +689,7 @@
     if (!isRemenberNoAskOpenCoverage.value) {
       isOpenCoverage = false;
     }
+    insertBlankLine();
     handleStartDebugContent();
   };
 

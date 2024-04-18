@@ -382,9 +382,6 @@ function readWorkbookFromRemoteFile(callback) {
   xhr.send();
 }
 $(function () {
-  $('#keywordInfo').scrollBar({
-    width: 252,
-  });
   loadSuggestion(recordPath);
   processInput();
   $('body').contextmenu(function (event) {

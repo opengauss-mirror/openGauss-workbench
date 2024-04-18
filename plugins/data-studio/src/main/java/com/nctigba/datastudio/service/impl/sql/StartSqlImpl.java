@@ -69,7 +69,7 @@ public class StartSqlImpl implements OperationInterface {
 
     @Override
     @Async
-    public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException, IOException {
+    public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException {
         PublicParamQuery paramReq = DebugUtils.changeParamType(obj);
         String windowName = paramReq.getWindowName();
         if (!conMap.containsKey(paramReq.getUuid())) {
@@ -109,6 +109,7 @@ public class StartSqlImpl implements OperationInterface {
                         if (stat.getUpdateCount() != -1) {
                             webSocketServer.sendMessage(windowName, TEXT, LocaleStringUtils.transLanguageWs(
                                     "2005", webSocketServer) + stat.getUpdateCount(), null);
+                            sqlHistoryDO.setUpdateCount(stat.getUpdateCount());
                         } else {
                             break;
                         }
@@ -117,25 +118,28 @@ public class StartSqlImpl implements OperationInterface {
                 }
                 webSocketServer.sendMessage(windowName, TEXT,
                         LocaleStringUtils.transLanguageWs("2003", webSocketServer), null);
-            } catch (IOException | SQLException e) {
+                webSocketServer.sendMessage(windowName, TEXT,
+                        LocaleStringUtils.transLanguageWs("2023", webSocketServer) +
+                                (endTime.getTime() - startTime.getTime()) + "ms", null);
+            } catch(SQLException e) {
                 log.info("StartSqlImpl operate catch: " + e);
                 isSuccess = false;
                 endTime = new Date();
-                try {
-                    if (e.getMessage().contains("FATAL: terminating connection due to administrator command")) {
-                        webSocketServer.sendMessage(windowName, DISCONNECTION,
-                                LocaleStringUtils.transLanguageWs("1004", webSocketServer), paramReq.getUuid());
-                        return;
-                    }
-                    webSocketServer.sendMessage(windowName, WINDOW, FIVE_HUNDRED, e.getMessage(), e.getStackTrace());
-                    webSocketServer.sendMessage(windowName, BUTTON,
-                            LocaleStringUtils.transLanguageWs("2006", webSocketServer), null);
-                    OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
-                    operateStatus.enableStopRun();
-                    webSocketServer.setOperateStatus(windowName, operateStatus);
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
+                if (e.getMessage().contains("FATAL: terminating connection due to administrator command")) {
+                    webSocketServer.sendMessage(windowName, DISCONNECTION,
+                            LocaleStringUtils.transLanguageWs("1004", webSocketServer), paramReq.getUuid());
+                    return;
                 }
+                String errMes =
+                        LocaleStringUtils.transLanguageWs("2024", webSocketServer) + e.getErrorCode() + "<br/>" +
+                                e.getMessage();
+                webSocketServer.sendMessage(windowName, WINDOW, FIVE_HUNDRED, errMes, e.getStackTrace());
+                webSocketServer.sendMessage(windowName, BUTTON,
+                        LocaleStringUtils.transLanguageWs("2006", webSocketServer), null);
+                OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
+                operateStatus.enableStopRun();
+                webSocketServer.setOperateStatus(windowName, operateStatus);
+                sqlHistoryDO.setErrMes(e.getMessage());
             } finally {
                 sqlHistoryDO.setStartTime(df.format(startTime));
                 sqlHistoryDO.setSuccess(isSuccess);

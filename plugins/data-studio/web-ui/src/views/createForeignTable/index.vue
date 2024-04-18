@@ -11,7 +11,7 @@
         </svg>
       </span>
     </template>
-    <template #tabs-container>
+    <template #center-container>
       <ForeignCreateTab
         ref="foreignRef"
         v-show="currentTabName == 'ForeignTab'"

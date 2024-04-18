@@ -4,7 +4,7 @@ export interface VisitedView extends RouteLocationNormalized {
   name: string;
   id: number;
   title: string;
-  fileName?: string;
+  showName?: string;
   connectInfoName?: string;
   dbname?: string;
   terminalNum?: string;

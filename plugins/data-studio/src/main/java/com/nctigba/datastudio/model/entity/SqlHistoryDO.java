@@ -52,4 +52,8 @@ public class SqlHistoryDO {
     private boolean isLock;
 
     private String webUser;
+
+    private String errMes;
+
+    private Integer updateCount = 0;
 }

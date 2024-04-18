@@ -9,7 +9,7 @@
       </el-tabs>
       <el-icon class="refresh" @click="handleRefresh"><Refresh /></el-icon>
     </template>
-    <template #tabs-container>
+    <template #center-container>
       <KeepAlive>
         <component
           :is="dataMap[currentTabName].component"

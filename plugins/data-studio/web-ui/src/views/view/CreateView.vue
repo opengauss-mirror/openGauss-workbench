@@ -6,7 +6,7 @@
         <el-tab-pane :label="$t('view.preview')" name="Sql"></el-tab-pane>
       </el-tabs>
     </template>
-    <template #tabs-container>
+    <template #center-container>
       <div v-show="currentTabName == 'Base'">
         <el-form :model="form" ref="ruleFormRef" :rules="rules" label-width="120px">
           <el-row :gutter="50">

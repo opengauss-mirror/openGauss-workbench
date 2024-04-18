@@ -112,7 +112,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
     public DatabaseConnectionDO addDatabaseConnection(DbConnectionCreateDTO request) {
         if (databaseConnectionDAO.getJudgeName(request.getName(), request.getWebUser()) == 0) {
             DatabaseConnectionDO conn = request.toDatabaseConnection();
-            conn.setEdition(test(request));
+            conn.setEdition(getVersion(request));
             databaseConnectionDAO.insertTable(conn);
             DatabaseConnectionDO dataList = databaseConnectionDAO.getAttributeByName(request.getName(),
                     request.getWebUser());
@@ -155,7 +155,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
     @Override
     public DatabaseConnectionDO updateDatabaseConnection(DbConnectionCreateDTO request) throws SQLException {
         DatabaseConnectionDO conn = request.toDatabaseConnection();
-        conn.setEdition(test(request));
+        conn.setEdition(getVersion(request));
         connectionMapDAO.deleteConnection(request.getConnectionid());
         databaseConnectionDAO.updateTable(conn);
         DatabaseConnectionDO dataList = databaseConnectionDAO.getAttributeByName(request.getName(),
@@ -179,7 +179,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
     @Override
     public DatabaseConnectionDO loginDatabaseConnection(DbConnectionCreateDTO request) {
         DatabaseConnectionDO conn = request.toDatabaseConnection();
-        conn.setEdition(test(request));
+        conn.setEdition(getVersion(request));
         databaseConnectionDAO.updateTable(conn);
         DatabaseConnectionDO dataList = databaseConnectionDAO.getAttributeByName(request.getName(),
                 request.getWebUser());
@@ -536,9 +536,8 @@ public class DbConnectionServiceImpl implements DbConnectionService {
         return list;
     }
 
-    @Override
-    public String test(DbConnectionCreateDTO request) {
-        log.info("test {}", request);
+
+    private String getVersion(DbConnectionCreateDTO request) {
         return metaDataByJdbcService.versionSQL(
                 GET_URL_JDBC + request.getIp() + ":" + request.getPort() + "/" + request.getDataName()
                         + CONFIGURE_TIME,
@@ -548,4 +547,22 @@ public class DbConnectionServiceImpl implements DbConnectionService {
         );
     }
 
+    @Override
+    public Long test(DbConnectionCreateDTO request) {
+        log.info("test {}", request);
+        try{
+            long start = System.currentTimeMillis();
+            Connection connection = ConnectionUtils.connectGet(
+                    GET_URL_JDBC + request.getIp() + ":" + request.getPort() + "/" + request.getDataName()
+                            + CONFIGURE_TIME,
+                    request.getUserName(),
+                    request.getPassword()
+            );
+            long time = System.currentTimeMillis() - start;
+            connection.close();
+            return time;
+        }catch (SQLException e) {
+            throw new CustomException(e.getMessage());
+        }
+    }
 }

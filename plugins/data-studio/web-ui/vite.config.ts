@@ -19,7 +19,7 @@ function resolve(dir) {
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
-    base: mode === 'production' ? `/static-plugin/${env.VITE_PLUGIN_NAME}/` : '/',
+    base: env.VITE_PLUGIN_NAME ? `/static-plugin/${env.VITE_PLUGIN_NAME}/` : '/',
     plugins: [
       vue(),
       vueSetupExtend(),

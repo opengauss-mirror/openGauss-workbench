@@ -88,8 +88,7 @@
       Object.assign(enterPasswordProps, data);
       enterPasswordVisible.value = true;
     });
-    document.getElementById('app').style.height =
-      import.meta.env.MODE === 'production' ? 'calc(100vh - 115px)' : '100%';
+    document.getElementById('app').style.height = self === parent ? '100%' : 'calc(100vh - 115px)';
 
     window.$wujie?.bus.$on('opengauss-theme-change', (val) => {
       // 'light' | 'dark'
