@@ -775,6 +775,64 @@ public class JschUtil {
         }
     }
 
+    /**
+     * @param rootSession root user session
+     * @param dependencies the list of dependencies
+     * @return java.util.ArrayList<java.lang.String> the list of missing dependencies
+     */
+    public ArrayList<String> checkDependencies(Session rootSession, ArrayList<String> dependencies) {
+        if (dependencies == null || dependencies.isEmpty()) {
+            log.warn("The list of dependencies to check is null or empty.");
+            return dependencies;
+        }
+
+        ArrayList<String> missingDependencies = new ArrayList<>();
+
+        String command = String.format("yum list installed | egrep '%s'",
+                String.join("|", dependencies));
+
+        JschResult jschResult = null;
+        try {
+            jschResult = executeCommand(command, rootSession);
+        } catch (OpsException e) {
+            log.info("None of the checked dependencies exists.");
+            return dependencies;
+        } catch (IOException | InterruptedException e) {
+            log.error("The check dependencies command fails to be executed. Details: ", e);
+            return dependencies;
+        }
+
+        String commandOutput = jschResult.getResult();
+        for (String dependency : dependencies) {
+            if (!commandOutput.contains(dependency)) {
+                missingDependencies.add(dependency);
+            }
+        }
+
+        return missingDependencies;
+    }
+
+    /**
+     * @param rootSession root user session
+     * @param dependencies the list of dependencies
+     */
+    public void installDependencies(Session rootSession, ArrayList<String> dependencies) {
+        if (dependencies == null || dependencies.isEmpty()) {
+            log.warn("The list of dependencies to install is null or empty.");
+            return;
+        }
+
+        String command = "yum install -y " + String.join(" ", dependencies);
+
+        try {
+            executeCommand(command, rootSession);
+        } catch (OpsException e) {
+            log.error("Some dependencies are not installed successfully. Details: " + e);
+        } catch (IOException | InterruptedException e) {
+            log.error("The install dependencies command fails to be executed. Details: " + e);
+        }
+    }
+
     private class JschProgressMonitor implements SftpProgressMonitor {
         // The total number of bytes currently received
         private long count = 0L;
