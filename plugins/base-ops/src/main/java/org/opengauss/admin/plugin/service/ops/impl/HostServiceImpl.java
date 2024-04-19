@@ -303,7 +303,18 @@ public class HostServiceImpl implements IHostService {
         }
     }
 
+    /**
+     * @param rootSession root user session
+     * @param port port number
+     * @return boolean is port used
+     */
     private boolean portUsed(Session rootSession, Integer port) {
+        ArrayList<String> dependencies = new ArrayList<>();
+        dependencies.add("lsof");
+
+        ArrayList<String> missingDependencies = jschUtil.checkDependencies(rootSession, dependencies);
+        jschUtil.installDependencies(rootSession, missingDependencies);
+
         String command = "lsof -i:"+port;
         try {
             jschUtil.executeCommand(command, rootSession);
