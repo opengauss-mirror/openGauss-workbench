@@ -258,7 +258,7 @@ public class PrometheusService extends AbstractInstaller {
     private Resource getMainInstallPkg() throws IOException {
         String archStr = System.getProperty("os.arch");
         Resource[] resources =
-            resourcePatternResolver.getResources("classpath*:pkg/prometheus-**-" + archStr + TAR);
+            resourcePatternResolver.getResources("classpath*:pkg/prometheus-**-" + arch(archStr) + TAR);
         if (resources.length == 0) {
             throw new CustomException("The Prometheus install package is not exist");
         }
