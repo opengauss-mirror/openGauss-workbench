@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS his_diagnosis_task_info (
 );
 
 ALTER TABLE his_diagnosis_task_info ADD collect_pid_status INTEGER NULL;
+ALTER TABLE his_diagnosis_task_info ADD schema_name VARCHAR;
 
 CREATE TABLE IF NOT EXISTS his_diagnosis_result_info (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,

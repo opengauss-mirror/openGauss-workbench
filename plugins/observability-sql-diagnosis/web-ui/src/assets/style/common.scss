@@ -255,3 +255,26 @@
 .gap-row {
     margin-bottom: 16px;
 }
+
+.line-tips {
+  position: absolute;
+  top: 8px;
+  left: 13px;
+  display: flex;
+  > div {
+    font-size: 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 12px;
+    gap: 4px;
+    border: 1px solid var(--border-2);
+    border-radius: 2px;
+  }
+
+  &.center {
+    position: unset;
+    justify-content: center;
+    flex-direction: row;
+  }
+}

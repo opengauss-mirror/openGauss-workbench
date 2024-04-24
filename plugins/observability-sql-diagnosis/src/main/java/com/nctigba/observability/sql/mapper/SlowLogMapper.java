@@ -24,11 +24,34 @@
 package com.nctigba.observability.sql.mapper;
 
 
-import org.apache.ibatis.annotations.Mapper;
-
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.nctigba.observability.sql.model.dto.SlowSqlDTO;
 import com.nctigba.observability.sql.model.entity.StatementHistoryDO;
+import com.nctigba.observability.sql.model.vo.StatementHistoryAggVO;
+import com.nctigba.observability.sql.model.vo.StatementHistoryDetailVO;
+import com.nctigba.observability.sql.service.impl.SqlProvider;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.SelectProvider;
+
+import java.util.List;
 
 @Mapper
 public interface SlowLogMapper extends BaseMapper<StatementHistoryDO> {
+    /**
+     * Select aggregated data
+     *
+     * @param slowSqlDTO String
+     * @return List
+     */
+    @SelectProvider(type = SqlProvider.class, method = "getAggSlowSql")
+    List<StatementHistoryAggVO> selectAggSlowSql(SlowSqlDTO slowSqlDTO);
+
+    /**
+     * Select detail data
+     *
+     * @param slowSqlDTO String
+     * @return List
+     */
+    @SelectProvider(type = SqlProvider.class, method = "getAllSlowSql")
+    List<StatementHistoryDetailVO> selectAllSlowSql(SlowSqlDTO slowSqlDTO);
 }

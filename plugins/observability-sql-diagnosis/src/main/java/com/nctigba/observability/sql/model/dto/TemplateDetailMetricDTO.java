@@ -13,41 +13,28 @@
  *  See the Mulan PSL v2 for more details.
  *  -------------------------------------------------------------------------
  *
- *  DiagnosisTaskDTO.java
+ *  TemplateDetailMetricDTO.java
  *
  *  IDENTIFICATION
- *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/model/dto/DiagnosisTaskDTO.java
+ *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/model/dto/TemplateDetailMetricDTO.java
  *
  *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.model.dto;
 
-import com.nctigba.observability.sql.model.vo.point.OptionVO;
-import com.nctigba.observability.sql.model.vo.point.ThresholdVO;
 import lombok.Data;
 
-import java.util.Date;
-import java.util.List;
-
 /**
- * DiagnosisTaskDTO
+ * DTO for setting template detail
  *
- * @author luomeng
- * @since 2023/6/9
+ * @since 2023-11-24
  */
 @Data
-public class DiagnosisTaskDTO {
-    private String clusterId;
-    private String nodeId;
-    private String taskName;
-    private String dbName;
-    private String schemaName;
-    private String sqlId;
-    private String sql;
-    private Date hisDataStartTime;
-    private Date hisDataEndTime;
-    List<OptionVO> configs;
-    List<ThresholdVO> thresholds;
-    private String diagnosisType;
+public class TemplateDetailMetricDTO {
+    private String metricGroupKey;
+    private String metricGroupName;
+    private String metricGroupDescription;
+    private String interval;
+    private Boolean isEnable;
 }

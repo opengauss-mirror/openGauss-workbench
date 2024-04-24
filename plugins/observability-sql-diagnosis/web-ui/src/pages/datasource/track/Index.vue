@@ -55,14 +55,22 @@ import TrackSlowLog from '@/pages/datasource/track/TrackSlowLog.vue'
 import TrackTasks from '@/pages/datasource/track/TrackTasks.vue'
 import Install from '@/pages/datasource/install/Index.vue'
 import TrackAdd from '@/pages/historyDiagnosis/Index.vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const clusterNodeId = ref()
 const taskListRef = ref<any>()
 
-const { tab, filters, rangeTime, instanceId } = storeToRefs(useMonitorStore())
-const tabLoaded = reactive([tab.value === 0, tab.value === 1])
+const urlParam = reactive<{
+  id: string | string[]
+}>({
+  id: ''
+})
+
+const { tab, filters, rangeTime } = storeToRefs(useMonitorStore())
+const tabLoaded = reactive([tab.value === 0, tab.value === 1, tab.value === 2, tab.value === 3])
 const indexs = ref<any>({ indexOpened: true, addOpened: false, showingComponent: 'index' })
-const diagnosisParam = ref<any>(undefined)
+const diagnosisParam = ref<any>()
 watch(tab, (v) => {
   if (!tabLoaded[v]) {
     tabLoaded[v] = true
@@ -105,6 +113,14 @@ const taskCreated = () => {
     taskListRef.value!.handleQuery()
   })
 }
+
+onMounted(() => {
+  const id = window.$wujie?.props.data.id
+  if (typeof id === 'string'){
+    tab.value = 1
+    gotoAdd(id)
+  }
+})
 </script>
 
 <style scoped lang="scss">

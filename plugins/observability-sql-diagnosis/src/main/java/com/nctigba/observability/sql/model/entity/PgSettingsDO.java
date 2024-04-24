@@ -13,30 +13,30 @@
  *  See the Mulan PSL v2 for more details.
  *  -------------------------------------------------------------------------
  *
- *  PageBaseQuery.java
+ *  PgSettingsDO.java
  *
  *  IDENTIFICATION
- *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/model/query/PageBaseQuery.java
+ *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/model/entity/PgSettingsDO.java
  *
  *  -------------------------------------------------------------------------
  */
 
-package com.nctigba.observability.sql.model.query;
+package com.nctigba.observability.sql.model.entity;
 
-import com.nctigba.observability.sql.service.MyPage;
-import com.nctigba.observability.sql.model.dto.BasePageDTO;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
+/**
+ * PgSettingsDO
+ *
+ * @author luomeng
+ * @since 2024/4/9
+ */
 @Data
-public class PageBaseQuery {
-    private int pageNum;
-    private int pageSize;
-    private Boolean queryCount = false;
-    private String orderByColumn;
-    private String isAsc;
-
-    public <T> MyPage<T> iPage() {
-        return new BasePageDTO<T>(pageNum, pageSize, queryCount);
-    }
-
+@TableName("pg_settings")
+@Accessors(chain = true)
+public class PgSettingsDO {
+    private String name;
+    private String setting;
 }

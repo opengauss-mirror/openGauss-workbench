@@ -13,39 +13,26 @@
  *  See the Mulan PSL v2 for more details.
  *  -------------------------------------------------------------------------
  *
- *  DbMapper.java
+ *  SysPluginsMapper.java
  *
  *  IDENTIFICATION
- *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/mapper/DbMapper.java
+ *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/mapper/SysPluginsMapper.java
  *
  *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.mapper;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.nctigba.observability.sql.model.entity.SysPluginsDO;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
 
-import java.util.List;
-
-import static com.nctigba.observability.sql.constant.SqlConstants.GET_DATABASE_SQL;
-import static com.nctigba.observability.sql.constant.SqlConstants.GET_SCHEMA_NAME_SQL;
-
+/**
+ * SysPluginsMapper
+ *
+ * @author luomeng
+ * @since 2024/4/16
+ */
 @Mapper
-public interface DbMapper {
-    /**
-     * Query database name
-     *
-     * @return list
-     */
-    @Select(GET_DATABASE_SQL)
-    List<String> dataBaseList();
-
-    /**
-     * Query schema name
-     *
-     * @return list
-     */
-    @Select(GET_SCHEMA_NAME_SQL)
-    List<String> schemaList();
+public interface SysPluginsMapper extends BaseMapper<SysPluginsDO> {
 }

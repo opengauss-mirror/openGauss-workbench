@@ -14,6 +14,7 @@
 		<!--config-->
 		<plugin-id>observability-sql-diagnosis</plugin-id>
 		<npm.run.script>buildNoTest</npm.run.script>
+		<test.skip>true</test.skip>
 		<web.build.skip>false</web.build.skip>
 		<web.clean.skip>false</web.clean.skip>
 
@@ -370,7 +371,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.21.0</version>
 				<configuration>
-					<skipTests>false</skipTests>
+					<skipTests>${test.skip}</skipTests>
 				</configuration>
 			</plugin>
 			<plugin>

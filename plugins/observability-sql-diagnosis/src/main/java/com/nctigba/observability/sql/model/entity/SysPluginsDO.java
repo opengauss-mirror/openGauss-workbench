@@ -13,30 +13,35 @@
  *  See the Mulan PSL v2 for more details.
  *  -------------------------------------------------------------------------
  *
- *  PageBaseQuery.java
+ *  SysPluginsDO.java
  *
  *  IDENTIFICATION
- *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/model/query/PageBaseQuery.java
+ *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/model/entity/SysPluginsDO.java
  *
  *  -------------------------------------------------------------------------
  */
 
-package com.nctigba.observability.sql.model.query;
+package com.nctigba.observability.sql.model.entity;
 
-import com.nctigba.observability.sql.service.MyPage;
-import com.nctigba.observability.sql.model.dto.BasePageDTO;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
+/**
+ * SysPluginsDO
+ *
+ * @author luomeng
+ * @since 2024/4/16
+ */
 @Data
-public class PageBaseQuery {
-    private int pageNum;
-    private int pageSize;
-    private Boolean queryCount = false;
-    private String orderByColumn;
-    private String isAsc;
-
-    public <T> MyPage<T> iPage() {
-        return new BasePageDTO<T>(pageNum, pageSize, queryCount);
-    }
-
+@TableName("sys_plugins")
+@Accessors(chain = true)
+public class SysPluginsDO {
+    private String id;
+    private String pluginId;
+    private String bootstrapClass;
+    private String pluginDesc;
+    private String pluginVersion;
+    private String pluginProvider;
+    private String pluginStatus;
 }

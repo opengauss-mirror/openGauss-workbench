@@ -66,6 +66,16 @@
                     <el-option v-for="item in dbList" :key="item" :value="item" :label="item" />
                   </el-select>
                 </el-form-item>
+                <el-form-item
+                    class="margin-bottom"
+                    :label="$t('datasource.schema')"
+                    prop="schemaName"
+                    v-if="props.type === 1"
+                    >
+                    <el-select v-model="diagnosisParam.schemaName" :placeholder="$t('datasource.selectSchema')">
+                    <el-option v-for="item in schemaList" :key="item" :value="item" :label="item" />
+                    </el-select>
+                </el-form-item>
                 <el-form-item class="margin-bottom" :label="$t('datasource.taskName')" prop="taskName">
                   <el-input
                     class="form-input"
@@ -242,21 +252,25 @@ const props = withDefaults(
     diagnosisParam?: any
     show: boolean
     dbName?: string
+    schemaName?: string
     clusterId?: string[]
     sqlText?: string
     clusterList?: Array<any>
     dbList?: Array<any>
+    schemaList?: Array<any>
     sqlId?: any
     type?: number // 1 task List；  2  topsql 3 slow sql
   }>(),
   {}
 )
 const dbList = ref<Array<any>>([])
+const schemaList = ref<Array<any>>([])
 const connectionFormRules = reactive<FormRules>({
   taskName: [{ required: true, message: t('datasource.trackFormRules[0]'), trigger: 'blur' }],
   dbName: [{ required: true, message: t('datasource.trackFormRules[1]'), trigger: 'blur' }],
   sql: [{ required: true, message: t('datasource.trackFormRules[2]'), trigger: 'blur' }],
   cluster: [{ required: true, message: t('datasource.trackFormRules[3]'), trigger: 'blur' }],
+  schemaName: [{ required: true, message: t('datasource.trackFormRules[4]'), trigger: 'blur' }]
 })
 
 watch(
@@ -299,6 +313,7 @@ const diagnosisParam = ref<DiagnosisParam>({
   configs: [],
   thresholds: [],
   dbName: '',
+  schemaName: '',
   clusterId: '',
   taskName: '',
   sql: props.diagnosisParam?.sqlText ? parseSql(props.diagnosisParam?.sqlText) : props.diagnosisParam?.sqlText,
@@ -442,8 +457,10 @@ const handleClusterValue = (val: any) => {
   diagnosisParam.value.nodeId = nodeId
   diagnosisParam.value.clusterId = val[0]
   diagnosisParam.value.dbName = null
+  diagnosisParam.value.schemaName = null
 
   dbData(nodeId)
+  schemaData(nodeId)
 }
 // get database
 const { data: ret, run: dbData } = useRequest(
@@ -460,11 +477,26 @@ watch(ret, (ret: any[]) => {
     dbList.value = []
   }
 })
-// get database
+// get schema
+const { data: schema, run: schemaData } = useRequest(
+  (nodeId: string) => {
+    return ogRequest.get('/sqlDiagnosis/api/v1/clusters/' + nodeId + '/schema', '')
+  },
+  { manual: true }
+)
+watch(schema, (ret: any[]) => {
+  console.log('watch(ret')
+  if (ret && Object.keys(ret).length) {
+    schemaList.value = ret
+  } else {
+    schemaList.value = []
+  }
+})
 
 onMounted(() => {
   // @ts-ignore
   const wujie = window.$wujie
+  diagnosisParam.value.sqlId = wujie?.props.data.id
   const startTime = wujie?.props.data.startTime
   const endTime = wujie?.props.data.endTime
   if (startTime && typeof startTime === 'string') ruleForm.hisDataStartTime = startTime
@@ -479,6 +511,8 @@ const clusterLoaded = (val: any) => {
     clusterComponent.value.setNodeId(instanceId)
     nextTick(() => {
       diagnosisParam.value.dbName = props.diagnosisParam?.dbName
+      const schemaName=props.diagnosisParam?.schemaName
+      diagnosisParam.value.schemaName = schemaName.split(',')[1]
     })
   }
 }

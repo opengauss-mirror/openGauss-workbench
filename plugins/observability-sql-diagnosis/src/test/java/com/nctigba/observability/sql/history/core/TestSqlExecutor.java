@@ -68,7 +68,7 @@ public class TestSqlExecutor {
     public void testExecuteSql() {
         try {
             Connection conn = mock(Connection.class);
-            when(clusterManager.getConnectionByNodeId(any(), any())).thenReturn(conn);
+            when(clusterManager.getConnectionByNodeId(any(), any(), any())).thenReturn(conn);
             Statement statement = mock(Statement.class);
             when(conn.createStatement()).thenReturn(statement);
             ResultSet resultSet = mock(ResultSet.class);
@@ -86,7 +86,7 @@ public class TestSqlExecutor {
     public void testExecuteSql_noSession() {
         try {
             Connection conn = mock(Connection.class);
-            when(clusterManager.getConnectionByNodeId(any(), any())).thenReturn(conn);
+            when(clusterManager.getConnectionByNodeId(any(), any(), any())).thenReturn(conn);
             Statement statement = mock(Statement.class);
             when(conn.createStatement()).thenReturn(statement);
             ResultSet resultSet = mock(ResultSet.class);
@@ -104,7 +104,7 @@ public class TestSqlExecutor {
     public void testExecuteSql_exception() {
         try {
             Connection conn = mock(Connection.class);
-            when(clusterManager.getConnectionByNodeId(any(), any())).thenReturn(conn);
+            when(clusterManager.getConnectionByNodeId(any(), any(), any())).thenReturn(conn);
             Statement statement = mock(Statement.class);
             when(conn.createStatement()).thenReturn(statement);
             when(statement.executeQuery(any())).thenThrow(new SQLException());

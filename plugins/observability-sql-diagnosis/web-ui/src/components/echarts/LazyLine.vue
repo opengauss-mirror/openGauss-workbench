@@ -3,7 +3,7 @@
     <div class="line-tips" v-if="tips">
       <div class=""><svg-icon name="info" />{{ tips }}</div>
     </div>
-    <div :key="`${i18n.global.locale.value}`" :id="domId" ref="loadRef" style="width: 100%; height: 100%"></div>
+    <div @mouseout="divMouseout" :id="domId" ref="loadRef" style="width: 100%; height: 100%"></div>
   </div>
 </template>
 
@@ -47,6 +47,13 @@ import { i18n } from '@/i18n'
 import { useWindowStore } from '@/store/window'
 import colorCharts from '@/assets/style/color.module.scss'
 import { useIntervalTime } from '@/hooks/time'
+import { useParamsStore } from "@/store/params";
+
+const paramsStore = useParamsStore();
+const {
+  dataIndex,
+  chartId
+} = storeToRefs(useParamsStore());
 
 export interface LineData {
   name: string
@@ -94,11 +101,14 @@ const props = withDefaults(
     markArea?: any[] // yAxis interval
     tabId?: string
     rangeSelect: boolean
+    legendShown: boolean
     isTooltipsFormatDate: boolean // x value is date,and format to YYYY-MM-DD HH:mm:ss
 
     unit?: string
     scatterUnit?: string
     tips?: string
+    toolTipsSort?: string // desc asc
+    toolTipsExcludeZero?: boolean
     // yAxis Scatter Data
     scatterData?: LineData
     // LineChart use areaStyle
@@ -121,6 +131,8 @@ const props = withDefaults(
     enterable?: boolean
     translate?: boolean
     countByDataTimePicker: boolean
+    xFormater?: string
+    isLinkage: boolean
   }>(),
   {
     xData: () => [],
@@ -130,9 +142,11 @@ const props = withDefaults(
     areaStyle: false,
     rangeSelect: false,
     translate: true,
+    legendShown: true,
     isTooltipsFormatDate: true,
     enterable: true,
     countByDataTimePicker: true,
+    isLinkage: false
   }
 )
 const timer = ref<number>()
@@ -151,7 +165,7 @@ onMounted(() => {
       }
       if (divWidth !== 0 && notMatch.value) {
         notMatch.value = false
-        myChart.resize()
+        myChart?.resize()
       }
       lastWidth.value = divWidth
     },
@@ -174,8 +188,11 @@ const renderChart = () => {
       areaStyle: props.areaStyle ? {} : undefined,
       ...d,
     }
-    if (props.bar) {
+    if (props.bar && d.type === undefined) {
       o.type = 'bar'
+      o['barGap'] = '0%'
+      o['barCategoryGap'] = '0%'
+      o['barWidth'] = '100%'
       o['stack'] = 'total'
       o['barMaxWidth'] = 12
     }
@@ -225,7 +242,7 @@ const renderChart = () => {
     },
     color: props.color ? props.color : colorArray,
     legend: {
-      show: true,
+      show: props.legendShown,
       type: 'scroll',
       left: 10,
       bottom: 0,
@@ -242,7 +259,7 @@ const renderChart = () => {
       left: 15,
       right: 15,
       top: props.tips ? 50 : 25,
-      bottom: 28,
+      bottom: props.legendShown ? 28 : 15,
       containLabel: true,
     },
     tooltip: {
@@ -252,6 +269,7 @@ const renderChart = () => {
       backgroundColor: 'rgba(0, 0, 0, 0.64)',
       borderWidth: 0,
       formatter: (params) => {
+        let dataIndex = 0;
         let htmlStr = '<div style="height: auto;max-height: 180px;overflow-y: scroll;border-radius: 4px;color:#fff">'
         if (Array.isArray(params)) {
           if (props.isTooltipsFormatDate) {
@@ -262,28 +280,45 @@ const renderChart = () => {
           } else {
             htmlStr += '<div style="font-size:14px">' + params[0].axisValue + '</div>'
           }
-
-          for (let i = 0; i < params.length; i++) {
+          let tempParams = params.filter((item: any) => {
+            if (
+              props.toolTipsExcludeZero &&
+              (Number.isNaN(item.value) || item.value === 'NaN' || Number(item.value) === 0)
+            ) {
+              return false
+            } else {
+              return true
+            }
+          })
+          if (props.toolTipsSort === 'desc') tempParams.sort((a: any, b: any) => b.value - a.value)
+          if (props.toolTipsSort === 'asc') tempParams.sort((a: any, b: any) => a.value - b.value)
+          for (let i = 0; i < tempParams.length; i++) {
             // htmlStr += '<div ">' + params[i].marker + params[i].seriesName + ':' + params[i].value + '</div>'
             htmlStr +=
               '<div style="display: flex;flex-direction: row;align-items:center;font-size:12px">' +
               '<div style="display: inline-block; width: 14px; height: 4px;border-radius: 1px;margin-right:8px;background-color: ' +
-              params[i].color +
+              tempParams[i].color +
               ';"></div>' +
               '<div style="flex-grow:1;padding-right:12px">' +
-              params[i].seriesName +
+              tempParams[i].seriesName +
               '</div>' +
               '<div style="">' +
-              params[i].value +
+              tempParams[i].value +
               (props.unit ? props.unit : '') +
               '</div>' +
               '</div>'
           }
+          dataIndex = params[0].dataIndex
         } else {
           const seriesName = props.translate ? t(`${params.seriesName}`) : params.seriesName
           htmlStr += `${params.name}<div style="display: flex;justify-content: space-between;"><div style="margin-right: 24px;">${params.marker} ${seriesName}</div>${params.data}</div>`
+          dataIndex = params.dataIndex
         }
         htmlStr += '</div>'
+        if (props.isLinkage) {
+          paramsStore.setDataIndex(dataIndex)
+          paramsStore.setChartId(domId)
+        }
         return htmlStr
       },
     },
@@ -319,7 +354,10 @@ const renderChart = () => {
       axisLabel: {
         color: theme.value === 'dark' ? '#FFFFFF' : '#4E5969',
         fontSize: 10,
-        formatter: (v) => moment(new Date(v)).format('HH:mm'),
+        formatter: (v) => {
+          if (props.xFormater) return moment(new Date(v)).format(props.xFormater)
+          else return moment(new Date(v)).format('HH:mm')
+        },
       },
       data: props.xData,
     },
@@ -362,7 +400,17 @@ const renderChart = () => {
         },
     series: data.length > 0 ? data : [],
   }
+  myChart.on('legendselectchanged', function (params: any) {
+    let selectedLegend = params.name
+    myEmit('legendSelected', selectedLegend)
+  })
   myChart.setOption(option, true)
+  myChart.getZr().on('mouseout', () => {
+    if (!props.isLinkage) {
+      return
+    }
+    paramsStore.setDataIndex(null)
+  });
   if (
     !props.countByDataTimePicker &&
     Array.isArray(props.defaultBrushArea) &&
@@ -402,9 +450,7 @@ const renderChart = () => {
   }
 }
 // lazy load
-const myEmit = defineEmits<{
-  (event: 'load'): void
-}>()
+const myEmit = defineEmits(['load', 'legendSelected'])
 const loadRef = ref<HTMLDivElement>()
 const { stop } = useIntersectionObserver(loadRef, ([{ isIntersecting }]) => {
   if (isIntersecting) {
@@ -420,6 +466,58 @@ watch(
   },
   { deep: true }
 )
+const download = (title) => {
+  let pic = myChart.getDataURL()
+  const elink = document.createElement("a")
+  elink.download = title
+  elink.style.display = "none"
+  elink.href = pic
+  document.body.appendChild(elink)
+  elink.click()
+  document.body.removeChild(elink);
+}
+defineExpose({ download })
+
+const divMouseout = () => {
+  if (!props.isLinkage) {
+    return
+  }
+  paramsStore.setDataIndex(null)
+  paramsStore.setChartId(null)
+}
+
+watch(dataIndex, (index) => {
+  if (!props.isLinkage) {
+    return
+  }
+  if (chartId.value === domId) {
+    return;
+  }
+  myChart.dispatchAction({
+      type: 'hideTip'
+  });
+  if (index == null) {
+    return;
+  }
+  for (let i = 0; i < props.data.length; i++) {
+    myChart.dispatchAction({
+      type: 'showTip',
+      seriesIndex: i,
+      dataIndex: index
+    });
+  }
+})
+
+watch(chartId, (chartId) => {
+  if (!props.isLinkage) {
+    return
+  }
+  if (!chartId) {
+    myChart.dispatchAction({
+        type: 'hideTip'
+    });
+  }
+})
 </script>
 
 <style scoped lang="scss"></style>
