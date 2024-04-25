@@ -1,6 +1,0 @@
-context:
-  listener:
-    classes: org.opengauss.admin.plugin.listener.PluginListener
-spring:
-  resources:
-    static-locations: classpath:resources

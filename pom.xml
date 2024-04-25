@@ -215,8 +215,6 @@
         <module>plugins/base-ops</module>
         <module>plugins/data-migration</module>
         <module>plugins/data-studio</module>
-        <module>plugins/datakit-demo-plugin</module>
-        <module>plugins/datasync-mysql</module>
         <module>plugins/observability-instance</module>
         <module>plugins/observability-log-search</module>
         <module>plugins/observability-sql-diagnosis</module>
