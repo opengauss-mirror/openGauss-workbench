@@ -76,6 +76,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @Autowired
     private IOpsClusterNodeService opsClusterNodeService;
     @Autowired
+    private IOpsJdbcDbClusterService opsJdbcDbClusterService;
+    @Autowired
     private IOpsAzService opsAzService;
     @Autowired
     private IOpsCheckService opsCheckService;
@@ -181,7 +183,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         ClusterSummaryVO clusterSummaryVO = new ClusterSummaryVO();
         clusterSummaryVO.setClusterNum(count());
         clusterSummaryVO.setHostNum(hostService.count());
-        clusterSummaryVO.setNodeNum(opsClusterNodeService.count());
+        clusterSummaryVO.setNodeNum(opsJdbcDbClusterService.count());
         return clusterSummaryVO;
     }
 
