@@ -607,6 +607,9 @@ const parselogParameter = (content) => {
         result = result + t('detail.index.5qtkk97a2e29')
     } else if(obj.increment_param.mysql.result === 1){
       result = result + t('detail.index.5qtkk97a2e30') + obj.increment_param.mysql.actualParam  + t('detail.index.5qtkk97a2e57')  + obj.increment_param.mysql.expectedParam+ t('detail.index.5qtkk97a2e35')
+      if(obj.increment_param.mysql.SQLException){
+        result = result + obj.increment_param.mysql.SQLException
+      }
     }else{
       result = result + t('detail.index.5qtkk97a2e31')
    }
@@ -616,6 +619,9 @@ const parselogParameter = (content) => {
       result = result + t('detail.index.5qtkk97a2e32')
     } else if(obj.reverse_param.opengauss.result === 1){
       result = result + t('detail.index.5qtkk97a2e33') + obj.reverse_param.opengauss.binlog_error + t('detail.index.5qtkk97a2e57') + obj.reverse_param.opengauss.binlog + t('detail.index.5qtkk97a2e35')
+      if(obj.reverse_param.opengauss.SQLException){
+        result = result + obj.reverse_param.opengauss.SQLException
+      }
     }else{
       result = result + t('detail.index.5qtkk97a2e34')
     }
@@ -632,6 +638,9 @@ const parseLowerParameter = (content) => {
       result = result + t('detail.index.5qtkk97a2e42')
   }else if(obj.lower_param.result === 1){
     result = result + t('detail.index.5qtkk97a2e43') + obj.lower_param.mysql + t('detail.index.5qtkk97a2e45') + t('detail.index.5qtkk97a2e44') + obj.lower_param.opengauss + t('detail.index.5qtkk97a2e35')
+    if(obj.lower_param.SQLException){
+      result = result + obj.lower_param.SQLException
+    }
   }
   return result
 }
