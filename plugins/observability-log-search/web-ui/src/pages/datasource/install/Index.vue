@@ -18,7 +18,7 @@
                         <el-tree :indent="0" :data="collectorList" :props="collectorProps" #default="{ node, data }">
                             <div class="custom-tree-node show-hide">
                                 <span v-if="data.id">
-                                    <el-tooltip :content="getStatusText(agentNodeStatusMap[data.id].status)" placement="top" effect="light">
+                                    <el-tooltip :content="getStatusText(agentNodeStatusMap[data.id].status)" placement="right" effect="light">
                                         <span class="state-row">
                                             <span class="state" :class="agentNodeStatusMap[data.id].status"></span>
                                         </span>
@@ -51,7 +51,7 @@
                         <div>
                             <span class="custom-tree-node show-hide server" v-for="data in proxyList" :key="data.id">
                                 <span v-if="data.id">
-                                    <el-tooltip :content="getStatusText(proxyNodeStatusMap[data.id].status)" placement="top" effect="light">
+                                    <el-tooltip :content="getStatusText(proxyNodeStatusMap[data.id].status)" placement="right" effect="light">
                                         <span class="state-row">
                                             <span class="state" :class="proxyNodeStatusMap[data.id].status"></span>
                                         </span>
