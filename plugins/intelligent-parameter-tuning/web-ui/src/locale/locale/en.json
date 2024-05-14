@@ -117,7 +117,8 @@
             "8mpn82ejri20": "The numerical values represent the expected probability of returning the number of columns in the query statement. The first numerical value represents the probability of querying all columns, which is fixed to 0. For example, [0, 0.8, 0.2] indicates that the probability of only returning 1 column in a single SQL statement is 80%, and the probability of returning 2 columns is 20%. Constraint: the total proportion is 1.",
             "8mpn82ejri21": "The numerical values represent the probability of occurrence of GROUP BY in the query statement. It is required that the number of query columns is greater than the number of group occurrences. For example, [0.8, 0.2] indicates an 80% probability that GROUP BY will not occur. Constraint: the total proportion is 1.",
             "8mpn82ejri22": "The numerical values represent the proportion of descending and ascending in the sorting statement. For example, [0.8, 0.2] represents an ascending proportion of 80% and a descending proportion of 20%. Constraint: the total proportion is 1.",
-            "8mpn82ejri23": "The numerical values represent the probability of one or two tables appearing in the query statement, with a maximum of two tables. For example, [0.8, 0.2] indicates that the probability of one table appearing in a single SQL statement is 80%, and the probability of two tables appearing is 20%. Constraint: The total proportion is 1."
+            "8mpn82ejri23": "The numerical values represent the probability of one or two tables appearing in the query statement, with a maximum of two tables. For example, [0.8, 0.2] indicates that the probability of one table appearing in a single SQL statement is 80%, and the probability of two tables appearing is 20%. Constraint: The total proportion is 1.",
+            "8mpn82ejri24": "Unit: second"
         }
     },
     "taskList": {

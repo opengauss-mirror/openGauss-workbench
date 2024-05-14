@@ -322,6 +322,11 @@ public class FixedTuning {
     public static final String APPLY_TO_DATABASE_COMMAND_ONLINE = "gs_guc reload -c %s -D %s";
 
     /**
+     * DATABASE_COMMAND_RESTART
+     */
+    public static final String DATABASE_COMMAND_RESTART = "gs_ctl restart -D %s -M primary";
+
+    /**
      * FALSE
      */
     public static final String FALSE = "False";

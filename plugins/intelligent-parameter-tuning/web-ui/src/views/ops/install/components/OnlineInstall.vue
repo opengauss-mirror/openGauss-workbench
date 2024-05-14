@@ -102,6 +102,19 @@
     field="runningTime"
     :label="$t('install.Offline.5mpn60ejri25')"
   >
+    <template #label>
+      <span>{{t('install.Offline.5mpn60ejri25')}}</span>
+      <a-tooltip
+      :content-style="{ color: '#1d212a' }"
+      background-color="#fff7e8"
+      :content="$t('install.Online.8mpn82ejri24')"
+      position="right"
+    >
+      <icon-question-circle-fill
+        :style="{ 'margin-left': '5px', color: '#ff7d00', 'font-size': '16px' }"
+      />
+    </a-tooltip>
+    </template>
     <a-input
       v-model="formDwg.runningTime"
       :placeholder="$t('install.Offline.7mpn60ejri25')"
@@ -402,7 +415,7 @@ const formDwg = reactive({
   isCustomPayloads:"0",
   averageTableNum:'[1,0]',
   sqlNum:"5000",
-  readWriteRatio:"0.9",
+  readWriteRatio:"1",
   queryComparisonOperatorRatio:"[0, 0, 1, 0]",
   queryLogicPredicateNum:"[1, 0, 0]",
   averageAggregationOperatorNum:"[1, 0, 0]",
