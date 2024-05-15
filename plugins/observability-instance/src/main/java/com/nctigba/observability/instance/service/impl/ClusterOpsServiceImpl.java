@@ -57,6 +57,7 @@ import com.nctigba.observability.instance.model.entity.ClusterSwitchoverLogReadD
 import com.nctigba.observability.instance.model.entity.ClusterSwitchoverRecordDO;
 import com.nctigba.observability.instance.service.ClusterManager;
 import com.nctigba.observability.instance.service.ClusterOpsService;
+import com.nctigba.observability.instance.service.ClusterSwitchService;
 import com.nctigba.observability.instance.service.MetricsService;
 import com.nctigba.observability.instance.util.MessageSourceUtils;
 import com.nctigba.observability.instance.util.SshSessionUtils;
@@ -72,6 +73,9 @@ import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -170,6 +174,8 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
     private ClusterSwitchoverLogReadMapper switchoverLogReadMapper;
     @Autowired
     private ClusterSwitchoverRecordMapper switchoverRecordMapper;
+    @Autowired
+    private ClusterSwitchService clusterSwitchService;
 
     @Override
     public List<ClustersDTO> listClusters() {
@@ -235,8 +241,8 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
             });
         }
         try {
-            if (!countDownLatch.await(10, TimeUnit.SECONDS)) {
-                throw new InstanceException("Exceeding the specified time to get the state of CM and OM");
+            if (!countDownLatch.await(60, TimeUnit.SECONDS)) {
+                throw new CustomException("Exceeding the specified time to get the state of CM and OM");
             }
         } catch (InterruptedException e) {
             throw new CustomException(e.getMessage());
@@ -253,7 +259,7 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
         SshSessionUtils sshSession = null;
         try {
             sshSession = getSshSession(clusterNode);
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
         if (sshSession == null) {
@@ -264,11 +270,14 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
         }
         String executeRes = "";
         String gaussHome = "";
+        if (!StringUtils.hasLength(envPath)) {
+            envPath = "~/.bashrc";
+        }
         String command = "source " + envPath + " && ps -aux | grep \"cm_agent\\|cm_server\\|om_monitor\"";
         try {
             gaussHome = sshSession.execute("source " + envPath + " && echo $GAUSSHOME");
             executeRes = sshSession.execute(command);
-        } catch (IOException e) {
+        } catch (IOException | CustomException e) {
             log.error(e.getMessage(), e);
         }
         cmServer.put(clusterNode.getNodeId(), "stop");
@@ -397,7 +406,7 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
             });
         }
         try {
-            if (!countDown.await(10, TimeUnit.SECONDS)) {
+            if (!countDown.await(60, TimeUnit.SECONDS)) {
                 throw new InstanceException("Exceeding the specified time to refresh all cluster state");
             }
         } catch (InterruptedException e) {
@@ -530,8 +539,11 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
     @Override
     public Page<SwitchRecordDTO> switchRecord(String clusterId, Long start, Long end,
                                               Integer pageSize, Integer pageNum) {
+        List<String> nodeIds = clusterManager.getOpsClusterVOById(clusterId).getClusterNodes().stream().map(
+                OpsClusterNodeVO::getNodeId).collect(Collectors.toList());
         LambdaQueryWrapper<ClusterSwitchoverRecordDO> wrapper = Wrappers.lambdaQuery(ClusterSwitchoverRecordDO.class)
-                .eq(ClusterSwitchoverRecordDO::getClusterId, clusterId);
+                .eq(ClusterSwitchoverRecordDO::getClusterId, clusterId)
+                .in(ClusterSwitchoverRecordDO::getClusterNodeId, nodeIds);
         if (start != null) {
             wrapper.ge(ClusterSwitchoverRecordDO::getSwitchoverTime, DateUtil.formatDateTime(new Date(start)));
         }
@@ -559,47 +571,19 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
     @Override
     public void switchRecordUpdate(String clusterId) {
         OpsClusterVO clusterVO = clusterManager.getOpsClusterVOById(clusterId);
-        String cmdPattern = "source {0} && awk_command=''NR>{1} && /gs_ctl failover/ '{'print FILENAME \">>>\" NR "
-                + "\">>>\" $0'}'''; if [ -f \"$'{'GAUSSLOG'}'/bin/gs_ctl/{2}\" ]; then awk \"$awk_command\" "
-                + "$'{'GAUSSLOG'}'/bin/gs_ctl/{2}; else file=$(ls "
-                + "$'{'GAUSSLOG'}'/bin/gs_ctl/gs_ctl-*-current.log); awk \"$awk_command\" $file; fi";
         for (OpsClusterNodeVO clusterNode : clusterVO.getClusterNodes()) {
             ClusterSwitchoverLogReadDO logRead = switchoverLogReadMapper.selectOne(
                     Wrappers.lambdaQuery(ClusterSwitchoverLogReadDO.class)
                             .eq(ClusterSwitchoverLogReadDO::getClusterId, clusterId)
                             .eq(ClusterSwitchoverLogReadDO::getClusterNodeId, clusterNode.getNodeId()));
-            if (logRead == null) {
-                ClusterSwitchoverLogReadDO initLogRead = new ClusterSwitchoverLogReadDO();
-                initLogRead.setClusterId(clusterId);
-                initLogRead.setClusterNodeId(clusterNode.getNodeId());
-                initLogRead.setLogName("gs_ctl-*-current.log");
-                initLogRead.setLogLastRead(0L);
-                switchoverLogReadMapper.insert(initLogRead);
-                logRead = initLogRead;
+            boolean resetLogLastRead = !switchoverRecordMapper.exists(
+                    Wrappers.lambdaQuery(ClusterSwitchoverRecordDO.class)
+                            .eq(ClusterSwitchoverRecordDO::getClusterNodeId, clusterNode.getNodeId()));
+            String envPath = clusterVO.getEnvPath();
+            if (!StringUtils.hasLength(envPath)) {
+                envPath = "~/.bashrc";
             }
-            String cmd = MessageFormat.format(cmdPattern, clusterVO.getEnvPath(), logRead.getLogLastRead().toString(),
-                    logRead.getLogName());
-            try {
-                SshSessionUtils sshSession = getSshSession(clusterNode);
-                String execRes = sshSession.execute(cmd);
-                if (execRes.isEmpty()) {
-                    continue;
-                }
-                String[] logs = execRes.split(StrUtil.LF);
-                for (String log : logs) {
-                    String[] logCol = log.split(">>>");
-                    ClusterSwitchoverRecordDO record = new ClusterSwitchoverRecordDO();
-                    record.setClusterId(clusterId);
-                    record.setPrimaryIp(clusterNode.getPublicIp());
-                    record.setSwitchoverTime(ClusterSwitchoverRecordDO.getLogTime(logCol[2]));
-                    record.setSwitchoverReason(ClusterSwitchoverRecordDO.getSwitchoverReason(logCol[2]));
-                    switchoverRecordMapper.insert(record);
-                }
-                logRead.updateAfterReadLog(logs);
-                switchoverLogReadMapper.updateById(logRead);
-            } catch (IOException e) {
-                throw new InstanceException(e.getMessage(), e);
-            }
+            clusterSwitchService.recordUpdate(clusterId, clusterNode, logRead, envPath, resetLogLastRead);
         }
     }
 
@@ -713,6 +697,9 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
         List<OpsClusterNodeVO> clusterNodes = cluster.getClusterNodes();
         List<SyncSituationDTO> standbyList = new ArrayList<>();
         for (OpsClusterNodeVO clusterNode : clusterNodes) {
+            if (stateCache.getNodeRole() == null) {
+
+            }
             if ("Primary".equalsIgnoreCase(stateCache.getNodeRole().get(clusterNode.getNodeId()))) {
                 List<SyncSituationDelayDTO> syncSituations = clustersMapper.getSyncSituation(clusterNode.getNodeId());
                 syncSituations.forEach(s -> {
@@ -787,16 +774,17 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
             try {
                 sshSession = getSshSession(clusterNode);
                 break;
-            } catch (IOException e) {
+            } catch (Exception e) {
                 log.error(e.getMessage(), e);
             }
         }
+        ClusterHealthStateDTO healthState = ClusterHealthStateDTO.init(cluster);
         if (sshSession == null) {
             log.error("Failed to connect cluster[{}]", cluster.getClusterId());
-            CLUSTER_STATE_CACHE.put(cluster.getClusterId(), new ClusterHealthStateDTO());
+            CLUSTER_STATE_CACHE.put(cluster.getClusterId(), healthState);
             return;
         }
-        ClusterHealthStateDTO healthState = getHealthState(sshSession, cluster);
+        healthState = getHealthState(sshSession, cluster);
         CLUSTER_STATE_CACHE.put(cluster.getClusterId(), healthState);
     }
 
@@ -807,41 +795,43 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
      * @return sshSession
      * @throws IOException IOException
      */
-    public SshSessionUtils getSshSession(OpsClusterNodeVO clusterNode) throws IOException {
+    public SshSessionUtils getSshSession(OpsClusterNodeVO clusterNode) throws IOException, ExecutionException,
+            InterruptedException, TimeoutException {
         OpsHostEntity hostEntity = hostFacade.getById(clusterNode.getHostId());
         OpsHostUserEntity userEntity = hostUserFacade.listHostUserByHostId(clusterNode.getHostId()).stream()
                 .filter(p -> p.getUsername().equals(clusterNode.getInstallUserName())).findFirst().orElseThrow(
                         () -> new InstanceException("The node information corresponding to the host is not found"));
-        return SshSessionUtils.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(),
-                encryptionUtils.decrypt(userEntity.getPassword()));
+        return SshSessionUtils.getSessionWithTimeout(hostEntity.getPublicIp(), hostEntity.getPort(),
+                userEntity.getUsername(), encryptionUtils.decrypt(userEntity.getPassword()), 5000);
     }
 
     private ClusterHealthStateDTO getHealthState(SshSessionUtils sshSession, OpsClusterVO clusterVO) {
-        String command = "source " + clusterVO.getEnvPath() + " && gs_om -t status --detail";
+        String envPath = clusterVO.getEnvPath();
+        if (!StringUtils.hasLength(envPath)) {
+            envPath = "~/.bashrc";
+        }
+        String command = "source " + envPath + " && gs_om -t status --detail";
         String result = null;
         try {
             result = sshSession.execute(command);
-        } catch (IOException e) {
+        } catch (IOException | CustomException e) {
             log.error(e.getMessage(), e);
         }
+        ClusterHealthStateDTO res = ClusterHealthStateDTO.init(clusterVO);
         if (result == null) {
-            return new ClusterHealthStateDTO();
+            return res;
         }
-        ClusterHealthStateDTO res = new ClusterHealthStateDTO();
-        Map<String, String> cmState = new HashMap<>(1);
+        Map<String, String> cmState = res.getCmState();
         int cmIndex = result.indexOf("CMServer State");
         if (cmIndex > 0) {
             cmState(result, cmState, cmIndex, clusterVO);
         }
-        res.setCmState(cmState);
         int clusterStateIndex = result.indexOf("cluster_state");
-        String clusterState = null;
         if (clusterStateIndex > 0) {
             int splitIndex = result.indexOf(":", clusterStateIndex);
             int lineEndIndex = result.indexOf(StrUtil.LF, clusterStateIndex);
-            clusterState = result.substring(splitIndex + 1, lineEndIndex).trim();
+            res.setClusterState(result.substring(splitIndex + 1, lineEndIndex).trim());
         }
-        res.setClusterState(clusterState);
         int datanodeStateIndex = result.indexOf("Datanode State");
         if (datanodeStateIndex > 0) {
             nodeState(result, datanodeStateIndex, res, clusterVO);
@@ -869,9 +859,9 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
 
     private void nodeState(String result, int datanodeStateIndex, ClusterHealthStateDTO res,
                            OpsClusterVO clusterVO) {
-        Map<String, String> nodeState = new HashMap<>(1);
-        Map<String, String> nodeRole = new HashMap<>(1);
-        Map<String, String> nodeName = new HashMap<>(1);
+        Map<String, String> nodeState = res.getNodeState();
+        Map<String, String> nodeRole = res.getNodeRole();
+        Map<String, String> nodeName = res.getNodeName();
         int splitIndex = result.indexOf("------------------", datanodeStateIndex);
         String dataNodeStateStr = result.substring(splitIndex);
         String[] dataNode = dataNodeStateStr.split(StrUtil.LF);
@@ -892,8 +882,5 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
             nodeRole.put(nodeId, s1[6]);
             nodeName.put(nodeId, s1[1]);
         }
-        res.setNodeState(nodeState);
-        res.setNodeRole(nodeRole);
-        res.setNodeName(nodeName);
     }
 }

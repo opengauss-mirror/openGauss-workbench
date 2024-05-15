@@ -33,6 +33,11 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
 import java.util.EnumSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import com.nctigba.observability.instance.enums.SshSessionPool;
 import org.apache.sshd.client.SshClient;
@@ -249,5 +254,34 @@ public class SshSessionUtils implements AutoCloseable {
     @Override
     public void close() throws IOException {
         session.close();
+    }
+
+    /**
+     * get session with timeout through sessionPool
+     * @param host     host
+     * @param port     port
+     * @param username username
+     * @param password password
+     * @param timeout milliseconds
+     * @return
+     * @throws ExecutionException
+     * @throws InterruptedException
+     * @throws TimeoutException
+     */
+    public static SshSessionUtils getSessionWithTimeout(String host, Integer port, String username
+            , String password, int timeout) throws ExecutionException, InterruptedException, TimeoutException {
+        FutureTask<SshSessionUtils> futureTask = new FutureTask<>(new Callable<SshSessionUtils>() {
+            @Override
+            public SshSessionUtils call() throws IOException {
+                return getSession(host, port, username, password);
+            }
+        });
+        ThreadUtil.execAsync(futureTask);
+        try {
+            return futureTask.get(timeout, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            futureTask.cancel(true);
+            throw e;
+        }
     }
 }

@@ -63,6 +63,9 @@ public class ClusterStateDTO {
                 "Unknown");
         dto.setClusterState(state);
         dto.setDesc(state);
+        if (stateCache.getNodeRole() == null) {
+            return dto;
+        }
         Optional<Map.Entry<String, String>> primary = stateCache.getNodeRole().entrySet().stream().filter(
                 en -> en.getValue().equals("Primary")).findFirst();
         primary.ifPresent(stringStringEntry -> dto.setPrimaryNodeId(stringStringEntry.getKey()));

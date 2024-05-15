@@ -63,7 +63,8 @@ public class ClusterSwitchoverRecordDO {
     @TableField("update_time")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "UTC")
     Date updateTime = new Date();
-
+    @TableField("cluster_node_id")
+    String clusterNodeId;
     /**
      * getLogTime
      *

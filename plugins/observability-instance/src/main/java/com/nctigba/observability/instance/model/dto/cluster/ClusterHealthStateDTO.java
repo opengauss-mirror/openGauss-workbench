@@ -25,7 +25,10 @@
 package com.nctigba.observability.instance.model.dto.cluster;
 
 import lombok.Data;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -41,4 +44,29 @@ public class ClusterHealthStateDTO {
     private Map<String, String> nodeRole;
     private Map<String, String> nodeName;
     private Map<String, String> cmState;
+
+    /**
+     * init ClusterHealthStateDTO
+     * @param cluster OpsClusterVO
+     * @return ClusterHealthStateDTO
+     */
+    public static ClusterHealthStateDTO init(OpsClusterVO cluster) {
+        ClusterHealthStateDTO dto = new ClusterHealthStateDTO();
+        dto.setClusterState("Unknown");
+        Map<String, String> nodeState = new HashMap<>();
+        Map<String, String> nodeRole = new HashMap<>();
+        Map<String, String> nodeName = new HashMap<>();
+        Map<String, String> cmState = new HashMap<>();
+        dto.setNodeState(nodeState);
+        dto.setNodeRole(nodeRole);
+        dto.setNodeName(nodeName);
+        dto.setCmState(cmState);
+        for (OpsClusterNodeVO clusterNode : cluster.getClusterNodes()) {
+            nodeState.put(clusterNode.getNodeId(), "Unknown");
+            nodeRole.put(clusterNode.getNodeId(), "Unknown");
+            nodeName.put(clusterNode.getNodeId(), "Unknown");
+            cmState.put(clusterNode.getNodeId(), "Unknown");
+        }
+        return dto;
+    }
 }

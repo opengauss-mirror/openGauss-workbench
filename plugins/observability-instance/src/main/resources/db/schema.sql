@@ -37,6 +37,8 @@ CREATE TABLE IF NOT EXISTS cluster_switchover_record (
     switchover_reason varchar(255),
     update_time DATETIME
 );
+ALTER TABLE cluster_switchover_record ADD COLUMN cluster_node_id varchar(255);
+
 CREATE TABLE IF NOT EXISTS cluster_switchover_log_read (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     cluster_id varchar(255),
