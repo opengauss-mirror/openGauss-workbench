@@ -28,7 +28,6 @@ import com.nctigba.observability.instance.agent.config.model.TargetConfig;
 import com.nctigba.observability.instance.agent.model.dto.TargetConfigDTO;
 import com.nctigba.observability.instance.agent.service.ClientService;
 import com.nctigba.observability.instance.agent.service.MetricCollectManagerService;
-import com.nctigba.observability.instance.agent.service.PrometheusRegistryManagerService;
 import com.nctigba.observability.instance.agent.service.TargetService;
 import com.nctigba.observability.instance.agent.util.CmdUtils;
 import com.nctigba.observability.instance.agent.util.DbUtils;
@@ -42,6 +41,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Controller to set and get agent config
@@ -62,8 +62,6 @@ public class ConfigController {
     DbUtils dbUtil;
     @Autowired
     MetricCollectManagerService metricCollectManagerService;
-    @Autowired
-    PrometheusRegistryManagerService prometheusRegistryManagerService;
 
     /**
      * To add, modify targets which this agent manager
@@ -74,11 +72,7 @@ public class ConfigController {
      */
     @PostMapping("/set")
     public void set(@RequestBody List<TargetConfigDTO> newConfigDTOs) throws IOException {
-        // clear http server
-        clientService.clear();
-
         // clear all cache
-        prometheusRegistryManagerService.clear();
         metricCollectManagerService.clear();
 
         // clear util
@@ -88,14 +82,11 @@ public class ConfigController {
         // clear all config file
         targetService.clearTargets();
 
-        for (int i = 0; i < newConfigDTOs.size(); i++) {
-            TargetConfigDTO newConfigDTO = newConfigDTOs.get(i);
-            TargetConfig newConfig = newConfigDTO.toTargetConfig();
-            newConfig.setExporterPort(clientService.getTargetStartPort(newConfig));
-            // should update before init, because init client will use this data
-            clientService.updateYmlTargetConfig(newConfig);
-            // init client
-            clientService.initClient(newConfig);
+        List<TargetConfig> targetConfigs = newConfigDTOs.stream().map(item -> item.toTargetConfig()).collect(
+            Collectors.toList());
+        clientService.updateYmlTargetConfigs(targetConfigs);
+        for (TargetConfig targetConfig : targetConfigs) {
+            dbUtil.createDataSource(targetConfig.getNodeId());
         }
     }
 

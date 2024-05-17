@@ -265,20 +265,8 @@ const isProxyEdit = ref<boolean>(false)
 const isReinstall = ref<boolean>(false)
 const showInstallProxy = () => {
   isReinstall.value = false
-  restRequest
-      .get('/observability/v1/environment/prometheus', {})
-      .then(function (res) {
-        let promeList = res.filter((item) => item.type === 'PROMETHEUS') || []
-        if (promeList.length > 0) {
-          ElMessage.error({
-            message: t('install.installedServerAlert'),
-            type: 'error',
-          })
-          return;
-        }
-        installProxyShown.value = true
-        isProxyEdit.value = false
-      })
+  installProxyShown.value = true
+  isProxyEdit.value = false
 }
 const showEditProxy = (node: any) => {
   isReinstall.value = false

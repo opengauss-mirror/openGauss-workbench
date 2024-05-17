@@ -41,7 +41,7 @@ import java.io.IOException;
  */
 @Slf4j
 public class SshClientSessionFactory implements PooledObjectFactory<ClientSession> {
-    private static final int SESSION_TIMEOUT = 10000;
+    private static final int SESSION_TIMEOUT = 2000;
 
     private SshClientConfig config;
     private SshClient client;

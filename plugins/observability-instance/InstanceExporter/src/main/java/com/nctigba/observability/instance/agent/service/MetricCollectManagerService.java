@@ -24,7 +24,6 @@
 
 package com.nctigba.observability.instance.agent.service;
 
-import com.nctigba.observability.instance.agent.collector.AgentCollector;
 import com.nctigba.observability.instance.agent.metric.MetricResult;
 
 import java.util.List;
@@ -35,24 +34,6 @@ import java.util.List;
  * @since 2023/12/1
  */
 public interface MetricCollectManagerService {
-    /**
-     * Store a collector in manager
-     *
-     * @param key       Key for collector
-     * @param collector Agent Collector
-     * @since 2023/12/1
-     */
-    void storeCollector(String key, AgentCollector collector);
-
-    /**
-     * Get collector from manager
-     *
-     * @param key Key for collector
-     * @return Agent Collector
-     * @since 2023/12/1
-     */
-    AgentCollector getCollector(String key);
-
 
     /**
      * Store group collect time in manager

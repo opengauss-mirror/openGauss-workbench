@@ -36,15 +36,6 @@ import java.util.Optional;
  * @since 2023/12/1
  */
 public interface CollectService {
-    /**
-     * Do collect data action
-     *
-     * @param target Target info
-     * @param param  Collect param
-     * @throws IOException Read og_exporter.yml error
-     * @since 2023/12/1
-     */
-    void collectMetricsData(CollectTargetDTO target, CollectParamDTO param) throws IOException;
 
     /**
      * Call prometheus java client to get metric data
@@ -55,5 +46,5 @@ public interface CollectService {
      * @throws IOException Read og_exporter.yml error
      * @since 2023/12/1
      */
-    String getMetricsData(String url, Optional<String[]> name) throws IOException;
+    String getMetricsData(String url, Optional<String[]> name, String nodeId) throws IOException;
 }

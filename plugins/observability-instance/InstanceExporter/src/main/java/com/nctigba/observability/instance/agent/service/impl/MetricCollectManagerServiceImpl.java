@@ -26,7 +26,6 @@ package com.nctigba.observability.instance.agent.service.impl;
 
 import cn.hutool.cache.CacheUtil;
 import cn.hutool.cache.impl.TimedCache;
-import com.nctigba.observability.instance.agent.collector.AgentCollector;
 import com.nctigba.observability.instance.agent.constant.CollectConstants;
 import com.nctigba.observability.instance.agent.metric.MetricResult;
 import com.nctigba.observability.instance.agent.service.MetricCollectManagerService;
@@ -38,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * MetricCollectManagerService Implement
@@ -47,9 +47,8 @@ import java.util.Optional;
 @Service
 public class MetricCollectManagerServiceImpl implements MetricCollectManagerService {
     private static final long CACHE_TIME_OUT = CollectConstants.CACHE_TIME_OUT;
-    private static Map<String, AgentCollector> metricsCache = new HashMap<>();
-    private static Map<String, Long> groupLastCollectTimeCache = new HashMap<>();
-    private static Map<String, Long> groupThisCollectTimeCache = new HashMap<>();
+    private static Map<String, Long> groupLastCollectTimeCache = new ConcurrentHashMap<>();
+    private static Map<String, Long> groupThisCollectTimeCache = new ConcurrentHashMap<>();
 
     private TimedCache<String, List<List<MetricResult>>> timedCache = CacheUtil.newTimedCache(CACHE_TIME_OUT);
 
@@ -62,25 +61,11 @@ public class MetricCollectManagerServiceImpl implements MetricCollectManagerServ
      * @inheritDoc
      */
     @Override
-    public void storeCollector(String metricKey, AgentCollector collector) {
-        metricsCache.put(metricKey, collector);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    @Override
-    public AgentCollector getCollector(String metricKey) {
-        return metricsCache.get(metricKey);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    @Override
-    public void storeGroupCollectTime(String groupCollectKey) {
+    public  void storeGroupCollectTime(String groupCollectKey) {
         Long lastTime = groupThisCollectTimeCache.get(groupCollectKey);
-        groupLastCollectTimeCache.put(groupCollectKey, lastTime);
+        if (lastTime != null) {
+            groupLastCollectTimeCache.put(groupCollectKey, lastTime);
+        }
         groupThisCollectTimeCache.put(groupCollectKey, System.currentTimeMillis());
     }
 
@@ -118,7 +103,6 @@ public class MetricCollectManagerServiceImpl implements MetricCollectManagerServ
      */
     @Override
     public void clear() {
-        metricsCache = new HashMap<>();
         groupLastCollectTimeCache = new HashMap<>();
         groupThisCollectTimeCache = new HashMap<>();
         timedCache = CacheUtil.newTimedCache(CACHE_TIME_OUT);

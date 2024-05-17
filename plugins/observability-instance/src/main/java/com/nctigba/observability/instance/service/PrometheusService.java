@@ -43,8 +43,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -297,12 +299,6 @@ public class PrometheusService extends AbstractInstaller {
             }
             boolean isNewInstall = StrUtil.isBlank(promInstall.getEnvId());
             nextStep(); // step2 check env
-            List<NctigbaEnvDO> nctigbaEnvList = envMapper.selectList(
-                Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, envType.PROMETHEUS));
-            if (CollectionUtil.isNotEmpty(nctigbaEnvList)
-                && (isNewInstall || !nctigbaEnvList.get(0).getId().equals(promInstall.getEnvId()))) {
-                throw new CustomException("The second server is exists,please refresh");
-            }
             if (!isNewInstall) {
                 updateSecondPromInstall(promInstall);
                 return;
@@ -728,11 +724,11 @@ public class PrometheusService extends AbstractInstaller {
     }
 
     private List<PrometheusConfigNodeDTO> getAddConfigNodes(List<String> addEnvAgentIds) {
-        List<String> addNodeIds = new ArrayList<>();
+        Set<String> addNodeIds = new HashSet<>();
         if (CollectionUtil.isNotEmpty(addEnvAgentIds)) {
             List<AgentNodeRelationDO> list = agentNodeRelationService.list(
                 Wrappers.<AgentNodeRelationDO>lambdaQuery().in(AgentNodeRelationDO::getEnvId, addEnvAgentIds));
-            addNodeIds = list.stream().map(item -> item.getNodeId()).collect(Collectors.toList());
+            addNodeIds = list.stream().map(item -> item.getNodeId()).collect(Collectors.toSet());
         }
         List<PrometheusConfigNodeDTO> addConfigNodes = new ArrayList<>();
         for (String addNodeId : addNodeIds) {

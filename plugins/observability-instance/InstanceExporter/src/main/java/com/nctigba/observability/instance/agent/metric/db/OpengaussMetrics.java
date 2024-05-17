@@ -27,13 +27,12 @@ package com.nctigba.observability.instance.agent.metric.db;
 import cn.hutool.cache.CacheUtil;
 import cn.hutool.cache.impl.TimedCache;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.date.StopWatch;
 import cn.hutool.core.thread.ThreadFactoryBuilder;
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
-import com.nctigba.observability.instance.agent.collector.AgentCollector;
-import com.nctigba.observability.instance.agent.collector.AgentCounter;
-import com.nctigba.observability.instance.agent.collector.AgentGauge;
 import com.nctigba.observability.instance.agent.constant.CollectConstants;
-import com.nctigba.observability.instance.agent.config.model.TargetConfig;
 import com.nctigba.observability.instance.agent.metric.MetricType;
 import com.nctigba.observability.instance.agent.metric.MetricTypeAndLabels;
 import com.nctigba.observability.instance.agent.model.dto.CollectParamDTO;
@@ -42,7 +41,7 @@ import com.nctigba.observability.instance.agent.service.MetricCollectManagerServ
 import com.nctigba.observability.instance.agent.util.DbUtils;
 import io.prometheus.metrics.core.metrics.Counter;
 import io.prometheus.metrics.core.metrics.Gauge;
-import io.prometheus.metrics.model.registry.PrometheusRegistry;
+import io.prometheus.metrics.model.snapshots.MetricSnapshot;
 import lombok.Data;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
@@ -56,9 +55,11 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -107,205 +108,183 @@ public class OpengaussMetrics {
      * @param param  Param DTO
      * @throws IOException Read og_exporter.yml error
      */
-    public void collectData(CollectTargetDTO target, CollectParamDTO param) throws IOException {
+    public List<MetricSnapshot> collectData(CollectTargetDTO target, CollectParamDTO param) throws IOException {
         long startTime = System.currentTimeMillis();
+        List<MetricSnapshot> list = Collections.synchronizedList(new ArrayList<>());
         var in = new ClassPathResource("og_exporter.yml").getInputStream();
         Map<String, Object> map = new Yaml().loadAs(in, Map.class);
+        CountDownLatch countDownLatch = new CountDownLatch(map.entrySet().size());
         map.entrySet().forEach((entry) -> {
-            if (entry.getValue() instanceof Map) {
-                QueryInstance b = BeanUtil.mapToBean((Map<?, ?>) entry.getValue(), QueryInstance.class, false);
-                for (int i = 0; i < b.getQuery().size(); i++) {
-                    QueryInstance.Query query = b.getQuery().get(i);
-                    if (StrUtil.isBlank(query.getDbRole())) {
-                        query.setDbRole(PRIMARY_ROLE);
-                    }
-
-                    // dbRole not match then ignore
-                    // tod: resolve db role, now when same metrics,differ sql for differ role,will error with same name
-
-                    String groupKey =
-                            getGroupCollectKey(target.getTargetConfig().getNodeId(), entry.getKey(), query.getDbRole(),
+            ThreadUtil.execAsync(() -> {
+                try {
+                    if (entry.getValue() instanceof Map) {
+                        StopWatch stopWatch = new StopWatch();
+                        stopWatch.start();
+                        QueryInstance b = BeanUtil.mapToBean((Map<?, ?>) entry.getValue(), QueryInstance.class, false);
+                        for (int i = 0; i < b.getQuery().size(); i++) {
+                            QueryInstance.Query query = b.getQuery().get(i);
+                            if (StrUtil.isBlank(query.getDbRole())) {
+                                query.setDbRole(PRIMARY_ROLE);
+                            }
+                            // dbRole not match then ignore
+                            // tod: resolve db role, now when same metrics,differ sql for differ role,will error with same name
+                            String groupKey =
+                                getGroupCollectKey(target.getTargetConfig().getNodeId(), entry.getKey(),
+                                    query.getDbRole(),
                                     b.getName());
 
-                    // filter collect data
-                    if (param.getGroupNames() != null && !param.getGroupNames().isEmpty()
-                            && param.getGroupNames().indexOf(b.name) < 0) {
-                        continue;
-                    }
-
-                    // record group this collect time
-                    metricCollectManager.storeGroupCollectTime(groupKey);
-                    String sql = b.getQuery().get(0).getSql();
-
-                    // TOD: to remove same timed task with same key
-                    // get cached data, if not > CACHE_TIME_OUT，return directly
-                    List<Map<String, Object>> result = timedCache.get(groupKey, false);
-
-                    // no cache, do query
-                    if (result == null) {
-                        result = dbUtil.query(target.getTargetConfig().getNodeId(), sql);
-                        timedCache.put(groupKey, result);
-                    }
-
-                    // if has time range after last scrape, build once timed task after (time range - 2s)
-                    // just support smallest range = MIN_COLLECT_INTERVAL
-                    // so, just create job when time range > (MIN_COLLECT_INTERVAL-1s)
-                    // 15s gap time，and cache valid time is CACHE_TIME_OUT
-                    // my once timed task should start after gap time - CACHE_TIME_OUT +1
-                    // TOD: set a max value, to void task which is after a very long time
-                    long gapTime = metricCollectManager.getGroupCollectGapTime(groupKey);
-                    log.debug("Gap time:{}", gapTime);
-                    if (gapTime >= (MIN_COLLECT_INTERVAL - 1000)) {
-                        ThreadFactory namedThreadFactory = new ThreadFactoryBuilder()
-                                .setNamePrefix("Metric-DB-" + gapTime + "-Collector-" + groupKey).build();
-                        ScheduledExecutorService executor =
-                                Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
-                        executor.schedule(() -> {
-                            log.debug("After 5s,run sql and cache");
-                            // real query job
-                            List<Map<String, Object>> resultNext =
-                                    dbUtil.query(target.getTargetConfig().getNodeId(), sql);
-                            timedCache.put(groupKey, resultNext);
-                            executor.shutdown();
-                        }, gapTime - CACHE_TIME_OUT + 1000, TimeUnit.MILLISECONDS);
-                    }
-
-                    // trans sql result into
-                    List<Map<String, Object>> finalResult = result;
-                    // generate label names
-                    List<String> labelNames = b.generateLabelNames();
-                    // generate metric family
-                    Map<String, MetricTypeAndLabels> metricFamily = b.generateMetricFamily(entry.getKey(), labelNames);
-
-                    // loop all item in [metrics] key in og_exporter.yml
-                    b.getMetrics().forEach(metric -> {
-                        // only do COUNTER GAUGE
-                        if (metric.getUsage() != QueryInstance.MetricInfo.Usage.COUNTER
-                                && metric.getUsage() != QueryInstance.MetricInfo.Usage.GAUGE) {
-                            return;
-                        }
-
-                        String metricKey = getMetricKey(target.getTargetConfig().getNodeId(), entry.getKey(), b.name,
-                                query.getDbRole(),
-                                metric.getName());
-
-                        // clear group data,
-                        // void one data has data at A time and has no data at B time, then B time still collect
-                        // value of Atime
-                        AgentCollector agentCollector = metricCollectManager.getCollector(metricKey);
-                        agentCollector.cleanAllLabelValuesData();
-
-                        // loop all query result row
-                        for (Map<String, Object> row : finalResult) {
-                            // label values of row
-                            List<String> labelValues = new ArrayList<>();
-                            for (String name : labelNames) {
-                                if (CollectConstants.DB_DEFAULT_METRIC_LABELS.contains(name)) {
-                                    continue;
-                                }
-                                labelValues.add(row.get(name).toString());
+                            // filter collect data
+                            if (param.getGroupNames() != null && !param.getGroupNames().isEmpty()
+                                && param.getGroupNames().indexOf(b.name) < 0) {
+                                continue;
                             }
-                            labelValues.add(target.getTargetConfig().getHostId());
-                            labelValues.add(target.getTargetConfig().getNodeId());
 
-                            if (metric.getUsage().equals(QueryInstance.MetricInfo.Usage.COUNTER)) {
-                                // get metric value
-                                Object value = row.get(metric.getName());
-                                if (value == null || StrUtil.isBlank(value.toString())) {
-                                    log.debug("No metric value:{}{}", metric.getName(), labelValues);
-                                } else if (agentCollector instanceof AgentCounter) {
-                                    ((AgentCounter) agentCollector).labelValues(labelValues.toArray(new String[0]))
-                                            .inc(Double.parseDouble(value.toString()));
-                                } else {
-                                    log.error("AgentCollector not instanceof AgentCounter");
-                                }
-                            } else if (metric.getUsage().equals(QueryInstance.MetricInfo.Usage.GAUGE)) {
-                                // get metric value
-                                Object value = row.get(metric.getName());
-                                if (value == null || StrUtil.isBlank(value.toString())) {
-                                    log.debug("No metric value:{}{}", metric.getName(), labelValues);
-                                } else if (agentCollector instanceof AgentGauge) {
-                                    ((AgentGauge) agentCollector).labelValues(labelValues.toArray(new String[0]))
-                                            .set(Double.parseDouble(value.toString()));
-                                } else {
-                                    log.error("AgentCollector not instanceof AgentGauge");
-                                }
-                            } else {
-                                log.error("Metric type not support:{}", metric.getUsage());
+                            // record group this collect time
+                            metricCollectManager.storeGroupCollectTime(groupKey);
+                            String sql = b.getQuery().get(0).getSql();
+
+                            // if has time range after last scrape, build once timed task after (time range - 2s)
+                            // just support smallest range = MIN_COLLECT_INTERVAL
+                            // so, just create job when time range > (MIN_COLLECT_INTERVAL-1s)
+                            // 15s gap time，and cache valid time is CACHE_TIME_OUT
+                            // my once timed task should start after gap time - CACHE_TIME_OUT +1
+                            // TOD: set a max value, to void task which is after a very long time
+                            long gapTime = metricCollectManager.getGroupCollectGapTime(groupKey);
+                            log.debug("Gap time:{}", gapTime);
+                            if (gapTime >= (MIN_COLLECT_INTERVAL - 1000)) {
+                                ThreadFactory namedThreadFactory = new ThreadFactoryBuilder()
+                                    .setNamePrefix("Metric-DB-" + gapTime + "-Collector-" + groupKey).build();
+                                ScheduledExecutorService executor =
+                                    Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
+                                executor.schedule(() -> {
+                                    StopWatch stopWatchTmp = new StopWatch();
+                                    stopWatchTmp.start();
+                                    log.debug("After 5s,run sql and cache");
+                                    // real query job
+                                    List<Map<String, Object>> resultNext =
+                                        dbUtil.query(target.getTargetConfig().getNodeId(), sql);
+                                    timedCache.put(groupKey, resultNext);
+                                    executor.shutdown();
+                                    stopWatchTmp.stop();
+                                    if (stopWatchTmp.getTotalTimeSeconds() > CollectConstants.COLLECT_TIMEOUT + 1) {
+                                        log.warn("The scheduled collection task for the metric [{}] of node {}:takes {} seconds, "
+                                                + "collection  has been timeout",
+                                            entry.getKey(), target.getTargetConfig().getNodeId(),
+                                            stopWatchTmp.getTotalTimeSeconds());
+                                    } else {
+                                        log.info("The scheduled collection task for the metric [{}] of node {}:takes {} seconds",
+                                            entry.getKey(), target.getTargetConfig().getNodeId(),
+                                            stopWatchTmp.getTotalTimeSeconds());
+                                    }
+                                }, gapTime - CACHE_TIME_OUT + 1000, TimeUnit.MILLISECONDS);
                             }
+
+                            // TOD: to remove same timed task with same key
+                            // get cached data, if not > CACHE_TIME_OUT，return directly
+                            List<Map<String, Object>> result = timedCache.get(groupKey, false);
+
+                            // no cache, do query
+                            if (CollectionUtil.isEmpty(result)) {
+                                result = dbUtil.query(target.getTargetConfig().getNodeId(), sql);
+                            }
+                            if (CollectionUtil.isEmpty(result)) {
+                                log.warn("Scrape metrics [{}] for node {}: value is empty",
+                                    b.getName(), target.getTargetConfig().getNodeId());
+                                return;
+                            }
+
+                            // trans sql result into
+                            List<Map<String, Object>> finalResult = result;
+                            // generate label names
+                            List<String> labelNames = b.generateLabelNames();
+                            // generate metric family
+                            b.generateMetricFamily(entry.getKey(), labelNames);
+
+                            // loop all item in [metrics] key in og_exporter.yml
+                            b.getMetrics().forEach(metric -> {
+                                // only do COUNTER GAUGE
+                                if (!metric.getUsage().equals(QueryInstance.MetricInfo.Usage.COUNTER)
+                                    && !metric.getUsage().equals(QueryInstance.MetricInfo.Usage.GAUGE)) {
+                                    return;
+                                }
+                                if (metric.getUsage().equals(QueryInstance.MetricInfo.Usage.COUNTER)) {
+                                    Counter counter = Counter.builder().name(b.name + '_' + metric.getName())
+                                        .help(metric.getDescription())
+                                        .labelNames(labelNames.toArray(new String[0])).build();
+                                    finalResult.forEach(row -> {
+                                        List<String> labelValues = new ArrayList<>();
+                                        for (String name : labelNames) {
+                                            if (CollectConstants.DB_DEFAULT_METRIC_LABELS.contains(name)) {
+                                                continue;
+                                            }
+                                            labelValues.add(row.get(name).toString());
+                                        }
+                                        labelValues.add(target.getTargetConfig().getHostId());
+                                        labelValues.add(target.getTargetConfig().getNodeId());
+                                        Object value = row.get(metric.getName());
+                                        if (value == null || StrUtil.isBlank(value.toString())) {
+                                            log.error("No metric value:{}_{}{}", entry.getKey(),
+                                                metric.getName(), labelValues);
+                                        } else {
+                                            counter.labelValues(labelValues.toArray(new String[0]))
+                                                .inc(Double.parseDouble(value.toString()));
+                                        }
+                                    });
+                                    list.add(counter.collect());
+                                }
+                                if (metric.getUsage().equals(QueryInstance.MetricInfo.Usage.GAUGE)) {
+                                    Gauge gauge = Gauge.builder().name(b.name + '_' + metric.getName())
+                                        .help(metric.getDescription())
+                                        .labelNames(labelNames.toArray(new String[0])).build();
+                                    finalResult.forEach(row -> {
+                                        List<String> labelValues = new ArrayList<>();
+                                        for (String name : labelNames) {
+                                            if (CollectConstants.DB_DEFAULT_METRIC_LABELS.contains(name)) {
+                                                continue;
+                                            }
+                                            labelValues.add(row.get(name).toString());
+                                        }
+                                        labelValues.add(target.getTargetConfig().getHostId());
+                                        labelValues.add(target.getTargetConfig().getNodeId());
+                                        Object value = row.get(metric.getName());
+                                        if (value == null || StrUtil.isBlank(value.toString())) {
+                                            log.error("No metric value:{}_{}{}", entry.getKey(), metric.getName(),
+                                                labelValues);
+                                        } else {
+                                            gauge.labelValues(labelValues.toArray(new String[0]))
+                                                .set(Double.parseDouble(value.toString()));
+                                        }
+                                    });
+                                    list.add(gauge.collect());
+                                }
+                            });
                         }
-                    });
+                        stopWatch.stop();
+                        if (stopWatch.getTotalTimeSeconds() > CollectConstants.COLLECT_TIMEOUT) {
+                            log.warn("The real-time collection task for the metric [{}] of node {}:takes {} seconds, "
+                                    + "collection  has been timeout",
+                                entry.getKey(), target.getTargetConfig().getNodeId(), stopWatch.getTotalTimeSeconds());
+                        } else {
+                            log.info("The real-time collection task for the metric [{}] of node {}:takes {} seconds",
+                                entry.getKey(), target.getTargetConfig().getNodeId(), stopWatch.getTotalTimeSeconds());
+                        }
+                    }
+                } finally {
+                    countDownLatch.countDown();
                 }
-            }
+            });
         });
 
+        try {
+            countDownLatch.await(CollectConstants.COLLECT_TIMEOUT, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            log.error(e.getMessage());
+        }
         // print run time
         long endTime = System.currentTimeMillis();
-        log.debug("Scrape db metrics for node {}:takes {} ms", target.getTargetConfig().getNodeId(),
-                endTime - startTime);
-    }
-
-    /**
-     * use og_exporter.yml register metrics
-     * TOD: how to match other database
-     *
-     * @param targetConfig Target Config
-     * @param registry     Prometheus Registry
-     * @throws IOException Read or write yml file error
-     */
-    public void register(TargetConfig targetConfig, PrometheusRegistry registry) throws IOException {
-        var in = new ClassPathResource("og_exporter.yml").getInputStream();
-        Map<String, Object> map = new Yaml().loadAs(in, Map.class);
-        map.entrySet().forEach((entry) -> {
-            if (!(entry.getValue() instanceof Map)) {
-                return;
-            }
-
-            QueryInstance b = BeanUtil.mapToBean((Map<?, ?>) entry.getValue(), QueryInstance.class, false);
-
-            // loop every og_exporter.yml item
-            for (int i = 0; i < b.getQuery().size(); i++) {
-                QueryInstance.Query query = b.getQuery().get(i);
-
-                // tod: abstract methods to do collect and register,to void edit 2 places
-                // set default dbrole as "PRIMARY"
-                if (StrUtil.isBlank(query.getDbRole())) {
-                    query.setDbRole(PRIMARY_ROLE);
-                }
-
-                // dbRole not match then ignore
-                // tod: resolve db role, now when same metrics,differ sql for differ role,will error with same name
-
-                // generate label names
-                List<String> labelNames = b.generateLabelNames();
-
-                // every metric register a collector into PrometheusRegistry,
-                // and store collector into collectorManager
-                b.getMetrics().forEach(metric -> {
-                    String metricKey = getMetricKey(targetConfig.getNodeId(), entry.getKey(), b.name, query.getDbRole(),
-                            metric.getName());
-                    log.debug("metricKey:{}", metricKey);
-                    if (metric.getUsage() == QueryInstance.MetricInfo.Usage.LABEL) {
-                        return;
-                    }
-                    if (metric.getUsage() == QueryInstance.MetricInfo.Usage.COUNTER) {
-                        log.debug("metric:{}", metric.getName());
-                        Counter collector =
-                                Counter.builder().name(b.name + '_' + metric.getName()).help(metric.getDescription())
-                                        .labelNames(labelNames.toArray(new String[0])).register(registry);
-                        metricCollectManager.storeCollector(metricKey, new AgentCounter(collector));
-                    } else if (metric.getUsage() == QueryInstance.MetricInfo.Usage.GAUGE) {
-                        log.debug("metric:{}", metric.getName());
-                        Gauge collector =
-                                Gauge.builder().name(b.name + '_' + metric.getName()).help(metric.getDescription())
-                                        .labelNames(labelNames.toArray(new String[0])).register(registry);
-                        metricCollectManager.storeCollector(metricKey, new AgentGauge(collector));
-                    } else {
-                        log.error("Metric type not support:{}", metric.getUsage());
-                    }
-                });
-            }
-        });
+        log.info("Scrape db metrics for node {}:takes {} ms", target.getTargetConfig().getNodeId(),
+            endTime - startTime);
+        return list;
     }
 
     /**

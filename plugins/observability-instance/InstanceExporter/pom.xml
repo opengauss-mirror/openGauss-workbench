@@ -37,12 +37,12 @@
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>prometheus-metrics-core</artifactId>
-            <version>1.0.0</version>
+            <version>1.2.1</version>
         </dependency>
         <dependency>
             <groupId>io.prometheus</groupId>
             <artifactId>prometheus-metrics-exporter-httpserver</artifactId>
-            <version>1.0.0</version>
+            <version>1.2.1</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.sshd/sshd-scp -->
         <dependency>
@@ -69,6 +69,11 @@
             <groupId>net.i2p.crypto</groupId>
             <artifactId>eddsa</artifactId>
             <version>0.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>1.2.22</version>
         </dependency>
     </dependencies>
     <build>

@@ -24,6 +24,7 @@
 
 package com.nctigba.observability.instance.agent.config.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.nctigba.observability.instance.agent.enums.DbTypeEnum;
 import lombok.Data;
 
@@ -33,10 +34,10 @@ import lombok.Data;
  * @since 2023/12/1
  */
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TargetConfig {
     private String nodeId;
     private String hostId;
-    private String exporterPort;
     private String machineIP;
     private String machinePort;
     private String machineUser;

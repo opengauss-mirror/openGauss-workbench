@@ -24,6 +24,7 @@
 
 package com.nctigba.observability.instance.controller;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONArray;
@@ -105,14 +106,21 @@ public class ResourceCPUController extends ControllerConfig {
 
     @GetMapping("topOSProcessAndDBThread")
     public AjaxResult topOSProcessAndDBThread(String id, String sort) throws IOException, InterruptedException {
-        AgentNodeRelationDO relationEntity = agentMapper.selectOne(
+        List<AgentNodeRelationDO> relationList = agentMapper.selectList(
                 Wrappers.<AgentNodeRelationDO>lambdaQuery().eq(AgentNodeRelationDO::getNodeId, id));
-        if (relationEntity == null) {
+        if (CollectionUtil.isEmpty(relationList)) {
             throw new CustomException("agent not installed");
         }
-        var env = envMapper.selectOne(
-                Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getId, relationEntity.getEnvId())
-                        .eq(NctigbaEnvDO::getType, envType.EXPORTER));
+        NctigbaEnvDO env = null;
+        for (AgentNodeRelationDO agentNodeRel : relationList) {
+            env = envMapper.selectOne(
+                Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getId, agentNodeRel.getEnvId())
+                    .eq(NctigbaEnvDO::getType, envType.EXPORTER));
+            if (env == null) {
+                continue;
+            }
+            break;
+        }
         if (env == null) {
             throw new CustomException("agent not installed");
         }

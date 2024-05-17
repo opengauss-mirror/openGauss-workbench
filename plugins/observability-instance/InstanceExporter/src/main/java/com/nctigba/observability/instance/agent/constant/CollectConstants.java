@@ -81,4 +81,19 @@ public class CollectConstants {
      * @since 2023/12/1
      */
     public static final List<String> DB_DEFAULT_METRIC_LABELS = Arrays.asList("host", "instanceId");
+
+    /**
+     * PRIMARY_ROLE
+     */
+    public static final String PRIMARY_ROLE = "primary";
+
+    /**
+     * THREAD_TIMEOUT
+     */
+    public static final int THREAD_TIMEOUT = 1;
+
+    /**
+     * THREAD_TIMEOUT
+     */
+    public static final int COLLECT_TIMEOUT = 1;
 }

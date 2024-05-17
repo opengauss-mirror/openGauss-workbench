@@ -34,8 +34,8 @@ public enum MetricsLine {
     MEMORY(Type.OS,
             "(1 - (agent_memory_MemAvailable_bytes{host='ogbrench'} /"
                     + " (agent_memory_MemTotal_bytes{host='ogbrench'}))) * 100"),
-    NETWORK_IN_TOTAL(Type.OS, "max(rate(agent_network_receive_bytes_total{host='ogbrench'}[5m])*8)"),
-    NETWORK_OUT_TOTAL(Type.OS, "max(rate(agent_network_transmit_bytes_total{host='ogbrench'}[5m])*8)"),
+    NETWORK_IN_TOTAL(Type.OS, "max(rate(agent_network_receive_bytes_total{host='ogbrench'}[5m]))"),
+    NETWORK_OUT_TOTAL(Type.OS, "max(rate(agent_network_transmit_bytes_total{host='ogbrench'}[5m]))"),
     IO(Type.OS, "sum(rate(agent_disk_tot_ticks_total{host='ogbrench'}[5m])) / 1000"),
     SWAP(Type.OS, "agent_free_Swap_used_bytes{host='ogbrench'}/agent_free_Swap_total_bytes{host='ogbrench'} *100"),
     DB_THREAD_POOL(Type.DB, "local_threadpool_status_pool_utilization_rate{instanceId='ogbrench'}"),
@@ -93,10 +93,11 @@ public enum MetricsLine {
     IOPS_R(Type.OS, "sum(rate(agent_disk_rd_ios_total{host='ogbrench'}[5m]))by(device)", "{device}"),
     IOPS_R_TOTAL(Type.OS, "sum(rate(agent_disk_rd_ios_total{host='ogbrench'}[5m]))"),
     IOPS_W(Type.OS, "sum(rate(agent_disk_wr_ios_total{host='ogbrench'}[5m]))by(device)", "{device}"),
-    IO_DISK_READ_BYTES_PER_SECOND(Type.OS, "sum(rate(agent_disk_rd_sectors_total{host='ogbrench'}[5m]))by(device) *512",
+    IO_DISK_READ_BYTES_PER_SECOND(Type.OS, "sum(rate(agent_disk_rd_sectors_total{host='ogbrench'}[5m]))by(device) "
+        + "*512 /1024",
             "{device}"),
     IO_DISK_WRITE_BYTES_PER_SECOND(Type.OS,
-            "sum(rate(agent_disk_wr_sectors_total{host='ogbrench'}[5m]))by(device) *512", "{device}"),
+            "sum(rate(agent_disk_wr_sectors_total{host='ogbrench'}[5m]))by(device) *512 /1024", "{device}"),
     IO_QUEUE_LENGTH(Type.OS, "sum(rate(agent_disk_rq_ticks_total{host='ogbrench'}[5m]))by(device)", "{device}"),
     IO_UTIL(Type.OS, "sum(rate(agent_disk_tot_ticks_total{host='ogbrench'}[5m])) by(device) / 1000", "{device}"),
     IO_AVG_REPONSE_TIME_READ(Type.OS,
@@ -123,8 +124,9 @@ public enum MetricsLine {
         "{device}"),
 
     // network
-    NETWORK_IN(Type.OS, "max(rate(agent_network_receive_bytes_total{host='ogbrench'}[5m])*8) by (device)", "{device}"),
-    NETWORK_OUT(Type.OS, "max(rate(agent_network_transmit_bytes_total{host='ogbrench'}[5m])*8) by (device)",
+    NETWORK_IN(Type.OS, "max(rate(agent_network_receive_bytes_total{host='ogbrench'}[5m]) / 1024) by (device)",
+        "{device}"),
+    NETWORK_OUT(Type.OS, "max(rate(agent_network_transmit_bytes_total{host='ogbrench'}[5m]) / 1024) by (device)",
             "{device}"),
     NETWORK_LOST_PACKAGE_IN(Type.OS,
         "sum(rate(agent_network_receive_dropped_total{host='ogbrench'}[5m])) by (device)",
