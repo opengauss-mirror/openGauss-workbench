@@ -33,6 +33,7 @@ import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.opengauss.admin.common.core.domain.UploadInfo;
+import org.opengauss.admin.plugin.vo.ShellInfoVo;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -89,5 +90,14 @@ public class MigrationHostPortalInstall {
 
     public String getDatakitLogPath() {
         return installPath + "datakit_install_portal.log";
+    }
+
+    /**
+     * get shell information
+     *
+     * @return ShellInfoVo
+     */
+    public ShellInfoVo getShellInfoVo() {
+        return new ShellInfoVo(this.getHost(), this.getPort(), this.getRunUser(), this.getRunPassword());
     }
 }

@@ -56,8 +56,8 @@ public class PortalHandle {
 
     public static boolean checkInstallPortal(String host, Integer port, String user, String pass, String installPath) {
         JschResult checkInstallPortalResult = ShellUtil.execCommandGetResult(host, port, user, pass,
-            "[ -f " + installPath + "portal/logs/portal_.log ] && cat " + installPath
-                + "portal/logs/portal_.log | grep 'Install all migration tools success'");
+                "[ -f " + installPath + "portal/logs/portal_.log ] && cat " + installPath
+                        + "portal/logs/portal_.log | grep 'Install all migration tools success'");
         return StringUtils.isNotBlank(checkInstallPortalResult.getResult().trim());
     }
 
@@ -117,7 +117,7 @@ public class PortalHandle {
 
     public static boolean installPortal(MigrationHostPortalInstall installParams) throws PortalInstallException {
         ShellUtil.execCommandGetResult(installParams.getHost(), installParams.getPort(), installParams.getRunUser(), installParams.getRunPassword(),
-                "rm -rf  " + installParams.getInstallPath() + "portal " + installParams.getDatakitLogPath());
+                "rm -rf  " + installParams.getInstallPath() + "portal");
         JschResult existsPortalInstallFileResult = ShellUtil.execCommandGetResult(installParams.getHost(), installParams.getPort(), installParams.getRunUser(), installParams.getRunPassword(), "[ -f " + installParams.getInstallPath() + installParams.getPkgName() + " ] && echo 1 || echo 0");
         if (existsPortalInstallFileResult.isOk() && Integer.parseInt(existsPortalInstallFileResult.getResult().trim()) == 0) {
             //download portal
@@ -149,14 +149,12 @@ public class PortalHandle {
         if (!installToolResult.isOk()) {
             throw new PortalInstallException("install portal package failed: " + installToolResult.getResult());
         }
-        log.info("portal exec install command result {}", installToolResult.getResult());
 
         if (installToolResult.getResult().contains("Install all migration tools success.") && installToolResult.getResult().contains("Start kafka success")) {
+            log.info("portal exec install command result {}", installToolResult.getResult());
             return true;
-        } else if (installToolResult.getResult().contains("Error message: ")) {
-            return false;
         }
-        return false;
+        throw new PortalInstallException("install portal package failed: " + installToolResult.getResult());
     }
 
     private static String buildPortalThirdPartySoftwareParams(
@@ -234,7 +232,7 @@ public class PortalHandle {
      * @return check result
      */
     public static boolean checkBeforeMigration(MigrationHostPortalInstall host, MigrationTask task,
-        String portalJarName, Map<String, String> paramMap, String command) {
+                                               String portalJarName, Map<String, String> paramMap, String command) {
         log.info("run host info: {}", JSON.toJSONString(host));
         String portalHome = host.getInstallPath() + "portal/";
         String params = paramMap.entrySet().stream().map(p -> {
@@ -248,7 +246,7 @@ public class PortalHandle {
         commandSb.append(" -Dskip=true -jar ").append(portalHome).append(portalJarName);
         log.info("check before migration,host: {}, command: {}", host.getHost(), commandSb);
         JschResult checkResult = ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getRunUser(),
-            host.getRunPassword(), commandSb.toString());
+                host.getRunPassword(), commandSb.toString());
         if (!checkResult.isOk()) {
             log.error("exec checkBeforeMigration command failed.");
         } else {
@@ -348,8 +346,8 @@ public class PortalHandle {
      */
     public static String getPortalCheckResult(MigrationHostPortalInstall installHost, Integer taskId) {
         JschResult result = ShellUtil.execCommandGetResult(installHost.getHost(), installHost.getPort(),
-            installHost.getRunUser(), installHost.getRunPassword(),
-            "cat " + installHost.getInstallPath() + "portal/workspace/" + taskId + "/checkResult.json");
+                installHost.getRunUser(), installHost.getRunPassword(),
+                "cat " + installHost.getInstallPath() + "portal/workspace/" + taskId + "/checkResult.json");
         return result.isOk() ? replaceAllBlank(result.getResult().trim()) : "";
     }
 

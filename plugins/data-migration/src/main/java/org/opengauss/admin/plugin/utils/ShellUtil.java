@@ -29,14 +29,20 @@ import cn.hutool.extra.ssh.JschUtil;
 import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
+import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.plugin.exception.ShellException;
+import org.opengauss.admin.plugin.vo.ShellInfoVo;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
+import java.util.StringJoiner;
 
 /**
  * @className: ShellUtil
@@ -50,6 +56,28 @@ public class ShellUtil {
      * Connect Timeout
      */
     private static final Integer CONNECT_TIMEOUT = 5000;
+
+    /**
+     * execute command
+     *
+     * @param shellInfo shell information
+     * @param commands commands
+     */
+    public static void execCommand(ShellInfoVo shellInfo, String... commands) {
+        execCommand(shellInfo.getIp(), shellInfo.getPort(), shellInfo.getUsername(), shellInfo.getPassword(), commands);
+    }
+
+    /**
+     * execute command and get result
+     *
+     * @param shellInfo shell information
+     * @param commands commands
+     * @return JschResult
+     */
+    public static JschResult execCommandGetResult(ShellInfoVo shellInfo, String... commands) {
+        return execCommandGetResult(
+                shellInfo.getIp(), shellInfo.getPort(), shellInfo.getUsername(), shellInfo.getPassword(), commands);
+    }
 
     public static void execCommand(String host, Integer port, String user, String password, String... commands) {
         Session session = JschUtil.openSession(host, port, user, password);
@@ -230,6 +258,81 @@ public class ShellUtil {
                 } catch (IOException e) {
                     log.error("close input stream failed: " + e.getMessage());
                 }
+            }
+        }
+    }
+
+    /**
+     * check dependencies on host and get the list of missing dependencies
+     *
+     * @param rootShellInfo root shell information
+     * @param dependencies the list of dependencies
+     * @return ArrayList the list of missing dependencies
+     */
+    public static List<String> checkDependencies(ShellInfoVo rootShellInfo, List<String> dependencies) {
+        if (dependencies == null || dependencies.isEmpty()) {
+            log.warn("The list of dependencies to check is null or empty.");
+            return Collections.emptyList();
+        }
+
+        String command = String.format("yum list installed | egrep '%s'", String.join("|", dependencies));
+        String commandResult = execCommandGetResult(rootShellInfo, command).getResult();
+
+        if (StringUtils.isEmpty(commandResult)) {
+            return dependencies;
+        }
+
+        List<String> missingDependencies = new ArrayList<>();
+        for (String dependency : dependencies) {
+            if (!commandResult.contains(dependency)) {
+                missingDependencies.add(dependency);
+            }
+        }
+        return missingDependencies;
+    }
+
+    /**
+     * yum install dependencies
+     *
+     * @param rootShellInfo root shell information
+     * @param dependencies the list of dependencies
+     */
+    public static void installDependencies(ShellInfoVo rootShellInfo, List<String> dependencies) {
+        if (dependencies == null || dependencies.isEmpty()) {
+            log.warn("The list of dependencies to install is null or empty.");
+            return;
+        }
+
+        StringJoiner dependencyJoiner = new StringJoiner(" ");
+        dependencies.forEach(dependencyJoiner::add);
+
+        String command = "yum install -y " + dependencyJoiner.toString();
+        JschResult jschResult = execCommandGetResult(rootShellInfo, command);
+
+        if (jschResult.isOk()) {
+            log.info("Dependencies installed successfully: {}", dependencyJoiner.toString());
+        } else {
+            throw new ShellException(String.format(
+                    "Failed to install dependencies. Command: {%s}, Result: {%s}", command, jschResult.getResult()));
+        }
+    }
+
+    /**
+     * Checks whether the port is occupied. If yes, throw an exception.
+     *
+     * @param rootShellInfo root shell information
+     * @param port port
+     */
+    public static void checkPortUsed(ShellInfoVo rootShellInfo, String port) {
+        String command = "lsof -i:" + port;
+        JschResult jschResult = ShellUtil.execCommandGetResult(rootShellInfo, command);
+        if (StringUtils.isNotEmpty(jschResult.getResult())) {
+            if (jschResult.isOk()) {
+                String errorMessage = "Port " + port + " is occupied.";
+                log.error(errorMessage);
+                throw new ShellException(errorMessage);
+            } else {
+                log.error("Failed to execute command: {}, Result: {}", command, jschResult.getResult());
             }
         }
     }
