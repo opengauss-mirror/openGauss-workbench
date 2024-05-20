@@ -486,13 +486,13 @@ watch(
     // table
     for (let index = 0; index < baseData.table.length; index++) {
       const element = baseData.table[index];
-      element.IO_TPS = toFixed(element.IO_TPS);
-      element.IO_RD = toFixed(element.IO_RD);
-      element.IO_WT = toFixed(element.IO_WT);
-      element.IO_AVGRQ_SZ = toFixed(element.IO_AVGRQ_SZ);
-      element.IO_AVGQU_SZ = toFixed(element.IO_AVGQU_SZ);
-      element.IO_AWAIT = toFixed(element.IO_AWAIT);
-      element.IO_UTIL = toFixed(element.IO_UTIL);
+      element.IO_TPS = toFixed(Math.max(parseFloat(element.IO_TPS) || 0, 0));
+      element.IO_RD = toFixed(Math.max(parseFloat(element.IO_RD) || 0, 0));
+      element.IO_WT = toFixed(Math.max(parseFloat(element.IO_WT) || 0, 0));
+      element.IO_AVGRQ_SZ = toFixed(Math.max(parseFloat(element.IO_AVGRQ_SZ) || 0, 0));
+      element.IO_AVGQU_SZ = toFixed(Math.max(parseFloat(element.IO_AVGQU_SZ) || 0, 0));
+      element.IO_AWAIT = toFixed(Math.max(parseFloat(element.IO_AWAIT) || 0, 0));
+      element.IO_UTIL = toFixed(Math.max(parseFloat(element.IO_UTIL) || 0, 0));
     }
     metricsData.value.table = baseData.table;
 

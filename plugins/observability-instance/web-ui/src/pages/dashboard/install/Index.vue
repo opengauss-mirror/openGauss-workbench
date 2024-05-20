@@ -23,7 +23,7 @@
                 <span v-if="data.id" style="margin-left: 2px">
                   <el-tooltip
                     :content="getStatusText(agentNodeStatusMap[data.id].status)"
-                    placement="top"
+                    placement="right"
                     effect="light"
                   >
                     <span class="state-row">
@@ -82,7 +82,7 @@
                 <span v-if="data.id" style="margin-left: 2px">
                   <el-tooltip
                     :content="getStatusText(proxyNodeStatusMap[data.id].status)"
-                    placement="top"
+                    placement="right"
                     effect="light"
                   >
                     <span class="state-row">

@@ -13,6 +13,8 @@ export async function getSQLEvent(instanceId: string, sqlId: string): Promise<vo
     id: instanceId,
     sqlId,
   })
+  .then(function (res) { return res })
+  .catch(function (res) { return "error"})
 }
 
 export async function getSQLMetrics(

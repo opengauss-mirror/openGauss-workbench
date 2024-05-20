@@ -977,6 +977,8 @@ export default {
     noOjcInfoTip: 'No object information',
     placeholderTip:
       'The SQL statement has a placeholder, unable to obtain index suggestions. It is recommended that the tracks in the database_ stmt_ The parameter parameter is set to on to obtain new SQL without placeholder',
+    waitEventTip:
+      'The details field in Statement_HISTORY records a list of waiting events. It is recommended to set the track_stmtstat_level parameter in the database to track the second level to L2 to obtain a list of statement lock events',
     objStructureOther: {
       commonTable: 'common Table',
       indexes: 'indexes',

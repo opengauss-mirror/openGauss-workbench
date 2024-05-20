@@ -5,5 +5,5 @@
 import ogRequest from '@/request/diagnosis'
 
 export async function hasSQLDiagnosisModule(): Promise<void | any> {
-    return ogRequest.get('/historyDiagnosis/api/v1/options', {})
+    return ogRequest.get('/historyDiagnosis/api/v2/options', {})
 }

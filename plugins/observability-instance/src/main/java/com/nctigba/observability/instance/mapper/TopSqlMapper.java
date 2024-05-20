@@ -219,4 +219,12 @@ public interface TopSqlMapper {
             + "a.attnum = b.objsubid, pg_catalog.pg_type t where c.relname = #{relname} and a.attnum>0 and a.attrelid ="
             + " c.oid and a.atttypid = t.oid limit 1")
     List<Map<String, Object>> indexInfo(String relname);
+
+    /**
+     * history sql wait event param
+     *
+     * @return wait event param
+     */
+    @Select("show track_stmt_stat_level;")
+    String waitEventParam();
 }
