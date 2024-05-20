@@ -280,7 +280,7 @@ const isEnvChange = (val: boolean) => {
 }
 
 const installUserChange = (val: string) => {
-  if (val && installType.value !== 'import') {
+  if (val && installType.value !== 'import'  && data.form.cluster.isEnvSeparate === true) {
     data.form.cluster.envPath = data.envPrefix + val + data.envSuffix
   }
 }
