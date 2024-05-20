@@ -92,7 +92,7 @@ const connectionFormRules = reactive<FormRules>({
 // cluster component
 const handleClusterValue = (val: any) => {
     formData.nodeId = val.length > 1 ? val[1] : ''
-    formData.path = `${basePath.value}/${formData.nodeId}/agent`
+    formData.path = `${basePath.value}/${formData.nodeId}_diagnosis-agent`
 }
 
 const started = ref(false)

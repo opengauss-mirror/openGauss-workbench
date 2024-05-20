@@ -27,6 +27,14 @@ export default {
     cluterTitle: 'Cluster/Instance:',
     saveSuccess: 'Save succeed！',
   },
+  diagnosis: {
+    sqlDiagnosis: 'SQL Diagnosis',
+    histroyDiagnosis: 'History Diagnosis',
+    newSQLTask: 'Add SQL Diagnosis Task',
+    globalThresholdSetting: 'Global Threshold Configuration',
+    globalThresholdLabel: 'Global Threshold',
+    globalThreshold: 'Global Threshold',
+  },
   sqlDiagnosisPoints: {
     referSQL: 'Optimized Reference SQL',
     beforePlan: 'Current Execution Plan',

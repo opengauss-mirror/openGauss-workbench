@@ -74,6 +74,7 @@ import static com.nctigba.observability.sql.constant.CommonConstants.INSTALL_FLA
 import static com.nctigba.observability.sql.constant.CommonConstants.JDK_VERSION;
 import static com.nctigba.observability.sql.constant.CommonConstants.MKDIR_FILE;
 import static com.nctigba.observability.sql.constant.CommonConstants.MV_FILE;
+import static com.nctigba.observability.sql.constant.CommonConstants.PID_PATH;
 import static com.nctigba.observability.sql.constant.CommonConstants.PORT_IS_EXIST;
 import static com.nctigba.observability.sql.constant.CommonConstants.PORT_PID;
 import static com.nctigba.observability.sql.constant.CommonConstants.PYTHON_VERSION;
@@ -321,7 +322,14 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
              InputStream in = loader.getResource("run_agent.sh").getInputStream()) {
             session.upload(in, env.getPath() + "/run_agent.sh");
             String pid = session.execute(String.format(PORT_PID, env.getPort()));
-            if (pid != null && !"".equals(pid)) {
+            if (!StrUtil.isBlank(pid)) {
+                String pidPath = session.execute(String.format(PID_PATH, pid));
+                if (!pidPath.endsWith(File.separator)) {
+                    pidPath += File.separator;
+                }
+                if (!env.getPath().equals(pidPath)) {
+                    return;
+                }
                 File pidFile = File.createTempFile("agent", ".pid");
                 FileUtil.appendUtf8String(pid, pidFile);
                 session.upload(pidFile.getCanonicalPath(), env.getPath() + "/agent.pid");
@@ -494,7 +502,13 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
         try (SshSessionUtils session = connect(env, rootPwd)) {
             String pid = session.execute(String.format(PORT_PID, env.getPort()));
             if (StrUtil.isNotBlank(pid) && NumberUtil.isLong(pid)) {
-                session.execute(Command.KILL.parse(pid));
+                String pidPath = session.execute(String.format(PID_PATH, pid));
+                if (!pidPath.endsWith(File.separator)) {
+                    pidPath += File.separator;
+                }
+                if (env.getPath().equals(pidPath)) {
+                    session.execute(Command.KILL.parse(pid));
+                }
             }
         } catch (IOException | RuntimeException e) {
             throw new CustomException("exec failed:" + e.getMessage());

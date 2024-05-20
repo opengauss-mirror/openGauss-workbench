@@ -17,7 +17,7 @@
             <el-tree :indent="0" :data="collectorList" :props="collectorProps" #default="{ node, data }">
               <div class="custom-tree-node show-hide">
                 <span v-if="data.id">
-                  <el-tooltip :content="getStatusText(nodeStatusMap[data.id].status)" placement="top" effect="light">
+                  <el-tooltip :content="getStatusText(nodeStatusMap[data.id].status)" placement="right" effect="light">
                     <span class="state-row">
                       <span class="state" :class="nodeStatusMap[data.id].status"></span>
                     </span>
