@@ -117,7 +117,7 @@ openGauss-tools-monitor
 * 以idea为例参考下图
 * 下载项目:git clone git@gitee.com:opengauss/openGauss-workbench.git
 * 使用maven打包编译
-* 打包完成后在openGauss-workbench\plugins\openGauss-tools-monitor\monitor-tools\target目录中找到monitor-tools-6.0.0-RC1-repackage.jar即为插件安装包。
+* 打包完成后在openGauss-workbench\plugins\openGauss-tools-monitor\monitor-tools\target目录中找到monitor-tools-6.0.0-repackage.jar即为插件安装包。
 * 打开并登陆openGauss一体化平台，点击插件管理-安装插件，将上述步骤获得的安装包上传并安装。
 * 刷新页面可在右侧菜单栏看到监控插件工具菜单即为安装成功。
 

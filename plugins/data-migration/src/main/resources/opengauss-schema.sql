@@ -963,7 +963,7 @@ COMMENT ON COLUMN "public"."tb_migration_tool_portal_download_info"."portal_jar_
 
 DELETE FROM "public"."tb_migration_tool_portal_download_info";
 
-CREATE OR REPLACE FUNCTION init_tb_migration_tool_portal_download_info_data_fuc(pkg_version varchar(255)[]) RETURNS void AS '
+CREATE OR REPLACE FUNCTION init_tb_migration_tool_portal_download_info_data_fuc(pkg_version varchar(255)[], latest_version varchar) RETURNS void AS '
 DECLARE
 host_os_info varchar(255)[][] := ARRAY[[''centos'', ''7''],
                                      [''openEuler'', ''20.03''],
@@ -979,7 +979,7 @@ BEGIN
         FOR row_i IN 1..array_length(host_os_info, 1) LOOP
             IF i = 1 THEN
                 INSERT INTO "public"."tb_migration_tool_portal_download_info" ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
-                    VALUES (num, host_os_info[row_i][1], host_os_info[row_i][2], host_cpu_arch[row_i], concat(''https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/'', host_os_info[row_i][1], host_os_info[row_i][2], ''/''), concat(''latest_PortalControl-'', pkg_version[i], ''-'', host_cpu_arch[row_i], ''.tar.gz''), concat(''portalControl-'', pkg_version[i], ''-exec.jar''))
+                    VALUES (num, host_os_info[row_i][1], host_os_info[row_i][2], host_cpu_arch[row_i], concat(''https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/'', host_os_info[row_i][1], host_os_info[row_i][2], ''/''), concat(''latest_PortalControl-'', latest_version, ''-'', host_cpu_arch[row_i], ''.tar.gz''), concat(''portalControl-'', latest_version, ''-exec.jar''))
                     ON DUPLICATE KEY UPDATE NOTHING;
                 num := num + 1;
             END IF;
@@ -1004,6 +1004,6 @@ END;
 '
 LANGUAGE plpgsql;
 
-SELECT init_tb_migration_tool_portal_download_info_data_fuc(ARRAY['6.0.0rc1', '5.1.0', '5.0.0']);
+SELECT init_tb_migration_tool_portal_download_info_data_fuc(ARRAY['6.0.0rc1', '5.1.0', '5.0.0'], '6.0.0');
 
 DROP FUNCTION init_tb_migration_tool_portal_download_info_data_fuc;

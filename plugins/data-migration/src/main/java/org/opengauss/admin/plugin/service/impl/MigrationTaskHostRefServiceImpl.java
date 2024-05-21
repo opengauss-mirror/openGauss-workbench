@@ -927,7 +927,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             if (parts.length > 1) {
                 String versionNumber = parts[1];
                 String signVersion = "6.0.0";
-                if (versionNumber.compareTo(signVersion) > 0) {
+                if (versionNumber.compareTo(signVersion) >= 0) {
                     install.setJarName("portalControl-" + versionNumber + "-exec.jar");
                 }
             } else {

@@ -181,7 +181,7 @@ git clone https://gitee.com/opengauss/openGauss-workbench
 mvn clean package -P prod
 ```
 
-**步骤 3：** 在target目录下找到生成的observability-sql-diagnosis-6.0.0-RC1-repackage.jar，安装到一体化平台。
+**步骤 3：** 在target目录下找到生成的observability-sql-diagnosis-6.0.0-repackage.jar，安装到一体化平台。
 
 ![](doc/3.png)
 
