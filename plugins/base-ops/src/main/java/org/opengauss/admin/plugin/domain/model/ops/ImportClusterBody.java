@@ -141,7 +141,11 @@ public class ImportClusterBody {
         opsClusterEntity.setInstallMode(installMode);
         opsClusterEntity.setDeployType(deployType);
         opsClusterEntity.setClusterName(clusterName);
-        opsClusterEntity.setEnvPath(envPath);
+        if (envPath == null || envPath.equals("")) {
+            opsClusterEntity.setEnvPath("~/.bashrc");
+        } else {
+            opsClusterEntity.setEnvPath(envPath);
+        }
 
         if (openGaussVersion == OpenGaussVersionEnum.ENTERPRISE) {
             opsClusterEntity.setDatabaseUsername(enterpriseInstallConfig.getDatabaseUsername());

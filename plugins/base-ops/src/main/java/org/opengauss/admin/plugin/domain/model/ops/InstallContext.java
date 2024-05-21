@@ -159,7 +159,11 @@ public class InstallContext implements Cloneable {
         opsClusterEntity.setInstallMode(installMode);
         opsClusterEntity.setDeployType(deployType);
         opsClusterEntity.setDatabaseUsername("gaussdb");
-        opsClusterEntity.setEnvPath(envPath);
+        if (envPath == null || envPath.equals("")) {
+            opsClusterEntity.setEnvPath("~/.bashrc");
+        } else {
+            opsClusterEntity.setEnvPath(envPath);
+        }
         if (openGaussVersion == OpenGaussVersionEnum.ENTERPRISE) {
             opsClusterEntity.setInstallPackagePath(enterpriseInstallConfig.getInstallPackagePath());
             opsClusterEntity.setDatabasePassword(enterpriseInstallConfig.getDatabasePassword());
