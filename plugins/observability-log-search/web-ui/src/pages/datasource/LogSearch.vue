@@ -48,7 +48,13 @@
                 <my-card :title="$t('datasource.logDistributionMap')" :legend="waitLegends" :bodyPadding="false" ref="cardRef" collapse :overflowHidden="overflowHidden" @click="toggleCard">
                     <div class="loading-cover" v-if="refreshingBar" v-loading="refreshingBar"></div>
                     <div class="line-wrap-chart" style="height: 250px" ref="lineChartRef">
-                        <my-bar v-if="showBar" :yname="$t('datasource.numberofLogs')" :xData="xData" :data="showData" :unit="$t('datasource.unit')" :barWidth="barWidth" :barHeight="barHeight"/>
+                        <my-bar v-if="showBar"
+                          :yname="$t('datasource.numberofLogs')"
+                          :xData="xData" :data="showData"
+                          :unit="$t('datasource.unit')"
+                          :finallyTime="dayjs.utc(formData.dateValue[1]).local().format('MM-DD HH:mm:ss')"
+                          :barWidth="barWidth"
+                          :barHeight="barHeight"/>
                     </div>
                 </my-card>
             </div>

@@ -72,6 +72,10 @@ import java.util.TimeZone;
 @RequiredArgsConstructor
 @Slf4j
 public class LogSearchServiceImpl implements LogSearchService {
+    private static final long SECOND = 1000L;
+    private static final long MINUTE = SECOND * 60L;
+    private static final long HALF_HOUR = MINUTE * 30L;
+    private static final int DEFAULT_INTERVAL_NUM = 6;
     @Autowired
     private EsLogSearchUtils esLogSearchUtils;
 
@@ -103,7 +107,7 @@ public class LogSearchServiceImpl implements LogSearchService {
                     Date endDate = new Date();
                     long time = endDate.getTime();
                     Date startDate = new Date();
-                    startDate.setTime(time - 1000 * 60 * 30);
+                    startDate.setTime(time - HALF_HOUR);
                     queryParam.setStartDate(stringFormat.parse(dateFormat.format(startDate)));
                     queryParam.setEndDate(stringFormat.parse(dateFormat.format(endDate)));
 
@@ -116,7 +120,7 @@ public class LogSearchServiceImpl implements LogSearchService {
                 EsSearchQuery esSearchQuery = new EsSearchQuery();
                 esSearchQuery.setEndDate(queryParam.getEndDate());
                 esSearchQuery.setStartDate(queryParam.getStartDate());
-                esSearchQuery.setInterval(interval / 6);
+                esSearchQuery.setInterval(Math.max(interval / DEFAULT_INTERVAL_NUM, MINUTE));
                 if (!queryParam.isEmptyObject()) {
                     esSearchQuery.setLogType(queryParam.getLogType());
                     esSearchQuery.setLogLevel(queryParam.getLogLevel());
@@ -133,13 +137,18 @@ public class LogSearchServiceImpl implements LogSearchService {
                     for (String logType : queryParam.getLogType()) {
                         slist.add("ob-" + logType + "-");
                     }
-                    listType = this.creatLogTypeTree(slist);
+                    listType = this.createLogTypeTree(slist);
                 } else {
                     listType = this.getLogType();
                 }
                 for (HistogramBucket histogramBucket : list) {
                     LogDistroMapDTO logDistroMapDTO = new LogDistroMapDTO();
-                    logDistroMapDTO.setDateTime(histogramBucket.keyAsString());
+                    if (lList.size() > 0) {
+                        logDistroMapDTO.setDateTime(histogramBucket.keyAsString());
+                    } else {
+                        SimpleDateFormat stringFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+                        logDistroMapDTO.setDateTime(stringFormat.format(esSearchQuery.getStartDate()));
+                    }
                     List<LogDistroMapInfoDTO> logDistroMapInfoDTOList = new ArrayList<>();
                     for (LogTypeTreeDTO logTypeTreeDTO : listType) {
                         long totalCount = 0;
@@ -160,7 +169,17 @@ public class LogSearchServiceImpl implements LogSearchService {
                                 LogDistroMapInfoDTO logDistMapInfo = new LogDistroMapInfoDTO();
                                 logDistMapInfo.setLogType(logTypeTreeDTO.getChildren().get(index).getTypeName());
                                 logDistMapInfo.setLogCount(stringTermsBucket1.docCount());
-                                logDistroMapList.add(logDistMapInfo);
+                                boolean isExist = logDistroMapList.stream().anyMatch(
+                                        dto -> dto.getLogType().equals(logDistMapInfo.getLogType()));
+                                if (isExist) {
+                                    logDistroMapList.forEach(f -> {
+                                        if (f.getLogType().equals(logDistMapInfo.getLogType())) {
+                                            f.setLogCount(f.getLogCount() + logDistMapInfo.getLogCount());
+                                        }
+                                    });
+                                } else {
+                                    logDistroMapList.add(logDistMapInfo);
+                                }
                             }
                         }
                         logDistroMapInfoDTO.setLogCount(totalCount);
@@ -266,7 +285,7 @@ public class LogSearchServiceImpl implements LogSearchService {
         Set<String> logTypes = esLogSearchUtils.indexList("ob-*");
         if (logTypes != null && logTypes.size() > 0) {
             List<String> list = new ArrayList<>(logTypes);
-            return this.creatLogTypeTree(list);
+            return this.createLogTypeTree(list);
         } else {
             return null;
         }
@@ -375,7 +394,7 @@ public class LogSearchServiceImpl implements LogSearchService {
      * @param logTypes log type
      * @return logType tree information
      */
-    private List<LogTypeTreeDTO> creatLogTypeTree(List<String> logTypes) {
+    private List<LogTypeTreeDTO> createLogTypeTree(List<String> logTypes) {
         List<LogTypeTreeDTO> logTypeList = new ArrayList<>();
         int start;
         int end;
@@ -424,11 +443,11 @@ public class LogSearchServiceImpl implements LogSearchService {
      * @return log node information
      */
     private List<String> getNodeId() {
-        if (nodeList != null && System.currentTimeMillis() - id < 60000) {
+        if (nodeList != null && System.currentTimeMillis() - id < MINUTE) {
             return nodeList;
         }
         synchronized (this) {
-            if (nodeList != null && System.currentTimeMillis() - id < 60000) {
+            if (nodeList != null && System.currentTimeMillis() - id < MINUTE) {
                 return nodeList;
             }
             Set<String> indexs = esLogSearchUtils.indexList("ob-*");

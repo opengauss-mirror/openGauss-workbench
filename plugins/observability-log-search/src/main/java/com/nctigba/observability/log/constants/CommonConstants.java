@@ -59,6 +59,11 @@ public class CommonConstants {
             + "| awk -F \"=\" '{print $2}'";
 
     /**
+     * Get pid by tid
+     */
+    public static final String PARENT_PID = "ps -o ppid= -p %s";
+
+    /**
      * Check if the directory exists
      */
     public static final String DIRECTORY_IS_EXIST = "[ -e %s ] && echo 'true' || echo 'false'";

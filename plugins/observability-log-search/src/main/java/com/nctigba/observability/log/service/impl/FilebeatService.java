@@ -41,6 +41,7 @@ import com.nctigba.observability.log.service.AbstractInstaller;
 import com.nctigba.observability.log.service.AbstractInstaller.Step.status;
 import com.nctigba.observability.log.service.AgentService;
 import com.nctigba.observability.log.service.ClusterManager;
+import com.nctigba.observability.log.util.CommonUtils;
 import com.nctigba.observability.log.util.Download;
 import com.nctigba.observability.log.util.SshSession;
 import com.nctigba.observability.log.util.SshSession.command;
@@ -112,6 +113,8 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
     private ResourceLoader loader;
     @Autowired
     private ClusterManager clusterManager;
+    @Autowired
+    private CommonUtils utils;
 
     /**
      * Install filebeat
@@ -228,9 +231,7 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                 curr = nextStep(wsSession, steps, curr);
                 // step4
                 // run shell
-                try (InputStream in = loader.getResource("run_filebeat.sh").getInputStream()) {
-                    session.upload(in, path + name + "/run_filebeat.sh");
-                }
+                utils.uploadShellScript(session, path + name + "/", "run_filebeat.sh");
                 // filebeat_conf
                 File f = File.createTempFile(CONF_FILE_NAME, FILE_TYPE);
                 try (var in = loader.getResource(CONF_FILE_NAME + FILE_TYPE).getInputStream();
@@ -242,6 +243,8 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                 session.execute("cd " + path + " && " + String.format(TAR_XVF_FILE, CONF_FILE_NAME + FILE_TYPE));
                 var esHost = hostFacade.getById(esEnv.getHostid());
                 var cluster = clusterManager.getOpsClusterByNodeId(nodeId);
+                // upload config script
+                utils.uploadShellScript(session, path + "/" + CONF_FILE_NAME + "/", "conf.sh");
                 // @formatter:off
                 session.execute("cd " + path + CONF_FILE_NAME + " && sh conf.sh"
                         + " --eshost " + esHost.getPublicIp() + ":" + esEnv.getPort()

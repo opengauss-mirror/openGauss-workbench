@@ -41,6 +41,7 @@ import com.nctigba.observability.log.model.vo.AgentStatusVO;
 import com.nctigba.observability.log.service.AbstractInstaller;
 import com.nctigba.observability.log.service.AbstractInstaller.Step.status;
 import com.nctigba.observability.log.service.AgentService;
+import com.nctigba.observability.log.util.CommonUtils;
 import com.nctigba.observability.log.util.Download;
 import com.nctigba.observability.log.util.SshSession;
 import com.nctigba.observability.log.util.SshSession.command;
@@ -72,6 +73,8 @@ import static com.nctigba.observability.log.constants.CommonConstants.MAX_MAP_CO
 import static com.nctigba.observability.log.constants.CommonConstants.MILLISECOND;
 import static com.nctigba.observability.log.constants.CommonConstants.MKDIR_FILE;
 import static com.nctigba.observability.log.constants.CommonConstants.MONITOR_CYCLE;
+import static com.nctigba.observability.log.constants.CommonConstants.PARENT_PID;
+import static com.nctigba.observability.log.constants.CommonConstants.PID_PATH;
 import static com.nctigba.observability.log.constants.CommonConstants.PORT_IS_EXIST;
 import static com.nctigba.observability.log.constants.CommonConstants.PORT_PID;
 import static com.nctigba.observability.log.constants.CommonConstants.RM_FILE;
@@ -114,6 +117,8 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
     private ResourceLoader loader;
     @Autowired
     private ElasticsearchProvider provider;
+    @Autowired
+    private CommonUtils utils;
 
     /**
      * Install elasticsearch
@@ -249,9 +254,7 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
                     session.upload(in, path + SRC + "/config/jvm.options");
                 }
                 // run shell
-                try (InputStream in = loader.getResource("run_elasticsearch.sh").getInputStream()) {
-                    session.upload(in, path + SRC + "/run_elasticsearch.sh");
-                }
+                utils.uploadShellScript(session, path + SRC + "/", "run_elasticsearch.sh");
             }
             envMapper.insert(env);
             curr = nextStep(wsSession, steps, curr);
@@ -403,14 +406,18 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
     }
 
     private void oldVersionAdapter(NctigbaEnvDO env) {
-        try (SshSession session = connect(env);
-             InputStream in = loader.getResource("run_elasticsearch.sh").getInputStream()) {
-            session.upload(in, env.getPath() + "/run_elasticsearch.sh");
+        try (SshSession session = connect(env)) {
+            utils.uploadShellScript(session, env.getPath() + "/", "run_elasticsearch.sh");
             String pid = session.execute(String.format(PORT_PID, env.getPort()));
-            if (pid != null && !"".equals(pid)) {
+            if (!StrUtil.isBlank(pid)) {
+                String parentPid = session.execute(String.format(PARENT_PID, pid));
+                String content = !StrUtil.isBlank(parentPid) && !"1".equals(parentPid.trim()) ? parentPid : pid;
                 File pidFile = File.createTempFile("elasticsearch", ".pid");
-                FileUtil.appendUtf8String(pid, pidFile);
-                session.upload(pidFile.getCanonicalPath(), env.getPath() + "/elasticsearch.pid");
+                String pidPath = session.execute(String.format(PID_PATH, content));
+                if (env.getPath().equals(pidPath)) {
+                    FileUtil.appendUtf8String(content, pidFile);
+                    session.upload(pidFile.getCanonicalPath(), env.getPath() + "/elasticsearch.pid");
+                }
             }
         } catch (IOException e) {
             throw new CustomException(e.getMessage());
@@ -492,7 +499,12 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
         try (SshSession session = connect(env)) {
             String pid = session.execute(String.format(PORT_PID, env.getPort()));
             if (StrUtil.isNotBlank(pid) && NumberUtil.isLong(pid)) {
-                session.execute(command.KILL.parse(pid));
+                String parentPid = session.execute(String.format(PARENT_PID, pid));
+                String actualPid = !StrUtil.isBlank(parentPid) && !"1".equals(parentPid.trim()) ? parentPid : pid;
+                String pidPath = session.execute(String.format(PID_PATH, actualPid));
+                if (env.getPath().equals(pidPath)) {
+                    session.execute(command.KILL.parse(actualPid));
+                }
             }
         } catch (IOException | RuntimeException e) {
             throw new CustomException("exec failed:" + e.getMessage());

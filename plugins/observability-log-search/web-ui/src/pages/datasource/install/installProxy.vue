@@ -135,6 +135,7 @@ const changeMachine = (val: any) => {
     if (formData.nodeId) {
         getPkgInfo(formData.nodeId);
         getHostUserList(formData.nodeId);
+        formData.path = `${basePath.value}/${formData.nodeId}_es`;
     }
 };
 const connectionFormRef = ref<FormInstance>();
@@ -185,10 +186,11 @@ const getHostUserList = (hostId: string) => {
     })
 }
 
+const basePath = ref<string>('');
 const getInstallPath = () => {
     ogRequest.get(`/observability/v1/environment/basePath`).then(res => {
         if(res) {
-            formData.path = res + (res.endsWith('/') ? 'data' : '/data') + '/es';
+            basePath.value = res + (res.endsWith('/') ? 'data' : '/data');
         }
     })
 }

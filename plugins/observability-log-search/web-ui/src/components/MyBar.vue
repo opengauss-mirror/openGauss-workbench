@@ -44,7 +44,8 @@ const props = withDefaults(
         color?: string[];
         theme?: 'dark' | 'light';
         barWidth: string,
-        barHeight: string
+        barHeight: string,
+        finallyTime: string
     }>(),
     {
         xData: () => [],
@@ -58,7 +59,8 @@ const props = withDefaults(
         color: () => ['#37D4D1', '#00C7F9', '#0D86E2', '#425ADD', '#E64A19', '#9CCC65', '#A97526', '#2830FF', '#8B00E1', '#0F866A'],
         theme: 'dark',
         barWidth: '100%',
-        barHeight: '100%'
+        barHeight: '100%',
+        finallyTime: ''
     }
 );
 const renderChart = () => {
@@ -101,8 +103,35 @@ const renderChart = () => {
         myChart = echarts.init(chartDom!);
     }
 
+    const time = props.finallyTime
+    const xData2 = props.xData.concat(time)
+
     const option: EchartsOption = {
         tooltip: {
+            formatter(item) {
+              let htmlStr = '<div style="height: auto;max-height: 300px;overflow-y: scroll;border-radius: 4px;">'
+              htmlStr += '<div style="display: flex;flex-direction: row;align-items:center;font-size:12px">' +
+                xData2[item[0].dataIndex] + '~' + xData2[item[0].dataIndex + 1] + '</div>';
+              for (let i = 0; i < item.length; i++) {
+                if(item[i].value){
+                  htmlStr +=
+                    '<div style="display: flex;flex-direction: row;align-items:center;font-size:12px">' +
+                    '<div style="display: inline-block; width: 14px; height: 4px;border-radius: 1px;margin-right:8px;background-color: ' +
+                    item[i].color +
+                    ';"></div>' +
+                    '<div style="flex-grow:1;padding-right:12px">' +
+                    item[i].seriesName +
+                    '</div>' +
+                    '<div style="min-width: 50px; text-align: right;">' +
+                    item[i].value +
+                    (props.unit ? props.unit : '') +
+                    '</div>' +
+                    '</div>'
+                }
+              }
+              htmlStr += '</div>'
+              return htmlStr;
+            },
             trigger: 'axis',
             axisPointer: {
                 type: 'shadow',
@@ -119,15 +148,20 @@ const renderChart = () => {
             bottom: '3%',
             containLabel: true,
         },
-        xAxis: {
-            type: 'category',
-            axisLine: {
-                lineStyle: {
-                    color: theme === 'dark' ? '#d4d4d4' : '#1d212a',
-                },
+        xAxis: [{
+            data: props.xData, show: false
+        },{
+          type: 'category',
+          axisLine: {
+            lineStyle: {
+              color: theme === 'dark' ? '#d4d4d4' : '#1d212a',
             },
-            data: props.xData,
-        },
+          },
+          data: xData2,
+          position: 'bottom',
+          boundaryGap: false,
+          axisPointer: { show: false },
+        }],
         yAxis: yAxisData,
         series: seriesData,
     };

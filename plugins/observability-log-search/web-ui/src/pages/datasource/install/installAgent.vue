@@ -163,7 +163,7 @@ const handleClusterValue = (val: any) => {
         nextTick(() => {
             refreshPkgInfo();
         });
-        formData.path = `${basePath.value}/${formData.nodeId}/filebeat`;
+        formData.path = `${basePath.value}/${formData.nodeId}_filebeat`;
     }
 };
 const getLogPath = (nodeId: string) => {
