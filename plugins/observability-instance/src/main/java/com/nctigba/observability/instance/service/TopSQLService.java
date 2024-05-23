@@ -198,6 +198,10 @@ public class TopSQLService {
     @Ds
     public List<Map<String, Object>> waitEvent(String nodeId, String sqlId) {
         List<Map<String, Object>> list = new ArrayList<>();
+        String param = topSqlMapper.waitEventParam();
+        if (!param.endsWith("L2")) {
+            throw new CustomException("failGetWaitEvent");
+        }
         String table = topSqlMapper.waitEvent(sqlId);
         if (StrUtil.isBlank(table)) {
             return topSqlMapper.currentWaitEvent(sqlId);

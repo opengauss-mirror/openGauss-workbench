@@ -1,5 +1,5 @@
 <template>
-    <div class="index-suggestions" v-loading="loading">
+    <div class="index-suggestions" v-if="placeholders === ''" v-loading="loading">
         <el-table
             :data="data"
             style="width: 100%; height: 560px"
@@ -19,12 +19,21 @@
             <el-table-column prop="waittime" :label="$t('sql.waitEventTable.waitLockTime')" />
         </el-table>
     </div>
+    <my-message
+      v-if="placeholders !== ''"
+      type="error"
+      :tip="$t('sql.waitEventTip')"
+      defaultTip=""
+      :key="i18n.global.locale.value"
+    />
 </template>
 
 <script setup lang="ts">
 import { useRequest } from 'vue-request'
 import moment from 'moment'
 import { getSQLEvent } from '@/api/sqlDetail'
+import { i18n } from '../../../i18n';
+import { useI18n } from 'vue-i18n';
 
 const props = withDefaults(
     defineProps<{
@@ -40,6 +49,7 @@ const props = withDefaults(
 )
 
 const data = ref<Array<any>>([])
+const placeholders = ref<string>("")
 
 const convertToCurrentTime = (timeStr: string) => {
     let momentObj = moment(timeStr, 'YYYY-MM-DD HH:mm:ss.SSS') // 解析字符串为 moment 对象
@@ -55,7 +65,11 @@ const { data: eventResult, loading, run: loadData } = useRequest(getSQLEvent, { 
 watch(
     eventResult,
     () => {
-        if (eventResult.value) data.value = eventResult.value
+        if (eventResult.value && typeof eventResult.value !== 'string') {
+          data.value = eventResult.value;
+        } else {
+          placeholders.value = 'error'
+        }
     },
     { deep: true }
 )

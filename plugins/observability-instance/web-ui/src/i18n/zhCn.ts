@@ -959,6 +959,8 @@ export default {
     noOjcInfoTip: '暂无对象信息',
     placeholderTip:
       'SQL 语句有占位符，无法获取索引建议，建议将数据库中的 track_stmt_parameter 参数设置为 on，以获取新的无占位符的 SQL',
+    waitEventTip:
+      'STATEMENT_HISTORY中的details字段的信息的记录的是等待事件的列表，建议将数据库中的 track_stmt_stat_level 参数追踪第二个level设置为L2，以获取语句锁事件的列表',
     objStructureOther: {
       commonTable: '普通表',
       indexes: '索引',

@@ -34,7 +34,7 @@
         <div class="table-in-card">
           <el-table
             :data="metricsData.memoryInfo"
-            style="width: 100%"
+            style="width: 100%; height: 60px"
             :border="true"
             :header-cell-class-name="
               () => {
@@ -70,7 +70,7 @@
         <div class="table-in-card">
           <el-table
             :data="metricsData.swapInfo"
-            style="width: 100%"
+            style="width: 100%; height: 60px"
             :border="true"
             :header-cell-class-name="
               () => {
