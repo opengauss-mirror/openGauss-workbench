@@ -158,7 +158,7 @@ public class IndexAdvisor implements DiagnosisPointService<Object> {
             }
             AnalysisDTO analysisDTO = new AnalysisDTO();
             if (afterPlanVO.getNodeType() != null) {
-                advisorDTO.setAdvisor(indexAdvisor);
+                advisorDTO.setAdvisor(String.join(System.lineSeparator(), indexAdvisor));
                 advisorDTO.setAfterExplain(util.getExecPlan(afterPlanVO));
                 double firstCost = firstPlanVO.getTotalCost();
                 double afterCost = afterPlanVO.getTotalCost();

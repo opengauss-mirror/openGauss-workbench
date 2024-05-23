@@ -130,4 +130,9 @@ public class CommonConstants {
      * Mv file
      */
     public static final String MV_FILE = "mv %s %s";
+
+    /**
+     * Get path by pid
+     */
+    public static final String PID_PATH = "ls -l /proc/%s |grep cwd|awk '{print $11}'";
 }
