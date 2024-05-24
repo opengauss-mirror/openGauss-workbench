@@ -182,7 +182,7 @@
 <script setup lang="ts">
 import { KeyValue } from "@/types/global";
 import { Message } from "@arco-design/web-vue";
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref ,onUnmounted} from "vue";
 import {
   packagePage,
   packageDel,
@@ -281,13 +281,21 @@ const fetchPackageVersionList = async () => {
     console.error(error);
   }
 };
-
+let intervalId;
 onMounted(async () => {
   if (route.query?.taskName) {
     filter.taskName = route.query?.taskName;
   }
   await getListData();
   await fetchPackageVersionList(); // 调用接口获取packageVersionList的值
+  intervalId = setInterval(getListData, 10000);
+});
+
+onUnmounted(() => {
+  // 组件卸载时清除定时器
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
 });
 
 const getListData = () => {
