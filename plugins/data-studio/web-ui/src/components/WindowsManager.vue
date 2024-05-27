@@ -35,7 +35,7 @@
               <svg-icon :icon-class="tag.meta.icon" class-name="icon" />
               <span class="name" v-if="tag.path == '/home'">{{ $t('windows.home') }}</span>
               <span class="name" v-else :title="tag.title">
-                {{ decodeURIComponent(tag.fileName) }}
+                {{ decodeURIComponent(tag.showName) }}
               </span>
             </li>
           </ul>
@@ -68,7 +68,7 @@
   const visitedViews = computed(() => {
     return input2.value
       ? TagsViewStore.visitedViews.filter((item) =>
-          decodeURIComponent(item.fileName).includes(input2.value),
+          decodeURIComponent(item.showName).includes(input2.value),
         )
       : TagsViewStore.visitedViews;
   });

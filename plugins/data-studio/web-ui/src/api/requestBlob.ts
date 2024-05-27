@@ -11,7 +11,9 @@ declare module 'axios' {
 const t = i18n.global.t;
 const service = axios.create({
   baseURL:
-    import.meta.env.MODE === 'production' ? `/plugins/${import.meta.env.VITE_PLUGIN_NAME}` : '/',
+    import.meta.env.PROD && import.meta.env.VITE_PLUGIN_NAME
+      ? `/plugins/${import.meta.env.VITE_PLUGIN_NAME}`
+      : '/',
   timeout: 3000000,
   withCredentials: true,
 });
@@ -21,9 +23,9 @@ service.interceptors.request.use(
     const token: string = localStorage.getItem('opengauss-token');
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
-      config.headers['Accept-Language'] = i18n.global.locale.value;
-      config.headers['Responsetype'] = 'blob';
     }
+    config.headers['Accept-Language'] = i18n.global.locale.value;
+    config.headers['Responsetype'] = 'blob';
     return config;
   },
   (error: AxiosError) => {

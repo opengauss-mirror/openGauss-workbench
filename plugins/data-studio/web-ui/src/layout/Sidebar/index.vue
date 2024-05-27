@@ -3,6 +3,16 @@
     <Splitpanes class="default-theme" horizontal :dbl-click-splitter="false">
       <Pane>
         <div class="database-wrapper group-wrapper">
+          <div class="group-title-contain">
+            <div class="left">
+              <svg-icon icon-class="database" class-name="icon" /> {{ $t('database.list') }}
+            </div>
+            <div class="right">
+              <el-button type="primary" @click="openConnectDialog('create')" size="small">
+                {{ $t('connection.new') }}
+              </el-button>
+            </div>
+          </div>
           <div class="group-search-contain">
             <el-input
               v-model="filterTreeText"
@@ -26,6 +36,13 @@
               @node-contextmenu="handleContextmenu"
             >
               <template #default="{ data }">
+                <svg-icon
+                  v-if="data.type == 'root'"
+                  :icon-class="
+                    AppStore.connectedRootInfo?.[data.id] ? 'og-connected' : 'og-disconnect'
+                  "
+                  class-name="icon"
+                />
                 <svg-icon
                   v-if="data.type == 'database'"
                   :icon-class="data.isConnect ? 'database-connected' : 'database-disconnect'"
@@ -1047,7 +1064,7 @@
       );
       for (let i = 0; i < databaseCollect.children.length; i++) {
         const db = databaseCollect.children[i];
-        if (import.meta.env.MODE !== 'development') {
+        if (!import.meta.env.DEV) {
           try {
             db.isConnect && (await closeConnections({ uuid: db.uuid }));
           } catch {

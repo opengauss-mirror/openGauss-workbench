@@ -14,7 +14,7 @@
         <el-tab-pane :label="$t('createTable.tabs[5]')" name="DDL" />
       </el-tabs>
     </template>
-    <template #tabs-container>
+    <template #center-container>
       <GeneralTab
         ref="generalref"
         v-show="currentTabName == 'GeneralTab'"

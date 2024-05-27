@@ -8,9 +8,10 @@
         </span>
       </template>
       <div class="my-message">
-        <el-scrollbar>
+        <el-scrollbar ref="qaScrollbarRef">
           <div class="message-row" v-for="item in props.msgData" :key="item.id">
-            {{ item.label }}: {{ item.text }}
+            <template v-if="item.label"> {{ item.label }}: </template
+            ><span v-html="item.text"></span>
           </div>
         </el-scrollbar>
       </div>
@@ -121,6 +122,7 @@
   });
   const isInHistory = computed(() => tabValue.value === 'history');
   const isInFrame = ref(self !== parent);
+  const isNeedScrollMessage = ref(false);
 
   watchThrottled(
     isInHistory,
@@ -130,6 +132,33 @@
       }
     },
     { throttle: 3000 },
+  );
+
+  watch(
+    props.msgData,
+    () => {
+      nextTick(() => {
+        if (props.tabValue == 'home') {
+          scrollToMessageBottom();
+          isNeedScrollMessage.value = false;
+        } else {
+          isNeedScrollMessage.value = true;
+        }
+      });
+    },
+    {
+      deep: true,
+    },
+  );
+
+  watch(
+    () => props.tabValue,
+    (newTabValue) => {
+      if (newTabValue == 'home') {
+        isNeedScrollMessage.value && scrollToMessageBottom();
+        isNeedScrollMessage.value = false;
+      }
+    },
   );
 
   const removeTab = (targetName: string, type?: string) => {
@@ -168,6 +197,17 @@
       item.handleClose();
     });
   };
+
+  const qaScrollbarRef = ref(null);
+  const scrollToMessageBottom = async () => {
+    setTimeout(() => {
+      const element = qaScrollbarRef.value.$el;
+      qaScrollbarRef.value.scrollTo(0, element.querySelector('.el-scrollbar__view').scrollHeight);
+    }, 200);
+  };
+  defineExpose({
+    scrollToMessageBottom,
+  });
 </script>
 <style lang="scss" scoped>
   .result-tabs {

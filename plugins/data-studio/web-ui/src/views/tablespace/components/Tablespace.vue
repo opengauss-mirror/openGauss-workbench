@@ -9,7 +9,7 @@
         />
       </el-tabs>
     </template>
-    <template #tabs-container>
+    <template #center-container>
       <GeneralTab
         ref="generalRef"
         v-show="currentTabName == 'GeneralTab'"

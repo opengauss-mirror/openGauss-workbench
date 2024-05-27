@@ -70,7 +70,7 @@ export const useTagsViewStore = defineStore({
         Object.assign({}, route, {
           id: ++this.maxTagsId,
           title: route.meta?.title || route.query?.title || 'no-name',
-          fileName: route.meta?.fileName || route.query?.fileName || 'no-name',
+          showName: route.meta?.fileName || route.query?.fileName || 'no-name',
           connectInfoName: route.query?.connectInfoName,
           dbname: route.query?.dbname,
           terminalNum: route.query?.terminalNum,
@@ -157,7 +157,7 @@ export const useTagsViewStore = defineStore({
     },
     renameTagById(tagId: number | string, newName: string) {
       const tagView = this.visitedViews.find((item) => item.id == tagId);
-      tagView.fileName = encodeURIComponent(newName);
+      tagView.showName = encodeURIComponent(newName);
       tagView.title = encodeURIComponent(`${newName}-${tagView.query.title}`);
       this.setVisitedViewsStorage();
     },

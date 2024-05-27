@@ -161,13 +161,13 @@
   const uploadRef = ref<UploadInstance>();
   const tableData = ref<{ columnName: string; dataType: string }[]>([]);
   const multipleTableRef = ref<InstanceType<typeof ElTable>>();
-  const formatList = ['Excel(xlsx)', 'Excel(xls)', 'CSV', 'Text', 'Binary'];
+  const formatList = computed(() => ['Excel(xlsx)', 'Excel(xls)', 'CSV', 'Text', 'Binary']);
   const encodingList = reactive(['UTF-8', 'GBK', 'LATIN1']);
   const timeFormatList = ['yyyy-MM-dd HH:mm:ss', 'yyyy-MM-dd hh:mm:ss'];
   const form = reactive({
     columnList: [],
     file: [],
-    fileType: 'Excel(xlsx)',
+    fileType: '',
     quote: '',
     escape: '',
     replaceNull: '',
@@ -207,7 +207,9 @@
     set: (val) => myEmit('update:modelValue', val),
   });
   const title = computed(() => {
-    return `${t('import.tableData')}${t('common.colon')} ${props.schema}.${props.tableName}`;
+    return `${t('import.tableData')}${t('common.colon')} ${props.schema ? props.schema + '.' : ''}${
+      props.tableName
+    }`;
   });
   const uploadParams = {};
 
@@ -266,6 +268,9 @@
   };
 
   const handleOpen = async () => {
+    Object.assign(form, {
+      fileType: formatList.value[0],
+    });
     try {
       loading.value = loadingInstance();
       const res = await getTableColumn({
@@ -281,7 +286,7 @@
         };
       });
       nextTick(() => {
-        multipleTableRef.value!.toggleAllSelection();
+        multipleTableRef.value?.toggleAllSelection();
       });
     } finally {
       loading.value.close();

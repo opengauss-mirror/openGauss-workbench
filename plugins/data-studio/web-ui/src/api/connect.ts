@@ -88,6 +88,14 @@ export const getConnectionTime = async (data) => {
   });
 };
 
+export function testConnectionApi(data) {
+  return request({
+    url: '/dataStudio/web/v1/connection/test',
+    method: 'post',
+    data,
+  });
+}
+
 // HTTP request for connection failure and no password
 export const reLogin = async (data) => {
   return request({

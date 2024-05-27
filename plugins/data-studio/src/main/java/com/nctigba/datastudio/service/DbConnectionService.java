@@ -44,9 +44,9 @@ public interface DbConnectionService {
      * test connection
      *
      * @param request request
-     * @return String
+     * @return Long
      */
-    String test(DbConnectionCreateDTO request);
+    Long test(DbConnectionCreateDTO request);
 
     /**
      * delete database connection

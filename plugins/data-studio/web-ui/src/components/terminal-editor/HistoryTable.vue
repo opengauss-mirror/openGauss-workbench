@@ -1,9 +1,10 @@
 <template>
   <div class="history-table">
     <el-table
-      :data="tableData"
+      :data="showList"
       border
       tooltip-effect="light"
+      :tooltip-options="{ rawContent: true }"
       style="width: 100%"
       v-loading="loading"
       class="history-table"
@@ -36,12 +37,45 @@
         </template>
       </el-table-column>
       <el-table-column align="center" :label="t('historyTable.column.sql')">
+        <template #header>
+          <div v-if="showSqlFilter" class="flex-header-start">
+            <div style="word-break: keep-all; margin-right: 5px">
+              {{ $t('historyTable.column.sql') }}
+            </div>
+            <div class="filter-wrapper">
+              <el-icon @click="hideNamefilter" class="icon-pointer">
+                <Search />
+              </el-icon>
+              <el-input class="border-bottom-input" v-model="sqlFilterInput" clearable />
+            </div>
+          </div>
+          <div v-else class="flex-header-between">
+            <div style="width: 12px"></div>
+            <span>{{ $t('historyTable.column.sql') }}</span>
+            <el-icon @click="showSqlFilter = true" class="icon-pointer">
+              <Search />
+            </el-icon>
+          </div>
+        </template>
         <template #default="{ row }">
           <div class="single-line-omission">
             {{ row.sql.slice(0, 200) }}
           </div>
         </template>
       </el-table-column>
+      <el-table-column
+        align="center"
+        prop="errMes"
+        :label="t('historyTable.column.errorMessage')"
+        show-overflow-tooltip
+        width="100"
+      ></el-table-column>
+      <el-table-column
+        align="center"
+        prop="updateCount"
+        :label="t('historyTable.column.effectLineNumber')"
+        width="75"
+      ></el-table-column>
       <el-table-column
         align="center"
         prop="executeTime"
@@ -96,19 +130,34 @@
   const visibleSqlDetailDialog = ref(false);
   const sqlDetail = ref('');
   const tableData = ref<SqlTableRow[]>([]);
+  const showSqlFilter = ref(false);
+  const sqlFilterInput = ref('');
+
+  const showList = computed(() => {
+    return tableData.value.filter((item) => item.sql.indexOf(sqlFilterInput.value) > -1);
+  });
 
   // getHistory
   const getHistory = async () => {
     loading.value = true;
+    hideNamefilter();
     querySqlHistory({
       webUser: UserStore.userId,
     })
       .then((res) => {
-        tableData.value = res.map((item, index) => ({ ...item, index: index + 1 }));
+        tableData.value = res.map((item, index) => ({
+          ...item,
+          index: index + 1,
+        }));
       })
       .finally(() => {
         loading.value = false;
       });
+  };
+
+  const hideNamefilter = () => {
+    showSqlFilter.value = false;
+    sqlFilterInput.value = '';
   };
 
   const handlePreview = (row) => {
@@ -178,6 +227,38 @@
     cursor: pointer;
     &:nth-child(n + 2) {
       margin-left: 5px;
+    }
+  }
+  .flex-header-start {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    .filter-wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  }
+  .flex-header-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .icon-pointer {
+    cursor: pointer;
+    :hover {
+      color: var(--normal-color);
+    }
+  }
+  .border-bottom-input {
+    box-shadow: none;
+    height: auto;
+    :deep(.el-input__wrapper) {
+      box-shadow: none;
+      .el-input__inner {
+        box-shadow: 0 1px 0 0 var(--el-input-border-color);
+      }
     }
   }
 </style>

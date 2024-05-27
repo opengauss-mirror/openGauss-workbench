@@ -15,7 +15,7 @@
           </transition>
         </router-view>
       </Pane>
-      <Pane min-size="30" v-if="AppStore.isOpenSqlAssistant">
+      <Pane min-size="30" size="30" v-if="AppStore.isOpenSqlAssistant">
         <div class="iframe-wrapper">
           <div class="iframe-container">
             <iframe

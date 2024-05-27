@@ -4,7 +4,7 @@
     class="rule-form"
     ref="ruleFormRef"
     :rules="rules"
-    label-width="110px"
+    label-width="auto"
     label-position="left"
     :label-suffix="$t('common.colon')"
   >

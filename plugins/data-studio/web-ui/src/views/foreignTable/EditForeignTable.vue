@@ -8,7 +8,7 @@
         <el-tab-pane :label="$t('foreignTable.data.title')" name="DataTab" />
       </el-tabs>
     </template>
-    <template #tabs-container>
+    <template #center-container>
       <DDL v-show="currentTabName == 'DDL'" :data="dataMap.DDL.data" />
       <ForeignInfoTab
         v-show="currentTabName == 'ForeignInfoTab'"
