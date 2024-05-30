@@ -31,13 +31,14 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.observability.instance.enums.MetricsLine;
 import com.nctigba.observability.instance.enums.MetricsValue;
-import com.nctigba.observability.instance.model.entity.NctigbaEnvDO;
 import com.nctigba.observability.instance.mapper.NctigbaEnvMapper;
+import com.nctigba.observability.instance.model.dto.MetricQueryDTO;
+import com.nctigba.observability.instance.model.dto.PrometheusQueryDTO;
+import com.nctigba.observability.instance.model.entity.NctigbaEnvDO;
 import com.nctigba.observability.instance.service.MetricsService.PrometheusResult.PromData.MonitoringMetric;
 import com.nctigba.observability.instance.util.ListUtils;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
-import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +60,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.nctigba.observability.instance.enums.MetricsLine.INSTANCE_DB_SLOWSQL;
+import static com.nctigba.observability.instance.enums.MetricsLine.INSTANCE_DB_SLOWSQL_DBNAME;
+
 @Service
 @Log4j2
 public class MetricsService {
@@ -78,14 +82,17 @@ public class MetricsService {
     private HostFacade hostFacade;
     @Autowired
     private ClusterManager clusterManager;
+    @Autowired
+    private TopSQLService topSQLService;
 
     private String getPrometheusUrl() {
         if (PROM.containsKey(DEFAULT)) {
             return PROM.get(DEFAULT);
         }
         var env = envMapper
-                .selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType,
-                    NctigbaEnvDO.envType.PROMETHEUS_MAIN));
+                .selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(
+                        NctigbaEnvDO::getType,
+                        NctigbaEnvDO.envType.PROMETHEUS_MAIN));
         if (env == null) {
             throw new CustomException("Prometheus not found");
         }
@@ -137,19 +144,51 @@ public class MetricsService {
         return prometheusResult.getData().getResult();
     }
 
+    /**
+     * prometheus batch value
+     *
+     * @param metricsArr metrics
+     * @param nodeId     node id
+     * @param start      second
+     * @param end        second
+     * @param step       second
+     * @return prometheus result
+     */
     public Map<String, Object> listBatch(Enum<?>[] metricsArr, String nodeId, Long start, Long end, Integer step) {
+        MetricQueryDTO dto = new MetricQueryDTO(metricsArr, nodeId, start, end, step, null);
+        return executePrometheus(dto);
+    }
+
+    /**
+     * prometheus slow sql
+     *
+     * @param dto metric query dto
+     * @return prometheus result
+     */
+    public Map<String, Object> slowSqlList(MetricQueryDTO dto) {
+        return executePrometheus(dto);
+    }
+
+    private Map<String, Object> executePrometheus(MetricQueryDTO dto) {
         var result = new HashMap<String, Object>();
-        var node = clusterManager.getOpsNodeById(nodeId);
+        var node = clusterManager.getOpsNodeById(dto.getNodeId());
         List<Long> timeline = new ArrayList<>();
-        for (long i = start; i < end; i += step) {
+        for (long i = dto.getStart(); i < dto.getEnd(); i += dto.getStep()) {
             timeline.add(i);
         }
         result.put(TIME, timeline.stream().map(t -> new Date(t.longValue() * 1000)).collect(Collectors.toList()));
-        var countDown = ThreadUtil.newCountDownLatch(metricsArr.length);
-        for (Object metric : metricsArr) {
+        var countDown = ThreadUtil.newCountDownLatch(dto.getMetricsArr().length);
+        for (Object metric : dto.getMetricsArr()) {
             ThreadUtil.execute(() -> {
                 try {
-                    result.putAll(extracted(node, start, end, step, metric));
+                    PrometheusQueryDTO queryDTO = new PrometheusQueryDTO();
+                    queryDTO.setDbName(dto.getDbName());
+                    queryDTO.setMetric(metric);
+                    queryDTO.setStart(dto.getStart());
+                    queryDTO.setEnd(dto.getEnd());
+                    queryDTO.setNode(node);
+                    queryDTO.setStep(dto.getStep());
+                    result.putAll(extracted(queryDTO));
                 } finally {
                     countDown.countDown();
                 }
@@ -160,23 +199,28 @@ public class MetricsService {
         } catch (InterruptedException e) {
             throw new CustomException(e.getMessage());
         }
+        result.put("slowSqlThreshold", topSQLService.getSlowSqlThreshold(dto.getNodeId()));
         return result;
     }
 
-    private Map<String, Object> extracted(OpsClusterNodeVO node, Long start, Long end, Integer step, Object metric) {
-        if (metric instanceof MetricsLine) {
-            MetricsLine metricLine = (MetricsLine) metric;
-            String promQl = metricLine.promQl(node);
-            var metrics = list(promQl, start, end, step);
+    private Map<String, Object> extracted(PrometheusQueryDTO dto) {
+        if (dto.getMetric() instanceof MetricsLine) {
+            MetricsLine metricLine = (MetricsLine) dto.getMetric();
+            String promQl = metricLine.promQl(dto.getNode());
+            if (metricLine.equals(INSTANCE_DB_SLOWSQL) && StrUtil.isNotEmpty(dto.getDbName())) {
+                String tmpQl = INSTANCE_DB_SLOWSQL_DBNAME.promQl(dto.getNode());
+                promQl = tmpQl.replace("postgres", dto.getDbName());
+            }
+            var metrics = list(promQl, dto.getStart(), dto.getEnd(), dto.getStep());
             List<Long> timeline = new ArrayList<>();
-            for (long i = start; i < end; i += step) {
+            for (long i = dto.getStart(); i < dto.getEnd(); i += dto.getStep()) {
                 timeline.add(i);
             }
             return Map.of(metricLine.name(), parseLine(promQl, metrics, timeline, metricLine.getTemplate()));
         }
-        if (metric instanceof MetricsValue) {
-            MetricsValue metricValue = (MetricsValue) metric;
-            String promQl = metricValue.promQl(node);
+        if (dto.getMetric() instanceof MetricsValue) {
+            MetricsValue metricValue = (MetricsValue) dto.getMetric();
+            String promQl = metricValue.promQl(dto.getNode());
             var metrics = value(promQl, System.currentTimeMillis() / 1000);
             return Map.of(metricValue.name(), parseValue(promQl, metrics, metricValue.getTemplate()));
         }
@@ -191,8 +235,9 @@ public class MetricsService {
         } else {
             var map = new HashMap<String, Object>();
             for (var monitoringMetric : metric) {
-                if (template == null)
+                if (template == null) {
                     return metric.get(0).getValue().get(1);
+                }
                 String key = StrUtil.format(template, monitoringMetric.getMetric());
                 map.put(key, monitoringMetric.getValue().get(1));
             }

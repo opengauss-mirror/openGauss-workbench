@@ -23,6 +23,26 @@
 
 package com.nctigba.observability.instance.service;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.nctigba.observability.instance.aspectj.annotation.Ds;
+import com.nctigba.observability.instance.mapper.PgSettingMapper;
+import com.nctigba.observability.instance.mapper.TopSqlMapper;
+import com.nctigba.observability.instance.model.dto.ExecutionPlanDTO;
+import com.nctigba.observability.instance.model.dto.IndexAdviceDTO;
+import com.nctigba.observability.instance.model.entity.PgSettingsDO;
+import com.nctigba.observability.instance.model.query.TopSQLListQuery;
+import com.nctigba.observability.instance.model.vo.PgStatActivityVO;
+import com.nctigba.observability.instance.model.vo.StatementHistoryVO;
+import com.nctigba.observability.instance.service.TopSQLService.WaitEvent.Event;
+import lombok.Data;
+import lombok.Generated;
+import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+import org.opengauss.admin.common.exception.CustomException;
+import org.springframework.stereotype.Service;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -33,28 +53,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.nctigba.observability.instance.model.vo.PgStatActivityVO;
-import com.nctigba.observability.instance.model.vo.StatementHistoryVO;
-import org.apache.commons.lang3.StringUtils;
-import org.opengauss.admin.common.exception.CustomException;
-import org.springframework.stereotype.Service;
-
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.nctigba.observability.instance.aspectj.annotation.Ds;
-import com.nctigba.observability.instance.model.query.TopSQLListQuery;
-import com.nctigba.observability.instance.model.entity.PgSettingsDO;
-import com.nctigba.observability.instance.mapper.PgSettingMapper;
-import com.nctigba.observability.instance.mapper.TopSqlMapper;
-import com.nctigba.observability.instance.model.dto.ExecutionPlanDTO;
-import com.nctigba.observability.instance.model.dto.IndexAdviceDTO;
-import com.nctigba.observability.instance.service.TopSQLService.WaitEvent.Event;
-
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
-import lombok.Data;
-import lombok.Generated;
-import lombok.RequiredArgsConstructor;
 
 /**
  * <p>
@@ -195,13 +193,16 @@ public class TopSQLService {
         return results;
     }
 
+    /**
+     * fetch TopSQL wait event from database
+     *
+     * @param nodeId instance node id
+     * @param sqlId  TopSQL debug query id
+     * @return TopSQL wait event
+     */
     @Ds
     public List<Map<String, Object>> waitEvent(String nodeId, String sqlId) {
         List<Map<String, Object>> list = new ArrayList<>();
-        String param = topSqlMapper.waitEventParam();
-        if (!param.endsWith("L2")) {
-            throw new CustomException("failGetWaitEvent");
-        }
         String table = topSqlMapper.waitEvent(sqlId);
         if (StrUtil.isBlank(table)) {
             return topSqlMapper.currentWaitEvent(sqlId);
@@ -222,8 +223,19 @@ public class TopSQLService {
     }
 
     /**
-     * pre-check top sql list job
+     * fetch TopSQL slow sql threshold from database
      *
+     * @param nodeId instance node id
+     * @return slow sql threshold
+     */
+    @Ds
+    public String getSlowSqlThreshold(String nodeId) {
+        return topSqlMapper.getSlowSqlThreshold();
+    }
+
+    /**
+     * pre-check top sql list job
+     * <p>
      * true when not log; false when can search log
      */
     private void topSqlListPreCheck() {
@@ -231,23 +243,23 @@ public class TopSQLService {
                 "enable_stmt_track", "enable_resource_track", "track_stmt_stat_level'"));
         for (PgSettingsDO pgSettingsDO : list) {
             switch (pgSettingsDO.getName()) {
-            case "enable_resource_track":
-            case "enable_stmt_track":
-                if ("off".equals(pgSettingsDO.getSetting())) {
-                    throw new CustomException("top sql pre check fail", 602);
-                }
-                break;
-            case "track_stmt_stat_level":
-                var setting = pgSettingsDO.getSetting();
-                if (StringUtils.isEmpty(setting) || !setting.contains(",")) {
-                    throw new CustomException("top sql pre check fail", 602);
-                }
-                String[] settingArr = setting.split(",");
-                if ("off".equalsIgnoreCase(settingArr[0])) {
-                    throw new CustomException("top sql pre check fail", 602);
-                }
-                break;
-            default:
+                case "enable_resource_track":
+                case "enable_stmt_track":
+                    if ("off".equals(pgSettingsDO.getSetting())) {
+                        throw new CustomException("top sql pre check fail", 602);
+                    }
+                    break;
+                case "track_stmt_stat_level":
+                    var setting = pgSettingsDO.getSetting();
+                    if (StringUtils.isEmpty(setting) || !setting.contains(",")) {
+                        throw new CustomException("top sql pre check fail", 602);
+                    }
+                    String[] settingArr = setting.split(",");
+                    if ("off".equalsIgnoreCase(settingArr[0])) {
+                        throw new CustomException("top sql pre check fail", 602);
+                    }
+                    break;
+                default:
             }
         }
     }
@@ -283,10 +295,12 @@ public class TopSQLService {
                 }
             }
             this.timeStr = str[2];
-            if (str.length > 3)
+            if (str.length > 3) {
                 this.id = str[3].replaceAll("'", "");
-            if (str.length > 4)
+            }
+            if (str.length > 4) {
                 this.lockType = str[4].replaceAll("'", "");
+            }
         }
 
         public enum Event {

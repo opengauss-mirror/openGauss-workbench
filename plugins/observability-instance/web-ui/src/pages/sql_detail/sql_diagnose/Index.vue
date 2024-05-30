@@ -1,7 +1,7 @@
 <template>
   <div class="search-form">
     <div class="filter">
-      <el-button type="primary" @click="handleModal">{{ $t('sql.sqlDiagnoseCreateTask') }}</el-button>
+      <el-button type="primary" @click="gotoAddSqlTask()">{{ $t('sql.sqlDiagnoseCreateTask') }}</el-button>
     </div>
   </div>
   <div class="page-container">
@@ -20,6 +20,10 @@
           </template>
         </el-table-column>
         <el-table-column prop="taskType" :label="$t('datasource.trackTable[1]')" width="80" align="center" />
+        <el-table-column prop="clusterId" :label="$t('datasource.trackTable[7]')" width="100" align="center" show-overflow-tooltip />
+        <el-table-column prop="nodeId" :label="$t('datasource.trackTable[8]')" width="100" align="center" show-overflow-tooltip />
+        <el-table-column prop="dbName" :label="$t('datasource.trackTable[10]')" width="80" align="center" />
+        <el-table-column prop="schemaName" :label="$t('datasource.trackTable[11]')" width="80" align="center" />
         <el-table-column label="SQL" width="300">
           <template #default="scope">
             <span v-if="scope.row.sql && scope.row.sql.length > 35">
@@ -76,6 +80,7 @@
       :type="2"
       :show="addModel"
       :dbName="props.dbName"
+      :schemaName="props.schemaName"
       :sqlId="props.sqlId"
       :clusterId="props.dbid"
       :sqlText="sqlText"
@@ -106,12 +111,14 @@ const props = withDefaults(
     sqlId: string | string[]
     sqlText: string
     dbName: string
+    schemaName: string
   }>(),
   {
     dbid: '',
     sqlId: '',
     sqlText: '',
     dbName: '',
+    schemaName: ''
   }
 )
 type Res =
@@ -152,6 +159,14 @@ const gotoTaskDetail = (id: string) => {
     query: {
       id,
     },
+  })
+}
+const gotoAddSqlTask = () => {
+  window.$wujie?.props.methods.jump({
+    name: `Static-pluginObservability-sql-diagnosisVemLogTrack`,
+    query: {
+      id : props.sqlId
+    }
   })
 }
 const handleModal = () => {

@@ -227,4 +227,12 @@ public interface TopSqlMapper {
      */
     @Select("show track_stmt_stat_level;")
     String waitEventParam();
+
+    /**
+     * slow sql threshold
+     *
+     * @return String
+     */
+    @Select("SHOW log_min_duration_statement")
+    String getSlowSqlThreshold();
 }

@@ -74,7 +74,7 @@ export default {
     },
     instance: {
       connectionQty: 'Connections',
-      slowSQL3s: 'Number Of Slow Sqls(>3s)',
+      slowSQL3s: 'Number Of Slow Sqls(>',
       rollbackQty: 'Transaction Rollback Count',
       commitQty: 'Transaction Commits',
       transTotalQty: 'Total Number Of Transaction Commits And Rollbacks',
@@ -1103,6 +1103,8 @@ export default {
       'Cluster ID',
       'Instance ID',
       'Operate',
+      'database',
+      'schema'
     ],
     configTable: ['Time', 'Type', 'Grade', 'log', 'Cluster ID', 'Instance ID'],
   },

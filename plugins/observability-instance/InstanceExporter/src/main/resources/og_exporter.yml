@@ -2629,19 +2629,23 @@ pg_stat_activity_slow:
   query:
     - name: count
       sql: |-
-        select count(1) count
+        select datname,count(1) count
         from pg_stat_activity
         where
           pid <> pg_backend_pid()
           and xact_start is not null
           and state = 'active'
-          and extract(epoch from now() - xact_start)>3
+          and extract(epoch from now() - xact_start)>(select setting/1000 as threshold from pg_settings where name ='log_min_duration_statement')
+        group by datname
       version: '>=0.0.0'
       timeout: 10
       ttl: 3600
       dbRole: "primary"
       status: enable
   metrics:
+    - name: datname
+      description: database name
+      usage: LABEL
     - name: count
       description: index scans initiated on this index
       usage: GAUGE

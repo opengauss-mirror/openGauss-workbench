@@ -42,7 +42,7 @@
     </el-col>
     <el-col :span="12">
       <my-card
-        :title="$t('instanceMonitor.instance.slowSQL3s')"
+        :title="$t('instanceMonitor.instance.slowSQL3s') + metricsData.threshold + ')'"
         height="300"
         :bodyPadding="false"
         :showBtns="true" @download="title => download(title,slowSQL3s)"
@@ -121,6 +121,7 @@ interface MetricsData {
   slowSQL: LineData[];
   databaseBlk: LineData[];
   time: string[];
+  threshold: string;
 }
 const metricsData = ref<MetricsData>({
   respTime: [],
@@ -129,6 +130,7 @@ const metricsData = ref<MetricsData>({
   slowSQL: [],
   databaseBlk: [],
   time: [],
+  threshold: ''
 });
 const {
   updateCounter,
@@ -184,6 +186,7 @@ watch(
     metricsData.value.connection = [];
     metricsData.value.databaseBlk = [];
     metricsData.value.slowSQL = [];
+    metricsData.value.threshold = '';
 
     const baseData = indexData.value;
     if (!baseData) return;
@@ -293,6 +296,9 @@ watch(
       })
       metricsData.value.databaseBlk.push({ data: tempData, name: key })
     }
+
+    //threshold
+    metricsData.value.threshold=baseData.slowSqlThreshold
 
     // time
     metricsData.value.time = baseData.time;
