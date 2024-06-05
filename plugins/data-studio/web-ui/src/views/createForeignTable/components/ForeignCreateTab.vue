@@ -126,13 +126,13 @@
               :disabled="['Fixed', 'Binary'].includes(form.fileType)"
               @change="form.delimiterOther = ''"
             >
-              <el-radio label="comma">{{ t('table.export.comma') }}(,)</el-radio>
-              <el-radio label="tab">
+              <el-radio value="comma">{{ t('table.export.comma') }}(,)</el-radio>
+              <el-radio value="tab">
                 {{ t('table.export.tab') }}({{ t('table.export.fourSpaces') }})
               </el-radio>
-              <el-radio label="pipe">{{ t('table.export.pipe') }}(|)</el-radio>
-              <el-radio label="semicolon">{{ t('table.export.semicolon') }}(;)</el-radio>
-              <el-radio label="other">
+              <el-radio value="pipe">{{ t('table.export.pipe') }}(|)</el-radio>
+              <el-radio value="semicolon">{{ t('table.export.semicolon') }}(;)</el-radio>
+              <el-radio value="other">
                 {{ t('table.export.other') }}{{ t('common.colon') }}
               </el-radio>
               <el-input

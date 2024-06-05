@@ -319,7 +319,7 @@ public class CoverageRateServiceImpl implements CoverageRateService {
                 boolean isMarkRow = Arrays.asList(coverageRateDO.getAllLineNumber().split(COMMA)).contains(
                         String.valueOf(k));
                 if (Arrays.asList(coverageRateDO.getExecutionLineNumber().split(COMMA)).contains(
-                        (k - 1) + "") && isMarkRow) {
+                        String.valueOf(k)) && isMarkRow) {
                     div.addClass("bac_pass");
                 } else {
                     if (k > (offset.get(BEGIN) + 1) && k < (offset.get(END) + 1) && isMarkRow) {

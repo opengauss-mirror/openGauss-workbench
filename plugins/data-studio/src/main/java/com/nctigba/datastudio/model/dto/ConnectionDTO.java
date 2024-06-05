@@ -29,6 +29,7 @@ import lombok.Data;
 import lombok.Generated;
 import lombok.NoArgsConstructor;
 
+import java.sql.Connection;
 import java.util.Date;
 import java.util.HashSet;
 
@@ -51,6 +52,7 @@ public class ConnectionDTO {
     private String dbPassword;
     private String type;
     private Integer timeLength;
+    //private Connection connection;
 
     /**
      * set connection dto

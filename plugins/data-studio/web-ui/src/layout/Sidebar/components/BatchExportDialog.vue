@@ -28,24 +28,9 @@
           :resizable="false"
         >
           <template #header>
-            <div v-if="showNameFilter" class="flex-header">
-              <div style="word-break: keep-all; margin-right: 5px">
-                {{ $t('common.name') }}
-              </div>
-              <div class="flex-header">
-                <el-icon @click="hideNamefilter" class="icon-pointer">
-                  <Search />
-                </el-icon>
-                <el-input class="border-bottom-input" v-model="nameFilterInput" clearable />
-              </div>
-            </div>
-            <div v-else class="flex-header">
-              <div style="width: 12px"></div>
-              <span>{{ $t('common.name') }}</span>
-              <el-icon @click="showNameFilter = true" class="icon-pointer">
-                <Search />
-              </el-icon>
-            </div>
+            <FilterTableDataHeaderSlot v-model="nameFilterInput" v-model:show="showNameFilter">
+              {{ $t('common.name') }}
+            </FilterTableDataHeaderSlot>
           </template>
         </el-table-column>
       </el-table>
@@ -60,6 +45,7 @@
 </template>
 <script lang="ts" setup>
   import { ElMessage, ElTable } from 'element-plus';
+  import FilterTableDataHeaderSlot from '@/components/FilterTableDataHeaderSlot.vue';
   import { useI18n } from 'vue-i18n';
   import { getSchemaList, getSchemaObjects } from '@/api/metaData';
   import { exportSchemaDdl } from '@/api/schema';
@@ -128,10 +114,6 @@
     { debounce: 400, maxWait: 1000 },
   );
 
-  const hideNamefilter = () => {
-    showNameFilter.value = false;
-    nameFilterInput.value = '';
-  };
   const getList = async () => {
     let api, params;
     if (['schemaDDL', 'schemaDDLData'].includes(props.type)) {
@@ -250,28 +232,5 @@
 <style lang="scss" scoped>
   .info {
     padding: 5px 0;
-  }
-  .flex-header {
-    flex: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .icon-pointer {
-    cursor: pointer;
-    :hover {
-      color: var(--normal-color);
-    }
-  }
-  .border-bottom-input {
-    flex: 1;
-    box-shadow: none;
-    height: auto;
-    :deep(.el-input__wrapper) {
-      box-shadow: none;
-      .el-input__inner {
-        box-shadow: 0 1px 0 0 var(--el-input-border-color);
-      }
-    }
   }
 </style>

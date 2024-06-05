@@ -238,6 +238,12 @@
                 </li>
                 <li
                   :class="{ disabled: !treeContextDbStatus }"
+                  @click="treeContextDbStatus && handlePrivilege()"
+                >
+                  {{ $t('privilege.grantOrRevoke') }}
+                </li>
+                <li
+                  :class="{ disabled: !treeContextDbStatus }"
                   @click="
                     treeContextDbStatus &&
                       refresh('database', {
@@ -249,7 +255,7 @@
                   {{ $t('connection.refresh') }}
                 </li>
               </ul>
-              <ul v-if="treeContext.modeVisible">
+              <ul v-if="treeContext.schemaVisible">
                 <li
                   @click="
                     !systemSchema.includes(currentContextNodeData.name) && handleSchema('edit')
@@ -1169,7 +1175,7 @@
   };
   const handleSchema = (type: 'create' | 'edit' | 'delete') => {
     treeContext.databaseVisible = false;
-    treeContext.modeVisible = false;
+    treeContext.schemaVisible = false;
     if (type == 'create') {
       createSchemaType.value = 'create';
       Object.assign(createSchemaData, {
@@ -1847,7 +1853,7 @@
     tablespaceCollectVisible: false,
     databaseCollectVisible: false,
     databaseVisible: false,
-    modeVisible: false,
+    schemaVisible: false,
     tableCollectVisible: false,
     foreignTableCollectVisible: false,
     triggerCollectVisible: false,
@@ -1899,8 +1905,8 @@
       tablespaceCollect: 'tablespaceCollectVisible',
       databaseCollect: 'databaseCollectVisible',
       database: 'databaseVisible',
-      public: 'modeVisible',
-      person: 'modeVisible',
+      public: 'schemaVisible',
+      person: 'schemaVisible',
       tableCollect: 'tableCollectVisible',
       table: 'tableVisible',
       foreignTableCollect: 'foreignTableCollectVisible',
@@ -2071,6 +2077,24 @@
         ? currentContextNodeData.name
         : currentContextNodeData.databaseName,
       schema: currentContextNodeData.schemaName,
+    });
+  };
+
+  const handlePrivilege = () => {
+    hideTreeContext();
+    const { name: connectInfoName, id: rootId } = currentContextNodeData.connectInfo;
+    const uuid = currentContextNodeData.uuid;
+    const dbname = currentContextNodeData.label;
+    router.push({
+      path: '/privilege/' + uuid,
+      query: {
+        title: 'privilege',
+        fileName: 'privilege',
+        rootId,
+        connectInfoName,
+        uuid,
+        dbname,
+      },
     });
   };
 

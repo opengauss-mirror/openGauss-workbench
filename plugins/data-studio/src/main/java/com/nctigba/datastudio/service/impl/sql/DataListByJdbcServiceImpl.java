@@ -24,6 +24,8 @@
 package com.nctigba.datastudio.service.impl.sql;
 
 import cn.hutool.core.thread.ThreadUtil;
+import com.nctigba.datastudio.base.JdbcConnectionManager;
+import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.enums.ParamTypeEnum;
 import com.nctigba.datastudio.model.dto.DataListDTO;
 import com.nctigba.datastudio.service.DataListByJdbcService;
@@ -55,6 +57,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.PRO_PACKAGE_ID;
 import static com.nctigba.datastudio.constants.CommonConstants.REL_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.SPACE;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_TYPENAME_SQL;
+import static com.nctigba.datastudio.utils.SecretUtils.desEncrypt;
 
 /**
  * DataListByJdbcServiceImpl
@@ -79,7 +82,7 @@ public class DataListByJdbcServiceImpl implements DataListByJdbcService {
         List<Map<String, Object>> trigger = new ArrayList<>();
         Map<String, String> funTypeMap = new HashMap<>();
         try (
-                Connection connection = ConnectionUtils.connectGet(jdbcUrl, username, password)
+                Connection connection = JdbcConnectionManager.getConnection(jdbcUrl, username, desEncrypt(password))
         ) {
             CountDownLatch countDownLatch = new CountDownLatch(7);
             ThreadUtil.execute(() -> {

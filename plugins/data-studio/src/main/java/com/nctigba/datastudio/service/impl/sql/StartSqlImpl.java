@@ -34,6 +34,8 @@ import com.nctigba.datastudio.service.impl.debug.AsyncHelper;
 import com.nctigba.datastudio.utils.DebugUtils;
 import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.core.NativeQuery;
+import org.opengauss.core.Parser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -46,9 +48,13 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.nctigba.datastudio.constants.CommonConstants.FIVE_HUNDRED;
+import static com.nctigba.datastudio.constants.CommonConstants.SQL;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static com.nctigba.datastudio.enums.MessageEnum.BUTTON;
 import static com.nctigba.datastudio.enums.MessageEnum.DISCONNECTION;
@@ -67,6 +73,15 @@ public class StartSqlImpl implements OperationInterface {
     @Autowired
     private AsyncHelper asyncHelper;
 
+    public static void main(String[] args) throws SQLException {
+        String sql = "select * from student;\t"
+                + "select id from student;";
+        String reg = "\\s+";
+        String queryTemp = sql.trim();
+        queryTemp = queryTemp.replaceAll(reg, "\u0000");
+        List<NativeQuery> nativeQueries = Parser.parseJdbcSql(sql, false, false, true, false);
+        System.out.println(nativeQueries.get(0).nativeSql);
+    }
     @Override
     @Async
     public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException {
@@ -76,6 +91,9 @@ public class StartSqlImpl implements OperationInterface {
             webSocketServer.sendMessage(windowName, DISCONNECTION,
                     LocaleStringUtils.transLanguageWs("1004", webSocketServer), paramReq.getUuid());
         }
+        String sql = paramReq.getSql();
+        Iterator<String>  sqlList = Parser.parseJdbcSql(sql, true, false, true, false)
+                .stream().map(q -> q.nativeSql).collect(Collectors.toList()).iterator();
         Connection connection = webSocketServer.getConnection(windowName);
         Statement stat = connection.createStatement();
         webSocketServer.setStatement(windowName, stat);
@@ -91,7 +109,7 @@ public class StartSqlImpl implements OperationInterface {
                 webSocketServer.sendMessage(windowName, TEXT,
                         LocaleStringUtils.transLanguageWs("2001", webSocketServer), null);
                 startTime = new Date();
-                boolean result = stat.execute(paramReq.getSql());
+                boolean result = stat.execute(sql);
                 endTime = new Date();
                 webSocketServer.sendMessage(windowName, BUTTON,
                         LocaleStringUtils.transLanguageWs("2006", webSocketServer), null);
@@ -99,10 +117,12 @@ public class StartSqlImpl implements OperationInterface {
                 operateStatus.enableStopRun();
                 webSocketServer.setOperateStatus(windowName, operateStatus);
                 while (true) {
+                    String subSql = sqlList.next();
                     if (result) {
+                        Map<String, Object> resultMap = DebugUtils.parseResultSetType(stat.getResultSet());
+                        resultMap.put(SQL, subSql);
                         webSocketServer.sendMessage(windowName, TABLE,
-                                LocaleStringUtils.transLanguageWs("2002", webSocketServer),
-                                DebugUtils.parseResultSetType(stat.getResultSet()));
+                                LocaleStringUtils.transLanguageWs("2002", webSocketServer), resultMap);
                         webSocketServer.sendMessage(windowName, TEXT,
                                 LocaleStringUtils.transLanguageWs("2002", webSocketServer), null);
                     } else {
@@ -143,7 +163,7 @@ public class StartSqlImpl implements OperationInterface {
             } finally {
                 sqlHistoryDO.setStartTime(df.format(startTime));
                 sqlHistoryDO.setSuccess(isSuccess);
-                sqlHistoryDO.setSql(paramReq.getSql());
+                sqlHistoryDO.setSql(sql);
                 sqlHistoryDO.setExecuteTime((endTime.getTime() - startTime.getTime()) + "ms");
                 sqlHistoryDO.setWebUser(paramReq.getWebUser());
                 list.add(sqlHistoryDO);

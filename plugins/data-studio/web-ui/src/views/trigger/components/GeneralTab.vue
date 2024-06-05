@@ -20,8 +20,8 @@
             v-model="form.status"
             :disabled="form.type !== 'table' || $props.type == 'edit'"
           >
-            <el-radio :label="true">{{ $t('button.enabled') }}</el-radio>
-            <el-radio :label="false">{{ $t('button.disabled') }}</el-radio>
+            <el-radio :value="true">{{ $t('button.enabled') }}</el-radio>
+            <el-radio :value="false">{{ $t('button.disabled') }}</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-col>

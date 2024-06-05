@@ -88,29 +88,12 @@
           show-overflow-tooltip
         >
           <template #header>
-            <div v-if="showVariableInput" class="flex-header">
-              <div style="word-break: keep-all; margin-right: 5px">
-                {{ $t('debugPane.variable') }}
-              </div>
-              <div class="flex-header">
-                <el-icon @click="showVariableInput = false" class="icon-pointer"
-                  ><Search
-                /></el-icon>
-                <el-input
-                  class="border-bottom-input"
-                  v-model="filterVariableText"
-                  :placeholder="$t('debugPane.placeholder.variable')"
-                  clearable
-                />
-              </div>
-            </div>
-            <div v-else class="flex-header">
-              <div style="width: 12px"></div>
-              <span>{{ $t('debugPane.variable') }}</span>
-              <el-icon @click="showVariableInput = true" class="icon-pointer">
-                <Search />
-              </el-icon>
-            </div>
+            <FilterTableDataHeaderSlot
+              v-model="filterVariableText"
+              v-model:show="showVariableInput"
+            >
+              {{ $t('common.name') }}
+            </FilterTableDataHeaderSlot>
           </template>
         </el-table-column>
         <el-table-column
@@ -138,7 +121,7 @@
 </template>
 <script lang="ts" setup>
   import { ElTable } from 'element-plus';
-  import { Search } from '@element-plus/icons-vue';
+  import FilterTableDataHeaderSlot from '@/components/FilterTableDataHeaderSlot.vue';
 
   interface Props {
     stackList: any[];
@@ -204,30 +187,6 @@
   );
 </script>
 <style lang="scss" scoped>
-  .filter-input {
-    margin-bottom: 5px;
-  }
-  .flex-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .icon-pointer {
-    cursor: pointer;
-    :hover {
-      color: var(--normal-color);
-    }
-  }
-  .border-bottom-input {
-    box-shadow: none;
-    height: auto;
-    :deep(.el-input__wrapper) {
-      box-shadow: none;
-      .el-input__inner {
-        box-shadow: 0 1px 0 0 var(--el-input-border-color);
-      }
-    }
-  }
   :deep(.el-table) {
     .el-table__body tr:hover > td.el-table__cell {
       background: none;

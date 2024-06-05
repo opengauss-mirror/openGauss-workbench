@@ -1261,7 +1261,7 @@ public class SqlConstants {
             + "from PG_AUTH_MEMBERS b INNER JOIN PG_ROLES c on c.oid = b.member " + LF
             + "where admin_option =false" + LF
             + "GROUP BY b.roleid) t2" + LF
-            + "left join (SELECT b.roleid,array_agg(c.rolname) merolname " + LF
+            + "full join (SELECT b.roleid,array_agg(c.rolname) merolname " + LF
             + "from PG_AUTH_MEMBERS b INNER JOIN PG_ROLES c on c.oid = b.member " + LF
             + "where admin_option =true" + LF
             + "GROUP BY b.roleid) t3" + LF
@@ -1294,7 +1294,7 @@ public class SqlConstants {
             + "from PG_AUTH_MEMBERS b INNER JOIN PG_ROLES c on c.oid = b.member " + LF
             + "where admin_option =false" + LF
             + "GROUP BY b.roleid) t2" + LF
-            + "left join (SELECT b.roleid,array_agg(c.rolname) merolname " + LF
+            + "full join (SELECT b.roleid,array_agg(c.rolname) merolname " + LF
             + "from PG_AUTH_MEMBERS b INNER JOIN PG_ROLES c on c.oid = b.member " + LF
             + "where admin_option =true" + LF
             + "GROUP BY b.roleid) t3" + LF

@@ -20,7 +20,7 @@
   --color-fill-2: #f2f3f5;
   --color-text-4: #c9cdd4;
   --color-bg-2: #fff;
-  --table-current-row-bg-color: #e1e1e1;
+  --table-current-row-bg-color: #f2f3f4;
 }
 
 html {
@@ -120,6 +120,10 @@ html {
 .el-input-number {
   .el-input-number__increase {
     top: 2px;
+  }
+  &.is-without-controls .el-input__wrapper {
+    padding-left: 5px;
+    padding-right: 5px;
   }
 }
 

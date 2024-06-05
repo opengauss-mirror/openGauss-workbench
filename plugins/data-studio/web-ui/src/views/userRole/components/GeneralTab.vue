@@ -17,8 +17,8 @@
       <el-col :span="12">
         <el-form-item prop="type" :label="$t('common.type')">
           <el-radio-group v-if="props.type == 'create'" v-model="form.type" @change="roleChange">
-            <el-radio label="user">{{ $t('userRole.user') }}</el-radio>
-            <el-radio label="role">{{ $t('userRole.role') }}</el-radio>
+            <el-radio value="user">{{ $t('userRole.user') }}</el-radio>
+            <el-radio value="role">{{ $t('userRole.role') }}</el-radio>
           </el-radio-group>
           <span v-else>{{ form.type == 'user' ? $t('userRole.user') : $t('userRole.role') }}</span>
         </el-form-item>

@@ -9,7 +9,7 @@
       v-loading="loading"
       class="history-table"
     >
-      <el-table-column align="center" :label="t('historyTable.column.no')" width="75">
+      <el-table-column align="center" :label="t('historyTable.column.no')" width="60">
         <template #default="{ row }">
           <div>
             <span v-if="row.lock" class="iconfont icon-lock num-icon"></span>
@@ -24,38 +24,25 @@
         width="160"
       ></el-table-column>
       <el-table-column
-        align="center"
+        header-align="center"
+        align="left"
         prop="success"
         :label="t('historyTable.column.status')"
         width="75"
       >
         <template #default="{ row }">
-          <div>
+          <div class="single-line-omission">
             <span :class="['status-dot', row.success ? 'success' : 'fail']"></span>
-            {{ row.success == '1' ? $t('message.success') : $t('message.fail') }}
+            {{ row.success ? $t('message.success') : $t('message.fail') }}
+            <span v-if="!row.success && row.errMes">,{{ row.errMes }}</span>
           </div>
         </template>
       </el-table-column>
       <el-table-column align="center" :label="t('historyTable.column.sql')">
         <template #header>
-          <div v-if="showSqlFilter" class="flex-header-start">
-            <div style="word-break: keep-all; margin-right: 5px">
-              {{ $t('historyTable.column.sql') }}
-            </div>
-            <div class="filter-wrapper">
-              <el-icon @click="hideNamefilter" class="icon-pointer">
-                <Search />
-              </el-icon>
-              <el-input class="border-bottom-input" v-model="sqlFilterInput" clearable />
-            </div>
-          </div>
-          <div v-else class="flex-header-between">
-            <div style="width: 12px"></div>
-            <span>{{ $t('historyTable.column.sql') }}</span>
-            <el-icon @click="showSqlFilter = true" class="icon-pointer">
-              <Search />
-            </el-icon>
-          </div>
+          <FilterTableDataHeaderSlot v-model="sqlFilterInput" v-model:show="showSqlFilter">
+            {{ $t('historyTable.column.sql') }}
+          </FilterTableDataHeaderSlot>
         </template>
         <template #default="{ row }">
           <div class="single-line-omission">
@@ -63,13 +50,6 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column
-        align="center"
-        prop="errMes"
-        :label="t('historyTable.column.errorMessage')"
-        show-overflow-tooltip
-        width="100"
-      ></el-table-column>
       <el-table-column
         align="center"
         prop="updateCount"
@@ -82,9 +62,9 @@
         :label="t('historyTable.column.executeTime')"
         width="100"
       ></el-table-column>
-      <el-table-column align="center" :label="t('historyTable.column.operation')" width="100">
+      <el-table-column align="center" :label="t('historyTable.column.operation')" width="110">
         <template #default="{ row }">
-          <span class="iconfont icon-yulan opetation-button" @click="handlePreview(row)"></span>
+          <span class="iconfont icon-yulan opetation-button" @click="handlePreviewSql(row)"></span>
           <span
             v-if="!row.lock"
             class="iconfont icon-lock opetation-button"
@@ -100,10 +80,18 @@
             class="iconfont icon-shanchu opetation-button"
             @click="handleDelelte(row)"
           ></span>
+          <el-icon
+            v-if="!row.success && row.errMes"
+            class="opetation-button"
+            style="vertical-align: text-bottom; font-size: 17px"
+            @click="handlePreviewError(row)"
+            ><Warning
+          /></el-icon>
         </template>
       </el-table-column>
     </el-table>
     <ShowHistorySqlDetailDialog v-model="visibleSqlDetailDialog" :sql="sqlDetail" />
+    <ErrorMessageDetailDialog v-model="visibleErrorDetailDialog" :sql="errorDetail" />
   </div>
 </template>
 
@@ -112,6 +100,8 @@
   import { useUserStore } from '@/store/modules/user';
   import { useI18n } from 'vue-i18n';
   import ShowHistorySqlDetailDialog from './ShowHistorySqlDetailDialog.vue';
+  import ErrorMessageDetailDialog from './ErrorMessageDetailDialog.vue';
+  import FilterTableDataHeaderSlot from '@/components/FilterTableDataHeaderSlot.vue';
   import { querySqlHistory, updateSqlHistory, deleteSqlHistory } from '@/api/sqlHistory';
 
   interface SqlTableRow {
@@ -121,24 +111,30 @@
     executeTime: string;
     webUser: string;
     success: boolean;
+    errMes: string;
     lock: boolean;
+    updateCount: number;
+    index: number;
   }
 
   const UserStore = useUserStore();
   const { t } = useI18n();
   const loading = ref(false);
   const visibleSqlDetailDialog = ref(false);
+  const visibleErrorDetailDialog = ref(false);
   const sqlDetail = ref('');
+  const errorDetail = ref('');
   const tableData = ref<SqlTableRow[]>([]);
   const showSqlFilter = ref(false);
   const sqlFilterInput = ref('');
 
   const showList = computed(() => {
-    return tableData.value.filter((item) => item.sql.indexOf(sqlFilterInput.value) > -1);
+    return tableData.value.filter(
+      (item) => item.lock || item.sql.indexOf(sqlFilterInput.value) > -1,
+    );
   });
 
-  // getHistory
-  const getHistory = async () => {
+  const getData = async () => {
     loading.value = true;
     hideNamefilter();
     querySqlHistory({
@@ -160,9 +156,13 @@
     sqlFilterInput.value = '';
   };
 
-  const handlePreview = (row) => {
+  const handlePreviewSql = (row) => {
     sqlDetail.value = row.sql;
     visibleSqlDetailDialog.value = true;
+  };
+  const handlePreviewError = (row) => {
+    errorDetail.value = row.errMes;
+    visibleErrorDetailDialog.value = true;
   };
   const handleLock = async (row: SqlTableRow, status: boolean) => {
     await updateSqlHistory({
@@ -171,7 +171,7 @@
       webUser: UserStore.userId,
     });
     ElMessage.success(t('message.setSuccess'));
-    getHistory();
+    getData();
   };
   const handleDelelte = (row: SqlTableRow) => {
     ElMessageBox.confirm(t('message.deleteRecord'), t('common.warning'), {
@@ -183,13 +183,13 @@
           type: 'success',
           message: t('message.deleteSuccess'),
         });
-        getHistory();
+        getData();
       })
       .catch(() => ({}));
   };
 
   defineExpose({
-    getHistory,
+    getData,
   });
 </script>
 

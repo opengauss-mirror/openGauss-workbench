@@ -95,28 +95,25 @@ public class FunctionSPObjectSQLServiceImpl implements FunctionSPObjectSQLServic
         log.info("dropFunctionSP request is: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
-                Statement statement = connection.createStatement()
+                Statement statement = connection.createStatement();
+                ResultSet funcResult = statement.executeQuery(String.format(PROC_SQL, request.getOid()))
         ) {
-            try (
-                    ResultSet funcResult = statement.executeQuery(String.format(PROC_SQL, request.getOid()))
-            ) {
-                String proKind;
-                if (funcResult.next()) {
-                    proKind = funcResult.getString(PRO_KIND);
-                } else {
-                    throw new CustomException(LocaleStringUtils.transLanguage("2015"));
-                }
-                String sql = "";
-                if ("f".equals(proKind)) {
-                    sql = String.format(DROP_FUNCTION_KEYWORD_SQL, DebugUtils.needQuoteName(request.getSchema()),
-                            request.getFunctionSPName());
-                } else if ("p".equals(proKind)) {
-                    sql = String.format(DROP_PROCEDURE_KEYWORD_SQL, DebugUtils.needQuoteName(request.getSchema()),
-                            request.getFunctionSPName());
-                }
-                log.info("dropFunctionSP sql is: " + sql);
-                return sql;
+            String proKind;
+            if (funcResult.next()) {
+                proKind = funcResult.getString(PRO_KIND);
+            } else {
+                throw new CustomException(LocaleStringUtils.transLanguage("2015"));
             }
+            String sql = "";
+            if ("f".equals(proKind)) {
+                sql = String.format(DROP_FUNCTION_KEYWORD_SQL, DebugUtils.needQuoteName(request.getSchema()),
+                        request.getFunctionSPName());
+            } else if ("p".equals(proKind)) {
+                sql = String.format(DROP_PROCEDURE_KEYWORD_SQL, DebugUtils.needQuoteName(request.getSchema()),
+                        request.getFunctionSPName());
+            }
+            log.info("dropFunctionSP sql is: " + sql);
+            return sql;
         }
     }
 

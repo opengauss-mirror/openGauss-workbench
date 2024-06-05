@@ -24,6 +24,7 @@
 package com.nctigba.datastudio.service.impl.sql;
 
 import com.nctigba.datastudio.compatible.GainObjectSQLService;
+import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.dao.ConnectionMapDAO;
 import com.nctigba.datastudio.dao.DatabaseConnectionDAO;
 import com.nctigba.datastudio.enums.ParamTypeEnum;
@@ -92,6 +93,8 @@ public class DbConnectionServiceImpl implements DbConnectionService {
 
     @Resource
     private DataListByJdbcService dataListByJdbcService;
+    @Resource
+    private ConnectionConfig connectionConfig;
 
     private Map<String, GainObjectSQLService> gainObjectSQLService;
 
@@ -280,8 +283,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
         List<Map<String, Object>> list = new ArrayList<>();
         ConnectionDTO connectionDTO = conMap.get(uuid);
         try (
-                Connection connection = ConnectionUtils.connectGet(
-                        connectionDTO.getUrl(), connectionDTO.getDbUser(), connectionDTO.getDbPassword());
+                Connection connection = connectionConfig.connectDatabase(uuid);
                 Statement statement = connection.createStatement();
         ) {
             list = parseByType(query, uuid, list, statement);
@@ -304,8 +306,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
         Map<String, Integer> map = new HashMap<>();
         ConnectionDTO connectionDTO = conMap.get(uuid);
         try (
-                Connection connection = ConnectionUtils.connectGet(
-                        connectionDTO.getUrl(), connectionDTO.getDbUser(), connectionDTO.getDbPassword());
+                Connection connection = connectionConfig.connectDatabase(uuid)
         ) {
             GainObjectSQLService service = gainObjectSQLService.get(comGetUuidType(uuid));
             String schema = DebugUtils.needQuoteName(query.getSchema());
