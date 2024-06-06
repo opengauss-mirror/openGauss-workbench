@@ -47,6 +47,7 @@ import com.nctigba.observability.instance.util.CommonUtils;
 import com.nctigba.observability.instance.util.DownloadUtils;
 import com.nctigba.observability.instance.util.SshSessionUtils;
 import com.nctigba.observability.instance.util.SshSessionUtils.command;
+import com.nctigba.observability.instance.util.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -158,12 +159,6 @@ public class ExporterInstallService extends AbstractInstaller {
                 Boolean isNewInstall = StrUtil.isBlank(exporterInstallDTO.getEnvId());
                 if (isNewInstall) {
                     session.testPortCanUse(httpPort);
-                } else {
-                    Boolean isAgentAlive = agentService.isAgentAlive(hostEntity.getPublicIp(),
-                        String.valueOf(exporterInstallDTO.getHttpPort()));
-                    if (!isAgentAlive) {
-                        throw new TipsException("agentNotAlive");
-                    }
                 }
                 nextStep();
                 if (isNewInstall) {
@@ -172,12 +167,12 @@ public class ExporterInstallService extends AbstractInstaller {
                         Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getHostid, exporterInstallDTO.getHostId())
                             .eq(NctigbaEnvDO::getType, envType.EXPORTER).eq(NctigbaEnvDO::getPort, httpPort));
                     if (expEnvs.size() > 0) {
-                        sendMsg(null, "exporter exists");
-                        return AjaxResult.success("exporter exists");
+                        throw new CustomException("exporter exists which has same host and port!");
+                    } else {
+                        expEnv = new NctigbaEnvDO().setHostid(exporterInstallDTO.getHostId()).setPort(httpPort)
+                            .setUsername(exporterInstallDTO.getUsername()).setType(envType.EXPORTER)
+                            .setPath(path);
                     }
-                    expEnv = new NctigbaEnvDO().setHostid(exporterInstallDTO.getHostId()).setPort(httpPort)
-                        .setUsername(exporterInstallDTO.getUsername()).setType(envType.EXPORTER)
-                        .setPath(path);
                 } else {
                     expEnv = envMapper.selectById(exporterInstallDTO.getEnvId());
                     if (expEnv == null) {
@@ -210,9 +205,16 @@ public class ExporterInstallService extends AbstractInstaller {
                     skipStep();
                     updateAgentNodeRel(expEnv.getId(), exporterInstallDTO.getNodeIds());
                 }
+                boolean isStop = AgentStatusEnum.MANUAL_STOP.getStatus().equalsIgnoreCase(expEnv.getStatus());
                 // set agent collect config: build param
                 sendMsg(null, "init exporter");
-                initExporterParams(exporterInstallDTO.getNodeIds(), hostEntity.getPublicIp(), expEnv.getPort());
+                List<Map<String, Object>> param = getExporterParams(exporterInstallDTO.getNodeIds());
+                if (isStop) {
+                    initExporterParamsOffline(session, expEnv.getPath(), param);
+                    startExporter(expEnv);
+                } else {
+                    initExporterParamsOnline(param, hostEntity.getPublicIp(), expEnv.getPort());
+                }
                 // check status
                 checkHealthStatus(expEnv);
                 // 重新分配agent
@@ -308,14 +310,11 @@ public class ExporterInstallService extends AbstractInstaller {
             AgentNodeRelationDO agentNodeRelationDO = new AgentNodeRelationDO();
             agentNodeRelationDO.setEnvId(envId);
             agentNodeRelationDO.setNodeId(nodeId);
-            agentNodeRelationService.saveOrUpdate(
-                agentNodeRelationDO,
-                new LambdaQueryWrapper<AgentNodeRelationDO>()
-                    .eq(AgentNodeRelationDO::getNodeId, nodeId));
+            agentNodeRelationService.getBaseMapper().insert(agentNodeRelationDO);
         });
     }
 
-    private void initExporterParams(List<String> nodeIds, String ip, int port) {
+    private List<Map<String, Object>> getExporterParams(List<String> nodeIds) {
         List<Map<String, Object>> param = new ArrayList<>();
         nodeIds.forEach(nodeId -> {
             ClusterManager.OpsClusterNodeVOSub nodeTemp = clusterManager.getOpsNodeById(nodeId);
@@ -343,6 +342,10 @@ public class ExporterInstallService extends AbstractInstaller {
             paramItem.put("machinePort", targetHostEntity.getPort());
             param.add(paramItem);
         });
+        return param;
+    }
+
+    private void initExporterParamsOnline(List<Map<String, Object>> param, String ip, int port) {
         for (int i = 0; i < 11; i++) {
             try {
                 String url = "http://" + ip + ":" + port + "/config/set";
@@ -356,6 +359,19 @@ public class ExporterInstallService extends AbstractInstaller {
             }
             ThreadUtil.sleep(5000L);
         }
+    }
+
+    private void initExporterParamsOffline(SshSessionUtils session, String path, List<Map<String, Object>> param)
+        throws IOException {
+        String filePath = path + (path.endsWith("/") ? "" : "/") + "application.yml";
+        String ymlStr = session.execute("cat " + filePath);
+        Map map = YamlUtils.loadAs(ymlStr, Map.class);
+        map.put("targets", param);
+        File agentConfigFile = File.createTempFile("application", ".tmp");
+        FileUtil.appendUtf8String(YamlUtils.dump(map), agentConfigFile);
+        // upload
+        session.upload(agentConfigFile.getCanonicalPath(), filePath);
+        Files.delete(agentConfigFile.toPath());
     }
 
     private void uninstallNodeAndGaussExporter(

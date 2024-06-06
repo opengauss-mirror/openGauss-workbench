@@ -25,6 +25,9 @@
 package com.nctigba.observability.instance.agent.util;
 
 import cn.hutool.core.text.StrFormatter;
+import cn.hutool.core.thread.ThreadUtil;
+import com.alibaba.druid.pool.DruidDataSource;
+import com.nctigba.observability.instance.agent.constant.CollectConstants;
 import com.nctigba.observability.instance.agent.enums.DbTypeEnum;
 import com.nctigba.observability.instance.agent.config.model.TargetConfig;
 import com.nctigba.observability.instance.agent.exception.CollectException;
@@ -34,15 +37,19 @@ import lombok.extern.log4j.Log4j2;
 import lombok.var;
 import org.springframework.stereotype.Component;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Util to query database
@@ -53,7 +60,8 @@ import java.util.Optional;
 @Log4j2
 @AllArgsConstructor
 public class DbUtils {
-    private static Map<String, Connection> conns = new HashMap<>();
+
+    private static Map<String, DataSource> dataSourceMap = new HashMap<>();
 
     private final TargetService targetService;
 
@@ -61,7 +69,7 @@ public class DbUtils {
      * Clear all connections
      */
     public void clear() {
-        conns = new HashMap<>();
+        dataSourceMap = new HashMap<>();
     }
 
     /**
@@ -74,15 +82,15 @@ public class DbUtils {
      */
     public final List<Map<String, Object>> query(String nodeId, String sql) {
         long startTime = System.currentTimeMillis();
-
-        if (!createAndCacheConnectionIfNotExisted(nodeId)) {
-            return Collections.emptyList();
-        }
-
-        Connection conn = conns.get(nodeId);
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet rs = null;
         try {
-            var stmt = conn.createStatement();
-            var rs = stmt.executeQuery(sql);
+            DataSource dataSource = dataSourceMap.get(nodeId);
+            conn = dataSource.getConnection();
+            long midTime = System.currentTimeMillis();
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery(sql);
             var rsmeta = rs.getMetaData();
             List<Map<String, Object>> list = new ArrayList<>();
             while (rs.next()) {
@@ -99,19 +107,34 @@ public class DbUtils {
 
             long endTime = System.currentTimeMillis();
             long executionTime = endTime - startTime;
-            log.debug("[sql time: {}s]query SQL: {}", executionTime, sql);
-            if (executionTime > 500) {
-                log.warn("[sql time: {}s]query SQL: {}", executionTime, sql);
+            if (executionTime > CollectConstants.COLLECT_TIMEOUT * 1000L) {
+                log.error("[sql time: {}ms]query SQL: {}", executionTime, sql);
+                log.error("real cost {}ms", endTime - midTime);
+                log.error("get connection cost {}ms", midTime - startTime);
+            } else {
+                log.debug("[sql time: {}ms]query SQL: {}", executionTime, sql);
             }
-
+            rs.close();
+            stmt.close();
+            conn.close();
             return list;
-        } catch (SQLException e) {
-            if (!test(conn)) {
-                conns.remove(nodeId);
-                return query(nodeId, sql);
-            }
+        } catch (Exception e) {
             log.error("sql error, cause :{} sql:{}", e.getMessage(), sql);
             return Collections.emptyList();
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                log.error("closed exception: {}", e.getMessage());
+            }
         }
     }
 
@@ -131,8 +154,23 @@ public class DbUtils {
      * @return boolean
      */
     public boolean test(String nodeId) {
-        if (createAndCacheConnectionIfNotExisted(nodeId)) {
-            return test(conns.get(nodeId));
+        DataSource dataSource = dataSourceMap.get(nodeId);
+        Connection conn = null;
+        try {
+            if (dataSource != null) {
+                conn = dataSource.getConnection();
+                return test(conn);
+            }
+        } catch (SQLException e) {
+            log.error("{}\n{}", e.getMessage(), e);
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                log.error("connection closed failed: {}", e.getMessage());
+            }
         }
         return false;
     }
@@ -148,26 +186,32 @@ public class DbUtils {
             targetConfig.getDbUserPassword());
     }
 
-    private boolean createAndCacheConnectionIfNotExisted(String nodeId) {
+    public void createDataSource(String nodeId) {
         Optional<TargetConfig> opTarget = targetService.getTargetConfigs()
             .stream().filter(z -> z.getNodeId().equals(nodeId)).findFirst();
         if (!opTarget.isPresent()) {
             throw new CollectException("No match node id target config for node Id:" + nodeId);
         }
-
-        if (!conns.containsKey(nodeId)) {
-            synchronized (this) {
-                try {
-                    if (!conns.containsKey(nodeId)) {
-                        Connection conn = createConnection(opTarget.get());
-                        conns.put(nodeId, conn);
-                    }
-                } catch (SQLException | ClassNotFoundException | NullPointerException e) {
-                    log.error("db connection fail", e);
-                    return false;
-                }
-            }
+        try {
+            TargetConfig targetConfig = opTarget.get();
+            DruidDataSource dataSource = new DruidDataSource();
+            dataSource.setInitialSize(25);
+            dataSource.setMaxActive(25);
+            dataSource.setMaxWait(2000L);
+            dataSource.setLoginTimeout(2);
+            dataSource.setName(nodeId);
+            String dbType = targetConfig.getDbType();
+            DbTypeEnum dbTypeEnum = DbTypeEnum.valueOf(dbType);
+            dataSource.setDriverClassName(dbTypeEnum.getDriverClass());
+            dataSource.setUrl(StrFormatter.format(dbTypeEnum.getUrlPattern(), targetConfig.getDbIp(),
+                targetConfig.getDbPort()));
+            dataSource.setUsername(targetConfig.getDbUserName());
+            dataSource.setPassword(targetConfig.getDbUserPassword());
+            dataSource.setAsyncInit(true);
+            dataSourceMap.put(nodeId, dataSource);
+            dataSource.init();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
-        return true;
     }
 }

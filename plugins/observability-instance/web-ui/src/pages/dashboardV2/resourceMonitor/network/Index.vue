@@ -525,7 +525,7 @@ watch(
   { deep: true }
 );
 const byteToMB = (val: number) => {
-  return (val / 8 / 1024 / 1024).toFixed(2);
+  return (val / 1024 / 1024).toFixed(4);
 };
 const gotoSQLDiagnosis = () => {
   hasSQLDiagnosisModule()

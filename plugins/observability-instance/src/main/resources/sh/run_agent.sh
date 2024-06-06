@@ -6,7 +6,7 @@ JAVA="${java}"
 PORT="${port}"
 
 start() {
-  nohup $JAVA -jar instance-exporter.jar --server.port=$PORT > instance-exporter.log &
+  nohup $JAVA -jar instance-exporter.jar --server.port=$PORT >/dev/null 2>&1 &
   count=0
   while [ $count -lt 100 ]; do
     agent_pid=$(ps aux | grep "instance-exporter.jar" | grep "server.port=$PORT" | grep -v grep | awk '{print $2}')

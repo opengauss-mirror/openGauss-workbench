@@ -39,5 +39,5 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @ConfigurationProperties(prefix = "agent.exporter")
 public class AgentExporterConfig {
-    private int startPort;
+    private int port;
 }

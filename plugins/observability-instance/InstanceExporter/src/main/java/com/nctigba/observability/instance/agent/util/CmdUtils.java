@@ -24,6 +24,7 @@
 
 package com.nctigba.observability.instance.agent.util;
 
+import cn.hutool.core.date.StopWatch;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import com.nctigba.observability.instance.agent.config.model.TargetConfig;
@@ -96,7 +97,7 @@ public class CmdUtils {
         try {
             ChannelExec channel = session.get().createExecChannel("echo 1");
             channel.open();
-            channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), 3000);
+            channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), 1000);
             return true;
         } catch (IOException e) {
             return false;
@@ -134,6 +135,8 @@ public class CmdUtils {
      */
     public static final void readFromCmd(
             String nodeId, String cmd, BiConsumer<Integer, String> consumer) throws IOException, CMDException {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
         Optional<TargetConfig> targetConfig =
                 targetService.getTargetConfigs().stream().filter(z -> z.getNodeId().equals(nodeId))
                         .findFirst();
@@ -149,6 +152,7 @@ public class CmdUtils {
 
         ClientSession session = opSession.get();
         log.debug("exec:" + cmd);
+
         var channel = session.createExecChannel(cmd);
         channel.setPtyType("ansi");
         channel.setPtyColumns(300);
@@ -160,8 +164,11 @@ public class CmdUtils {
             ThreadUtil.sleep(100L);
         }
         if (channel.getExitStatus() != null && channel.getExitStatus() != 0) {
+            log.error("{}: exitStatus is {}", cmd, channel.getExitStatus());
             channel.close();
             pool.releaseSession(session);
+            stopWatch.stop();
+            log.error("exec {} costs {}ms", cmd, stopWatch.getTotalTimeMillis());
             throw new CMDException(cmd + StrUtil.SPACE + StrUtil.LF + StrUtil.SPACE + channel.getInvertedErr());
         }
 
@@ -184,6 +191,8 @@ public class CmdUtils {
         } finally {
             channel.close();
             pool.releaseSession(session);
+            stopWatch.stop();
+            log.info("exec {} costs {}ms", cmd, stopWatch.getTotalTimeMillis());
         }
     }
 

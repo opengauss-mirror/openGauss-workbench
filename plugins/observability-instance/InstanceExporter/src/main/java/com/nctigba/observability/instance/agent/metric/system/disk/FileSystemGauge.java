@@ -87,16 +87,20 @@ public class FileSystemGauge implements DBMetric {
                 log.debug("agent_filesystem line:{}", line);
                 String[] part = StringUtils.splitByBlank(line);
                 String[] labels = {target.getTargetConfig().getHostId(), part[0], part[5]};
-                result.get(0).add(new MetricResult(labels, Double.valueOf(part[1])));
-                result.get(1).add(new MetricResult(labels, Double.valueOf(part[2])));
-                result.get(2).add(new MetricResult(labels, Double.valueOf(part[3])));
+                double used = Double.valueOf(part[2]);
+                double free  = Double.valueOf(part[3]);
+                result.get(0).add(new MetricResult(labels, used + free));
+                result.get(1).add(new MetricResult(labels, used));
+                result.get(2).add(new MetricResult(labels, free));
             });
             CmdUtils.readFromCmd(target.getTargetConfig().getNodeId(), FILESYSTEM_INODE_COMMAND, line -> {
                 String[] part = StringUtils.splitByBlank(line);
                 String[] labels = {target.getTargetConfig().getHostId(), part[0], part[5]};
-                result.get(3).add(new MetricResult(labels, Double.valueOf(part[1])));
-                result.get(4).add(new MetricResult(labels, Double.valueOf(part[2])));
-                result.get(5).add(new MetricResult(labels, Double.valueOf(part[3])));
+                double used = Double.valueOf(part[2]);
+                double free  = Double.valueOf(part[3]);
+                result.get(3).add(new MetricResult(labels, used + free));
+                result.get(4).add(new MetricResult(labels, used));
+                result.get(5).add(new MetricResult(labels, free));
             });
         } catch (IOException | CMDException e) {
             e.printStackTrace();

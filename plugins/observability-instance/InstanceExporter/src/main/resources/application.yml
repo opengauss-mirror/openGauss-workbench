@@ -2,4 +2,4 @@ server:
   port: 9596
 agent:
   exporter:
-    startPort: 9400
+    port: 9400

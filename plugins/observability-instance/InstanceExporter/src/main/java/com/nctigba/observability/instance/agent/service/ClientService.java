@@ -27,6 +27,7 @@ package com.nctigba.observability.instance.agent.service;
 import com.nctigba.observability.instance.agent.config.model.TargetConfig;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Service to manage client
@@ -37,11 +38,10 @@ public interface ClientService {
     /**
      * Start a prometheus client by TargetConfig
      *
-     * @param targetConfig Target info
      * @return Result
      * @since 2023/12/1
      */
-    String initClient(TargetConfig targetConfig);
+    void initClient();
 
     /**
      * Update Yml file whit target new config
@@ -53,22 +53,17 @@ public interface ClientService {
      */
     TargetConfig updateYmlTargetConfig(TargetConfig newConfig) throws IOException;
 
+    /**
+     * Update Yml file whit target new config list
+     *
+     * @param newConfigs New target config list
+     * @return TargetConfigList, exporter port will be update
+     * @throws IOException Read yml file error
+     */
+    List<TargetConfig> updateYmlTargetConfigs(List<TargetConfig> newConfigs) throws IOException;
 
     /**
-     * Find the start port for the new target
-     * If start port existed in Yml file, then use it
-     * If not then use agentExporterConfig.getStartPort()
-     *
-     * @param newConfig New target config
-     * @return The real start port to try to start
-     * @since 2023/12/1
+     * close
      */
-    String getTargetStartPort(TargetConfig newConfig);
-
-    /**
-     * Clear all client
-     *
-     * @since 2023/12/1
-     */
-    void clear();
+    void close();
 }

@@ -24,6 +24,7 @@
 
 package com.nctigba.observability.instance.agent.controller;
 
+import com.nctigba.observability.instance.agent.config.model.AgentExporterConfig;
 import com.nctigba.observability.instance.agent.config.model.TargetConfig;
 import com.nctigba.observability.instance.agent.model.dto.CollectParamDTO;
 import com.nctigba.observability.instance.agent.model.dto.CollectTargetDTO;
@@ -53,6 +54,8 @@ public class MetricsController {
     TargetService targetService;
     @Autowired
     CollectService collectService;
+    @Autowired
+    AgentExporterConfig agentExporterConfig;
 
     /**
      * API for scraping metrics values
@@ -68,12 +71,12 @@ public class MetricsController {
     public String scrapeMetrics(
             @RequestParam(name = "name[]", required = false) Optional<String[]> name,
             @RequestParam(required = true) String nodeId) throws IOException {
-        log.info("Scrape metrics for node {}:{}", nodeId, name.orElse(new String[0]));
+        log.info("Scrape metrics for node {} by '/metrics' is start: {}", nodeId, name.orElse(new String[0]));
         long startTime = System.currentTimeMillis();
 
         // get target
         Optional<TargetConfig> targetConfig =
-                targetService.getTargetConfigs().stream().filter(z -> z.getNodeId().equals(nodeId)).findFirst();
+            targetService.getTargetConfigs().stream().filter(z -> z.getNodeId().equals(nodeId)).findFirst();
         if (!targetConfig.isPresent()) {
             String errorMsg = String.format("No match node id targets!!!!!Node id = %s", nodeId);
             log.error(errorMsg);
@@ -89,16 +92,13 @@ public class MetricsController {
             param.setGroupNames(Arrays.asList(name.get()));
         }
 
-        // collect metrics data
-        collectService.collectMetricsData(target, param);
-
         // get metrics data
-        String url = "http://localhost:" + targetConfig.get().getExporterPort() + "/metrics";
-        String responseBody = collectService.getMetricsData(url, name);
+        String url = "http://localhost:" + agentExporterConfig.getPort() + "/metrics";
+        String responseBody = collectService.getMetricsData(url, name, nodeId);
 
         // print run time
         long endTime = System.currentTimeMillis();
-        log.info("Scrape metrics for node {}:takes {} ms", nodeId, endTime - startTime);
+        log.info("Scrape metrics for node {} by '/metrics' is end: total takes {} ms", nodeId, endTime - startTime);
 
         return responseBody;
     }

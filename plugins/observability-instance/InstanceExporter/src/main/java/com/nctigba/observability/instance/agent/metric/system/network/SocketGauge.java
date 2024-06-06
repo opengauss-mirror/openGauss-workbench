@@ -76,7 +76,7 @@ public class SocketGauge implements DBMetric {
                     return;
                 }
                 String[] part = StringUtils.splitByBlank(line);
-                if (part.length < 5) {
+                if (part.length <= 5) {
                     return;
                 }
                 String proto = part[0];

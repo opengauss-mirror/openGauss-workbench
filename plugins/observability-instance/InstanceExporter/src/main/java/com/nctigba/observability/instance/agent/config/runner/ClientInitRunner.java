@@ -24,9 +24,12 @@
 
 package com.nctigba.observability.instance.agent.config.runner;
 
+import cn.hutool.core.thread.ThreadUtil;
 import com.nctigba.observability.instance.agent.config.model.TargetConfig;
+import com.nctigba.observability.instance.agent.pool.SshClientNodeSessionPool;
 import com.nctigba.observability.instance.agent.service.ClientService;
 import com.nctigba.observability.instance.agent.service.TargetService;
+import com.nctigba.observability.instance.agent.util.DbUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -45,17 +48,18 @@ public class ClientInitRunner implements ApplicationRunner {
     TargetService targetService;
     @Autowired
     ClientService clientService;
+    @Autowired
+    DbUtils dbUtils;
 
     /**
      * @inheritDoc
      */
     @Override
     public void run(ApplicationArguments args) {
+        clientService.initClient();
         List<TargetConfig> targetConfigs = targetService.getTargetConfigs();
-        if (!targetConfigs.isEmpty()) {
-            for (int i = 0; i < targetConfigs.size(); i++) {
-                clientService.initClient(targetConfigs.get(i));
-            }
+        for (TargetConfig targetConfig : targetConfigs) {
+            dbUtils.createDataSource(targetConfig.getNodeId());
         }
     }
 }

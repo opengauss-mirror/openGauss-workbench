@@ -298,20 +298,11 @@ public class CollectTemplateNodeServiceImpl
             // loop related nodes
             for (PrometheusConfigNodeDTO z : configNodes) {
                 String nodeId = z.getNodeId();
-                AgentNodeRelationDO agentNodeRelationDO = agentNodeRelationService.getOne(
+                List<AgentNodeRelationDO> agentNodeRelList = agentNodeRelationService.list(
                     new LambdaQueryWrapper<AgentNodeRelationDO>()
-                        .eq(AgentNodeRelationDO::getNodeId, nodeId), false);
-                if (agentNodeRelationDO == null) {
+                        .eq(AgentNodeRelationDO::getNodeId, nodeId));
+                if (CollectionUtil.isEmpty(agentNodeRelList)) {
                     throw new TipsException("Agent node relation not found for node :" + nodeId);
-                }
-
-                NctigbaEnvDO evnNode = envMapper.selectOne(
-                    Wrappers.<NctigbaEnvDO>lambdaQuery()
-                        .eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.EXPORTER)
-                        .eq(NctigbaEnvDO::getId, agentNodeRelationDO.getEnvId()));
-                if (evnNode == null) {
-                    throw new TipsException("Agent not found for node and env:" + nodeId + " "
-                        + agentNodeRelationDO.getEnvId());
                 }
 
                 // get node info
@@ -319,21 +310,38 @@ public class CollectTemplateNodeServiceImpl
                 if (node == null) {
                     throw new TipsException("node not found");
                 }
-                // get host data
-                OpsHostEntity hostEntity = hostFacade.getById(evnNode.getHostid());
-                if (hostEntity == null) {
-                    throw new TipsException(CommonConstants.HOST_NOT_FOUND);
-                }
                 // remove old configs
                 conf.getScrape_configs().removeIf(
                     oldConfigs -> oldConfigs.getJob_name().contains(nodeId)
                 );
+                List<String> targets = new ArrayList<>();
+                for (AgentNodeRelationDO agentNodeRelationDO : agentNodeRelList) {
+                    NctigbaEnvDO evnNode = envMapper.selectOne(
+                        Wrappers.<NctigbaEnvDO>lambdaQuery()
+                            .eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.EXPORTER.name())
+                            .eq(NctigbaEnvDO::getId, agentNodeRelationDO.getEnvId()));
+                    if (evnNode == null) {
+                        agentNodeRelationService.remove(Wrappers.<AgentNodeRelationDO>lambdaQuery()
+                            .eq(AgentNodeRelationDO::getNodeId, nodeId)
+                            .eq(AgentNodeRelationDO::getEnvId, agentNodeRelationDO.getEnvId()));
+                        continue;
+                    }
+                    // get host data
+                    OpsHostEntity hostEntity = hostFacade.getById(evnNode.getHostid());
+                    if (hostEntity == null) {
+                        throw new TipsException(CommonConstants.HOST_NOT_FOUND);
+                    }
+                    // new staticConfigs
+                    String agentPort = evnNode.getPort().toString();
+                    targets.add(hostEntity.getPublicIp() + ":" + agentPort);
+                }
+                if (CollectionUtil.isEmpty(targets)) {
+                    throw new TipsException("Agent node relation not found for node :" + nodeId);
+                }
 
-                // new staticConfigs
-                String agentPort = evnNode.getPort().toString();
                 var staticConfigs = new PrometheusService.prometheusConfig.job.conf();
                 staticConfigs.setLabels(Map.of("instance", nodeId, "type", "exporter"));
-                staticConfigs.setTargets(Arrays.asList(hostEntity.getPublicIp() + ":" + agentPort));
+                staticConfigs.setTargets(targets);
 
                 // loop same node id by diff scrape interval
                 z.getDetails().forEach(detail -> {

@@ -19,6 +19,33 @@
         </encoder>
     </appender>
 
+    <appender name="appErr" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/agent-warn.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>logs/agent-err.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+            <maxFileSize>20mb</maxFileSize>
+            <totalSizeCap>10gb</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{15} - %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+            <level>WARN</level>
+        </filter>
+    </appender>
+
+    <logger name="com.nctigba.observability.instance.agent" level="ERROR" additivity="false">
+        <appender-ref ref="stdout" />
+        <appender-ref ref="appErr" />
+    </logger>
+
+    <logger name="com.nctigba.observability.instance.agent" level="INFO" additivity="false">
+        <appender-ref ref="stdout" />
+        <appender-ref ref="app" />
+    </logger>
+
     <root level="INFO">
         <appender-ref ref="stdout" />
         <appender-ref ref="app" />
