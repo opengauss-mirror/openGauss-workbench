@@ -13,41 +13,38 @@
  *  See the Mulan PSL v2 for more details.
  *  -------------------------------------------------------------------------
  *
- *  DiagnosisTaskDTO.java
+ *  NctigbaEnvDTO.java
  *
  *  IDENTIFICATION
- *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/model/dto/DiagnosisTaskDTO.java
+ *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/model/dto/NctigbaEnvDTO.java
  *
  *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.model.dto;
 
-import com.nctigba.observability.sql.model.vo.point.OptionVO;
-import com.nctigba.observability.sql.model.vo.point.ThresholdVO;
 import lombok.Data;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 
 import java.util.Date;
-import java.util.List;
 
 /**
- * DiagnosisTaskDTO
+ * NctigbaEnvDTO
  *
  * @author luomeng
- * @since 2023/6/9
+ * @since 2024/4/8
  */
 @Data
-public class DiagnosisTaskDTO {
-    private String clusterId;
-    private String nodeId;
-    private String taskName;
-    private String dbName;
-    private String schemaName;
-    private String sqlId;
-    private String sql;
-    private Date hisDataStartTime;
-    private Date hisDataEndTime;
-    List<OptionVO> configs;
-    List<ThresholdVO> thresholds;
-    private String diagnosisType;
+public class NctigbaEnvDTO {
+    String id;
+    String hostId;
+    String type;
+    String username;
+    String path;
+    Integer port;
+    String nodeId;
+    OpsHostEntity host;
+    String status;
+    String param;
+    Date updateTime;
 }

@@ -64,6 +64,10 @@
           </template>
         </el-table-column>
         <el-table-column prop="taskType" :label="$t('datasource.trackTable[1]')" width="80" align="center" />
+        <el-table-column prop="clusterId" :label="$t('datasource.trackTable[7]')" width="100" align="center" show-overflow-tooltip />
+        <el-table-column prop="nodeId" :label="$t('datasource.trackTable[8]')" width="100" align="center" show-overflow-tooltip />
+        <el-table-column prop="dbName" :label="$t('datasource.trackTable[10]')" width="80" align="center" />
+        <el-table-column prop="schemaName" :label="$t('datasource.trackTable[11]')" width="80" align="center" />
         <el-table-column label="SQL" width="300">
           <template #default="scope">
             <span v-if="scope.row.sql && scope.row.sql.length > 35">
@@ -99,20 +103,6 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column
-          prop="clusterId"
-          :label="$t('datasource.trackTable[7]')"
-          width="100"
-          align="center"
-          show-overflow-tooltip
-        />
-        <el-table-column
-          prop="nodeId"
-          :label="$t('datasource.trackTable[8]')"
-          width="100"
-          align="center"
-          show-overflow-tooltip
-        />
         <el-table-column :label="$t('datasource.trackTable[9]')" align="center" fixed="right" width="80">
           <template #default="scope">
             <el-link size="small" type="primary" @click="handleDelete(scope.row)">{{ $t('app.delete') }}</el-link>

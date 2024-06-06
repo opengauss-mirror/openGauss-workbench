@@ -41,6 +41,7 @@ import lombok.experimental.Accessors;
 public class StatementHistoryDO {
 	private String dbName;
 	private String userName;
+	private String schemaName;
 	private String clientAddr;
 	private Long uniqueQueryId;
 	@TableField("query")

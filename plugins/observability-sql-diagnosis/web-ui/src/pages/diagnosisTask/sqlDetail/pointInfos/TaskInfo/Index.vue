@@ -26,6 +26,9 @@
           {{ $t('historyDiagnosis.taskInfo.dbName') }}<span>{{ taskData.pointData.dbName }}</span>
         </p>
         <p class="s-i-base-item">
+          {{ $t('historyDiagnosis.taskInfo.schemaName') }}<span>{{ taskData.pointData.schemaName }}</span>
+        </p>
+        <p class="s-i-base-item">
           {{ $t('historyDiagnosis.taskInfo.sqlId') }}<span>{{ taskData.pointData.sqlId }}</span>
         </p>
         <p class="s-i-base-item">
@@ -135,6 +138,7 @@ const taskData = ref<{
     hisDataStartTime: string
     taskName: string
     dbName: string
+    schemaName: string
     sqlId: string
     taskType: string
     taskStartTime: string

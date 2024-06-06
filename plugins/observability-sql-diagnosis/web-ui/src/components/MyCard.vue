@@ -1,10 +1,21 @@
 <template>
-  <div class="card">
+  <div class="card" style="overflow: visible" ref="card">
     <div class="card-header">
       <div class="icon"></div>
-      <div class="title">{{ props.title }}</div>
+      <div class="title">
+        {{ props.title }}
+        <ShowInfo :info="info" v-if="showBtns || showQuestion" />
+      </div>
       <div class="buttons">
         <slot name="headerExtend"></slot>
+        <div class="card-links">
+          <el-link :underline="false" @click="expand" v-if="showBtns || showExpand">
+            <svg-icon name="Vector" />
+          </el-link>
+          <el-link :underline="false" @click="() => myEmit('download', props.title)" v-if="showBtns || showDownload">
+            <svg-icon name="download" />
+          </el-link>
+        </div>
       </div>
     </div>
     <div
@@ -14,8 +25,9 @@
       :style="{
         resize: props.resize ? 'vertical' : 'none',
       }"
+      style="overflow: visible"
     >
-      <div style="position: relative; height: 100%; overflow: auto">
+      <div style="position: relative; height: 100%; overflow: visible">
         <slot />
       </div>
     </div>
@@ -25,29 +37,40 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core'
 import { useWidthOverflow } from '@/hooks/dom'
+import ShowInfo from "@/components/ShowInfo.vue";
 
 const props = withDefaults(
   defineProps<{
-    title: string
-    legend?: { color: string; name: string }[]
-    bodyPadding?: boolean
-    height?: string | number
-    collapse?: boolean
-    skipBodyHeight?: boolean // do not set body height
+    title: string;
+    legend?: { color: string; name: string }[];
+    bodyPadding?: boolean;
+    height?: string | number;
+    collapse?: boolean;
+    skipBodyHeight?: boolean // do not set body height;
     // enable resize bodyHeight
-    resize?: boolean
-    maxBodyHeight?: string
-    overflowHidden?: boolean
-    withTable?: boolean
+    resize?: boolean;
+    maxBodyHeight?: string;
+    overflowHidden?: boolean;
+    withTable?: boolean;
+    showBtns: boolean;
+    showQuestion: boolean;
+    showExpand: boolean;
+    showDownload: boolean;
+    info: {title: string, option: any[]};
   }>(),
   {
     bodyPadding: true,
     maxBodyHeight: 'unset',
     overflowHidden: true,
     withTable: false,
+    showBtns: false,
+    showQuestion: false,
+    showExpand: false,
+    showDownload: false,
+    info: () => { return { title: '', option: [] } },
   }
 )
-const hidden = ref(props.overflowHidden ? 'hidden' : 'unset')
+const hidden = ref(props.overflowHidden ? 'hidden' : 'scroll')
 const padding = ref(props.bodyPadding ? '24px 16px' : '0px')
 const withTableBorderRadius = ref(props.withTable ? '2px 2px 0 0' : '2px')
 const bodyRef = ref<HTMLDivElement>()
@@ -56,7 +79,6 @@ const minBodyHeight = ref(bodyHeight.value)
 // unset transition animation when resize body height
 onMounted(() => {
   nextTick(() => {
-    if (props.height === 'auto') return
     if (!props.skipBodyHeight && bodyRef && bodyRef.value) {
       bodyHeight.value = `${bodyRef.value.offsetHeight + (props.bodyPadding && !props.collapse ? 48 : 0)}px`
     }
@@ -77,14 +99,16 @@ onMounted(() => {
   })
 })
 const myEmit = defineEmits<{
-  (event: 'resize-body-height', height: number): void
+  (event: 'resize-body-height', height: number): void;
+  (event: 'download', title: string): void;
+  (event: 'expand'): void;
 }>()
 // ctl height
 const height = computed(() => {
   if (!props.height) {
     return '100%'
   }
-  return ['auto', '%', 'px'].includes(`${props.height}`) ? props.height : `${props.height}px`
+  return ['%', 'px'].includes(`${props.height}`) ? props.height : `${props.height}px`
 })
 // ctl collapse
 const isCollapse = ref(false)
@@ -108,10 +132,34 @@ const toggleCollapse = () => {
 }
 const extraRef = ref()
 const dropdownRef = ref()
-const { overflow, isFinish, trigger } = useWidthOverflow(extraRef, dropdownRef)
+const { trigger } = useWidthOverflow(extraRef, dropdownRef)
 defineExpose({
   trigger,
 })
+
+const card = ref()
+const isExpand = ref<boolean>(false)
+const expand = () => {
+  let ref = card.value
+  if (!isExpand.value) {
+    ref.style.position = 'fixed'
+    ref.style.top = 0
+    ref.style.right = 0
+    ref.style.left = 0
+    ref.style.bottom = 0
+    ref.style.zIndex = 9999
+    ref.style.height = '100vh'
+  } else {
+    ref.style.position = 'relative'
+    ref.style.top = 'auto'
+    ref.style.right = 'auto'
+    ref.style.left = 'auto'
+    ref.style.bottom = 'auto'
+    ref.style.zIndex = 'auto'
+    ref.style.height = height.value
+  }
+  isExpand.value = !isExpand.value
+}
 </script>
 
 <style scoped lang="scss">
@@ -151,6 +199,10 @@ defineExpose({
         &.is-collapse {
           transform: rotate(-90deg);
         }
+      }
+      .question {
+        margin: 0px 4px;
+        top: 40%
       }
     }
     .tips {

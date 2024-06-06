@@ -23,31 +23,63 @@
     }}</el-button>
     <el-button @click="handleReset" :title="$t('app.refresh')" :icon="Refresh">{{ $t('app.reset') }}</el-button>
   </div>
-  <div class="slow-log">
-    <div class="slow-log-table">
+  <div>
+    <my-card
+      :title="$t('dashboard.slowSqlMoreThan3Seconds') + metricsData.threshold + ')'"
+      height="250"
+      :bodyPadding="false"
+      :showBtns="true" @download="title => download(title,slowSQL3s)"
+      :info="slowSQL3sInfo"
+    >
+      <template v-if="placeholders === '{{i18n,slowSql.param.tip}}'">
+        <div class="message-error">
+          <div class="message-error">
+            <div class=""><svg-icon name="info" />{{ $t('datasource.slowSqlChartParamTip') }}</div>
+          </div>
+        </div>
+      </template>
+      <template v-else-if="placeholders === '{{i18n,slowSql.agent.tip}}'">
+        <div class="message-error">
+          <div class=""><svg-icon name="info" />{{ $t('datasource.slowSqlChartAgentTip') }}</div>
+        </div>
+      </template>
+      <template v-else-if="placeholders === '{{i18n,slowSql.metric.tip}}'">
+        <div class="message-error">
+          <div class=""><svg-icon name="info" />{{ $t('datasource.slowSqlChartMetricTip') }}</div>
+        </div>
+      </template>
+      <template v-else>
+        <LazyLine
+          ref="slowSQL3s"
+          :tabId="1"
+          :tips="$t(`datasource.slowSqlChartTip`)"
+          :formatter="toFixed"
+          :data="metricsData.slowSQL"
+          :xData="metricsData.time"
+        />
+      </template>
+    </my-card>
+  </div>
+  <el-tabs v-model="tab" class="tab2">
+    <el-tab-pane :name="2">
+      <template #label>
+        <span>{{ $t("datasource.statistics") }}
+        </span>
+      </template>
       <el-table
         size="small"
-        :data="tableDatas"
+        :data="tableAggDatas"
         style="width: 100%"
-        :default-sort="{ prop: 'date', order: 'descending' }"
+        v-loading="aggLoading"
+        :default-sort="{ prop: 'totalExecuteTime', order: 'descending' }"
+        @sort-change="handleAggSortChange"
         :header-cell-class-name="
-          () => {
-            return 'grid-header'
-          }
-        "
+        () => {
+          return 'grid-header'
+        }"
       >
-        <el-table-column prop="uniqueQueryId" :label="$t('datasource.sqlID')" width="90" />
-        <el-table-column :label="$t('datasource.slowLogTable[0]')" width="140" align="center">
-          <template #default="scope">
-            <span>{{ dayjs.utc(scope.row.startTime).local().format('YYYY-MM-DD HH:mm:ss') }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column :label="$t('datasource.slowLogTable[1]')" width="140" align="center">
-          <template #default="scope">
-            <span>{{ dayjs.utc(scope.row.finishTime).local().format('YYYY-MM-DD HH:mm:ss') }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="sqlTemplate" :label="$t('datasource.slowLogTable[2]')" min-width="250">
+        <el-table-column prop="uniqueQueryId" :label="$t('datasource.slowStaticTable[0]')" width="120" fixed="left" :sortable="true" />
+        <el-table-column prop="sqlTemplate" :label="$t('datasource.slowStaticTable[1]')" min-width="250" fixed="left" :sortable="true">
           <template #default="scope">
             <span v-if="scope.row.sqlTemplate && scope.row.sqlTemplate.length > 35">
               <el-popover width="300" trigger="hover" :content="scope.row.sqlTemplate" popper-class="sql-popover-tip">
@@ -59,17 +91,98 @@
             <span v-else>{{ scope.row.sqlTemplate }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="dbName" :label="$t('datasource.slowLogTable[3]')" width="100" />
-        <el-table-column prop="clientAddr" :label="$t('datasource.slowLogTable[4]')" width="110" />
-        <el-table-column prop="schemaName" :label="$t('datasource.slowLogTable[5]')" width="100" />
-        <el-table-column prop="dbTime" :label="$t('datasource.slowLogTable[6]')" width="120" />
-        <el-table-column prop="cpuTime" :label="$t('datasource.slowLogTable[7]')" width="120" />
-        <el-table-column prop="dataIoTime" :label="$t('datasource.slowLogTable[8]')" width="120" />
-        <el-table-column prop="parseTime" :label="$t('datasource.slowLogTable[9]')" width="120" />
-        <el-table-column prop="plExecutionTime" :label="$t('datasource.slowLogTable[10]')" width="130" />
-        <el-table-column prop="lockWaitTime" :label="$t('datasource.slowLogTable[11]')" width="120" />
-        <el-table-column prop="nreturnedRows" :label="$t('datasource.slowLogTable[12]')" width="100" />
-        <el-table-column prop="nreturnedRows" :label="$t('datasource.slowLogTable[13]')" width="100" />
+        <el-table-column prop="executeNum" :label="$t('datasource.slowStaticTable[2]')" width="110" :sortable="true" />
+        <el-table-column prop="totalExecuteTime" :label="$t('datasource.slowStaticTable[3]')" width="120" :sortable="true" />
+        <el-table-column prop="avgExecuteTime" :label="$t('datasource.slowStaticTable[4]')" width="130" :sortable="true" />
+        <el-table-column prop="totalScanRows" :label="$t('datasource.slowStaticTable[5]')" width="110" :sortable="true" />
+        <el-table-column prop="avgScanRows" :label="$t('datasource.slowStaticTable[6]')" width="120" :sortable="true" />
+        <el-table-column prop="totalRandomScanRows" :label="$t('datasource.slowStaticTable[7]')" width="130" :sortable="true" />
+        <el-table-column prop="avgRandomScanRows" :label="$t('datasource.slowStaticTable[8]')" width="140" :sortable="true" />
+        <el-table-column prop="totalOrderScanRows" :label="$t('datasource.slowStaticTable[9]')" width="130" :sortable="true" />
+        <el-table-column prop="avgOrderScanRows" :label="$t('datasource.slowStaticTable[10]')" width="140" :sortable="true" />
+        <el-table-column prop="avgReturnRows" :label="$t('datasource.slowStaticTable[11]')" width="120" :sortable="true" />
+        <el-table-column prop="avgLockTime" :label="$t('datasource.slowStaticTable[12]')" width="130" :sortable="true" />
+        <el-table-column prop="firstExecuteTime" :label="$t('datasource.slowStaticTable[13]')" width="140" align="center" :sortable="true">
+          <template #default="scope">
+            <span>{{ dayjs.utc(scope.row.firstExecuteTime).local().format('YYYY-MM-DD HH:mm:ss') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="finalExecuteTime" :label="$t('datasource.slowStaticTable[14]')" width="140" align="center" :sortable="true">
+          <template #default="scope">
+            <span>{{ dayjs.utc(scope.row.finalExecuteTime).local().format('YYYY-MM-DD HH:mm:ss') }}</span>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        v-model:currentPage="aggPage.currentPage"
+        v-model:pageSize="aggPage.pageSize"
+        :total="aggPage.total"
+        :page-sizes="[10, 20, 30, 40]"
+        class="pagination"
+        layout="total,sizes,prev,pager,next"
+        background
+        small
+        @size-change="aggHandleSizeChange"
+        @current-change="aggHandleCurrentChange"
+      />
+    </el-tab-pane>
+    <el-tab-pane :label="$t('datasource.detail')" :name="3">
+      <template #label>
+        <span>{{ $t("datasource.detail") }}
+        </span>
+      </template>
+      <el-table
+        size="small"
+        :data="tableDatas"
+        style="width: 100%"
+        v-loading="loading"
+        :default-sort="{ prop: 'startTime', order: 'descending' }"
+        @sort-change="handleSortChange"
+        :header-cell-class-name="
+          () => {
+            return 'grid-header'
+          }
+        "
+      >
+        <el-table-column prop="debugQueryId" :label="$t('datasource.sqlID')" width="130" fixed="left" :sortable="true">
+        <template #default="scope">
+            <a class="table-wrapper-table-id" @click="gotoSqlDetail(scope.row.debugQueryId)">{{ scope.row.debugQueryId }}</a>
+        </template>
+        </el-table-column>
+        <el-table-column prop="sqlTemplate" :label="$t('datasource.slowLogTable[2]')" min-width="250" fixed="left" :sortable="true">
+          <template #default="scope">
+            <span v-if="scope.row.sqlTemplate && scope.row.sqlTemplate.length > 35">
+              <el-popover width="300" trigger="hover" :content="scope.row.sqlTemplate" popper-class="sql-popover-tip">
+                <template #reference>
+                  <span>{{ scope.row.sqlTemplate.substr(0, 35) + '...' }}</span>
+                </template>
+              </el-popover>
+            </span>
+            <span v-else>{{ scope.row.sqlTemplate }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="startTime" :label="$t('datasource.slowLogTable[0]')" width="140" align="center" :sortable="true">
+          <template #default="scope">
+            <span>{{ dayjs.utc(scope.row.startTime).local().format('YYYY-MM-DD HH:mm:ss') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="finishTime" :label="$t('datasource.slowLogTable[1]')" width="140" align="center" :sortable="true">
+          <template #default="scope">
+            <span>{{ dayjs.utc(scope.row.finishTime).local().format('YYYY-MM-DD HH:mm:ss') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="dbName" :label="$t('datasource.slowLogTable[3]')" width="80" :sortable="true" />
+        <el-table-column prop="clientAddr" :label="$t('datasource.slowLogTable[4]')" width="110" :sortable="true" />
+        <el-table-column prop="schemaName" :label="$t('datasource.slowLogTable[5]')" width="100" :sortable="true" />
+        <el-table-column prop="dbTime" :label="$t('datasource.slowLogTable[6]')" width="100" :sortable="true" />
+        <el-table-column prop="cpuTime" :label="$t('datasource.slowLogTable[7]')" width="80" :sortable="true" />
+        <el-table-column prop="dataIoTime" :label="$t('datasource.slowLogTable[8]')" width="70" :sortable="true" />
+        <el-table-column prop="parseTime" :label="$t('datasource.slowLogTable[9]')" width="90" :sortable="true" />
+        <el-table-column prop="plExecutionTime" :label="$t('datasource.slowLogTable[10]')" width="120" :sortable="true" />
+        <el-table-column prop="lockWaitTime" :label="$t('datasource.slowLogTable[11]')" width="90" :sortable="true" />
+        <el-table-column prop="nTuplesReturned" :label="$t('datasource.slowLogTable[12]')" width="120" :sortable="true" />
+        <el-table-column prop="nreturnedRows" :label="$t('datasource.slowLogTable[13]')" width="100" :sortable="true" />
+        <el-table-column prop="uniqueQueryId" :label="$t('datasource.slowLogTable[14]')" width="120" :sortable="true" />
         <el-table-column :label="$t('datasource.trackTable[9]')" align="center" fixed="right" width="80">
           <template #default="scope">
             <el-link type="primary" @click="handleModal(scope.row)">{{ $t('datasource.diagnosis') }}</el-link>
@@ -88,8 +201,9 @@
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
       />
-    </div>
-  </div>
+    </el-tab-pane>
+  </el-tabs>
+
 </template>
 
 <script lang="ts" setup>
@@ -102,10 +216,23 @@ import timezone from 'dayjs/plugin/timezone'
 import { Refresh, Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import { i18n } from '@/i18n'
+import LazyLine from "@/components/echarts/LazyLine.vue";
+import { useMonitorStore } from "@/store/monitor";
+import { toFixed } from "@/shared";
+import { storeToRefs } from "pinia";
+import { getInstanceInfo } from "@/api/observability";
+import { useIntervalTime } from "@/hooks/time";
+import { tabKeys } from "@/api/common";
 const { t } = useI18n()
+import moment from "moment"
+
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
+
+const clusterNodeId = ref()
+const placeholders = ref<string>("")
 
 type Res =
   | {
@@ -120,9 +247,12 @@ type AddTaskParam = {
   clusterId: string
   nodeId: string
   dbName: string
+  schemaName: string
 }
 const emit = defineEmits(['addTask'])
 const tableDatas = ref<Array<any>>([])
+const tableAggDatas = ref<Array<any>>([])
+const aggLoading = ref(false);
 const dbList = ref<Array<any>>([])
 const searched = ref(false)
 const cluster = ref<Array<any>>([])
@@ -131,6 +261,7 @@ const addTaskParam = ref<AddTaskParam>({
   clusterId: '',
   nodeId: '',
   dbName: '',
+  schemaName: ''
 })
 
 const handleModal = (row: any) => {
@@ -139,6 +270,7 @@ const handleModal = (row: any) => {
     clusterId: row.clusterId,
     nodeId: row.nodeId,
     dbName: row.dbName,
+    schemaName: row.schemaName
   }
   emit('addTask', addTaskParam.value)
 }
@@ -152,10 +284,19 @@ const page = reactive({
   pageSize: 10,
   currentPage: 1,
   total: 0,
+  orderByColumn : 'startTime',
+  isAsc : 'desc'
+})
+const aggPage = reactive({
+  pageSize: 10,
+  currentPage: 1,
+  total: 0,
+  orderByColumn : 'totalExecuteTime',
+  isAsc : 'desc'
 })
 const queryData = computed(() => {
   const { dbName, dateValue } = formData
-  const { pageSize: row, currentPage: current } = page
+  const { pageSize: row, currentPage: current, orderByColumn: column, isAsc : order} = page
   const queryObj = {
     startTime: dateValue.length ? dateValue[0] : null,
     finishTime: dateValue.length ? dateValue[1] : null,
@@ -164,6 +305,24 @@ const queryData = computed(() => {
     pageSize: row,
     nodeId: cluster.value.length ? cluster.value[1] : '',
     queryCount: true,
+    orderByColumn: column,
+    isAsc: order
+  }
+  return queryObj
+})
+const queryAggData = computed(() => {
+  const { dbName, dateValue } = formData
+  const { pageSize: row, currentPage: current, orderByColumn: column, isAsc : order } = aggPage
+  const queryObj = {
+    startTime: dateValue.length ? dateValue[0] : null,
+    finishTime: dateValue.length ? dateValue[1] : null,
+    dbName,
+    pageNum: current,
+    pageSize: row,
+    nodeId: cluster.value.length ? cluster.value[1] : '',
+    queryCount: true,
+    orderByColumn: column,
+    isAsc: order
   }
   return queryObj
 })
@@ -174,16 +333,22 @@ const handleQuery = () => {
     return
   }
   page.currentPage = 1
+  aggPage.currentPage = 1
   requestData()
+  requestAggData()
+  load();
 }
 const handleReset = () => {
   page.currentPage = 1
+  aggPage.currentPage = 1
   formData.dateValue = []
   if (!queryData.value.nodeId) {
     ElMessage.warning(t('datasource.pleaseSelectInstance'))
     return
   }
   requestData()
+  requestAggData()
+  requestMetricData()
 }
 const changePageCurrent = (data: number) => {
   Object.assign(page, data)
@@ -196,6 +361,31 @@ const handleClusterValue = (val: any) => {
   if (cluster.value.length > 0) dbData(val[1])
 }
 
+const aggChangePageCurrent = (data: number) => {
+  Object.assign(aggPage, data)
+  requestAggData()
+}
+
+const handleSortChange = ({ column, prop, order }) => {
+   const sortedProp = prop;
+   const sortOrder = order === 'ascending' ? 'asc' : 'desc';
+   page.currentPage = 1
+   page.orderByColumn = sortedProp,
+   page.isAsc = sortOrder
+   tableDatas.value = []
+   requestData()
+};
+
+const handleAggSortChange = ({ column, prop, order }) => {
+   const sortedProp = prop;
+   const sortOrder = order === 'ascending' ? 'asc' : 'desc';
+   aggPage.currentPage = 1
+   aggPage.orderByColumn = sortedProp,
+   aggPage.isAsc = sortOrder
+   tableAggDatas.value = []
+   requestAggData()
+};
+
 const { data: ret, run: dbData } = useRequest(
   (nodeId: string) => {
     return ogRequest.get('/sqlDiagnosis/api/v1/clusters/' + nodeId + '/instances', '')
@@ -203,7 +393,7 @@ const { data: ret, run: dbData } = useRequest(
   { manual: true }
 )
 
-const { data: res, run: requestData } = useRequest(
+const { loading, data: res, run: requestData } = useRequest(
   () => {
     const clusterId = cluster.value.length ? cluster.value[0] : ''
     const nodeId = queryData.value.nodeId
@@ -240,28 +430,195 @@ watch(res, (res: Res) => {
   }
 })
 
-const props = defineProps<{
-  logData: string[]
-  pages: {
-    pageSize: number
-    currentPage: number
-    total: number
+const { data: aggResult, run: requestAggData } = useRequest(
+  () => {
+    aggLoading.value = true;
+    const clusterId = cluster.value.length ? cluster.value[0] : ''
+    const nodeId = queryAggData.value.nodeId
+    return ogRequest
+      .get('/sqlDiagnosis/api/v1/slowSqls/aggData', { ...queryAggData.value })
+      .then(function (res) {
+        res.records.forEach((element: { clusterId: any; nodeId: any }) => {
+          element.nodeId = nodeId
+          element.clusterId = clusterId
+        })
+        return res
+      })
+      .catch(function (res) {
+        tableAggDatas.value = []
+        Object.assign(aggPage, { pageSize: aggPage.pageSize, total: 0, currentPage: 1 })
+      })
+      .finally(function () {
+        aggLoading.value = false;
+      });
+  },
+  { manual: true }
+)
+type aggRes =
+  | {
+      records: string[]
+      pageNum: number
+      total: number
+    }
+  | undefined
+watch(aggResult, (aggResult: aggRes) => {
+  if (aggResult && Object.keys(aggResult).length) {
+    tableAggDatas.value = aggResult.records
+    Object.assign(aggPage, { pageSize: aggPage.pageSize, total: aggResult.total })
+  } else {
+    tableAggDatas.value = []
+    Object.assign(aggPage, { pageSize: aggPage.pageSize, total: 0, currentPage: 1 })
   }
-}>()
-const tableData = ref<Array<any>>([])
+})
+
+const props = withDefaults(defineProps<{ tabId: string }>(), {});
+const tab = 2;
+
+interface LineData {
+  name: string;
+  data: any[];
+  [other: string]: any;
+}
+interface MetricsData {
+  slowSQL: LineData[];
+  time: string[];
+  message: string;
+  threshold: string;
+}
+const metricsData = ref<MetricsData>({
+  slowSQL: [],
+  time: [],
+  message: '',
+  threshold: ''
+});
+const {
+  updateCounter,
+  sourceType,
+  autoRefreshTime,
+  tabNow,
+  nodeId,
+} = storeToRefs(useMonitorStore(props.tabId));
+
+// same for every page in index
+const timer = ref<number>();
+onMounted(() => {
+  load();
+});
 watch(
-  () => props.pages,
-  (newVal) => {
-    Object.assign(page, newVal)
+  updateCounter,
+  () => {
+    clearInterval(timer.value);
+    if (tabNow.value === tabKeys.InstanceMonitorInstanceInfo) {
+      if (updateCounter.value.source === sourceType.value.INSTANCE) {
+        load();
+      }
+      if (updateCounter.value.source === sourceType.value.MANUALREFRESH) load();
+      if (updateCounter.value.source === sourceType.value.TIMETYPE) load();
+      if (updateCounter.value.source === sourceType.value.TIMERANGE) load();
+      if (updateCounter.value.source === sourceType.value.TABCHANGE) load();
+      const time = autoRefreshTime.value;
+      timer.value = useIntervalTime(
+        () => {
+          load();
+        },
+        computed(() => time * 1000)
+      );
+    }
+  },
+  { immediate: false }
+);
+
+// load data
+const load = (checkTab?: boolean, checkRange?: boolean) => {
+  const nodeId = queryData.value.nodeId
+  if (!nodeId) return;
+  requestMetricData();
+};
+const { data: indexData, run: requestMetricData } = useRequest(
+  () => {
+    const clusterId = cluster.value.length ? cluster.value[0] : '';
+    const instanceId = queryData.value.nodeId;
+    const sTime = queryAggData.value.startTime;
+    const eTime = queryAggData.value.finishTime;
+    const dbName = queryData.value.dbName;
+    let start = 0
+    let end = 0
+    let step = 0
+    if(sTime === null || eTime === null){
+      const _time = moment()
+      end = Number.parseInt(`${_time.subtract(60, 'second').toDate().getTime() / 1000}`)
+      start = Number.parseInt(`${_time.subtract(24 * 7, 'hour').toDate().getTime() / 1000}`)
+    }else{
+      start = Number.parseInt(`${new Date(sTime).getTime() / 1000}`)
+      end= Number.parseInt(`${new Date(eTime).getTime() / 1000}`)
+    }
+    step = Math.max(14, Number.parseInt(`${Math.round((end - start) / 260)}`))
+    return ogRequest.get('/sqlDiagnosis/api/v1/slowSqls/chart', {
+      id: instanceId,
+      start: start,
+      end: end,
+      step: step,
+      dbName: dbName
+    })
+    .then(function (res) {
+      if (res.msg != null) {
+        placeholders.value = res.msg
+      }else{
+        placeholders.value = 'success'
+        return res
+      }
+    })
+    .catch(function (res) {
+      placeholders.value = 'error'
+    })
+  }, {
+  manual: true,
+});
+watch(
+  indexData,
+  () => {
+    // clear data
+    metricsData.value.slowSQL = [];
+    metricsData.value.threshold = '';
+
+    const baseData = indexData.value;
+    if (!baseData) return;
+
+    // tip info
+    metricsData.value.message = baseData.msg
+
+    // slow SQL
+    slowSQL3sInfo.value.option = []
+    if (baseData.INSTANCE_DB_SLOWSQL) {
+      let tempData: string[] = [];
+      baseData.INSTANCE_DB_SLOWSQL.forEach((d: number) => {
+        tempData.push(d.toString());
+      });
+      metricsData.value.slowSQL.push({
+        data: tempData,
+        name: queryData.value.dbName ? queryData.value.dbName + t("instanceMonitor.instance.dbSlowSQLQty") : t("instanceMonitor.instance.slowSQLQty"),
+      });
+      slowSQL3sInfo.value.option.push({ name: t("instanceMonitor.instance.slowSQLQty"), value: t("instanceMonitor.instance.slowSQLQtyContent") })
+    }
+
+    // time
+    metricsData.value.time = baseData.time;
+
+    //threshold
+    metricsData.value.threshold=baseData.slowSqlThreshold
   },
   { deep: true }
-)
-watch(
-  () => props.logData,
-  (newVal) => {
-    tableData.value = newVal
-  }
-)
+);
+
+const slowSQL3s = ref();
+const download = (title: string, ref: any) => {
+  ref.download(title)
+}
+
+const slowSQL3sInfo = ref<any>({
+  title: t("app.lineOverview"),
+  option: []
+})
 
 const handleSizeChange = (val: number) => {
   page.currentPage = 1
@@ -272,6 +629,56 @@ const handleCurrentChange = (val: number) => {
   page.currentPage = val
   changePageCurrent(page.currentPage)
 }
+
+const aggHandleSizeChange = (val: number) => {
+  aggPage.currentPage = 1
+  aggPage.pageSize = val
+  aggChangePageCurrent(aggPage.currentPage)
+}
+const aggHandleCurrentChange = (val: number) => {
+  aggPage.currentPage = val
+  aggChangePageCurrent(aggPage.currentPage)
+}
+
+const getInstallInstance = async () => {
+  try {
+    const res = await ogRequest.get('/sqlDiagnosis/api/v1/plugin/instance');
+    if(res.code === 200) {
+      return res.data;
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+const router = useRouter()
+const gotoSqlDetail = async(debugQueryId: string) => {
+  const result = await getInstallInstance()
+  const instanceId = queryData.value.nodeId;
+  if(!result){
+     ElMessage.warning(t('datasource.pleaseInstallInstance'))
+     return
+  }else{
+    window.$wujie?.props.methods.jump({
+      name: `Static-pluginObservability-instanceVemSql_detail`,
+      query: {
+        dbid : instanceId,
+        id : debugQueryId
+      },
+    })
+  }
+}
+
+onMounted(() => {
+  // @ts-ignore
+  const wujie = window.$wujie
+  if (wujie) {
+    // Monitoring platform language change
+    wujie?.bus.$on('opengauss-locale-change', (val: string) => {
+      requestMetricData()
+    })
+  }
+})
 </script>
 
 <style lang="scss" scoped>
@@ -309,6 +716,48 @@ const handleCurrentChange = (val: number) => {
     .noResult .barLine-chart {
       display: none;
     }
+  }
+}
+.tab-wrapper {
+  position: relative;
+  &-filter {
+    z-index: 10;
+    position: absolute;
+    padding-right: 16px;
+    display: flex;
+    align-items: center;
+    right: 0;
+    top: 0px;
+    height: 40px;
+    background-color: $og-sub-background-color;
+    > div:not(:last-of-type),
+    > span,
+    > button {
+      margin-right: 4px;
+    }
+  }
+}
+.message-error {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  > div {
+    font-size: 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 4px 12px;
+    gap: 4px;
+    border: 1px solid var(--border-2);
+    border-radius: 2px;
+  }
+
+  &.center {
+    position: unset;
+    justify-content: center;
+    flex-direction: row;
   }
 }
 </style>

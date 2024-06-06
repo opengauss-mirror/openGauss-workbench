@@ -69,6 +69,8 @@ public class DiagnosisTaskDO {
     String nodeId;
     @TableField("db_name")
     String dbName;
+    @TableField("schema_name")
+    String schemaName;
     @TableField("task_name")
     String taskName;
     @TableField("topology_map")
@@ -130,6 +132,7 @@ public class DiagnosisTaskDO {
         this.nodeId = taskDTO.getNodeId();
         this.sqlId = taskDTO.getSqlId();
         this.dbName = taskDTO.getDbName();
+        this.schemaName = taskDTO.getSchemaName();
         this.taskName = taskDTO.getTaskName();
         this.taskType = TaskTypeEnum.MANUAL;
         this.sql = taskDTO.getSql();

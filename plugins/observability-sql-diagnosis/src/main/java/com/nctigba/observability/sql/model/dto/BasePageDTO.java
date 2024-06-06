@@ -16,11 +16,11 @@
  *  BasePageDTO.java
  *
  *  IDENTIFICATION
- *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/service/impl/BasePageDTO.java
+ *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/model/dto/BasePageDTO.java
  *
  *  -------------------------------------------------------------------------
  */
-package com.nctigba.observability.sql.service.impl;
+package com.nctigba.observability.sql.model.dto;
 
 import java.util.ArrayList;
 import java.util.Arrays;

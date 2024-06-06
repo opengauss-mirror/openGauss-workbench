@@ -338,4 +338,14 @@ public class SqlConstants {
      * select all function
      */
     public static final String ALL_FUNCTION = "select distinct proname from pg_proc where 1=1;";
+
+    /**
+     * get schema name sql
+     */
+    public static final String GET_SCHEMA_NAME_SQL = "SELECT nspname FROM pg_namespace order by nspname;";
+
+    /**
+     * get database name sql
+     */
+    public static final String GET_DATABASE_SQL = "SELECT datname FROM pg_database;";
 }

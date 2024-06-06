@@ -62,10 +62,31 @@ public class ClusterManager {
     @AutowiredType(Type.MAIN_PLUGIN)
     private OpsFacade opsFacade;
 
+    /**
+     * Get database name list
+     *
+     * @param nodeId String
+     * @return List
+     */
     public List<String> databaseList(String nodeId) {
         try {
             setCurrentDatasource(nodeId, null);
             return dbMapper.dataBaseList();
+        } finally {
+            pool();
+        }
+    }
+
+    /**
+     * Get schema name list
+     *
+     * @param nodeId String
+     * @return List
+     */
+    public List<String> schemaList(String nodeId) {
+        try {
+            setCurrentDatasource(nodeId, null);
+            return dbMapper.schemaList();
         } finally {
             pool();
         }
@@ -78,21 +99,21 @@ public class ClusterManager {
      * @see ClusterManager#pool()
      */
     public void setCurrentDatasource(String nodeId, String dbname) {
-		if (StringUtils.isBlank(nodeId)) {
-			throw new RuntimeException("node is null");
-		}
+        if (StringUtils.isBlank(nodeId)) {
+            throw new RuntimeException("node is null");
+        }
         var ds = (DynamicRoutingDataSource) dataSource;
         if (ds.getDataSources().containsKey(nodeId)) {
             DynamicDataSourceContextHolder.push(nodeId);
             return;
         }
         var node = getOpsNodeById(nodeId);
-		if (node == null) {
-			throw new RuntimeException("node info not found");
-		}
-		if (StringUtils.isBlank(dbname)) {
-			dbname = node.getDbName();
-		}
+        if (node == null) {
+            throw new RuntimeException("node info not found");
+        }
+        if (StringUtils.isBlank(dbname)) {
+            dbname = node.getDbName();
+        }
         var dataSourceBuilder = DataSourceBuilder.create();
         dataSourceBuilder.driverClassName("org.opengauss.Driver");
         dataSourceBuilder.url("jdbc:opengauss://" + node.getPublicIp() + ":" + node.getDbPort() + "/" + dbname);
@@ -113,25 +134,31 @@ public class ClusterManager {
     public List<OpsClusterVO> getAllOpsCluster() {
         List<OpsClusterVO> opsClusterVOList = new ArrayList<>();
         try {
-			if (opsFacade != null) {
-				opsClusterVOList = opsFacade.listCluster();
-			}
+            if (opsFacade != null) {
+                opsClusterVOList = opsFacade.listCluster();
+            }
         } catch (Exception e) {
             log.info("get all ops cluster fail:{}", e.getMessage());
         }
         return opsClusterVOList;
     }
 
+    /**
+     * Get OpsClusterId by nodeId
+     *
+     * @param nodeId String
+     * @return String
+     */
     public String getOpsClusterIdByNodeId(String nodeId) {
-		if ("0".equals(nodeId)) {
-			return "0";
-		}
+        if ("0".equals(nodeId)) {
+            return "0";
+        }
         for (OpsClusterVO cluster : getAllOpsCluster()) {
-			if (cluster.getClusterNodes().stream().anyMatch(node -> {
-				return nodeId.equals(node.getNodeId());
-			})) {
-				return cluster.getClusterId();
-			}
+            if (cluster.getClusterNodes().stream().anyMatch(node -> {
+                return nodeId.equals(node.getNodeId());
+            })) {
+                return cluster.getClusterId();
+            }
         }
         throw new RuntimeException("node info not found");
     }
@@ -156,37 +183,72 @@ public class ClusterManager {
                     "jdbc:opengauss://" + getPublicIp() + ":" + getDbPort() + "/" + dbname + "?TimeZone=UTC",
                     getDbUser(), getDbUserPassword());
             try (var preparedStatement = conn.prepareStatement("select 1");
-                 var rs = preparedStatement.executeQuery();) {
+                 var ignored = preparedStatement.executeQuery()) {
                 return conn;
-            } finally {
+            }
+        }
+
+        public Connection connection(String dbname, String schemaName) throws SQLException {
+            var conn = DriverManager.getConnection(
+                    "jdbc:opengauss://" + getPublicIp() + ":" + getDbPort() + "/" + dbname + "?currentSchema="
+                            + schemaName + "&TimeZone=UTC",
+                    getDbUser(), getDbUserPassword());
+            try (var preparedStatement = conn.prepareStatement("select 1");
+                 var ignored = preparedStatement.executeQuery()) {
+                return conn;
             }
         }
     }
 
     /**
-     * 直接获取指定节点的连接
+     * Get connection by nodeId
+     *
+     * @param nodeId String
+     * @return Connection
      */
     public Connection getConnectionByNodeId(String nodeId) throws SQLException {
         return getOpsNodeById(nodeId).connection();
     }
 
+    /**
+     * Get connection by nodeId
+     *
+     * @param nodeId String
+     * @param dbname String
+     * @return Connection
+     */
     public Connection getConnectionByNodeId(String nodeId, String dbname) throws SQLException {
         return getOpsNodeById(nodeId).connection(dbname);
     }
 
     /**
-     * 获取指定节点信息
+     * Get connection by nodeId
+     *
+     * @param nodeId     String
+     * @param dbname     String
+     * @param schemaName String
+     * @return Connection
+     */
+    public Connection getConnectionByNodeId(String nodeId, String dbname, String schemaName) throws SQLException {
+        return getOpsNodeById(nodeId).connection(dbname, schemaName);
+    }
+
+    /**
+     * Get OpsClusterNodeVOSub by nodeId
+     *
+     * @param nodeId String
+     * @return OpsClusterNodeVOSub
      */
     public OpsClusterNodeVOSub getOpsNodeById(String nodeId) {
         List<OpsClusterVO> opsClusterVOList = getAllOpsCluster();
-		if (CollectionUtils.isEmpty(opsClusterVOList)) {
-			return null;
-		}
+        if (CollectionUtils.isEmpty(opsClusterVOList)) {
+            return null;
+        }
         for (OpsClusterVO cluster : opsClusterVOList) {
             List<OpsClusterNodeVO> nodes = cluster.getClusterNodes();
-			if (CollectionUtils.isEmpty(nodes)) {
-				continue;
-			}
+            if (CollectionUtils.isEmpty(nodes)) {
+                continue;
+            }
             for (OpsClusterNodeVO clusterNode : nodes) {
                 if (nodeId.equals(clusterNode.getNodeId())) {
                     return new OpsClusterNodeVOSub(clusterNode, cluster.getVersion());

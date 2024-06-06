@@ -76,7 +76,8 @@ public class SqlExecutor {
             task.setState(TaskStateEnum.SQL_RUNNING);
             mapper.updateById(task);
             var rsList = new ArrayList<String>();
-            try (var conn = clusterManager.getConnectionByNodeId(task.getNodeId(), task.getDbName())) {
+            try (var conn = clusterManager.getConnectionByNodeId(task.getNodeId(), task.getDbName(),
+                    task.getSchemaName())) {
                 Long sessionid = null;
                 int count = 0;
                 while (count++ < 100) {
