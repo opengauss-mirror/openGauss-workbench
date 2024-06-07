@@ -70,7 +70,29 @@ public class PageController extends ControllerConfig {
             MetricsLine.IO_AVG_REPONSE_TIME_WRITE,
             MetricsLine.IO_AVG_REPONSE_TIME_RW,
             MetricsLine.IO_DISK_USAGE,
-            MetricsLine.IO_DISK_INODE_USAGE
+            MetricsLine.IO_DISK_INODE_USAGE,
+            MetricsLine.IO_DISK_DB_VOLUME_DATA,
+            MetricsLine.IO_DISK_DB_VOLUME_XLOG,
+            MetricsLine.IO_DISK_DB_USAGE_DATA,
+            MetricsLine.IO_DISK_DB_USAGE_XLOG,
+            MetricsLine.IO_DISK_DB_VOLUME_TOTAL,
+            MetricsLine.IO_DISK_XLOG_VOLUME_TOTAL,
+            MetricsLine.IO_DISK_DB_VOLUME_USED,
+            MetricsLine.IO_DISK_DB_VOLUME_FREE,
+            MetricsLine.IO_DISK_DB_USAGE_TOTAL,
+            MetricsLine.IO_DISK_XLOG_USAGE_TOTAL,
+            MetricsLine.IO_DISK_DB_USAGE_USED,
+            MetricsLine.IO_DISK_DB_USAGE_FREE,
+            MetricsLine.IO_DISK_XLOG_VOLUME_USED,
+            MetricsLine.IO_DISK_XLOG_USAGE_USED,
+            MetricsLine.IO_DISK_DB_VOLUME_OTHER,
+            MetricsLine.IO_DISK_DB_USAGE_OTHER,
+            MetricsLine.IO_DISK_XLOG_VOLUME_OTHER,
+            MetricsLine.IO_DISK_XLOG_USAGE_OTHER,
+            MetricsLine.IO_DISK_DB_VOLUME_OTHER_TWO,
+            MetricsLine.IO_DISK_DB_USAGE_OTHER_TWO,
+            MetricsLine.IO_DISK_XLOG_VOLUME_OTHER_TWO,
+            MetricsLine.IO_DISK_XLOG_USAGE_OTHER_TWO
     };
 
     private static final MetricsValue[] IO_TABLE = {

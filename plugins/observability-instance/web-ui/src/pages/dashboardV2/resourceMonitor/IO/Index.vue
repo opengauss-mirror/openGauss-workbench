@@ -3,29 +3,94 @@
     <span>{{$t('echart.linkage')}}:&nbsp;&nbsp;</span> <span><el-switch v-model="isLinkage" @change="changeChartLinkage"/></span>
   </div>
   <el-row :gutter="12">
-    <el-col :span="12">
+    <el-col :span=spanParams.values[0]>
       <my-card
-        :title="$t('resourceMonitor.io.ioDiskUsage')"
+        :title="$t('resourceMonitor.io.ioDbDiskUsage')"
+        height="300"
+        :bodyPadding="false"
+        :info="dbDiskInfo"
+        :showBtns="true"
+        @download="(title) => download(title, ioDbDiskUsage)"
+      >
+        <div class="charts-container">
+          <div style="width: 50%;  height: 100%;" v-if="metricsData.xLogShouldShow">
+            <LazyLine
+              ref="ioDbDiskUsage"
+              :tabId="props.tabId"
+              :formatter="toFixed"
+              :data="metricsData.dbDiskUsage"
+              :xData="metricsData.time"
+              :unit="'%'"
+              :max="100"
+              :min="0"
+              :chartContent=metricsData.dbChartContent
+              :interval="25"
+              :tool-tips-exclude-zero="true"
+              :isLinkage="isLinkage"
+            />
+          </div>
+          <div style="width: 100%;  height: 100%;" v-else>
+            <LazyLine
+              ref="ioDbDiskUsage"
+              :tabId="props.tabId"
+              :formatter="toFixed"
+              :data="metricsData.dbDiskUsage"
+              :xData="metricsData.time"
+              :unit="'%'"
+              :max="100"
+              :min="0"
+              :dbDiskIo="true"
+              :chartContent=metricsData.dbChartContent
+              :interval="25"
+              :tool-tips-exclude-zero="true"
+              :isLinkage="isLinkage"
+            />
+          </div>
+          <div style="width: 50%;  height: 100%;" v-if="metricsData.xLogShouldShow">
+            <LazyLine
+              ref="ioDbDiskUsage"
+              :tabId="props.tabId"
+              :formatter="toFixed"
+              :data="metricsData.xLogDiskUsage"
+              :xData="metricsData.time"
+              :unit="'%'"
+              :max="100"
+              :min="0"
+              :dbDiskIo="true"
+              :chartContent=metricsData.xLogChartContent
+              :interval="25"
+              :tool-tips-exclude-zero="true"
+              :isLinkage="isLinkage"
+            />
+          </div>
+        </div>
+      </my-card>
+    </el-col>
+    <el-col :span=spanParams.values[1]>
+      <my-card
+        :title="$t('resourceMonitor.io.ioOtherDiskUsage')"
         height="300"
         :bodyPadding="false"
         :info="ioDiskInfo"
         :showBtns="true"
-        @download="(title) => download(title, ioDiskUsage)"
+        @download="(title) => download(title, ioOtherDiskUsage)"
       >
         <LazyLine
-          ref="ioDiskUsage"
+          ref="ioOtherDiskUsage"
           :tabId="props.tabId"
           :formatter="toFixed"
           :data="deviceIODiskUsage"
           :xData="metricsData.time"
           :unit="'%'"
+          :max="100"
+          :min="0"
           :tool-tips-sort="'desc'"
           :tool-tips-exclude-zero="true"
           :isLinkage="isLinkage"
         />
       </my-card>
     </el-col>
-    <el-col :span="12">
+    <el-col :span=spanParams.values[2]>
       <my-card
         :title="$t('resourceMonitor.io.ioDiskInodeUsage')"
         height="300"
@@ -41,6 +106,8 @@
           :data="deviceIODiskInodeUsage"
           :xData="metricsData.time"
           :unit="'%'"
+          :max="100"
+          :min="0"
           :tool-tips-sort="'desc'"
           :tool-tips-exclude-zero="true"
           :isLinkage="isLinkage"
@@ -253,6 +320,8 @@ import { useParamsStore } from "@/store/params";
 const props = withDefaults(defineProps<{ tabId: string }>(), {});
 const { t } = useI18n();
 
+const spanParams = reactive({ values: [8, 8, 8] });
+
 interface LineData {
   name: string;
   data: any[];
@@ -266,6 +335,18 @@ interface MetricsData {
   ioUse: LineData[];
   ioTime: LineData[];
   time: string[];
+  dbDiskUsage: LineData[];
+  dbVolume: string[];
+  dbDiskName: string;
+  xLogShouldShow: boolean;
+  xLogDiskUsage: LineData[];
+  xLogVolume: string[];
+  xLogDiskName: string;
+  dbDiskData: string[];
+  xLogDiskData: string[];
+  dbChartContent: any[];
+  xLogChartContent: any[];
+
 }
 const metricsData = ref<MetricsData>({
   table: [],
@@ -275,6 +356,18 @@ const metricsData = ref<MetricsData>({
   ioUse: [],
   ioTime: [],
   time: [],
+  dbDiskUsage: [],
+  dbVolume: [],
+  dbDiskName: '',
+  xLogShouldShow: false,
+  xLogDiskUsage: [],
+  xLogVolume: [],
+  xLogDiskName: '',
+  dbDiskData: [],
+  xLogDiskData: [],
+  dbChartContent: [],
+  xLogChartContent: []
+
 });
 const multipleSelection = ref<string[]>([]);
 const deviceIOPS = computed(() => {
@@ -463,6 +556,10 @@ watch(
   { immediate: false }
 );
 
+const getWidth = computed(() => {
+  return spanParams.values[3] + '%';
+});
+
 // load data
 const load = (checkTab?: boolean, checkRange?: boolean) => {
   if (!instanceId.value) return;
@@ -480,9 +577,316 @@ watch(
     metricsData.value.ioTime = [];
     metricsData.value.ioDiskUsage = [];
     metricsData.value.ioDiskInodeUsage = [];
+    metricsData.value.dbDiskUsage = [];
+    metricsData.value.dbVolume = [];
+    metricsData.value.dbDiskTitle = '';
+    metricsData.value.xLogDiskUsage = [];
+    metricsData.value.xLogVolume = [];
+    metricsData.value.xLogDiskTitle = '';
+    metricsData.value.xLogShouldShow = false;
+    metricsData.value.dbChartContent = [];
+    metricsData.value.xLogChartContent = [];
     const baseData = indexData.value;
     if (!baseData) return;
 
+    // db disk usage
+    const dataDirKeys = Object.keys(baseData.IO_DISK_DB_VOLUME_DATA);
+    const dataDirName = dataDirKeys[0].split(',')[0]
+    const dataPartName = dataDirKeys[0].split(',')[1]
+    const xLogDirKeys = Object.keys(baseData.IO_DISK_DB_VOLUME_XLOG);
+    const xLogDirName = xLogDirKeys[0].split(',')[0]
+    const xLogPartName = xLogDirKeys[0].split(',')[1]
+    let dbDiskName = ''
+    let xLogDiskName = ''
+    if (xLogDirName.includes(dataDirName) && xLogDirKeys.length === 1) {
+      spanParams.values[0] = 8
+      spanParams.values[1] = 8
+      spanParams.values[2] = 8
+      let totalVolume = 0;
+      for (let key in baseData.IO_DISK_DB_VOLUME_TOTAL) {
+        for (const element of baseData.IO_DISK_DB_VOLUME_TOTAL[key]) {
+            if (element != '0') {
+                totalVolume = toFixed(element / 1024 / 1024);
+                break;
+            }
+        }
+      }
+      const dataKeys = Object.keys(baseData.IO_DISK_DB_USAGE_DATA);
+      dbDiskName = dataKeys[0]
+      metricsData.value.dbDiskTitle = t('resourceMonitor.io.ioDiskName') + dataKeys[0] + '(' + dataPartName + '),' + totalVolume
+      for (let key in baseData.IO_DISK_DB_VOLUME_USED) {
+        let tempData: string[] = [];
+        baseData.IO_DISK_DB_VOLUME_USED[key].forEach((element) => {
+          tempData.push(toFixed(element/1024/1024));
+        });
+        metricsData.value.dbDiskData = tempData
+      }
+      for (let key in baseData.IO_DISK_DB_VOLUME_DATA) {
+        let tempData: string[] = [];
+        baseData.IO_DISK_DB_VOLUME_DATA[key].forEach((element) => {
+          tempData.push(toFixed(element/1024/1024));
+        });
+        metricsData.value.dbVolume.push({
+          data: tempData,
+          areaStyle: {},
+          stack: "Total",
+          name: t('resourceMonitor.io.ioDataDirectory').replace('dataDir',dataDirName)
+        });
+      }
+      for (let key in baseData.IO_DISK_DB_VOLUME_XLOG) {
+        let tempData: string[] = [];
+        baseData.IO_DISK_DB_VOLUME_XLOG[key].forEach((element) => {
+          tempData.push(toFixed(element/1024/1024));
+        });
+        metricsData.value.dbVolume.push({
+          data: tempData,
+          areaStyle: {},
+          stack: "Total",
+          name: t('resourceMonitor.io.ioXLogDirectory').replace('xLogDir',xLogDirName)
+        });
+      }
+      for (let key in baseData.IO_DISK_DB_VOLUME_OTHER) {
+         let tempData: string[] = [];
+         baseData.IO_DISK_DB_VOLUME_OTHER[key].forEach((element) => {
+           tempData.push(toFixed(element/1024/1024));
+         });
+         metricsData.value.dbVolume.push({
+           data: tempData,
+           areaStyle: {},
+           stack: "Total",
+           name: t('resourceMonitor.io.ioOtherDirectory')
+         });
+      }
+      for (let key in baseData.IO_DISK_DB_USAGE_DATA) {
+        let tempData: string[] = [];
+        baseData.IO_DISK_DB_USAGE_DATA[key].forEach((element) => {
+          tempData.push(toFixed(element));
+        });
+        metricsData.value.dbDiskUsage.push({
+          data: tempData,
+          areaStyle: {},
+          stack: "Total",
+          name: t('resourceMonitor.io.ioDataDirectory').replace('dataDir',dataDirName)
+        });
+      }
+      for (let key in baseData.IO_DISK_DB_USAGE_XLOG) {
+        let tempData: string[] = [];
+        baseData.IO_DISK_DB_USAGE_XLOG[key].forEach((element) => {
+          tempData.push(toFixed(element));
+        });
+        metricsData.value.dbDiskUsage.push({
+          data: tempData,
+          areaStyle: {},
+          stack: "Total",
+          name: t('resourceMonitor.io.ioXLogDirectory').replace('xLogDir',xLogDirName)
+        });
+      }
+      for (let key in baseData.IO_DISK_DB_USAGE_OTHER) {
+        let tempData: string[] = [];
+        baseData.IO_DISK_DB_USAGE_OTHER[key].forEach((element) => {
+          tempData.push(toFixed(element));
+        });
+        metricsData.value.dbDiskUsage.push({
+          data: tempData,
+          areaStyle: {},
+          stack: "Total",
+          name: t('resourceMonitor.io.ioOtherDirectory')
+        });
+      }
+      metricsData.value.dbChartContent.push({
+        chartTitle: metricsData.value.dbDiskTitle,
+        chartTitleData: metricsData.value.dbDiskData,
+        volumeData: metricsData.value.dbVolume
+      });
+    } else {
+      metricsData.value.xLogShouldShow = true
+      spanParams.values[0] = 12
+      spanParams.values[1] = 6
+      spanParams.values[2] = 6
+      let totalVolume = 0;
+      for (let key in baseData.IO_DISK_DB_VOLUME_TOTAL) {
+        for (const element of baseData.IO_DISK_DB_VOLUME_TOTAL[key]) {
+            if (element != '0') {
+                totalVolume = toFixed(element / 1024 / 1024);
+                break;
+            }
+        }
+      }
+      const dataKeys = Object.keys(baseData.IO_DISK_DB_USAGE_DATA);
+      dbDiskName = dataKeys[0]
+      metricsData.value.dbDiskTitle = t('resourceMonitor.io.ioDiskName') + dataKeys[0] + '(' + dataPartName + '),' + totalVolume
+      let xLogTotalVolume = 0;
+      for (let key in baseData.IO_DISK_XLOG_VOLUME_TOTAL) {
+        for (const element of baseData.IO_DISK_XLOG_VOLUME_TOTAL[key]) {
+            if (element != '0') {
+                xLogTotalVolume = toFixed(element / 1024 / 1024);
+                break;
+            }
+        }
+      }
+      const xLogKeys = Object.keys(baseData.IO_DISK_DB_USAGE_XLOG);
+      xLogDiskName = xLogKeys[0]
+      metricsData.value.xLogDiskTitle = t('resourceMonitor.io.ioDiskName') + xLogKeys[0] + '(' + xLogPartName + '),' + xLogTotalVolume
+      for (let key in baseData.IO_DISK_DB_VOLUME_USED) {
+        let tempData: string[] = [];
+        baseData.IO_DISK_DB_VOLUME_USED[key].forEach((element) => {
+          tempData.push(toFixed(element/1024/1024));
+        });
+        metricsData.value.dbDiskData = tempData
+      }
+      for (let key in baseData.IO_DISK_XLOG_VOLUME_USED) {
+        let tempData: string[] = [];
+        baseData.IO_DISK_XLOG_VOLUME_USED[key].forEach((element) => {
+          tempData.push(toFixed(element/1024/1024));
+        });
+        metricsData.value.xLogDiskData = tempData
+      }
+      for (let key in baseData.IO_DISK_DB_VOLUME_DATA) {
+        let tempData: string[] = [];
+        baseData.IO_DISK_DB_VOLUME_DATA[key].forEach((element) => {
+          tempData.push(toFixed(element/1024/1024));
+        });
+        metricsData.value.dbVolume.push({
+          data: tempData,
+          areaStyle: {},
+          stack: "Total",
+          name: t('resourceMonitor.io.ioDataDirectory2').replace('dataDir',dataDirName)
+        });
+      }
+      for (let key in baseData.IO_DISK_DB_VOLUME_OTHER_TWO) {
+         let tempData: string[] = [];
+         baseData.IO_DISK_DB_VOLUME_OTHER_TWO[key].forEach((element) => {
+           tempData.push(toFixed(element/1024/1024));
+         });
+         metricsData.value.dbVolume.push({
+           data: tempData,
+           areaStyle: {},
+           stack: "Total",
+           name: t('resourceMonitor.io.ioOtherDirectory')
+         });
+      }
+      for (let key in baseData.IO_DISK_DB_VOLUME_XLOG) {
+        let tempData: string[] = [];
+        if ( key.includes(dataDirName) ){
+          baseData.IO_DISK_DB_VOLUME_XLOG[key].forEach((element) => {
+            tempData.push(toFixed(element/1024/1024));
+          });
+          metricsData.value.dbVolume.push({
+            data: tempData,
+            areaStyle: {},
+            stack: "Total",
+            name: t('resourceMonitor.io.ioXLogDirectory').replace('xLogDir',xLogDirName)
+          });
+        } else {
+          baseData.IO_DISK_DB_VOLUME_XLOG[key].forEach((element) => {
+            tempData.push(toFixed(element/1024/1024));
+          });
+          metricsData.value.xLogVolume.push({
+            data: tempData,
+            areaStyle: {},
+            stack: "Total",
+            name: t('resourceMonitor.io.ioXLogDirectory').replace('xLogDir',xLogDirName)
+          });
+        }
+      }
+      for (let key in baseData.IO_DISK_XLOG_VOLUME_OTHER_TWO) {
+        let tempData: string[] = [];
+        if ( key === dbDiskName ) {
+         baseData.IO_DISK_XLOG_VOLUME_OTHER_TWO[key].forEach((element) => {
+            tempData.push(toFixed(element/1024/1024));
+          });
+          metricsData.value.dbVolume.push({
+            data: tempData,
+            areaStyle: {},
+            stack: "Total",
+            name: t('resourceMonitor.io.ioOtherDirectory')
+          });
+        } else {
+          baseData.IO_DISK_XLOG_VOLUME_OTHER_TWO[key].forEach((element) => {
+            tempData.push(toFixed(element/1024/1024));
+          });
+          metricsData.value.xLogVolume.push({
+            data: tempData,
+            areaStyle: {},
+            stack: "Total",
+            name: t('resourceMonitor.io.ioOtherDirectory')
+          });
+        }
+      }
+      for (let key in baseData.IO_DISK_DB_USAGE_DATA) {
+        let tempData: string[] = [];
+        baseData.IO_DISK_DB_USAGE_DATA[key].forEach((element) => {
+          tempData.push(toFixed(element));
+        });
+        metricsData.value.dbDiskUsage.push({
+          data: tempData,
+          areaStyle: {},
+          stack: "Total",
+          name: t('resourceMonitor.io.ioDataDirectory2').replace('dataDir',dataDirName)
+        });
+      }
+      for (let key in baseData.IO_DISK_DB_USAGE_OTHER_TWO) {
+        let tempData: string[] = [];
+        baseData.IO_DISK_DB_USAGE_OTHER_TWO[key].forEach((element) => {
+          tempData.push(toFixed(element));
+        });
+        metricsData.value.dbDiskUsage.push({
+          data: tempData,
+          areaStyle: {},
+          stack: "Total",
+          name: t('resourceMonitor.io.ioOtherDirectory')
+        });
+      }
+      for (let key in baseData.IO_DISK_DB_USAGE_XLOG) {
+        let tempData: string[] = [];
+        if ( key === dbDiskName ) {
+          baseData.IO_DISK_DB_USAGE_XLOG[key].forEach((element) => {
+            tempData.push(toFixed(element));
+          });
+          metricsData.value.dbDiskUsage.push({
+            data: tempData,
+            areaStyle: {},
+            stack: "Total",
+            name: t('resourceMonitor.io.ioXLogDirectory').replace('xLogDir',xLogDirName)
+          });
+        } else {
+          baseData.IO_DISK_DB_USAGE_XLOG[key].forEach((element) => {
+            tempData.push(toFixed(element));
+          });
+          metricsData.value.xLogDiskUsage.push({
+            data: tempData,
+            areaStyle: {},
+            stack: "Total",
+            name: t('resourceMonitor.io.ioXLogDirectory').replace('xLogDir',xLogDirName)
+          });
+        }
+      }
+      for (let key in baseData.IO_DISK_XLOG_USAGE_OTHER_TWO) {
+        let tempData: string[] = [];
+        if ( key === dbDiskName ) {
+        } else {
+          baseData.IO_DISK_XLOG_USAGE_OTHER_TWO[key].forEach((element) => {
+            tempData.push(toFixed(element));
+          });
+          metricsData.value.xLogDiskUsage.push({
+            data: tempData,
+            areaStyle: {},
+            stack: "Total",
+            name: t('resourceMonitor.io.ioOtherDirectory')
+          });
+        }
+      }
+      metricsData.value.dbChartContent.push({
+        chartTitle: metricsData.value.dbDiskTitle,
+        chartTitleData: metricsData.value.dbDiskData,
+        volumeData: metricsData.value.dbVolume
+      });
+      metricsData.value.xLogChartContent.push({
+        chartTitle: metricsData.value.xLogDiskTitle,
+        chartTitleData: metricsData.value.xLogDiskData,
+        volumeData: metricsData.value.xLogVolume
+      });
+    }
     // table
     for (let index = 0; index < baseData.table.length; index++) {
       const element = baseData.table[index];
@@ -569,6 +973,8 @@ watch(
       metricsData.value.ioTime.push({ data: tempData, name: key + "(读+写)", key });
     }
     for (let key in baseData.IO_DISK_USAGE) {
+      if (key === dbDiskName || key === xLogDiskName)
+        continue;
       let tempData: string[] = [];
       baseData.IO_DISK_USAGE[key].forEach((element) => {
         tempData.push(toFixed(element));
@@ -643,6 +1049,8 @@ watch(
 
 const ioDiskUsage = ref();
 const ioDiskInodeUsage = ref();
+const ioDbDiskUsage = ref();
+const ioOtherDiskUsage = ref();
 const IOPS = ref();
 const rwSecond = ref();
 const queueLength = ref();
@@ -658,6 +1066,15 @@ const ioDiskInfo = ref<any>({
     {
       name: t("resourceMonitor.io.ioDiskUsage"),
       value: t("resourceMonitor.io.ioDiskUsageContent1"),
+    },
+  ],
+});
+const dbDiskInfo = ref<any>({
+  title: t("app.lineOverview"),
+  option: [
+    {
+      name: t("resourceMonitor.io.dbDiskUsage"),
+      value: t("resourceMonitor.io.dbDiskUsageContent"),
     },
   ],
 });
@@ -765,5 +1182,9 @@ const changeChartLinkage = () => {
 .chart-link {
   display: flex;
   justify-content: flex-end;
+}
+.charts-container {
+  display: flex;
+  height: 100%;
 }
 </style>
