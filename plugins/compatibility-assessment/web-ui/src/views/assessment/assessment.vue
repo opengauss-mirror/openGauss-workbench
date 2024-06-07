@@ -769,6 +769,7 @@ const fileDownload = (fileName) => {
         reader.readAsText(blob);
         reader.onload = () => {
           modalContent.value = reader.result;
+          analysisScript(modalContent.value);
         };
         modalVisible.value = true;
       }
@@ -779,7 +780,20 @@ const fileDownload = (fileName) => {
       console.error("Error downloading file:", error);
     });
 };
-
+const analysisScript = (data) => {
+  let mutiScriptSelect = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi;
+  var scriptArray = data.match(mutiScriptSelect);
+  nextTick(() => {
+    scriptArray.forEach((item) => {
+      var scriptSelect = /<script>([\s\S]*?)<\/script>/;
+      if (item.match(scriptSelect)) {
+        let scriptElement = document.createElement('script');
+        scriptElement.innerHTML = item.match(scriptSelect)[1];
+        document.getElementsByTagName('body')[0].appendChild(scriptElement);
+      }
+    })
+  })
+};
 const downloadStatus = reactive({
   progress: 0.0,
   downloading: false,
