@@ -162,7 +162,7 @@ export default {
     },
     instance: {
       connectionQty: '连接数',
-      slowSQL3s: '慢SQL数（大于3秒）',
+      slowSQL3s: '慢SQL数（大于',
       rollbackQty: '事务回滚数',
       commitQty: '事务提交数',
       transTotalQty: '事务提交和回滚总数',
@@ -1084,6 +1084,8 @@ export default {
       '集群ID',
       '实例ID',
       '操作',
+      '数据库',
+      '模式'
     ],
     logSearchTable: ['时间', '类型', '级别', '日志', '集群ID', '实例ID'],
   },
