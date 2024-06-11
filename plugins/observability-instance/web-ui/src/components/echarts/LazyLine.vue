@@ -46,6 +46,7 @@ import { useWindowStore } from '@/store/window'
 import colorCharts from '@/assets/style/color.module.scss'
 import { useIntervalTime } from '@/hooks/time'
 import { useParamsStore } from "@/store/params";
+import { toFixed } from "@/shared";
 
 const paramsStore = useParamsStore();
 const {
@@ -110,6 +111,8 @@ const props = withDefaults(
     areaStyle?: boolean
     // chart colors
     color?: Array<string>
+    // chart content
+    chartContent: any[]
     /**
      * enable brush for select range time, the value is uuid
      */
@@ -141,7 +144,8 @@ const props = withDefaults(
     isTooltipsFormatDate: true,
     enterable: true,
     countByDataTimePicker: true,
-    isLinkage: false
+    isLinkage: false,
+    chartContent: [],
   }
 )
 const timer = ref<number>()
@@ -276,21 +280,63 @@ const renderChart = () => {
           })
           if (props.toolTipsSort === 'desc') tempParams.sort((a: any, b: any) => b.value - a.value)
           if (props.toolTipsSort === 'asc') tempParams.sort((a: any, b: any) => a.value - b.value)
-          for (let i = 0; i < tempParams.length; i++) {
-            // htmlStr += '<div ">' + params[i].marker + params[i].seriesName + ':' + params[i].value + '</div>'
-            htmlStr +=
-              '<div style="display: flex;flex-direction: row;align-items:center;font-size:12px">' +
-              '<div style="display: inline-block; width: 14px; height: 4px;border-radius: 1px;margin-right:8px;background-color: ' +
-              tempParams[i].color +
-              ';"></div>' +
-              '<div style="flex-grow:1;padding-right:12px">' +
-              tempParams[i].seriesName +
-              '</div>' +
-              '<div style="">' +
-              tempParams[i].value +
-              (props.unit ? props.unit : '') +
-              '</div>' +
-              '</div>'
+          if(props.chartContent.length > 0){
+            if(tempParams.length > 0){
+              const a = props.chartContent[0]
+              const titleName = a.chartTitle
+              let tempData: string[] = titleName.split(',');
+              const tmpIndex: number = props.xData.indexOf(tempParams[0].axisValue);
+              const tmpDataList: string[]=props.chartContent[0].chartTitleData
+              htmlStr += '<div style="display: flex;flex-direction: row;align-items:center;font-size:12px">' +
+                '<div style="font-size:14px;flex-grow:1;padding-right:6px">' + tempData[0] + '</div>' +
+                '<div style="">' +
+                tmpDataList[tmpIndex] + 'G/' + tempData[1] +'G' +
+                '</div>' +
+                '<div style="min-width: 50px; text-align: right;">' +
+                '&nbsp' +
+                toFixed(tmpDataList[tmpIndex] / tempData[1] * 100) +
+                (props.unit ? props.unit : '') +
+                '</div>' +
+                '</div>';
+              for (let i = 0; i < tempParams.length; i++) {
+                const index: number = props.xData.indexOf(tempParams[i].axisValue);
+                const dataList: string[]=props.chartContent[0].volumeData[i].data
+                htmlStr +=
+                  '<div style="display: flex;flex-direction: row;align-items:center;font-size:12px">' +
+                  '<div style="display: inline-block; width: 14px; height: 4px;border-radius: 1px;margin-right:8px;background-color: ' +
+                  tempParams[i].color +
+                  ';"></div>' +
+                  '<div style="flex-grow:1;padding-right:12px">' +
+                  tempParams[i].seriesName +
+                  '</div>' +
+                  '<div style="">' +
+                  dataList[index] + 'G' +
+                  '</div>' +
+                  '<div style="min-width: 50px; text-align: right;">' +
+                  '&nbsp' +
+                  tempParams[i].value +
+                  (props.unit ? props.unit : '') +
+                  '</div>' +
+                  '</div>'
+              }
+            }
+          } else {
+            for (let i = 0; i < tempParams.length; i++) {
+              // htmlStr += '<div ">' + params[i].marker + params[i].seriesName + ':' + params[i].value + '</div>'
+              htmlStr +=
+                '<div style="display: flex;flex-direction: row;align-items:center;font-size:12px">' +
+                '<div style="display: inline-block; width: 14px; height: 4px;border-radius: 1px;margin-right:8px;background-color: ' +
+                tempParams[i].color +
+                ';"></div>' +
+                '<div style="flex-grow:1;padding-right:12px">' +
+                tempParams[i].seriesName +
+                '</div>' +
+                '<div style="">' +
+                tempParams[i].value +
+                (props.unit ? props.unit : '') +
+                '</div>' +
+                '</div>'
+            }
           }
           dataIndex = params[0].dataIndex
         } else {

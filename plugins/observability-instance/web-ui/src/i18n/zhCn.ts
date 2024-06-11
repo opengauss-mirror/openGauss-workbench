@@ -244,8 +244,12 @@ export default {
       ioUsage: 'I/O使用率',
       ioTime: '平均IO响应时间',
       ioDiskUsage: '磁盘使用率',
+      dbDiskUsage: '数据库相关磁盘使用率',
       ioDiskInodeUsage: '磁盘inode使用率',
-      ioDiskUsageContent1: '主要显示各个文件系统的磁盘使用率',
+      ioDbDiskUsage: '数据库相关磁盘使用率',
+      ioOtherDiskUsage: '其它磁盘使用率',
+      dbDiskUsageContent:'主要显示数据库data、xlog目录的磁盘使用率',
+      ioDiskUsageContent1: '主要显示除了数据库相关磁盘的其它磁盘使用率',
       ioDiskUsageContent2: '，文件系统包含',
       ioDiskUsageContent3: '主要显示各个文件系统的磁盘Inode使用率',
       deviceContent: '设备名称',
@@ -266,6 +270,11 @@ export default {
         '指计算机系统中输入/输出（I/O）操作的利用率。它表示在一定时间内，系统对于执行I/O操作所花费的时间与总时间的比例，可以衡量系统的效率和性能。每条折线图对应一个设备的I/O使用率',
       ioTimeContent:
         '指完成一个I/O操作所花费的平均时间,它表示从发起I/O请求到完成该请求的整个过程所需的平均时间。每条折线图对应一个设备的平均IO响应时间',
+      ioDataDirectory: '数据目录（dataDir，排除x_log）',
+      ioDataDirectory2: '数据目录（dataDir）',
+      ioXLogDirectory: 'x_log目录（xLogDir）',
+      ioOtherDirectory: '其它目录',
+      ioDiskName: '磁盘 ',
     },
     network: {
       in: '网络流量(流入)',
@@ -960,7 +969,7 @@ export default {
     placeholderTip:
       'SQL 语句有占位符，无法获取索引建议，建议将数据库中的 track_stmt_parameter 参数设置为 on，以获取新的无占位符的 SQL',
     waitEventTip:
-      'STATEMENT_HISTORY中的details字段的信息的记录的是等待事件的列表，建议将数据库中的 track_stmt_stat_level 参数追踪第二个level设置为L2，以获取语句锁事件的列表',
+          'STATEMENT_HISTORY中的details字段的信息的记录的是等待事件的列表，建议将数据库中的 track_stmt_stat_level 参数追踪第二个level设置为L2，以获取语句锁事件的列表',
     objStructureOther: {
       commonTable: '普通表',
       indexes: '索引',

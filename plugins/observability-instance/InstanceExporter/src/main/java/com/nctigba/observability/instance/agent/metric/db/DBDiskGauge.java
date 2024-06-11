@@ -28,15 +28,15 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.text.StrFormatter;
 import cn.hutool.core.util.StrUtil;
 import com.nctigba.observability.instance.agent.exception.CMDException;
-import com.nctigba.observability.instance.agent.util.CmdUtils;
-import com.nctigba.observability.instance.agent.util.DbUtils;
-import com.nctigba.observability.instance.agent.util.StringUtils;
 import com.nctigba.observability.instance.agent.exception.CollectException;
 import com.nctigba.observability.instance.agent.metric.DBMetric;
 import com.nctigba.observability.instance.agent.metric.MetricResult;
 import com.nctigba.observability.instance.agent.metric.MetricType;
 import com.nctigba.observability.instance.agent.model.dto.CollectParamDTO;
 import com.nctigba.observability.instance.agent.model.dto.CollectTargetDTO;
+import com.nctigba.observability.instance.agent.util.CmdUtils;
+import com.nctigba.observability.instance.agent.util.DbUtils;
+import com.nctigba.observability.instance.agent.util.StringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,10 +64,10 @@ public class DBDiskGauge implements DBMetric {
     private MetricType type = MetricType.GAUGE;
     private String groupName = "db_filesystem";
     private String[] names = {"db_filesystem_size_kbytes", "db_filesystem_used_size_kbytes",
-        "db_filesystem_free_size_kbytes"
+            "db_filesystem_free_size_kbytes"
     };
     private String[] helps = {"Database total filesystem size.", "Database used filesystem size.",
-        "Database free filesystem size."};
+            "Database free filesystem size."};
     private String[] labelNames = {"host", "device", "mount", "dir", "dirType"};
 
     @Autowired
@@ -75,21 +75,27 @@ public class DBDiskGauge implements DBMetric {
 
     @Override
     public List<List<MetricResult>> collectData(
-        CollectTargetDTO target, CollectParamDTO param) throws CollectException {
+            CollectTargetDTO target, CollectParamDTO param) throws CollectException {
         List<List<MetricResult>> result = new ArrayList<>();
-
+        for (int i = 0; i < names.length; i++) {
+            result.add(new ArrayList<>());
+        }
         List<Map<String, Object>> query = dbUtils.query(target.getTargetConfig().getNodeId(), DATADIR_SQL);
         if (CollectionUtil.isNotEmpty(query)) {
             String dir = query.get(0).get("data_directory").toString();
-            result.addAll(collect(target, dir, "dataDir"));
-            result.addAll(collect(target, dir + "/pg_xlog", "xlog"));
-            result.addAll(collect(target, dir + "/pg_log", "pglog"));
+            if (StrUtil.isNotEmpty(dir)) {
+                collect(target, dir, "dataDir", result);
+                collect(target, dir + "/pg_xlog", "xlog", result);
+                collect(target, dir + "/pg_log", "pglog", result);
+            }
         }
         query.clear();
         query = dbUtils.query(target.getTargetConfig().getNodeId(), ARCHIVE_SQL);
         if (CollectionUtil.isNotEmpty(query)) {
             String dir = query.get(0).get("archive_dest").toString();
-            result.addAll(collect(target, dir, "archive"));
+            if (StrUtil.isNotEmpty(dir)) {
+                collect(target, dir, "archive", result);
+            }
         }
         query.clear();
         try {
@@ -102,7 +108,9 @@ public class DBDiskGauge implements DBMetric {
                     return;
                 }
                 String dir = split[1].trim();
-                result.addAll(collect(target, dir, "cm"));
+                if (StrUtil.isNotEmpty(dir)) {
+                    collect(target, dir, "cm", result);
+                }
             });
         } catch (IOException | CMDException e) {
             throw new CollectException(this, e);
@@ -110,24 +118,20 @@ public class DBDiskGauge implements DBMetric {
         return result;
     }
 
-    private List<List<MetricResult>> collect(CollectTargetDTO target, String dir, String dirType) {
-        List<List<MetricResult>> result = new ArrayList<>();
-        for (int i = 0; i < names.length; i++) {
-            result.add(new ArrayList<>());
-        }
+    private void collect(CollectTargetDTO target, String dir, String dirType,
+            List<List<MetricResult>> result) {
         try {
             CmdUtils.readFromCmd(target.getTargetConfig().getNodeId(), StrFormatter.format(FILESYSTEM_COMMAND, dir),
-                line -> {
-                log.debug("agent_filesystem line:{}", line);
-                String[] part = StringUtils.splitByBlank(line);
-                String[] labels = {target.getTargetConfig().getHostId(), part[0], part[5], dir, dirType};
-                result.get(0).add(new MetricResult(labels, Double.valueOf(part[1])));
-                result.get(1).add(new MetricResult(labels, Double.valueOf(part[2])));
-                result.get(2).add(new MetricResult(labels, Double.valueOf(part[3])));
-            });
+                    line -> {
+                        log.debug("agent_filesystem line:{}", line);
+                        String[] part = StringUtils.splitByBlank(line);
+                        String[] labels = {target.getTargetConfig().getHostId(), part[0], part[5], dir, dirType};
+                        result.get(0).add(new MetricResult(labels, Double.parseDouble(part[1])));
+                        result.get(1).add(new MetricResult(labels, Double.parseDouble(part[2])));
+                        result.get(2).add(new MetricResult(labels, Double.parseDouble(part[3])));
+                    });
         } catch (IOException | CMDException e) {
             throw new CollectException(this, e);
         }
-        return result;
     }
 }

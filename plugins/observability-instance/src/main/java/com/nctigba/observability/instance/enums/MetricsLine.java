@@ -106,7 +106,7 @@ public enum MetricsLine {
     IOPS_R_TOTAL(Type.OS, "sum(rate(agent_disk_rd_ios_total{host='ogbrench'}[5m]))"),
     IOPS_W(Type.OS, "sum(rate(agent_disk_wr_ios_total{host='ogbrench'}[5m]))by(device)", "{device}"),
     IO_DISK_READ_BYTES_PER_SECOND(Type.OS, "sum(rate(agent_disk_rd_sectors_total{host='ogbrench'}[5m]))by(device) "
-        + "*512 /1024",
+            + "*512 /1024",
             "{device}"),
     IO_DISK_WRITE_BYTES_PER_SECOND(Type.OS,
             "sum(rate(agent_disk_wr_sectors_total{host='ogbrench'}[5m]))by(device) *512 /1024", "{device}"),
@@ -131,18 +131,140 @@ public enum MetricsLine {
             "{device}"),
     IO_DISK_USAGE(
             Type.OS,
-            "sum(agent_filesystem_used_size_kbytes{host='ogbrench'}) by (device) / "
-                    + "max(agent_filesystem_size_kbytes{host='ogbrench'}) by (device) * 100",
+            "sum(agent_filesystem_used_size_kbytes{host='ogbrench'}) by (device,instance) / "
+                    + "max(agent_filesystem_size_kbytes{host='ogbrench'}) by (device,instance) * 100",
             "{device}"),
     IO_DISK_INODE_USAGE(
             Type.OS,
             "sum(agent_filesystem_inode_used_size{host='ogbrench'}) by (device) / "
                     + "max(agent_filesystem_inode_size{host='ogbrench'}) by (device) * 100",
             "{device}"),
-
+    IO_DISK_DB_VOLUME_DATA(
+            Type.DB,
+            "db_filesystem_data_used_size_kbytes{instance='ogbrench'}",
+            "{dir},{part}"),
+    IO_DISK_DB_VOLUME_XLOG(
+            Type.DB,
+            "db_filesystem_xlog_used_size_kbytes{instance='ogbrench'}",
+            "{dir},{part}"),
+    IO_DISK_DB_USAGE_DATA(
+            Type.DB,
+            "sum(db_filesystem_data_used_size_kbytes{instance='ogbrench'}) by (device) / "
+                    + "sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device) * 100",
+            "{device}"),
+    IO_DISK_DB_USAGE_XLOG(
+            Type.DB,
+            "sum(db_filesystem_xlog_used_size_kbytes{instance='ogbrench'}) by (device) / "
+                    + "sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device) * 100",
+            "{device}"),
+    IO_DISK_DB_VOLUME_TOTAL(
+            Type.DB,
+            "sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device) ",
+            "{device}"),
+    IO_DISK_XLOG_VOLUME_TOTAL(
+            Type.DB,
+            "sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device) ",
+            "{device}"),
+    IO_DISK_DB_VOLUME_USED(
+            Type.DB,
+            "sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device)"
+                    + " - sum(db_filesystem_free_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device)",
+            "{device}"),
+    IO_DISK_DB_VOLUME_OTHER(
+            Type.DB,
+            "sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device)"
+                    + " - sum(db_filesystem_free_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device)"
+                    + " - sum(db_filesystem_data_used_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device)"
+                    + " - sum(db_filesystem_xlog_used_size_kbytes{instance='ogbrench'}) by (device)",
+            "{device}"),
+    IO_DISK_DB_VOLUME_OTHER_TWO(
+            Type.DB,
+            "sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device)"
+                    + " - sum(db_filesystem_free_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device)"
+                    + " - sum(db_filesystem_data_used_size_kbytes{instance='ogbrench'}) by (device)",
+            "{device}"),
+    IO_DISK_XLOG_VOLUME_USED(
+            Type.DB,
+            "sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device)"
+                    + " - sum(db_filesystem_free_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device)",
+            "{device}"),
+    IO_DISK_XLOG_VOLUME_OTHER(
+            Type.DB,
+            "sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device)"
+                    + " - sum(db_filesystem_free_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device)"
+                    + " - sum(db_filesystem_data_used_size_kbytes{instance='ogbrench'}) by (device)"
+                    + " - sum(db_filesystem_xlog_used_size_kbytes{instance='ogbrench'}) by (device)",
+            "{device}"),
+    IO_DISK_XLOG_VOLUME_OTHER_TWO(
+            Type.DB,
+            "sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device)"
+                    + " - sum(db_filesystem_free_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device)"
+                    + " - sum(db_filesystem_xlog_used_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device)",
+            "{device}"),
+    IO_DISK_DB_VOLUME_FREE(
+            Type.DB,
+            "sum(db_filesystem_free_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device) ",
+            "{device}"),
+    IO_DISK_DB_USAGE_TOTAL(
+            Type.DB,
+            "sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device) / "
+                    + "sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device) * 100",
+            "{device}"),
+    IO_DISK_XLOG_USAGE_TOTAL(
+            Type.DB,
+            "sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device) / "
+                    + "sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device) * 100",
+            "{device}"),
+    IO_DISK_DB_USAGE_USED(
+            Type.DB,
+            "(sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device)"
+                    + " - sum(db_filesystem_free_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device))"
+                    + " / sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device) * 100",
+            "{device}"),
+    IO_DISK_DB_USAGE_OTHER(
+            Type.DB,
+            "(sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device)"
+                    + " - sum(db_filesystem_free_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device)"
+                    + " - sum(db_filesystem_data_used_size_kbytes{instance='ogbrench'}) by (device)"
+                    + " - sum(db_filesystem_xlog_used_size_kbytes{instance='ogbrench'}) by (device))"
+                    + " / sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device) * 100",
+            "{device}"),
+    IO_DISK_DB_USAGE_OTHER_TWO(
+            Type.DB,
+            "(sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device)"
+                    + " - sum(db_filesystem_free_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device)"
+                    + " - sum(db_filesystem_data_used_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device))"
+                    + " / sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='dataDir'}) by (device) * 100",
+            "{device}"),
+    IO_DISK_XLOG_USAGE_USED(
+            Type.DB,
+            "(sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device)"
+                    + " - sum(db_filesystem_free_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device))"
+                    + " / sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device) * 100",
+            "{device}"),
+    IO_DISK_XLOG_USAGE_OTHER(
+            Type.DB,
+            "(sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device)"
+                    + " - sum(db_filesystem_free_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device)"
+                    + " - sum(db_filesystem_data_used_size_kbytes{instance='ogbrench'}) by (device)"
+                    + " - sum(db_filesystem_xlog_used_size_kbytes{instance='ogbrench'}) by (device))"
+                    + " / sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device) * 100",
+            "{device}"),
+    IO_DISK_XLOG_USAGE_OTHER_TWO(
+            Type.DB,
+            "(sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device)"
+                    + " - sum(db_filesystem_free_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device)"
+                    + " - sum(db_filesystem_xlog_used_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device))"
+                    + " / sum(db_filesystem_size_kbytes{instance='ogbrench',dirType='xlog'}) by (device) * 100",
+            "{device}"),
+    IO_DISK_DB_USAGE_FREE(
+            Type.DB,
+            "sum(db_filesystem_free_size_kbytes{instance='ogbrench'}) by (dirType) / "
+                    + "sum(db_filesystem_size_kbytes{instance='ogbrench'}) by (dirType) * 100",
+            "{device}"),
     // network
     NETWORK_IN(Type.OS, "max(rate(agent_network_receive_bytes_total{host='ogbrench'}[5m]) / 1024) by (device)",
-        "{device}"),
+            "{device}"),
     NETWORK_OUT(Type.OS, "max(rate(agent_network_transmit_bytes_total{host='ogbrench'}[5m]) / 1024) by (device)",
             "{device}"),
     NETWORK_LOST_PACKAGE_IN(
