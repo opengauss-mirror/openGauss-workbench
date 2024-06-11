@@ -86,23 +86,23 @@
             {{ $t('common.all') }}
           </el-checkbox>
           <el-checkbox-group v-model="form.power">
-            <el-checkbox label="LOGIN" :disabled="form.type === 'role'">
+            <el-checkbox value="LOGIN" :disabled="form.type === 'role'">
               {{ $t('userRole.privilegeItem.login') }}
             </el-checkbox>
-            <el-checkbox label="INHERIT">{{ $t('userRole.privilegeItem.inherit') }}</el-checkbox>
-            <el-checkbox label="REPLICATION">
+            <el-checkbox value="INHERIT">{{ $t('userRole.privilegeItem.inherit') }}</el-checkbox>
+            <el-checkbox value="REPLICATION">
               {{ $t('userRole.privilegeItem.replication') }}
             </el-checkbox>
-            <el-checkbox label="CREATEROLE">
+            <el-checkbox value="CREATEROLE">
               {{ $t('userRole.privilegeItem.createRole') }}
             </el-checkbox>
-            <el-checkbox label="CREATEDB">
+            <el-checkbox value="CREATEDB">
               {{ $t('userRole.privilegeItem.createDatabase') }}
             </el-checkbox>
-            <el-checkbox label="AUDITADMIN">
+            <el-checkbox value="AUDITADMIN">
               {{ $t('userRole.privilegeItem.auditAdministrator') }}
             </el-checkbox>
-            <el-checkbox label="SYSADMIN">
+            <el-checkbox value="SYSADMIN">
               {{ $t('userRole.privilegeItem.systemAdministrator') }}
             </el-checkbox>
           </el-checkbox-group>

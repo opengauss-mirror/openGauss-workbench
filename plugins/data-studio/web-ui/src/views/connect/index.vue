@@ -391,17 +391,32 @@
     }
   };
 
+  const getConnectionParams = () => {
+    // common params
+    const params = {
+      id: form.id,
+      type: form.type,
+      name: form.name,
+      webUser: UserStore.userId,
+      connectionid: props.uuid || undefined,
+    };
+    // customized params
+    Object.assign(params, {
+      ip: form.ip,
+      port: String(form.port),
+      dataName: form.dataName,
+      userName: form.userName,
+      password: Crypto.encrypt(form.password),
+      isRememberPassword: form.isRememberPassword,
+    });
+    return params;
+  };
+
   const testConnection = async (formEl: FormInstance | undefined) => {
     if (!formEl) return;
     await formEl.validate(async (valid) => {
       if (valid) {
-        const params = {
-          ...form,
-          port: String(form.port),
-          password: Crypto.encrypt(form.password),
-          webUser: UserStore.userId,
-          connectionid: props.uuid || undefined,
-        };
+        const params = getConnectionParams();
         try {
           const time = await testConnectionApi(params);
           ElMessage.success(t('message.testConnectionSuccess', { time }));
@@ -439,13 +454,7 @@
     formEl.clearValidate();
   };
   const requestConnect = async () => {
-    const params = {
-      ...form,
-      port: String(form.port),
-      password: Crypto.encrypt(form.password),
-      webUser: UserStore.userId,
-      connectionid: props.uuid || undefined,
-    };
+    const params = getConnectionParams();
     const data =
       props.type === 'create' ? await createConnect(params) : await updateConnect(params);
     EventBus.notify(EventTypeName.GET_CONNECTION_LIST, data);

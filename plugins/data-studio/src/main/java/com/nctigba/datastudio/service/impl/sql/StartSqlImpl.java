@@ -73,15 +73,6 @@ public class StartSqlImpl implements OperationInterface {
     @Autowired
     private AsyncHelper asyncHelper;
 
-    public static void main(String[] args) throws SQLException {
-        String sql = "select * from student;\t"
-                + "select id from student;";
-        String reg = "\\s+";
-        String queryTemp = sql.trim();
-        queryTemp = queryTemp.replaceAll(reg, "\u0000");
-        List<NativeQuery> nativeQueries = Parser.parseJdbcSql(sql, false, false, true, false);
-        System.out.println(nativeQueries.get(0).nativeSql);
-    }
     @Override
     @Async
     public void operate(WebSocketServer webSocketServer, Object obj) throws SQLException {
@@ -144,6 +135,7 @@ public class StartSqlImpl implements OperationInterface {
             } catch(SQLException e) {
                 log.info("StartSqlImpl operate catch: " + e);
                 isSuccess = false;
+                sqlHistoryDO.setErrMes(e.getMessage());
                 endTime = new Date();
                 if (e.getMessage().contains("FATAL: terminating connection due to administrator command")) {
                     webSocketServer.sendMessage(windowName, DISCONNECTION,
@@ -159,7 +151,6 @@ public class StartSqlImpl implements OperationInterface {
                 OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
                 operateStatus.enableStopRun();
                 webSocketServer.setOperateStatus(windowName, operateStatus);
-                sqlHistoryDO.setErrMes(e.getMessage());
             } finally {
                 sqlHistoryDO.setStartTime(df.format(startTime));
                 sqlHistoryDO.setSuccess(isSuccess);

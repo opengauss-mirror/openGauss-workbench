@@ -103,15 +103,15 @@
             @change="fetchUpdateFieldList"
             :disabled="$props.type == 'edit'"
           >
-            <el-checkbox label="INSERT" />
-            <el-checkbox label="DELETE" />
+            <el-checkbox value="INSERT" />
+            <el-checkbox value="DELETE" />
             <el-checkbox
-              label="TRUNCATE"
+              value="TRUNCATE"
               :disabled="
                 form.type == 'view' || form.time == 'INSTEAD OF' || form.frequency != 'STATEMENT'
               "
             />
-            <el-checkbox label="UPDATE" />
+            <el-checkbox value="UPDATE" />
           </el-checkbox-group>
         </el-form-item>
       </el-col>

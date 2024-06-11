@@ -58,8 +58,7 @@
     let docWidth = document.documentElement.clientWidth;
     let menuHeight = proxy.$el.getBoundingClientRect().height;
     let menuWidth = proxy.$el.getBoundingClientRect().width;
-    console.log(proxy.$el.getBoundingClientRect());
-    
+
     // Increase the spacing between clicks and menus, which is more aesthetically pleasing
     const gap = 3;
     let topover = props.offset.top + menuHeight + gap >= docHeight ? menuHeight + gap : -gap;
