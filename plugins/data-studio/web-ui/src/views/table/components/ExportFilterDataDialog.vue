@@ -11,7 +11,7 @@
     <div>
       {{ $t('table.export.chooseFormat') }}
       <el-radio-group v-model="fileType">
-        <el-radio v-for="item in fileTypeList" :key="item" :label="item">{{ item }}</el-radio>
+        <el-radio v-for="item in fileTypeList" :key="item" :value="item">{{ item }}</el-radio>
       </el-radio-group>
     </div>
     <template #footer>

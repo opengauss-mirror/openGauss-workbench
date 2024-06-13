@@ -202,7 +202,7 @@ public class TriggerSqlServiceImpl implements TriggerSqlService {
                 String hexString = Integer.toBinaryString(resultSet.getInt("tgtype"));
                 parseHexString(hexString, map);
                 map.put(FUNCTION, resultSet.getString("proname"));
-                map.put("condition", resultSet.getString("tgqual"));
+                map.put("condition", "tgqual");
                 map.put(DESCRIPTION, resultSet.getString(DESCRIPTION));
                 attr = resultSet.getString("tgattr");
             }

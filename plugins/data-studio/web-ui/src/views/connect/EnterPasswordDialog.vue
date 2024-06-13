@@ -13,8 +13,8 @@
         </el-form-item>
         <el-form-item prop="isRememberPassword" :label="$t('connection.savePassword')">
           <el-radio-group v-model="form.isRememberPassword">
-            <el-radio label="y">{{ $t('connection.currentSessionOnly') }}</el-radio>
-            <el-radio label="n">{{ $t('connection.doNotSave') }}</el-radio>
+            <el-radio value="y">{{ $t('connection.currentSessionOnly') }}</el-radio>
+            <el-radio value="n">{{ $t('connection.doNotSave') }}</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>

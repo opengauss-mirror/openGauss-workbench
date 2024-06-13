@@ -158,8 +158,8 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
                 BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
         ) {
             getTableDdl(bufferedWriter, request);
-            DebugUtils.exportFile(fileName, path, response);
         }
+        DebugUtils.exportFile(fileName, path, response);
     }
 
     @Override
@@ -480,8 +480,8 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
                 BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
         ) {
             getFunctionDdl(bufferedWriter, request);
-            DebugUtils.exportFile(fileName, path, response);
         }
+        DebugUtils.exportFile(fileName, path, response);
     }
 
     @Override
@@ -494,8 +494,8 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
                 BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
         ) {
             getViewDdl(bufferedWriter, request);
-            DebugUtils.exportFile(fileName, path, response);
         }
+        DebugUtils.exportFile(fileName, path, response);
     }
 
     @Override
@@ -509,8 +509,8 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
                 BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
         ) {
             getSequenceDdl(bufferedWriter, request);
-            DebugUtils.exportFile(fileName, path, response);
         }
+        DebugUtils.exportFile(fileName, path, response);
     }
 
     @Override
@@ -560,8 +560,8 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
                 getSequenceDdl(bufferedWriter, exportQuery);
                 log.info("ExportService exportSchemaDdl end: ");
             }
-            DebugUtils.exportFile(fileName, path, response);
         }
+        DebugUtils.exportFile(fileName, path, response);
     }
 
     private void getTableDdl(BufferedWriter bufferedWriter, ExportQuery request) throws SQLException, IOException {

@@ -11,8 +11,8 @@
       <div class="dialog_body">
         {{ $t('terminal.importSqlText') }}
         <el-radio-group v-model="ruleForm.radio">
-          <el-radio label="overwrite">{{ t('button.overwrite') }}</el-radio>
-          <el-radio label="append">{{ t('button.append') }}</el-radio>
+          <el-radio value="overwrite">{{ t('button.overwrite') }}</el-radio>
+          <el-radio value="append">{{ t('button.append') }}</el-radio>
         </el-radio-group>
       </div>
       <template #footer>

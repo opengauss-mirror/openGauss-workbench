@@ -19,46 +19,16 @@
       >
         <el-table-column align="center" prop="name" :label="$t('connection.name')" width="160">
           <template #header>
-            <div v-if="showNameFilter" class="flex-header">
-              <div style="word-break: keep-all; margin-right: 5px">
-                {{ $t('connection.name') }}
-              </div>
-              <div class="flex-header">
-                <el-icon @click="hideNamefilter" class="icon-pointer">
-                  <Search />
-                </el-icon>
-                <el-input class="border-bottom-input" v-model="nameFilterInput" clearable />
-              </div>
-            </div>
-            <div v-else class="flex-header">
-              <div style="width: 12px"></div>
-              <span>{{ $t('connection.name') }}</span>
-              <el-icon @click="showNameFilter = true" class="icon-pointer">
-                <Search />
-              </el-icon>
-            </div>
+            <FilterTableDataHeaderSlot v-model="nameFilterInput" v-model:show="showNameFilter">
+              {{ $t('connection.name') }}
+            </FilterTableDataHeaderSlot>
           </template>
         </el-table-column>
         <el-table-column align="center" prop="connectInfo" :label="$t('connection.info')">
           <template #header>
-            <div v-if="showInfoFilter" class="flex-header">
-              <div style="word-break: keep-all; margin-right: 5px">
-                {{ $t('connection.info') }}
-              </div>
-              <div class="flex-header">
-                <el-icon @click="hideInfofilter" class="icon-pointer">
-                  <Search />
-                </el-icon>
-                <el-input class="border-bottom-input" v-model="infoFilterInput" clearable />
-              </div>
-            </div>
-            <div v-else class="flex-header">
-              <div style="width: 12px"></div>
-              <span>{{ $t('connection.info') }}</span>
-              <el-icon @click="showInfoFilter = true" class="icon-pointer">
-                <Search />
-              </el-icon>
-            </div>
+            <FilterTableDataHeaderSlot v-model="infoFilterInput" v-model:show="showInfoFilter">
+              {{ $t('connection.info') }}
+            </FilterTableDataHeaderSlot>
           </template>
         </el-table-column>
         <el-table-column
@@ -106,7 +76,7 @@
           </template>
         </el-table-column>
       </el-table>
-      <el-form :model="form" ref="ruleFormRef" :rules="rules" label-width="95px">
+      <el-form :model="form" ref="ruleFormRef" :rules="rules" label-width="auto">
         <el-form-item prop="type" :label="$t('connection.databaseType')">
           <el-select
             v-model="form.type"
@@ -132,6 +102,7 @@
             :step="1"
             step-strictly
             controls-position="right"
+            style="width: 110px"
           />
           <span>{{ $t('connection.maximum') }}: 65535</span>
         </el-form-item>
@@ -157,22 +128,30 @@
         </el-form-item>
         <el-form-item prop="isRememberPassword" :label="$t('connection.savePassword')">
           <el-radio-group v-model="form.isRememberPassword">
-            <el-radio label="y">{{ $t('connection.currentSessionOnly') }}</el-radio>
-            <el-radio label="n">{{ $t('connection.doNotSave') }}</el-radio>
+            <el-radio value="y">{{ $t('connection.currentSessionOnly') }}</el-radio>
+            <el-radio value="n">{{ $t('connection.doNotSave') }}</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
     </div>
     <template #footer>
       <div class="dialog-space-footer">
-        <el-button
-          type="danger"
-          @click="handleDelete"
-          :disabled="connectListInfo.listCurrentRow?.sourceType != 2"
-          class="footer-left"
-        >
-          {{ $t('connection.deleteInfo') }}
-        </el-button>
+        <span class="footer-left">
+          <el-button
+            type="danger"
+            @click="handleDelete"
+            :disabled="connectListInfo.listCurrentRow?.sourceType != 2"
+            class="footer-left"
+          >
+            {{ $t('connection.deleteInfo') }}
+          </el-button>
+          <span v-if="testConnectionStatus == 'success'" class="connection-tips connection-success">
+            <el-icon><CircleCheckFilled /></el-icon>{{ $t('message.testConnectionSuccessTips') }}
+          </span>
+          <span v-if="testConnectionStatus == 'fail'" class="connection-tips connection-fail">
+            <el-icon><CircleCloseFilled /></el-icon>{{ $t('message.testConnectionFailTips') }}
+          </span>
+        </span>
         <span class="footer-right">
           <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
           <el-button type="primary" @click="resetForm(ruleFormRef)">
@@ -201,7 +180,8 @@
     testConnectionApi,
   } from '@/api/connect';
   import { ElMessage, ElMessageBox, ElTable, FormInstance, FormRules } from 'element-plus';
-  import { ArrowDown, View, Hide, Search } from '@element-plus/icons-vue';
+  import FilterTableDataHeaderSlot from '@/components/FilterTableDataHeaderSlot.vue';
+  import { ArrowDown, View, Hide } from '@element-plus/icons-vue';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
   import { useI18n } from 'vue-i18n';
   import { useUserStore } from '@/store/modules/user';
@@ -235,7 +215,7 @@
     get: () => props.modelValue,
     set: (val) => myEmit('update:modelValue', val),
   });
-  const dialogWidth = ref(1000);
+  const dialogWidth = ref(1100);
   const title = ref(t('connection.new'));
   const ruleFormRef = ref<FormInstance>();
   const tableRef = ref<InstanceType<typeof ElTable>>();
@@ -245,6 +225,7 @@
   const nameFilterInput = ref('');
   const infoFilterInput = ref('');
   const sourceFilterInput = ref(0);
+  const testConnectionStatus = ref<'none' | 'success' | 'fail'>('none');
 
   const form = reactive({
     type: 'openGauss', // default
@@ -338,6 +319,7 @@
   };
 
   const getTableList = () => {
+    testConnectionStatus.value = 'none';
     Object.assign(connectListInfo, {
       list: [],
       listCurrentRow: {},
@@ -361,15 +343,6 @@
         sourceFilterInput.value == 0 ? true : item.sourceType == sourceFilterInput.value,
       );
   });
-
-  const hideNamefilter = () => {
-    showNameFilter.value = false;
-    nameFilterInput.value = '';
-  };
-  const hideInfofilter = () => {
-    showInfoFilter.value = false;
-    infoFilterInput.value = '';
-  };
 
   const handleOpen = async () => {
     const formEl = ruleFormRef.value;
@@ -418,19 +391,39 @@
     }
   };
 
+  const getConnectionParams = () => {
+    // common params
+    const params = {
+      id: form.id,
+      type: form.type,
+      name: form.name,
+      webUser: UserStore.userId,
+      connectionid: props.uuid || undefined,
+    };
+    // customized params
+    Object.assign(params, {
+      ip: form.ip,
+      port: String(form.port),
+      dataName: form.dataName,
+      userName: form.userName,
+      password: Crypto.encrypt(form.password),
+      isRememberPassword: form.isRememberPassword,
+    });
+    return params;
+  };
+
   const testConnection = async (formEl: FormInstance | undefined) => {
     if (!formEl) return;
     await formEl.validate(async (valid) => {
       if (valid) {
-        const params = {
-          ...form,
-          port: String(form.port),
-          password: Crypto.encrypt(form.password),
-          webUser: UserStore.userId,
-          connectionid: props.uuid || undefined,
-        };
-        const time = await testConnectionApi(params);
-        ElMessage.success(t('message.testConnectionSuccess', { time }));
+        const params = getConnectionParams();
+        try {
+          const time = await testConnectionApi(params);
+          ElMessage.success(t('message.testConnectionSuccess', { time }));
+          testConnectionStatus.value = 'success';
+        } catch {
+          testConnectionStatus.value = 'fail';
+        }
       }
     });
   };
@@ -446,6 +439,7 @@
     infoFilterInput.value = '';
     nameFilterInput.value = '';
     sourceFilterInput.value = 0;
+    testConnectionStatus.value = 'none';
     if (!formEl) return;
     Object.keys(form).map((key) => {
       const excludeKeys = props.type === 'create' ? ['type'] : ['type', 'name'];
@@ -460,13 +454,7 @@
     formEl.clearValidate();
   };
   const requestConnect = async () => {
-    const params = {
-      ...form,
-      port: String(form.port),
-      password: Crypto.encrypt(form.password),
-      webUser: UserStore.userId,
-      connectionid: props.uuid || undefined,
-    };
+    const params = getConnectionParams();
     const data =
       props.type === 'create' ? await createConnect(params) : await updateConnect(params);
     EventBus.notify(EventTypeName.GET_CONNECTION_LIST, data);
@@ -489,6 +477,7 @@
     if (!currentRow) return;
     if (props.type == 'edit') return;
     connectListInfo.listCurrentRow = currentRow || {};
+    testConnectionStatus.value = 'none';
     Object.assign(form, {
       id: currentRow.id,
       name: currentRow.name,
@@ -507,57 +496,50 @@
       width: 180px;
     }
     span {
-      margin-left: 20px;
+      margin-left: 5px;
       color: #808080;
       font-style: italic;
+      font-size: 12px;
     }
   }
   .el-input__icon {
     cursor: pointer;
     font-size: 14px;
   }
-  :deep(.el-input) {
-    height: 30px;
-  }
   .dialog_body {
     display: flex;
-  }
-  .flex-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .icon-pointer {
-    cursor: pointer;
-    :hover {
-      color: var(--normal-color);
-    }
-  }
-  .border-bottom-input {
-    box-shadow: none;
-    height: auto;
-    :deep(.el-input__wrapper) {
-      box-shadow: none;
-      .el-input__inner {
-        box-shadow: 0 1px 0 0 var(--el-input-border-color);
-      }
-    }
   }
   .dialog-space-footer {
     display: flex;
     justify-content: space-between;
     padding-right: 80px;
   }
+  .connection-tips {
+    margin-left: 5px;
+    vertical-align: sub;
+    &.connection-success {
+      color: var(--el-color-success);
+    }
+    &.connection-fail {
+      color: var(--el-color-error);
+    }
+    :deep(.el-icon) {
+      margin-right: 3px;
+      vertical-align: sub;
+      font-size: 17px;
+    }
+  }
   :deep(.el-table) {
     flex: 1;
     .el-table__cell {
       .cell {
-        padding: 0 8px;
+        padding: 0 5px;
       }
     }
   }
   :deep(.el-form) {
-    width: 320px;
+    margin-left: 5px;
+    width: 300px;
   }
   :deep(.source-column) {
     .cell {

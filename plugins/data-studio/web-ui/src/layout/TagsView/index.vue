@@ -4,6 +4,7 @@
     <div class="function-div">
       <div class="left">
         <el-select
+          v-show="terminalDbOptions.length"
           v-model="AppStore.currentTerminalInfo"
           value-key="uuid"
           size="small"
@@ -90,7 +91,7 @@
           {{ $t('windows.renameTerminal') }}
         </li>
         <li @click="createSameTerminal(contextTag)" v-if="contextTag.name == 'createTerminal'">
-          {{ $t('create.terminal') }}
+          {{ $t('create.openNewTerminal') }}
         </li>
         <li @click="closeCurrentTab">{{ $t('windows.closeCurrentTab') }}</li>
         <li @click="closeOtherTab">{{ $t('windows.closeOtherTab') }}</li>
@@ -559,6 +560,10 @@ ${curStr}`
     margin-right: 5px;
     border: 1px solid #d8dce5;
     user-select: none;
+    .pre-icon {
+      width: 16px;
+      height: 16px;
+    }
     &.active .tag-icon {
       display: block;
     }
@@ -576,9 +581,14 @@ ${curStr}`
   }
   .pre-icon {
     margin-right: 4px;
+    width: 16px;
+    height: 16px;
   }
   .tag-icon {
     margin-left: 6px;
+    margin-top: 3px;
+    width: 16px;
+    height: 16px;
   }
   .tags-view-item {
     position: relative;

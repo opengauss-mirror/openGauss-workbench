@@ -21,8 +21,8 @@
             v-if="item.type == 'pageNum'"
             :disabled="!item.enabled"
             :model-value="pageNum"
-            @input="handlePageNumInput"
-            @change="handlePageNumChange"
+            @input="handleInputPageNum"
+            @change="handleChangePageNum"
             size="small"
             style="width: 50px"
             input-style="text-align: center;"
@@ -138,15 +138,15 @@
   });
 
   // Trigger in input. Maybe many times
-  const handlePageNumInput = (value) => {
+  const handleInputPageNum = (value) => {
     const result = value.replace(/[^0-9]/g, '');
     const pageNum = result == 0 ? props.pageNum : Math.min(props.pageTotal, Number(result));
     emit('update:pageNum', pageNum);
   };
 
   // Trigger in onBlur
-  const handlePageNumChange = (pageNum) => {
-    handlePageNumInput(pageNum);
+  const handleChangePageNum = (pageNum) => {
+    handleInputPageNum(pageNum);
     emit('changePageNum', pageNum);
   };
   const changePageSize = (value) => {

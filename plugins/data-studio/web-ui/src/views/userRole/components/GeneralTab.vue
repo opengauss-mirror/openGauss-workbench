@@ -17,8 +17,8 @@
       <el-col :span="12">
         <el-form-item prop="type" :label="$t('common.type')">
           <el-radio-group v-if="props.type == 'create'" v-model="form.type" @change="roleChange">
-            <el-radio label="user">{{ $t('userRole.user') }}</el-radio>
-            <el-radio label="role">{{ $t('userRole.role') }}</el-radio>
+            <el-radio value="user">{{ $t('userRole.user') }}</el-radio>
+            <el-radio value="role">{{ $t('userRole.role') }}</el-radio>
           </el-radio-group>
           <span v-else>{{ form.type == 'user' ? $t('userRole.user') : $t('userRole.role') }}</span>
         </el-form-item>
@@ -86,23 +86,23 @@
             {{ $t('common.all') }}
           </el-checkbox>
           <el-checkbox-group v-model="form.power">
-            <el-checkbox label="LOGIN" :disabled="form.type === 'role'">
+            <el-checkbox value="LOGIN" :disabled="form.type === 'role'">
               {{ $t('userRole.privilegeItem.login') }}
             </el-checkbox>
-            <el-checkbox label="INHERIT">{{ $t('userRole.privilegeItem.inherit') }}</el-checkbox>
-            <el-checkbox label="REPLICATION">
+            <el-checkbox value="INHERIT">{{ $t('userRole.privilegeItem.inherit') }}</el-checkbox>
+            <el-checkbox value="REPLICATION">
               {{ $t('userRole.privilegeItem.replication') }}
             </el-checkbox>
-            <el-checkbox label="CREATEROLE">
+            <el-checkbox value="CREATEROLE">
               {{ $t('userRole.privilegeItem.createRole') }}
             </el-checkbox>
-            <el-checkbox label="CREATEDB">
+            <el-checkbox value="CREATEDB">
               {{ $t('userRole.privilegeItem.createDatabase') }}
             </el-checkbox>
-            <el-checkbox label="AUDITADMIN">
+            <el-checkbox value="AUDITADMIN">
               {{ $t('userRole.privilegeItem.auditAdministrator') }}
             </el-checkbox>
-            <el-checkbox label="SYSADMIN">
+            <el-checkbox value="SYSADMIN">
               {{ $t('userRole.privilegeItem.systemAdministrator') }}
             </el-checkbox>
           </el-checkbox-group>

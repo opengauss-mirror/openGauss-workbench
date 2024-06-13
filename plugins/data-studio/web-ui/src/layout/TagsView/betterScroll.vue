@@ -1,6 +1,6 @@
 <!-- Copyright(c) vue-admin-perfect(zouzhibin). -->
 <template>
-  <div ref="bsWrap" class="tags-scroll-wrap">
+  <div ref="bsWrap" class="tags-scroll-wrap" @contextmenu.prevent="stop">
     <div ref="bsContent" class="tags-scroll">
       <slot></slot>
     </div>
@@ -28,6 +28,10 @@
       instance.value = new BScroll(bsWrap.value, props.options);
     });
   }
+
+  function stop() {
+    instance.value?.stop();
+  };
 
   const { width: wrapWidth } = useElementSize(bsWrap);
 

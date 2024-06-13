@@ -468,4 +468,6 @@ public class CommonConstants {
      * number of table attribute rows
      */
     public static final int NUM_TABLE_ATTR_ROWS = 14;
+
+    public static final String SQL = "sql";
 }

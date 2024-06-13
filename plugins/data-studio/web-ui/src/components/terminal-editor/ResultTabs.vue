@@ -128,7 +128,7 @@
     isInHistory,
     (value) => {
       if (value) {
-        nextTick(historyTableRef.value.getHistory);
+        nextTick(historyTableRef.value.getData);
       }
     },
     { throttle: 3000 },

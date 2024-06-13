@@ -20,8 +20,8 @@
             v-model="form.status"
             :disabled="form.type !== 'table' || $props.type == 'edit'"
           >
-            <el-radio :label="true">{{ $t('button.enabled') }}</el-radio>
-            <el-radio :label="false">{{ $t('button.disabled') }}</el-radio>
+            <el-radio :value="true">{{ $t('button.enabled') }}</el-radio>
+            <el-radio :value="false">{{ $t('button.disabled') }}</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-col>
@@ -103,15 +103,15 @@
             @change="fetchUpdateFieldList"
             :disabled="$props.type == 'edit'"
           >
-            <el-checkbox label="INSERT" />
-            <el-checkbox label="DELETE" />
+            <el-checkbox value="INSERT" />
+            <el-checkbox value="DELETE" />
             <el-checkbox
-              label="TRUNCATE"
+              value="TRUNCATE"
               :disabled="
                 form.type == 'view' || form.time == 'INSTEAD OF' || form.frequency != 'STATEMENT'
               "
             />
-            <el-checkbox label="UPDATE" />
+            <el-checkbox value="UPDATE" />
           </el-checkbox-group>
         </el-form-item>
       </el-col>

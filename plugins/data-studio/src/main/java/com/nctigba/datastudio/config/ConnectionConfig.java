@@ -23,6 +23,7 @@
 
 package com.nctigba.datastudio.config;
 
+import com.nctigba.datastudio.base.JdbcConnectionManager;
 import com.nctigba.datastudio.dao.ConnectionMapDAO;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
 import com.nctigba.datastudio.utils.ConnectionUtils;
@@ -35,6 +36,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
+import static com.nctigba.datastudio.utils.SecretUtils.desEncrypt;
 
 /**
  * ConnectionConfig
@@ -56,10 +58,10 @@ public class ConnectionConfig {
             throw new CustomException(LocaleStringUtils.transLanguage("1004"), 555);
         }
         ConnectionDTO connectionDTO = conMap.get(uuid);
-        Connection connection = ConnectionUtils.connectGet(
+        Connection connection = JdbcConnectionManager.getConnection(
                 connectionDTO.getUrl(),
                 connectionDTO.getDbUser(),
-                connectionDTO.getDbPassword());
+                desEncrypt(connectionDTO.getDbPassword()));
         connectionDTO.updateConnectionDTO(connectionDTO);
         ConnectionMapDAO.setConMap(uuid, connectionDTO);
         return connection;

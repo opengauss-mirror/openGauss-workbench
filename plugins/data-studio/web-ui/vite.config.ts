@@ -58,7 +58,6 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       host: '0.0.0.0',
       port: 8100,
       open: true,
-      https: false,
       cors: true,
       proxy: {
         '/dataStudio/web': {
@@ -72,7 +71,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       },
     },
     build: {
-      sourcemap: false,
+      sourcemap: process.env.NODE_ENV == 'development',
     },
   };
 });
