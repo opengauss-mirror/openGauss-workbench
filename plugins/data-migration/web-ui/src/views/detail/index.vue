@@ -146,7 +146,6 @@
                     <p>{{ parseDatabasePermission(record.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(record.statusDesc,'increment_param') === true || judgeKeyExist(record.statusDesc,'reverse_param') === true">{{ parselogParameter(record.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(record.statusDesc,'lower_param') === true">{{ parseLowerParameter(record.statusDesc) }}</p>
-                    <p v-if="judgeKeyExist(record.statusDesc,'disk_space') === true">{{ parseDiskSpace(record.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(record.statusDesc,'mysql_encryption') === true">{{ parseMysqlEncryption(record.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(record.statusDesc,'sql_compatibility') === true">{{ parseOpenGaussBDB(record.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(record.statusDesc,'replication_slots') === true">{{ parseReplicationNumber(record.statusDesc) }}</p>
