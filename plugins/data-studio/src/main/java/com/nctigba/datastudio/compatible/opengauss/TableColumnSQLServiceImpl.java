@@ -647,6 +647,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
 
     private String getConstraintSQL(ConstraintDTO request) {
         StringBuilder partition = new StringBuilder();
+        partition.append(",");
         if (StringUtils.isNotEmpty(request.getConType())) {
             if (request.getConType().equals("u")) {
                 if (request.getConDeferrable() != null && request.getConDeferrable()) {

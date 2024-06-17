@@ -17,19 +17,22 @@ export async function interceptHttpDisconnection(uuid: string) {
   if (isManualOpeningDb && targetRootNode) {
     const { connectInfo } = targetRootNode;
     if (connectInfo.isRememberPassword == 'y') {
-      const res = (await reLogin({
+      const params = {
+        id: connectInfo.id,
         type: connectInfo.type,
         name: connectInfo.name,
+        webUser: UserStore.userId,
+        connectionid: uuid,
+      };
+      Object.assign(params, {
         ip: connectInfo.ip,
         port: connectInfo.port,
         dataName: connectInfo.dataName,
         userName: connectInfo.userName,
-        id: connectInfo.id,
         password: undefined,
         isRememberPassword: 'y',
-        webUser: UserStore.userId,
-        connectionid: uuid,
-      })) as unknown as {
+      });
+      const res = (await reLogin(params)) as unknown as {
         connectionid: string;
         id: string;
         type: string;

@@ -60,6 +60,9 @@ export default {
     loadToTerminal: 'Load To Terminal',
     saveChanges: 'Save Changes',
     refresh: 'Refresh',
+    lock: 'Lock',
+    unlock: 'Unlock',
+    unlock2: 'Unlock',
   },
   utils: {
     colorError: 'Wrong {name} color value',
@@ -299,6 +302,11 @@ export default {
     connectionWay: 'Connection Way',
     connectionWayList: ['Remote', 'Local'],
     dbPath: 'Database Path',
+    createDatabase: {
+      name: 'Create Database',
+      noExist: 'Create if it does not exist',
+      tips: 'When checked: If the database does not exist, it will be automatically created. If it exists, it will be opened. <br/>When not checked: Only existing databases can be opened. If the database does not exist, an error message will appear.',
+    },
     currentSessionOnly: 'Current Session Only',
     doNotSave: 'Do Not Save',
     enterPassword: 'Enter the current user password',

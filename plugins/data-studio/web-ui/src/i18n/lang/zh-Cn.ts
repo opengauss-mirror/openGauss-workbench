@@ -59,6 +59,9 @@ export default {
     loadToTerminal: '加载至终端',
     saveChanges: '保存修改',
     refresh: '刷新',
+    lock: '锁定',
+    unlock: '解锁',
+    unlock2: '取消锁定',
   },
   utils: {
     colorError: '输入错误的{name}颜色值',
@@ -292,6 +295,11 @@ export default {
     connectionWay: '连接方式',
     connectionWayList: ['远程连接', '本地连接'],
     dbPath: '数据库路径',
+    createDatabase: {
+      name: '创建数据库',
+      noExist: '不存在则创建',
+      tips: '勾选时：如果数据库不存在，则自动创建一个，如果存在则打开。<br/>不勾选时：只能打开已有数据库。如果数据库不存在，则提示错误。',
+    },
     currentSessionOnly: '仅当前会话',
     doNotSave: '不保存',
     enterPassword: '输入当前用户密码',
