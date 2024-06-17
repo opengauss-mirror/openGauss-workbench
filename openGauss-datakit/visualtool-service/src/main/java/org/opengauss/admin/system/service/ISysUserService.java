@@ -29,6 +29,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.common.core.domain.entity.SysUser;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
  * User Service Interface
  *
@@ -143,4 +145,6 @@ public interface ISysUserService extends IService<SysUser> {
     public int deleteUserById(Integer userId);
 
     public int deleteUserByIds(Integer[] userIds);
+
+    public List<SysUser> listUserByRemark(String remark);
 }
