@@ -117,11 +117,14 @@ public class UsrCpu implements DiagnosisPointService<Object> {
                 if (line.isBlank()) {
                     continue;
                 }
-                if (line.startsWith("Average")) {
+                if (line.startsWith("Average") && line.length() > 8) {
                     var data = line.substring(8).trim().split("\\s+");
-                    if (NumberUtils.toDouble(data[2]) < 1) {
+                    if (data.length > 8 && NumberUtils.toDouble(data[2]) < 1) {
                         usr.delLine(data[8]);
                     }
+                    continue;
+                }
+                if (line.length() < 12) {
                     continue;
                 }
                 var data = line.substring(11).trim().split("\\s+");

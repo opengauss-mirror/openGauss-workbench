@@ -1,5 +1,5 @@
 <template>
-  <div class="card" style="overflow: visible" ref="card">
+  <div class="card" style="overflow: auto" ref="card">
     <div class="card-header">
       <div class="icon"></div>
       <div class="title">
@@ -25,9 +25,9 @@
       :style="{
         resize: props.resize ? 'vertical' : 'none',
       }"
-      style="overflow: visible"
+      style="overflow: auto"
     >
-      <div style="position: relative; height: 100%; overflow: visible">
+      <div style="position: relative; height: 100%; overflow: auto">
         <slot />
       </div>
     </div>

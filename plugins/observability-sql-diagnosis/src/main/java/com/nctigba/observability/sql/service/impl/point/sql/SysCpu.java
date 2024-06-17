@@ -113,10 +113,7 @@ public class SysCpu implements DiagnosisPointService<Object> {
         try (var reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
             while (reader.ready()) {
                 var line = reader.readLine();
-                if (line.isBlank()) {
-                    continue;
-                }
-                if (line.startsWith("Average")) {
+                if (line.isBlank() || line.startsWith("Average") || line.length() < 12) {
                     continue;
                 }
                 var data = line.substring(11).trim().split("\\s+");

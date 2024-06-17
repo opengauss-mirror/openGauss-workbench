@@ -90,6 +90,7 @@
                     class="form-textarea"
                     v-model="diagnosisParam.sql"
                     :disabled="true"
+                    :autosize="{ minRows: 3, maxRows: 8 }"
                     type="textarea"
                   />
                   <el-input
@@ -97,6 +98,7 @@
                     class="form-textarea"
                     v-model="diagnosisParam.sql"
                     :placeholder="$t('datasource.selectSql')"
+                    :autosize="{ minRows: 3, maxRows: 8 }"
                     type="textarea"
                   />
                 </el-form-item>
@@ -486,8 +488,8 @@ const { data: schema, run: schemaData } = useRequest(
 )
 watch(schema, (ret: any[]) => {
   console.log('watch(ret')
-  if (ret && Object.keys(ret).length) {
-    schemaList.value = ret
+  if (ret && Object.keys(ret.data).length) {
+    schemaList.value = ret.data
   } else {
     schemaList.value = []
   }
@@ -503,6 +505,15 @@ onMounted(() => {
   if (endTime && typeof endTime === 'string') ruleForm.hisDataEndTime = endTime
   initOptions()
   initThresholds()
+  if (wujie) {
+    // Monitoring platform language change
+    wujie?.bus.$on('opengauss-locale-change', (val: string) => {
+      nextTick(() => {
+        initOptions()
+        initThresholds()
+      })
+    })
+  }
 })
 const clusterLoaded = (val: any) => {
   // init nodeId
