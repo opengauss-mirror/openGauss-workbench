@@ -1,45 +1,91 @@
 <script>
 import axios from 'axios';
-import request from '@/request.js'
+
 export default {
   data() {
     return {
-      responseData: null
+      rootUrl: '',
+      urlParams: null,
+      loginParams: ['id_token', 'sso_state'],
+      codeParams: ['code', 'state']
     };
   },
-  methods: {
 
-    async getData() {
-      try {
-        console.log('enter')
-        const response = await axios.get('/plugins/oauth-login/oauth/test?param=123')
-        this.responseData = response.data;
-        console.log(response.data)
-      } catch (error) {
-        console.log('error')
-        console.error(error);
+  mounted() {
+    this.rootUrl = window.location.origin;
+    this.urlParams = new URLSearchParams(window.location.search);
+    this.processUrl();
+  },
+
+  methods: {
+    processUrl() {
+      const hasLoginParams = this.loginParams.every(param => this.urlParams.has(param) && this.urlParams.get(param) !== '');
+      const hasCodeParam = this.codeParams.every(param => this.urlParams.has(param) && this.urlParams.get(param) !== '');
+
+      if ((hasLoginParams || hasCodeParam) && !(hasLoginParams && hasCodeParam)) {
+        if (hasLoginParams) {
+          this.getCode(this.urlParams.get(this.loginParams[0]), this.urlParams.get(this.loginParams[1]))
+          console.log('Parameters id_token and sso_state exist.');
+        } else if (hasCodeParam) {
+          this.getToken(this.urlParams.get(this.codeParams[0]), this.urlParams.get(this.codeParams[1]))
+          console.log('Parameters code and state exists.');
+        }
+      } else {
+        console.error('URL parameters are incorrect.');
       }
+    },
+
+    async getCode(id_token, sso_state) {
+      const params = new URLSearchParams();
+      params.append('id_token', id_token);
+      params.append('sso_state', sso_state);
+
+      const fullUrl = this.rootUrl + '/plugins/oauth-login/oauth/authorize?' + params.toString();
+
+      try {
+        const response = await axios.get(fullUrl);
+
+        if (response.data.code === 200) {
+          window.location.href = response.data.data.Location;
+        } else {
+          console.error('Error occurred in the response:', response.data.msg);
+        }
+      } catch (error) {
+        console.error('An error occurred while making the GET request:', error);
+      }
+    },
+
+    async getToken(code, state) {
+      const params = new URLSearchParams();
+      params.append('code', code);
+      params.append('state', state);
+
+      const fullUrl = this.rootUrl + '/plugins/oauth-login/oauth/token?' + params.toString();
+
+      try {
+        const response = await axios.get(fullUrl);
+
+        if (response.data.code === 200) {
+          const token = response.data.data.token;
+          this.setToken(token);
+          window.location.href = this.rootUrl;
+        } else {
+          console.error('Error occurred in the response:', response.data.msg);
+        }
+      } catch (error) {
+        console.error('An error occurred while making the GET request:', error);
+      }
+    },
+
+    setToken(token){
+      localStorage.setItem('opengauss-token', token)
     }
   }
 };
-
-export function getCodeImg() {
-  return request({
-    url: '/plugins/oauth-login/oauth/test?param=123',
-    method: 'get'
-  })
-}
 </script>
 
 <template>
-  <p>test123</p>
-  <a>oauth-login.vue</a>
-  <button @click="getData">获取数据</button>
-  <div v-if="responseData">
-    <p>{{ responseData }}</p>
-
-  </div>
-
+  <h2>LOADING...</h2>
 </template>
 
 <style>
