@@ -4,7 +4,6 @@
 
 <template>
 
-    <p>appvue</p>
   <router-view/>
 
 </template>
