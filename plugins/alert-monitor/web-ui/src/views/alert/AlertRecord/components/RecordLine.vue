@@ -31,6 +31,32 @@ watch(() => props.unit, (unit) => {
 })
 
 const init = () => {
+    let series = props.datas.map(item => {
+        if (item.metric) {
+            item.metric.instance = undefined
+            item.metric.instanceId = undefined
+            item.metric.host = undefined
+            item.metric.type = undefined
+            item.metric.job = undefined
+            item.metric.minor = undefined
+            item.metric.major = undefined
+        }
+        let name = JSON.stringify(item.metric)
+        let dataArr = item.values
+        return {
+            name: name,
+            type: 'line',
+            showSymbol: true,
+            symbol: 'circle',
+            symbolSize: 4,
+            hoverAnimation: false,
+            labelLine: {
+                show: true,
+                smooth: true
+            },
+            data: dataArr
+        }
+    });
     const theme = localStorage.getItem('theme');
     let chart = echarts.init(main.value)
     const option = {
@@ -48,6 +74,7 @@ const init = () => {
         },
         legend: {
             left: 'left',
+            type: 'scroll',
             textStyle: {
                 color: theme === 'dark' ? '#d4d4d4' : '#1d212a'
             }
@@ -65,19 +92,7 @@ const init = () => {
                 show: true
             }
         },
-        series: [
-            {
-                name: props.title,
-                type: 'line',
-                showSymbol: false,
-                hoverAnimation: false,
-                labelLine: {
-                    show: true,
-                    smooth: true
-                },
-                data: props.datas
-            }
-        ]
+        series: series
     }
     chart.setOption(option)
 }

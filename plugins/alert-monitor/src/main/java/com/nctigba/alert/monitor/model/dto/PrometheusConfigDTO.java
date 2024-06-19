@@ -94,12 +94,21 @@ public class PrometheusConfigDTO implements Serializable {
             @JsonProperty("enable_http2")
             private Boolean isEnableHttp2;
             private String timeout;
+            @JsonProperty("tls_config")
+            private TlsConfig tlsConfig = new TlsConfig();
 
             @Data
             public static class Conf implements Serializable {
                 private static final long serialVersionUID = 1L;
 
                 private List<String> targets;
+            }
+
+            @Data
+            public static class TlsConfig implements Serializable {
+                private static final long serialVersionUID = 1L;
+                @JsonProperty("insecure_skip_verify")
+                private boolean insecureSkipVerify = true;
             }
         }
     }

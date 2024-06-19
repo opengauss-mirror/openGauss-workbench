@@ -46,4 +46,6 @@ public class AlertTemplateQuery {
     @NotNull
     @Size(min = 1)
     private List<AlertTemplateRuleQuery> templateRuleReqList;
+
+    private List<String> excludedTemplateRuleIds;
 }

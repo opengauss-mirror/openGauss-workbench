@@ -182,6 +182,10 @@ public class PrometheusServiceImpl implements PrometheusService {
             Boolean bool = environmentProvider.getBoolean("server.ssl.enabled");
             http = bool != null && bool ? "https" : "http";
         }
+        PrometheusConfigDTO.Alert.Alertmanager.TlsConfig tlsConfig =
+            new PrometheusConfigDTO.Alert.Alertmanager.TlsConfig();
+        tlsConfig.setInsecureSkipVerify(true);
+        alertmanager.setTlsConfig(tlsConfig);
         alertmanager.setScheme(http);
         alertmanager.setIsFollowRedirects(true);
         alertmanager.setTimeout("10s");
@@ -292,7 +296,7 @@ public class PrometheusServiceImpl implements PrometheusService {
      *        [1683478230,"1.3272727272735807"],[1683478575,"1.7454545454546206"],[1683478920,"1.472727272728008"],
      *        [1683479265,"1.4909090909085592"]]}]}}
      */
-    public Number[][] queryRange(
+    public List queryRange(
         String url, String port, String query, LocalDateTime startTime,
         LocalDateTime endTime) {
         Instant startInstant = startTime.toInstant(ZoneOffset.of("+8"));
@@ -309,32 +313,21 @@ public class PrometheusServiceImpl implements PrometheusService {
         String httpUrl = "http://" + url + ":" + port + "/api/v1/query_range";
         String res = HttpUtil.get(httpUrl, paramMap);
         if (StrUtil.isBlank(res)) {
-            return new Number[0][0];
+            return new JSONArray();
         }
         JSONObject resJson = new JSONObject(res);
         if (!resJson.getStr("status", "").equals("success")) {
-            return new Number[0][0];
+            return new JSONArray();
         }
         JSONObject data = resJson.getJSONObject("data");
         if (data == null) {
-            return new Number[0][0];
+            return new JSONArray();
         }
         JSONArray result = data.getJSONArray("result");
         if (CollectionUtil.isEmpty(result)) {
-            return new Number[0][0];
+            return new JSONArray();
         }
-        JSONObject metricInfo = result.getJSONObject(0);
-        if (metricInfo.isEmpty()) {
-            return new Number[0][0];
-        }
-        JSONArray values = metricInfo.getJSONArray("values");
-        Number[][] dataResult = new Number[values.size()][2];
-        for (int i = 0; i < values.size(); i++) {
-            JSONArray valArr = values.getJSONArray(i);
-            dataResult[i][0] = valArr.getLong(0) * 1000;
-            dataResult[i][1] = valArr.getBigDecimal(1).setScale(2, BigDecimal.ROUND_HALF_UP);
-        }
-        return dataResult;
+        return result;
     }
 
     /**
@@ -479,8 +472,9 @@ public class PrometheusServiceImpl implements PrometheusService {
         return ruleExp;
     }
 
-    private String subRuleExp(Boolean isAnd, String ruleExp, String operate, String limitValue) {
-        return (isAnd ? "on(instance) " : "") + ruleExp + (StrUtil.isNotBlank(operate) ? (operate + limitValue) : "");
+    private String subRuleExp(Boolean isAnd, String ruleExp, String operate, BigDecimal limitValue) {
+        return (isAnd ? "on(instance) " : "") + ruleExp
+            + (StrUtil.isNotBlank(operate) ? (operate + limitValue.toString()) : "");
     }
 
     /**
