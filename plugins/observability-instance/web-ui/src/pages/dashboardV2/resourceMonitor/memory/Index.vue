@@ -211,7 +211,8 @@
 
   <el-row :gutter="12">
     <el-col :span="12">
-      <my-card :title="$t('resourceMonitor.memory.instanceMemoryUsage')" height="380" :bodyPadding="false">
+      <my-card :title="$t('resourceMonitor.memory.instanceMemoryUsage')" height="380"
+        :bodyPadding="false" :showBtns="true" :info="memoryUsageInfo">
         <el-table
           :data="metricsData.dbMemoryCondition"
           style="width: 100%; height: 340px"
@@ -229,7 +230,8 @@
       </my-card>
     </el-col>
     <el-col :span="12">
-      <my-card :title="$t('resourceMonitor.memory.parameterConfiguration')" height="382" :bodyPadding="false">
+      <my-card :title="$t('resourceMonitor.memory.parameterConfiguration')" height="382"
+        :bodyPadding="false" :showBtns="true" :info="paramConfigInfo">
         <el-table
           :data="metricsData.dbMemoryConfig"
           style="width: 100%; height: 340px"
@@ -311,6 +313,15 @@ const innerRefreshTime = ref<number>(30)
 const innerRefreshDoneTime = ref<string>('')
 const { updateCounter, sourceType, autoRefreshTime, tabNow, instanceId, isManualRangeSelected, timeRange, node } =
   storeToRefs(useMonitorStore(props.tabId))
+
+const memoryUsageInfo = ref<any>({
+  title: t("app.lineOverview"),
+  option: [{ name: t("dbParam.disableMemoryProtect.tip"), value: t("dbParam.disableMemoryProtect.tipContent") }],
+});
+const paramConfigInfo = ref<any>({
+  title: t("app.lineOverview"),
+  option: [{ name: t("dbParam.common.tip"), value: t("dbParam.common.tipContent") }],
+});
 
 // same for every page in index
 const timer = ref<number>()

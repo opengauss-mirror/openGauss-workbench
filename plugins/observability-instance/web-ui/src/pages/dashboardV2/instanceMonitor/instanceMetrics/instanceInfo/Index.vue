@@ -215,6 +215,7 @@ watch(
       });
       respTimeInfo.value.option.push({ name: 'p95', value: t('instanceIndex.p95Content') })
     }
+    respTimeInfo.value.option.push({ name: t("dbParam.common.tip"), value: t('dbParam.common.tipContent') })
     // cacheHitTable
     if (baseData.cacheHit) {
       baseData.cacheHit.forEach(item => {
@@ -273,6 +274,7 @@ watch(
       });
       connectionQtyInfo.value.option.push({ name: t("instanceMonitor.instance.maxConnectionQty"), value: t("instanceMonitor.instance.maxConnectionQtyContent") })
     }
+    connectionQtyInfo.value.option.push({ name: t("dbParam.trackActivities.tip"), value: t("dbParam.trackActivities.tipContent") })
 
     // slow SQL
     slowSQL3sInfo.value.option = []
@@ -287,6 +289,7 @@ watch(
       });
       slowSQL3sInfo.value.option.push({ name: t("instanceMonitor.instance.slowSQLQty"), value: t("instanceMonitor.instance.slowSQLQtyContent") })
     }
+    slowSQL3sInfo.value.option.push({ name: t("dbParam.trackActivities.tip"), value: t("dbParam.trackActivities.tipContent") })
 
     // databaseBlk
     for (let key in baseData.INSTANCE_DB_DATABASE_BLK) {

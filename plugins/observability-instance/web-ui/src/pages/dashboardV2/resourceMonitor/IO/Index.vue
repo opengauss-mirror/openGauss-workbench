@@ -590,15 +590,25 @@ watch(
     if (!baseData) return;
 
     // db disk usage
-    const dataDirKeys = Object.keys(baseData.IO_DISK_DB_VOLUME_DATA);
-    const dataDirName = dataDirKeys[0].split(',')[0]
-    const dataPartName = dataDirKeys[0].split(',')[1]
-    const xLogDirKeys = Object.keys(baseData.IO_DISK_DB_VOLUME_XLOG);
-    const xLogDirName = xLogDirKeys[0].split(',')[0]
-    const xLogPartName = xLogDirKeys[0].split(',')[1]
+    let dataDirName = ''
+    let dataPartName = ''
+    let xLogDirName = ''
+    let xLogPartName = ''
+    let dataDirKeys = ''
+    let xLogDirKeys = ''
+    if (baseData && baseData.IO_DISK_DB_VOLUME_DATA && baseData.IO_DISK_DB_VOLUME_XLOG) {
+      dataDirKeys = Object.keys(baseData.IO_DISK_DB_VOLUME_DATA);
+      xLogDirKeys = Object.keys(baseData.IO_DISK_DB_VOLUME_XLOG);
+      if (dataDirKeys.length > 0 && xLogDirKeys.length > 0) {
+        dataDirName = dataDirKeys[0].split(',')[0]
+        dataPartName = dataDirKeys[0].split(',')[1]
+        xLogDirName = xLogDirKeys[0].split(',')[0]
+        xLogPartName = xLogDirKeys[0].split(',')[1]
+      }
+    }
     let dbDiskName = ''
     let xLogDiskName = ''
-    if (xLogDirName.includes(dataDirName) && xLogDirKeys.length === 1) {
+    if (xLogDirName && dataDirName && xLogDirName.includes(dataDirName) && xLogDirKeys.length === 1 && baseData.IO_DISK_DB_USAGE_DATA) {
       spanParams.values[0] = 8
       spanParams.values[1] = 8
       spanParams.values[2] = 8
@@ -698,7 +708,7 @@ watch(
         chartTitleData: metricsData.value.dbDiskData,
         volumeData: metricsData.value.dbVolume
       });
-    } else {
+    } else if (xLogDirName && dataDirName && baseData.IO_DISK_DB_USAGE_DATA && baseData.IO_DISK_DB_USAGE_XLOG){
       metricsData.value.xLogShouldShow = true
       spanParams.values[0] = 12
       spanParams.values[1] = 6
