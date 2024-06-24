@@ -160,7 +160,7 @@ import { storeToRefs } from 'pinia'
 const errorInfo = ref<string | Error>()
 
 const props = withDefaults(defineProps<{ tabId: string }>(), {})
-const { updateCounter, sourceType, tabNow } = storeToRefs(useMonitorStore(props.tabId))
+const { updateCounter, sourceType, tabNow, clusterId } = storeToRefs(useMonitorStore(props.tabId))
 
 const startId = ref<number>()
 const endId = ref<number>()
@@ -217,12 +217,14 @@ const bandleCoveyBuildWDR = (code: number) => {
   requestData()
 }
 const handleQuery = () => {
+  if (!clusterId.value) return;
   requestData()
 }
 const handleReset = () => {
   formData.reportRange = initFormData.reportRange
   formData.reportType = initFormData.reportType
   formData.dateValue = initFormData.dateValue
+  if (!clusterId.value) return;
   requestData()
 }
 

@@ -174,6 +174,9 @@
       { color: '#00C7F9', name: $t('metric.transactionAndRollbackTotal') },
     ]"
     :bodyPadding="false"
+    :showBtns="true"
+    @download="(title) => download(title, session)"
+    :info="sessionInfo"
   >
     <template #headerExtend>
       <div class="info-row">
@@ -195,6 +198,7 @@
       </div>
     </template>
     <LazyLine
+      ref="session"
       :tips="$t('instanceIndex.activeSessionQtyTips')"
       :rangeSelect="true"
       :tabId="props.tabId"
@@ -237,7 +241,12 @@
       />
     </div>
     <el-tabs v-model="tab" class="tab2">
-      <el-tab-pane :label="$t('instanceIndex.nowTOPSQL')" :name="0">
+      <el-tab-pane :name="0">
+        <template #label>
+            <span>{{ $t("instanceIndex.nowTOPSQL") }}
+                <show-info :info="topSqlInfo"/>
+            </span>
+        </template>
         <el-table
           :table-layout="'auto'"
           :data="topSQLData == null ? [] : topSQLData"
@@ -280,7 +289,12 @@
           </el-table-column>
         </el-table>
       </el-tab-pane>
-      <el-tab-pane :label="$t('session.blockSessions.tabTitle')" :name="1">
+      <el-tab-pane :name="1">
+        <template #label>
+            <span>{{ $t("session.blockSessions.tabTitle") }}
+                <show-info :info="blockSessionInfo"/>
+            </span>
+        </template>
         <div class="row" style="margin-bottom: 8px">
           <div class="filter">
             <el-button
@@ -336,7 +350,12 @@
           <el-table-column prop="applicationName" :label="$t('session.blockSessions.appName')" />
         </el-table>
       </el-tab-pane>
-      <el-tab-pane :label="$t('session.trans.longTransaction')" :name="2">
+      <el-tab-pane :name="2">
+        <template #label>
+            <span>{{ $t("session.trans.longTransaction") }}
+                <show-info :info="longTransactionInfo"/>
+            </span>
+        </template>
         <div style="
             display: flex;
             flex-direction: row;
@@ -381,7 +400,12 @@
           <el-table-column prop="state" :label="$t('session.trans.sessionState')" width="100" />
         </el-table>
       </el-tab-pane>
-      <el-tab-pane :label="$t('session.waitEventTab.title')" :name="3">
+      <el-tab-pane :name="3">
+        <template #label>
+            <span>{{ $t("session.waitEventTab.title") }}
+                <show-info :info="waitEventInfo"/>
+            </span>
+        </template>
         <el-row>
           <el-col :span="4">
             <div>{{ $t('session.waitEventTab.waitEventTotal') }}: {{ waitEventTotal }}</div>
@@ -522,6 +546,31 @@ const { t } = useI18n()
 
 const tab = 0
 
+const topSqlInfo = ref<any>({
+  title: t("app.fieldOverview"),
+  option: [
+    { name: t("dbParam.trackActivities.tip"), value: t("dbParam.trackActivities.tipContent") },
+  ]
+})
+const blockSessionInfo = ref<any>({
+  title: t("app.fieldOverview"),
+  option: [
+    { name: t("dbParam.trackActivities.tip"), value: t("dbParam.trackActivities.tipContent") },
+  ]
+})
+const longTransactionInfo = ref<any>({
+  title: t("app.fieldOverview"),
+  option: [
+    { name: t("dbParam.trackActivities.tip"), value: t("dbParam.trackActivities.tipContent") },
+  ]
+})
+const waitEventInfo = ref<any>({
+  title: t("app.fieldOverview"),
+  option: [
+    { name: t("dbParam.trackActivities.tip"), value: t("dbParam.trackActivities.tipContent") },
+  ]
+})
+
 interface LineData {
   name: string
   data: any[]
@@ -635,12 +684,16 @@ const getLineColor = (data: LineData[]) => {
   else if (getMetricsValue(data) < 90) return '#FFDC83'
   else return '#FF8D8D'
 }
+const sessionInfo = ref<any>({
+  title: t("app.lineOverview"),
+  option: [],
+});
 // get data
 const load = (checkTab?: boolean, checkRange?: boolean) => {
   if (!instanceId.value) return
   requestData(props.tabId)
 }
-const { data: indexData, run: requestData } = useRequest(getIndexMetrics, { manual: true })
+const { data: indexData, run: requestData } = useRequest(getIndexMetrics, { manual: true, onError: () => clearData() })
 watch(
   indexData,
   () => {
@@ -654,6 +707,7 @@ watch(
     metricsData.value.sessionQty = []
     metricsData.value.waitEvents = []
     metricsData.value.time = ['0']
+    sessionInfo.value.option = [];
 
     const baseData = indexData.value
     if (!baseData) return
@@ -763,13 +817,18 @@ watch(
         name: Object.keys(sortedData[item])[0],
       })
     }
+    sessionInfo.value.option.push({
+      name: t("dbParam.trackActivities.tip"),
+      value: t("dbParam.trackActivities.tipContent"),
+    });
 
     // time
     metricsData.value.time = baseData.time
   },
   { deep: true }
 )
-const { data: topSQLNowData, run: loadTopSQL } = useRequest(getTOPSQLNow, { manual: true })
+const { data: topSQLNowData, run: loadTopSQL } = useRequest(getTOPSQLNow, { manual: true, onError: () => clearTopSqlData() 
+})
 watch(
   topSQLNowData,
   () => {
@@ -838,6 +897,9 @@ watch(
     clearInterval(timerInner.value)
     if (tabNow.value === tabKeys.Home) {
       if (updateCounter.value.source === sourceType.value.INSTANCE) {
+        clearData()
+        clearTopSqlData()
+        if (!instanceId.value) return;
         load()
         loadTopSQL(props.tabId)
       }
@@ -866,6 +928,31 @@ watch(instanceId, () => {
     fieldValue: '',
   }
 })
+
+const clearData = () => {
+  metricsData.value.cpu = []
+  metricsData.value.memory = []
+  metricsData.value.network = []
+  metricsData.value.io = []
+  metricsData.value.swap = []
+  metricsData.value.session = []
+  metricsData.value.sessionQty = []
+  metricsData.value.waitEvents = []
+  metricsData.value.time = ['0']
+}
+
+const clearTopSqlData = () => {
+  topSQLData.value = []
+  blockSessionTable.value = []
+  transTable.value = []
+  transTotal.value = 0
+  waitEventTable.value = []
+  waitEventTotal.value = 0
+  waitEventTableSrc.value = []
+  waitStatusList.value = []
+  waitEventList.value = []
+  innerRefreshDoneTime.value = ''
+}
 
 const changeWaitEventForm = () => {
   waitEventTable.value = waitEventTableSrc.value.filter(item => {

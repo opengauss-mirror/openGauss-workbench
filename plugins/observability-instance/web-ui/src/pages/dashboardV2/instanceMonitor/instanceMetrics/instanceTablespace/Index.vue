@@ -194,6 +194,7 @@ watch(
     clearInterval(timer.value);
     if (tabNow.value === tabKeys.InstanceMonitorInstanceTablespace) {
       if (updateCounter.value.source === sourceType.value.INSTANCE) {
+        clearData()
         load();
       }
       if (updateCounter.value.source === sourceType.value.MANUALREFRESH) load();
@@ -212,6 +213,15 @@ watch(
   { immediate: false }
 );
 
+const clearData = () => {
+  metricsData.value.time = [];
+  metricsData.value.tablespaceSize = [];
+  metricsData.value.tablesTop10 = [];
+  metricsData.value.indexsTop10 = [];
+  metricsData.value.deadTableTop10 = [];
+  metricsData.value.vacuumTop10 = [];
+}
+
 // load data
 const load = (checkTab?: boolean, checkRange?: boolean) => {
   if (!instanceId.value) return;
@@ -219,6 +229,9 @@ const load = (checkTab?: boolean, checkRange?: boolean) => {
 };
 const { data: indexData, run: requestData } = useRequest(getInstanceTablespace, {
   manual: true,
+  onError: () => {
+    clearData()
+  }
 });
 watch(
   indexData,

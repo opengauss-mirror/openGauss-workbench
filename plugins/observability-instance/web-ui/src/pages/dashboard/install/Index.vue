@@ -147,6 +147,7 @@
     <InstallAgent
       v-if="installCollectorShown"
       :show="installCollectorShown"
+      :addNodeId="addNodeId"
       @changeModal="changeModalInstallCollector"
       @installed="agentInstalled()"
     />
@@ -207,8 +208,9 @@ const agentNodeStatusMap = ref<any>({})
 const proxyNodeStatusMap = ref<any>({})
 const agentTimer = ref<any>()
 const proxyTimer = ref<any>()
+const addNodeId = ref<string>()
 
-const emits = defineEmits(["isUninstallAgent"]);
+const emits = defineEmits(["isUninstallAgent", "afterInstallAgent"]);
 
 const showUninstallInfo = ref<boolean>(false)
 onMounted(() => {
@@ -218,7 +220,8 @@ onMounted(() => {
 
 // install collector
 const installCollectorShown = ref(false)
-const showInstallCollector = () => {
+const showInstallCollector = (nodeId: string) => {
+  addNodeId.value = ''
   restRequest
       .get('/observability/v1/environment/prometheus', {})
       .then(function (res) {
@@ -231,6 +234,9 @@ const showInstallCollector = () => {
           return;
         }
         installCollectorShown.value = true
+        if (nodeId) {
+          addNodeId.value = nodeId
+        }
       })
 }
 const changeModalInstallCollector = (val: boolean) => {
@@ -239,6 +245,7 @@ const changeModalInstallCollector = (val: boolean) => {
 const agentInstalled = () => {
   activeName.value = 'collector'
   refreshCollectors()
+  emit('afterInstallAgent')
 }
 
 // edit collector
@@ -246,6 +253,21 @@ const editCollectorShown = ref(false)
 const editNode = ref({})
 const deleteNodeId = ref('')
 const showEditCollector = (node: any, delNodeId?: string) => {
+  if (node.data.children && delNodeId) {
+    let nodeList = []
+    node.data.children.forEach(item => {
+      if (item.children && item.children.length > 0)  {
+        nodeList.push(...item.children)
+      }
+    })
+    if (nodeList.length <= 1) {
+      ElMessage.warning({
+        message: t('install.delInstanceTip'),
+        type: 'warning',
+      })
+      return;
+    }
+  }
   editNode.value = node.data
   deleteNodeId.value = delNodeId !== undefined ? delNodeId : ''
   editCollectorShown.value = true
@@ -608,6 +630,7 @@ const stopProxy = (id: string) => {
       updateProxyNodeStatusMapByInterval()
     })
 }
+defineExpose({showInstallCollector})
 </script>
 
 <style scoped lang="scss">
@@ -727,5 +750,8 @@ const stopProxy = (id: string) => {
 .custom-icon {
   margin-top: 5px;
   animation: spin 1s infinite linear;
+}
+:deep .el-tree {
+    --el-tree-node-hover-bg-color: var(--color-fill-2) !important;
 }
 </style>

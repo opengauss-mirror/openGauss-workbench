@@ -129,8 +129,8 @@ public class SshSessionUtils implements AutoCloseable {
      * @throws IOException exception
      */
     public boolean isDirNotEmpty(String path) throws IOException {
-        String result = execute("ls -A " + path + " && echo 1 || echo 0");
-        if (result.equals("1")) {
+        String result = execute("ls -A " + path + " | wc -l");
+        if (!result.equals("0")) {
             return true;
         }
         return false;
@@ -219,7 +219,7 @@ public class SshSessionUtils implements AutoCloseable {
             session.addPasswordIdentity(password);
             session.auth().verify(SESSION_TIMEOUT);
         } catch (Exception e) {
-            throw new RuntimeException(username + " password error");
+            throw new RuntimeException(e.getMessage());
         }
     }
 

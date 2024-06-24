@@ -59,6 +59,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -147,8 +148,9 @@ public class MultiCollectorServiceImpl implements MultiCollector {
         long startTime = System.currentTimeMillis();
         List<MetricSnapshot> list = Collections.synchronizedList(new ArrayList<>());
         CountDownLatch countDownLatch = new CountDownLatch(metricList.size());
+        ThreadPoolExecutor executors = ThreadUtil.newExecutor(0, metricList.size());
         metricList.forEach(metric -> {
-            ThreadUtil.execAsync(() -> {
+            executors.submit(() -> {
                 try {
                     StopWatch stopWatch = new StopWatch();
                     stopWatch.start();
@@ -208,6 +210,9 @@ public class MultiCollectorServiceImpl implements MultiCollector {
                         log.info("The real-time collection task for the metric [{}] of node {}:takes {} seconds",
                             metric.getGroupName(), targetConfig.getNodeId(), stopWatch.getTotalTimeSeconds());
                     }
+                } catch (Exception e) {
+                    log.error("The real-time collection task for the metric [{}] of node {} is fail!",
+                        metric.getGroupName(), targetConfig.getNodeId());
                 } finally {
                     countDownLatch.countDown();
                 }
@@ -219,6 +224,7 @@ public class MultiCollectorServiceImpl implements MultiCollector {
         } catch (InterruptedException e) {
             log.error("commonMetric countDownLatch await timeout: {}", e.getMessage());
         }
+        executors.shutdown();
         long endTime = System.currentTimeMillis();
         log.info("Scrape not db metrics for node {}:takes {} ms", targetConfig.getNodeId(),
             endTime - startTime);
@@ -233,23 +239,30 @@ public class MultiCollectorServiceImpl implements MultiCollector {
             namedThreadFactory);
         executor.schedule(() -> {
             // real query job
-            StopWatch stopWatch = new StopWatch();
-            stopWatch.start();
-            CollectTargetDTO target = new CollectTargetDTO();
-            target.setTargetConfig(targetConfig);
-            CollectParamDTO param = new CollectParamDTO();
-            param.setGroupNames(groupNames);
-            List<List<MetricResult>> resultNext = metric.collectData(target, param);
-            metricCollectManager.cacheGroupCollectData(collectGroupKey, resultNext);
-            executor.shutdown();
-            stopWatch.stop();
-            if (stopWatch.getTotalTimeSeconds() > CollectConstants.COLLECT_TIMEOUT + 1) {
-                log.warn("The scheduled collection task for the metric [{}] of node {}:takes {} seconds, "
-                        + "collection  has been timeout",
-                    metric.getGroupName(), targetConfig.getNodeId(), stopWatch.getTotalTimeSeconds());
-            } else {
-                log.info("The scheduled collection task for the metric [{}] of node {}:takes {} seconds",
-                    metric.getGroupName(), targetConfig.getNodeId(), stopWatch.getTotalTimeSeconds());
+            try {
+                StopWatch stopWatch = new StopWatch();
+                stopWatch.start();
+                CollectTargetDTO target = new CollectTargetDTO();
+                target.setTargetConfig(targetConfig);
+                CollectParamDTO param = new CollectParamDTO();
+                param.setGroupNames(groupNames);
+                List<List<MetricResult>> resultNext = metric.collectData(target, param);
+                metricCollectManager.cacheGroupCollectData(collectGroupKey, resultNext);
+                stopWatch.stop();
+                if (stopWatch.getTotalTimeSeconds() > CollectConstants.COLLECT_TIMEOUT + 1) {
+                    log.warn("The scheduled collection task for the metric [{}] of node {}:takes {} seconds, "
+                            + "collection  has been timeout",
+                        metric.getGroupName(), targetConfig.getNodeId(), stopWatch.getTotalTimeSeconds());
+                } else {
+                    log.info("The scheduled collection task for the metric [{}] of node {}:takes {} seconds",
+                        metric.getGroupName(), targetConfig.getNodeId(), stopWatch.getTotalTimeSeconds());
+                }
+            } catch (Exception e) {
+                log.error("The scheduled collection task for the metric [{}] of node {} is fail",
+                    metric.getGroupName(), targetConfig.getNodeId());
+                log.error(e.getMessage());
+            } finally {
+                executor.shutdown();
             }
         }, gapTime - CollectConstants.CACHE_TIME_OUT + 1000, TimeUnit.MILLISECONDS);
     }

@@ -81,6 +81,10 @@ public class ConsistentHashAllocatorServiceImpl implements AllocatorService {
             return Collections.emptyMap();
         }
         Map<String, List<String>> map = new HashMap<>();
+        SortedMap<Integer, AllocateServerDTO> alloctorMap = alloctorMapTL.get();
+        alloctorMap.values().forEach(item -> {
+            map.put(item.getId(), new ArrayList<>());
+        });
         for (AllocateServerDTO server : recipients) {
             String id = getAllocatorId(server);
             if (StrUtil.isBlank(id)) {
@@ -88,7 +92,6 @@ public class ConsistentHashAllocatorServiceImpl implements AllocatorService {
             }
             List<String> list = map.get(id);
             if (CollectionUtil.isEmpty(list)) {
-                list = new ArrayList<>();
                 map.put(id, list);
             }
             map.get(id).add(server.getId());

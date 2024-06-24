@@ -52,7 +52,7 @@
               class="left-align"
               style="width: 300px; margin: 0 4px"
               v-model="formData.port"
-              :min="0"
+              :min="1025"
               :max="65535"
               :controls="false"
             >
@@ -280,7 +280,8 @@ const getHostUserList = (hostId: string) => {
 const getInstallPath = () => {
   restRequest.get(`/observability/v1/environment/basePath`).then((res) => {
     if (res) {
-      formData.path = res + (res.endsWith('/') ? 'data' : '/data') + '/prometheus'
+      let path = decodeURIComponent(res)
+      formData.path = path + (path.endsWith('/') ? 'data' : '/data') + '/prometheus'
     }
   })
 }

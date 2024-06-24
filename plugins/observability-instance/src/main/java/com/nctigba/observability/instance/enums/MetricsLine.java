@@ -132,12 +132,12 @@ public enum MetricsLine {
     IO_DISK_USAGE(
             Type.OS,
             "sum(agent_filesystem_used_size_kbytes{host='ogbrench'}) by (device,instance) / "
-                    + "max(agent_filesystem_size_kbytes{host='ogbrench'}) by (device,instance) * 100",
+                    + "sum(agent_filesystem_size_kbytes{host='ogbrench'}) by (device,instance) * 100",
             "{device}"),
     IO_DISK_INODE_USAGE(
             Type.OS,
             "sum(agent_filesystem_inode_used_size{host='ogbrench'}) by (device) / "
-                    + "max(agent_filesystem_inode_size{host='ogbrench'}) by (device) * 100",
+                    + "sum(agent_filesystem_inode_size{host='ogbrench'}) by (device) * 100",
             "{device}"),
     IO_DISK_DB_VOLUME_DATA(
             Type.DB,

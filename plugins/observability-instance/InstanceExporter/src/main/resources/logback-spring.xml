@@ -22,7 +22,7 @@
     <appender name="appErr" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>logs/agent-warn.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>logs/agent-err.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>logs/agent-warn.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxHistory>7</maxHistory>
             <maxFileSize>20mb</maxFileSize>
             <totalSizeCap>10gb</totalSizeCap>

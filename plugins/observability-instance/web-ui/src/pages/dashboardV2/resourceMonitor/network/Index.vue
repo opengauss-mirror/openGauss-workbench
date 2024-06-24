@@ -351,7 +351,10 @@ watch(
     isLinkage.value = isChartLinkage.value
     clearInterval(timer.value);
     if (tabNow.value === tabKeys.ResourceMonitorNetwork) {
-      if (updateCounter.value.source === sourceType.value.INSTANCE) load();
+      if (updateCounter.value.source === sourceType.value.INSTANCE) {
+        clearData()
+        load();
+      }
       if (updateCounter.value.source === sourceType.value.MANUALREFRESH) load();
       if (updateCounter.value.source === sourceType.value.TIMETYPE) load();
       if (updateCounter.value.source === sourceType.value.TIMERANGE) load();
@@ -368,6 +371,21 @@ watch(
   { immediate: false }
 );
 
+const clearData = () => {
+  metricsData.value.flowIn = [];
+  metricsData.value.flowOut = [];
+  metricsData.value.lost = [];
+  metricsData.value.lostIn = [];
+  metricsData.value.lostOut = [];
+  metricsData.value.errIn = [];
+  metricsData.value.errOut = [];
+  metricsData.value.networkSocket = [];
+  metricsData.value.tcpSocket = [];
+  metricsData.value.udpSocket = [];
+  metricsData.value.table = [];
+  metricsData.value.time = [];
+}
+
 // load data
 const load = (checkTab?: boolean, checkRange?: boolean) => {
   if (!instanceId.value) return;
@@ -375,6 +393,9 @@ const load = (checkTab?: boolean, checkRange?: boolean) => {
 };
 const { data: indexData, run: requestData } = useRequest(getNetworkMetrics, {
   manual: true,
+  onError: () => {
+    clearData()
+  }
 });
 watch(
   indexData,
@@ -393,8 +414,6 @@ watch(
     metricsData.value.table = [];
     metricsData.value.time = [];
 
-    connectionInfo.value.option = []
-
     const baseData = indexData.value;
     if (!baseData) return;
 
@@ -402,7 +421,7 @@ watch(
     for (let key in baseData.NETWORK_IN) {
       let tempData: string[] = [];
       baseData.NETWORK_IN[key]?.forEach((element) => {
-        tempData.push(byteToMB(element));
+        tempData.push(kbyteToMB(element));
       });
       metricsData.value.flowIn.push({ data: tempData, name: key });
     }
@@ -411,7 +430,7 @@ watch(
     for (let key in baseData.NETWORK_OUT) {
       let tempData: string[] = [];
       baseData.NETWORK_OUT[key]?.forEach((element) => {
-        tempData.push(byteToMB(element));
+        tempData.push(kbyteToMB(element));
       });
       metricsData.value.flowOut.push({ data: tempData, name: key });
     }
@@ -460,7 +479,6 @@ watch(
         tempData.push(toFixed(d));
       });
       metricsData.value.networkSocket.push({ data: tempData, name: "tcpalloc" });
-      connectionInfo.value.option.push({ name: 'tcpalloc', value: t('resourceMonitor.network.tcpallocContent') })
     }
     {
       let tempData: string[] = [];
@@ -468,7 +486,6 @@ watch(
         tempData.push(toFixed(d));
       });
       metricsData.value.networkSocket.push({ data: tempData, name: "currestab" });
-      connectionInfo.value.option.push({ name: 'currestab', value: t('resourceMonitor.network.currestabContent') })
     }
     {
       let tempData: string[] = [];
@@ -476,7 +493,6 @@ watch(
         tempData.push(toFixed(d));
       });
       metricsData.value.networkSocket.push({ data: tempData, name: "tcpinsegs" });
-      connectionInfo.value.option.push({ name: 'tcpinsegs', value: t('resourceMonitor.network.tcpinsegsContent') })
     }
     {
       let tempData: string[] = [];
@@ -484,7 +500,6 @@ watch(
         tempData.push(toFixed(d));
       });
       metricsData.value.networkSocket.push({ data: tempData, name: "tcpooutsegs" });
-      connectionInfo.value.option.push({ name: 'tcpooutsegs', value: t('resourceMonitor.network.tcpooutsegsContent') })
     }
 
     // tcp socket
@@ -524,8 +539,8 @@ watch(
   },
   { deep: true }
 );
-const byteToMB = (val: number) => {
-  return (val / 1024 / 1024).toFixed(4);
+const kbyteToMB = (val: number) => {
+  return (val / 1024).toFixed(4);
 };
 const gotoSQLDiagnosis = () => {
   hasSQLDiagnosisModule()
@@ -630,7 +645,10 @@ const errOutInfo = ref<any>({
 })
 const connectionInfo = ref<any>({
   title: t("app.lineOverview"),
-  option: []
+  option: [{ name: 'tcpalloc', value: t('resourceMonitor.network.tcpallocContent')},
+  { name: 'currestab', value: t('resourceMonitor.network.currestabContent')},
+  { name: 'tcpinsegs', value: t('resourceMonitor.network.tcpinsegsContent')},
+  { name: 'tcpooutsegs', value: t('resourceMonitor.network.tcpooutsegsContent') }]
 })
 const tcpInfo = ref<any>({
   title: t("app.lineOverview"),
@@ -641,7 +659,7 @@ const tcpInfo = ref<any>({
 const udpInfo = ref<any>({
   title: t("app.lineOverview"),
   option: [
-    { name: t('resourceMonitor.network.updQty'), value: t('resourceMonitor.network.tcpContent') }
+    { name: t('resourceMonitor.network.updQty'), value: t('resourceMonitor.network.updContent') }
   ]
 })
 const tableInfo = ref<any>({

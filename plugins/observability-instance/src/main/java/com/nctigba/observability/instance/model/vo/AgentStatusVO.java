@@ -54,15 +54,18 @@ public class AgentStatusVO {
         agentStatus.setId(env.getId());
         agentStatus.setUpdateTime(env.getUpdateTime());
         String status0 = env.getStatus();
+        if (StrUtil.isBlank(status0) || env.getUpdateTime() == null) {
+            agentStatus.setStatus(AgentStatusEnum.UNKNOWN.getStatus());
+            return agentStatus;
+        }
         boolean isStop = AgentStatusEnum.MANUAL_STOP.getStatus().equals(status0);
         boolean isRunning =
             AgentStatusEnum.STARTING.getStatus().equals(status0) || AgentStatusEnum.STOPPING.getStatus().equals(
                 status0);
-        long updateTime0 = env.getUpdateTime() != null ? env.getUpdateTime().getTime()
-            : new Date().getTime() - 3 * CommonConstants.MONITOR_CYCLE * 1000L - 1000L;
+        long updateTime0 = env.getUpdateTime().getTime();
         boolean isRunTimeout = isRunning
             && new Date().getTime() - updateTime0 > 3 * CommonConstants.MONITOR_CYCLE * 1000L;
-        boolean isTimeout = new Date().getTime() - updateTime0 > CommonConstants.MONITOR_CYCLE * 1000L;
+        boolean isTimeout = new Date().getTime() - updateTime0 > 2 * CommonConstants.MONITOR_CYCLE * 1000L;
         if (StrUtil.isBlank(status0) || (!isStop && !isRunTimeout && isTimeout) || isRunTimeout) {
             agentStatus.setStatus(AgentStatusEnum.UNKNOWN.getStatus());
         } else {

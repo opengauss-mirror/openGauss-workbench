@@ -60,7 +60,7 @@ import java.util.function.Consumer;
 @Log4j2
 @Component
 public class CmdUtils {
-    private static final int CHANNEL_TIMEOUT = 1000 * 60 * 5;
+    private static final int CHANNEL_TIMEOUT = 1000 * 3;
     private static TargetService targetService;
 
     @Autowired
@@ -135,6 +135,7 @@ public class CmdUtils {
      */
     public static final void readFromCmd(
             String nodeId, String cmd, BiConsumer<Integer, String> consumer) throws IOException, CMDException {
+        String name = Thread.currentThread().getName();
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         Optional<TargetConfig> targetConfig =
@@ -147,6 +148,7 @@ public class CmdUtils {
 
         Optional<ClientSession> opSession = pool.getSession();
         if (!opSession.isPresent()) {
+            log.error("{} Get SSH session fail for {}", name, nodeId);
             throw new CollectException("Get SSH session fail for " + nodeId);
         }
 

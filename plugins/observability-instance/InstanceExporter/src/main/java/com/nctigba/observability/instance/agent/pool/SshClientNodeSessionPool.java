@@ -37,10 +37,10 @@ import java.util.Map;
  * @since 2023/12/28
  */
 public class SshClientNodeSessionPool {
-    private static final int MAX_SESSION_FOR_ONE_CLIENT = 10;
-    private static final int MAX_IDLE_FOR_ONE_NODE = 5;
+    private static final int MAX_SESSION_FOR_ONE_CLIENT = 12;
+    private static final int MAX_IDLE_FOR_ONE_NODE = 12;
     private static final int MIN_IDLE_FOR_ONE_NODE = 0;
-    private static final int MAX_GET_CONNECTION_WAIT_SECONDS = 10;
+    private static final int MAX_GET_CONNECTION_WAIT_SECONDS = 3;
     private static Map<String, SshClientSessionPool> poolMap = new HashMap<>();
 
     /**

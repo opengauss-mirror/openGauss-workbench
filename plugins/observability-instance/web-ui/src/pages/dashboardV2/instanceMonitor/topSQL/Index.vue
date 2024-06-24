@@ -164,6 +164,7 @@ watch(typeTab, () => {
 });
 const load = () => {
   data.tableData = [];
+  if (!instanceId.value) return;
   requestData(getParam());
 };
 const { run: requestData, loading } = useRequest(
@@ -178,7 +179,7 @@ const { run: requestData, loading } = useRequest(
         if (typeof(e) === 'string') {
           errorInfo.value = e;
         }
-        const code = e?.data.code;
+        const code = e?.data?.code;
         if (code === 602) {
           errorInfo.value = t("dashboard.topsqlListTip");
         }

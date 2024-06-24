@@ -450,3 +450,11 @@ export async function getNodeInfo(tabId: string): Promise<void | NodeInfo> {
     id: instanceId,
   })
 }
+
+export async function isExistAgentForInstance(tabId: string): Promise<void | boolean> {
+  const monitorStore = useMonitorStore(tabId)
+  const { instanceId } = monitorStore
+  return ogRequest.get('/instanceMonitoring/api/v1/isExistAgentForInstance', {
+    id: instanceId,
+  })
+}

@@ -63,7 +63,7 @@ public class DBDirDiskGauge implements DBMetric {
                     + "awk '{print $1}') | awk '{print $NF}';} | tr '\\n' ' '";
     private static final String READ_LINK_CMD = "readlink {} && echo \"\" || echo \"false\"";
     private MetricType type = MetricType.GAUGE;
-    private String groupName = "db_filesystem";
+    private String groupName = "db_dir_filesystem";
     private String[] names = {"db_filesystem_data_used_size_kbytes", "db_filesystem_xlog_used_size_kbytes"};
     private String[] helps = {"Database xlog dir used filesystem size.", "Database data dir used filesystem size."};
     private String[] labelNames = {"host", "device", "dir", "dirType", "part"};

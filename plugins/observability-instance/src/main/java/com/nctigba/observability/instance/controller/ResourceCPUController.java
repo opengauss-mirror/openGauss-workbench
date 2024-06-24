@@ -38,6 +38,7 @@ import com.nctigba.observability.instance.model.entity.NctigbaEnvDO.envType;
 import com.nctigba.observability.instance.mapper.AgentNodeRelationMapper;
 import com.nctigba.observability.instance.mapper.NctigbaEnvMapper;
 import com.nctigba.observability.instance.service.MetricsService;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
@@ -54,6 +55,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/instanceMonitoring/api/v1/")
+@Slf4j
 public class ResourceCPUController extends ControllerConfig {
     @Autowired
     private MetricsService metricsService;
@@ -87,19 +89,23 @@ public class ResourceCPUController extends ControllerConfig {
     public AjaxResult cpu(String id, Long start, Long end, Integer step) {
         Map<String, Object> cpu = metricsService.listBatch(CPU, id, start, end, step);
         int core = 1;
-        for (Number n : (List<Number>) cpu.get(MetricsLine.CPU_TOTAL_CORE_NUM.name())) {
-            if (n.intValue() != 0) {
-                core = n.intValue();
-                break;
+        if (cpu.get(MetricsLine.CPU_TOTAL_CORE_NUM.name()) != null) {
+            for (Number n : (List<Number>) cpu.get(MetricsLine.CPU_TOTAL_CORE_NUM.name())) {
+                if (n.intValue() != 0) {
+                    core = n.intValue();
+                    break;
+                }
             }
         }
-        List<Number> db = new ArrayList<>();
-        List<Number> list = (List<Number>) cpu.get(MetricsLine.CPU_DB.name());
-        if (list != null) {
-            for (Number n : list) {
-                db.add(n.doubleValue() / core);
+        if (cpu.get(MetricsLine.CPU_DB.name()) != null) {
+            List<Number> list = (List<Number>) cpu.get(MetricsLine.CPU_DB.name());
+            if (list != null) {
+                List<Number> db = new ArrayList<>();
+                for (Number n : list) {
+                    db.add(n.doubleValue() / core);
+                }
+                cpu.put(MetricsLine.CPU_DB.name(), db);
             }
-            cpu.put(MetricsLine.CPU_DB.name(), db);
         }
         return AjaxResult.success(cpu);
     }
@@ -109,7 +115,7 @@ public class ResourceCPUController extends ControllerConfig {
         List<AgentNodeRelationDO> relationList = agentMapper.selectList(
                 Wrappers.<AgentNodeRelationDO>lambdaQuery().eq(AgentNodeRelationDO::getNodeId, id));
         if (CollectionUtil.isEmpty(relationList)) {
-            throw new CustomException("agent not installed");
+            return AjaxResult.success("agent not installed");
         }
         NctigbaEnvDO env = null;
         for (AgentNodeRelationDO agentNodeRel : relationList) {
@@ -122,7 +128,7 @@ public class ResourceCPUController extends ControllerConfig {
             break;
         }
         if (env == null) {
-            throw new CustomException("agent not installed");
+            return AjaxResult.success("agent not installed");
         }
         var param = new HashMap<String, Object>();
         param.put("nodeId", id);
@@ -131,13 +137,17 @@ public class ResourceCPUController extends ControllerConfig {
         }
         var host = hostFacade.getById(env.getHostid());
         var str = HttpUtil.get("http://" + host.getPublicIp() + ":" + env.getPort() + "/cmd/top", param);
-        var top = JSONUtil.parseArray(str);
-        var result = new ArrayList<>();
-        for (Object object : top) {
-            if (object instanceof JSONArray) {
-                JSONArray arr = (JSONArray) object;
-                result.add(arr.subList(0, Math.min(10, arr.size())));
+        ArrayList<Object> result = new ArrayList<>();
+        try {
+            var top = JSONUtil.parseArray(str);
+            for (Object object : top) {
+                if (object instanceof JSONArray) {
+                    JSONArray arr = (JSONArray) object;
+                    result.add(arr.subList(0, Math.min(10, arr.size())));
+                }
             }
+        } catch (Exception e) {
+           log.error("parse to Array error:" + e.getMessage());
         }
         return AjaxResult.success(result);
     }

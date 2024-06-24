@@ -63,6 +63,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -114,8 +115,9 @@ public class OpengaussMetrics {
         var in = new ClassPathResource("og_exporter.yml").getInputStream();
         Map<String, Object> map = new Yaml().loadAs(in, Map.class);
         CountDownLatch countDownLatch = new CountDownLatch(map.entrySet().size());
+        ThreadPoolExecutor executors = ThreadUtil.newExecutor(0, map.entrySet().size());
         map.entrySet().forEach((entry) -> {
-            ThreadUtil.execAsync(() -> {
+            executors.submit(() -> {
                 try {
                     if (entry.getValue() instanceof Map) {
                         StopWatch stopWatch = new StopWatch();
@@ -157,24 +159,31 @@ public class OpengaussMetrics {
                                 ScheduledExecutorService executor =
                                     Executors.newSingleThreadScheduledExecutor(namedThreadFactory);
                                 executor.schedule(() -> {
-                                    StopWatch stopWatchTmp = new StopWatch();
-                                    stopWatchTmp.start();
-                                    log.debug("After 5s,run sql and cache");
-                                    // real query job
-                                    List<Map<String, Object>> resultNext =
-                                        dbUtil.query(target.getTargetConfig().getNodeId(), sql);
-                                    timedCache.put(groupKey, resultNext);
-                                    executor.shutdown();
-                                    stopWatchTmp.stop();
-                                    if (stopWatchTmp.getTotalTimeSeconds() > CollectConstants.COLLECT_TIMEOUT + 1) {
-                                        log.warn("The scheduled collection task for the metric [{}] of node {}:takes {} seconds, "
-                                                + "collection  has been timeout",
-                                            entry.getKey(), target.getTargetConfig().getNodeId(),
-                                            stopWatchTmp.getTotalTimeSeconds());
-                                    } else {
-                                        log.info("The scheduled collection task for the metric [{}] of node {}:takes {} seconds",
-                                            entry.getKey(), target.getTargetConfig().getNodeId(),
-                                            stopWatchTmp.getTotalTimeSeconds());
+                                    try {
+                                        StopWatch stopWatchTmp = new StopWatch();
+                                        stopWatchTmp.start();
+                                        log.debug("After 5s,run sql and cache");
+                                        // real query job
+                                        List<Map<String, Object>> resultNext =
+                                            dbUtil.query(target.getTargetConfig().getNodeId(), sql);
+                                        timedCache.put(groupKey, resultNext);
+                                        stopWatchTmp.stop();
+                                        if (stopWatchTmp.getTotalTimeSeconds() > CollectConstants.COLLECT_TIMEOUT + 1) {
+                                            log.warn("The scheduled collection task for the metric [{}] of node {}:takes {} seconds, "
+                                                    + "collection  has been timeout",
+                                                entry.getKey(), target.getTargetConfig().getNodeId(),
+                                                stopWatchTmp.getTotalTimeSeconds());
+                                        } else {
+                                            log.info("The scheduled collection task for the metric [{}] of node {}:takes {} seconds",
+                                                entry.getKey(), target.getTargetConfig().getNodeId(),
+                                                stopWatchTmp.getTotalTimeSeconds());
+                                        }
+                                    } catch (IllegalStateException e) {
+                                        log.error("The scheduled collection task for the metric [{}] of node {}"
+                                                + " is fail", entry.getKey(), target.getTargetConfig().getNodeId());
+                                        log.error(e.getMessage());
+                                    } finally {
+                                        executor.shutdown();
                                     }
                                 }, gapTime - CACHE_TIME_OUT + 1000, TimeUnit.MILLISECONDS);
                             }
@@ -269,6 +278,9 @@ public class OpengaussMetrics {
                                 entry.getKey(), target.getTargetConfig().getNodeId(), stopWatch.getTotalTimeSeconds());
                         }
                     }
+                }  catch (Exception e) {
+                    log.error("The real-time collection task for the metric [{}] of node {} is fail!",
+                        entry.getKey(), target.getTargetConfig().getNodeId());
                 } finally {
                     countDownLatch.countDown();
                 }
@@ -280,6 +292,7 @@ public class OpengaussMetrics {
         } catch (InterruptedException e) {
             log.error(e.getMessage());
         }
+        executors.shutdown();
         // print run time
         long endTime = System.currentTimeMillis();
         log.info("Scrape db metrics for node {}:takes {} ms", target.getTargetConfig().getNodeId(),
