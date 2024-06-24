@@ -32,6 +32,9 @@ import org.opengauss.admin.common.core.domain.model.ops.HostBody;
 import org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO;
 import org.opengauss.admin.common.core.domain.model.ops.host.SSHBody;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -81,6 +84,12 @@ public interface IHostService extends IService<OpsHostEntity> {
      * @return whether succeed
      */
     boolean edit(String hostId, HostBody hostBody);
+
+    void invokeFile(String uuid, HashMap<String, InputStream> fileStreamMap);
+
+    void downloadTemplate(HttpServletResponse response);
+
+    void downloadErrorExcel(HttpServletResponse response, String uuid);
 
     IPage<OpsHostVO> pageHost(Page page, String name, Set<String> tagIds, String os);
 
