@@ -17,6 +17,20 @@
             <a-button
               type="primary"
               class="mr"
+              @click="addHostbulk('create')"
+            >
+              {{ $t('physical.index.5mphf11rr090') }}
+            </a-button>
+            <a-button
+              type="primary"
+              class="mr"
+              @click="deleteSelectedHosts"
+            >
+              {{ $t('physical.index.5mphf11rr590') }}
+            </a-button>
+            <a-button
+              type="primary"
+              class="mr"
               @click="handleBatchTag()"
             >
               {{ $t('physical.index.labelBatch') }}
@@ -314,6 +328,10 @@
           ref="labelManageDlgRef"
           @finish="labelClose"
         ></label-manage-dlg>
+        <bulk-import
+          ref="addHostBulkRef"
+          @finish="bulkClose"
+        ></bulk-import>
         <batch-label-dlg
           ref="batchLabelDlgRef"
           @finish="batchFinish"
@@ -329,6 +347,7 @@ import { Message, Table } from '@arco-design/web-vue'
 import { onMounted, reactive, ref, onUnmounted } from 'vue'
 import { hostPage, delHost, hostMonitor, hostTagListAll } from '@/api/ops' // eslint-disable-line
 import AddHost from './components/AddHost.vue'
+import BulkImport from './components/BulkImport.vue'
 import HostPwdDlg from './components/HostPwdDlg.vue'
 import HostTerminal from './components/HostTerminal.vue'
 import HostUserMng from './components/HostUserMng.vue'
@@ -431,6 +450,12 @@ const tableRef = ref<null | InstanceType<typeof Table>>(null)
 const batchFinish = () => {
   tableRef.value?.select(list.selectedHostIds, false)
   list.selectedHostIds = []
+  getListData()
+  getAllTag()
+}
+
+// const tableBulk = ref<null | InstanceType<typeof Table>>(null)
+const bulkClose = () => {
   getListData()
   getAllTag()
 }
@@ -659,27 +684,51 @@ const deleteRows = (record: KeyValue) => {
   })
 }
 
-// const getStateColor = (state: number) => {
-//   switch (state) {
-//     case -1:
-//       return 'gray'
-//     case 0:
-//       return 'red'
-//     case 1:
-//       return 'green'
-//   }
-// }
+const addHostBulkRef = ref<null | InstanceType<typeof BulkImport>>(null)
+const addHostbulk = (type: string, data?: KeyValue) => {
 
-// const getStateDesc = (state: number) => {
-//   switch (state) {
-//     case -1:
-//       return t('physical.index.5mphf11tfr80')
-//     case 0:
-//       return t('physical.index.5mphf11tfx80')
-//     case 1:
-//       return t('physical.index.5mphf11tg780')
-//   }
-// }
+  addHostBulkRef.value?.open()
+}
+
+const deleHostbulkRef = ref<null | InstanceType<typeof BatchLabelDlg>>(null)
+
+const deleteSelectedHosts = () => {
+  const selectedRecords = list.selectedHostIds.map((hostId: string | number) => {
+    return data.selectedData[hostId];
+  });
+  if (selectedRecords.length > 0) {
+    deleteMultipleRows(selectedRecords);
+  } else {
+    Message.warning(t('physical.index.else1'))
+  }
+};
+
+const deleteMultipleRows = (records: KeyValue) => {
+  const deletePromises = records.map((record) => delHost(record.hostId))
+    Promise.all(deletePromises).then((responses) => {
+      let allSuccess = true
+      responses.forEach((res) => {
+        if (Number(res.code) !== 200) {
+          allSuccess = false
+        }
+      })
+      if (allSuccess) {
+        Message.success(t('physical.index.5mphf11rr890'))
+      } else {
+        Message.error(t('physical.index.5mphf11rr990'))
+      }
+      list.selectedHostIds = []
+      data.selectedData = {}
+      getListData()
+    }).catch(() => {
+      Message.error({
+        content: 'An error occurred while deleting hosts'
+      })
+    });
+  getListData()
+  getAllTag()
+
+}
 
 const hostUserRef = ref<null | InstanceType<typeof HostUserMng>>(null)
 const showHostUserMng = (record: KeyValue) => {
