@@ -449,6 +449,35 @@ COMMENT ON COLUMN "public"."ops_host_tag_rel"."create_time" IS '创建时间';
 COMMENT ON COLUMN "public"."ops_host_tag_rel"."update_by" IS '更新者';
 COMMENT ON COLUMN "public"."ops_host_tag_rel"."update_time" IS '更新时间';
 
+
+-- ----------------------------
+-- Table structure for ops_package_path_dict
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS "public"."ops_package_path_dict" (
+                                                                "id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "os" varchar(255) COLLATE "pg_catalog"."default",
+    "cpu_arch" varchar(255) COLLATE "pg_catalog"."default",
+    "version" varchar(255) COLLATE "pg_catalog"."default",
+    "url_path" varchar(255) COLLATE "pg_catalog"."default",
+    "package_name_tmp" varchar(255) COLLATE "pg_catalog"."default",
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6)
+    )
+;
+COMMENT ON COLUMN "public"."ops_package_path_dict"."os" IS '操作系统名称';
+COMMENT ON COLUMN "public"."ops_package_path_dict"."cpu_arch" IS 'CPU架构';
+COMMENT ON COLUMN "public"."ops_package_path_dict"."version" IS 'openGauss版本';
+COMMENT ON COLUMN "public"."ops_package_path_dict"."url_path" IS 'openGauss包URI路径';
+COMMENT ON COLUMN "public"."ops_package_path_dict"."package_name_tmp" IS 'openGauss包名称模版';
+COMMENT ON COLUMN "public"."ops_package_path_dict"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."ops_package_path_dict"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."ops_package_path_dict"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."ops_package_path_dict"."update_time" IS '更新时间';
+COMMENT ON TABLE "public"."ops_package_path_dict" IS 'openGauss包名称字典表';
+
 CREATE OR REPLACE FUNCTION add_host_user_field_func() RETURNS integer AS 'BEGIN
 IF
 ( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host_user'' AND COLUMN_NAME = ''sudo'' ) = 0
@@ -1280,6 +1309,24 @@ VALUES ('1706224187103813678', 'openEuler', 'aarch64', 'MINIMAL_LIST', '6.0.0-RC
         'https://opengauss.obs.cn-south-1.myhuaweicloud.com/6.0.0-RC1/arm_2203/openGauss-6.0.0-RC1-openEuler-64bit.tar.bz2', NULL,
         'admin', '2024-04-15 20:26:07.402', 'admin', '2024-04-15 20:26:07.402', 'openGauss', 'offical_6.0.0-RC1_mini_openEuler2203_aarch64') ON DUPLICATE KEY
 UPDATE NOTHING;
+
+
+INSERT INTO "public"."ops_package_path_dict" VALUES ('01', 'CentOS', 'x86_64', 'LITE', 'x86', 'openGauss-Lite-%s-CentOS-x86_64.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('02', 'CentOS', 'x86_64', 'MINIMAL_LIST', 'x86', 'openGauss-%s-CentOS-64bit.tar.bz2', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('03', 'CentOS', 'x86_64', 'ENTERPRISE', 'x86', 'openGauss-%s-CentOS-64bit-all.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('04', 'openEuler', 'aarch64', 'LITE', 'arm', 'openGauss-Lite-%s-openEuler-aarch64.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('05', 'openEuler', 'aarch64', 'MINIMAL_LIST', 'arm', 'openGauss-%s-openEuler-64bit.tar.bz2', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('06', 'openEuler', 'aarch64', 'ENTERPRISE', 'arm', 'openGauss-%s-openEuler-64bit-all.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('07', 'openEuler', 'x86_64', 'LITE', 'x86_openEuler', 'openGauss-Lite-%s-openEuler-aarch64.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('08', 'openEuler', 'x86_64', 'MINIMAL_LIST', 'x86_openEuler', 'openGauss-%s-openEuler-64bit.tar.bz2', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('09', 'openEuler', 'x86_64', 'ENTERPRISE', 'x86_openEuler', 'openGauss-%s-openEuler-64bit-all.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('10', 'openEuler_2203', 'aarch64', 'LITE', 'arm_2203', 'openGauss-Lite-%s-openEuler-aarch64.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('11', 'openEuler_2203', 'aarch64', 'MINIMAL_LIST', 'arm_2203', 'openGauss-%s-openEuler-64bit.tar.bz2', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('12', 'openEuler_2203', 'aarch64', 'ENTERPRISE', 'arm_2203', 'openGauss-%s-openEuler-64bit-all.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('13', 'openEuler_2203', 'x86_64', 'LITE', 'x86_openEuler_2203', 'openGauss-Lite-%s-openEuler-aarch64.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('14', 'openEuler_2203', 'x86_64', 'MINIMAL_LIST', 'x86_openEuler_2203', 'openGauss-%s-openEuler-64bit.tar.bz2', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('15', 'openEuler_2203', 'x86_64', 'ENTERPRISE', 'x86_openEuler_2203', 'openGauss-%s-openEuler-64bit-all.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('16', 'KYLIN', 'x86_64', 'ENTERPRISE', 'x86', 'openGauss-%s-openEuler-64bit-all.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
 
 CREATE
 OR REPLACE FUNCTION init_data_fuc() RETURNS integer AS 'BEGIN
