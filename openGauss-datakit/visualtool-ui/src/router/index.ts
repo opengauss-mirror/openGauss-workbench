@@ -5,6 +5,7 @@ import 'nprogress/nprogress.css'
 import { appRoutes } from './routes'
 import createRouteGuard from './guard'
 
+
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
 const router = createRouter({
@@ -23,7 +24,7 @@ const router = createRouter({
       path: '/:pathMatch(.*)*',
       name: 'notFound',
       component: () => import('@/views/not-found/index.vue')
-    }
+    },
   ],
   scrollBehavior () {
     return { top: 0 }
