@@ -1331,7 +1331,7 @@ public class SqlConstants {
      * select column sql
      */
     public static final String SELECT_COLUMN_SQL = "select column_name from information_schema.columns where "
-            + "table_schema ='%s' and table_name = '%s';";
+            + "table_schema ='%s' and table_name = '%s' order by ordinal_position;";
 
     /**
      * select function sql
