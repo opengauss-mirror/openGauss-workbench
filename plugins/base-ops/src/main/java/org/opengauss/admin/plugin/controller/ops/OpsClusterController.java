@@ -30,6 +30,7 @@ import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.core.domain.model.ops.check.CheckSummaryVO;
 import org.opengauss.admin.common.enums.OsSupportMap;
 import org.opengauss.admin.plugin.base.BaseController;
+import org.opengauss.admin.plugin.domain.entity.ops.OpsImportEntity;
 import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;
 import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
@@ -42,11 +43,11 @@ import org.opengauss.admin.plugin.vo.ops.SlowSqlVO;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -201,6 +202,36 @@ public class OpsClusterController extends BaseController {
     public AjaxResult importCluster(@RequestBody ImportClusterBody importClusterBody) {
         opsClusterService.importCluster(importClusterBody);
         return AjaxResult.success();
+    }
+
+    @GetMapping("/downloadImportFile")
+    public void downloadImportFile(HttpServletResponse response) {
+        opsClusterService.downloadImportFile(response);
+    }
+
+    List<OpsImportEntity> opsImportEntities = new ArrayList<>();
+
+    @PostMapping("/uploadImportFile")
+    public AjaxResult uploadImportFile(MultipartFile file) {
+        opsImportEntities = opsClusterService.uploadImportFile(file);
+        return AjaxResult.success();
+    }
+
+    @GetMapping("/parseExcel")
+    public AjaxResult parseExcel() {
+        opsImportEntities = opsClusterService.parseExcel(opsImportEntities);
+        return AjaxResult.success(opsImportEntities.size());
+    }
+
+    @GetMapping("/importSuccessCount")
+    public AjaxResult importSuccessCount() {
+        int importSuccessCount = opsClusterService.importSuccessCount();
+        return AjaxResult.success(importSuccessCount);
+    }
+
+    @GetMapping("/downloadErrorFile")
+    public void downloadErrorFile(HttpServletResponse response) {
+        opsClusterService.downloadErrorFile(response, opsImportEntities);
     }
 
     @GetMapping("/monitor")

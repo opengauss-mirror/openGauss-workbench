@@ -29,6 +29,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
+import org.opengauss.admin.plugin.domain.entity.ops.OpsImportEntity;
 import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;
 import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
@@ -37,6 +38,7 @@ import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.vo.ops.SessionVO;
 import org.opengauss.admin.plugin.vo.ops.SlowSqlVO;
 import org.opengauss.admin.plugin.vo.ops.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -112,4 +114,14 @@ public interface IOpsClusterService extends IService<OpsClusterEntity> {
     List<GucSettingVO> getGucSettingList(String clusterId, String hostId) throws OpsException;
 
     void batchConfigGucSetting(GucSettingDto gucSettingDto);
+
+    void downloadImportFile(HttpServletResponse response);
+
+    List<OpsImportEntity> uploadImportFile(MultipartFile file);
+
+    List<OpsImportEntity> parseExcel(List<OpsImportEntity> opsImportEntities);
+
+    int importSuccessCount();
+
+    void downloadErrorFile(HttpServletResponse response, List<OpsImportEntity> usersList);
 }
