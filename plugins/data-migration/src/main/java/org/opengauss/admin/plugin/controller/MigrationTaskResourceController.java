@@ -232,4 +232,12 @@ public class MigrationTaskResourceController extends BaseController {
             }
         });
     }
+
+    /**
+     * find tables
+     */
+    @PostMapping("/tables/{dbName}")
+    public AjaxResult getTables(@PathVariable String dbName, String url, String username, String password) {
+        return AjaxResult.success(migrationTaskHostRefService.getTablesBySourceDb(dbName, url, username, password));
+    }
 }
