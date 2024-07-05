@@ -697,7 +697,8 @@ const deleteSelectedHosts = () => {
     return data.selectedData[hostId];
   });
   if (selectedRecords.length > 0) {
-    deleteMultipleRows(selectedRecords);
+    const tempselectedRecords = selectedRecords.filter(hostId => hostId !== null && hostId !== undefined)
+    deleteMultipleRows(tempselectedRecords)
   } else {
     Message.warning(t('physical.index.else1'))
   }

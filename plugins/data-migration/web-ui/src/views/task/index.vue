@@ -128,6 +128,7 @@ const saveConfig = () => {
         targetDbVersion: item.targetNodeInfo.versionNum,
         targetNodeId: item.targetNodeInfo.nodeId,
         isSystemAdmin: item.isSystemAdmin,
+        sourceTables: item.sourceTables,
         taskParams: [...taskParamsObject.basic.map(item => ({ paramKey: item.paramKey, paramValue: item.paramValue, paramDesc: item.paramDesc })), ...taskParamsObject.more.map(item => ({ paramKey: item.paramKey, paramValue: item.paramValue, paramDesc: item.paramDesc }))]
       }
     })
@@ -198,7 +199,8 @@ const getTaskDetail = id => {
         taskParamsObject: {
           basic: item.taskParams.filter(child => ~defaultBasicData.value.indexOf(child.paramKey)),
           more: item.taskParams.filter(child => !~defaultBasicData.value.indexOf(child.paramKey))
-        }
+        },
+        sourceTables: item.sourceTables
       }
     })
     stepOneComp.value.init(subTaskConfig.value)
