@@ -52,6 +52,7 @@ public class MigrationTask {
     private Integer id;
     private String sourceNodeId;
     private String sourceDb;
+    private String sourceTables;
     private String sourceDbHost;
     private String sourceDbPort;
     private String sourceDbUser;

@@ -1082,4 +1082,25 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             }
         }
     }
+
+    /**
+     * get tables by sourceDb
+     *
+     * @param dbName    database name
+     * @param url       source database connection
+     * @param username  username of db connection
+     * @param password  password of db connection
+     * @return tables
+     */
+    @Override
+    public List<Object> getTablesBySourceDb(String dbName, String url, String username, String password) {
+        String sql = String.format("SELECT table_name FROM information_schema.tables " +
+                "WHERE table_schema = '%s' and Table_type = 'BASE TABLE'", dbName);
+        List<Object> tables = new ArrayList<>();
+        List<Map<String, Object>> rs = querySource(url, username, password, sql);
+        for (Map<String, Object> map : rs) {
+            tables.addAll(map.values());
+        }
+        return tables;
+    }
 }
