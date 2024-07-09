@@ -126,9 +126,7 @@
 import { KeyValue } from '@/types/global'
 import { nextTick, reactive, ref, toRaw, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
-import axios from 'axios'
 import {bulkImporErrPlan, bulkImportany, bulkuploadPhy} from '@/api/ops'
-import qs from 'qs'
 
 const { t } = useI18n()
 
@@ -202,6 +200,7 @@ const handleClose = () => {
   progressWidth.value = 0
   data.formLoaFlag = formLoaFlaEnum.waiting
   clearInterval(intervalIdP)
+  window.removeEventListener('beforeunload', handleBeforeUnload)
   emits('finish')
 }
 

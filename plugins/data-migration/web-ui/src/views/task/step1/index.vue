@@ -1,7 +1,7 @@
 <template>
   <div class="step1-container">
     <div class="form-con">
-      <div class="form-left">
+      <div class="form-left" >
         <a-card bordered style="width: 400px;">
           <template #title>
             <div class="card-title-con">
@@ -17,8 +17,8 @@
           <template #extra>
             <a-link @click="handleAddSql('MYSQL')">{{$t('step1.index.5q091ixigdc0')}}</a-link>
           </template>
-          <div class="sql-tree-con">
-            <a-spin :loading="loadingSource" style="display: block;">
+          <div class="sql-tree-con" >
+            <a-spin :loading="loadingSource">
               <a-tree :data="treeSourceData" v-model:selected-keys="selectedSourceKey" blockNode :check-strictly="true" :load-more="getSourceClusterDbsData" :default-expand-all="false" @select="sourceNodeSelect">
                 <template #title="nodeData">
                   <!-- eslint-disable -->
@@ -31,7 +31,10 @@
                         <p>Port: {{ nodeData?.port }}</p>
                       </template>
                     </a-popover>
-                    <span v-else>{{ nodeData?.title }}</span>
+                    <div v-else class="add-sub-task" style="width:278px;" @mouseover="showButtonSourceDB(nodeData)" @mouseleave="hideButtonSourceDB">
+                      <span>{{ nodeData?.title }}</span>
+                      <a-button type="primary" size="mini" @click="dataTblWin(nodeData)" v-if="checkBtnShow(nodeData)" class="add-sub-btn">选择数据表</a-button>
+                    </div>
                   </template>
                   <span v-else>
                     {{ nodeData?.title?.substr(0, index) }}
@@ -48,6 +51,7 @@
         <div v-if="selectSourceDB.sourceDBName" class="selected-db-con">
           <span class="selected-info">{{$t('step1.index.5q091ixiggs0')}}</span>
           <span class="selected-db">{{ selectSourceDB.sourceDBName }}</span>
+          <span class="selected-info" v-if="tblListShowflag.value > 0" >已选择{{ tblListShowflag.value }}个数据表</span>
         </div>
       </div>
       <div class="form-center">
@@ -84,7 +88,7 @@
                       </template>
                     </a-popover>
                     <div v-else class="add-sub-task">
-                      <span>{{ nodeData?.title }}</span>
+                      {{ nodeData?.title }}
                       <a-button v-if="nodeData?.isLeaf && nodeData?.isSelect" class="add-sub-btn" type="primary" size="mini" @click="addSubTask(nodeData)">{{$t('step1.index.5q091ixigog0')}}</a-button>
                     </div>
                   </template>
@@ -107,6 +111,12 @@
         <template #columns>
           <a-table-column :title="$t('step1.index.5q091ixigro0')" data-index="sourceNodeName" :width="200" ellipsis tooltip></a-table-column>
           <a-table-column :title="$t('step1.index.5q091ixigug0')" data-index="sourceDBName" :width="200" ellipsis tooltip></a-table-column>
+          <a-table-column v-if="selectedTblColumn" :title="$t('数据表')" data-index="seletedTblNum" :width="150" ellipsis tooltip>
+            <template #cell="{ record }">
+              <a-button v-if="record.sourceTables && record.sourceTables !== ''" @click="showTblList(record.sourceDBName, record.sourceTables)">{{ record.seletedTblNum }}</a-button>
+              <p v-else>全部</p>
+            </template>
+          </a-table-column>
           <a-table-column :title="$t('step1.index.5q091ixigy80')" data-index="targetNodeName" :width="200" ellipsis tooltip></a-table-column>
           <a-table-column :title="$t('step1.index.5q091ixih280')" data-index="targetDBName" :width="200" ellipsis tooltip></a-table-column>
           <a-table-column data-index="mode" :width="130">
@@ -142,7 +152,7 @@
               </div>
             </template>
             <template #cell="{ record }">
-              <input style="position: center; margin-left: 100px" v-model="record.isAdjustKernelParam" calss="checkbox" type = "checkbox" :disabled="isDisable(record.isSystemAdmin)"/>
+              <input style="position: center; margin-left: 100px" v-model="record.isAdjustKernelParam" class="checkbox" type = "checkbox" :disabled="isDisable(record.isSystemAdmin)"/>
             </template>
           </a-table-column>
           <a-table-column :title="$t('step1.index.5q091ixiibk0')" align="center" :width="100" fixed="right">
@@ -163,9 +173,12 @@
         </template>
       </a-table>
     </div>
-
-    <!-- add sql -->
-    <add-jdbc ref="addJdbcRef" @finish="finishAddJdbc" />
+    <div>
+      <!-- add sql -->
+      <add-jdbc ref="addJdbcRef" @finish="finishAddJdbc" />
+      <dataTblModal v-if="dataTblModalRef" @close="dataTblWinClose" :seleDBMsg="seleDBMsg" @data-selected="handleTableSeleted"> </dataTblModal>
+      <dataTblList v-if="dataTblListRef" @close="showTblListClose" :seleDBMsgaft="seleDBMsgaft" > </dataTblList>
+    </div>
   </div>
 </template>
 
@@ -176,6 +189,8 @@ import AddJdbc from '../components/AddJdbc.vue'
 import { sourceClusters, targetClusters, sourceClusterDbsData, targetClusterDbsData } from '@/api/task'
 import useTheme from '@/hooks/theme'
 import { useI18n } from 'vue-i18n'
+import dataTblModal from './dataTableModal.vue'
+import dataTblList from './dataTableList.vue'
 
 const { t } = useI18n()
 
@@ -205,6 +220,129 @@ const selectSourceDB = reactive({
 })
 
 const tableData = ref([])
+const seleDBMsg = reactive({
+  dbName: '',
+  url: '',
+  username: '',
+  password: '',
+  seletedTbl: ''
+})
+
+const selectedData = ref([''])
+const dataTblModalRef = ref (false)
+const selectedTblColumn = ref (false)
+const tblListShowflag = ref (0)
+const showSourceDBbtn = ref(null)
+const showButtonSourceDB = (nodeData) => {
+  if (nodeData.title) {
+    showSourceDBbtn.value = nodeData.title
+  }
+}
+
+const checkBtnShow = (nodeData) => {
+  if (showSourceDBbtn.value && nodeData && nodeData.title && nodeData.level !== 0 && nodeData.level !== 1) {
+    if (showSourceDBbtn.value === nodeData.title) {
+      return true
+    }
+  }
+  return false
+}
+
+const hideButtonSourceDB = () => {
+  showSourceDBbtn.value = -1
+}
+
+const selecTblbf = ref('')
+const dataTblWin = async (nodeData) => {
+  tblListShowflag.value = 0
+  seleDBMsg.dbName = nodeData?.title
+  if (selectedData.value.length > 0 && selecTblbf && selecTblbf.value && selecTblbf.value === seleDBMsg.dbName) {
+    if (selectedData.value[0] === '') {
+      seleDBMsg.seletedTbl = '全部'
+    } else {
+      seleDBMsg.seletedTbl = selectedData.value
+    }
+  } else if (selectedData.value.length === 0 && selecTblbf && selecTblbf.value && selecTblbf.value === seleDBMsg.dbName) {
+    seleDBMsg.seletedTbl = '全部'
+  } else {
+    selecTblbf.value = ''
+    seleDBMsg.seletedTbl = ''
+    seleDBMsg.seletedTbl = ''
+  }
+  if (seleDBMsg.url) {
+    dataTblModalRef.value = true
+  }
+}
+
+const dataTblWinClose = () => {
+  dataTblModalRef.value = false
+  selectedTblColumn.value = !(selectedData.value.length === 0 && selectedTblColumn.value === false)
+}
+
+const handleTableSeleted = (data) => {
+  selectedData.value = data.selectedValue
+  selecTblbf.value = data.selecTbl
+  tblListShowflag.value = selectedData.value.length
+  if (tblListShowflag.value > 0 && selectedData.value[0] !== '') {
+    selectedTblColumn.value = true
+  } else {
+    tblListShowflag.value = 0
+  }
+}
+
+const getTblOpt = async (nodeData) => {
+  seleDBMsg.url = nodeData.url
+  seleDBMsg.username = nodeData.username
+  seleDBMsg.password = nodeData.password
+}
+
+const comTbllist = () => {
+  let retString = ''
+  if (selectedData.value && Array.isArray(selectedData.value) && selectedData.value.length > 0) {
+    for (let part of selectedData.value) {
+      if (part === '') {
+        retString = ''
+      } else {
+        if (retString.length > 1) {
+          retString = retString + ',' + seleDBMsg.dbName + '.' + part
+        } else {
+          retString = seleDBMsg.dbName + '.' + part
+        }
+      }
+    }
+  }
+  return retString
+}
+
+const comTblLen = () => {
+  let retString = ''
+  if (selectedData.value && Array.isArray(selectedData.value) && selectedData.value.length > 0) {
+    if (selectedData.value[0] === '') {
+      retString = '全部'
+    } else {
+      retString = '已选择' + selectedData.value.length + '张表'
+    }
+  }
+  if (retString === '') {
+    retString = '全部'
+  }
+  return retString
+}
+
+const dataTblListRef = ref (false)
+const seleDBMsgaft = reactive({
+  dbName: '',
+  TblList: ''
+})
+
+const showTblList = (dbName, TblList) => {
+  seleDBMsgaft.dbName = dbName
+  seleDBMsgaft.TblList = TblList
+  dataTblListRef.value = true
+}
+const showTblListClose = () => {
+  dataTblListRef.value = false
+}
 
 const treeSourceData = computed(() => {
   if (!searchSourceKey.value) return sourceTreeData.value
@@ -252,7 +390,7 @@ const getMatchTargetIndex = (title) => { // eslint-disable-line
 const sourceNodeSelect = (selectedKeys, data) => {
   if (data.node.isLeaf) {
     selectSourceDB.sourceInfo = data.node.parentInfo,
-    selectSourceDB.sourceNodeName = data.node.parentName
+      selectSourceDB.sourceNodeName = data.node.parentName
     selectSourceDB.sourceDBName = data.node.title
   } else {
     selectedSourceKey.value = []
@@ -310,6 +448,7 @@ const deepTargetTreeData = (data) => {
 
 // get source db data
 const getSourceClusterDbsData = (nodeData) => {
+  getTblOpt(nodeData)
   return sourceClusterDbsData({
     url: nodeData.url,
     username: nodeData.username,
@@ -429,6 +568,8 @@ const addSubTask = (targetDB) => {
     sourceNodeName: selectSourceDB.sourceNodeName,
     sourceNodeInfo: selectSourceDB.sourceInfo,
     sourceDBName: selectSourceDB.sourceDBName,
+    seletedTblNum: comTblLen(),
+    sourceTables: comTbllist(),
     targetNodeName: targetDB.parentName,
     targetNodeInfo: targetDB.parentInfo,
     targetDBName: targetDB.title,
@@ -445,10 +586,13 @@ const addSubTask = (targetDB) => {
   selectSourceDB.sourceDBName = ''
   selectedSourceKey.value = []
   selectedTargetKey.value = []
+  selectedData.value = ''
+  tblListShowflag.value = 0
+  selecTblbf.value = ''
 }
 
 const isDisable = (val) => {
-  if(val === true) {
+  if (val === true) {
     return false
   } else {
     return true
@@ -458,6 +602,18 @@ const isDisable = (val) => {
 // remove sub task
 const deleteSubTask = (idx) => {
   tableData.value.splice(idx, 1)
+  selecTblbf.value = ''
+  if (selectedTblColumn.value) {
+    let temptblListShow = false
+    for (let db of tableData.value) {
+      if (db. selectedTblList !== '全部') {
+        temptblListShow = temptblListShow || true
+      } else {
+        temptblListShow = temptblListShow || false
+      }
+    }
+    selectedTblColumn.value = temptblListShow
+  }
 }
 
 const addJdbcRef = ref(null)
@@ -480,35 +636,66 @@ onMounted(() => {
   getTargetClustersData()
   init()
 })
+
 </script>
 
 <style lang="less" scoped>
+
+.right-aligned {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
 .step1-container {
+  .add-sub-task {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .add-sub-btn {
+      display: none;
+    }
+  }
+
+  &:hover {
+    .add-sub-task {
+      .add-sub-btn {
+        display: block;
+      }
+    }
+  }
   .form-con {
     display: flex;
     justify-content: center;
+
     .form-left {
       position: relative;
+
       .selected-db-con {
         position: absolute;
         z-index: 100;
         left: 1px;
-        bottom: 1px;
+        bottom: -20px;
         height: 40px;
         width: calc(100% - 2px);
         padding: 0 16px;
         border-top: 1px solid var(--color-border-1);
+        border-bottom: 1px solid var(--color-border-1);
         display: flex;
         align-items: center;
         background-color: var(--color-bg-2);
+
         .selected-info {
           color: var(--color-text-1);
         }
+
         .selected-db {
           color: rgb(var(--primary-6));
         }
       }
     }
+
     .form-center {
       display: flex;
       flex-direction: column;
@@ -516,39 +703,49 @@ onMounted(() => {
       align-items: center;
       margin-left: 60px;
       margin-right: 60px;
+
       .arrow {
         color: var(--color-text-3);
       }
     }
+
     .card-title-con {
       display: flex;
       align-items: center;
+
       .card-title {
         font-size: 16px;
         margin-right: 10px;
       }
+
       .refresh-con {
         margin-left: 5px;
         margin-top: 3px;
         cursor: pointer;
       }
     }
+
     .sql-tree-con {
       height: 350px;
       padding-bottom: 30px;
       overflow-y: auto;
     }
+
     .sql-selected-con {
       height: 350px;
       overflow-y: auto;
+
       .sql-group {
         margin-bottom: 15px;
+
         .sql-group-title {
           font-size: 14px;
           color: var(--color-text-1);
         }
+
         .sql-item-con {
           margin-top: 5px;
+
           .sql-item {
             font-size: 12px;
             padding: 5px 8px;
@@ -558,20 +755,26 @@ onMounted(() => {
           }
         }
       }
+
       :deep(.arco-tree-node-title) {
         height: 24px;
+
         .arco-tree-node-title-text {
           flex: 1;
         }
+
         .add-sub-task {
           display: flex;
           justify-content: space-between;
           align-items: center;
+
           .add-sub-btn {
             display: none;
           }
         }
+
         &:hover {
+          color:red;
           .add-sub-task {
             .add-sub-btn {
               display: block;
@@ -581,14 +784,17 @@ onMounted(() => {
       }
     }
   }
+
   .table-con {
     margin-top: 20px;
     padding: 0 20px 30px;
+
     .opt-con {
       display: flex;
       justify-content: flex-end;
       margin-bottom: 10px;
     }
   }
+
 }
 </style>

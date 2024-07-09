@@ -43,3 +43,7 @@ export function openSSH (data) {
 export function getEntryKey () {
   return axios.get('/encryption/getKey')
 }
+
+export function getdataTbl (formData, dbName) {
+  return axios.post(`/plugins/data-migration/resource/tables/${dbName}`, formData)
+}
