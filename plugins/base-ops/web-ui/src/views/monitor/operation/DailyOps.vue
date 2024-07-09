@@ -75,7 +75,7 @@
                         <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xbzew0') }}:</div>
                         <div
                           class="flex-row"
-                          v-if="clusterData.deployType === 'CLUSTER' && clusterData.clusterNodes.length > 1"
+                          v-if="clusterData.deployType === 'CLUSTER' || clusterData.clusterNodes.length > 1"
                         >
                           <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xbzmw0') }}</div>
                           <div class="value-color ft-lg ft-b mr-s">{{ clusterData.clusterNodes.length - 1 }}</div>
@@ -299,7 +299,7 @@
                         v-model="instance.state"
                         checked-value="true"
                         unchecked-value="false"
-                        @change="handleInstanceSwitchChange($event, index, nodeIndex)"
+                        @click="handleInstanceSwitchChange($event, index, nodeIndex)"
                       >
                         <template #checked>
                           ON
@@ -471,11 +471,6 @@ const getList = () => new Promise(resolve => {
         item.isShow = true
         item.state = -1
         item.loading = false
-        if (item.version === 'MINIMAL_LIST' && item.deployType === 'CLUSTER') {
-          const slaveNode = JSON.parse(JSON.stringify(item.clusterNodes[0]))
-          slaveNode.clusterRole = ClusterRoleEnum.SLAVE
-          item.clusterNodes.push(slaveNode)
-        }
         openWebSocket(item, index)
         data.clusterList.push(item)
       })

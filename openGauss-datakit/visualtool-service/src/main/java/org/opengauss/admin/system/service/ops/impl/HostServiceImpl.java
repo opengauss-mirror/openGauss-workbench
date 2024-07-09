@@ -71,6 +71,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -162,7 +163,10 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             response.setCharacterEncoding("utf-8");
             String fileName = URLEncoder.encode("模板", "UTF-8").replaceAll("\\+", "%20");
             response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
-            EasyExcel.write(response.getOutputStream(), HostRecord.class).sheet("模板").doWrite(new ArrayList<HostRecord>());
+            OutputStream out = response.getOutputStream();
+            EasyExcel.write(out, HostRecord.class).sheet("模板").doWrite(new ArrayList<HostRecord>());
+            out.flush();
+            out.close();
         } catch (IOException e) {
             log.error("Download template failed.", e);
             throw new OpsException("Download template failed.");
@@ -177,10 +181,13 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             response.setCharacterEncoding("utf-8");
             String fileName = URLEncoder.encode("错误报告" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()), "UTF-8").replaceAll("\\+", "%20");
             response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
-            EasyExcel.write(response.getOutputStream(), ErrorHostRecord.class).sheet("错误报告").doWrite(errorhostRecords);
+            OutputStream out = response.getOutputStream();
+            EasyExcel.write(out, ErrorHostRecord.class).sheet("错误报告").doWrite(errorhostRecords);
+            out.flush();
+            out.close();
         } catch (IOException e) {
-            log.error("Download template failed.", e);
-            throw new OpsException("Download template failed.");
+            log.error("Download failed.", e);
+            throw new OpsException("Download failed.");
         }
     }
 

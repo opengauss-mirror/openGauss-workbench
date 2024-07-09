@@ -28,6 +28,7 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -44,9 +45,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.PermissionUtils;
-import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
-import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
-import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
+import org.opengauss.admin.plugin.domain.entity.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.cache.SSHChannelManager;
 import org.opengauss.admin.plugin.domain.model.ops.cache.TaskManager;
@@ -59,8 +58,10 @@ import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeCon
 import org.opengauss.admin.plugin.domain.model.ops.node.LiteInstallNodeConfig;
 import org.opengauss.admin.plugin.domain.model.ops.node.MinimalistInstallNodeConfig;
 import org.opengauss.admin.plugin.enums.ops.*;
+import org.opengauss.admin.plugin.listener.OpsImportEntityListener;
 import org.opengauss.admin.plugin.mapper.ops.OpsClusterMapper;
 import org.opengauss.admin.plugin.mapper.ops.OpsDisasterClusterMapper;
+import org.opengauss.admin.plugin.mapper.ops.OpsImportSshMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsCheckService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
@@ -78,21 +79,27 @@ import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.opengauss.admin.system.plugin.facade.SysSettingFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -108,6 +115,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import static org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants.*;
+import static org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum.MASTER;
+import static org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum.SLAVE;
+import static org.opengauss.admin.plugin.enums.ops.DeployTypeEnum.CLUSTER;
+import static org.opengauss.admin.plugin.enums.ops.DeployTypeEnum.SINGLE_NODE;
+import static org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum.*;
 
 /**
  * @author lhf
@@ -118,6 +131,17 @@ import java.util.stream.Collectors;
 public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClusterEntity> implements IOpsClusterService {
     private static String[] dependencyPackageNames = {"libaio-devel", "flex", "bison", "ncurses-devel", "glibc-devel",
             "patch", "readline-devel"};
+    private static final Logger log = LoggerFactory.getLogger(OpsClusterServiceImpl.class);
+
+    private int importSuccessCount;
+
+    private boolean infoAndConn;
+
+    private OpsClusterEntity opsClusterEntity = new OpsClusterEntity();
+
+    private List<OpsClusterEntity> opsClusterEntityList = new ArrayList<>();
+
+    private List<OpsClusterNodeEntity> opsClusterNodeEntityList = new ArrayList<>();
 
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
@@ -163,6 +187,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     @Autowired
     private OpsDisasterClusterMapper disasterClusterMapper;
+
+    @Autowired
+    private OpsImportSshMapper opsImportSshMapper;
 
     @Override
     public void download(DownloadBody downloadBody) {
@@ -1539,6 +1566,258 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         clusterSummaryVO.setHostNum(hostFacade.count());
         clusterSummaryVO.setNodeNum(opsClusterNodeService.count());
         return clusterSummaryVO;
+    }
+
+    public void downloadImportFile(HttpServletResponse response) {
+        try {
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setCharacterEncoding("utf-8");
+            String fileName = URLEncoder.encode("模板", "UTF-8").replaceAll("\\+", "%20");
+            response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+            List<OpsImportEntity> usersList = new ArrayList<>();
+            OpsImportEntity opsImportEntity = new OpsImportEntity("1", "ip1,ip2", "ip1,ip2", "omm","gaussdb", "12345", 5432, "/home/omm/cluster_2024.bashrc", null,null);
+            usersList.add(opsImportEntity);
+            OutputStream out = response.getOutputStream();
+            EasyExcel.write(out, OpsImportEntity.class).sheet("用户信息").doWrite(usersList);
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            throw new OpsException("download fail!");
+        }
+    }
+
+    @Override
+    public List<OpsImportEntity> uploadImportFile(MultipartFile file) {
+        List<OpsImportEntity> opsImportEntityList = new ArrayList<>();
+        OpsImportEntityListener userDataListener = new OpsImportEntityListener();
+        try {
+            opsImportEntityList = EasyExcel.read(file.getInputStream(), OpsImportEntity.class, userDataListener).sheet().doReadSync();
+        } catch (IOException e) {
+            log.error("upload fail!" + e);
+            throw new OpsException("upload fail!");
+        }
+        return opsImportEntityList;
+    }
+
+    @Override
+    public int importSuccessCount() {
+        return importSuccessCount;
+    }
+
+    private String rootUserJudgeOpenGaussVersion(Session session, List<String> rootCommandList) {
+        String versionType = null;
+        int count = 0;
+        try {
+            try {
+                jschUtil.executeCommand(rootCommandList.get(0), session);
+                versionType = "ENTERPRISE";
+            } catch (OpsException opsException) {
+                log.warn(opsException.getMessage());
+                count++;
+            }
+            try {
+                jschUtil.executeCommand(rootCommandList.get(1), session);
+                versionType = "LITE";
+            } catch (OpsException opsException) {
+                log.warn(opsException.getMessage());
+                count++;
+            }
+            if (count == 2) {
+                versionType = "MINIMAL_LIST";
+            }
+        } catch (IOException | InterruptedException e) {
+            log.error("rootJudgeOpenGaussVersion error" + e);
+        }
+        return versionType;
+    }
+
+    private void markErrorInfo(OpsImportEntity opsImportEntity){
+        infoAndConn = false;
+        opsImportEntity.setImportStatus("fail");
+        opsImportEntity.setErrorInfo("please check publicIp or installUsername or envPath!");
+    }
+
+    private void packingClusterInfo(List<String> resultList, String versionType, OpsImportEntity opsImportEntity, OpsImportSshEntity HostAndUserId, String publicIp, int ipSequence) {
+        String localRole = null;
+        if (versionType.equals("ENTERPRISE")) {
+            int enterCommandLength = 4;
+            if (resultList.size() == enterCommandLength) {
+                localRole = resultList.get(3);
+            } else {
+                markErrorInfo(opsImportEntity);
+            }
+        }
+        else if (versionType.equals("LITE")) {
+            try {
+                localRole = MessageFormat.format(CHANGE_SUB_USER, opsImportEntity.getInstallUsername(), MessageFormat.format(THREE_IN_ONE, "source " + opsImportEntity.getEnvPath(), ";gs_ctl query -D " + resultList.get(2) + "|grep local_role|awk '\\''{print $3}'\\''|head -n 1", ""));
+            } catch (OpsException opsException) {
+                markErrorInfo(opsImportEntity);
+            }
+        }
+        else {
+            localRole = ipSequence == 0 ? "Primary" : "Standby";
+        }
+        opsClusterEntity.setClusterId(opsImportEntity.getClusterName());
+        opsClusterEntity.setVersion(versionType.equals("ENTERPRISE") ? ENTERPRISE : versionType.equals("LITE") ? LITE : MINIMAL_LIST);
+        opsClusterEntity.setVersionNum(versionType.equals("ENTERPRISE") | versionType.equals("LITE") ? resultList.get(2) : resultList.get(1));
+        opsClusterEntity.setDatabasePassword(opsImportEntity.getDatabasePassword());
+        opsClusterEntity.setDatabaseUsername(opsImportEntity.getDatabaseUsername());
+        opsClusterEntity.setPort(opsImportEntity.getPort());
+        opsClusterEntity.setEnvPath(opsImportEntity.getEnvPath());
+        opsClusterEntity.setInstallPath(resultList.get(0));
+        OpsClusterNodeEntity opsClusterNodeEntity = new OpsClusterNodeEntity();
+        opsClusterNodeEntity.setClusterNodeId(StrUtil.uuid());
+        Connection connection = null;
+        try {
+            ClusterRoleEnum ClusterRole = localRole.equals("Primary") ? MASTER : SLAVE;
+            opsClusterNodeEntity.setClusterRole(ClusterRole);
+            connection = DBUtil.getSession(publicIp, opsImportEntity.getPort(), opsImportEntity.getDatabaseUsername(), opsImportEntity.getDatabasePassword()).orElseThrow(() -> new OpsException("please check databaseUser is or not a origianl User,if it is,Connection failed"));
+        } catch (SQLException | ClassNotFoundException e) {
+            opsImportEntity.setImportStatus(localRole.equals("Primary") ? "fail" : "");
+            opsImportEntity.setErrorInfo(publicIp+" Connection fail :"+e);
+            infoAndConn = false;
+        } catch (NullPointerException e) {
+            log.error("lack of cluster info!");
+        } finally {
+            DBUtil.closeConn(connection);
+        }
+        opsClusterNodeEntity.setHostId(HostAndUserId.getHostId()+"");
+        opsClusterNodeEntity.setInstallUserId(HostAndUserId.getHostUserId()+"");
+        opsClusterNodeEntity.setInstallPath(resultList.get(0));
+        opsClusterNodeEntity.setDataPath(versionType.equals("ENTERPRISE") | versionType.equals("LITE") ? resultList.get(1) : resultList.get(0) + "/data");
+        opsClusterNodeEntity.setClusterId(opsImportEntity.getClusterName());
+        opsClusterNodeEntityList.add(opsClusterNodeEntity);
+    }
+
+    private void selectClusterInfo(String versionType, Session session, OpsImportEntity opsImportEntity, OpsImportSshEntity HostAndUserId, String publicIp, int ipSequence) {
+        String VersionNum = MessageFormat.format(THREE_IN_ONE,"source "+opsImportEntity.getEnvPath(),";gsql -V| grep -oP \"\\d+\\.\\d+\\.\\d+\"","");
+        String enterGAUSSHOME = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP, "GAUSSHOME=", opsImportEntity.getEnvPath()), "|grep app", RESULT_BY_SPLIT_EQUAL);
+        String enterPGDATA = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP, "PGDATA=", opsImportEntity.getEnvPath()), "|grep dn", RESULT_BY_SPLIT_EQUAL);
+        String enterJudgeMasterOrSlave = MessageFormat.format(THREE_IN_ONE,"source "+opsImportEntity.getEnvPath(),";gs_om -t status --detail|grep "+publicIp+"|awk '\\''{print $8}'\\''","");
+        String liteAndMiniGAUSSHOME = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP, "GAUSSHOME=", opsImportEntity.getEnvPath()), "", RESULT_BY_SPLIT_EQUAL);
+        String liteGAUSSDATA = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP, "GAUSSDATA=", opsImportEntity.getEnvPath()), "", RESULT_BY_SPLIT_EQUAL);
+        String command = null;
+        if (versionType.equals("ENTERPRISE")) {
+            command = MessageFormat.format(CHANGE_SUB_USER, opsImportEntity.getInstallUsername(), enterGAUSSHOME + ";" + enterPGDATA + ";" + VersionNum + ";" + enterJudgeMasterOrSlave);
+        } else if (versionType.equals("LITE")) {
+            command = MessageFormat.format(CHANGE_SUB_USER, opsImportEntity.getInstallUsername(), liteAndMiniGAUSSHOME + ";" + liteGAUSSDATA + ";" + VersionNum);
+        } else {
+            command = MessageFormat.format(CHANGE_SUB_USER, opsImportEntity.getInstallUsername(), liteAndMiniGAUSSHOME+";"+VersionNum);
+        }
+        List<String> resultList = new ArrayList<>();
+        try {
+            String result = jschUtil.executeCommand(command, session).getResult();
+            String regex = "(\\S+)";
+            Pattern pattern = Pattern.compile(regex);
+            Matcher matcher = pattern.matcher(result);
+            while (matcher.find()) {
+                resultList.add(matcher.group());
+                System.out.println(matcher.group());
+            }
+        } catch (OpsException opsException) {
+            markErrorInfo(opsImportEntity);
+        } catch (IOException | InterruptedException e) {
+            log.error("command fail, please check the excel info and database env file!");
+        }
+        packingClusterInfo(resultList, versionType, opsImportEntity, HostAndUserId, publicIp, ipSequence);
+    }
+
+    private void checkPortAndIp(String[] hosts, OpsImportEntity opsImportEntity) {
+        boolean flag = false;
+        for (int j = 0; j < hosts.length; j++) {
+            try {
+                String host = hosts[j];
+                List<String> cluster_id = opsImportSshMapper.checkPublicIpAndPort(host, opsImportEntity.getPort()+"");
+                if (cluster_id.get(0) != null) {
+                    flag = true;
+                    opsImportEntity.setImportStatus("fail");
+                    opsImportEntity.setErrorInfo("The public IP and port that are inputted already exist,Similar to it are :" + cluster_id);
+                }
+            } catch (IndexOutOfBoundsException | NullPointerException e) {
+                log.warn("checkPublicIpAndPort, no same cluster");
+            }
+        }
+        opsClusterEntity.setDeployType(hosts.length > 1 ? CLUSTER : SINGLE_NODE);
+        opsClusterEntityList.add(opsClusterEntity);
+        if (!flag && infoAndConn) {
+            saveBatch(opsClusterEntityList, opsClusterNodeEntityList);
+            importSuccessCount ++;
+            opsImportEntity.setImportStatus("success");
+        }
+        opsClusterEntityList.clear();
+        opsClusterNodeEntityList.clear();
+    }
+
+    @Override
+    public List<OpsImportEntity> parseExcel(List<OpsImportEntity> list){
+        String[] hosts = {};
+        importSuccessCount = 0;
+        for (int i = 0; i < list.size(); i++) {
+            try {
+                list.get(i).checkConfig();
+            } catch (OpsException e) {
+                list.get(i).setImportStatus("fail");
+                list.get(i).setErrorInfo("please fill in all the blanks!"+e);
+            }
+        }
+        try {
+            if (list != null && !list.isEmpty()){
+                for (int i = 0; i < list.size(); i++) {
+                    infoAndConn = true;
+                    hosts = list.get(i).getPublicIp().split(",");
+                    List<OpsImportSshEntity> RootPortAndPasswordlist = opsImportSshMapper.queryHostInfo("root", hosts[0]);
+                    if (RootPortAndPasswordlist != null && !RootPortAndPasswordlist.isEmpty()) {
+                        Session session = jschUtil.getSession(hosts[0], RootPortAndPasswordlist.get(0).getPort(), "root", encryptionUtils.decrypt(RootPortAndPasswordlist.get(0).getPassword())).orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
+                        String omCommand = MessageFormat.format(CHANGE_SUB_USER,list.get(i).getInstallUsername(),MessageFormat.format(THREE_IN_ONE,"source "+list.get(i).getEnvPath(),";gs_om -t view",""));
+                        String liteCommand = MessageFormat.format(CHANGE_SUB_USER,list.get(i).getInstallUsername(),MessageFormat.format(THREE_IN_ONE,"source "+list.get(i).getEnvPath(),";gsql -V|grep -i \"openGauss-lite\"",""));
+                        List<String> rootCommandList = new ArrayList<>();
+                        rootCommandList.add(omCommand);
+                        rootCommandList.add(liteCommand);
+                        String versionType = rootUserJudgeOpenGaussVersion(session, rootCommandList);
+                        for (int j = 0; j < hosts.length; j++) {
+                            List<OpsImportSshEntity> HostAndUserIdlist = opsImportSshMapper.queryHostInfo(list.get(i).getInstallUsername(), hosts[j]);
+                            if (HostAndUserIdlist != null && !HostAndUserIdlist.isEmpty()) {
+                                selectClusterInfo(versionType, session, list.get(i), HostAndUserIdlist.get(0), hosts[j], j);
+                            }
+                        }
+                        checkPortAndIp(hosts, list.get(i));
+                    } else {
+                        list.get(i).setImportStatus("fail");
+                        list.get(i).setErrorInfo("please import host and user information.");
+                    }
+                }
+            }
+        } catch (NullPointerException e) {
+            log.error("queryHostInfo fail!");
+        }
+        return list;
+    }
+
+    @Transactional
+    public void saveBatch(List<OpsClusterEntity> opsClusterEntityList, List<OpsClusterNodeEntity> opsClusterNodeEntityList) {
+        try {
+            saveBatch(opsClusterEntityList);
+            opsClusterNodeService.saveBatch(opsClusterNodeEntityList);
+        } catch (Exception e) {
+            log.error("database saveBatch error!");
+        }
+    }
+
+    @Override
+    public void downloadErrorFile(HttpServletResponse response, List<OpsImportEntity> usersList) {
+        try {
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setCharacterEncoding("utf-8");
+            String fileName = URLEncoder.encode("错误报告", "UTF-8").replaceAll("\\+", "%20");
+            response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+            OutputStream out = response.getOutputStream();
+            EasyExcel.write(out, OpsImportEntity.class).sheet("用户信息").doWrite(usersList);
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            log.error("downloadErrorFile fail!");
+            throw new OpsException("downloadErrorFile fail!");
+        }
     }
 
     @Override

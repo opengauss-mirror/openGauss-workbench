@@ -260,5 +260,5 @@ export const bulkImportany = (data: KeyValue) => {
 }
 
 export const bulkImporErrPlan = (data: KeyValue) => {
-  return axios.get(`/host/get_import_plan/${data.uuid}`, data)
+  return axios.get(`/host/get_import_plan`, data)
 }
