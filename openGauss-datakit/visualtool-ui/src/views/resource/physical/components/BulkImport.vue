@@ -126,6 +126,7 @@
 import { KeyValue } from '@/types/global'
 import { nextTick, reactive, ref, toRaw, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
+import axios from 'axios'
 import {bulkImporErrPlan, bulkImportany, bulkuploadPhy} from '@/api/ops'
 
 const { t } = useI18n()
@@ -320,7 +321,7 @@ const fetchProgress = async () => {
   const uid = data.uid
   let formLoaFlagTemp = formLoaFlaEnum.loadWin
   try {
-    const progressResponse = bulkImporErrPlan({
+    const progressResponse = await axios.get('/host/get_import_plan/', {
       params: {
         uuid: uid
       }
