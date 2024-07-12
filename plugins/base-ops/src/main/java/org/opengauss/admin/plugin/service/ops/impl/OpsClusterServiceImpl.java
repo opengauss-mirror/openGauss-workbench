@@ -137,6 +137,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private boolean infoAndConn;
 
+    private boolean masterIsNormal;
+
     private OpsClusterEntity opsClusterEntity = new OpsClusterEntity();
 
     private List<OpsClusterEntity> opsClusterEntityList = new ArrayList<>();
@@ -1631,50 +1633,55 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return versionType;
     }
 
-    private void markErrorInfo(OpsImportEntity opsImportEntity){
+    private void markErrorInfo(OpsImportEntity opsImportEntity) {
         infoAndConn = false;
         opsImportEntity.setImportStatus("fail");
         opsImportEntity.setErrorInfo("please check publicIp or installUsername or envPath!");
     }
 
-    private void judgeNodeConnSuccess(String publicIp, OpsImportEntity opsImportEntity, String localRole){
+    private void judgeNodeConnSuccess(String publicIp, OpsImportEntity opsImportEntity, String localRole) {
         Connection connection = null;
         try {
             connection = DBUtil.getSession(publicIp, opsImportEntity.getPort(), opsImportEntity.getDatabaseUsername(), opsImportEntity.getDatabasePassword()).orElseThrow(() -> new OpsException("please check databaseUser is or not a origianl User,if it is,Connection failed"));
-            opsImportEntity.setImportStatus("success");
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (OpsException | SQLException | ClassNotFoundException e) {
             if (localRole == null || localRole.equals("")) {
                 opsImportEntity.setImportStatus("fail");
             } else {
                 if (localRole.equals("Primary")) {
                     opsImportEntity.setImportStatus("fail");
+                    infoAndConn = false;
                 }
             }
             opsImportEntity.setErrorInfo(publicIp + " Connection fail :" + e);
-            infoAndConn = false;
         } finally {
             DBUtil.closeConn(connection);
         }
     }
 
-    private void packingClusterInfo(List<String> resultList, String versionType, OpsImportEntity opsImportEntity, OpsImportSshEntity HostAndUserId, String publicIp, int ipSequence) {
+    private void packingClusterInfo(List<String> resultList, String versionType, OpsImportEntity opsImportEntity, OpsImportSshEntity HostAndUserId, String publicIp, int ipSequence, Session session) {
         String localRole = null;
         if (versionType.equals("ENTERPRISE")) {
-            int enterCommandLength = 4;
-            if (resultList.size() == enterCommandLength && resultList.get(enterCommandLength - 1).equals("Primary")) {
-                localRole = resultList.get(enterCommandLength - 1);
-            } else {
-                markErrorInfo(opsImportEntity);
-            }
-        }
-        else if (versionType.equals("LITE")) {
+            int selectCommandLength = 4;
             try {
-                localRole = MessageFormat.format(CHANGE_SUB_USER, opsImportEntity.getInstallUsername(), MessageFormat.format(THREE_IN_ONE, "source " + opsImportEntity.getEnvPath(), ";gs_ctl query -D " + resultList.get(2) + "|grep local_role|awk '\\''{print $3}'\\''|head -n 1", ""));
-            } catch (OpsException opsException) {
+                if (resultList.get(selectCommandLength - 1).equals("Primary")) {
+                    localRole = resultList.get(selectCommandLength - 1);
+                    masterIsNormal = true;
+                } else {
+                    localRole = resultList.get(selectCommandLength - 1);
+                    opsImportEntity.setErrorInfo("check node status error!");
+                }
+            } catch (IndexOutOfBoundsException e) {
+                markErrorInfo(opsImportEntity);
+                opsImportEntity.setErrorInfo("please check if envFile has GAUSSHOME and PGDATA!");
+            }
+        } else if (versionType.equals("LITE")) {
+            try {
+                String selectLocal = MessageFormat.format(CHANGE_SUB_USER, opsImportEntity.getInstallUsername(), MessageFormat.format(THREE_IN_ONE, "source " + opsImportEntity.getEnvPath(), ";gs_ctl query -D " + resultList.get(2) + "|grep local_role|awk '\\''{print $3}'\\''|head -n 1", ""));
+                localRole = jschUtil.executeCommand(selectLocal, session).getResult();
+            } catch (OpsException | IOException | InterruptedException e) {
                 markErrorInfo(opsImportEntity);
             }
-        }
-        else {
+        } else {
             localRole = ipSequence == 0 ? "Primary" : "Standby";
         }
         opsClusterEntity.setClusterId(opsImportEntity.getClusterName());
@@ -1687,12 +1694,11 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         opsClusterEntity.setInstallPath(resultList.get(0));
         OpsClusterNodeEntity opsClusterNodeEntity = new OpsClusterNodeEntity();
         opsClusterNodeEntity.setClusterNodeId(StrUtil.uuid());
-        Connection connection = null;
         try {
             ClusterRoleEnum ClusterRole = localRole.equals("Primary") ? MASTER : SLAVE;
             opsClusterNodeEntity.setClusterRole(ClusterRole);
         } catch (NullPointerException e) {
-            log.error("lack of cluster info!");
+            log.error("lack of clusterInfo!");
         }
         judgeNodeConnSuccess(publicIp, opsImportEntity, localRole);
         opsClusterNodeEntity.setHostId(HostAndUserId.getHostId()+"");
@@ -1704,10 +1710,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     private void selectClusterInfo(String versionType, Session session, OpsImportEntity opsImportEntity, OpsImportSshEntity HostAndUserId, String publicIp, int ipSequence) {
-        String VersionNum = MessageFormat.format(THREE_IN_ONE,"source "+opsImportEntity.getEnvPath(),";gsql -V| grep -oP \"\\d+\\.\\d+\\.\\d+\"","");
+        String VersionNum = MessageFormat.format(THREE_IN_ONE,"source "+opsImportEntity.getEnvPath(), ";gsql -V| grep -oP \"\\d+\\.\\d+\\.\\d+\"", "");
         String enterGAUSSHOME = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP, "GAUSSHOME=", opsImportEntity.getEnvPath()), "|grep app", RESULT_BY_SPLIT_EQUAL);
         String enterPGDATA = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP, "PGDATA=", opsImportEntity.getEnvPath()), "|grep dn", RESULT_BY_SPLIT_EQUAL);
-        String enterJudgeMasterOrSlave = MessageFormat.format(THREE_IN_ONE,"source "+opsImportEntity.getEnvPath(),";gs_om -t status --detail|grep "+publicIp+"|awk '\\''{print $8}'\\''","");
+        String enterJudgeMasterOrSlave = MessageFormat.format(THREE_IN_ONE,"source "+opsImportEntity.getEnvPath(), ";gs_om -t status --detail|grep "+publicIp+"|awk '\\''{print $8}'\\''", "");
         String liteAndMiniGAUSSHOME = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP, "GAUSSHOME=", opsImportEntity.getEnvPath()), "", RESULT_BY_SPLIT_EQUAL);
         String liteGAUSSDATA = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP, "GAUSSDATA=", opsImportEntity.getEnvPath()), "", RESULT_BY_SPLIT_EQUAL);
         String command = null;
@@ -1726,17 +1732,16 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             Matcher matcher = pattern.matcher(result);
             while (matcher.find()) {
                 resultList.add(matcher.group());
-                System.out.println(matcher.group());
             }
         } catch (OpsException opsException) {
             markErrorInfo(opsImportEntity);
         } catch (IOException | InterruptedException e) {
             log.error("command fail, please check the excel info and database env file!");
         }
-        packingClusterInfo(resultList, versionType, opsImportEntity, HostAndUserId, publicIp, ipSequence);
+        packingClusterInfo(resultList, versionType, opsImportEntity, HostAndUserId, publicIp, ipSequence, session);
     }
 
-    private void checkPortAndIp(String[] hosts, OpsImportEntity opsImportEntity) {
+    private boolean checkPortAndIp(String[] hosts, OpsImportEntity opsImportEntity) {
         boolean flag = false;
         for (int j = 0; j < hosts.length; j++) {
             try {
@@ -1745,14 +1750,18 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 if (cluster_id.get(0) != null) {
                     flag = true;
                     opsImportEntity.setImportStatus("fail");
-                    opsImportEntity.setErrorInfo("The public IP and port that are inputted already exist,Similar to it are :" + cluster_id);
+                    opsImportEntity.setErrorInfo("The public IP and port that are inputted already exist, Similar to it are :" + cluster_id);
                 }
             } catch (IndexOutOfBoundsException | NullPointerException e) {
                 log.warn("checkPublicIpAndPort, no same cluster");
             }
         }
         opsClusterEntity.setDeployType(hosts.length > 1 ? CLUSTER : SINGLE_NODE);
-        if (!flag && infoAndConn) {
+        return flag;
+    }
+
+    private void saveCluster(boolean sameCluster, OpsImportEntity opsImportEntity) {
+        if (!sameCluster && infoAndConn && masterIsNormal) {
             saveBatch(opsClusterEntity, opsClusterNodeEntityList, opsImportEntity);
         }
         opsClusterEntityList.clear();
@@ -1760,47 +1769,54 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     @Override
-    public List<OpsImportEntity> parseExcel(List<OpsImportEntity> list){
+    public List<OpsImportEntity> parseExcel(List<OpsImportEntity> list) {
         String[] hosts = {};
         importSuccessCount = 0;
-        try {
-            if (list == null && list.isEmpty()) {
-                return list;
+        if (list == null || list.isEmpty()) {
+            return list;
+        }
+        for (int i = 0; i < list.size(); i++) {
+            try {
+                list.get(i).checkConfig();
+            } catch (OpsException e) {
+                list.get(i).setImportStatus("fail");
+                list.get(i).setErrorInfo("please fill in all the blanks!" + e);
+                continue;
             }
-            for (int i = 0; i < list.size(); i++) {
-                try {
-                    list.get(i).checkConfig();
-                } catch (OpsException e) {
+            infoAndConn = true;
+            masterIsNormal = false;
+            hosts = list.get(i).getPublicIp().split(",");
+            List<OpsImportSshEntity> RootPortAndPasswordlist = opsImportSshMapper.queryHostInfo("root", hosts[0]);
+            if (RootPortAndPasswordlist == null || RootPortAndPasswordlist.isEmpty()) {
+                list.get(i).setImportStatus("fail");
+                list.get(i).setErrorInfo("please import host information.");
+                continue;
+            }
+            Session session = null;
+            try {
+                session = jschUtil.getSession(hosts[0], RootPortAndPasswordlist.get(0).getPort(), "root", encryptionUtils.decrypt(RootPortAndPasswordlist.get(0).getPassword())).orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
+            } catch (OpsException opsException) {
+                log.error(opsException + hosts[0]);
+                list.get(i).setImportStatus("fail");
+                list.get(i).setErrorInfo(opsException + hosts[0]);
+            }
+            String omCommand = MessageFormat.format(CHANGE_SUB_USER, list.get(i).getInstallUsername(), MessageFormat.format(THREE_IN_ONE,"source "+list.get(i).getEnvPath(), ";gs_om -t view", ""));
+            String liteCommand = MessageFormat.format(CHANGE_SUB_USER, list.get(i).getInstallUsername(), MessageFormat.format(THREE_IN_ONE,"source "+list.get(i).getEnvPath(), ";gsql -V|grep -i \"openGauss-lite\"", ""));
+            List<String> rootCommandList = new ArrayList<>();
+            rootCommandList.add(omCommand);
+            rootCommandList.add(liteCommand);
+            String versionType = rootUserJudgeOpenGaussVersion(session, rootCommandList);
+            for (int j = 0; j < hosts.length; j++) {
+                List<OpsImportSshEntity> HostAndUserIdlist = opsImportSshMapper.queryHostInfo(list.get(i).getInstallUsername(), hosts[j]);
+                if (HostAndUserIdlist == null || HostAndUserIdlist.isEmpty()) {
                     list.get(i).setImportStatus("fail");
-                    list.get(i).setErrorInfo("please fill in all the blanks!"+e);
+                    list.get(i).setErrorInfo("please import hostUser information.");
                     continue;
                 }
-                infoAndConn = true;
-                hosts = list.get(i).getPublicIp().split(",");
-                List<OpsImportSshEntity> RootPortAndPasswordlist = opsImportSshMapper.queryHostInfo("root", hosts[0]);
-                if (RootPortAndPasswordlist == null && RootPortAndPasswordlist.isEmpty()) {
-                    list.get(i).setImportStatus("fail");
-                    list.get(i).setErrorInfo("please import host and user information.");
-                    return list;
-                }
-                Session session = jschUtil.getSession(hosts[0], RootPortAndPasswordlist.get(0).getPort(), "root", encryptionUtils.decrypt(RootPortAndPasswordlist.get(0).getPassword())).orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
-                String omCommand = MessageFormat.format(CHANGE_SUB_USER,list.get(i).getInstallUsername(),MessageFormat.format(THREE_IN_ONE,"source "+list.get(i).getEnvPath(),";gs_om -t view",""));
-                String liteCommand = MessageFormat.format(CHANGE_SUB_USER,list.get(i).getInstallUsername(),MessageFormat.format(THREE_IN_ONE,"source "+list.get(i).getEnvPath(),";gsql -V|grep -i \"openGauss-lite\"",""));
-                List<String> rootCommandList = new ArrayList<>();
-                rootCommandList.add(omCommand);
-                rootCommandList.add(liteCommand);
-                String versionType = rootUserJudgeOpenGaussVersion(session, rootCommandList);
-                for (int j = 0; j < hosts.length; j++) {
-                    List<OpsImportSshEntity> HostAndUserIdlist = opsImportSshMapper.queryHostInfo(list.get(i).getInstallUsername(), hosts[j]);
-                    if (HostAndUserIdlist == null && HostAndUserIdlist.isEmpty()) {
-                        return list;
-                    }
-                    selectClusterInfo(versionType, session, list.get(i), HostAndUserIdlist.get(0), hosts[j], j);
-                }
-                checkPortAndIp(hosts, list.get(i));
+                selectClusterInfo(versionType, session, list.get(i), HostAndUserIdlist.get(0), hosts[j], j);
             }
-        } catch (NullPointerException e) {
-            log.error("queryHostInfo fail!");
+            boolean sameCluster = checkPortAndIp(hosts, list.get(i));
+            saveCluster(sameCluster, list.get(i));
         }
         return list;
     }
