@@ -31,6 +31,7 @@ import com.nctigba.observability.sql.constant.CollectionTypeConstants;
 import com.nctigba.observability.sql.constant.DiagnosisTypeConstants;
 import com.nctigba.observability.sql.constant.PointTypeConstants;
 import com.nctigba.observability.sql.constant.SqlConstants;
+import com.nctigba.observability.sql.enums.AgentStatusEnum;
 import com.nctigba.observability.sql.enums.DatabaseParamEnum;
 import com.nctigba.observability.sql.enums.OptionEnum;
 import com.nctigba.observability.sql.enums.OsParamEnum;
@@ -72,6 +73,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -252,11 +254,6 @@ public class TaskServiceImpl implements TaskService {
         task.setThresholds(thresholds);
         boolean isAgent = bccBeforeStart(task);
         if (DiagnosisTypeConstants.SQL.equals(task.getDiagnosisType())) {
-            try {
-                sqlValidator.beforeStart(task);
-            } catch (HisDiagnosisException e) {
-                throw new HisDiagnosisException("error:", e);
-            }
             task.addRemarks("bcc diagnosis:" + isAgent);
             boolean isExist = options.stream().anyMatch(f -> OptionEnum.IS_BCC.toString().equals(f.getOption()));
             if (isExist) {
@@ -1011,7 +1008,8 @@ public class TaskServiceImpl implements TaskService {
         }
         var env = envMapper.selectOne(
                 Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getNodeid, task.getNodeId()).eq(
-                        NctigbaEnvDO::getType, NctigbaEnvDO.envType.AGENT));
+                                NctigbaEnvDO::getType, NctigbaEnvDO.envType.AGENT)
+                        .eq(NctigbaEnvDO::getStatus, AgentStatusEnum.NORMAL.getStatus()));
         return env != null;
     }
 
@@ -1078,14 +1076,15 @@ public class TaskServiceImpl implements TaskService {
             watch.start();
             // catch pid
             while (lwpid == null) {
-                var stmt = conn.createStatement();
                 String sql = task.getSql().lastIndexOf(";") > -1 ? task.getSql().substring(
                         0, task.getSql().length() - 1) : task.getSql();
                 String taskSql = isExplain ? "explain analyze " + sql : sql;
-                String getPidSql = "SELECT b.lwpid from pg_stat_activity a,dbe_perf.os_threads b "
-                        + "where a.state != 'idle' and a.pid=b.pid and a.sessionid = '" + task.getSessionId()
-                        + "' and a.query = '" + taskSql + "';";
-                var rs = stmt.executeQuery(getPidSql);
+                String getPidSql = "SELECT b.lwpid FROM pg_stat_activity a, dbe_perf.os_threads b " +
+                        "WHERE a.state != 'idle' AND a.pid = b.pid AND a.sessionid = ? AND a.query like ?";
+                PreparedStatement stmt = conn.prepareStatement(getPidSql);
+                stmt.setString(1, String.valueOf(task.getSessionId()));
+                stmt.setString(2, "%" + taskSql + "%");
+                var rs = stmt.executeQuery();
                 if (rs.next()) {
                     lwpid = rs.getInt(1);
                 }

@@ -51,38 +51,38 @@ public class PublicController {
     private final DictionaryConfigServiceImpl dictionaryConfigServiceImpl;
     private final SysPluginsMapper sysPluginsMapper;
 
-	/**
-	 * Retrieves a list of all cluster information.
-	 *
-	 * <p>This endpoint, accessed via a GET request to "/clusters", requires no parameters and returns a list of operational clusters managed by the cluster manager.
-	 *
-	 * @return A list containing details of all operational clusters.
-	 */
+    /**
+     * Retrieves a list of all cluster information.
+     *
+     * <p>This endpoint, accessed via a GET request to "/clusters", requires no parameters and returns a list of operational clusters managed by the cluster manager.
+     *
+     * @return A list containing details of all operational clusters.
+     */
     @GetMapping("/clusters")
     public List<OpsClusterVO> listCluster() {
         return clusterManager.getAllOpsCluster();
     }
 
-	/**
-	 * Retrieves the list of database instances associated with the specified cluster.
-	 *
-	 * @param clusterId Unique identifier for the target cluster.
-	 * @return A list of strings representing the names of all database instances within the specified cluster.
-	 */
-    @GetMapping("/clusters/{clusterId}/instances")
-    public List<String> datebaseList(@PathVariable String clusterId) {
-        return clusterManager.databaseList(clusterId);
+    /**
+     * Retrieves the list of database instances associated with the specified cluster.
+     *
+     * @param nodeId Unique identifier for the target cluster.
+     * @return A list of strings representing the names of all database instances within the specified cluster.
+     */
+    @GetMapping("/clusters/{nodeId}/instances")
+    public List<String> datebaseList(@PathVariable String nodeId) {
+        return clusterManager.databaseList(nodeId);
     }
 
-	/**
-	 * Retrieves the list of database schemas for the specified cluster.
-	 *
-	 * @param clusterId Unique identifier of the cluster to query.
-	 * @return A list of string values representing the names of the database schemas within the specified cluster.
-	 */
-    @GetMapping("/clusters/{clusterId}/schema")
-    public List<String> schemaList(@PathVariable String clusterId) {
-        return clusterManager.schemaList(clusterId);
+    /**
+     * Retrieves the list of database schemas for the specified cluster.
+     *
+     * @param nodeId Unique identifier of the cluster to query.
+     * @return A list of string values representing the names of the database schemas within the specified cluster.
+     */
+    @GetMapping("/clusters/{nodeId}/schema")
+    public AjaxResult schemaList(@PathVariable String nodeId) {
+        return AjaxResult.success(clusterManager.schemaList(nodeId));
     }
 
     /**
@@ -98,7 +98,7 @@ public class PublicController {
     /**
      * Updates configuration information for the specified node.
      *
-     * @param nodeId Node ID, a path variable used to identify the node whose configuration needs updating.
+     * @param nodeId  Node ID, a path variable used to identify the node whose configuration needs updating.
      * @param configs A list of configuration items, passed in the request body, containing the dictionary configurations to be set.
      * @return Returns the updated list of configuration items.
      */
@@ -116,7 +116,7 @@ public class PublicController {
      * for a particular plugin ID and status, thereby determining if the plugin instance is enabled.</p>
      *
      * @return An AjaxResult object containing the query result. If the plugin instance is found (i.e., it is enabled),
-     *         a successful result is returned; otherwise, a failure result is returned.
+     * a successful result is returned; otherwise, a failure result is returned.
      */
     @GetMapping("/plugin/instance")
     public AjaxResult getInstance() {

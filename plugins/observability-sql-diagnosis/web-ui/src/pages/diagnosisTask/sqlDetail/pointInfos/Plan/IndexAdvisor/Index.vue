@@ -19,7 +19,7 @@
       <my-card
         :title="$t('sqlDiagnosisPoints.beforePlan')"
         height="auto"
-        style="margin-bottom: 10px"
+        style="margin-bottom: 10px;height:300px"
         :bodyPadding="false"
       >
         <div style="padding: 10px">
@@ -35,7 +35,7 @@
       </my-card>
 
       <my-card :title="$t('sqlDiagnosisPoints.afterPlan')" height="auto" :bodyPadding="false">
-        <div style="padding: 10px">
+        <div style="padding: 10px;height:300px">
           <MyPlan
             v-if="pointData && pointData.afterExplain && pointData.afterExplain"
             :planData="{
@@ -117,6 +117,7 @@ watch(res, (res: any) => {
   if (pointInfo.value?.pointState !== 'SUCCEED') return
 
   pointData.value = baseData.pointData[0]
+  console.log(pointData.value)
 })
 </script>
 
