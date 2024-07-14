@@ -14,7 +14,6 @@
 ---CoreOptimizerParam DIAGNOSIS
 ---RandomPageCost DIAGNOSIS
 ---IndexAdvisor DIAGNOSIS
----SmpParallelQuery DIAGNOSIS
 ---BlockSession DIAGNOSIS
 ---PlanRecommendedToCreateIndex DIAGNOSIS
 ---PlanChangedToPartitionTable DIAGNOSIS
