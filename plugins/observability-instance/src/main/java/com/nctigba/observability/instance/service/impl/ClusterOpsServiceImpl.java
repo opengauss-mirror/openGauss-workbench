@@ -480,7 +480,7 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
         List<ClusterStateDTO> clusterStateDTOS = allClusterState();
         List<SyncSituationDTO> allStandbyNodes = allStandbyNodes();
         List<SyncSituationDTO> nodesDataToStandbyNodesState = allStandbyNodes.stream().map(node -> {
-            if (!node.getNodeState().getValue().equals(MessageSourceUtils.getMsg(NODE_STATES[0]))) {
+            if (!MessageSourceUtils.getMsg(NODE_STATES[0]).equals(node.getNodeState().getValue())) {
                 node.setNodeState(new StateDTO(NODE_STATES[1]));
             }
             return node;
