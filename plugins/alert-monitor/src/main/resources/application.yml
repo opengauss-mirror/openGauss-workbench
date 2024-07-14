@@ -34,11 +34,10 @@ server.compression:
   enabled: true
   mime-types: application/javascript,text/css,application/json,application/xml,text/html,text/xml,text/plain
 mybatis-plus:
-  typeAliasesPackage: org.opengauss.plugin.alertcenter.entity
+  typeAliasesPackage: com.nctigba.alert.monitor.model.entity
   mapperLocations: classpath*:mapper/*.xml
   configuration:
     mapUnderscoreToCamelCase: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 alert:
   rule-file-prefix: rules/

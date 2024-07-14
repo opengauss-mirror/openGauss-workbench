@@ -125,6 +125,7 @@ public class AlertTemplateRuleDO {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
     private Integer isDeleted;
+    private Integer isIncluded;
     @Valid
     @NotEmpty
     @TableField(exist = false)

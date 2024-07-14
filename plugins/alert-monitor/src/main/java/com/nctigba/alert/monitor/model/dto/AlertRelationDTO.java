@@ -42,7 +42,7 @@ import java.util.Map;
 public class AlertRelationDTO {
     private String name;
 
-    private Number[][] datas;
+    private List datas;
 
     private List<Map<String, Object>> tables;
     private List<String> tableThs;

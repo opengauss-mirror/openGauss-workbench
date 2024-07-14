@@ -113,6 +113,7 @@ const loading = ref<boolean>(false)
 const title = ref<string>()
 const showMain = ref<boolean>(true)
 const ruleTable = ref();
+const templateRuleIdsSrc = ref<string[]>([])
 const formData = ref<any>({
   templateName: '',
   templateRuleList: []
@@ -146,9 +147,8 @@ const showRuleExpDesc = (rule: any) => {
         let param = JSON.parse(ruleExpParam)
         paramStr = '(' + Object.keys(param).map((key: any) => param[key]).join(',') + ')'
       }
-      console.log(ruleItemSrc)
       let name = i18n.global.locale.value === 'zhCn' && ruleItemSrc && ruleItemSrc.nameZh ? ruleItemSrc.nameZh : (ruleItemSrc && ruleItemSrc.nameEn) ? ruleItemSrc.nameEn : ruleItemSrc ? t(`alertRule.${ruleItemSrc.name}`) : ''
-      if (!item.operate || !item.limitValue) {
+      if (!item.operate) {
         return `[${item.ruleMark}]: ${name}`
       }
       return `[${item.ruleMark}]: ${name + paramStr + ' ' + (item.action === 'normal' ? (item.operate + item.limitValue + item.unit) : t(`alertRule.${item.action}Action`))}`
@@ -193,9 +193,11 @@ watch(ruleRes, (ruleRes: any) => {
       tableDatas.value = tableDatas.value.map(item => {
         let datas = selectDatas.filter((item0: any) => item0.ruleId === item.ruleId) || []
         if (datas.length > 0) {
-          nextTick(() => {
-            ruleTable.value.toggleRowSelection(datas[0], true)
-          })
+          if (datas[0].isIncluded === 1) {
+            nextTick(() => {
+              ruleTable.value.toggleRowSelection(datas[0], true)
+            })
+          }
           return datas[0]
         }
         return item;
@@ -216,13 +218,16 @@ watch(templateRes, (templateRes: any) => {
   if (templateRes && templateRes.code === 200) {
     formData.value = templateRes.data
     let selectDatas = formData.value.templateRuleList || [];
+    templateRuleIdsSrc.value = selectDatas.filter(item => item.isIncluded).map(item => item.templateRuleId) || []
     if (tableDatas.value.length > 0) {
       tableDatas.value = tableDatas.value.map(item => {
         let datas = selectDatas.filter((item0: any) => item0.ruleId === item.ruleId) || []
         if (datas.length > 0) {
-          nextTick(() => {
-            ruleTable.value.toggleRowSelection(datas[0], true)
-          })
+          if (datas[0].isIncluded === 1) {
+            nextTick(() => {
+              ruleTable.value.toggleRowSelection(datas[0], true)
+            })
+          }
           return datas[0]
         }
         return item;
@@ -247,13 +252,19 @@ const confirm = () => {
       })
       return;
     }
+    let templateRuleIds = []
     let templateRuleReqList = rows.map((item: any) => {
+      if (item.templateRuleId) {
+        templateRuleIds.push(item.templateRuleId)
+      }
       return { templateRuleId: item.templateRuleId, ruleId: item.ruleId }
     })
+    let excludedTemplateRuleIds = templateRuleIdsSrc.value.filter(item => !templateRuleIds.includes(item)) || []
     let param = {
       id: formData.value.id,
       templateName: formData.value.templateName,
-      templateRuleReqList
+      templateRuleReqList,
+      excludedTemplateRuleIds
     }
     loading.value = true
     request.post(`/api/v1/alertTemplate`, param).then((res: any) => {
@@ -267,6 +278,7 @@ const confirm = () => {
           templateName: '',
           templateRuleList: []
         }
+        templateRuleIdsSrc.value = []
         emit("updateTemplate")
       } else {
         ElMessage({
@@ -313,12 +325,16 @@ const updateTemplateRuleSuccess = (templateRule: any) => {
       tableDatas.value[i].silenceEndTime = templateRule.silenceEndTime
       tableDatas.value[i].alertNotify = templateRule.alertNotify
       tableDatas.value[i].notifyWayIds = templateRule.notifyWayIds
+      tableDatas.value[i].alertRuleItemList = templateRule.alertRuleItemList
+      break
     }
   }
   showMain.value = true
   nextTick(() => {
     for (let row of selectedRuleRows.value) {
-      ruleTable.value.toggleRowSelection(row, true)
+      if (row.isIncluded === 1) {
+        ruleTable.value.toggleRowSelection(row, true)
+      }
     }
   })
 }
@@ -327,7 +343,9 @@ const cancelUpdateTemplateRule = (num = 0) => {
   showMain.value = true
   nextTick(() => {
     for (let row of selectedRuleRows.value) {
-      ruleTable.value.toggleRowSelection(row, true)
+      if (row.isIncluded === 1) {
+        ruleTable.value.toggleRowSelection(row, true)
+      }
     }
   })
   if (num > 0) {
