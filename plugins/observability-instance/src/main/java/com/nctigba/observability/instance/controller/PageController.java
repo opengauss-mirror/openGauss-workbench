@@ -29,7 +29,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.nctigba.observability.instance.service.DbConfigService;
+import com.nctigba.observability.instance.service.TopSQLService;
 import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,6 +49,8 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/instanceMonitoring/api/v1/")
 @RequiredArgsConstructor
 public class PageController extends ControllerConfig {
+    @Autowired
+    private TopSQLService topSQLService;
     private static final Enum<?>[] MEMORY = {
             MetricsLine.MEMORY_USED,
             MetricsLine.MEMORY_DB_USED,
@@ -277,6 +281,7 @@ public class PageController extends ControllerConfig {
     @GetMapping("instance")
     public Map<String, Object> instance(String id, Long start, Long end, Integer step) {
         Map<String, Object> result = metricsService.listBatch(INSTANCE, id, start, end, step);
+        result.put("slowSqlThreshold", topSQLService.getSlowSqlThreshold(id));
         List<Map<String, Object>> cacheHitList = dbConfigService.cacheHit(id);
         result.put("cacheHit", cacheHitList);
         return AjaxResult.success(result);

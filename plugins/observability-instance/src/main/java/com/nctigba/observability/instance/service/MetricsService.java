@@ -166,7 +166,9 @@ public class MetricsService {
      * @return prometheus result
      */
     public Map<String, Object> slowSqlList(MetricQueryDTO dto) {
-        return executePrometheus(dto);
+        Map<String, Object> result = executePrometheus(dto);
+        result.put("slowSqlThreshold", topSQLService.getSlowSqlThreshold(dto.getNodeId()));
+        return result;
     }
 
     private Map<String, Object> executePrometheus(MetricQueryDTO dto) {
@@ -199,7 +201,6 @@ public class MetricsService {
         } catch (InterruptedException e) {
             throw new CustomException(e.getMessage());
         }
-        result.put("slowSqlThreshold", topSQLService.getSlowSqlThreshold(dto.getNodeId()));
         return result;
     }
 

@@ -56,6 +56,7 @@
         :formatter="toFixed"
         :data="metricsData.databaseIns"
         :xData="metricsData.time"
+        :toolTipsExcludeZero="true"
       />
     </my-card>
   </el-col>
@@ -73,6 +74,7 @@
         :formatter="toFixed"
         :data="metricsData.databaseUpd"
         :xData="metricsData.time"
+        :toolTipsExcludeZero="true"
       />
     </my-card>
   </el-col>
@@ -90,6 +92,7 @@
         :formatter="toFixed"
         :data="metricsData.databaseDel"
         :xData="metricsData.time"
+        :toolTipsExcludeZero="true"
       />
     </my-card>
   </el-col>
@@ -112,6 +115,7 @@
         :formatter="toFixed"
         :data="metricsData.databaseReturn"
         :xData="metricsData.time"
+        :toolTipsExcludeZero="true"
       />
     </my-card>
   </el-col>
@@ -129,6 +133,8 @@
         :formatter="toFixed"
         :data="metricsData.databaseFecth"
         :xData="metricsData.time"
+        :toolTipsExcludeZero="true"
+        :stack="true"
       />
     </my-card>
   </el-col>
@@ -254,7 +260,6 @@ watch(
     if (!baseData) return;
 
     // TPS
-    tpsInfo.value.option = []
     if (baseData.INSTANCE_TPS_ROLLBACK) {
       let tempData: string[] = [];
       baseData.INSTANCE_TPS_ROLLBACK.forEach((d: number) => {
@@ -264,7 +269,6 @@ watch(
         data: tempData,
         name: t("instanceMonitor.instance.rollbackQty"),
       });
-      tpsInfo.value.option.push({ name: t('instanceMonitor.instance.rollbackQty'), value: t('instanceMonitor.instance.rollbackQtyContent') })
     }
     if (baseData.INSTANCE_TPS_COMMIT) {
       let tempData: string[] = [];
@@ -275,7 +279,6 @@ watch(
         data: tempData,
         name: t("instanceMonitor.instance.commitQty"),
       });
-      tpsInfo.value.option.push({ name: t('instanceMonitor.instance.commitQty'), value: t('instanceMonitor.instance.commitQtyContent') })
     }
     if (baseData.INSTANCE_TPS_CR) {
       let tempData: string[] = [];
@@ -286,11 +289,9 @@ watch(
         data: tempData,
         name: t("instanceMonitor.instance.transTotalQty"),
       });
-      tpsInfo.value.option.push({ name: t('instanceMonitor.instance.transTotalQty'), value: t('instanceMonitor.instance.transTotalQtyContent') })
     }
 
     // QPS
-    qpsInfo.value.option = []
     if (baseData.INSTANCE_QPS) {
       let tempData: string[] = [];
       baseData.INSTANCE_QPS.forEach((d: number) => {
@@ -300,7 +301,6 @@ watch(
         data: tempData,
         name: t("instanceMonitor.instance.queryQty"),
       });
-      qpsInfo.value.option.push({ name: t('instanceMonitor.instance.queryQty'), value: t('instanceMonitor.instance.queryQtyContent') })
     }
 
     // databaseIns
@@ -359,7 +359,6 @@ watch(
     }
 
     // bgwriter
-    bgwriterInfo.value.option = []
     if (baseData.INSTANCE_DB_BGWRITER_CHECKPOINT) {
       let tempData: string[] = [];
       baseData.INSTANCE_DB_BGWRITER_CHECKPOINT.forEach((d: number) => {
@@ -369,7 +368,6 @@ watch(
         data: tempData,
         name: t("instanceIndex.bgwriterCheckpoint"),
       });
-      bgwriterInfo.value.option.push({ name: t('instanceIndex.bgwriterCheckpoint'), value: t('instanceIndex.bgwriterCheckpointContent') })
     }
     if (baseData.INSTANCE_DB_BGWRITER_CLEAN) {
       let tempData: string[] = [];
@@ -380,7 +378,6 @@ watch(
         data: tempData,
         name: t("instanceIndex.bgwriterClean"),
       });
-      bgwriterInfo.value.option.push({ name: t('instanceIndex.bgwriterClean'), value: t('instanceIndex.bgwriterCleanContent') })
     }
     if (baseData.INSTANCE_DB_BGWRITER_BACKEND) {
       let tempData: string[] = [];
@@ -391,7 +388,6 @@ watch(
         data: tempData,
         name: t("instanceIndex.bgwriterBackend"),
       });
-      bgwriterInfo.value.option.push({ name: t('instanceIndex.bgwriterBackend'), value: t('instanceIndex.bgwriterBackendContent') })
     }
 
     // time
@@ -434,11 +430,15 @@ const download = (title: string, ref: any) => {
 
 const tpsInfo = ref<any>({
   title: t("app.lineOverview"),
-  option: []
+  option: [{ name: t('instanceMonitor.instance.rollbackQty'), value: t('instanceMonitor.instance.rollbackQtyContent') },
+  { name: t('instanceMonitor.instance.commitQty'), value: t('instanceMonitor.instance.commitQtyContent') },
+  { name: t('instanceMonitor.instance.transTotalQty'), value: t('instanceMonitor.instance.transTotalQtyContent') }]
 })
 const qpsInfo = ref<any>({
   title: t("app.lineOverview"),
-  option: []
+  option: [{ name: t('instanceMonitor.instance.queryQty'), value: t('instanceMonitor.instance.queryQtyContent') },
+    { name: t('dbParam.common.tip'), value: `1:${t('dbParam.common.tipContent')};2:${t('dbParam.trackActivities.tipContent')};3:${t('dbParam.trackSqlCount.tipContent')}` }
+  ]
 })
 const databaseInsInfo = ref<any>({
   title: t("app.lineOverview"),
@@ -472,7 +472,9 @@ const databaseFecthInfo = ref<any>({
 })
 const bgwriterInfo = ref<any>({
   title: t("app.lineOverview"),
-  option: []
+  option: [{ name: t('instanceIndex.bgwriterCheckpoint'), value: t('instanceIndex.bgwriterCheckpointContent') },
+  { name: t('instanceIndex.bgwriterClean'), value: t('instanceIndex.bgwriterCleanContent') },
+  { name: t('instanceIndex.bgwriterBackend'), value: t('instanceIndex.bgwriterBackendContent') }]
 })
 </script>
 
