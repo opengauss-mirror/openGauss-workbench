@@ -66,9 +66,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.nctigba.observability.log.constants.CommonConstants.AWK_FILE;
 import static com.nctigba.observability.log.constants.CommonConstants.DIRECTORY_IS_EMPTY;
 import static com.nctigba.observability.log.constants.CommonConstants.DIRECTORY_IS_EXIST;
 import static com.nctigba.observability.log.constants.CommonConstants.FILE_IS_EXIST;
+import static com.nctigba.observability.log.constants.CommonConstants.JAVA_CLASSPATH;
 import static com.nctigba.observability.log.constants.CommonConstants.MAX_MAP_COUNT;
 import static com.nctigba.observability.log.constants.CommonConstants.MILLISECOND;
 import static com.nctigba.observability.log.constants.CommonConstants.MKDIR_FILE;
@@ -78,6 +80,7 @@ import static com.nctigba.observability.log.constants.CommonConstants.PID_PATH;
 import static com.nctigba.observability.log.constants.CommonConstants.PORT_IS_EXIST;
 import static com.nctigba.observability.log.constants.CommonConstants.PORT_PID;
 import static com.nctigba.observability.log.constants.CommonConstants.RM_FILE;
+import static com.nctigba.observability.log.constants.CommonConstants.SED_FILE;
 import static com.nctigba.observability.log.constants.CommonConstants.TIMEOUT;
 import static com.nctigba.observability.log.constants.CommonConstants.U_LIMIT;
 
@@ -112,6 +115,7 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
     private static final String STOP_ELASTICSEARCH = "cd %s && sh run_elasticsearch.sh stop";
     private static final String START_ELASTICSEARCH = "cd %s && sh run_elasticsearch.sh start";
     private static final String CHECK_ELASTICSEARCH = "cd %s && sh run_elasticsearch.sh status";
+    private static final String RESTART_FILEBEAT = "cd %s && sh run_filebeat.sh restart";
 
     @Autowired
     private ResourceLoader loader;
@@ -148,14 +152,14 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
                     .selectOne(
                             Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, InstallType.ELASTICSEARCH));
             if (env != null) {
-                throw new CustomException("elasticsearch exists");
+                throw new CustomException("elastic.install.exists.tip");
             }
             env = new NctigbaEnvDO().setHostid(installDTO.getHostId()).setPort(installDTO.getPort()).setPath(
                             path).setType(InstallType.ELASTICSEARCH)
                     .setPath(path + SRC);
             OpsHostEntity hostEntity = hostFacade.getById(installDTO.getHostId());
             if (hostEntity == null) {
-                throw new CustomException("host not found");
+                throw new CustomException("elastic.install.host.tip");
             }
             env.setHost(hostEntity);
             var user = getUser(hostEntity, installDTO.getUsername());
@@ -165,7 +169,7 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
                     encryptionUtils.decrypt(user.getPassword()))) {
                 String message = session.execute(String.format(PORT_IS_EXIST, env.getPort()));
                 if (message.contains("true")) {
-                    throw new CustomException("port is exists");
+                    throw new CustomException("elastic.install.port.tip");
                 }
                 String installPath = session.execute(String.format(DIRECTORY_IS_EXIST, path));
                 if (installPath.contains("false")) {
@@ -173,20 +177,29 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
                 } else {
                     String fileIsEmpty = session.execute(String.format(DIRECTORY_IS_EMPTY, path));
                     if (fileIsEmpty.startsWith("/")) {
-                        throw new CustomException("The installation folder is not empty!");
+                        throw new CustomException("elastic.install.folder.tip");
                     }
                 }
                 var vm = session.execute(MAX_MAP_COUNT);
                 if (NumberUtil.parseInt(vm) < 262144) {
-                    throw new CustomException(
-                            "please set vm.max_map_count to upper than 262144, command:echo vm.max_map_count = 262144 "
-                                    + ">> /etc/sysctl.conf &&sysctl -p");
+                    throw new CustomException("elastic.install.max_map_count.tip");
                 }
                 String configCheck = session.execute(U_LIMIT);
                 if (NumberUtil.parseInt(configCheck) < 65535) {
-                    throw new CustomException(
-                            "please set max file descriptors increase to at least [65535],command:echo * soft nofile "
-                                    + "65536 * hard nofile 65536 >> /etc/security/limits.conf && sysctl -p");
+                    throw new CustomException("elastic.install.nofile.tip");
+                }
+                String classpathCheck = session.execute(JAVA_CLASSPATH);
+                if (!StrUtil.isBlank(classpathCheck)) {
+                    String[] classpathList = classpathCheck.split(":");
+                    for (String classpath : classpathList) {
+                        if (".".equals(classpath)) {
+                            continue;
+                        }
+                        String pathCheck = session.execute(String.format(FILE_IS_EXIST, classpath));
+                        if ("false".equals(pathCheck)) {
+                            throw new CustomException("elastic.install.classpath.tip");
+                        }
+                    }
                 }
             }
             curr = nextStep(wsSession, steps, curr);
@@ -210,7 +223,8 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
                     }
                 }
                 if (isDownload) {
-                    var f = Download.download(PATH + tar, "pkg/" + tar);
+                    addMsg(wsSession, steps, curr, "elastic.install.download.start");
+                    File f = Download.download(PATH + tar, "pkg/" + tar);
                     pkg = new NctigbaEnvDO().setPath(f.getCanonicalPath()).setType(InstallType.ELASTICSEARCH_PKG);
                     addMsg(wsSession, steps, curr, "elastic.install.download.success");
                     save(pkg);
@@ -259,6 +273,7 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
             envMapper.insert(env);
             curr = nextStep(wsSession, steps, curr);
             // step5
+            updateFilebeatSet(hostEntity.getPublicIp(), env.getPort());
             startElasticsearch(env);
             curr = nextStep(wsSession, steps, curr);
             // step6
@@ -297,11 +312,11 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
         try {
             var env = envMapper.selectById(id);
             if (env == null) {
-                throw new CustomException("id not found");
+                throw new CustomException("elastic.uninstall.id.tip");
             }
             OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
             if (hostEntity == null) {
-                throw new CustomException("host not found");
+                throw new CustomException("elastic.uninstall.host.tip");
             }
             env.setHost(hostEntity);
             // step2
@@ -621,10 +636,29 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
             String path = env.getPath().substring(0, index);
             String pkgPath = session.execute(String.format(DIRECTORY_IS_EXIST, path));
             if (env.getPath() != null && !pkgPath.contains("false")) {
+                Thread.sleep(2000L);
                 session.execute(String.format(RM_FILE, path));
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             throw new CustomException(e.getMessage());
+        }
+    }
+
+    private void updateFilebeatSet(String publicId, Integer port) {
+        List<NctigbaEnvDO> filebeatList = envMapper.selectList(
+                Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, InstallType.FILEBEAT));
+        for (NctigbaEnvDO envDO : filebeatList) {
+            OpsHostEntity hostEntity = hostFacade.getById(envDO.getHostid());
+            OpsHostUserEntity opsHostUser = getUser(hostEntity, envDO.getUsername());
+            try (SshSession session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
+                    envDO.getUsername(), encryptionUtils.decrypt(opsHostUser.getPassword()))) {
+                String ipAddress = session.execute(String.format(AWK_FILE, envDO.getPath()));
+                session.execute(
+                        String.format(SED_FILE, ipAddress, publicId + ":" + port, envDO.getPath() + "/filebeat.yml"));
+                session.execute(String.format(RESTART_FILEBEAT, envDO.getPath()));
+            } catch (IOException e) {
+                throw new CustomException(e.getMessage());
+            }
         }
     }
 }
