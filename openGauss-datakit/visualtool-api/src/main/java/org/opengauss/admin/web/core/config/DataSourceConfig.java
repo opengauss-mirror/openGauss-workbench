@@ -23,16 +23,23 @@
 
 package org.opengauss.admin.web.core.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.enums.DbDataLocationEnum;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.jdbc.init.DataSourceScriptDatabaseInitializer;
 import org.springframework.boot.sql.init.DatabaseInitializationMode;
 import org.springframework.boot.sql.init.DatabaseInitializationSettings;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Optional;
 
 /**
@@ -40,12 +47,17 @@ import java.util.Optional;
  *
  * @since 2024/1/16
  */
+@Slf4j
 @Configuration
 public class DataSourceConfig {
+    @Autowired
+    private ApplicationContext applicationContext;
+
     @Bean
     @Profile("!dev")
     DataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSourceProperties properties,
                                                                             DataSource dataSource) {
+        checkConnection(properties);
         String driverClassName = properties.getDriverClassName();
         Optional<DbDataLocationEnum> dbDataLocationEnum = DbDataLocationEnum.of(driverClassName);
         DatabaseInitializationSettings settings = new DatabaseInitializationSettings();
@@ -57,5 +69,18 @@ public class DataSourceConfig {
         }
         settings.setDataLocations(dbDataLocationEnum.get().getLocations());
         return new DataSourceScriptDatabaseInitializer(dataSource, settings);
+    }
+
+    private void checkConnection(DataSourceProperties properties) {
+        try (Connection connection = DriverManager.getConnection(
+                properties.getUrl(), properties.getUsername(), properties.getPassword())) {
+            if (connection == null) {
+                log.error("Failed to get connection to the database: connection is null.");
+                System.exit(SpringApplication.exit(applicationContext, () -> 1));
+            }
+        } catch (SQLException e) {
+            log.error("Failed to get connection to the database: ", e);
+            System.exit(SpringApplication.exit(applicationContext, () -> 1));
+        }
     }
 }
