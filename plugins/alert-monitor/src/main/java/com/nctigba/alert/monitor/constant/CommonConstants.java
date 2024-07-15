@@ -236,4 +236,14 @@ public class CommonConstants {
      * IS_INCLUDED
      */
     public static final Integer IS_INCLUDED = 1;
+
+    /**
+     * IS_ENABLE_STATUS
+     */
+    public static final Integer IS_NOT_ENABLE = 0;
+
+    /**
+     * ENABLE_STATUS
+     */
+    public static final Integer IS_ENABLE = 1;
 }

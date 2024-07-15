@@ -56,6 +56,14 @@ export const routes: RouteRecordRaw[] = [
                 },
             },
             {
+                path: "/vem/alert/alertShielding",
+                component: () => import("@/views/alert/AlertShielding/Index.vue"),
+                meta: {
+                    title: 'alertShielding.title',
+                    breadcrumb: [],
+                },
+            },
+            {
                 path: "/vem/notify/notifyTemplate",
                 component: () => import("@/views/notify/NotifyTemplate/Index.vue"),
                 meta: {

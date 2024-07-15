@@ -1419,3 +1419,19 @@ update notify_template set notify_content = '告警信息','告警时间：${ale
 create INDEX idx_alert_template_rule_template_id on alert_template_rule(template_id);
 create INDEX idx_alert_template_rule_item_template_rule_id on alert_template_rule_item(template_rule_id);
 create INDEX idx_alert_rule_item_rule_id on alert_rule_item(rule_id);
+
+CREATE TABLE IF NOT alert_shielding (
+	id int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
+	rule_name varchar(50) NOT NULL,
+	rule_detail varchar(300) NULL,
+	cluster_node_ids text NOT NULL,
+	type varchar(32) NOT NULL,
+	start_date date NULL,
+	end_date date NULL,
+	start_time time NULL,
+	end_time time NULL,
+	is_enable int8 NULL DEFAULT 1,
+	is_deleted int8 NULL DEFAULT 0,
+	create_time timestamp NULL,
+	update_time timestamp NULL
+);
