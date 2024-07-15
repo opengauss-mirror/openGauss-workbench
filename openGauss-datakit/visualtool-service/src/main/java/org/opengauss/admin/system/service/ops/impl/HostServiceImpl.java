@@ -277,10 +277,12 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         Session session = connectivityTest(hostRecord);
         try {
             hostRecord.toHostEntity(getHostInfoVo(session));
+            HostBody hostBody = hostRecord.toHostBody();
+            hostBody.setPassword(encryptionUtils.encrypt(hostBody.getPassword()));
             if (Objects.isNull(hostEntity)) {
-                add(hostRecord.toHostBody());
+                add(hostBody);
             } else {
-                edit(hostEntity.getHostId(), hostRecord.toHostBody());
+                edit(hostEntity.getHostId(), hostBody);
             }
         } finally {
             if (Objects.nonNull(session) && session.isConnected()) {
