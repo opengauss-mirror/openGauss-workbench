@@ -42,14 +42,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class ConnectionWrapper implements Connection {
 
     private static final Logger log = LoggerFactory.getLogger(ConnectionWrapper.class);
-
-    // Connection接口的实现类对象的引用
     private Connection connection;
-
-    // 存放连接包装对象的池子的引用
     private LinkedBlockingQueue<ConnectionWrapper> pool;
-
-    ///激活时间（用于判断该连接是否长时间未使用）
     private long activeTime;
 
     public ConnectionWrapper(Connection connection, LinkedBlockingQueue<ConnectionWrapper> pool) {
@@ -59,9 +53,9 @@ public class ConnectionWrapper implements Connection {
     }
 
     /**
-     * 检测连接是否超时
+     * checkTimeOut
      *
-     * @return
+     * @return is timeout
      */
     public boolean checkTimeOut() {
         if ((new Date().getTime() - this.activeTime) > JdbcConnectionManager.CONN_TIMEOUT) {
@@ -71,25 +65,23 @@ public class ConnectionWrapper implements Connection {
     }
 
     /**
-     * 关闭连接
+     * closeConnection
      *
-     * @throws SQLException
+     * @throws SQLException SQLException
      */
     public void closeConnection() throws SQLException {
         this.connection.close();
     }
 
     /**
-     * 重写close方法，实际执行连接回收操作
+     * close connection
      *
      * @throws SQLException
      */
     @Override
     public void close() throws SQLException {
-        log.info("-------------------------------------开始执行连接回收操作-------------------------------------");
         this.activeTime = new Date().getTime();
         pool.add(this);
-        log.info("-------------------------------------连接回收完毕-------------------------------------");
     }
 
     @Override
