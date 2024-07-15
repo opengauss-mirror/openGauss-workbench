@@ -226,4 +226,14 @@ public class CommonConstants {
      * local ip
      */
     public static final String LOCAL_IP = "127.0.0.1";
+
+    /**
+     * IS_NOT_INCLUDED
+     */
+    public static final Integer IS_NOT_INCLUDED = 0;
+
+    /**
+     * IS_INCLUDED
+     */
+    public static final Integer IS_INCLUDED = 1;
 }

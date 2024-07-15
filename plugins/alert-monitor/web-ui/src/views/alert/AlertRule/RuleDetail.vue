@@ -39,9 +39,9 @@
         </el-radio-group>
       </el-form-item>
       <el-form-item :label="$t('alertRule.ruleItem')" prop="ruleItem">
-        <el-row v-for="(item, index ) in formData.alertRuleItemList" :key="item.id" class="rule"
-          style="margin-bottom: 5px;">
-          <span v-if="formData.ruleType === 'log'">
+        <el-row v-for="(item, index ) in formData.alertRuleItemList" :key="item.id"
+          style="margin-bottom: 5px;width: 100%">
+          <div v-if="formData.ruleType === 'log'" class="rule">
             <div style="width: 100%;">
               <span style="margin: 5px;">{{ $t('alertRule.ruleItemNum') }}</span><el-input v-model="item.ruleMark"
                 disabled style="width: 40px;margin: 5px 24px 5px 4px;height: 32px;"></el-input>
@@ -63,8 +63,8 @@
               <span style="margin: 5px 5px 10px 5px;">{{ $t('alertRule.blockWord') }}</span><el-input
                 v-model="item.blockWord" :disabled="disabled" style="width: 600px;margin: 5px;height: 32px;"></el-input>
             </div>
-          </span>
-          <span v-else>
+          </div>
+          <div v-else class="rule">
             <span style="margin: 5px;">{{ $t('alertRule.ruleItemNum') }}</span><el-input v-model="item.ruleMark" disabled
               style="width: 40px;margin: 5px 24px 5px 5px;height: 32px;"></el-input>
             <span style="margin: 5px 10px 10px 5px;">{{ $t('alertRule.ruleItemExp') }}</span>
@@ -82,17 +82,17 @@
               <el-option v-for="item0 in item.ruleItemExpSrcList" :key="item0.id" :value="item0.action"
                 :label="$t(`alertRule.${item0.action}Action`)" />
             </el-select> -->
-            <span></span><el-select v-if="item.showLimitValue !== 0"
+            <el-select v-if="item.showLimitValue !== 0"
               v-model="item.operate" :disabled="disabled" style="width: 70px;margin: 5px 4px;">
               <el-option v-for="item0 in compareSymbolList" :key="item0" :value="item0" :label="item0" />
             </el-select>
-            <span></span><el-input v-if="item.showLimitValue !== 0"
+            <el-input v-if="item.showLimitValue !== 0"
               v-model="item.limitValue" style="width: 100px;margin: 5px 4px;height: 32px;" :disabled="disabled"></el-input>
             <span v-if="item.unit" style="width: 50px;margin: 5px 4px;">{{ item.unit }}</span>
-          </span>
-          <span v-if="(state === 'add' || state === 'edit') && formData.alertRuleItemList.length > 1"
+          </div>
+          <div v-if="(state === 'add' || state === 'edit') && formData.alertRuleItemList.length > 1"
             style="margin: 5px 10px 5px 15px;"><el-button type="primary" circle :icon="Delete"
-              @click="delItem(index)"></el-button></span>
+              @click="delItem(index)"></el-button></div>
         </el-row>
         <div v-if="state === 'add' || state === 'edit'" style="width: 100%;">
           <span style="margin: 5px;"><el-button type="primary" @click="addItem" circle :icon="Plus"></el-button></span>
@@ -496,7 +496,7 @@ const checkRuleItem = (rule: any, value: any, callback: any) => {
         callback(new Error(t('alertRule.ruleItemTip')))
       }
     } else {
-      if (!ruleItem.ruleExpName || !ruleItem.action || !ruleItem.operate || !ruleItem.limitValue) {
+      if (!ruleItem.ruleExpName || !ruleItem.action || (ruleItem.showLimitValue !== 0 && (!ruleItem.operate || !ruleItem.limitValue))) {
         callback(new Error(t('alertRule.ruleItemTip')))
       }
       if (ruleItem.params && Object.keys(ruleItem.params).length > 0) {
@@ -557,6 +557,9 @@ const checkIsRepeat = (rule: any, value: any, callback: any) => {
   }
   if (formData.value.isRepeat !== 0 && formData.value.isRepeat !== 1) {
     callback(new Error(t('alertRule.isRepeatTip')))
+  }
+  if (formData.value.isRepeat === 0) {
+      callback()
   }
   if (!formData.value.nextRepeat) {
     callback(new Error(t('alertRule.nextRepeatIsNotEmpty')))

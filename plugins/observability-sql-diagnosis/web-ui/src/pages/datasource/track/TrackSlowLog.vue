@@ -26,7 +26,7 @@
   <div>
     <my-card
       :title="$t('dashboard.slowSqlMoreThan3Seconds') + metricsData.threshold + ')'"
-      height="250"
+      height="200"
       :bodyPadding="false"
       :showBtns="true" @download="title => download(title,slowSQL3s)"
       :info="slowSQL3sInfo"
@@ -400,7 +400,7 @@ const { loading, data: res, run: requestData } = useRequest(
     return ogRequest
       .get('/sqlDiagnosis/api/v1/slowSqls', { ...queryData.value })
       .then(function (res) {
-        res.records.forEach((element: { clusterId: any; nodeId: any }) => {
+        res.data.records.forEach((element: { clusterId: any; nodeId: any }) => {
           element.nodeId = nodeId
           element.clusterId = clusterId
         })
@@ -422,8 +422,8 @@ watch(ret, (ret: any[]) => {
 })
 watch(res, (res: Res) => {
   if (res && Object.keys(res).length) {
-    tableDatas.value = res.records
-    Object.assign(page, { pageSize: page.pageSize, total: res.total })
+    tableDatas.value = res.data.records
+    Object.assign(page, { pageSize: page.pageSize, total: res.data.total })
   } else {
     tableDatas.value = []
     Object.assign(page, { pageSize: page.pageSize, total: 0, currentPage: 1 })
@@ -438,7 +438,7 @@ const { data: aggResult, run: requestAggData } = useRequest(
     return ogRequest
       .get('/sqlDiagnosis/api/v1/slowSqls/aggData', { ...queryAggData.value })
       .then(function (res) {
-        res.records.forEach((element: { clusterId: any; nodeId: any }) => {
+        res.data.records.forEach((element: { clusterId: any; nodeId: any }) => {
           element.nodeId = nodeId
           element.clusterId = clusterId
         })
@@ -463,8 +463,8 @@ type aggRes =
   | undefined
 watch(aggResult, (aggResult: aggRes) => {
   if (aggResult && Object.keys(aggResult).length) {
-    tableAggDatas.value = aggResult.records
-    Object.assign(aggPage, { pageSize: aggPage.pageSize, total: aggResult.total })
+    tableAggDatas.value = aggResult.data.records
+    Object.assign(aggPage, { pageSize: aggPage.pageSize, total: aggResult.data.total })
   } else {
     tableAggDatas.value = []
     Object.assign(aggPage, { pageSize: aggPage.pageSize, total: 0, currentPage: 1 })
@@ -561,7 +561,7 @@ const { data: indexData, run: requestMetricData } = useRequest(
       dbName: dbName
     })
     .then(function (res) {
-      if (res.msg != null) {
+      if (res.msg != null && res.msg != 'success') {
         placeholders.value = res.msg
       }else{
         placeholders.value = 'success'
@@ -589,9 +589,9 @@ watch(
 
     // slow SQL
     slowSQL3sInfo.value.option = []
-    if (baseData.INSTANCE_DB_SLOWSQL) {
+    if (baseData.data.INSTANCE_DB_SLOWSQL) {
       let tempData: string[] = [];
-      baseData.INSTANCE_DB_SLOWSQL.forEach((d: number) => {
+      baseData.data.INSTANCE_DB_SLOWSQL.forEach((d: number) => {
         tempData.push(d.toString());
       });
       metricsData.value.slowSQL.push({
@@ -602,10 +602,10 @@ watch(
     }
 
     // time
-    metricsData.value.time = baseData.time;
+    metricsData.value.time = baseData.data.time;
 
     //threshold
-    metricsData.value.threshold=baseData.slowSqlThreshold
+    metricsData.value.threshold=baseData.data.slowSqlThreshold
   },
   { deep: true }
 );
@@ -684,7 +684,7 @@ onMounted(() => {
 <style lang="scss" scoped>
 .slow-log {
   &-chart {
-    height: 380px;
+    height: 200px;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -702,7 +702,7 @@ onMounted(() => {
     }
     .noresult-wrap {
       width: 100%;
-      height: 500px;
+      height: 200px;
       .noresult-img {
         width: 200px;
         display: block;
@@ -728,7 +728,7 @@ onMounted(() => {
     align-items: center;
     right: 0;
     top: 0px;
-    height: 40px;
+    height: 32px;
     background-color: $og-sub-background-color;
     > div:not(:last-of-type),
     > span,

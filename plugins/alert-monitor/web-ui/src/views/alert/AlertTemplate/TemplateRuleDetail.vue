@@ -380,7 +380,7 @@ const checkRuleItem = (rule: any, value: any, callback: any) => {
         callback(new Error(t('alertRule.ruleItemTip')))
       }
     } else {
-      if (!ruleItem.ruleExpName || !ruleItem.action || !ruleItem.operate || !ruleItem.limitValue) {
+      if (!ruleItem.ruleExpName || !ruleItem.action || (ruleItem.showLimitValue !== 0 && (!ruleItem.operate || !ruleItem.limitValue))) {
         callback(new Error(t('alertRule.ruleItemTip')))
       }
       if (ruleItem.params && Object.keys(ruleItem.params).length > 0) {

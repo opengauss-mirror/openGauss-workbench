@@ -28,22 +28,22 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.observability.sql.constant.CommonConstants;
-import com.nctigba.observability.sql.enums.OptionEnum;
 import com.nctigba.observability.sql.constant.SqlConstants;
+import com.nctigba.observability.sql.enums.FrameTypeEnum;
+import com.nctigba.observability.sql.enums.OptionEnum;
+import com.nctigba.observability.sql.enums.ResultTypeEnum;
 import com.nctigba.observability.sql.handler.TopSQLHandler;
 import com.nctigba.observability.sql.mapper.DiagnosisResultMapper;
 import com.nctigba.observability.sql.mapper.DiagnosisTaskMapper;
-import com.nctigba.observability.sql.model.vo.PartitionDataVO;
-import com.nctigba.observability.sql.enums.FrameTypeEnum;
-import com.nctigba.observability.sql.enums.ResultTypeEnum;
+import com.nctigba.observability.sql.model.dto.TaskResultDTO;
+import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
 import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
 import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
-import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
-import com.nctigba.observability.sql.model.dto.TaskResultDTO;
+import com.nctigba.observability.sql.model.vo.PartitionDataVO;
 import com.nctigba.observability.sql.service.CollectionItem;
+import com.nctigba.observability.sql.service.DataStoreService;
 import com.nctigba.observability.sql.service.DiagnosisPointService;
 import com.nctigba.observability.sql.service.impl.ClusterManager;
-import com.nctigba.observability.sql.service.DataStoreService;
 import com.nctigba.observability.sql.service.impl.collection.table.ExplainItem;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -132,7 +132,7 @@ public class ObjectInfoCheck implements DiagnosisPointService<Object> {
      *
      * @param rsList execution plan list
      * @param nodeId node id
-     * @param task task info
+     * @param task   task info
      * @return JSONObject
      */
     private JSONObject getExecutionPlanResult(ArrayList<String> rsList, String nodeId, DiagnosisTaskDO task) {
@@ -304,7 +304,7 @@ public class ObjectInfoCheck implements DiagnosisPointService<Object> {
         ResultSet rs = null;
         try {
             stmt = conn.createStatement();
-            rs = stmt.executeQuery(sql.replace(CommonConstants.TABLENAME, tableName));
+            rs = stmt.executeQuery(sql.replace(CommonConstants.TABLENAME, tableName.replace("\"", "")));
             if (isList) {
                 JSONArray resultArray = new JSONArray();
                 while (rs.next()) {

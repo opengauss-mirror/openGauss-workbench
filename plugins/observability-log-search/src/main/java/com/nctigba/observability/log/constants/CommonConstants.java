@@ -55,7 +55,7 @@ public class CommonConstants {
     /**
      * Get pid by port
      */
-    public static final String PORT_PID = "ss -tulpn | grep ':%s\\s' | awk '{print $7}' | awk -F \",\" '{print $2}' "
+    public static final String PORT_PID = "source /etc/profile && ss -tulpn | grep ':%s\\s' | awk '{print $7}' | awk -F \",\" '{print $2}' "
             + "| awk -F \"=\" '{print $2}'";
 
     /**
@@ -139,4 +139,19 @@ public class CommonConstants {
      * Status timeout time
      */
     public static final int TIMEOUT = 3;
+
+    /**
+     * Modify file
+     */
+    public static final String SED_FILE = "sed -i 's/%s/%s/g' %s";
+
+    /**
+     * Get es ip address from filebeat.yml
+     */
+    public static final String AWK_FILE = "awk -F'[\"]' '/hosts: \\[/{print $2; exit}' %s/filebeat.yml";
+
+    /**
+     * Java environment variable : classpath
+     */
+    public static final String JAVA_CLASSPATH = "echo $CLASSPATH";
 }

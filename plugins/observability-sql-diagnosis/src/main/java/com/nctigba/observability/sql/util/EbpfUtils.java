@@ -37,6 +37,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
+import static com.nctigba.observability.sql.constant.AgentParamConstants.TIMEOUT;
+
 /**
  * EbpfUtil
  *
@@ -76,7 +78,7 @@ public class EbpfUtils {
         // call post
         String postForObject = HttpUtil.post(
                 url,
-                Map.of("tid", task.getPid(), "taskId", task.getId(), "monitorType", param));
+                Map.of("tid", task.getPid(), "taskId", task.getId(), "monitorType", param), TIMEOUT);
         task.addRemarks("bccResult for :" + param + ":" + (postForObject == null ? "" : postForObject));
         return "success";
     }
@@ -89,7 +91,7 @@ public class EbpfUtils {
      */
     public boolean getStatus(NctigbaEnvDO env) {
         String url = getAgentUrl(env.getNodeid()) + "/monitor/v1/status";
-        String status = HttpUtil.get(url);
+        String status = HttpUtil.get(url, TIMEOUT);
         return "success".equals(status);
     }
 
@@ -100,7 +102,7 @@ public class EbpfUtils {
      */
     public void record(DiagnosisTaskDO task) {
         String url = getAgentUrl(task.getNodeId()) + "/monitor/v1/record";
-        HttpUtil.post(url, Map.of("taskId", task.getId()));
+        HttpUtil.post(url, Map.of("taskId", task.getId()), TIMEOUT);
     }
 
     /**
@@ -111,7 +113,7 @@ public class EbpfUtils {
      */
     public boolean stopMonitor(DiagnosisTaskDO task) {
         String url = getAgentUrl(task.getNodeId()) + "/monitor/v1/stopMonitor";
-        String message = HttpUtil.post(url, Map.of("taskId", task.getId()));
+        String message = HttpUtil.post(url, Map.of("taskId", task.getId()), TIMEOUT);
         return Boolean.parseBoolean(message);
     }
 
@@ -123,7 +125,7 @@ public class EbpfUtils {
      */
     public boolean statusMonitor(DiagnosisTaskDO task) {
         String url = getAgentUrl(task.getNodeId()) + "/monitor/v1/statusMonitor";
-        String message = HttpUtil.post(url, Map.of("taskId", task.getId()));
+        String message = HttpUtil.post(url, Map.of("taskId", task.getId()), TIMEOUT);
         return Boolean.parseBoolean(message);
     }
 }

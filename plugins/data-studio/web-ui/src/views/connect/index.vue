@@ -76,7 +76,7 @@
           </template>
         </el-table-column>
       </el-table>
-      <el-form :model="form" ref="ruleFormRef" :rules="rules" label-width="auto">
+      <el-form :model="form" ref="ruleFormRef" :rules="rules" label-width="auto" label-position="left">
         <el-form-item prop="type" :label="$t('connection.databaseType')">
           <el-select
             v-model="form.type"
@@ -512,7 +512,7 @@
   .dialog-space-footer {
     display: flex;
     justify-content: space-between;
-    padding-right: 80px;
+    padding-right: 20px;
   }
   .connection-tips {
     margin-left: 5px;

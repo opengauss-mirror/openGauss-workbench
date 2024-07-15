@@ -25,17 +25,13 @@
       ></el-table-column>
       <el-table-column
         header-align="center"
-        align="left"
-        prop="success"
+        align="center"
         :label="t('historyTable.column.status')"
         width="75"
       >
         <template #default="{ row }">
-          <div class="single-line-omission">
-            <span :class="['status-dot', row.success ? 'success' : 'fail']"></span>
-            {{ row.success ? $t('message.success') : $t('message.fail') }}
-            <span v-if="!row.success && row.errMes">,{{ row.errMes }}</span>
-          </div>
+          <span :class="['status-dot', row.success ? 'success' : 'fail']"></span>
+          {{ row.success ? $t('message.success') : $t('message.fail') }}
         </template>
       </el-table-column>
       <el-table-column align="center" :label="t('historyTable.column.sql')">
@@ -62,29 +58,42 @@
         :label="t('historyTable.column.executeTime')"
         width="100"
       ></el-table-column>
-      <el-table-column align="center" :label="t('historyTable.column.operation')" width="110">
+      <el-table-column
+        header-align="center"
+        align="left"
+        :label="t('historyTable.column.operation')"
+        width="100"
+      >
         <template #default="{ row }">
-          <span class="iconfont icon-yulan opetation-button" @click="handlePreviewSql(row)"></span>
+          <span
+            class="iconfont icon-yulan opetation-button"
+            @click="handlePreviewSql(row)"
+            :title="$t('historyTable.dialog.title')"
+          ></span>
           <span
             v-if="!row.lock"
             class="iconfont icon-lock opetation-button"
             @click="handleLock(row, true)"
+            :title="$t('button.lock')"
           ></span>
           <span
             v-if="row.lock"
             class="iconfont icon-unlock opetation-button"
             @click="handleLock(row, false)"
+            :title="$t('button.unlock2')"
           ></span>
           <span
             v-if="!row.lock"
             class="iconfont icon-shanchu opetation-button"
             @click="handleDelelte(row)"
+            :title="$t('button.delete')"
           ></span>
           <el-icon
             v-if="!row.success && row.errMes"
             class="opetation-button"
             style="vertical-align: text-bottom; font-size: 17px"
             @click="handlePreviewError(row)"
+            :title="$t('historyTable.column.errorMessage')"
             ><Warning
           /></el-icon>
         </template>
@@ -96,6 +105,7 @@
 </template>
 
 <script lang="ts" setup>
+  import { Tooltip as VxeTooltip } from 'vxe-table';
   import { ElMessage, ElMessageBox } from 'element-plus';
   import { useUserStore } from '@/store/modules/user';
   import { useI18n } from 'vue-i18n';
@@ -227,38 +237,6 @@
     cursor: pointer;
     &:nth-child(n + 2) {
       margin-left: 5px;
-    }
-  }
-  .flex-header-start {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    .filter-wrapper {
-      flex: 1;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-  }
-  .flex-header-between {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .icon-pointer {
-    cursor: pointer;
-    :hover {
-      color: var(--normal-color);
-    }
-  }
-  .border-bottom-input {
-    box-shadow: none;
-    height: auto;
-    :deep(.el-input__wrapper) {
-      box-shadow: none;
-      .el-input__inner {
-        box-shadow: 0 1px 0 0 var(--el-input-border-color);
-      }
     }
   }
 </style>

@@ -95,4 +95,15 @@ public interface MigrationTaskHostRefService extends IService<MigrationTaskHostR
     String getPortalInstallLog(String hostId);
 
     UploadInfo upload(MultipartFile file, Integer userId) throws PortalInstallException;
+
+    /**
+     * find tables task
+     *
+     * @param dbName    database name
+     * @param url       source database connection
+     * @param username  username of db connection
+     * @param password  password of db connection
+     * @return tables
+     */
+    List<Object> getTablesBySourceDb(String dbName, String url, String username, String password);
 }

@@ -55,7 +55,7 @@ public class SqlProvider {
                 + "SUM(n_tuples_fetched) AS total_random_scan_rows, "
                 + "ROUND(SUM(n_tuples_fetched)/COUNT(unique_query_id)) AS avg_random_scan_rows, "
                 + "SUM(n_tuples_returned) AS total_order_scan_rows, "
-                + "ROUND(SUM(n_returned_rows)/COUNT(unique_query_id)) AS avg_order_scan_rows, "
+                + "ROUND(SUM(n_tuples_returned)/COUNT(unique_query_id)) AS avg_order_scan_rows, "
                 + "ROUND(SUM(lock_time/1000/1000)/ COUNT(unique_query_id),3) AS avg_lock_time, "
                 + "ROUND(SUM(n_returned_rows)/COUNT(unique_query_id)) AS avg_return_rows,"
                 + "MIN(start_time) AS first_execute_time, "

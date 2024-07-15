@@ -25,9 +25,6 @@ package com.nctigba.observability.sql.controller;
 
 import com.nctigba.observability.sql.config.ControllerConfig;
 import com.nctigba.observability.sql.model.query.SlowLogQuery;
-import com.nctigba.observability.sql.model.vo.StatementHistoryAggVO;
-import com.nctigba.observability.sql.model.vo.StatementHistoryDetailVO;
-import com.nctigba.observability.sql.service.MyPage;
 import com.nctigba.observability.sql.service.impl.SlowLogServiceImpl;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.exception.CustomException;
@@ -36,8 +33,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/sqlDiagnosis/api/v1")
 public class SlowLogController extends ControllerConfig {
@@ -45,21 +40,21 @@ public class SlowLogController extends ControllerConfig {
     private SlowLogServiceImpl slowLogServiceImpl;
 
     @GetMapping("/slowSqls")
-    public MyPage<StatementHistoryDetailVO> listSlowSQLs(SlowLogQuery slowLogQuery) {
-        return slowLogServiceImpl.listSlowSQLs(slowLogQuery);
+    public AjaxResult listSlowSQLs(SlowLogQuery slowLogQuery) {
+        return AjaxResult.success(slowLogServiceImpl.listSlowSQLs(slowLogQuery));
     }
 
     @GetMapping("/slowSqls/chart")
-    public Map<String, Object> slowSqlChart(String id, Long start, Long end, Integer step, String dbName) {
+    public AjaxResult slowSqlChart(String id, Long start, Long end, Integer step, String dbName) {
         try {
-            return slowLogServiceImpl.getSlowSqlChart(id, start, end, step, dbName);
+            return AjaxResult.success(slowLogServiceImpl.getSlowSqlChart(id, start, end, step, dbName));
         } catch (CustomException e) {
             return AjaxResult.success(e.getMessage());
         }
     }
 
     @GetMapping("/slowSqls/aggData")
-    public MyPage<StatementHistoryAggVO> slowSqlAggData(SlowLogQuery slowLogQuery) {
-        return slowLogServiceImpl.selectSlowSqlAggData(slowLogQuery);
+    public AjaxResult slowSqlAggData(SlowLogQuery slowLogQuery) {
+        return AjaxResult.success(slowLogServiceImpl.selectSlowSqlAggData(slowLogQuery));
     }
 }

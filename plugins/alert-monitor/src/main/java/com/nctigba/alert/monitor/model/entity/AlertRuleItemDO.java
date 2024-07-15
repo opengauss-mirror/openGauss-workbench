@@ -36,7 +36,7 @@ import lombok.experimental.Accessors;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -64,8 +64,8 @@ public class AlertRuleItemDO {
     private String action;
     @EnumString(values = {">", ">=", "=", "<=", "<", "!="})
     private String operate;
-    @Pattern(regexp = "^-?\\d+(\\.\\d+)?$")
-    private String limitValue;
+    @JsonSerialize(using = ToStringSerializer.class)
+    private BigDecimal limitValue;
     private String unit;
     @NotBlank(groups = AlertRuleDO.IndexRuleGroup.class)
     private String ruleExp;

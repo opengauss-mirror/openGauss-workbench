@@ -274,5 +274,11 @@ public interface SshCommandConstants {
      * command to find wwn by upadmin_plus
      */
     String FIND_DISK_BY_UPADMIN_PLUS = "upadmin_plus show vlun | grep %s | awk '{print $2}'";
-
+    /**
+     * Import cluster command
+     */
+    String ENV_PARAMETER_GREP = "grep {0} {1}";
+    String RESULT_BY_SPLIT_EQUAL = "|awk -F '=' '\\''{print $2}'\\''";
+    String THREE_IN_ONE = "{0}{1}{2}";
+    String CHANGE_SUB_USER = "su - {0} -c ''{1}''";
 }

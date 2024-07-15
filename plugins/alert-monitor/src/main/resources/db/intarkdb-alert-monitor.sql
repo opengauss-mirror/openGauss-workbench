@@ -130,6 +130,7 @@ ALTER TABLE "alert_rule_item" ADD COLUMN "block_word" text;
 COMMENT ON COLUMN "alert_rule_item"."keyword" IS '关键字，多个用逗号分隔';
 COMMENT ON COLUMN "alert_rule_item"."block_word" IS '屏蔽词，多个用逗号分隔';
 ALTER TABLE alert_rule_item ALTER COLUMN rule_exp_param TYPE text;
+alter table alert_rule_item alter  COLUMN  limit_value type DECIMAL;
 
 
 CREATE TABLE IF NOT EXISTS "alert_rule_item_param" (
@@ -272,6 +273,8 @@ COMMENT ON COLUMN "alert_template_rule"."check_frequency" IS '检查频率';
 COMMENT ON COLUMN "alert_template_rule"."check_frequency_unit" IS '检查频率单位';
 ALTER TABLE "alert_template_rule" ADD COLUMN "enable" int8 NOT NULL default 1;
 COMMENT ON COLUMN "alert_template_rule"."enable" IS '启动/停止，0为停止，1为启动，默认启动';
+ALTER TABLE "alert_template_rule" ADD COLUMN "is_included" int8 NOT NULL default 1;
+COMMENT ON COLUMN "alert_template_rule"."is_included" IS '是否有效，0为否，1为是，默认1';
 
 CREATE TABLE IF NOT EXISTS "alert_template_rule_item" (
     "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -312,6 +315,7 @@ ALTER TABLE "alert_template_rule_item" ADD COLUMN "block_word" text;
 COMMENT ON COLUMN "alert_template_rule_item"."keyword" IS '关键字，多个用逗号分隔';
 COMMENT ON COLUMN "alert_template_rule_item"."block_word" IS '屏蔽词，多个用逗号分隔';
 ALTER TABLE alert_template_rule_item ALTER COLUMN rule_exp_param TYPE text;
+alter table alert_template_rule_item alter  COLUMN  limit_value type DECIMAL;
 
 CREATE TABLE alert_template_rule_item_param (
     id int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -616,6 +620,7 @@ insert into alert_rule_item_src(id,name,unit,params,create_time) values (19,'slo
 insert into alert_rule_item_exp_src(id,rule_item_src_id,action,operate,limit_value,exp,show_limit_value,
 create_time) values(50,19,'normal','',null,
 'pg_active_slowsql_query_runtime{instance=~"${instances}"}',1,now()) ;
+update alert_rule_item_exp_src set exp = 'max(pg_active_slowsql_query_runtime{instance=~"${instances}"}) by (instance,query)' where id = 50;
 
 insert into alert_rule_item_src(id,name,unit,params,params_explanation,create_time) values (20,'tablespaceSize',
 'MB','{"name": ""}','{"name": {"tip": "tablespaceNameTip","required": true}}',now()) ;
@@ -664,6 +669,7 @@ INSERT into alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_va
  INSERT into alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_value,unit,rule_exp,rule_item_desc,is_deleted,create_time,update_time,action)
   VALUES (9,9,'A','slowsqlRunTime','>',10,'s','pg_active_slowsql_query_runtime{instance=~"${instances}"}',
   'sql执行时间超过10秒',0,'2023-08-07 15:45:20.02',null,'normal') ;
+  update alert_rule_item set rule_exp = 'max(pg_active_slowsql_query_runtime{instance=~"${instances}"}) by (instance,query)' where id = 9;
 
  INSERT into alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
   VALUES (10,'数据库连接数监控','warn','index','A','${nodeName}的连接数超过500',1,'m',1,0,null,null,'firing','1',
@@ -707,6 +713,7 @@ INSERT into alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,
  '网络输入速率监控',0,'2023-08-07 15:45:20.02',null) ;
 INSERT into alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_value,unit,rule_exp,rule_item_desc,is_deleted,create_time,update_time,action)
  VALUES (14,14,'A','networkReceiveRate','>=',100,'MB/s','max(rate(agent_network_receive_bytes_total{instance=~"${instances}"}[2m])) by (instance) /8/1024/1024','网络输入速率大于等于100MB/s',0,'2023-06-05 15:45:20.02',null,'normal');
+ update alert_rule_item set rule_exp = 'max(rate(agent_network_receive_bytes_total{instance=~"${instances}"}[2m])) by (instance)/1024/1024' where id = 14;
 
 INSERT into alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (15,'网络输出速率监控','warn','index','A','${nodeName}的网络输出速率大于等于100MB/s',1,'m',1,0,null,null,'firing','1',
@@ -715,6 +722,7 @@ INSERT into alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_va
  VALUES (15,15,'A','networkTransmitRate','>=',100,'MB/s',
  'max(rate(agent_network_transmit_bytes_total{instance=~"${instances}"}[2m])) by (instance) /8/1024/1024',
  '网络输出速率大于等于100MB/s',0,'2023-06-05 15:45:20.02',null,'normal') ;
+  update alert_rule_item set rule_exp = 'max(rate(agent_network_transmit_bytes_total{instance=~"${instances}"}[2m])) by (instance)/1024/1024' where id = 15;
 
 
 
@@ -775,6 +783,8 @@ INSERT into alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,
 INSERT into alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_value,unit,rule_exp,rule_item_desc,is_deleted,create_time,update_time,action)
  VALUES (23,23,'A','dbCpuUsage','>',95,'%','top_db_cpu{instance=~"${instances}"}',
  '数据库CPU使用率大于95%',0,now(),null,'normal') ;
+ update alert_rule_item_exp_src set exp = 'top_db_cpu{instance=~"${instances}"}/on(instance) count(agent_cpu_seconds_total{mode="system"}) by (instance)' where id = 70;
+ update alert_rule_item set rule_exp = 'top_db_cpu{instance=~"${instances}"}/on(instance) count(agent_cpu_seconds_total{mode="system"}) by (instance))' where id = 23;
 
 -- 主机连接不可用
 insert into alert_rule_item_src(id,name,name_zh,name_en,unit,params,create_time) values (71,'hostConnectStatus',
@@ -1216,6 +1226,7 @@ insert into alert_rule_item_src(id,name,name_zh,name_en,unit,params,create_time,
 insert into alert_rule_item_exp_src(id,rule_item_src_id,action,operate,limit_value,exp,show_limit_value,
 create_time) values(94,94,'normal','',null,
 'db_replslot_dir_size_kbytes{instance=~"${instances}"}/1024/1024/8',1,now()) ;
+update alert_rule_item_exp_src set exp = 'db_replslot_dir_size_kbytes{instance=~"${instances}"}/1024/1024' where id = 94;
 
 INSERT into alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (55,'pg_replslot目录大小告警','warn','index','A',
@@ -1225,6 +1236,7 @@ INSERT into alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_va
  VALUES (55,55,'A','dbReplslotDirSize','>',1,'GB',
  'db_replslot_dir_size_kbytes{instance=~"${instances}"}/1024/1024/8',
  'Replslot目录大小大于1GB',0,now(),null,'normal') ;
+ update alert_rule_item set rule_exp = 'db_replslot_dir_size_kbytes{instance=~"${instances}"}/1024/1024' where id = 55;
 
 -- 数据库每分钟查询数告警
 insert into alert_rule_item_src(id,name,name_zh,name_en,unit,params,create_time,alert_params) values (95,
@@ -1406,3 +1418,4 @@ update notify_template set notify_content = '告警信息','告警时间：${ale
 
 create INDEX idx_alert_template_rule_template_id on alert_template_rule(template_id);
 create INDEX idx_alert_template_rule_item_template_rule_id on alert_template_rule_item(template_rule_id);
+create INDEX idx_alert_rule_item_rule_id on alert_rule_item(rule_id);

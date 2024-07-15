@@ -27,6 +27,7 @@ import com.nctigba.datastudio.compatible.TableObjectSQLService;
 import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.query.SelectDataFiltrationQuery;
 import com.nctigba.datastudio.model.query.SelectDataQuery;
+import com.nctigba.datastudio.utils.DebugUtils;
 import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -157,42 +158,42 @@ public class TableObjectSQLServiceImpl implements TableObjectSQLService {
 
     @Override
     public String tableTruncateSQL(String schema, String tableName) {
-        String ddl = String.format(TABLE_TRUNCATE_SQL, schema, tableName);
+        String ddl = String.format(TABLE_TRUNCATE_SQL, schema, needQuoteName(tableName));
         log.info("tableAnalyseSQL response is: " + ddl);
         return ddl;
     }
 
     @Override
     public String tableVacuumSQL(String schema, String tableName) {
-        String ddl = String.format(VACUUM_SQL, schema, tableName);
+        String ddl = String.format(VACUUM_SQL, schema, needQuoteName(tableName));
         log.info("tableAnalyseSQL response is: " + ddl);
         return ddl;
     }
 
     @Override
     public String tableReindexSQL(String schema, String tableName) {
-        String ddl = String.format(REINDEX_TABLE_SQL, schema, tableName);
+        String ddl = String.format(REINDEX_TABLE_SQL, schema, needQuoteName(tableName));
         log.info("tableAnalyseSQL response is: " + ddl);
         return ddl;
     }
 
     @Override
     public String tableRenameSQL(String schema, String tableName, String newName) {
-        String ddl = String.format(RENAME_TABLE_SQL, schema, tableName, newName);
+        String ddl = String.format(RENAME_TABLE_SQL, schema, needQuoteName(tableName), needQuoteName(newName));
         log.info("tableAnalyseSQL response is: " + ddl);
         return ddl;
     }
 
     @Override
     public String tableCommentSQL(String schema, String tableName, String comment) {
-        String ddl = String.format(COMMENT_TABLE_SQL, schema, tableName, comment);
+        String ddl = String.format(COMMENT_TABLE_SQL, schema, needQuoteName(tableName), comment);
         log.info("tableAnalyseSQL response is: " + ddl);
         return ddl;
     }
 
     @Override
     public String tableAlterSchemaSQL(String schema, String tableName, String newSchema) {
-        String ddl = String.format(SCHEMA_TABLE_SQL, schema, tableName, newSchema);
+        String ddl = String.format(SCHEMA_TABLE_SQL, schema, needQuoteName(tableName), newSchema);
         log.info("tableAnalyseSQL response is: " + ddl);
         return ddl;
     }
@@ -206,7 +207,7 @@ public class TableObjectSQLServiceImpl implements TableObjectSQLService {
 
     @Override
     public String tableAlterTablespaceSQL(String schema, String tableName, String tablespace) {
-        String ddl = String.format(TABLESPACE_TABLE_SQL, schema, tableName, tablespace);
+        String ddl = String.format(TABLESPACE_TABLE_SQL, schema, needQuoteName(tableName), tablespace);
         log.info("tableAnalyseSQL response is: " + ddl);
         return ddl;
     }

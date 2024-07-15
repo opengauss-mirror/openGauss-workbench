@@ -87,6 +87,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.nctigba.alert.monitor.constant.CommonConstants.FIRING_STATUS;
@@ -394,7 +395,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             if (analysisServiceMap.get(ruleItemSrc.getAnalysisBeanName()) != null) {
                 AlertAnalysisService analysisService = analysisServiceMap.get(ruleItemSrc.getAnalysisBeanName());
                 relationDtoList.addAll(analysisService.getRelationData(alertRecordDO.getClusterNodeId(),
-                    templateRuleItem.getLimitValue()));
+                    templateRuleItem.getLimitValue().toString()));
                 continue;
             }
             AlertRelationDTO relationDto = new AlertRelationDTO();
@@ -407,10 +408,10 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             LocalDateTime maxTime = alertRecordDO.getEndTime().plusMinutes(30L);
             relationDto.setMinTime(minTime).setMaxTime(maxTime);
             String ruleExp = templateRuleItem.getRuleExp();
-            ruleExp = ruleExp.replace("${instances}", alertRecordDO.getClusterNodeId());
-            Number[][] datas = prometheusService.queryRange(CommonConstants.LOCAL_IP, promEnv.getPort().toString(),
+            ruleExp = ruleExp.replaceAll(Pattern.quote("${instances}"), alertRecordDO.getClusterNodeId());
+            List datas = prometheusService.queryRange(CommonConstants.LOCAL_IP, promEnv.getPort().toString(),
                 ruleExp, minTime, maxTime);
-            relationDto.setDatas(datas).setLimitValue(templateRuleItem.getLimitValue());
+            relationDto.setDatas(datas).setLimitValue(templateRuleItem.getLimitValue().toString());
             relationDtoList.add(relationDto);
         }
         return relationDtoList;

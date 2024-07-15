@@ -19,7 +19,7 @@
       <my-card
         :title="$t('sqlDiagnosisPoints.beforePlan')"
         height="auto"
-        style="margin-bottom: 10px"
+        style="margin-bottom: 10px;height:300px"
         :bodyPadding="false"
       >
         <div style="padding: 10px">
@@ -34,7 +34,10 @@
         </div>
       </my-card>
 
-      <my-card :title="$t('sqlDiagnosisPoints.afterPlan')" height="auto" :bodyPadding="false">
+      <my-card :title="$t('sqlDiagnosisPoints.afterPlan')"
+        height="auto"
+        style="margin-bottom: 10px;height:300px"
+        :bodyPadding="false">
         <div style="padding: 10px">
           <MyPlan
             v-if="pointData && pointData.afterExplain && pointData.afterExplain"

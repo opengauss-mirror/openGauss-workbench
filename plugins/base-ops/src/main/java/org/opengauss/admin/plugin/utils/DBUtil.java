@@ -62,6 +62,16 @@ public class DBUtil {
         return Optional.ofNullable(conn);
     }
 
+    public void closeConn(Connection connection) {
+        if (Objects.nonNull(connection)) {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                log.error("database close fail!");
+            }
+        }
+    }
+
     @Data
     @NoArgsConstructor
     @AllArgsConstructor

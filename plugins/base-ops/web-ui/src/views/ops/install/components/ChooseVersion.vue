@@ -27,6 +27,13 @@
               {{ data.label }}
             </template>
           </a-radio-group>
+          <a-button
+            type="primary"
+            @click="addHostbulk"
+          >
+            批量导入
+          </a-button>
+          <import-cluster ref="addHostBulkRef"></import-cluster>
         </div>
       </div>
       <div
@@ -89,6 +96,9 @@ import { useOpsStore } from '@/store'
 import { onMounted, reactive, ref, computed, inject } from 'vue'
 import { OpenGaussVersionEnum } from '@/types/ops/install'
 import { useI18n } from 'vue-i18n'
+import importCluster from '../../import/importCluster.vue'
+import {KeyValue} from '@/types/global'
+
 const { t } = useI18n()
 const currVersion = ref(OpenGaussVersionEnum.MINIMAL_LIST)
 const versionStore = useOpsStore()
@@ -98,6 +108,13 @@ const loadingFunc = inject<any>('loading')
 const data = reactive({
   installType: 'install'
 })
+
+const addHostBulkRef = ref<null | InstanceType<typeof importCluster>>(null)
+
+const addHostbulk = () => {
+  console.log("addHostBulkRef.value: "+addHostBulkRef.value);
+  addHostBulkRef.value?.open()
+}
 
 const installTypes = computed(() => [
   { label: t('components.ChooseVersion.5mpmxod8zs80'), value: 'install' },

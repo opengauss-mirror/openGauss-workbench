@@ -25,19 +25,28 @@
 package org.opengauss.admin.web.controller.ops;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import io.swagger.annotations.ApiOperation;
 import org.opengauss.admin.common.core.controller.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.HostBody;
+import org.opengauss.admin.common.core.domain.model.ops.ImportAsynInfo;
 import org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO;
 import org.opengauss.admin.common.core.domain.model.ops.host.SSHBody;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.common.enums.OsSupportMap;
+import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.common.utils.excel.ImportAsynInfoUtils;
 import org.opengauss.admin.system.service.ops.IHostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -54,10 +63,54 @@ public class HostController extends BaseController {
     @Autowired
     private IHostService hostService;
 
+    private HashMap<String, InputStream> fileStreamMap = new HashMap();
+
     @PostMapping
     public AjaxResult add(@RequestBody @Validated HostBody hostBody) {
         hostService.add(hostBody);
         return AjaxResult.success();
+    }
+
+    @PostMapping("/upload")
+    public AjaxResult upload(@RequestPart @RequestParam("file") MultipartFile file) {
+        ImportAsynInfo asynInfo = new ImportAsynInfo();
+        String uuid = ImportAsynInfoUtils.createUUID(asynInfo);
+        if (!file.isEmpty()) {
+            try {
+                fileStreamMap.put(uuid, file.getInputStream());
+            } catch (IOException e) {
+                throw new OpsException(e.getMessage());
+            }
+        } else {
+            throw new OpsException("The file is empty.");
+        }
+        return AjaxResult.success(uuid);
+    }
+
+    @PostMapping("/invokeFile")
+    public AjaxResult invokeFile(@RequestParam String uuid, @RequestParam Integer isInvoke) {
+        if (isInvoke == 0) {
+            hostService.invokeFile(uuid, fileStreamMap);
+        }
+        fileStreamMap.remove(uuid);
+        return AjaxResult.success();
+    }
+
+    @GetMapping("/downloadTemplate")
+    public void downloadTemplate(HttpServletResponse response) {
+        hostService.downloadTemplate(response);
+    }
+
+    @GetMapping("/downloadErrorExcel/{uuid}")
+    public void downloadErrorExcel(HttpServletResponse response, @PathVariable String uuid) {
+        hostService.downloadErrorExcel(response, uuid);
+        ImportAsynInfoUtils.deleteAsynInfo(uuid);
+    }
+
+    @GetMapping("get_import_plan")
+    public AjaxResult getImportPlanByUuid(@RequestParam String uuid) {
+        ImportAsynInfo asynInfo = ImportAsynInfoUtils.getAsynInfo(uuid);
+        return asynInfo == null ? AjaxResult.error("The progress information has been fully obtained.") : asynInfo.getMsg() == null ? AjaxResult.success(asynInfo) : AjaxResult.error(asynInfo.getMsg());
     }
 
     @GetMapping("/listAll")

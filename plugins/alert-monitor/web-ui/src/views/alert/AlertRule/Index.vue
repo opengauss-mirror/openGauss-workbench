@@ -172,7 +172,7 @@ const showRuleExpDesc = (rule: any) => {
         paramStr = '(' + Object.keys(param).map((key: any) => param[key]).join(',') + ')'
       }
       let name = i18n.global.locale.value === 'zhCn' && ruleItemSrc && ruleItemSrc.nameZh ? ruleItemSrc.nameZh : (ruleItemSrc && ruleItemSrc.nameEn) ? ruleItemSrc.nameEn : ruleItemSrc ? t(`alertRule.${ruleItemSrc.name}`) : ''
-      if (!item.operate || !item.limitValue) {
+      if (!item.operate) {
         return `[${item.ruleMark}]: ${name}`
       }
       return `[${item.ruleMark}]: ${name + paramStr + ' ' + (item.action === 'normal' ? (item.operate + item.limitValue + item.unit) : t(`alertRule.${item.action}Action`))}`
