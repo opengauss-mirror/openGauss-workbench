@@ -24,18 +24,14 @@
 package org.opengauss.admin.plugin.domain.model.ops;
 
 import com.alibaba.fastjson.annotation.JSONField;
-import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
-import org.springframework.boot.jackson.JsonObjectDeserializer;
-import org.springframework.boot.jackson.JsonObjectSerializer;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Date;
@@ -44,6 +40,9 @@ import java.util.Date;
  * @author wangyl
  * @date 203/03/08 13:40
  **/
+@SuperBuilder
+@Accessors(chain = true)
+@NoArgsConstructor
 @Data
 public class OpsPackageVO {
     private String packageId;
@@ -77,5 +76,4 @@ public class OpsPackageVO {
         entity.setRemark(remark);
         return entity;
     }
-
 }

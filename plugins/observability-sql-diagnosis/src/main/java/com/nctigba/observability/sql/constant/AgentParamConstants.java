@@ -149,4 +149,9 @@ public class AgentParamConstants {
      * Os call sar q
      */
     public static final String SAR_Q = "sarq";
+
+    /**
+     * Timeout time
+     */
+    public static final int TIMEOUT = 3000;
 }

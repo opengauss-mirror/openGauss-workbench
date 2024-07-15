@@ -129,6 +129,24 @@ export default {
     noneRole: '无',
     noneRoleName: '无角色',
   },
+  dbParam: {
+    trackActivities: {
+      tip: '数据库参数约束',
+      tipContent: '需设置参数track_activities的值为on'
+    },
+    trackSqlCount: {
+      tip: '数据库参数约束',
+      tipContent: '需设置参数track_sql_count的值为on'
+    },
+    disableMemoryProtect: {
+      tip: '数据库参数约束',
+      tipContent: '必须具有管理员权限；当系统内存不足时，需设置参数disable_memory_protect的值为on'
+    },
+    common: {
+      tip: '数据库参数约束',
+      tipContent: '必须具有管理员权限'
+    }
+  },
   instanceMonitor: {
     instanceMonitor: '实例监控',
     clusterTitle: '集群/实例：',

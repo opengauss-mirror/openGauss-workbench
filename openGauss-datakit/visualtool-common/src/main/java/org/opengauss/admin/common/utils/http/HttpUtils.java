@@ -25,8 +25,10 @@
 package org.opengauss.admin.common.utils.http;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 import org.opengauss.admin.common.constant.Constants;
+import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -228,6 +230,33 @@ public class HttpUtils {
             }
         }
         return result.toString();
+    }
+
+    /**
+     * check url can be connected
+     *
+     * @param urlAddr url address
+     * @return AjaxResult
+     */
+    public static AjaxResult checkUrl(String urlAddr) {
+        try {
+            if (StrUtil.isEmpty(urlAddr)) {
+                return AjaxResult.error("The URL must not empty.");
+            }
+            URL url = new URL(urlAddr);
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.connect();
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 200) {
+                return AjaxResult.success("The URL is connected successfully.");
+            } else {
+                return AjaxResult.error("The URL is not connected.");
+            }
+        } catch (IOException e) {
+            return AjaxResult.error("The URL is not connected : " + e.getMessage());
+        }
     }
 
     private static class TrustAnyTrustManager implements X509TrustManager {

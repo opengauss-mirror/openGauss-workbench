@@ -204,7 +204,7 @@ export const hasNameAZ = (data: KeyValue) => {
   })
 }
 
-// jdbc 
+// jdbc
 
 export const downloadTemplate = () => {
   return axios.get('jdbcDbCluster/downloadTemplate')
@@ -249,4 +249,16 @@ export const jdbcNodeMonitor = (clusterNodeId: any, data: KeyValue) => {
   return axios.get(`jdbcDbClusterNode/monitor/${clusterNodeId}`, {
     params: data
   })
+}
+
+export const bulkuploadPhy = (data: KeyValue) => {
+  return axios.post(`/host/upload`, data)
+}
+
+export const bulkImportany = (data: KeyValue) => {
+  return axios.post(`host/invokeFile`, data)
+}
+
+export const bulkImporErrPlan = (data: KeyValue) => {
+  return axios.get(`/host/get_import_plan`, data)
 }

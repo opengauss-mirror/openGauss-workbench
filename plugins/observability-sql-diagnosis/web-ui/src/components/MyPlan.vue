@@ -30,7 +30,7 @@
         :height="props.height"
         default-expand-all
         border
-        :tree-props="{ children: 'plans' }"
+        :tree-props="{ children: 'planVOS' }"
       >
         <el-table-column type="index" align="center" />
         <el-table-column prop="nodeType" label="operation" show-overflow-tooltip />
@@ -160,17 +160,17 @@ const calc = (nodes: any[]) => {
   nodes.forEach((d) => {
     count++
     d.id = count
-    if (d.plans && d.plans.length) {
+    if (d.planVOS && d.planVOS.length) {
       if (d.nodeType !== 'Limit') {
         let c = d.totalCost
-        d.plans.forEach((child: any) => {
+        d.planVOS.forEach((child: any) => {
           c = Number.parseFloat((c - child.totalCost).toFixed(2))
         })
         d.singleCost = c
       } else {
         d.singleCost = 0
       }
-      calc(d.plans)
+      calc(d.planVOS)
     } else {
       d.singleCost = d.totalCost
     }
@@ -224,8 +224,8 @@ const TraversalTree = useDebounceFn((treeData: Array<any>, type: string) => {
       recordMaxRowData.value = item[type]
       recordMaxRowData.id = item.id
     }
-    if (Array.isArray(item.plans) && item.plans.length > 0) {
-      TraversalTree(item.plans, type)
+    if (Array.isArray(item.planVOS) && item.planVOS.length > 0) {
+      TraversalTree(item.planVOS, type)
     }
   })
 }, 0)

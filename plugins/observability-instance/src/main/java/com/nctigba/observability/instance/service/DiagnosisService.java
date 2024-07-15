@@ -28,14 +28,12 @@ import com.nctigba.observability.instance.enums.MetricsLine;
 import com.nctigba.observability.instance.mapper.AgentNodeRelationMapper;
 import com.nctigba.observability.instance.mapper.NctigbaEnvMapper;
 import com.nctigba.observability.instance.model.dto.MetricQueryDTO;
-import com.nctigba.observability.instance.model.dto.NctigbaEnvDTO;
 import com.nctigba.observability.instance.model.dto.TemplateDetailMetricDTO;
 import com.nctigba.observability.instance.model.entity.AgentNodeRelationDO;
 import com.nctigba.observability.instance.model.entity.NctigbaEnvDO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.AjaxResult;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -86,20 +84,24 @@ public class DiagnosisService {
         String end = result.get("end");
         String step = result.get("step");
         String dbName = result.get("dbName");
-        AgentNodeRelationDO relationEntity = relationMapper.selectOne(
+        List<AgentNodeRelationDO> relationEntity = relationMapper.selectList(
                 Wrappers.<AgentNodeRelationDO>lambdaQuery().eq(
                         AgentNodeRelationDO::getNodeId, instanceId));
-        if (relationEntity == null) {
+        if (CollectionUtils.isEmpty(relationEntity)) {
             return AjaxResult.success("node is not exists relation!");
         }
-        NctigbaEnvDO envDO = envMapper.selectOne(
-                Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getId, relationEntity.getEnvId()).eq(
-                        NctigbaEnvDO::getType, NctigbaEnvDO.envType.EXPORTER));
-        if (envDO == null) {
+        boolean isExists = false;
+        for (AgentNodeRelationDO relationDO : relationEntity) {
+            NctigbaEnvDO envDO = envMapper.selectOne(
+                    Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getId, relationDO.getEnvId()).eq(
+                            NctigbaEnvDO::getType, NctigbaEnvDO.envType.EXPORTER));
+            if (envDO != null) {
+                isExists = true;
+            }
+        }
+        if (!isExists) {
             return AjaxResult.success("export is not exists!");
         }
-        NctigbaEnvDTO envDTO = new NctigbaEnvDTO();
-        BeanUtils.copyProperties(envDTO, envDO);
         List<TemplateDetailMetricDTO> metricDTOList = templateMetricsService.getTemplateDetailsByNodeId(
                 instanceId).getDetails();
         if (CollectionUtils.isEmpty(metricDTOList)) {

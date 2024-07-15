@@ -423,6 +423,7 @@ import {
   onUnmounted,
   computed,
   watchEffect,
+  nextTick
 } from "vue";
 import {
   getCompletePids,

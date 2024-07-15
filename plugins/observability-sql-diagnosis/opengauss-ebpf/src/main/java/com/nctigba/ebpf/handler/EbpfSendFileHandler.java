@@ -53,7 +53,7 @@ public class EbpfSendFileHandler {
      * @param monitorType String
      */
     public void sendFile(String taskId, String monitorType) {
-        FileSystemResource file;
+        FileSystemResource file = null;
         HTTPUtils httpUtils = new HTTPUtils();
         String outputUrl = System.getProperty("user.dir") + "/output/";
         String httpUrl = urlConfig.getHttpUrl();
@@ -66,25 +66,23 @@ public class EbpfSendFileHandler {
             } else {
                 file = new FileSystemResource(outputUrl + taskId + monitorType + FileTypeConstants.DEFAULT);
             }
-            boolean isFinish = httpUtils.httpUrlPost(url, file, monitorType);
-            log.info(monitorType + " is finish.");
-            if (isFinish) {
-                if (file.exists()) {
-                    boolean isSuccess = file.getFile().delete();
-                    log.info(file.getFilename() + " is delete:" + isSuccess);
-                }
-                if (EbpfTypeConstants.PROFILE.equals(monitorType) || EbpfTypeConstants.MEMLEAK.equals(monitorType)
-                        || EbpfTypeConstants.OFFCPUTIME.equals(monitorType)) {
-                    FileSystemResource stackFile = new FileSystemResource(
-                            outputUrl + taskId + monitorType + FileTypeConstants.STACKS);
-                    if (stackFile.exists()) {
-                        boolean isSuccess = stackFile.getFile().delete();
-                        log.info(stackFile.getFilename() + " is delete:" + isSuccess);
-                    }
-                }
-            }
+            httpUtils.httpUrlPost(url, file, monitorType);
         } catch (Exception e) {
             log.error("failed:" + e.getMessage());
+        } finally {
+            if (file != null && file.exists()) {
+                boolean isSuccess = file.getFile().delete();
+                log.info(file.getFilename() + " is delete:" + isSuccess);
+            }
+            if (EbpfTypeConstants.PROFILE.equals(monitorType) || EbpfTypeConstants.MEMLEAK.equals(monitorType)
+                    || EbpfTypeConstants.OFFCPUTIME.equals(monitorType)) {
+                FileSystemResource stackFile = new FileSystemResource(
+                        outputUrl + taskId + monitorType + FileTypeConstants.STACKS);
+                if (stackFile.exists()) {
+                    boolean isSuccess = stackFile.getFile().delete();
+                    log.info(stackFile.getFilename() + " is delete:" + isSuccess);
+                }
+            }
         }
     }
 

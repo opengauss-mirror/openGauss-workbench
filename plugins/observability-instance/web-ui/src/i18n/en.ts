@@ -41,6 +41,24 @@ export default {
     lineOverview: 'Line graph',
     fieldOverview: 'Field description',
   },
+  dbParam: {
+    trackActivities: {
+      tip: 'Database parameter constraints',
+      tipContent: 'Need to set the value of the parameter track_activities to on'
+    },
+    trackSqlCount: {
+      tip: 'Database parameter constraints',
+      tipContent: 'Need to set the value of the parameter track_sql_count to on'
+    },
+    disableMemoryProtect: {
+      tip: 'Database parameter constraints',
+      tipContent: 'Must have administrator privileges; When the system memory is low, it is necessary to set the value of the parameter disable_memory_protect to on'
+    },
+    common: {
+      tip: 'Database parameter constraints',
+      tipContent: 'Must have administrator privileges'
+    }
+  },
   instanceMonitor: {
     instanceMonitor: 'Instance Monitor',
     clusterTitle: 'Cluster/Instances:',

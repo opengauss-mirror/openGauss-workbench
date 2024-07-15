@@ -26,6 +26,7 @@ package com.nctigba.alert.monitor.service;
 import com.nctigba.alert.monitor.model.entity.AlertConfigDO;
 import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleDO;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -69,7 +70,7 @@ public interface PrometheusService {
      *        [1683478230,"1.3272727272735807"],[1683478575,"1.7454545454546206"],[1683478920,"1.472727272728008"],
      *        [1683479265,"1.4909090909085592"]]}]}}
      */
-    Number[][] queryRange(String url, String port, String query, LocalDateTime startTime, LocalDateTime endTime);
+    List queryRange(String url, String port, String query, LocalDateTime startTime, LocalDateTime endTime);
 
     /**
      * use to update the prometheus rule config

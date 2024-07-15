@@ -415,7 +415,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
                                         DebugUtils.containsSqlInjection(data.getColumnName()) :
                                         DebugUtils.containsSqlInjection(data.getNewColumnName())),
                         uuid);
-                String sql = String.format(CONSTRAINT_DROP_SQL, schema, tableName, uniqueKey);
+                String sql = String.format(CONSTRAINT_DROP_SQL, schema, tableName, DebugUtils.needQuoteName(uniqueKey));
                 list.add(sql);
             }
         }
@@ -585,8 +585,8 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
             }
             if (StringUtils.isNotEmpty(constraintDTO.getDescription())) {
                 constraintsComment.append(
-                        String.format(CONSTRAINT_COMMENT_SQL, constraintDTO.getConName(), schema,
-                                tableName, constraintDTO.getDescription())).append(LF);
+                        String.format(CONSTRAINT_COMMENT_SQL, DebugUtils.needQuoteName(constraintDTO.getConName()),
+                                schema, tableName, constraintDTO.getDescription())).append(LF);
             }
         }
         cteate.append(RIGHT_BRACKET);
@@ -648,23 +648,25 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
     private String getConstraintSQL(ConstraintDTO request) {
         StringBuilder partition = new StringBuilder();
         partition.append(",");
+        String conName = DebugUtils.needQuoteName(request.getConName());
+        String attName = request.getAttName();
         if (StringUtils.isNotEmpty(request.getConType())) {
             if (request.getConType().equals("u")) {
                 if (request.getConDeferrable() != null && request.getConDeferrable()) {
-                    partition.append(String.format(UNIQUE_IMMEDIATE_SQL, request.getConName(), request.getAttName()));
+                    partition.append(String.format(UNIQUE_IMMEDIATE_SQL, conName, attName));
                 } else {
-                    partition.append(String.format(UNIQUE_SQL, request.getConName(), request.getAttName()));
+                    partition.append(String.format(UNIQUE_SQL, conName, attName));
                 }
             } else if (request.getConType().equals("p")) {
-                partition.append(String.format(PRIMARY_KEY_SQL, request.getConName(), request.getAttName()));
+                partition.append(String.format(PRIMARY_KEY_SQL, conName, attName));
             } else if (request.getConType().equals("c")) {
-                partition.append(String.format(CHECK_SQL, request.getConName(), request.getConstraintDef()));
+                partition.append(String.format(CHECK_SQL, conName, request.getConstraintDef()));
             } else if (request.getConType().equals("f")) {
                 partition.append(
-                        String.format(FOREIGN_KEY_SQL, request.getConName(), request.getAttName(), request.getNspName(),
+                        String.format(FOREIGN_KEY_SQL, conName, attName, request.getNspName(),
                                 DebugUtils.needQuoteName(request.getTbName()), request.getColName()));
             } else if (request.getConType().equals("s")) {
-                partition.append(String.format(PARTIAL_CLUSTER_KEY_SQL, request.getConName(), request.getAttName()));
+                partition.append(String.format(PARTIAL_CLUSTER_KEY_SQL, conName, attName));
             }
             return partition.toString();
         }

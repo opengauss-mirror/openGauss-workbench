@@ -1,0 +1,31 @@
+context:
+  listener:
+    classes: org.opengauss.admin.plugin.listener.OauthLoginPluginListener
+spring:
+  resources:
+    static-locations: classpath:resources
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      test-while-idle: false
+      test-on-borrow: true
+      validation-query: "select 1"
+      validation-query-timeout: 30000
+# log config
+logging:
+  level:
+    org.opengauss.admin: debug
+    org.springframework: warn
+  file:
+    path: /ops/logs/oauth-login/
+mybatis-plus:
+  # Search for the specified package alias
+  typeAliasesPackage: org.opengauss.admin.plugin.domain
+
+  mapperLocations: classpath*:mapper/*.xml
+  # Load the global configuration file
+  configuration:
+    mapUnderscoreToCamelCase: true
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+
+

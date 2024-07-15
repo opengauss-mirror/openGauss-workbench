@@ -26,21 +26,23 @@ package org.opengauss.admin.system.service.ops.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.exception.ExcelDataConvertException;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.constant.ops.SshCommandConstants;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
-import org.opengauss.admin.common.core.domain.model.ops.HostBody;
-import org.opengauss.admin.common.core.domain.model.ops.JschResult;
-import org.opengauss.admin.common.core.domain.model.ops.WsSession;
+import org.opengauss.admin.common.core.domain.model.ops.*;
 import org.opengauss.admin.common.core.domain.model.ops.host.HostMonitorVO;
 import org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO;
 import org.opengauss.admin.common.core.domain.model.ops.host.SSHBody;
@@ -51,20 +53,29 @@ import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
 import org.opengauss.admin.common.core.vo.HostInfoVo;
 import org.opengauss.admin.common.enums.OsSupportMap;
 import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.common.utils.excel.ImportAsynInfoUtils;
 import org.opengauss.admin.common.utils.ops.JschUtil;
 import org.opengauss.admin.common.utils.ops.WsUtil;
+import org.opengauss.admin.system.domain.HostRecordDataListener;
 import org.opengauss.admin.system.mapper.ops.OpsHostMapper;
 import org.opengauss.admin.system.service.ops.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
@@ -96,6 +107,11 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     @Autowired
     private IOpsHostTagService opsHostTagService;
 
+    Cache<String, List<ErrorHostRecord>> errorExcel = CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .expireAfterWrite(1, TimeUnit.DAYS)
+            .build();
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean add(HostBody hostBody) {
@@ -117,6 +133,209 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         opsHostTagService.addTag(HostTagInputDto.of(hostBody.getTags(), hostEntity.getHostId()));
         OpsHostUserEntity hostUserEntity = hostBody.toRootUser(hostEntity.getHostId());
         return hostUserService.save(hostUserEntity);
+    }
+
+    @Override
+    public void invokeFile(String uuid, HashMap<String, InputStream> fileStreamMap) {
+        ExecutorService executor = Executors.newCachedThreadPool();
+        RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
+        RequestContextHolder.setRequestAttributes(attributes, true);
+        final InputStream inputStream = fileStreamMap.get(uuid);
+        Future<?> future = executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    startInvoke(inputStream, uuid);
+                } catch (OpsException e) {
+                    log.error("Unable to import.", e);
+                    ImportAsynInfoUtils.getAsynInfo(uuid).setMsg(e.getMessage());
+                    ImportAsynInfoUtils.getAsynInfo(uuid).setEnd(true);
+                    throw new OpsException("Unable to import.");
+                }
+            }
+        });
+    }
+
+    @Override
+    public void downloadTemplate(HttpServletResponse response) {
+        try {
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setCharacterEncoding("utf-8");
+            String fileName = URLEncoder.encode("模板", "UTF-8").replaceAll("\\+", "%20");
+            response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+            OutputStream out = response.getOutputStream();
+            EasyExcel.write(out, HostRecord.class).sheet("模板").doWrite(new ArrayList<HostRecord>());
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            log.error("Download template failed.", e);
+            throw new OpsException("Download template failed.");
+        }
+    }
+
+    @Override
+    public void downloadErrorExcel(HttpServletResponse response, String uuid) {
+        List<ErrorHostRecord> errorhostRecords = errorExcel.getIfPresent(uuid);
+        try {
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setCharacterEncoding("utf-8");
+            String fileName = URLEncoder.encode("错误报告" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()), "UTF-8").replaceAll("\\+", "%20");
+            response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+            OutputStream out = response.getOutputStream();
+            EasyExcel.write(out, ErrorHostRecord.class).sheet("错误报告").doWrite(errorhostRecords);
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            log.error("Download failed.", e);
+            throw new OpsException("Download failed.");
+        }
+    }
+
+    private void startInvoke(InputStream inputStream, String uuid) {
+        try {
+            List<HostRecord> hostRecords = readExcelFile(inputStream);
+            if (CollectionUtils.isEmpty(hostRecords) || hostRecords.size() == 0) {
+                log.error("Failed to parse data.");
+                throw new OpsException("Failed to parse data.");
+            }
+            ImportAsynInfoUtils.getAsynInfo(uuid).setTotality(hostRecords.size());
+            Map<String, List<HostRecord>> groupedHostLists = groupHostRecordsByIP(hostRecords);
+            invoke(groupedHostLists, uuid);
+            ImportAsynInfoUtils.getAsynInfo(uuid).setEnd(true);
+        } catch (IllegalArgumentException e) {
+            log.error("File format mismatch.", e);
+            throw new OpsException("The format of the file you are trying to import does not match the template. Please re-download the template and fill it out again.");
+        } catch (ExcelDataConvertException e) {
+            log.error("Data parsing format error.", e);
+            throw new OpsException(e.getRowIndex() + "row" + (e.getColumnIndex() + 1) + "column,parsing exception, please modify and re-upload.");
+        }
+    }
+
+    private List<HostRecord> readExcelFile(InputStream inputStream) {
+        HostRecordDataListener hostRecordDataListener = new HostRecordDataListener(this);
+        return EasyExcel.read(inputStream, HostRecord.class, hostRecordDataListener).sheet().doReadSync();
+    }
+
+    private Map<String, List<HostRecord>> groupHostRecordsByIP(List<HostRecord> hostRecords) {
+        Map<String, List<HostRecord>> map = new HashMap<>();
+        for (HostRecord hostRecord : hostRecords) {
+            List<HostRecord> list = map.getOrDefault(hostRecord.getPublicIp(), new ArrayList<>());
+            list.add(hostRecord);
+            map.put(hostRecord.getPublicIp(), list);
+        }
+        return map;
+    }
+
+    private void invoke(Map<String, List<HostRecord>> groupedHostLists, String uuid) {
+        ExecutorService executorService = Executors.newFixedThreadPool(16);
+        List<Future<?>> futures = new ArrayList<>();
+        for (List<HostRecord> list : groupedHostLists.values()) {
+            Future<?> future = executorService.submit(() -> {
+                for (HostRecord hostRecord : list) {
+                    try {
+                        invokeRecord(hostRecord, uuid);
+                        ImportAsynInfoUtils.addSuccessSum(uuid);
+                    } catch (OpsException e) {
+                        log.error("Record of failure.", e);
+                        ImportAsynInfoUtils.addErrorSum(uuid);
+                        hostRecord.setRemark(e.getMessage());
+                        addHostRecordToErrorMap(uuid, errorExcel, hostRecord);
+                    } finally {
+                        ImportAsynInfoUtils.addDoneSum(uuid);
+                    }
+                }
+            });
+            futures.add(future);
+        }
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                log.error("Failed to obtain the thread execution result.", e);
+                throw new OpsException(e.getMessage());
+            }
+        }
+        executorService.shutdown();
+    }
+
+    private void invokeRecord(@Validated HostRecord hostRecord, String uuid) {
+        if (!checkRecord(hostRecord)) {
+            throw new OpsException("Some attributes have not been filled in.");
+        }
+        OpsHostEntity hostEntity = getByPublicIp(hostRecord.getPublicIp());
+        if (isAdminUser(hostRecord)) {
+            handleAdminUser(hostRecord, hostEntity, uuid);
+        } else {
+            handleNonAdminUser(hostRecord, hostEntity);
+        }
+    }
+
+    private void handleAdminUser(HostRecord hostRecord, OpsHostEntity hostEntity, String uuid) {
+        if (!"root".equals(hostRecord.getUserName())) {
+            throw new OpsException("The user is not a root user.");
+        }
+        Session session = connectivityTest(hostRecord);
+        try {
+            hostRecord.toHostEntity(getHostInfoVo(session));
+            if (Objects.isNull(hostEntity)) {
+                add(hostRecord.toHostBody());
+            } else {
+                edit(hostEntity.getHostId(), hostRecord.toHostBody());
+            }
+        } finally {
+            if (Objects.nonNull(session) && session.isConnected()) {
+                session.disconnect();
+            }
+        }
+    }
+
+    private void handleNonAdminUser(HostRecord hostRecord, OpsHostEntity hostEntity) {
+        if (Objects.isNull(hostEntity)) {
+            throw new OpsException("Host information is not exits.");
+        } else {
+            HostUserBody hostUserBody = new HostUserBody();
+            hostUserBody.setHostId(hostEntity.getHostId());
+            hostUserBody.setUsername(hostRecord.getUserName());
+            hostUserBody.setPassword(encryptionUtils.encrypt(hostRecord.getPassword()));
+            hostUserService.add(hostUserBody);
+            opsHostTagService.addTag(HostTagInputDto.of(addAllTagsToNewCollection(hostRecord.getTags()), hostEntity.getHostId()));
+        }
+    }
+
+    private synchronized void addHostRecordToErrorMap(String uuid, Cache<String, List<ErrorHostRecord>> errorExcel, HostRecord hostRecord) {
+        List<ErrorHostRecord> list = errorExcel.getIfPresent(uuid);
+        if (list == null) {
+            list = new ArrayList<>();
+        }
+        list.add(hostRecord.toErrorHostRecord());
+        errorExcel.put(uuid, list);
+    }
+
+    private Boolean checkRecord(HostRecord hostRecord) {
+        if (hostRecord.getName() == null || hostRecord.getIsAdmin() == null || hostRecord.getPublicIp() == null || hostRecord.getPrivateIp() == null ||
+                hostRecord.getPort() == null || hostRecord.getUserName() == null || hostRecord.getPassword() == null) {
+            return false;
+        }
+        return true;
+    }
+
+    private Session connectivityTest(HostRecord hostRecord) {
+        Session session = null;
+        session = jschUtil.getSession(hostRecord.getPublicIp(), hostRecord.getPort(), hostRecord.getUserName(), encryptionUtils.decrypt(hostRecord.getPassword())).orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
+        return session;
+    }
+
+    private boolean isAdminUser(HostRecord hostRecord) {
+        Integer isAdmin = hostRecord.getIsAdmin();
+        return isAdmin == 0 ? true : false;
+    }
+
+    private List<String> addAllTagsToNewCollection(List<String> tags) {
+        List<String> hostTags = new ArrayList<>();
+        if (tags != null) {
+            hostTags.addAll(tags);
+        }
+        return hostTags;
     }
 
     private HostInfoVo getHostInfoVo(Session rootSession) {

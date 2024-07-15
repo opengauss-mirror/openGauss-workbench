@@ -41,3 +41,13 @@ spring:
 management:
   server:
     port: 9494
+plugins:
+  oauth-login:
+    # A unique identifier obtained by registering with DevKit
+    client-id: your_client_id
+    # A secret key paired with the client_id
+    client-secret: your_client_secret
+    datakit-url: https://ip:port
+    devkit-url: https://ip:port
+    # SSL certificate
+    ssl-key: your_ssl_key

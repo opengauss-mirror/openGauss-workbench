@@ -143,34 +143,34 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
         try {
             var node = clusterManager.getOpsNodeById(nodeId);
             if (node == null) {
-                throw new CustomException("node not found");
+                throw new CustomException("filebeat.install.nodeId.tip");
             }
             var hostId = node.getHostId();
             var env = envMapper.selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getHostid, hostId)
                     .eq(NctigbaEnvDO::getType, InstallType.FILEBEAT).eq(NctigbaEnvDO::getNodeid, nodeId));
             if (env != null) {
-                throw new CustomException("filebeat exists");
+                throw new CustomException("filebeat.install.exists.tip");
             }
             env = new NctigbaEnvDO().setHostid(hostId).setType(InstallType.FILEBEAT).setNodeid(nodeId).setPath(path);
             var esEnv = envMapper
                     .selectOne(
                             Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, InstallType.ELASTICSEARCH));
             if (esEnv == null) {
-                throw new CustomException("elasticsearch not exist");
+                throw new CustomException("filebeat.install.elastic.tip");
             }
             if (StrUtil.isBlank(esEnv.getUsername())) {
-                throw new CustomException("elasticsearch installing");
+                throw new CustomException("filebeat.install.elastic.installing.tip");
             }
             var opsClusterNodeEntity = opsClusterNodeService.getById(nodeId);
             if (opsClusterNodeEntity == null) {
-                throw new CustomException("No cluster node information found");
+                throw new CustomException("filebeat.install.nodeId.tip");
             }
             String installUserId = opsClusterNodeEntity.getInstallUserId();
             OpsHostUserEntity user = hostUserFacade.getById(installUserId);
             env.setUsername(user.getUsername());
             OpsHostEntity hostEntity = hostFacade.getById(hostId);
             if (hostEntity == null) {
-                throw new CustomException("host not found");
+                throw new CustomException("filebeat.install.host.tip");
             }
             try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
                     user.getUsername(), encryptionUtils.decrypt(user.getPassword()))) {
@@ -180,7 +180,7 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                 } else {
                     String fileIsEmpty = session.execute(String.format(DIRECTORY_IS_EMPTY, path));
                     if (fileIsEmpty.contains("false")) {
-                        throw new CustomException("The installation folder is not empty!");
+                        throw new CustomException("filebeat.install.folder.tip");
                     }
                 }
             }
@@ -219,6 +219,7 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                     }
                 }
                 if (isDownload) {
+                    addMsg(wsSession, steps, curr, "filebeat.install.download.start");
                     var f = Download.download(PATH + tar, "pkg/" + tar);
                     pkg = new NctigbaEnvDO().setPath(f.getCanonicalPath()).setType(InstallType.FILEBEAT_PKG);
                     addMsg(wsSession, steps, curr, "filebeat.install.download.success");
@@ -315,11 +316,11 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                     Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, InstallType.FILEBEAT)
                             .eq(NctigbaEnvDO::getNodeid, node.getNodeId()));
             if (env == null) {
-                throw new CustomException("filebeat not found");
+                throw new CustomException("filebeat.uninstall.id.tip");
             }
             OpsHostEntity hostEntity = hostFacade.getById(node.getHostId());
             if (hostEntity == null) {
-                throw new CustomException("host not found");
+                throw new CustomException("filebeat.uninstall.host.tip");
             }
             env.setHost(hostEntity);
             // step2

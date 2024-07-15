@@ -304,4 +304,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         return userMapper.deleteBatchIds(Arrays.asList(userIds));
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public List<SysUser> listUserByRemark(String remark) {
+        LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SysUser::getRemark, remark);
+        return userMapper.selectList(queryWrapper);
+    }
 }

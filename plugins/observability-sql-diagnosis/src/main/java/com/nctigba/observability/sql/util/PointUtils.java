@@ -265,7 +265,7 @@ public class PointUtils {
                 List<String> tableList = tablesNamesFinder.getTableList(selectStatement);
                 for (String table : tableList) {
                     sb.append("'");
-                    sb.append(table);
+                    sb.append(table.replace("\"", ""));
                     sb.append("'");
                     sb.append(",");
                 }

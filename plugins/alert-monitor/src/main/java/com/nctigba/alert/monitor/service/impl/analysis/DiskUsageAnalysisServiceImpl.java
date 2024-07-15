@@ -30,6 +30,7 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.mapper.NctigbaEnvMapper;
 import com.nctigba.alert.monitor.model.dto.AlertRelationDTO;
 import com.nctigba.alert.monitor.model.entity.NctigbaEnvDO;
@@ -46,6 +47,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -55,8 +57,8 @@ import java.util.stream.Collectors;
  */
 @Service("diskUsageAnalysisService")
 public class DiskUsageAnalysisServiceImpl implements AlertAnalysisService {
-    private final String promQL = "sum(agent_filesystem_used_size_kbytes\\{instance=\"$\\{clusterNodeId}\"}"
-        + "/agent_filesystem_size_kbytes\\{instance=\"$\\{clusterNodeId}\"} * 100) by (device)";
+    private String promQL = "sum(agent_filesystem_used_size_kbytes{instance=~\"${instances}\"}) by (device) / "
+        + "sum(agent_filesystem_size_kbytes{instance=~\"${instances}\"}) by (device) * 100";
 
     @Autowired
     private NctigbaEnvMapper envMapper;
@@ -108,18 +110,18 @@ public class DiskUsageAnalysisServiceImpl implements AlertAnalysisService {
 
     private JSONArray getPromData(String clusterNodeId) {
         NctigbaEnvDO promEnv = envMapper.selectOne(
-            Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, NctigbaEnvDO.Type.PROMETHEUS));
+            Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, NctigbaEnvDO.Type.PROMETHEUS_MAIN));
         if (promEnv == null) {
             return new JSONArray();
         }
         String hostid = promEnv.getHostid();
         OpsHostEntity hostEntity = hostFacade.getById(hostid);
         Map<String, Object> paramMap = new HashMap<>();
-        paramMap.put("query", promQL.replaceAll("$\\{clusterNodeId}", clusterNodeId));
+        paramMap.put("query", promQL.replaceAll(Pattern.quote("${instances}"), clusterNodeId));
         BigDecimal decimal = BigDecimal.valueOf(System.currentTimeMillis()).divide(new BigDecimal(1000))
             .setScale(3, BigDecimal.ROUND_HALF_UP);
         paramMap.put("time", decimal);
-        String httpUrl = "http://" + hostEntity.getPublicIp() + ":" + promEnv.getPort() + "/api/v1/query";
+        String httpUrl = "http://" + CommonConstants.LOCAL_IP + ":" + promEnv.getPort() + "/api/v1/query";
         String response = HttpUtil.get(httpUrl, paramMap);
         if (StrUtil.isBlank(response)) {
             return new JSONArray();

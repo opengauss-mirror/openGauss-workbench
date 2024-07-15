@@ -16,7 +16,7 @@
                 <el-tabs v-model="activeName" @tab-click="handleClick">
                     <el-tab-pane :label="t('install.installedAgent')" name="collector" v-loading="loadingCollector">
                         <el-tree :indent="0" :data="collectorList" :props="collectorProps" #default="{ node, data }">
-                            <div class="custom-tree-node show-hide">
+                            <div class="custom-tree-node show-hide server">
                                 <span v-if="data.id">
                                     <el-tooltip :content="getStatusText(agentNodeStatusMap[data.id].status)" placement="right" effect="light">
                                         <span class="state-row">
@@ -468,7 +468,7 @@ const stopProxy = (id: string) => {
         margin-right: 10px;
         height: 24px;
         &:hover {
-            background-color: #f5f7fa;
+            background-color: var(--color-fill-2) !important;
         }
         .item {
             .btns {
@@ -553,7 +553,7 @@ const stopProxy = (id: string) => {
     flex-direction: row;
     justify-content: flex-end;
     flex-grow: 1;
-    background-color: #F2F3F5;
+    background-color: var(--color-fill-2) !important;
 }
 .show-hide:hover .label {
     flex-shrink: 1;

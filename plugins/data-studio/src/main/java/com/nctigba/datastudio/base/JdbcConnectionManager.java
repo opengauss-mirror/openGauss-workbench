@@ -111,16 +111,18 @@ public class JdbcConnectionManager extends Thread {
                 Integer limitNum = CONNECTION_NUMLIMIT.get(key);
                 if (!queue.isEmpty()) {
                     ConnectionWrapper conn = queue.take();
-                    return conn.isValid(3) ? conn : createConnnection(jdbcUrl, username, password);
-                }
-                if (limitNum >= MAX_CONNECTION_NUM) {
-                    ConnectionWrapper conn = JDBC_POOL.get(key).take();
                     connectionWrapper = conn.isValid(3) ? conn : createConnnection(jdbcUrl, username, password);
                 } else {
-                    connectionWrapper = createConnnection(jdbcUrl, username, password);
-                    CONNECTION_NUMLIMIT.put(key, CONNECTION_NUMLIMIT.get(key) + 1);
+                    if (limitNum >= MAX_CONNECTION_NUM) {
+                        ConnectionWrapper conn = JDBC_POOL.get(key).take();
+                        connectionWrapper = conn.isValid(3) ? conn : createConnnection(jdbcUrl, username, password);
+                    } else {
+                        connectionWrapper = createConnnection(jdbcUrl, username, password);
+                        CONNECTION_NUMLIMIT.put(key, CONNECTION_NUMLIMIT.get(key) + 1);
+                    }
                 }
             }
+            connectionWrapper.setAutoCommit(true);
             return connectionWrapper;
         } catch (Exception e) {
             log.error("getConnection error", e);

@@ -157,10 +157,11 @@ public class AlertLogSchedulingRunnable implements Runnable {
                         ruleItem.getBlockWord(), start, now);
                     String ruleMark = ruleItem.getRuleMark();
                     String operate = ruleItem.getOperate();
-                    Long limitValue = Long.valueOf(ruleItem.getLimitValue());
-                    boolMap.put(ruleMark, operate.equals(">") ? count > limitValue
-                        : operate.equals(">=") ? count >= limitValue : operate.equals("=") ? count == limitValue
-                        : operate.equals("<=") ? count <= limitValue : count < limitValue);
+                    Double limitValue = ruleItem.getLimitValue().doubleValue();
+                    double countD = count.doubleValue();
+                    boolMap.put(ruleMark, operate.equals(">") ? countD > limitValue
+                        : operate.equals(">=") ? countD >= limitValue : operate.equals("=") ? countD == limitValue
+                        : operate.equals("<=") ? countD <= limitValue : countD < limitValue);
                 }
                 boolean isAlert = Arrays.stream(templateRule.getRuleExpComb().split("or")).map(andComb ->
                         Arrays.stream(andComb.split("and")).map(mark -> boolMap.get(mark.trim()))

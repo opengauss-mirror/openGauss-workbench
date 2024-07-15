@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS "tb_migration_task" (
     "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "source_node_id" varchar(64) ,
     "source_db" varchar(255) ,
+    "source_tables" varchar(255) ,
     "target_node_id" varchar(64) ,
     "target_db" varchar(255) ,
     "migration_operations" varchar(255) ,
@@ -87,6 +88,8 @@ CREATE TABLE IF NOT EXISTS "tb_migration_task" (
 COMMENT ON COLUMN "tb_migration_task"."id" IS '主键ID';
 
 COMMENT ON COLUMN "tb_migration_task"."source_node_id" IS '源端实例ID';
+
+COMMENT ON COLUMN "tb_migration_task"."source_tables" IS '源端表';
 
 COMMENT ON COLUMN "tb_migration_task"."source_db" IS '源端数据库';
 
@@ -367,7 +370,7 @@ VALUES (12, 'source.debezium-num-period', '1000', 'Debezium增量校验数量的
 INSERT INTO "tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
 VALUES (11, 'source.debezium-time-period', '1', 'Debezium增量校验时间段：24*60单位：分钟，即每隔1小时增量校验一次');
 INSERT INTO "tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
-VALUES (13, 'rules.enable', 'false', '规则过滤，true代表开启，false代表关闭');
+VALUES (13, 'rules.enable', 'true', '规则过滤，true代表开启，false代表关闭');
 INSERT INTO "tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
 VALUES (14, 'rules.table', '0','配置表过滤规则，可通过添加黑白名单，对当前数据库中待校验表进行过滤，黑白名单为互斥规则，配置有白名单时，会忽略配置的黑名单规则。可同时配置多组白名单或者黑名单。如果配置多组白名单或黑名单，那么会依次按照白名单去筛选表。值为table规则的数量');
 INSERT INTO "tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
@@ -550,7 +553,7 @@ SET "param_key"     = 'source.debezium-num-period', "param_value"   = '1000',
 WHERE "id" = 12;
 
 UPDATE "tb_migration_task_init_global_param"
-SET "param_key"     = 'rules.enable', "param_value"   = 'false',
+SET "param_key"     = 'rules.enable', "param_value"   = 'true',
     "param_desc"    = '规则过滤，true代表开启，false代表关闭',
     "param_type"    = 3, "param_extends" = NULL
 WHERE "id" = 13;

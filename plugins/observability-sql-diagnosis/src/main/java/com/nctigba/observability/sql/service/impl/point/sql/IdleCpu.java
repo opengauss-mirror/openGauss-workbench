@@ -117,18 +117,15 @@ public class IdleCpu implements DiagnosisPointService<Object> {
                     new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
                 while (reader.ready()) {
                     var line = reader.readLine();
-                    if (line.isBlank()) {
+                    if (line.isBlank() || line.startsWith("Average") || line.length() < 12) {
                         continue;
                     }
-                    if (line.startsWith("Average")) {
-                        break;
-                    }
                     var data = line.substring(11).trim().split("\\s+");
-                    if (data[0].equals("CPU")) {
+                    if (data.length < 1 || data[0].equals("CPU")) {
                         continue;
                     }
                     var time = line.substring(0, 11);
-                    if (data[0].equals("all")) {
+                    if (data.length > 10 && data[0].equals("all")) {
                         all.addX(time);
                         for (int i : INDEX) {
                             all.addPoint(KEYS[i], PercentUtils.parse(data[i]));
