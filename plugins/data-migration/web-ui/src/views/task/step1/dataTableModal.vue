@@ -221,38 +221,37 @@ fetchTblList()
 
 <style>
 .modal {
+  position: absolute;
+  cursor: move;
   z-index: 100;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   width: 100%;
-  height: 100%;
+  height: 800px;
   display: flex;
   justify-content: center;
   align-items: center;
-  cursor: move;
 }
 
 .modal-content {
+  cursor: move;
   background-color: white;
   padding: 20px;
   border-radius: 5px;
   width: 100%;
   height: 90%;
-  max-height: 700px;
-  max-width: 500px;
-  cursor: move;
+  max-width: 800px;
+  position: relative;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5)
 }
 .header {
+  cursor: move;
   background-color: #f0f0f0;
   padding: 10px;
+  position: static;
   top: 0;
   z-index: 102;
-  cursor: move;
 }
 .header h2 {
   font-size: xx-large;
@@ -261,6 +260,7 @@ fetchTblList()
   font-size: x-large;
 }
 .scrollable {
+  cursor: move;
   height: 60%;
   flex: 1;
   overflow-y: auto;
@@ -277,15 +277,16 @@ fetchTblList()
 .footer {
   background-color: #f0f0f0;
   padding: 10px;
+  position: sticky;
   bottom: 0;
   z-index: 102;
 }
 
 .close {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 20px;
+  top: 20px;
+  right: 20px;
+  font-size: 30px;
   cursor: pointer;
   color: rgba(0, 0, 0, 0.5);
   transition: color 0.3s ease;
