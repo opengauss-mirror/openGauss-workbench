@@ -1666,6 +1666,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 if (resultList.get(selectCommandLength - 1).equals("Primary")) {
                     localRole = resultList.get(selectCommandLength - 1);
                     masterIsNormal = true;
+                } else if (resultList.get(selectCommandLength - 1).equals("Standby")) {
+                    localRole = resultList.get(selectCommandLength - 1);
                 } else {
                     localRole = resultList.get(selectCommandLength - 1);
                     opsImportEntity.setErrorInfo("check node status error!");
@@ -1676,12 +1678,14 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             }
         } else if (versionType.equals("LITE")) {
             try {
+                masterIsNormal = true;
                 String selectLocal = MessageFormat.format(CHANGE_SUB_USER, opsImportEntity.getInstallUsername(), MessageFormat.format(THREE_IN_ONE, "source " + opsImportEntity.getEnvPath(), ";gs_ctl query -D " + resultList.get(2) + "|grep local_role|awk '\\''{print $3}'\\''|head -n 1", ""));
                 localRole = jschUtil.executeCommand(selectLocal, session).getResult();
             } catch (OpsException | IOException | InterruptedException e) {
                 markErrorInfo(opsImportEntity);
             }
         } else {
+            masterIsNormal = true;
             localRole = ipSequence == 0 ? "Primary" : "Standby";
         }
         opsClusterEntity.setClusterId(opsImportEntity.getClusterName());
@@ -1821,7 +1825,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return list;
     }
 
-    @Transactional(rollbackFor = RuntimeException.class)
+    @Transactional
     public void saveBatch(OpsClusterEntity opsClusterEntity, List<OpsClusterNodeEntity> opsClusterNodeEntityList, OpsImportEntity opsImportEntity) {
         try {
             save(opsClusterEntity);
@@ -1831,8 +1835,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         } catch (Exception e) {
             log.error("database saveBatch error!");
             opsImportEntity.setImportStatus("fail");
-            opsImportEntity.setErrorInfo("database saveBatch error!");
-            throw new RuntimeException("database rollback!");
+            opsImportEntity.setErrorInfo("please change clusterId that already exists!");
         }
     }
 
