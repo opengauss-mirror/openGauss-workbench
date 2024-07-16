@@ -73,7 +73,6 @@ import static com.nctigba.datastudio.constants.SqlConstants.COUNT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.COURSE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.FETCH_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.TABLE_DATA_LIMIT_SQL;
-import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static com.nctigba.datastudio.utils.DebugUtils.comGetUuidType;
 import static java.lang.Math.ceil;
 
@@ -480,8 +479,8 @@ public class TableDataServiceImpl implements TableDataService {
     }
 
     public List<Map<String, Object>> tableAttribute(TableAttributeDTO request) throws SQLException {
-        return tableObjectSQLService.get(conMap.get(request.getUuid())
-                .getType()).tableAttributeSQL(request.getUuid(), request.getOid(), request.getTableType());
+        return tableObjectSQLService.get(comGetUuidType(request.getUuid()))
+                .tableAttributeSQL(request.getUuid(), request.getOid(), request.getTableType());
     }
 
     public void tableAnalyze(TableNameDTO request) throws SQLException {

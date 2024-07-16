@@ -34,7 +34,6 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.opengauss.admin.common.exception.CustomException;
-import org.opengauss.util.PGobject;
 import org.springframework.util.CollectionUtils;
 
 import javax.servlet.http.HttpServletResponse;
@@ -363,12 +362,8 @@ public class DebugUtils {
         while (resultSet.next()) {
             List<Object> list = new ArrayList<>();
             for (String column : columnList) {
-                Object columnValue = resultSet.getObject(column);
-                if (columnValue instanceof PGobject) {
-                    list.add(((PGobject) columnValue).getValue());
-                } else {
-                    list.add(objectToSting(columnValue));
-                }
+                Object columnValue = resultSet.getString(column);
+                list.add(columnValue);
             }
             dataList.add(list);
         }
@@ -862,22 +857,25 @@ public class DebugUtils {
                 newValue = null;
                 break;
             }
+            case Types.INTEGER:
             case Types.BIGINT:
-            case Types.TINYINT:
+            case Types.SMALLINT:
+            case Types.TINYINT: {
+                newValue = value;
+                break;
+            }
             case Types.NUMERIC:
             case Types.DECIMAL:
-            case Types.INTEGER:
-            case Types.SMALLINT:
             case Types.FLOAT:
             case Types.REAL: {
-                newValue = value;
+                newValue = value + "::" + columnTypeName;
                 break;
             }
             case Types.DOUBLE: {
                 if ("money".equalsIgnoreCase(columnTypeName)) {
-                    newValue = QUOTES + value + QUOTES;
+                    newValue = QUOTES + value + QUOTES + "::" + columnTypeName;
                 } else {
-                    newValue = value;
+                    newValue = value + "::" + columnTypeName;
                 }
                 break;
             }

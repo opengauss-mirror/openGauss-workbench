@@ -34,13 +34,10 @@ import com.nctigba.datastudio.service.impl.debug.AsyncHelper;
 import com.nctigba.datastudio.utils.DebugUtils;
 import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.opengauss.core.NativeQuery;
-import org.opengauss.core.Parser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -48,13 +45,10 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.nctigba.datastudio.constants.CommonConstants.FIVE_HUNDRED;
-import static com.nctigba.datastudio.constants.CommonConstants.SQL;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static com.nctigba.datastudio.enums.MessageEnum.BUTTON;
 import static com.nctigba.datastudio.enums.MessageEnum.DISCONNECTION;
@@ -83,8 +77,6 @@ public class StartSqlImpl implements OperationInterface {
                     LocaleStringUtils.transLanguageWs("1004", webSocketServer), paramReq.getUuid());
         }
         String sql = paramReq.getSql();
-        Iterator<String>  sqlList = Parser.parseJdbcSql(sql, true, false, true, false)
-                .stream().map(q -> q.nativeSql).collect(Collectors.toList()).iterator();
         Connection connection = webSocketServer.getConnection(windowName);
         Statement stat = connection.createStatement();
         webSocketServer.setStatement(windowName, stat);
@@ -95,6 +87,8 @@ public class StartSqlImpl implements OperationInterface {
             Date startTime = new Date();
             Date endTime = new Date();
             boolean isSuccess = true;
+            boolean isUpdate = false;
+            int updateCount = 0;
 
             try {
                 webSocketServer.sendMessage(windowName, TEXT,
@@ -108,32 +102,35 @@ public class StartSqlImpl implements OperationInterface {
                 operateStatus.enableStopRun();
                 webSocketServer.setOperateStatus(windowName, operateStatus);
                 while (true) {
-                    String subSql = sqlList.next();
                     if (result) {
                         Map<String, Object> resultMap = DebugUtils.parseResultSetType(stat.getResultSet());
-                        resultMap.put(SQL, subSql);
                         webSocketServer.sendMessage(windowName, TABLE,
                                 LocaleStringUtils.transLanguageWs("2002", webSocketServer), resultMap);
                         webSocketServer.sendMessage(windowName, TEXT,
                                 LocaleStringUtils.transLanguageWs("2002", webSocketServer), null);
                     } else {
-                        if (stat.getUpdateCount() != -1) {
-                            webSocketServer.sendMessage(windowName, TEXT, LocaleStringUtils.transLanguageWs(
-                                    "2005", webSocketServer) + stat.getUpdateCount(), null);
-                            sqlHistoryDO.setUpdateCount(stat.getUpdateCount());
+                        int perCount;
+                        if ((perCount = stat.getUpdateCount()) != -1) {
+                            isUpdate = true;
+                            updateCount = updateCount + perCount;
                         } else {
                             break;
                         }
                     }
                     result = stat.getMoreResults();
                 }
+                if (isUpdate) {
+                    webSocketServer.sendMessage(windowName, TEXT, LocaleStringUtils.transLanguageWs(
+                            "2005", webSocketServer) + updateCount, null);
+                    sqlHistoryDO.setUpdateCount(updateCount);
+                }
                 webSocketServer.sendMessage(windowName, TEXT,
                         LocaleStringUtils.transLanguageWs("2003", webSocketServer), null);
                 webSocketServer.sendMessage(windowName, TEXT,
                         LocaleStringUtils.transLanguageWs("2023", webSocketServer) +
                                 (endTime.getTime() - startTime.getTime()) + "ms", null);
-            } catch(SQLException e) {
-                log.info("StartSqlImpl operate catch: " + e);
+            } catch (SQLException e) {
+                log.error("StartSqlImpl operate catch: ", e);
                 isSuccess = false;
                 sqlHistoryDO.setErrMes(e.getMessage());
                 endTime = new Date();
@@ -161,11 +158,11 @@ public class StartSqlImpl implements OperationInterface {
                 asyncHelper.insertSqlHistory(list);
 
                 try {
-                    stat.close();
                     stat.cancel();
+                    stat.close();
                     webSocketServer.setStatement(windowName, null);
                 } catch (SQLException e) {
-                    log.info("StartSqlImpl operate Exception: " + e);
+                    log.error("StartSqlImpl operate Exception: ", e);
                 }
             }
         });
