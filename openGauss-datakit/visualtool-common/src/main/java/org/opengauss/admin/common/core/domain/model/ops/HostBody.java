@@ -48,7 +48,6 @@ public class HostBody {
     private String privateIp;
     private String password;
     private Boolean isRemember;
-    @NotEmpty(message = "Please select AZ")
     private String azId;
     private String remark;
     private Integer port;
