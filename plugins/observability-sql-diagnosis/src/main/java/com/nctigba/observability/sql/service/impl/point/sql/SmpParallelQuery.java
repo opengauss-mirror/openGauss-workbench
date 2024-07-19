@@ -25,8 +25,8 @@ package com.nctigba.observability.sql.service.impl.point.sql;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constant.CommonConstants;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.model.dto.point.AgentDTO;
 import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
 import com.nctigba.observability.sql.model.dto.point.TuningAdvisorDTO;
@@ -109,8 +109,8 @@ public class SmpParallelQuery implements DiagnosisPointService<Object> {
         TuningAdvisorDTO advisorDTO = new TuningAdvisorDTO();
         advisorDTO.setAdvisor("set query_dop=4;");
         ResultSet rs = null;
-        try (var conn = clusterManager.getConnectionByNodeId(task.getNodeId());
-             Statement stmt = conn.createStatement()) {
+        try (var conn = clusterManager.getConnectionByNodeId(task.getNodeId(), task.getDbName(),
+                task.getSchemaName()); Statement stmt = conn.createStatement()) {
             String preSql = "SET explain_perf_mode TO normal;";
             stmt.execute(preSql);
             String diagnosisSql = task.getSql();
