@@ -13,35 +13,31 @@
  * See the Mulan PSL v2 for more details.
  * -------------------------------------------------------------------------
  *
- * OpsClusterTaskNodeVO.java
+ * GenerateClusterConfigXml.java
  *
  * IDENTIFICATION
- * plugins/base-ops/src/main/java/org/opengauss/admin/plugin/domain/model/ops/OpsClusterTaskNodeVO.java
+ * plugins/base-ops/src/main/java/org/opengauss/admin/plugin/service/ops/impl/function/GenerateClusterConfigXml.java
  *
  * -------------------------------------------------------------------------
  */
 
-package org.opengauss.admin.plugin.domain.model.ops;
+package org.opengauss.admin.plugin.service.ops.impl.function;
 
-import lombok.Data;
+import org.opengauss.admin.plugin.domain.model.ops.InstallContext;
 
 /**
+ * GenerateClusterConfigXml
+ *
  * @author wangchao
- * @date 2024/06/15 09:26
- */
-@Data
-public class OpsClusterTaskNodeVO {
-    private String clusterNodeId;
-    private String clusterId;
-    private String hostId;
-    private String hostIp;
-    private String hostUserId;
-    private String hostUsername;
-    private String nodeType;
-    private String dataPath;
-    private String azOwner;
-    private String azPriority;
-    private Boolean isCmMaster;
-    private String cmDataPath;
-    private Integer cmPort;
+ * @date 2024/6/22 9:41
+ **/
+@FunctionalInterface
+public interface GenerateClusterConfigXml {
+    /**
+     * generate openGauss enterprise cluster config xml
+     *
+     * @param installContext install context
+     * @return xml
+     */
+    String generate(InstallContext installContext);
 }

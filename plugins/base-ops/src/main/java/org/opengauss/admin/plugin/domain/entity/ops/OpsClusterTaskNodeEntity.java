@@ -57,7 +57,9 @@ public class OpsClusterTaskNodeEntity extends BaseEntity {
     private String azPriority;
     private ClusterEnvCheckResultEnum envCheckResult;
     private String envCheckDetail;
-
+    private Boolean isCmMaster;
+    private String cmDataPath;
+    private Integer cmPort;
     public OpsClusterTaskNodeVO toVo() {
         OpsClusterTaskNodeVO opsClusterNodeVO = new OpsClusterTaskNodeVO();
         BeanUtils.copyProperties(this, opsClusterNodeVO);

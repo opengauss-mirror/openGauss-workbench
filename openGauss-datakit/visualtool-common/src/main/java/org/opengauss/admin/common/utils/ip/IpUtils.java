@@ -24,6 +24,7 @@
 
 package org.opengauss.admin.common.utils.ip;
 
+import org.apache.commons.validator.routines.InetAddressValidator;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.html.EscapeUtil;
 
@@ -187,5 +188,9 @@ public class IpUtils {
         } catch (UnknownHostException e) {
         }
         return "Unknown";
+    }
+
+    public static boolean mayBeIPAddress(String hostIp) {
+        return InetAddressValidator.getInstance().isValid(hostIp);
     }
 }

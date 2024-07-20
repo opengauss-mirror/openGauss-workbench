@@ -74,9 +74,24 @@ public enum BusinessType {
      * uninstall
      */
     UNINSTALL,
-    
     /**
      * reset
      */
-    RESET
+    RESET,
+    /**
+     * confirm
+     */
+    CONFIRM,
+    /**
+     * check_environment
+     */
+    CHECK_ENVIRONMENT,
+    /**
+     * batch_install
+     */
+    BATCH_INSTALL,
+    /**
+     * copy
+     */
+    COPY
 }

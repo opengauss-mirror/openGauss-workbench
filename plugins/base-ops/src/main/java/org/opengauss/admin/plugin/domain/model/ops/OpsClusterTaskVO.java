@@ -58,6 +58,7 @@ public class OpsClusterTaskVO {
     private String corePath;
     private String envPath;
     private Boolean enableCmTool;
+    private Boolean enableDcf;
     private Boolean enableGenerateEnvironmentVariableFile;
     private String xmlConfigPath;
     private Integer clusterNodeNum;

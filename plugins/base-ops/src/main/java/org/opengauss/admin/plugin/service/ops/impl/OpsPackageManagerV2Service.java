@@ -26,6 +26,7 @@ package org.opengauss.admin.plugin.service.ops.impl;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -77,17 +78,17 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
                 .eq(OpsPackageManagerEntity::getCpuArch, cpuArch)
                 .eq(OpsPackageManagerEntity::getPackageVersion, packageVersion)
                 .eq(OpsPackageManagerEntity::getPackageVersionNum, packageVersionNum)
-                .orderByDesc(OpsPackageManagerEntity::getPackageVersionNum);
+                .orderByAsc(OpsPackageManagerEntity::getPackageVersionNum);
         return list(queryWrapper).stream().map(OpsPackageManagerEntity::toVO)
                 .distinct().collect(Collectors.toList());
     }
 
     @Override
     public List<String> listVersionNumber() {
-        LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.select(OpsPackageManagerEntity::getPackageVersionNum);
-        return list(queryWrapper).stream().map(OpsPackageManagerEntity::getPackageVersionNum)
-                .distinct().collect(Collectors.toList());
+        QueryWrapper<OpsPackageManagerEntity> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("distinct package_version_num");
+        queryWrapper.orderByDesc("package_version_num");
+        return list(queryWrapper).stream().map(OpsPackageManagerEntity::getPackageVersionNum).collect(Collectors.toList());
     }
 
     @Override

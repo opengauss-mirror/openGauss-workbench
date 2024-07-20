@@ -78,16 +78,25 @@ public class ClusterPackageManagerController extends BaseController {
 
     @GetMapping("/page/package")
     public TableDataInfo pagePackage(@RequestBody PackageDto dto) {
+        IPage<OpsPackageManagerEntity> page = opsPackageManagerV2Service.page(startPage(), getOpsPackageQueryWrapper(dto));
+        return getDataTable(page);
+    }
+
+    @GetMapping("/list/package")
+    public List<OpsPackageManagerEntity> listPackage(@RequestBody PackageDto dto) {
+        return opsPackageManagerV2Service.list(getOpsPackageQueryWrapper(dto));
+    }
+
+    private LambdaQueryWrapper<OpsPackageManagerEntity> getOpsPackageQueryWrapper(PackageDto dto) {
         LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = Wrappers.lambdaQuery(OpsPackageManagerEntity.class)
-                .eq(StrUtil.isNotEmpty(dto.getName()), OpsPackageManagerEntity::getName, dto.getName())
+                .like(StrUtil.isNotEmpty(dto.getName()), OpsPackageManagerEntity::getName, dto.getName())
                 .eq(StrUtil.isNotEmpty(dto.getOs()), OpsPackageManagerEntity::getOs, dto.getOs())
                 .eq(StrUtil.isNotEmpty(dto.getCpuArch()), OpsPackageManagerEntity::getCpuArch, dto.getCpuArch())
                 .eq(StrUtil.isNotEmpty(dto.getOpenGaussVersionNum()), OpsPackageManagerEntity::getPackageVersionNum, dto.getOpenGaussVersionNum())
                 .eq(Objects.nonNull(dto.getOpenGaussVersion()), OpsPackageManagerEntity::getPackageVersion, dto.getOpenGaussVersion().name())
                 .isNotNull(OpsPackageManagerEntity::getPackagePath)
                 .orderByDesc(OpsPackageManagerEntity::getUpdateTime);
-        IPage<OpsPackageManagerEntity> page = opsPackageManagerV2Service.page(startPage(), queryWrapper);
-        return getDataTable(page);
+        return queryWrapper;
     }
 
     @GetMapping("/list/version/number")

@@ -68,6 +68,7 @@ public class InstallContext implements Cloneable {
     private String clusterId;
 
     private WsSession retSession;
+    private RetBuffer retBuffer;
 
     private String envPath;
 

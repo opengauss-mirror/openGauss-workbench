@@ -854,7 +854,8 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         }
     }
 
-    private OpsHostEntity getByPublicIp(String publicIp) {
+    @Override
+    public OpsHostEntity getByPublicIp(String publicIp) {
         if (StrUtil.isEmpty(publicIp)) {
             return null;
         }
