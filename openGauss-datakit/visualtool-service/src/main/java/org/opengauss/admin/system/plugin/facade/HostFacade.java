@@ -110,4 +110,14 @@ public class HostFacade {
     public ClusterNodeDto getClusterNodeByNodeId(String clusterNodeId) {
         return opsClusterNodeService.getClusterNodeDtoByNodeId(clusterNodeId);
     }
+
+    /**
+     * get host info
+     *
+     * @param hostIp host public Ip
+     * @return host
+     */
+    public OpsHostEntity getByPublicIp(String hostIp) {
+        return hostService.getByPublicIp(hostIp);
+    }
 }

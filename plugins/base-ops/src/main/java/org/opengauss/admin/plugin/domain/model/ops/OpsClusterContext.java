@@ -38,7 +38,7 @@ import java.util.List;
 @Data
 public class OpsClusterContext implements Cloneable {
     private WsSession retSession;
-
+    private RetBuffer retBuffer;
     private List<String> opNodeIds;
 
     private List<HostInfoHolder> hostInfoHolders;

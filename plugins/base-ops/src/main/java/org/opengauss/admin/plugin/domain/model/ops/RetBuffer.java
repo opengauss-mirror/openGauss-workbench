@@ -13,35 +13,41 @@
  * See the Mulan PSL v2 for more details.
  * -------------------------------------------------------------------------
  *
- * OpsClusterTaskNodeVO.java
+ * RetBuffer.java
  *
  * IDENTIFICATION
- * plugins/base-ops/src/main/java/org/opengauss/admin/plugin/domain/model/ops/OpsClusterTaskNodeVO.java
+ * plugins/base-ops/src/main/java/org/opengauss/admin/plugin/domain/model/ops/RetBuffer.java
  *
  * -------------------------------------------------------------------------
  */
 
 package org.opengauss.admin.plugin.domain.model.ops;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
+ * RetBuffer
+ *
  * @author wangchao
- * @date 2024/06/15 09:26
- */
-@Data
-public class OpsClusterTaskNodeVO {
-    private String clusterNodeId;
+ * @date 2024/6/22 9:41
+ **/
+@Slf4j
+public class RetBuffer {
+    private StringBuffer buffer;
+    @Getter
     private String clusterId;
-    private String hostId;
-    private String hostIp;
-    private String hostUserId;
-    private String hostUsername;
-    private String nodeType;
-    private String dataPath;
-    private String azOwner;
-    private String azPriority;
-    private Boolean isCmMaster;
-    private String cmDataPath;
-    private Integer cmPort;
+
+    public RetBuffer(String clusterId) {
+        this.clusterId = clusterId;
+        buffer = new StringBuffer();
+    }
+
+    public String getRetBuffer() {
+        return buffer.toString();
+    }
+
+    public void sendText(String text) {
+        buffer.append(text).append(System.getProperty("line.separator"));
+    }
 }

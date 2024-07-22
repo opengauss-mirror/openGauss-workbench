@@ -56,6 +56,7 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 
 import java.beans.PropertyEditorSupport;
+import java.util.ArrayList;
 import java.util.Date;
 
 /**
@@ -144,6 +145,19 @@ public class BaseController {
         return rspData;
     }
 
+    /**
+     * Set response pagination params
+     *
+     * @return page
+     */
+    protected TableDataInfo getDataTable() {
+        TableDataInfo rspData = new TableDataInfo();
+        rspData.setCode(ResponseCode.SUCCESS.code());
+        rspData.setMsg(ResponseCode.SUCCESS.msg());
+        rspData.setRows(new ArrayList<>());
+        rspData.setTotal(0);
+        return rspData;
+    }
     /**
      * response result
      *

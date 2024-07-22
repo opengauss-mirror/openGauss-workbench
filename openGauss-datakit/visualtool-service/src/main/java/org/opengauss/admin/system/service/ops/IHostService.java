@@ -106,4 +106,12 @@ public interface IHostService extends IService<OpsHostEntity> {
     void updateHostOsVersion(OpsHostEntity opsHostEntity);
 
     OpsHostEntity getMappedHostEntityById(String hostId);
+
+    /**
+     * get host info
+     *
+     * @param hostIp host public Ip
+     * @return host
+     */
+    OpsHostEntity getByPublicIp(String hostIp);
 }

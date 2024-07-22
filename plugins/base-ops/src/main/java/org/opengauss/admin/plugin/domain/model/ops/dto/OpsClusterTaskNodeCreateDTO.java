@@ -45,6 +45,10 @@ public class OpsClusterTaskNodeCreateDTO {
     private String dataPath;
     private String azOwner;
     private String azPriority;
+    private Boolean isCMMaster;
+    private String cmDataPath;
+    private Integer cmPort;
+
 
     public OpsClusterTaskNodeEntity toEntity() {
         OpsClusterTaskNodeEntity opsClusterTaskNodeEntity = new OpsClusterTaskNodeEntity();

@@ -146,6 +146,7 @@ public class OpsClusterTaskEntity extends BaseEntity {
      * cluster install base info  : enable install cm tool
      */
     private Boolean enableCmTool;
+    private Boolean enableDcf;
     /**
      * cluster install base info  : enable generate environment variable file
      */

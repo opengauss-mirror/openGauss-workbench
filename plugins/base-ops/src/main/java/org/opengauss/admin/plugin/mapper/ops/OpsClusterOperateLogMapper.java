@@ -13,35 +13,26 @@
  * See the Mulan PSL v2 for more details.
  * -------------------------------------------------------------------------
  *
- * OpsClusterTaskNodeVO.java
+ * OpsClusterOperateLogMapper.java
  *
  * IDENTIFICATION
- * plugins/base-ops/src/main/java/org/opengauss/admin/plugin/domain/model/ops/OpsClusterTaskNodeVO.java
+ * plugins/base-ops/src/main/java/org/opengauss/admin/plugin/mapper/ops/OpsClusterOperateLogMapper.java
  *
  * -------------------------------------------------------------------------
  */
 
-package org.opengauss.admin.plugin.domain.model.ops;
+package org.opengauss.admin.plugin.mapper.ops;
 
-import lombok.Data;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
+import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterOperateLog;
 
 /**
+ * OpsClusterOperateLogMapper
+ *
  * @author wangchao
- * @date 2024/06/15 09:26
- */
-@Data
-public class OpsClusterTaskNodeVO {
-    private String clusterNodeId;
-    private String clusterId;
-    private String hostId;
-    private String hostIp;
-    private String hostUserId;
-    private String hostUsername;
-    private String nodeType;
-    private String dataPath;
-    private String azOwner;
-    private String azPriority;
-    private Boolean isCmMaster;
-    private String cmDataPath;
-    private Integer cmPort;
+ * @date 2024/6/22 9:41
+ **/
+@Mapper
+public interface OpsClusterOperateLogMapper extends BaseMapper<OpsClusterOperateLog> {
 }
