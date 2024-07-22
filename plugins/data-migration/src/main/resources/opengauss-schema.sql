@@ -285,6 +285,20 @@ SELECT add_migration_task_is_adjust_kernel_param_field_func();
 
 DROP FUNCTION add_migration_task_is_adjust_kernel_param_field_func;
 
+CREATE OR REPLACE FUNCTION add_migration_task_source_tables_field_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''tb_migration_task'' AND COLUMN_NAME = ''source_tables'' ) = 0
+THEN
+ALTER TABLE public.tb_migration_task ADD COLUMN source_tables VARCHAR;
+COMMENT ON COLUMN "public"."tb_migration_task"."source_tables" IS ''源端表'';
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_migration_task_source_tables_field_func();
+
+DROP FUNCTION add_migration_task_source_tables_field_func;
 
 CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_exec_result_detail" (
   "id" int8 NOT NULL DEFAULT nextval('sq_tb_task_exec_result_detail_id'::regclass),
