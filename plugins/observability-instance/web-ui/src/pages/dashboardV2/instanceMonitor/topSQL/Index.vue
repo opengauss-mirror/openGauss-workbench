@@ -164,6 +164,7 @@ watch(typeTab, () => {
 });
 const load = () => {
   data.tableData = [];
+  if (!instanceId.value) return;
   requestData(getParam());
 };
 const { run: requestData, loading } = useRequest(

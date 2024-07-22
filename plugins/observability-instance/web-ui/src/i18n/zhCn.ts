@@ -153,6 +153,10 @@ export default {
     index: '首页',
     resourceMonitor: '资源监控',
     thisInstance: '，当前实例',
+    selectInstance: '请选择监控实例',
+    selectInstanceWithoutAgent: '未安装采集代理对实例进行指标采集，部分实例监控数据将为空！',
+    toInstall: '去安装',
+    selectInstanceInErrAgent: '采集代理状态异常，部分实例监控数据将为空',
     asp: {
       sampleActiveSessionCount: '采样活跃会话数量',
       aspAnalysis: 'ASP分析',
@@ -304,7 +308,7 @@ export default {
       errOut: '网卡错包数量(出包)',
       connection: '网络socket连接信息',
       tcpQty: 'TCP socket数量统计',
-      UDPQty: 'UDP socket数量统计',
+      udpQty: 'UDP socket数量统计',
       card: '网卡传输统计',
       inContent: '显示各个网卡每秒的流入流量',
       outContent: '显示各个网卡每秒的流出流量',
@@ -640,6 +644,7 @@ export default {
       '请选择安装用户',
     ],
     tip: '提示',
+    delInstanceTip: '代理器中至少保留一个监控目标。如不需要监控，请卸载代理器。',
   },
   configParam: {
     tabTitle: '系统与数据库配置',

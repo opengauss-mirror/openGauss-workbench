@@ -87,6 +87,7 @@
           :formatter="toFixed"
           :data="metricsData.databaseBlk"
           :xData="metricsData.time"
+          :toolTipsExcludeZero="true"
         />
       </my-card>
     </el-col>
@@ -151,6 +152,7 @@ watch(
     clearInterval(timer.value);
     if (tabNow.value === tabKeys.InstanceMonitorInstanceInfo) {
       if (updateCounter.value.source === sourceType.value.INSTANCE) {
+        clearData()
         load();
       }
       if (updateCounter.value.source === sourceType.value.MANUALREFRESH) load();
@@ -169,6 +171,16 @@ watch(
   { immediate: false }
 );
 
+const clearData = () => {
+  metricsData.value.respTime = [];
+  metricsData.value.cacheHitTable = [];
+  metricsData.value.connection = [];
+  metricsData.value.databaseBlk = [];
+  metricsData.value.slowSQL = [];
+  metricsData.value.threshold = '';
+  metricsData.value.time = [];
+}
+
 // load data
 const load = (checkTab?: boolean, checkRange?: boolean) => {
   if (!instanceId.value) return;
@@ -176,6 +188,9 @@ const load = (checkTab?: boolean, checkRange?: boolean) => {
 };
 const { data: indexData, run: requestData } = useRequest(getInstanceInfo, {
   manual: true,
+  onError: () => {
+    clearData()
+  }
 });
 watch(
   indexData,
@@ -192,7 +207,6 @@ watch(
     if (!baseData) return;
 
     // respTime
-    respTimeInfo.value.option = []
     if (baseData.INSTANCE_DB_RESPONSETIME_P80) {
       let tempData: string[] = [];
       baseData.INSTANCE_DB_RESPONSETIME_P80.forEach((d: number) => {
@@ -202,7 +216,6 @@ watch(
         data: tempData,
         name: 'p80',
       });
-      respTimeInfo.value.option.push({ name: 'p80', value: t('instanceIndex.p80Content') })
     }
     if (baseData.INSTANCE_DB_RESPONSETIME_P95) {
       let tempData: string[] = [];
@@ -213,7 +226,6 @@ watch(
         data: tempData,
         name: 'p95',
       });
-      respTimeInfo.value.option.push({ name: 'p95', value: t('instanceIndex.p95Content') })
     }
     respTimeInfo.value.option.push({ name: t("dbParam.common.tip"), value: t('dbParam.common.tipContent') })
     // cacheHitTable
@@ -224,7 +236,6 @@ watch(
       metricsData.value.cacheHitTable = baseData.cacheHit
     }
 
-    connectionQtyInfo.value.option = []
     // connections
     if (baseData.INSTANCE_DB_CONNECTION_ACTIVE) {
       let tempData: string[] = [];
@@ -237,7 +248,6 @@ watch(
         stack: "Total",
         name: t("instanceMonitor.instance.idleConnectionQty"),
       });
-      connectionQtyInfo.value.option.push({ name: t("instanceMonitor.instance.idleConnectionQty"), value: t("instanceMonitor.instance.idleConnectionQtyContent") })
     }
     if (baseData.INSTANCE_DB_CONNECTION_IDLE) {
       let tempData: string[] = [];
@@ -250,7 +260,6 @@ watch(
         stack: "Total",
         name: t("instanceMonitor.instance.activeConnectionQty"),
       });
-      connectionQtyInfo.value.option.push({ name: t("instanceMonitor.instance.activeConnectionQty"), value: t("instanceMonitor.instance.activeConnectionQtyContent") })
     }
     if (baseData.INSTANCE_DB_CONNECTION_CURR) {
       let tempData: string[] = [];
@@ -261,7 +270,6 @@ watch(
         data: tempData,
         name: t("instanceMonitor.instance.connectionQtyNow"),
       });
-      connectionQtyInfo.value.option.push({ name: t("instanceMonitor.instance.connectionQtyNow"), value: t("instanceMonitor.instance.connectionQtyNowContent") })
     }
     if (baseData.INSTANCE_DB_CONNECTION_TOTAL) {
       let tempData: string[] = [];
@@ -272,7 +280,6 @@ watch(
         data: tempData,
         name: t("instanceMonitor.instance.maxConnectionQty"),
       });
-      connectionQtyInfo.value.option.push({ name: t("instanceMonitor.instance.maxConnectionQty"), value: t("instanceMonitor.instance.maxConnectionQtyContent") })
     }
     connectionQtyInfo.value.option.push({ name: t("dbParam.trackActivities.tip"), value: t("dbParam.trackActivities.tipContent") })
 
@@ -287,17 +294,18 @@ watch(
         data: tempData,
         name: t("instanceMonitor.instance.slowSQLQty"),
       });
-      slowSQL3sInfo.value.option.push({ name: t("instanceMonitor.instance.slowSQLQty"), value: t("instanceMonitor.instance.slowSQLQtyContent") })
     }
     slowSQL3sInfo.value.option.push({ name: t("dbParam.trackActivities.tip"), value: t("dbParam.trackActivities.tipContent") })
 
     // databaseBlk
-    for (let key in baseData.INSTANCE_DB_DATABASE_BLK) {
-      let tempData: string[] = []
-      baseData.INSTANCE_DB_DATABASE_BLK[key]?.forEach((element) => {
-        tempData.push(toFixed(element))
-      })
-      metricsData.value.databaseBlk.push({ data: tempData, name: key })
+    if (baseData.INSTANCE_DB_DATABASE_BLK) {
+      for (let key in baseData.INSTANCE_DB_DATABASE_BLK) {
+        let tempData: string[] = []
+        baseData.INSTANCE_DB_DATABASE_BLK[key]?.forEach((element) => {
+          tempData.push(toFixed(element))
+        })
+        metricsData.value.databaseBlk.push({ data: tempData, name: key })
+      }
     }
 
     //threshold
@@ -319,15 +327,19 @@ const download = (title: string, ref: any) => {
 
 const connectionQtyInfo = ref<any>({
   title: t("app.lineOverview"),
-  option: []
+  option: [{ name: t("instanceMonitor.instance.idleConnectionQty"), value: t("instanceMonitor.instance.idleConnectionQtyContent") },
+  { name: t("instanceMonitor.instance.activeConnectionQty"), value: t("instanceMonitor.instance.activeConnectionQtyContent") },
+  { name: t("instanceMonitor.instance.connectionQtyNow"), value: t("instanceMonitor.instance.connectionQtyNowContent") },
+  { name: t("instanceMonitor.instance.maxConnectionQty"), value: t("instanceMonitor.instance.maxConnectionQtyContent") },
+  ]
 })
 const slowSQL3sInfo = ref<any>({
   title: t("app.lineOverview"),
-  option: []
+  option: [{ name: t("instanceMonitor.instance.slowSQLQty"), value: t("instanceMonitor.instance.slowSQLQtyContent") }]
 })
 const respTimeInfo = ref<any>({
   title: t("app.lineOverview"),
-  option: []
+  option: [{ name: 'p80', value: t('instanceIndex.p80Content')}, { name: 'p95', value: t('instanceIndex.p95Content')}]
 })
 const databaseBlkInfo = ref<any>({
   title: t("app.lineOverview"),

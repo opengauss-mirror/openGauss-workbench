@@ -327,6 +327,7 @@ const paramConfigInfo = ref<any>({
 const timer = ref<number>()
 onMounted(() => {
   isLinkage.value = isChartLinkage.value
+  if (!instanceId.value) return;
   load()
   loadTOPMemoryProcessNow(props.tabId)
 })
@@ -337,6 +338,9 @@ watch(
     clearInterval(timer.value)
     if (tabNow.value === tabKeys.ResourceMonitorMemory) {
       if (updateCounter.value.source === sourceType.value.INSTANCE) {
+        clearData()
+        clearTopMemData()
+        if (!instanceId.value) return;
         load()
         loadTOPMemoryProcessNow(props.tabId)
       }
@@ -357,6 +361,18 @@ watch(
   { immediate: false }
 )
 
+const clearData = () => {
+  metricsData.value.memoryUsed = []
+  metricsData.value.swap = []
+  metricsData.value.time = []
+}
+
+const clearTopMemData = () => {
+  topMemoryProcessNowData.value = []
+  topMemoryDBThreadNowData.value = []
+  innerRefreshDoneTime.value = ''
+}
+
 // load data
 const load = (checkTab?: boolean, checkRange?: boolean) => {
   if (!instanceId.value) return
@@ -368,15 +384,15 @@ const rowClassName = ({ row }: { row: any }) => {
   }
   return ''
 }
-const { data: indexData, run: requestData } = useRequest(getMemoryMetrics, { manual: true })
+const { data: indexData, run: requestData } = useRequest(getMemoryMetrics, { manual: true, onError: () => {
+  clearData()
+  } })
 watch(
   indexData,
   () => {
     // clear data
     metricsData.value.memoryUsed = []
     metricsData.value.swap = []
-    memoryUseInfo.value.option = []
-    memorySwapInfo.value.option = []
 
     const baseData = indexData.value
     if (!baseData) return
@@ -410,7 +426,6 @@ watch(
         areaStyle: {},
         name: t('resourceMonitor.memory.memoryUse'),
       })
-      memoryUseInfo.value.option.push({ name: t('resourceMonitor.memory.memoryUse'), value: t('resourceMonitor.memory.memoryUseContent')})
     }
     if (baseData.MEMORY_DB_USED) {
       let tempData: string[] = []
@@ -422,7 +437,6 @@ watch(
         areaStyle: {},
         name: t('resourceMonitor.memory.memoryDBUse'),
       })
-      memoryUseInfo.value.option.push({ name: t('resourceMonitor.memory.memoryDBUse'), value: t('resourceMonitor.memory.memoryDBUseContent') })
     }
 
     // swap
@@ -432,7 +446,6 @@ watch(
         tempData.push(toFixed(d))
       })
       metricsData.value.swap.push({ data: tempData, areaStyle: {}, stack: 'Total', name: 'swap' })
-      memoryUseInfo.value.option.push({ name: 'swap', value: t('resourceMonitor.memory.swapContent') })
     }
 
     // dbMemoryConfig
@@ -451,6 +464,9 @@ const byteToMB = (val: number) => {
 }
 const { data: topMemoryProcessNowResult, run: loadTOPMemoryProcessNow } = useRequest(getTOPMemoryProcessNow, {
   manual: true,
+  onError: () => {
+    clearTopMemData()
+  }
 })
 watch(
   topMemoryProcessNowResult,
@@ -477,6 +493,7 @@ const updateTimerInner = () => {
   const timeInner = innerRefreshTime.value
   timerInner.value = useIntervalTime(
     () => {
+      if (!instanceId.value) return;
       loadTOPMemoryProcessNow(props.tabId)
     },
     computed(() => timeInner * 1000)
@@ -577,12 +594,14 @@ const download = (title: string, ref: any) => {
 
 const memoryUseInfo = ref<any>({
   title: t("app.fieldOverview"),
-  option: []
+  option: [{ name: t('resourceMonitor.memory.memoryUse'), value: t('resourceMonitor.memory.memoryUseContent')},
+  { name: t('resourceMonitor.memory.memoryDBUse'), value: t('resourceMonitor.memory.memoryDBUseContent')},
+  ]
 })
 
 const memorySwapInfo = ref<any>({
   title: t("app.fieldOverview"),
-  option: []
+  option: [{ name: 'swap', value: t('resourceMonitor.memory.swapContent')}]
 })
 
 const topThreadInfo = ref<any>({

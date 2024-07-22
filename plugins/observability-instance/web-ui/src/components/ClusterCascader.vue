@@ -51,6 +51,7 @@ const emit = defineEmits(['getCluster', 'loaded'])
 
 const cluster = ref<Array<any>>([])
 const clusterList = ref<Array<any>>([])
+const curNodeId = ref<string>()
 const cascaderProps = ref<any>({
   // props.
   multiple: props.multiple,
@@ -88,6 +89,10 @@ const getClusterValue = (val: string[]) => {
 }
 const setNodeId = (val: string) => {
   if (val === '' || val === null || val === undefined) return
+  curNodeId.value = val
+  setSelectedNodeId(curNodeId.value)
+}
+const setSelectedNodeId = (val: string) => {
   nextTick(() => {
     if (clusterList.value.length <= 0) return
     for (let p1 = 0; p1 < clusterList.value.length; p1++) {
@@ -125,6 +130,9 @@ const { data: rer, run: clusterData } = useRequest(
 watch(rer, (rer: Rer) => {
   if (rer && Object.keys(rer).length) {
     clusterList.value = treeTransform(rer)
+    if (curNodeId.value) {
+      setSelectedNodeId(curNodeId.value)
+    }
     emit('loaded', rer)
   }
 })

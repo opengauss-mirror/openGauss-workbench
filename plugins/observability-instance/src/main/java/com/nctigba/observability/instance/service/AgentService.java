@@ -37,4 +37,12 @@ public interface AgentService {
      * @return Is alive
      */
     Boolean isAgentAlive(String ip, String port);
+
+    /**
+     * Check is agent exist
+     *
+     * @param clusterNodeId String
+     * @return Integer
+     */
+    Integer isExistAgentForInstance(String clusterNodeId);
 }

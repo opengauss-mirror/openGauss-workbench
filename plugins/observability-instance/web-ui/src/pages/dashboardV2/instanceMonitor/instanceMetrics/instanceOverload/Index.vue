@@ -56,8 +56,8 @@
         :formatter="toFixed"
         :data="metricsData.databaseIns"
         :xData="metricsData.time"
-        :toolTipsExcludeZero="true"
-      />
+		:toolTipsExcludeZero="true"
+        :toolTipsSort="'desc'"      />
     </my-card>
   </el-col>
   <el-col :span="8">
@@ -75,7 +75,7 @@
         :data="metricsData.databaseUpd"
         :xData="metricsData.time"
         :toolTipsExcludeZero="true"
-      />
+        :toolTipsSort="'desc'"      />
     </my-card>
   </el-col>
   <el-col :span="8">
@@ -93,7 +93,7 @@
         :data="metricsData.databaseDel"
         :xData="metricsData.time"
         :toolTipsExcludeZero="true"
-      />
+        :toolTipsSort="'desc'"      />
     </my-card>
   </el-col>
 </el-row>
@@ -116,7 +116,7 @@
         :data="metricsData.databaseReturn"
         :xData="metricsData.time"
         :toolTipsExcludeZero="true"
-      />
+        :toolTipsSort="'desc'"      />
     </my-card>
   </el-col>
   <el-col :span="8">
@@ -134,8 +134,7 @@
         :data="metricsData.databaseFecth"
         :xData="metricsData.time"
         :toolTipsExcludeZero="true"
-        :stack="true"
-      />
+        :toolTipsSort="'desc'"      />
     </my-card>
   </el-col>
   <el-col :span="8">
@@ -217,6 +216,7 @@ watch(
     clearInterval(timer.value);
     if (tabNow.value === tabKeys.InstanceMonitorInstanceOverload) {
       if (updateCounter.value.source === sourceType.value.INSTANCE) {
+        clearData();
         load();
       }
       if (updateCounter.value.source === sourceType.value.MANUALREFRESH) load();
@@ -235,6 +235,18 @@ watch(
   { immediate: false }
 );
 
+const clearData = () => {
+  metricsData.value.tps = [];
+  metricsData.value.qps = [];
+  metricsData.value.databaseIns = [];
+  metricsData.value.databaseUpd = [];
+  metricsData.value.databaseDel = [];
+  metricsData.value.databaseReturn = [];
+  metricsData.value.databaseFecth = [];
+  metricsData.value.bgwriter = [];
+  metricsData.value.time = [];
+}
+
 // load data
 const load = (checkTab?: boolean, checkRange?: boolean) => {
   if (!instanceId.value) return;
@@ -242,6 +254,9 @@ const load = (checkTab?: boolean, checkRange?: boolean) => {
 };
 const { data: indexData, run: requestData } = useRequest(getInstanceOverload, {
   manual: true,
+  onError: () => {
+    clearData()
+  }
 });
 watch(
   indexData,
@@ -310,7 +325,7 @@ watch(
         baseData.INSTANCE_DB_DATABASE_INS[key]?.forEach((element) => {
           tempData.push(toFixed(element))
         })
-        metricsData.value.databaseIns.push({ data: tempData, name: key })
+        metricsData.value.databaseIns.push({ data: tempData, name: key, areaStyle: {}, stack: "Total" })
       }
     }
 
@@ -321,7 +336,7 @@ watch(
         baseData.INSTANCE_DB_DATABASE_UPD[key]?.forEach((element) => {
           tempData.push(toFixed(element))
         })
-        metricsData.value.databaseUpd.push({ data: tempData, name: key })
+        metricsData.value.databaseUpd.push({ data: tempData, name: key, areaStyle: {}, stack: "Total" })
       }
     }
 
@@ -332,7 +347,7 @@ watch(
         baseData.INSTANCE_DB_DATABASE_DEL[key]?.forEach((element) => {
           tempData.push(toFixed(element))
         })
-        metricsData.value.databaseDel.push({ data: tempData, name: key })
+        metricsData.value.databaseDel.push({ data: tempData, name: key, areaStyle: {}, stack: "Total" })
       }
     }
 
@@ -343,7 +358,7 @@ watch(
         baseData.INSTANCE_DB_DATABASE_RETURN[key]?.forEach((element) => {
           tempData.push(toFixed(element))
         })
-        metricsData.value.databaseReturn.push({ data: tempData, name: key })
+        metricsData.value.databaseReturn.push({ data: tempData, name: key, areaStyle: {}, stack: "Total" })
       }
     }
 
@@ -354,7 +369,7 @@ watch(
         baseData.INSTANCE_DB_DATABASE_FECTH[key]?.forEach((element) => {
           tempData.push(toFixed(element))
         })
-        metricsData.value.databaseFecth.push({ data: tempData, name: key })
+        metricsData.value.databaseFecth.push({ data: tempData, name: key, areaStyle: {}, stack: "Total" })
       }
     }
 

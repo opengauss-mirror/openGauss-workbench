@@ -24,6 +24,7 @@
 
 package com.nctigba.observability.instance.service.impl;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nctigba.observability.instance.model.entity.AgentNodeRelationDO;
 import com.nctigba.observability.instance.mapper.AgentNodeRelationMapper;
@@ -36,6 +37,7 @@ import org.springframework.stereotype.Service;
  * @since 2023-11-24
  */
 @Service
+@DS("embedded")
 public class AgentNodeRelationServiceImpl
         extends ServiceImpl<AgentNodeRelationMapper, AgentNodeRelationDO>
         implements AgentNodeRelationService {

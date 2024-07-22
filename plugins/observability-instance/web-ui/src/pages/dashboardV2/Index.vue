@@ -3,7 +3,7 @@
     <el-container>
       <el-aside :width="isCollapse ? '0px' : '310px'">
         <div style="height: 13px"></div>
-        <Install style="margin-right: 10px" @isUninstallAgent="isUninstallAgent"/>
+        <Install ref="installRef" style="margin-right: 10px" @isUninstallAgent="isUninstallAgent" @afterInstallAgent="afterInstallAgent"/>
       </el-aside>
       <el-main style="position: relative; padding-top: 0px" class="padding-fix">
         <div class="page-header" style="padding-left: 20px">
@@ -12,9 +12,11 @@
           <div class="seperator"></div>
           <div class="cluster-title">{{ $t('instanceMonitor.clusterTitle') }}</div>
 
-          <el-cascader v-model="clusterNodeId" :options="clusterList" />
-          <svg-icon class="info-hollow" name="info-hollow" style="margin-left: 4px" @click="showInfo" />
-          <div style="position: relative" v-if="visible">
+          <el-cascader v-model="clusterNodeId" :options="clusterList" style="width: 280px"
+           :class="{'cascader-err': selectInstanceTip}" @visible-change="updateClusterList"/>
+          <span ref="infoHollow"><svg-icon v-if="clusterNodeId" class="info-hollow" name="info-hollow" style="margin-left: 4px" @click="showInfo" /></span>
+          <!-- <span class="msg-err" v-if="selectInstanceTip">{{selectInstanceTip}}</span> -->
+          <div style="position: fixed;z-index: 9999" :style='{"left": infoLeft}' v-if="visible">
             <div class="instance-info">
               <div class="title-row">
                 <div class="title">{{ $t('instanceMonitor.nodeInfo.instanceInfo') }}</div>
@@ -140,12 +142,19 @@
         </el-tabs>
       </el-main>
     </el-container>
+    <div class="el-message" v-if="isShowMsg" style="top: 40px; z-index: 2003;">
+      <i class="el-icon el-message__icon" style="color: #E6A23C" v-if="isShowWarn"><WarningFilled /></i>
+      <i class="el-icon el-message__icon" style="color: #F56C6C" v-if="isShowErr"><CircleCloseFilled /></i>
+      <p class="el-message__content">{{selectInstanceTip}}</p>
+      <i class="el-icon msg-closeBtn" v-if="isShowMsgClose" @click="isShowMsg = false"><Close /></i>
+      <e-link class="msg-btn" v-if="isShowMsgBtn" style="color: #F56C6C" @click="msgBtnClick">{{msgBtn}}</e-link>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Fold, Expand } from '@element-plus/icons-vue'
+import { Fold, Expand, WarningFilled, Close, CircleCloseFilled } from '@element-plus/icons-vue'
 import { storeToRefs } from 'pinia'
 import { useMonitorStore } from '@/store/monitor'
 import PerformanceLoad from '@/pages/dashboardV2/performanceLoad/Index.vue'
@@ -161,7 +170,8 @@ import SystemConfiguration from '@/pages/dashboardV2/systemConfiguration/Index.v
 import CollectionConfig from '@/pages/dashboardV2/collectConfig/Index.vue'
 import { tabKeys } from '@/pages/dashboardV2/common'
 import { uuid } from '@/shared'
-import { getNodeInfo } from '@/api/observability'
+import { getNodeInfo, isExistAgentForInstance } from '@/api/observability'
+import { ElMessage } from 'element-plus'
 import moment from 'moment'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
@@ -173,8 +183,9 @@ type Res =
       }
     ]
   | undefined
-
+const installRef = ref(null)
 const clusterNodeId = ref()
+const selectInstanceTip=ref<string>('')
 const clusterList = ref<Array<any>>([])
 const nodeVersion = ref<string>('')
 const lastNodeId = ref<string>('')
@@ -190,9 +201,27 @@ const { instanceId } = storeToRefs(useMonitorStore(tabId))
 
 const router = useRouter()
 const tabKeyLoaded = ref<Array<string>>([])
+const infoHollow = ref(null)
 const visible = ref(false)
+const infoLeft = ref<string>('')
+const elMsg = ref()
+const isShowMsg = ref<boolean>(false)
+const isShowWarn = ref<boolean>(false)
+const isShowErr = ref<boolean>(false)
+const isShowMsgClose = ref<boolean>(false)
+const isShowMsgBtn = ref<boolean>(false)
+const msgBtn = ref<string>('')
+const timer = ref<any>(null)
 onMounted(() => {
   dashboardTabKey.value = tabKeys.Home
+  if (!clusterNodeId.value) {
+    selectInstanceTip.value = t('instanceMonitor.selectInstance')
+    isShowMsg.value = true
+    isShowWarn.value = true
+    isShowErr.value = false
+    isShowMsgClose.value = true
+    isShowMsgBtn.value = false
+  }
 })
 const toChangeCluster = (publicIp: string, port: string) => {
   for (let p1 = 0; p1 < clusterList.value.length; p1++) {
@@ -226,7 +255,7 @@ watch(dashboardTabKey, (v) => {
 })
 
 // get cluster data
-const { data: opsClusterData } = useRequest(() => ogRequest.get('/observability/v1/topsql/cluster'), { manual: false })
+const { data: opsClusterData, run: getOpsClusterDatas } = useRequest(() => ogRequest.get('/observability/v1/topsql/cluster'), { manual: true })
 watch(opsClusterData, (res: Res) => {
   if (res && Object.keys(res).length) {
     clusterList.value = treeTransform(res)
@@ -234,21 +263,34 @@ watch(opsClusterData, (res: Res) => {
     nextTick(() => {
       let paramsId = router.currentRoute.value.query.nodeId as string
       let nodeId = window.$wujie?.props.data.nodeId as string
-      if (nodeId) toChangeClusterByNodeId(nodeId)
-      else toChangeClusterByNodeId(paramsId)
+      if (nodeId) toChangeClusterByNodeId(nodeId);
+      else if (paramsId) toChangeClusterByNodeId(paramsId); 
     })
   }
 })
 
 // cluster changed
-watch(clusterNodeId, (res) => {
+watch(clusterNodeId, (res, old) => {
+  selectInstanceTip.value = ''
   visible.value = false
   // getInstanceId
   let curInstanceId = instanceId.value
   if (typeof res === 'string') {
     curInstanceId = res
+    isShowMsg.value = false
   } else if (Array.isArray(res) && res.length > 0) {
     curInstanceId = res[res.length - 1]
+    isShowMsg.value = false
+  } else {
+    selectInstanceTip.value = t('instanceMonitor.selectInstance')
+    isShowMsg.value = true
+    isShowWarn.value = true
+    isShowErr.value = false
+    isShowMsgClose.value = true
+    isShowMsgBtn.value = false
+  }
+  if (timer.value) {
+    clearTimeout(timer.value)
   }
 
   // store new InstanceId to a temp
@@ -271,11 +313,18 @@ watch(clusterNodeId, (res) => {
     }
   }
   useMonitorStore(tabId).updateInstanceAndClusterId(curInstanceId, clusterId, obj)
+  checkAgentInstanceRel()
 })
 
 const isCollapse = ref(true)
 const toggleCollapse = () => {
   isCollapse.value = !isCollapse.value
+  if (visible.value) {
+    nextTick(() => {
+      let position = infoHollow.value.getBoundingClientRect()
+      infoLeft.value = (position.left + position.width ) + 'px'
+    })
+  }
 }
 
 const goto = (key: string, param: object) => {
@@ -307,9 +356,9 @@ const treeTransform = (arr: any) => {
   if (arr instanceof Array) {
     arr.forEach((item) => {
       // init current cluster node
-      if (item.nodeId && item.nodeId === instanceId.value) {
-        clusterNodeId.value = instanceId.value
-      }
+      // if (item.nodeId && item.nodeId === instanceId.value) {
+      //   clusterNodeId.value = instanceId.value
+      // }
       obj.push({
         label: item.clusterId
           ? item.clusterId
@@ -329,6 +378,9 @@ const treeTransform = (arr: any) => {
 const showInfo = () => {
   if (!clusterNodeId.value) return
   visible.value = !visible.value
+  if (!visible.value) return
+  let position = infoHollow.value.getBoundingClientRect()
+  infoLeft.value = (position.left + position.width ) + 'px'
   loadNodeInfo(tabId)
 }
 const { data: nodeInfoData, run: loadNodeInfo, loading } = useRequest(getNodeInfo, { manual: true })
@@ -341,6 +393,53 @@ const isUninstallAgent = () => {
     })
     isCollapse.value = false
 }
+const afterInstallAgent = () => {
+  checkAgentInstanceRel()
+}
+const checkAgentInstanceRel = () => {
+  if (!clusterNodeId.value) {
+    return;
+  }
+  isExistAgentForInstance(tabId).then(res => {
+    if (res === 0) {
+      selectInstanceTip.value = ''
+      if (timer.value) {
+        clearTimeout(timer.value)
+      }
+    } else if (res === 1){
+      selectInstanceTip.value = t('instanceMonitor.selectInstanceWithoutAgent')
+      msgBtn.value = t('instanceMonitor.toInstall')
+      isShowMsg.value = true
+      isShowWarn.value = false
+      isShowErr.value = true
+      isShowMsgClose.value = false
+      isShowMsgBtn.value = true
+      if (timer.value) {
+        clearTimeout(timer.value)
+      }
+    } else if (res === 2) {
+      selectInstanceTip.value = t('instanceMonitor.selectInstanceInErrAgent')
+      isShowMsg.value = true
+      isShowWarn.value = false
+      isShowErr.value = true
+      isShowMsgClose.value = false
+      isShowMsgBtn.value = false
+      timer.value = setTimeout(() => {
+        isShowMsg.value = false
+      }, 5000)
+    }
+  })
+}
+const msgBtnClick = () => {
+  isShowMsg.value = false
+  isCollapse.value = false
+  installRef.value.showInstallCollector(instanceId.value)
+}
+const updateClusterList = (isShow: boolean) => {
+  if (isShow) {
+    getOpsClusterDatas()
+  }
+}
 </script>
 
 <style scoped lang="scss">
@@ -350,6 +449,17 @@ const isUninstallAgent = () => {
   padding-right: 9px;
   padding-bottom: 0px;
 }
+
+:deep .cascader-err .el-input__wrapper {
+  box-shadow: 0 0 1px 1px var(--el-color-danger) inset !important;
+}
+
+.msg-err {
+    color: var(--el-color-danger);
+    font-size: 12px;
+    line-height: 1;
+    margin-left: 4px;
+  }
 
 .min-height {
   min-height: 500px !important;
@@ -373,7 +483,7 @@ const isUninstallAgent = () => {
     flex-shrink: 0;
     border-radius: 2px 2px 0px 0px;
     border-bottom: 1px solid var(--unnamed, #d9d9d9);
-    background: var(--fill, #f7f7f7);
+    background: var(--background-color-2);
     .title {
       font-size: 14px;
       font-weight: 500;
@@ -396,6 +506,23 @@ const isUninstallAgent = () => {
     font-weight: 400;
     line-height: 29px;
     padding: 12px 24px;
+    background: var(--background-color-1);
+  }
+}
+:deep .el-message {
+  background-color: var(--background-color-1)
+}
+.el-message {
+  .msg-closeBtn {
+    color: var(--el-message-close-icon-color);
+    font-size: var(--el-message-close-size);
+    cursor: pointer;
+    margin-left: 15px;
+  }
+  .msg-btn {
+    font-size: 14px;
+    cursor: pointer;
+    margin-left: 15px;
   }
 }
 </style>

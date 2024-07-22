@@ -281,6 +281,7 @@ const {
 const timer = ref<number>();
 onMounted(() => {
   isLinkage.value = isChartLinkage.value
+  if (!instanceId.value) return;
   load();
   loadTOPCPUProcessNow(props.tabId);
 });
@@ -291,6 +292,9 @@ watch(
     clearInterval(timer.value);
     if (tabNow.value === tabKeys.ResourceMonitorCPU) {
       if (updateCounter.value.source === sourceType.value.INSTANCE) {
+        clearData()
+        clearTopCpuData()
+        if (!instanceId.value) return;
         load();
         loadTOPCPUProcessNow(props.tabId);
       }
@@ -311,6 +315,18 @@ watch(
   { immediate: false }
 );
 
+const clearData = () => {
+  metricsData.value.cpu = [];
+  metricsData.value.cpuPayload = [];
+  metricsData.value.time = ['0']
+}
+
+const clearTopCpuData = () => {
+  topCPUProcessNowData.value = [];
+  topCPUDBThreadNowData.value = [];
+  innerRefreshDoneTime.value = ''
+}
+
 // load data
 const load = (checkTab?: boolean, checkRange?: boolean) => {
   if (!instanceId.value) return;
@@ -323,15 +339,15 @@ const rowClassName = ({ row }: { row: any }) => {
   }
   return "";
 };
-const { data: indexData, run: requestData } = useRequest(getCPUMetrics, { manual: true });
+const { data: indexData, run: requestData } = useRequest(getCPUMetrics, { manual: true, onError: () => {
+  clearData()
+  } });
 watch(
   indexData,
   () => {
     // clear data
     metricsData.value.cpu = [];
     metricsData.value.cpuPayload = [];
-    cpuUseInfo.value.option = [];
-    cpuLoadInfo.value.option = [];
 
     const baseData = indexData.value;
     if (!baseData) return;
@@ -345,10 +361,6 @@ watch(
         data: tempData,
         name: t("resourceMonitor.cpu.dbThread"),
       });
-      cpuUseInfo.value.option.push({
-        name: t("resourceMonitor.cpu.dbThread"),
-        value: t("resourceMonitor.cpu.dbThreadContent"),
-      });
     }
     {
       let tempData: string[] = [];
@@ -356,10 +368,6 @@ watch(
         tempData.push(toFixed(d));
       });
       metricsData.value.cpu.push({ data: tempData, name: "Total" });
-      cpuUseInfo.value.option.push({
-        name: "Total",
-        value: t("resourceMonitor.cpu.totalContent"),
-      });
     }
     {
       let tempData: string[] = [];
@@ -372,10 +380,6 @@ watch(
         stack: "Total",
         name: "User",
       });
-      cpuUseInfo.value.option.push({
-        name: "User",
-        value: t("resourceMonitor.cpu.userContent"),
-      });
     }
     {
       let tempData: string[] = [];
@@ -387,10 +391,6 @@ watch(
         areaStyle: {},
         stack: "Total",
         name: "System",
-      });
-      cpuUseInfo.value.option.push({
-        name: "System",
-        value: t("resourceMonitor.cpu.systemContent"),
       });
     }
     {
@@ -416,10 +416,6 @@ watch(
         stack: "Total",
         name: "Nice",
       });
-      cpuUseInfo.value.option.push({
-        name: "Nice",
-        value: t("resourceMonitor.cpu.niceContent"),
-      });
     }
     {
       let tempData: string[] = [];
@@ -431,10 +427,6 @@ watch(
         areaStyle: {},
         stack: "Total",
         name: "IRQ",
-      });
-      cpuUseInfo.value.option.push({
-        name: "IRQ",
-        value: t("resourceMonitor.cpu.irqContent"),
       });
     }
     {
@@ -448,10 +440,6 @@ watch(
         stack: "Total",
         name: "Soft IRQ",
       });
-      cpuUseInfo.value.option.push({
-        name: "Soft IRQ",
-        value: t("resourceMonitor.cpu.softirqContent"),
-      });
     }
     {
       let tempData: string[] = [];
@@ -463,10 +451,6 @@ watch(
         areaStyle: {},
         stack: "Total",
         name: "Steal",
-      });
-      cpuUseInfo.value.option.push({
-        name: "Steal",
-        value: t("resourceMonitor.cpu.stealContent"),
       });
     }
     {
@@ -480,10 +464,6 @@ watch(
         stack: "Total",
         name: "Idle",
       });
-      cpuUseInfo.value.option.push({
-        name: "Idle",
-        value: t("resourceMonitor.cpu.idleContent"),
-      });
     }
     {
       let tempData: string[] = [];
@@ -493,11 +473,7 @@ watch(
       metricsData.value.cpuPayload.push({
         data: tempData,
         name: t("resourceMonitor.cpu.total1mLoad"),
-      });
-      cpuLoadInfo.value.option.push({
-        name: t("resourceMonitor.cpu.total1mLoad"),
-        value: t("resourceMonitor.cpu.total1mLoadContent"),
-      });
+      })
     }
     {
       let tempData: string[] = [];
@@ -507,11 +483,7 @@ watch(
       metricsData.value.cpuPayload.push({
         data: tempData,
         name: t("resourceMonitor.cpu.total5mLoad"),
-      });
-      cpuLoadInfo.value.option.push({
-        name: t("resourceMonitor.cpu.total5mLoad"),
-        value: t("resourceMonitor.cpu.total5mLoadContent"),
-      });
+      })
     }
     {
       let tempData: string[] = [];
@@ -521,11 +493,7 @@ watch(
       metricsData.value.cpuPayload.push({
         data: tempData,
         name: t("resourceMonitor.cpu.total15mLoad"),
-      });
-      cpuLoadInfo.value.option.push({
-        name: t("resourceMonitor.cpu.total15mLoad"),
-        value: t("resourceMonitor.cpu.total15mLoadContent"),
-      });
+      })
     }
     {
       let tempData: string[] = [];
@@ -535,11 +503,7 @@ watch(
       metricsData.value.cpuPayload.push({
         data: tempData,
         name: t("resourceMonitor.cpu.coreNum"),
-      });
-      cpuLoadInfo.value.option.push({
-        name: t("resourceMonitor.cpu.coreNum"),
-        value: t("resourceMonitor.cpu.coreNumContent"),
-      });
+      })
     }
 
     metricsData.value.cpu = metricsData.value.cpu.sort((a, b) => {
@@ -563,7 +527,9 @@ watch(
 const {
   data: topCPUProcessNowResult,
   run: loadTOPCPUProcessNow,
-} = useRequest(getTOPCPUProcessNow, { manual: true });
+} = useRequest(getTOPCPUProcessNow, { manual: true, onError: () => {
+  clearTopCpuData()
+  } });
 watch(
   topCPUProcessNowResult,
   () => {
@@ -593,6 +559,7 @@ const updateTimerInner = () => {
   const timeInner = innerRefreshTime.value;
   timerInner.value = useIntervalTime(
     () => {
+      if (!instanceId.value) return;
       loadTOPCPUProcessNow(props.tabId);
     },
     computed(() => timeInner * 1000)
@@ -699,11 +666,50 @@ const download = (title: string, ref: any) => {
 
 const cpuUseInfo = ref<any>({
   title: t("app.lineOverview"),
-  option: [],
+  option: [{
+    name: t("resourceMonitor.cpu.dbThread"),
+    value: t("resourceMonitor.cpu.dbThreadContent"),
+  }, {
+    name: "Total",
+    value: t("resourceMonitor.cpu.totalContent"),
+  }, {
+        name: "User",
+        value: t("resourceMonitor.cpu.userContent"),
+  }, {
+        name: "System",
+        value: t("resourceMonitor.cpu.systemContent"),
+  }, {
+        name: "Nice",
+        value: t("resourceMonitor.cpu.niceContent"),
+  }, {
+        name: "IRQ",
+        value: t("resourceMonitor.cpu.irqContent"),
+  }, {
+        name: "Soft IRQ",
+        value: t("resourceMonitor.cpu.softirqContent"),
+  }, {
+        name: "Steal",
+        value: t("resourceMonitor.cpu.stealContent"),
+  }, {
+        name: "Idle",
+        value: t("resourceMonitor.cpu.idleContent"),
+  }],
 });
 const cpuLoadInfo = ref<any>({
   title: t("app.lineOverview"),
-  option: [],
+  option: [{
+    name: t("resourceMonitor.cpu.total1mLoad"),
+    value: t("resourceMonitor.cpu.total1mLoadContent"),
+  }, {
+    name: t("resourceMonitor.cpu.total5mLoad"),
+    value: t("resourceMonitor.cpu.total5mLoadContent"),
+  }, {
+        name: t("resourceMonitor.cpu.total15mLoad"),
+        value: t("resourceMonitor.cpu.total15mLoadContent"),
+  }, {
+        name: t("resourceMonitor.cpu.coreNum"),
+        value: t("resourceMonitor.cpu.coreNumContent"),
+  }],
 });
 
 const topThreadInfo = ref<any>({

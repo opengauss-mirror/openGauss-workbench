@@ -65,6 +65,10 @@ export default {
     index: 'Home',
     resourceMonitor: 'Resource Monitor',
     thisInstance: ',Current Instance',
+    selectInstance: 'Please select an instance',
+    selectInstanceWithoutAgent: 'If the collection agent is not installed, some instance monitoring data will be empty!',
+    toInstall: 'Go to install',
+    selectInstanceInErrAgent: 'The collection agent is experiencing an abnormal status; as a result, monitoring data for some instances will be missing.',
     asp: {
       sampleActiveSessionCount: 'Sample Active Session Count',
       aspAnalysis: 'ASP Analysis',
@@ -306,7 +310,7 @@ export default {
       errOut: 'NIC Packet Error Quantity(Outgoing)',
       connection: 'Network Socket Connection Information',
       tcpQty: 'Number of TCP Sockets',
-      UDPQty: 'Number of UDP Sockets',
+      udpQty: 'Number of UDP Sockets',
       card: 'NIC Transmission Statistics',
       inContent: 'Display the incoming traffic in bytes per second for each network interface',
       outContent: 'Display the outgoing traffic in bytes per second for each network interface',
@@ -655,6 +659,7 @@ export default {
       'select install user please',
     ],
     tip: 'Tip',
+    delInstanceTip: 'The proxy must retain at least one monitoring target. If monitoring is not required, please uninstall the proxy.',
   },
   configParam: {
     tabTitle: 'system && database configuration',

@@ -539,7 +539,10 @@ watch(
     isLinkage.value = isChartLinkage.value
     clearInterval(timer.value);
     if (tabNow.value === tabKeys.ResourceMonitorIO) {
-      if (updateCounter.value.source === sourceType.value.INSTANCE) load();
+      if (updateCounter.value.source === sourceType.value.INSTANCE) {
+        clearData();
+        load();
+      }
       if (updateCounter.value.source === sourceType.value.MANUALREFRESH) load();
       if (updateCounter.value.source === sourceType.value.TIMETYPE) load();
       if (updateCounter.value.source === sourceType.value.TIMERANGE) load();
@@ -560,12 +563,35 @@ const getWidth = computed(() => {
   return spanParams.values[3] + '%';
 });
 
+const clearData = () => {
+  metricsData.value.iops = [];
+  metricsData.value.rw = [];
+  metricsData.value.queueLenth = [];
+  metricsData.value.ioUse = [];
+  metricsData.value.ioTime = [];
+  metricsData.value.ioDiskUsage = [];
+  metricsData.value.ioDiskInodeUsage = [];
+  metricsData.value.dbDiskUsage = [];
+  metricsData.value.dbVolume = [];
+  metricsData.value.dbDiskTitle = '';
+  metricsData.value.xLogDiskUsage = [];
+  metricsData.value.xLogVolume = [];
+  metricsData.value.xLogDiskTitle = '';
+  metricsData.value.xLogShouldShow = false;
+  metricsData.value.dbChartContent = [];
+  metricsData.value.xLogChartContent = [];
+  metricsData.value.table = [];
+  metricsData.value.time = ['0']
+}
+
 // load data
 const load = (checkTab?: boolean, checkRange?: boolean) => {
   if (!instanceId.value) return;
   requestData(props.tabId);
 };
-const { data: indexData, run: requestData } = useRequest(getIOMetrics, { manual: true });
+const { data: indexData, run: requestData } = useRequest(getIOMetrics, { manual: true, onError: () => {
+  clearData()
+  } });
 watch(
   indexData,
   () => {

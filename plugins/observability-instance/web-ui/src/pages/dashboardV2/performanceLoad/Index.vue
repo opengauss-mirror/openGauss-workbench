@@ -693,7 +693,7 @@ const load = (checkTab?: boolean, checkRange?: boolean) => {
   if (!instanceId.value) return
   requestData(props.tabId)
 }
-const { data: indexData, run: requestData } = useRequest(getIndexMetrics, { manual: true })
+const { data: indexData, run: requestData } = useRequest(getIndexMetrics, { manual: true, onError: () => clearData() })
 watch(
   indexData,
   () => {
@@ -827,7 +827,8 @@ watch(
   },
   { deep: true }
 )
-const { data: topSQLNowData, run: loadTopSQL } = useRequest(getTOPSQLNow, { manual: true })
+const { data: topSQLNowData, run: loadTopSQL } = useRequest(getTOPSQLNow, { manual: true, onError: () => clearTopSqlData() 
+})
 watch(
   topSQLNowData,
   () => {
@@ -896,6 +897,9 @@ watch(
     clearInterval(timerInner.value)
     if (tabNow.value === tabKeys.Home) {
       if (updateCounter.value.source === sourceType.value.INSTANCE) {
+        clearData()
+        clearTopSqlData()
+        if (!instanceId.value) return;
         load()
         loadTopSQL(props.tabId)
       }
@@ -924,6 +928,31 @@ watch(instanceId, () => {
     fieldValue: '',
   }
 })
+
+const clearData = () => {
+  metricsData.value.cpu = []
+  metricsData.value.memory = []
+  metricsData.value.network = []
+  metricsData.value.io = []
+  metricsData.value.swap = []
+  metricsData.value.session = []
+  metricsData.value.sessionQty = []
+  metricsData.value.waitEvents = []
+  metricsData.value.time = ['0']
+}
+
+const clearTopSqlData = () => {
+  topSQLData.value = []
+  blockSessionTable.value = []
+  transTable.value = []
+  transTotal.value = 0
+  waitEventTable.value = []
+  waitEventTotal.value = 0
+  waitEventTableSrc.value = []
+  waitStatusList.value = []
+  waitEventList.value = []
+  innerRefreshDoneTime.value = ''
+}
 
 const changeWaitEventForm = () => {
   waitEventTable.value = waitEventTableSrc.value.filter(item => {

@@ -83,4 +83,9 @@ public class CommonConstants {
      * Check if the directory exists
      */
     public static final String DIRECTORY_IS_EXIST = "[ -e %s ] && echo 'true' || echo 'false'";
+
+    /**
+     * HTTP_TIMEOUT ms
+     */
+    public static final Integer HTTP_TIMEOUT = 3000;
 }

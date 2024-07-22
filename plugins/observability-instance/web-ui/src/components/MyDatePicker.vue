@@ -12,6 +12,7 @@
         :end-placeholder="$t('app.endTime')"
         :disabled="props.disabled"
         :teleported="false"
+        :clearable="false"
     />
 </template>
 

@@ -43,6 +43,7 @@ import com.nctigba.observability.instance.service.ExporterInstallService;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
@@ -159,6 +160,9 @@ public class EnvironmentController {
 
         // get agent host info
         List<OpsHostEntity> hosts = hostFacade.listAll();
+        // get related cluster
+        List<AgentNodeRelationDO> relations = agentNodeRelationService.list();
+        List<OpsClusterVO> clusters = clusterManager.getAllOpsCluster();
         result.forEach(installedAgentsVO -> {
             Optional<OpsHostEntity> host =
                     hosts.stream().filter(hostTemp -> hostTemp.getHostId().equals(installedAgentsVO.getHostId()))
@@ -167,30 +171,20 @@ public class EnvironmentController {
                 installedAgentsVO.setHostName(host.get().getName());
                 installedAgentsVO.setHostPublicIp(host.get().getPublicIp());
             }
-        });
-
-        // get related cluster
-        List<AgentNodeRelationDO> relations = agentNodeRelationService.list();
-        List<OpsClusterVO> clusters = clusterManager.getAllOpsCluster();
-        result.forEach(installedAgentsVO -> {
             List<String> agentRelatedNodeIds = relations.stream()
-                    .filter(relationTemp -> relationTemp.getEnvId().equals(installedAgentsVO.getId()))
-                    .map(z -> z.getNodeId()).collect(Collectors.toList());
-
+                .filter(relationTemp -> relationTemp.getEnvId().equals(installedAgentsVO.getId()))
+                .map(z -> z.getNodeId()).collect(Collectors.toList());
             List<OpsClusterVO> relatedClusters = clusters.stream()
-                    .filter(z -> z.getClusterNodes()
-                            .stream().anyMatch(node -> agentRelatedNodeIds.contains(node.getNodeId())))
-                    .collect(Collectors.toList());
-
-            // clear not related nodes
-            relatedClusters.forEach(cluster -> {
-                List relatedNodes = cluster.getClusterNodes().stream()
-                        .filter(node -> agentRelatedNodeIds.contains(node.getNodeId()))
-                        .collect(Collectors.toList());
-                cluster.setClusterNodes(relatedNodes);
-            });
-
-            installedAgentsVO.getClusters().addAll(relatedClusters);
+                .filter(z -> z.getClusterNodes()
+                    .stream().anyMatch(node -> agentRelatedNodeIds.contains(node.getNodeId())))
+                .map(z -> {
+                    List<OpsClusterNodeVO> nodeList = z.getClusterNodes().stream().filter(
+                        node -> agentRelatedNodeIds.contains(node.getNodeId())).collect(
+                        Collectors.toList());
+                    z.setClusterNodes(nodeList);
+                    return z;
+                }).collect(Collectors.toList());
+            installedAgentsVO.setClusters(relatedClusters);
         });
 
         // clear no cluster result

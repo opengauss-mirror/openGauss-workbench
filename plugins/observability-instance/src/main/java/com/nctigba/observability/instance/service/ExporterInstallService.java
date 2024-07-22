@@ -24,6 +24,7 @@
 package com.nctigba.observability.instance.service;
 
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.date.StopWatch;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.io.IoUtil;
@@ -33,6 +34,7 @@ import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.enums.AgentStatusEnum;
 import com.nctigba.observability.instance.model.dto.ExporterInstallDTO;
@@ -45,16 +47,21 @@ import com.nctigba.observability.instance.model.vo.AgentStatusVO;
 import com.nctigba.observability.instance.service.AbstractInstaller.Step.Status;
 import com.nctigba.observability.instance.util.CommonUtils;
 import com.nctigba.observability.instance.util.DownloadUtils;
+import com.nctigba.observability.instance.util.MessageSourceUtils;
 import com.nctigba.observability.instance.util.SshSessionUtils;
 import com.nctigba.observability.instance.util.SshSessionUtils.command;
 import com.nctigba.observability.instance.util.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
+import org.opengauss.admin.system.service.ops.IOpsClusterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -100,6 +107,12 @@ public class ExporterInstallService extends AbstractInstaller {
     AgentService agentService;
     @Autowired
     PrometheusService prometheusService;
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private IOpsClusterNodeService opsClusterNodeService;
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private IOpsClusterService clusterService;
 
     /**
      * install
@@ -133,6 +146,9 @@ public class ExporterInstallService extends AbstractInstaller {
         }
         NctigbaEnvDO expEnv = null;
         try {
+            if (exporterInstallDTO.getHttpPort() <= 1024) {
+                throw new CustomException("The port number must be greater than 1024.");
+            }
             // check nodeId,check node db install user
             // check prometheus
             List<NctigbaEnvDO> promEnvList = envMapper.selectList(
@@ -168,11 +184,59 @@ public class ExporterInstallService extends AbstractInstaller {
                             .eq(NctigbaEnvDO::getType, envType.EXPORTER).eq(NctigbaEnvDO::getPort, httpPort));
                     if (expEnvs.size() > 0) {
                         throw new CustomException("exporter exists which has same host and port!");
-                    } else {
-                        expEnv = new NctigbaEnvDO().setHostid(exporterInstallDTO.getHostId()).setPort(httpPort)
-                            .setUsername(exporterInstallDTO.getUsername()).setType(envType.EXPORTER)
-                            .setPath(path);
                     }
+                    List<AgentNodeRelationDO> relList =
+                        agentNodeRelationService.list(Wrappers.<AgentNodeRelationDO>lambdaQuery()
+                            .in(AgentNodeRelationDO::getNodeId, exporterInstallDTO.getNodeIds()));
+                    List<OpsClusterNodeEntity> clusterNodes = null;
+                    List<NctigbaEnvDO> expEnvList = null;
+                    Map<String, List<String>> envNodeMap = new HashMap<>();
+                    if (CollectionUtil.isNotEmpty(relList)) {
+                        List<String> nodeIds = new ArrayList<>();
+                        List<String> expEnvIds = new ArrayList<>();
+                        relList.forEach(item -> {
+                            if (CollectionUtil.isEmpty(envNodeMap.get(item.getEnvId()))) {
+                                envNodeMap.put(item.getEnvId(), new ArrayList<>());
+                            }
+                            nodeIds.add(item.getNodeId());
+                            expEnvIds.add(item.getEnvId());
+                            envNodeMap.get(item.getEnvId()).add(item.getNodeId());
+                        });
+                        expEnvList = envMapper.selectBatchIds(expEnvIds);
+                        clusterNodes = opsClusterNodeService.listByIds(nodeIds);
+                    }
+                    if (CollectionUtil.isNotEmpty(expEnvList) && CollectionUtil.isNotEmpty(clusterNodes)) {
+                        sendMsg(Status.ERROR, "exporterinstall.repeat.tip1");
+                        StringBuilder errMsgBuilder = new StringBuilder();
+                        errMsgBuilder.append(MessageSourceUtils.get("exporterinstall.repeat.tip1")
+                            + System.lineSeparator());
+                        List<OpsClusterNodeEntity> clusterNodeTmps = clusterNodes;
+                        expEnvList.forEach(env -> {
+                            List<String> nodeIds = envNodeMap.get(env.getId());
+                            if (CollectionUtil.isEmpty(nodeIds)) {
+                                nodeIds = new ArrayList<>();
+                            }
+                            List<String> nodeIdTmps = nodeIds;
+                            OpsHostEntity envHost = hostFacade.getById(env.getHostid());
+                            String key = envHost.getPublicIp() + ":" + env.getPort();
+                            List<String> val =
+                                clusterNodeTmps.stream().filter(item -> nodeIdTmps.contains(item.getClusterNodeId()))
+                                    .map(item -> {
+                                        OpsHostEntity host = hostFacade.getById(item.getHostId());
+                                OpsClusterEntity cluster = clusterService.getById(item.getClusterId());
+                                return host.getPublicIp() +  ":" + cluster.getPort();
+                            }).collect(Collectors.toList());
+                            sendMsg(Status.ERROR, "exporterinstall.repeat.tip2", key, val);
+                            errMsgBuilder.append(MessageSourceUtils.get("exporterinstall.repeat.tip2", key, val)
+                                + System.lineSeparator());
+                        });
+                        sendMsg(Status.ERROR, "exporterinstall.repeat.tip3");
+                        errMsgBuilder.append(MessageSourceUtils.get("exporterinstall.repeat.tip3"));
+                        return AjaxResult.error(errMsgBuilder.toString());
+                    }
+                    expEnv = new NctigbaEnvDO().setHostid(exporterInstallDTO.getHostId()).setPort(httpPort)
+                        .setUsername(exporterInstallDTO.getUsername()).setType(envType.EXPORTER)
+                        .setPath(path);
                 } else {
                     expEnv = envMapper.selectById(exporterInstallDTO.getEnvId());
                     if (expEnv == null) {
@@ -301,17 +365,27 @@ public class ExporterInstallService extends AbstractInstaller {
     }
 
     private void updateAgentNodeRel(String envId, List<String> nodeIds) {
-        // 1、clear all relation data
-        agentNodeRelationService.remove(
-            new LambdaQueryWrapper<AgentNodeRelationDO>()
-                .eq(AgentNodeRelationDO::getEnvId, envId));
-        // refresh prometheus by setting template
-        nodeIds.forEach(nodeId -> {
-            AgentNodeRelationDO agentNodeRelationDO = new AgentNodeRelationDO();
-            agentNodeRelationDO.setEnvId(envId);
-            agentNodeRelationDO.setNodeId(nodeId);
-            agentNodeRelationService.getBaseMapper().insert(agentNodeRelationDO);
-        });
+        List<AgentNodeRelationDO> list = agentNodeRelationService.list(
+            Wrappers.<AgentNodeRelationDO>lambdaQuery().eq(AgentNodeRelationDO::getEnvId, envId));
+        // delete old data
+        List<AgentNodeRelationDO> delList = list.stream().filter(item -> !nodeIds.contains(item.getNodeId())).collect(
+            Collectors.toList());
+        if (CollectionUtil.isNotEmpty(delList)) {
+            agentNodeRelationService.removeByIds(delList);
+        }
+
+        // add new data
+        List<String> oldNodeIds = list.stream().map(item -> item.getNodeId()).collect(Collectors.toList());
+        List<AgentNodeRelationDO> newNodeList =
+            nodeIds.stream().filter(item -> !oldNodeIds.contains(item)).map(nodeId -> {
+                AgentNodeRelationDO agentNodeRelationDO = new AgentNodeRelationDO();
+                agentNodeRelationDO.setEnvId(envId);
+                agentNodeRelationDO.setNodeId(nodeId);
+                return agentNodeRelationDO;
+            }).collect(Collectors.toList());
+        if (CollectionUtil.isNotEmpty(newNodeList)) {
+            newNodeList.forEach(item -> agentNodeRelationService.getBaseMapper().insert(item));
+        }
     }
 
     private List<Map<String, Object>> getExporterParams(List<String> nodeIds) {
@@ -476,6 +550,8 @@ public class ExporterInstallService extends AbstractInstaller {
         clearInstallFolder(exporterEnv);
         nextStep();
         envMapper.deleteById(envId);
+        agentNodeRelationService.remove(Wrappers.<AgentNodeRelationDO>lambdaQuery().eq(AgentNodeRelationDO::getEnvId,
+            envId));
         sendMsg(Status.DONE, "");
     }
 
@@ -547,11 +623,13 @@ public class ExporterInstallService extends AbstractInstaller {
     /**
      * monitorStatus
      */
-    @Scheduled(fixedDelay = CommonConstants.MONITOR_CYCLE, timeUnit = TimeUnit.SECONDS)
+    @Scheduled(fixedRate = CommonConstants.MONITOR_CYCLE, timeUnit = TimeUnit.SECONDS)
     public void monitorStatus() {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
         List<NctigbaEnvDO> envList = envMapper
             .selectList(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType,
-                NctigbaEnvDO.envType.EXPORTER.name()));
+                NctigbaEnvDO.envType.EXPORTER.name()).orderByDesc(NctigbaEnvDO::getStatus));
         envList.forEach(e -> {
             e.setHost(hostFacade.getById(e.getHostid()));
         });
@@ -574,19 +652,30 @@ public class ExporterInstallService extends AbstractInstaller {
                 AgentExceptionVO check = checkPidStatus(env);
                 if (!check.isUpStatus()) {
                     startExporter(env);
+                    checkHealthStatus(env);
                     prometheusService.incAgentAlloc(env);
+                } else {
+                    env.setStatus(getHealthStatus(env) ? AgentStatusEnum.NORMAL.getStatus()
+                        : AgentStatusEnum.ERROR_PROGRAM_UNHEALTHY.getStatus()).setUpdateTime(new Date());
+                    envMapper.updateById(env);
                 }
-                checkHealthStatus(env);
                 String status = env.getStatus();
-                if (AgentStatusEnum.NORMAL.equals(oldStatus) && !AgentStatusEnum.NORMAL.equals(status)) {
+                if (AgentStatusEnum.NORMAL.getStatus().equals(oldStatus)
+                    && !AgentStatusEnum.NORMAL.getStatus().equals(status)) {
                     prometheusService.decAgentAlloc(env);
                 }
-                if (!AgentStatusEnum.NORMAL.equals(oldStatus) && AgentStatusEnum.NORMAL.equals(status)) {
+                if (!AgentStatusEnum.NORMAL.getStatus().equals(oldStatus)
+                    && AgentStatusEnum.NORMAL.getStatus().equals(status)) {
                     prometheusService.incAgentAlloc(env);
                 }
-            } catch (CustomException e) {
-                log.error(e.getMessage());
+            } catch (Exception e) {
+                log.error("exporter at {} is exception: {} ", env.getPath(),e.getMessage());
             }
+        }
+        stopWatch.stop();
+        if (stopWatch.getTotalTimeSeconds() > CommonConstants.MONITOR_CYCLE) {
+            log.error("Exporter check status is over {}s, it takes {}s",
+                CommonConstants.MONITOR_CYCLE, stopWatch.getTotalTimeSeconds());
         }
     }
 
@@ -606,7 +695,7 @@ public class ExporterInstallService extends AbstractInstaller {
     }
 
     private void checkHealthStatus(NctigbaEnvDO env) {
-        for (int i = 0; i < 11; i++) {
+        for (int i = 0; i < 31; i++) {
             try {
                 Boolean isAlive = agentService.isAgentAlive(env.getHost().getPublicIp(), env.getPort().toString());
                 if (!isAlive) {
@@ -616,13 +705,21 @@ public class ExporterInstallService extends AbstractInstaller {
                 envMapper.updateById(env);
                 break;
             } catch (Exception e) {
-                ThreadUtil.sleep(3000L);
-                if (i == 10) {
+                if (i == 30) {
                     env.setStatus(AgentStatusEnum.ERROR_PROGRAM_UNHEALTHY.getStatus()).setUpdateTime(new Date());
                     envMapper.updateById(env);
                     throw new CustomException("Agent is unhealthy");
                 }
+                ThreadUtil.sleep(2000L);
             }
+        }
+    }
+
+    private boolean getHealthStatus(NctigbaEnvDO env) {
+        try {
+            return agentService.isAgentAlive(env.getHost().getPublicIp(), env.getPort().toString());
+        } catch (Exception e) {
+            return false;
         }
     }
 
@@ -647,7 +744,7 @@ public class ExporterInstallService extends AbstractInstaller {
             envMapper.updateById(env);
             String command = "cd " + env.getPath() + " && source /etc/profile && sh run_agent.sh start";
             session.executeNoWait(command);
-        } catch (IOException e) {
+        } catch (Exception e) {
             env.setStatus(AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus()).setUpdateTime(new Date());
             envMapper.updateById(env);
             throw new CustomException("exec failed:" + e.getMessage());
@@ -773,7 +870,7 @@ public class ExporterInstallService extends AbstractInstaller {
                 FileUtil.appendUtf8String(pid, pidFile);
                 session.upload(pidFile.getCanonicalPath(), env.getPath() + "/instance-exporter.pid");
             }
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             throw new CustomException(e.getMessage());
         }
     }

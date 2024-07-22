@@ -68,4 +68,3 @@ mybatis-plus:
   # 加载全局的配置文件
   configuration:
     mapUnderscoreToCamelCase: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

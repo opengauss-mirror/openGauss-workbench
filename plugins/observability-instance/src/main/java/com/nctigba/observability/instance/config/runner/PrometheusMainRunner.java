@@ -49,7 +49,7 @@ public class PrometheusMainRunner implements ApplicationRunner {
         try {
             prometheusService.installMainProm();
         } catch (Exception e) {
-            log.error(e.getMessage(), e);
+            log.error("The main install or update fail:{}, exception is {}", e.getMessage(), e);
         }
     }
 }

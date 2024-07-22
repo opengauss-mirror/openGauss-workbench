@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.nctigba.observability.instance.service.AgentService;
 import org.mybatis.spring.MyBatisSystemException;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -80,6 +81,8 @@ public class IndexController extends ControllerConfig {
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     @Autowired
     private EncryptionUtils encryptionUtils;
+    @Autowired
+    private AgentService agentService;
 
     private static final MetricsLine[] MAIN = {
             MetricsLine.CPU,
@@ -168,9 +171,17 @@ public class IndexController extends ControllerConfig {
             blockAndLongTxc.put("waitEvents", configMapper.waitEvents());
             blockAndLongTxc.put("waitEventTotal", configMapper.waitEventTotal());
             return AjaxResult.success(blockAndLongTxc);
-        } catch (MyBatisSystemException e) {
+        } catch (Exception e) {
             log.error("connection fail");
             return AjaxResult.error();
         }
+    }
+
+    @GetMapping("isExistAgentForInstance")
+    public AjaxResult isExistAgentForInstance(String id) {
+        if (StrUtil.isBlank(id)) {
+            return AjaxResult.success(1);
+        }
+        return AjaxResult.success(agentService.isExistAgentForInstance(id));
     }
 }

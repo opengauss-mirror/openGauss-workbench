@@ -65,7 +65,7 @@
               style="width: 300px; margin: 0 4px"
               v-model="formData.httpPort"
               :disabled="editing"
-              :min="0"
+              :min="1025"
               :max="65535"
               :controls="false"
             >
@@ -116,6 +116,7 @@ const props = withDefaults(
     editing?: boolean
     node?: any
     delNodeId?: String
+    addNodeId: String
   }>(),
   {}
 )
@@ -292,7 +293,8 @@ const basePath = ref<string>('')
 const getInstallPath = () => {
   restRequest.get(`/observability/v1/environment/basePath`).then((res) => {
     if (res) {
-      basePath.value = res + (res.endsWith('/') ? 'data' : '/data')
+      let path = decodeURIComponent(res)
+      basePath.value = path + (path.endsWith('/') ? 'data' : '/data')
       formData.path = basePath.value + '/agent/' + uuid()
     }
   })
@@ -301,8 +303,14 @@ const getInstallPath = () => {
 const machineRef = ref<any>(null)
 const nodeRef = ref<any>(null)
 onMounted(() => {
-  if (!props.editing) getInstallPath()
-  else {
+  if (!props.editing) {
+    getInstallPath()
+    if (props.addNodeId) {
+      nextTick(() => {
+        nodeRef.value.setNodeId(props.addNodeId)
+      })
+    }
+  } else {
     formData.envId = props.node?.id
     formData.path = props.node?.path
     formData.httpPort = props.node?.exporterPort
@@ -319,7 +327,6 @@ onMounted(() => {
           clusterAndNodeIds.push(clusterAndNodeId)
         })
       })
-      console.log('clusterAndNodeIds', clusterAndNodeIds)
       nodeRef.value.setNodeIds(clusterAndNodeIds)
     })
   }

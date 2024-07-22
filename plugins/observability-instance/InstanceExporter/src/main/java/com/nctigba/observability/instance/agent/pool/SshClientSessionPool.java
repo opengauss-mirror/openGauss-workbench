@@ -67,7 +67,7 @@ public class SshClientSessionPool {
         try {
             return Optional.ofNullable(pool.borrowObject());
         } catch (Exception e) {
-            log.error("Get ssh client session error!");
+            log.error("{} Get ssh client session error!", Thread.currentThread().getName());
             e.printStackTrace();
         }
         return Optional.empty();
