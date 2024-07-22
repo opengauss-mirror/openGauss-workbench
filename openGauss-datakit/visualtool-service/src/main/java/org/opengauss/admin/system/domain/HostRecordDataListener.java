@@ -26,6 +26,7 @@ import java.util.Set;
 public class HostRecordDataListener implements ReadListener<HostRecord> {
 
     private IHostService hostService;
+    private boolean headerChecked = false;
 
     public HostRecordDataListener() {
         hostService = new HostServiceImpl();
@@ -37,12 +38,16 @@ public class HostRecordDataListener implements ReadListener<HostRecord> {
 
     @Override
     public void invoke(HostRecord data, AnalysisContext context) {
+        if (!headerChecked) {
+            throw new IllegalArgumentException("Error parsing header.");
+        }
         log.info("Parsed a data record: {}", JSON.toJSONString(data));
 
     }
 
     @Override
     public void invokeHead(Map<Integer, ReadCellData<?>> headMap, AnalysisContext context) {
+        headerChecked = true;
         Set<Map.Entry<Integer, ReadCellData<?>>> entries = headMap.entrySet();
         if (!isHeaderValid(entries)) {
             throw new IllegalArgumentException("Error parsing header.");
