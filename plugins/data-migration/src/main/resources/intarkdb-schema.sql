@@ -282,6 +282,21 @@ COMMENT ON COLUMN "tb_migration_task_param"."param_desc" IS '参数说明';
 COMMENT ON COLUMN "tb_migration_task_param"."param_type" IS '参数类型；1：全局；2：个性化';
 COMMENT ON TABLE "tb_migration_task_param" IS '任务参数配置表';
 
+CREATE OR REPLACE FUNCTION add_migration_task_source_tables_field_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''tb_migration_task'' AND COLUMN_NAME = ''source_tables'' ) = 0
+THEN
+ALTER TABLE public.tb_migration_task ADD COLUMN source_tables VARCHAR;
+COMMENT ON COLUMN "public"."tb_migration_task"."source_tables" IS ''源端表'';
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_migration_task_source_tables_field_func();
+
+DROP FUNCTION add_migration_task_source_tables_field_func;
+
 CREATE TABLE IF NOT EXISTS "tb_migration_third_party_software_config" (
     "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "zk_port" varchar(50) ,
