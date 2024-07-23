@@ -111,7 +111,7 @@
         <template #columns>
           <a-table-column :title="$t('step1.index.5q091ixigro0')" data-index="sourceNodeName" :width="200" ellipsis tooltip></a-table-column>
           <a-table-column :title="$t('step1.index.5q091ixigug0')" data-index="sourceDBName" :width="200" ellipsis tooltip></a-table-column>
-          <a-table-column v-if="selectedTblColumn" :title="$t('数据表')" data-index="seletedTblNum" :width="150" ellipsis tooltip>
+          <a-table-column :title="$t('数据表')" data-index="seletedTblNum" :width="150" ellipsis tooltip>
             <template #cell="{ record }">
               <a-button v-if="record.sourceTables && record.sourceTables !== ''" @click="showTblList(record.sourceDBName, record.sourceTables)">{{ record.seletedTblNum }}</a-button>
               <p v-else>全部</p>
