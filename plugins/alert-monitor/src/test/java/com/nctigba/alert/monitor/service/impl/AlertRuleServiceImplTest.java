@@ -26,15 +26,15 @@ package com.nctigba.alert.monitor.service.impl;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.nctigba.alert.monitor.model.entity.AlertRuleDO;
-import com.nctigba.alert.monitor.model.entity.AlertRuleItemDO;
-import com.nctigba.alert.monitor.model.entity.AlertRuleItemExpSrcDO;
-import com.nctigba.alert.monitor.model.entity.AlertRuleItemSrcDO;
 import com.nctigba.alert.monitor.mapper.AlertRuleItemExpSrcMapper;
 import com.nctigba.alert.monitor.mapper.AlertRuleItemMapper;
 import com.nctigba.alert.monitor.mapper.AlertRuleItemSrcMapper;
 import com.nctigba.alert.monitor.mapper.AlertRuleMapper;
 import com.nctigba.alert.monitor.model.dto.AlertRuleParamDTO;
+import com.nctigba.alert.monitor.model.entity.AlertRuleDO;
+import com.nctigba.alert.monitor.model.entity.AlertRuleItemDO;
+import com.nctigba.alert.monitor.model.entity.AlertRuleItemExpSrcDO;
+import com.nctigba.alert.monitor.model.entity.AlertRuleItemSrcDO;
 import com.nctigba.alert.monitor.model.query.RuleQuery;
 import com.nctigba.alert.monitor.service.AlertRuleItemService;
 import com.nctigba.alert.monitor.util.MessageSourceUtils;
@@ -50,7 +50,9 @@ import org.mockito.Spy;
 import org.opengauss.admin.common.exception.ServiceException;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -118,7 +120,7 @@ public class AlertRuleServiceImplTest {
             when(baseMapper.selectPage(eq(page), any())).thenReturn(alertRulePage);
 
             AlertRuleItemDO ruleItem = new AlertRuleItemDO().setId(1L).setRuleId(1L).setAction("normal")
-                .setOperate(">=").setLimitValue("50").setRuleMark("A").setRuleExpName("cpu").setUnit("%");
+                .setOperate(">=").setLimitValue(new BigDecimal(50)).setRuleMark("A").setRuleExpName("cpu").setUnit("%");
             List<AlertRuleItemDO> alertRuleItemDOS = new ArrayList<>();
             alertRuleItemDOS.add(ruleItem);
             when(alertRuleItemMapper.selectList(any())).thenReturn(alertRuleItemDOS);
@@ -163,12 +165,12 @@ public class AlertRuleServiceImplTest {
         when(baseMapper.selectList(any())).thenReturn(alertRuleDOS);
 
         AlertRuleItemDO ruleItem1 = new AlertRuleItemDO().setId(1L).setRuleId(1L).setAction("normal")
-            .setOperate(">=").setLimitValue("50").setRuleMark("A").setRuleExpName("cpu").setUnit("%");
+            .setOperate(">=").setLimitValue(new BigDecimal(50)).setRuleMark("A").setRuleExpName("cpu").setUnit("%");
         List<AlertRuleItemDO> alertRuleItemDOS = new ArrayList<>();
         alertRuleItemDOS.add(ruleItem1);
         when(alertRuleItemMapper.selectList(any())).thenReturn(alertRuleItemDOS);
 
-        List<AlertRuleDO> ruleList = alertRuleService.getRuleList();
+        List<AlertRuleDO> ruleList = alertRuleService.getRuleList(Arrays.asList("index", "log"));
 
         verify(baseMapper, times(1)).selectList(any());
         verify(alertRuleItemMapper, times(1)).selectList(any());

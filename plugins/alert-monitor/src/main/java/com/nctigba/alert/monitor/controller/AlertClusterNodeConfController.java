@@ -23,6 +23,8 @@
 
 package com.nctigba.alert.monitor.controller;
 
+import cn.hutool.core.util.StrUtil;
+import com.nctigba.alert.monitor.constant.CommonConstants;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import com.nctigba.alert.monitor.model.dto.AlertClusterNodeConfDTO;
 import com.nctigba.alert.monitor.model.entity.AlertClusterNodeConfDO;
@@ -59,8 +61,8 @@ public class AlertClusterNodeConfController extends BaseController {
      * @return AjaxResult
      */
     @GetMapping
-    public AjaxResult getList() {
-        List<AlertClusterNodeConfDTO> list = alertClusterNodeConfService.getList();
+    public AjaxResult getList(@RequestParam String type) {
+        List<AlertClusterNodeConfDTO> list = alertClusterNodeConfService.getList(type);
         return AjaxResult.success(list);
     }
 
@@ -71,8 +73,12 @@ public class AlertClusterNodeConfController extends BaseController {
      * @return AjaxResult
      */
     @GetMapping("/clusterNode/{clusterNodeId}")
-    public AjaxResult getByClusterNodeId(@PathVariable String clusterNodeId) {
-        AlertClusterNodeConfDO alertClusterNodeConfDO = alertClusterNodeConfService.getByClusterNodeId(clusterNodeId);
+    public AjaxResult getByClusterNodeId(@PathVariable String clusterNodeId, @RequestParam String type) {
+        if (StrUtil.isBlank(type)) {
+            type = CommonConstants.INSTANCE;
+        }
+        AlertClusterNodeConfDO alertClusterNodeConfDO = alertClusterNodeConfService.getByClusterNodeId(clusterNodeId,
+            type);
         return AjaxResult.success(alertClusterNodeConfDO);
     }
 
@@ -108,8 +114,8 @@ public class AlertClusterNodeConfController extends BaseController {
      * @return AjaxResult
      */
     @DeleteMapping("/unbind")
-    public AjaxResult unbind(@RequestParam String clusterNodeIds) {
-        alertClusterNodeConfService.unbindByIds(clusterNodeIds);
+    public AjaxResult unbind(@RequestParam String clusterNodeIds, @RequestParam String type) {
+        alertClusterNodeConfService.unbindByIds(clusterNodeIds, type);
         return AjaxResult.success();
     }
 }

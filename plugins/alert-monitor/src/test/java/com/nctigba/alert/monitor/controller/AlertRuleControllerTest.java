@@ -24,10 +24,10 @@ package com.nctigba.alert.monitor.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nctigba.alert.monitor.constant.CommonConstants;
+import com.nctigba.alert.monitor.model.dto.AlertRuleParamDTO;
 import com.nctigba.alert.monitor.model.entity.AlertRuleDO;
 import com.nctigba.alert.monitor.model.entity.AlertRuleItemExpSrcDO;
 import com.nctigba.alert.monitor.model.entity.AlertRuleItemSrcDO;
-import com.nctigba.alert.monitor.model.dto.AlertRuleParamDTO;
 import com.nctigba.alert.monitor.model.query.RuleQuery;
 import com.nctigba.alert.monitor.service.AlertRuleService;
 import com.nctigba.alert.monitor.util.MessageSourceUtils;
@@ -43,6 +43,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -84,9 +85,9 @@ public class AlertRuleControllerTest {
     @Test
     public void testGetRuleList() {
         List<AlertRuleDO> list = new ArrayList<>();
-        when(alertRuleService.getRuleList()).thenReturn(list);
-        AjaxResult result = alertRuleController.getRuleList();
-        verify(alertRuleService, times(1)).getRuleList();
+        when(alertRuleService.getRuleList(Arrays.asList("index", "log"))).thenReturn(list);
+        AjaxResult result = alertRuleController.getRuleList("index.log");
+        verify(alertRuleService, times(1)).getRuleList(Arrays.asList("index", "log"));
         assertEquals(list, result.get("data"));
     }
 

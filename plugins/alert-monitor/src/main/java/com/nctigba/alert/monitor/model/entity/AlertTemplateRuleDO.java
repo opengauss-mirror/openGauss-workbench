@@ -86,17 +86,17 @@ public class AlertTemplateRuleDO {
     @NotNull(groups = IndexRuleGroup.class)
     @EnumInteger(values = {0, 1})
     private Integer isRepeat;
-    @NotBlank
+    @NotBlank(groups = {IndexRuleGroup.class, LogRuleGroup.class})
     @EnumString(values = {CommonConstants.SECOND, CommonConstants.MINUTE, CommonConstants.HOUR, CommonConstants.DAY})
     private String notifyDurationUnit;
-    @NotNull
+    @NotNull(groups = {IndexRuleGroup.class, LogRuleGroup.class})
     private Integer notifyDuration;
     @NotBlank
     private String ruleContent;
-    @NotBlank
+    @NotBlank(groups = {IndexRuleGroup.class, LogRuleGroup.class})
     private String ruleExpComb;
     @NotBlank
-    @EnumString(values = {CommonConstants.LOG_RULE, CommonConstants.INDEX_RULE})
+    @EnumString(values = {CommonConstants.LOG_RULE, CommonConstants.INDEX_RULE, CommonConstants.PLUGIN_RULE})
     private String ruleType;
     @NotBlank
     @EnumString(values = {CommonConstants.SERIOUS, CommonConstants.WARN, CommonConstants.INFO})
@@ -127,9 +127,14 @@ public class AlertTemplateRuleDO {
     private Integer isDeleted;
     private Integer isIncluded;
     @Valid
-    @NotEmpty
+    @NotEmpty(groups = {IndexRuleGroup.class, LogRuleGroup.class})
     @TableField(exist = false)
     private List<AlertTemplateRuleItemDO> alertRuleItemList;
+
+    @NotBlank(groups = PluginRuleGroup.class)
+    private String pluginCode;
+    @NotBlank(groups = PluginRuleGroup.class)
+    private String ruleCode;
 
     /**
      * validate LogRule fields
@@ -147,5 +152,11 @@ public class AlertTemplateRuleDO {
      * validate Silence fields
      */
     public interface SilenceGroup {
+    }
+
+    /**
+     * validate Silence fields
+     */
+    public interface PluginRuleGroup {
     }
 }

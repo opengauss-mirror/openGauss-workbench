@@ -43,6 +43,8 @@ public class AlertClusterNodeAndTemplateQuery {
     private String clusterNodeIds;
     @NotBlank
     private String templateName;
+    @NotBlank
+    private String type;
 
     @NotNull
     @Valid

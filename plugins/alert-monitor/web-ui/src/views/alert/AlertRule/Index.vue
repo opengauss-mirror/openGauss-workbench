@@ -124,7 +124,7 @@ const page = reactive({
   pageSize: 10,
   total: 0,
 });
-const ruleTypeList = reactive(['index', 'log'])
+const ruleTypeList = reactive(['index', 'log', 'plugin'])
 const levelList = reactive(['serious', 'warn', 'info'])
 const formData = ref<any>({
   ruleName: '',
@@ -159,7 +159,7 @@ watch(ruleResult, (ruleResult: any) => {
 const showRuleExpDesc = (rule: any) => {
   const alertRuleItemList = rule.alertRuleItemList;
   if (!alertRuleItemList || alertRuleItemList.length === 0) {
-    return '';
+    return '/';
   }
 
   if (rule.ruleType === 'index') {
@@ -186,7 +186,7 @@ const showRuleExpDesc = (rule: any) => {
 
 const showRuleExpComb = (ruleExpComb: String) => {
   if (!ruleExpComb) {
-    return ''
+    return '/'
   }
   return ruleExpComb.split(' ').map((item: String) => {
     if (item === 'and' || item === 'or') {

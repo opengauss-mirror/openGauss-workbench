@@ -41,6 +41,8 @@ public class AlertTemplateQuery {
     private Long id;
     @NotBlank
     private String templateName;
+    @NotBlank
+    private String type;
 
     @Valid
     @NotNull

@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS "alert_rule" (
     "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "rule_name" varchar(50)  NOT NULL,
     "level" varchar(20)  NOT NULL,
-    "rule_type" varchar(20),
+    rule_type varchar(20),
     "rule_exp_comb" varchar(100),
     "rule_content" text,
     "notify_duration" int8,
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS "alert_rule" (
 COMMENT ON COLUMN "alert_rule"."id" IS '规则ID';
 COMMENT ON COLUMN "alert_rule"."rule_name" IS '规则名称';
 COMMENT ON COLUMN "alert_rule"."level" IS '告警等级，serous:严重，warn:警告，info:提示';
-COMMENT ON COLUMN "alert_rule"."rule_type" IS '规则类型，index为指标，log为日志';
+COMMENT ON COLUMN "alert_rule".rule_type IS '规则类型，index为指标，log为日志';
 COMMENT ON COLUMN "alert_rule"."rule_exp_comb" IS '组合表达式';
 COMMENT ON COLUMN "alert_rule"."rule_content" IS '规则内容';
 COMMENT ON COLUMN "alert_rule"."notify_duration" IS '统计周期，表示告警持续多久通知';
@@ -223,7 +223,7 @@ CREATE TABLE IF NOT EXISTS "alert_template_rule" (
     "rule_id" int8 NOT NULL,
     "rule_name" varchar(50)  NOT NULL,
     "level" varchar(20)  NOT NULL,
-    "rule_type" varchar(20),
+    rule_type varchar(20),
     "rule_exp_comb" varchar(100),
     "rule_content" text,
     "notify_duration" int8,
@@ -244,7 +244,7 @@ COMMENT ON COLUMN "alert_template_rule"."template_id" IS '模板ID';
 COMMENT ON COLUMN "alert_template_rule"."rule_id" IS '规则ID';
 COMMENT ON COLUMN "alert_template_rule"."rule_name" IS '规则名称';
 COMMENT ON COLUMN "alert_template_rule"."level" IS '告警等级，serous:严重，warn:警告，info:提示';
-COMMENT ON COLUMN "alert_template_rule"."rule_type" IS '规则类型，index为指标，log为日志';
+COMMENT ON COLUMN "alert_template_rule".rule_type IS '规则类型，index为指标，log为日志';
 COMMENT ON COLUMN "alert_template_rule"."rule_exp_comb" IS '组合表达式';
 COMMENT ON COLUMN "alert_template_rule"."rule_content" IS '规则内容';
 COMMENT ON COLUMN "alert_template_rule"."notify_duration" IS '通知评估时长，表示告警持续多久通知';
@@ -1419,3 +1419,47 @@ update notify_template set notify_content = '告警信息','告警时间：${ale
 create INDEX idx_alert_template_rule_template_id on alert_template_rule(template_id);
 create INDEX idx_alert_template_rule_item_template_rule_id on alert_template_rule_item(template_rule_id);
 create INDEX idx_alert_rule_item_rule_id on alert_rule_item(rule_id);
+
+-- 20240930
+ALTER TABLE alert_rule ADD COLUMN plugin_code varchar(100);
+ALTER TABLE alert_rule ADD COLUMN rule_code varchar(100);
+COMMENT ON COLUMN alert_rule.rule_type IS '规则类型，index为指标，log为日志, plugin为插件';
+COMMENT ON COLUMN alert_rule.plugin_code IS '插件标识';
+COMMENT ON COLUMN alert_rule.rule_code IS '规则标识';
+
+ALTER TABLE alert_template ADD COLUMN type varchar(100) default 'instance';
+COMMENT ON COLUMN alert_template_rule.type IS '模板类型，instance为实例，noninstance为非实例';
+update alert_template set type = 'instance' where type is null or type = '';
+
+ALTER TABLE alert_template_rule ADD COLUMN plugin_code varchar(100);
+ALTER TABLE alert_template_rule ADD COLUMN rule_code varchar(100);
+COMMENT ON COLUMN alert_template_rule.rule_type IS '规则类型，index为指标，log为日志, plugin为插件';
+COMMENT ON COLUMN alert_template_rule.plugin_code IS '插件标识';
+COMMENT ON COLUMN alert_template_rule.rule_code IS '规则标识';
+
+CREATE TABLE IF NOT EXISTS public.alert_plugin_info (
+	id int8 NOT NULL PRIMARY KEY,
+	name varchar(50) NOT NULL,
+	is_deleted int1 NULL DEFAULT 0,
+	create_time timestamp(6) NULL,
+	update_time timestamp(6) NULL
+);
+insert into alert_plugin_info(id, name, is_deleted, create_time) values (1, '非实例告警', 0, now());
+
+ALTER TABLE alert_cluster_node_conf add COLUMN type varchar(100) default 'instance';
+COMMENT ON COLUMN alert_cluster_node_conf.type IS '类型，instance为实例，noninstance为非实例';
+update alert_cluster_node_conf set type = 'instance' where type is null or type = '';
+
+ALTER TABLE alert_record ADD COLUMN type varchar(100) default 'instance';
+COMMENT ON COLUMN alert_record.type IS '类型，instance为实例，noninstance为非实例';
+update alert_record set type = 'instance' where type is null or type = '';
+ALTER TABLE alert_record ADD COLUMN ip varchar(100);
+ALTER TABLE alert_record ADD COLUMN port varchar(100);
+ALTER TABLE alert_record ADD COLUMN node_name varchar(200);
+
+ALTER TABLE alert_record_detail ADD COLUMN type varchar(100) default 'instance';
+COMMENT ON COLUMN alert_record_detail.type IS '类型，instance为实例，noninstance为非实例';
+update alert_record_detail set type = 'instance' where type is null or type = '';
+ALTER TABLE alert_record_detail ADD COLUMN ip varchar(100);
+ALTER TABLE alert_record_detail ADD COLUMN port varchar(100);
+ALTER TABLE alert_record_detail ADD COLUMN node_name varchar(200);

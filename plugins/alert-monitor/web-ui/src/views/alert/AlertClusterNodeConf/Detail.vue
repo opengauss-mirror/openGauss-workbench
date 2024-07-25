@@ -16,7 +16,7 @@
       </el-breadcrumb>
     </div>
     <el-form label-position="left" size="default" style="margin-top: 8px;">
-      <el-form-item style="margin-bottom: 10px !important;">
+      <el-form-item style="margin-bottom: 10px !important;" v-if="type === 'instance'">
         <span style="font-family: Source Han Sans CN;font-size: 14px;font-weight: bold;line-height: 22px;text-align: left;">{{$t('AlertClusterNodeConf.selectedInstance')}}：</span>
         <el-tag v-for="(item, index) in clusterNodeList0" :key="item.clusterNodeId" size="large" closable
           @close="closeTag(index)">{{ item.nodeName }}</el-tag>
@@ -37,6 +37,12 @@
                     </template>
                   </el-table-column>
                   <el-table-column prop="templateName" :label="$t('alertTemplate.table[0]')" />
+                  <el-table-column prop="type" :label="$t('alertTemplate.table[1]')">
+                    <template #default="scope">
+                      <div v-if="scope.row.type === 'instance'">{{ $t('app.instance') }}</div>
+                      <div v-if="scope.row.type === 'noninstance'">{{ $t('app.noninstance') }}</div>
+                    </template>
+                  </el-table-column>
                 </el-table>
               </div>
             </el-col>
@@ -191,9 +197,11 @@ const { t } = useI18n();
 
 const props = withDefaults(
   defineProps<{
+    type: string,
     clusterNodeList: any[],
   }>(),
   {
+    type: 'instance',
     clusterNodeList: () => [],
   }
 );
@@ -232,15 +240,15 @@ const closeTag = (index: number) => {
 }
 
 const { data: res, run: requestData } = useRequest(
-  (clusterNodeId) => {
-    return request.get(`/api/v1/alertClusterNodeConf/clusterNode/${clusterNodeId}`)
+  (clusterNodeId, type) => {
+    return request.get(`/api/v1/alertClusterNodeConf/clusterNode/${clusterNodeId}`, {type})
   },
   { manual: true }
 )
 
 const { data: templateRes, run: requestTemplateData } = useRequest(
-  () => {
-    return request.get("/api/v1/alertTemplate/list")
+  (type: string) => {
+    return request.get("/api/v1/alertTemplate/list", {type})
   },
   { manual: true }
 );
@@ -305,7 +313,7 @@ const getCurrentRow = (id: number) => {
 const showRuleExpDesc = (rule: any) => {
   const alertRuleItemList = rule.alertRuleItemList;
   if (!alertRuleItemList || alertRuleItemList.length === 0) {
-    return '';
+    return '/';
   }
 
   if (rule.ruleType === 'index') {
@@ -317,7 +325,6 @@ const showRuleExpDesc = (rule: any) => {
         let param = JSON.parse(ruleExpParam)
         paramStr = '(' + Object.keys(param).map((key: any) => param[key]).join(',') + ')'
       }
-      console.log(ruleItemSrc)
       let name = i18n.global.locale.value === 'zhCn' && ruleItemSrc && ruleItemSrc.nameZh ? ruleItemSrc.nameZh : (ruleItemSrc && ruleItemSrc.nameEn) ? ruleItemSrc.nameEn : ruleItemSrc ? t(`alertRule.${ruleItemSrc.name}`) : ''
       if (!item.operate || !item.limitValue) {
         return `[${item.ruleMark}]: ${name}`
@@ -333,7 +340,7 @@ const showRuleExpDesc = (rule: any) => {
 
 const showRuleExpComb = (ruleExpComb: String) => {
   if (!ruleExpComb) {
-    return ''
+    return '/'
   }
   return ruleExpComb.split(' ').map((item: String) => {
     if (item === 'and' || item === 'or') {
@@ -352,8 +359,14 @@ const showAlertNotify = (val: string) => {
 }
 
 const { data: ruleListRes, run: requestRuleList } = useRequest(
-  () => {
-    return request.get(`/api/v1/alertRule/ruleList`)
+  (type: string) => {
+    let ruleTypes = ''
+    if (type === 'noninstance') {
+      ruleTypes = 'plugin'
+    } else {
+      ruleTypes = 'index,log'
+    }
+    return request.get(`/api/v1/alertRule/ruleList`, { ruleTypes })
   },
   { manual: true }
 );
@@ -380,7 +393,8 @@ const confirm = () => {
     let clusterNodeIds = clusterNodeList0.value.map(item => item.clusterNodeId).join(',')
     let param = {
       clusterNodeIds,
-      templateId: currentId.value
+      templateId: currentId.value,
+      type: props.type,
     }
     loading.value = true
     request.post(`/api/v1/alertClusterNodeConf`, param).then((res: any) => {
@@ -441,6 +455,7 @@ const updateTemplateRuleSuccess = (templateRule: any) => {
       ruleTableDataList.value[i].silenceEndTime = templateRule.silenceEndTime
       ruleTableDataList.value[i].alertNotify = templateRule.alertNotify
       ruleTableDataList.value[i].notifyWayIds = templateRule.notifyWayIds
+      ruleTableDataList.value[i].alertRuleItemList = templateRule.alertRuleItemList
     }
   }
   showMain.value = true
@@ -473,6 +488,7 @@ const saveTemplateAndConfig = () => {
     templateName: templateName.value,
     templateRuleReqList,
     clusterNodeIds,
+    type: props.type,
   }
   loading.value = true
   request.post(`/api/v1/alertClusterNodeConf/alertTemplate`, param).then((res: any) => {
@@ -515,12 +531,14 @@ const requestRuleItemSrcList = () => {
 
 onMounted(() => {
   if (props.clusterNodeList && props.clusterNodeList.length === 1) {
-    requestData(props.clusterNodeList[0].clusterNodeId)
+    requestData(props.clusterNodeList[0].clusterNodeId, props.type)
   }
-  requestRuleItemSrcList()
+  if (props.type === 'instance') {
+    requestRuleItemSrcList()
+  }
   clusterNodeList0.value = props.clusterNodeList
-  requestTemplateData()
-  requestRuleList()
+  requestTemplateData(props.type)
+  requestRuleList(props.type)
 })
 
 </script>

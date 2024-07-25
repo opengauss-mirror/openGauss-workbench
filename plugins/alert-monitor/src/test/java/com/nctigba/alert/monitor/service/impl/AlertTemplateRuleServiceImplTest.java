@@ -42,6 +42,7 @@ import org.mockito.Spy;
 import org.opengauss.admin.common.exception.ServiceException;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -107,12 +108,12 @@ public class AlertTemplateRuleServiceImplTest {
     @Test
     public void testSaveIndexTemplateRule() {
         AlertTemplateRuleItemDO ruleItem = new AlertTemplateRuleItemDO().setId(1L).setTemplateRuleId(1L)
-            .setAction("normal").setOperate(">=").setLimitValue("50").setRuleMark("A").setRuleExpName("cpu")
+            .setAction("normal").setOperate(">=").setLimitValue(new BigDecimal(50)).setRuleMark("A").setRuleExpName("cpu")
             .setUnit("%");
         AlertTemplateRuleItemDO ruleItem2 = new AlertTemplateRuleItemDO().setTemplateRuleId(1L).setAction(
-            "normal").setOperate(">=").setLimitValue("50").setRuleMark("B").setRuleExpName("cpu").setUnit("");
+            "normal").setOperate(">=").setLimitValue(new BigDecimal(50)).setRuleMark("B").setRuleExpName("cpu").setUnit("");
         AlertTemplateRuleItemDO ruleItem3 = new AlertTemplateRuleItemDO().setId(3L).setTemplateRuleId(1L).setAction(
-            "normal").setOperate(">=").setLimitValue("50").setRuleMark("C").setRuleExpName("cpu").setUnit("");
+            "normal").setOperate(">=").setLimitValue(new BigDecimal(50)).setRuleMark("C").setRuleExpName("cpu").setUnit("");
         List<AlertTemplateRuleItemDO> templateRuleItemList = new ArrayList<>();
         templateRuleItemList.add(ruleItem);
         templateRuleItemList.add(ruleItem2);
@@ -136,12 +137,12 @@ public class AlertTemplateRuleServiceImplTest {
     @Test
     public void testSaveIndexTemplateRuleWithoutTemplateId() {
         AlertTemplateRuleItemDO ruleItem = new AlertTemplateRuleItemDO().setId(1L).setTemplateRuleId(1L)
-            .setAction("normal").setOperate(">=").setLimitValue("50").setRuleMark("A").setRuleExpName("cpu")
+            .setAction("normal").setOperate(">=").setLimitValue(new BigDecimal(50)).setRuleMark("A").setRuleExpName("cpu")
             .setUnit("%");
         AlertTemplateRuleItemDO ruleItem2 = new AlertTemplateRuleItemDO().setTemplateRuleId(1L).setAction(
-            "normal").setOperate(">=").setLimitValue("50").setRuleMark("B").setRuleExpName("cpu").setUnit("");
+            "normal").setOperate(">=").setLimitValue(new BigDecimal(50)).setRuleMark("B").setRuleExpName("cpu").setUnit("");
         AlertTemplateRuleItemDO ruleItem3 = new AlertTemplateRuleItemDO().setId(3L).setTemplateRuleId(1L).setAction(
-            "normal").setOperate(">=").setLimitValue("50").setRuleMark("C").setRuleExpName("cpu").setUnit("");
+            "normal").setOperate(">=").setLimitValue(new BigDecimal(50)).setRuleMark("C").setRuleExpName("cpu").setUnit("");
         List<AlertTemplateRuleItemDO> templateRuleItemList = new ArrayList<>();
         templateRuleItemList.add(ruleItem);
         templateRuleItemList.add(ruleItem2);

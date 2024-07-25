@@ -117,10 +117,10 @@ public class AlertRuleServiceImpl extends ServiceImpl<AlertRuleMapper, AlertRule
     }
 
     @Override
-    public List<AlertRuleDO> getRuleList() {
+    public List<AlertRuleDO> getRuleList(List<String> ruleTypes) {
         List<AlertRuleDO> alertRuleDOS =
-            this.baseMapper.selectList(Wrappers.<AlertRuleDO>lambdaQuery().eq(AlertRuleDO::getIsDeleted,
-                CommonConstants.IS_NOT_DELETE).orderByDesc(AlertRuleDO::getId));
+            this.baseMapper.selectList(Wrappers.<AlertRuleDO>lambdaQuery().in(AlertRuleDO::getRuleType, ruleTypes)
+                .eq(AlertRuleDO::getIsDeleted, CommonConstants.IS_NOT_DELETE).orderByDesc(AlertRuleDO::getId));
         List<Long> ruleIdList = alertRuleDOS.stream().map(item -> item.getId()).collect(Collectors.toList());
         List<AlertRuleItemDO> alertRuleItemDOS = alertRuleItemMapper.selectList(
             Wrappers.<AlertRuleItemDO>lambdaQuery().in(AlertRuleItemDO::getRuleId, ruleIdList).eq(
@@ -166,6 +166,9 @@ public class AlertRuleServiceImpl extends ServiceImpl<AlertRuleMapper, AlertRule
         AlertRuleDO alertRuleDO = new AlertRuleDO();
         BeanUtil.copyProperties(alertRule, alertRuleDO);
         this.saveOrUpdate(alertRuleDO);
+        if (CommonConstants.PLUGIN_RULE.equals(alertRule.getRuleType())) {
+            return;
+        }
         List<AlertRuleItemDO> ruleItemList = alertRuleDO.getAlertRuleItemList();
         // delete the old ruleItem
         List<Long> itemIdList = ruleItemList.stream().filter(item -> item.getRuleId() != null).map(
@@ -238,7 +241,7 @@ public class AlertRuleServiceImpl extends ServiceImpl<AlertRuleMapper, AlertRule
     public void delRuleById(Long id) {
         List<AlertTemplateRuleDO> list = templateRuleService.list(
             Wrappers.<AlertTemplateRuleDO>lambdaQuery().eq(AlertTemplateRuleDO::getIsDeleted,
-                CommonConstants.IS_NOT_DELETE).isNotNull(AlertTemplateRuleDO::getTemplateId)
+                    CommonConstants.IS_NOT_DELETE).isNotNull(AlertTemplateRuleDO::getTemplateId)
                 .eq(AlertTemplateRuleDO::getRuleId, id));
         if (CollectionUtil.isNotEmpty(list)) {
             throw new ServiceException(MessageSourceUtils.get("ruleIsUsed"));

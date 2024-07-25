@@ -88,4 +88,14 @@ public class CommonConstants {
      * HTTP_TIMEOUT ms
      */
     public static final Integer HTTP_TIMEOUT = 3000;
+
+    /**
+     * PLUGIN_CODE
+     */
+    public static final String PLUGIN_CODE = "observability-instance";
+
+    /**
+     * EXPORTER_EXCEPTION_STATUS
+     */
+    public static final String EXPORTER_EXCEPTION_STATUS = "exporter-exception-status";
 }

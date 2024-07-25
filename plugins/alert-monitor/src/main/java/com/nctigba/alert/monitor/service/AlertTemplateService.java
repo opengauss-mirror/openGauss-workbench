@@ -46,7 +46,7 @@ public interface AlertTemplateService extends IService<AlertTemplateDO> {
 
     AlertTemplateDO saveTemplate(AlertTemplateQuery templateReq);
 
-    List<AlertTemplateDO> getTemplateList();
+    List<AlertTemplateDO> getTemplateList(String type);
 
     List<AlertTemplateRuleDO> getTemplateRuleListById(Long templateId);
 

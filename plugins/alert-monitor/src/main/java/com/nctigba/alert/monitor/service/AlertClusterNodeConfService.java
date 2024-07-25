@@ -38,16 +38,16 @@ import java.util.List;
 public interface AlertClusterNodeConfService extends IService<AlertClusterNodeConfDO> {
     void saveClusterNodeConf(AlertClusterNodeConfQuery alertClusterNodeConfQuery);
 
-    AlertClusterNodeConfDO getByClusterNodeId(String clusterNodeId);
+    AlertClusterNodeConfDO getByClusterNodeId(String clusterNodeId, String type);
 
     void saveAlertTemplateAndConfig(AlertClusterNodeAndTemplateQuery clusterNodeAndTemplateReq);
 
-    List<AlertClusterNodeConfDTO> getList();
+    List<AlertClusterNodeConfDTO> getList(String type);
 
     /**
      * unbindByIds
      *
      * @param clusterNodeIds String
      */
-    void unbindByIds(String clusterNodeIds);
+    void unbindByIds(String clusterNodeIds, String type);
 }

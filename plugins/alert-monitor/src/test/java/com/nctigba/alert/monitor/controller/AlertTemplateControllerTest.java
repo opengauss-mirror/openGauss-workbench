@@ -87,9 +87,9 @@ public class AlertTemplateControllerTest {
     @Test
     public void testGetTemplateList() {
         List<AlertTemplateDO> list = new ArrayList<>();
-        when(templateService.getTemplateList()).thenReturn(list);
-        AjaxResult result = alertTemplateController.getTemplateList();
-        verify(templateService, times(1)).getTemplateList();
+        when(templateService.getTemplateList(CommonConstants.INSTANCE)).thenReturn(list);
+        AjaxResult result = alertTemplateController.getTemplateList(CommonConstants.INSTANCE);
+        verify(templateService, times(1)).getTemplateList(CommonConstants.INSTANCE);
         assertEquals(list, result.get("data"));
     }
 

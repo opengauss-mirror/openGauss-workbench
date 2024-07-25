@@ -27,7 +27,7 @@ spring:
     init:
       mode: always
       data-locations: classpath:db/alert-monitor.sql
-      continue-on-error: false
+      continue-on-error: true
 
 mybatis-plus:
   typeAliasesPackage: org.opengauss.plugin.alertcenter.entity,org.opengauss.admin.common.core.domain.entity

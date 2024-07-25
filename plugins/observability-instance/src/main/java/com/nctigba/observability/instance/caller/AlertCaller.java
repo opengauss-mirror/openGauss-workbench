@@ -13,33 +13,32 @@
  *  See the Mulan PSL v2 for more details.
  *  -------------------------------------------------------------------------
  *
- *  AlertClusterNodeConfDTO.java
+ *  DataSourceConfig.java
  *
  *  IDENTIFICATION
- *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/model/dto/AlertClusterNodeConfDTO.java
+ *  plugins/observability-instance/src/main/java/com/nctigba/observability/instance/caller/AlertCaller.java
  *
  *  -------------------------------------------------------------------------
  */
 
-package com.nctigba.alert.monitor.model.dto;
+package com.nctigba.observability.instance.caller;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import lombok.Data;
-import lombok.experimental.Accessors;
+import com.gitee.starblues.annotation.Caller;
+import org.opengauss.admin.common.core.domain.AjaxResult;
+
+import java.util.List;
+import java.util.Map;
 
 /**
+ * AlertCaller
+ *
  * @author wuyuebin
- * @date 2023/5/22 10:36
- * @description
+ * @since 2024/7/24 11:09
  */
-@Data
-@Accessors(chain = true)
-public class AlertClusterNodeConfDTO {
-    private String clusterNodeId;
-    private String nodeName;
-    private String type;
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long templateId;
-    private String templateName;
+@Caller("alert")
+public interface AlertCaller {
+    @Caller.Method("saveAlertRule")
+    public AjaxResult saveAlertRule(Map<String, Object> paramMap);
+    @Caller.Method("alerts")
+    public AjaxResult alerts(List<Map<String, Object>> paramList);
 }

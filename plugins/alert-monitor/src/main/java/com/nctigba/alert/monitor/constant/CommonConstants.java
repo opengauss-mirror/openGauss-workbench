@@ -78,6 +78,11 @@ public class CommonConstants {
     public static final String LOG_RULE = "log";
 
     /**
+     * ruleType: plugin
+     */
+    public static final String PLUGIN_RULE = "plugin";
+
+    /**
      * schedule name prefix
      */
     public static final String THREAD_NAME_PREFIX = "alertRule-";
@@ -236,4 +241,14 @@ public class CommonConstants {
      * IS_INCLUDED
      */
     public static final Integer IS_INCLUDED = 1;
+
+    /**
+     * instance
+     */
+    public static final String INSTANCE = "instance";
+
+    /**
+     * noninstance
+     */
+    public static final String NONINSTANCE = "noninstance";
 }

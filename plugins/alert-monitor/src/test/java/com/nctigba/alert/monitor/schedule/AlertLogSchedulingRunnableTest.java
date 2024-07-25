@@ -55,6 +55,7 @@ import org.snmp4j.mp.SnmpConstants;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -179,7 +180,7 @@ public class AlertLogSchedulingRunnableTest {
                 SpringContextUtils.getBean(AlertTemplateRuleItemService.class)).thenReturn(templateRuleItemService);
             List<AlertTemplateRuleItemDO> templateRuleItems = new ArrayList<>();
             templateRuleItems.add(new AlertTemplateRuleItemDO().setRuleMark("A").setKeyword("abc,efg").setBlockWord(
-                "bcd").setOperate(">").setLimitValue("10"));
+                "bcd").setOperate(">").setLimitValue(new BigDecimal(10)));
             when(templateRuleItemService.list(any())).thenReturn(templateRuleItems);
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(ElasticsearchProviderConfig.class)).thenReturn(elasticsearchProviderConfig);
@@ -215,7 +216,7 @@ public class AlertLogSchedulingRunnableTest {
                 SpringContextUtils.getBean(AlertTemplateRuleItemService.class)).thenReturn(templateRuleItemService);
             List<AlertTemplateRuleItemDO> templateRuleItems = new ArrayList<>();
             templateRuleItems.add(new AlertTemplateRuleItemDO().setRuleMark("A").setKeyword("abc,efg").setBlockWord(
-                "bcd").setOperate(">=").setLimitValue("5"));
+                "bcd").setOperate(">=").setLimitValue(new BigDecimal(10)));
             when(templateRuleItemService.list(any())).thenReturn(templateRuleItems);
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(ElasticsearchProviderConfig.class)).thenReturn(elasticsearchProviderConfig);
@@ -251,7 +252,7 @@ public class AlertLogSchedulingRunnableTest {
                 SpringContextUtils.getBean(AlertTemplateRuleItemService.class)).thenReturn(templateRuleItemService);
             List<AlertTemplateRuleItemDO> templateRuleItems = new ArrayList<>();
             templateRuleItems.add(new AlertTemplateRuleItemDO().setRuleMark("A").setKeyword("abc,efg").setBlockWord(
-                "bcd").setOperate(">=").setLimitValue("5"));
+                "bcd").setOperate(">=").setLimitValue(new BigDecimal(10)));
             when(templateRuleItemService.list(any())).thenReturn(templateRuleItems);
             mockedStatic.when(() ->
                 SpringContextUtils.getBean(ElasticsearchProviderConfig.class)).thenReturn(elasticsearchProviderConfig);

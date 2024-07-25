@@ -43,7 +43,7 @@ public interface AlertRuleService extends IService<AlertRuleDO> {
 
     AlertRuleDO getRuleById(Long id);
 
-    List<AlertRuleDO> getRuleList();
+    List<AlertRuleDO> getRuleList(List<String> ruleTypes);
 
     /**
      * getRuleItemSrcList

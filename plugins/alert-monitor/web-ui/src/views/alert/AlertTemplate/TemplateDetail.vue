@@ -21,6 +21,12 @@
         <el-input v-model="formData.templateName" style="height: 32px !important;"
           :placeholder="$t('alertTemplate.templateNamePlaceholder')"></el-input>
       </el-form-item>
+      <el-form-item :label="$t('alertTemplate.table[1]')" prop="type">
+        <el-radio-group v-model="formData.type" :disabled="disabled || state === 'edit'" @change="changeType">
+          <el-radio label="instance">{{ $t('app.instance') }}</el-radio>
+          <el-radio label="noninstance">{{ $t('app.noninstance') }}</el-radio>
+        </el-radio-group>
+      </el-form-item>
       <el-form-item :label="$t('alertTemplate.selectRule')" :required="true">
         <el-table size="small" :data="tableDatas" ref="ruleTable" style="width: 100%" header-cell-class-name="grid-header"
           border>
@@ -101,10 +107,12 @@ const props = withDefaults(
   defineProps<{
     templateId: number,
     state: string,
+    type: string,
   }>(),
   {
     state: 'add',
-    templateId: undefined
+    templateId: undefined,
+    type: 'instance',
   }
 );
 const emit = defineEmits(["updateTemplate", "cancelTemplate"]);
@@ -116,6 +124,7 @@ const ruleTable = ref();
 const templateRuleIdsSrc = ref<string[]>([])
 const formData = ref<any>({
   templateName: '',
+  type: 'instance',
   templateRuleList: []
 })
 const tableDatas = ref<any[]>([])
@@ -129,13 +138,16 @@ const formRef = ref<FormInstance>()
 const formRules = reactive<FormRules>({
   templateName: [
     { required: true, message: t('alertTemplate.templateNamePlaceholder'), trigger: 'blur' },
-  ]
+  ],
+  type: [
+      { required: true, message: t('alertTemplate.selectTypePlaceholder'), trigger: 'change' },
+  ],
 })
 
 const showRuleExpDesc = (rule: any) => {
   const alertRuleItemList = rule.alertRuleItemList;
   if (!alertRuleItemList || alertRuleItemList.length === 0) {
-    return '';
+    return '/';
   }
 
   if (rule.ruleType === 'index') {
@@ -162,7 +174,7 @@ const showRuleExpDesc = (rule: any) => {
 
 const showRuleExpComb = (ruleExpComb: String) => {
   if (!ruleExpComb) {
-    return ''
+    return '/'
   }
   return ruleExpComb.split(' ').map((item: String) => {
     if (item === 'and' || item === 'or') {
@@ -180,8 +192,8 @@ const showAlertNotify = (val: string) => {
   return result
 }
 const { data: ruleRes, run: requestRuleData } = useRequest(
-  () => {
-    return request.get(`/api/v1/alertRule/ruleList`)
+  (ruleTypes) => {
+    return request.get(`/api/v1/alertRule/ruleList`, { ruleTypes })
   },
   { manual: true }
 );
@@ -217,6 +229,7 @@ const { data: templateRes, run: requestData } = useRequest(
 watch(templateRes, (templateRes: any) => {
   if (templateRes && templateRes.code === 200) {
     formData.value = templateRes.data
+    changeType(formData.value.type)
     let selectDatas = formData.value.templateRuleList || [];
     templateRuleIdsSrc.value = selectDatas.filter(item => item.isIncluded).map(item => item.templateRuleId) || []
     if (tableDatas.value.length > 0) {
@@ -263,6 +276,7 @@ const confirm = () => {
     let param = {
       id: formData.value.id,
       templateName: formData.value.templateName,
+      type: formData.value.type,
       templateRuleReqList,
       excludedTemplateRuleIds
     }
@@ -332,9 +346,7 @@ const updateTemplateRuleSuccess = (templateRule: any) => {
   showMain.value = true
   nextTick(() => {
     for (let row of selectedRuleRows.value) {
-      if (row.isIncluded === 1) {
-        ruleTable.value.toggleRowSelection(row, true)
-      }
+      ruleTable.value.toggleRowSelection(row, true)
     }
   })
 }
@@ -362,13 +374,24 @@ const requestRuleItemSrcList = () => {
   })
 }
 
+const changeType = (type) => {
+  let ruleTypes = ''
+  if (type === 'instance') {
+    ruleTypes = 'index,log'
+  } else {
+    ruleTypes = 'plugin'
+  }
+  requestRuleData(ruleTypes)
+}
+
 onMounted(() => {
   requestRuleItemSrcList()
   title.value = props.state === 'add' ? t('alertTemplate.addTitle') : props.state === 'edit' ? t('alertTemplate.editTitle') : t('alertTemplate.detailTitle')
-  requestRuleData()
+  formData.value.type = props.type || 'instance'
+  changeType(props.type)
   if (props.templateId) {
     requestData(props.templateId)
-  }
+  } 
 })
 
 </script>

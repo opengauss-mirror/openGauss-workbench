@@ -24,7 +24,8 @@
           </div>
           <div>
             <div style="margin-bottom: 4px !important;">
-              <span>{{$t('alertRecord.clusterName')}}：</span><span>{{ formData.clusterId }}</span>
+              <span v-if="formData.type === 'noninstance'"><span>{{$t('alertRecord.instanceName')}}：</span><span>{{ formData.nodeName }}</span></span>
+              <span v-if="formData.type === 'instance'"><span>{{$t('alertRecord.clusterName')}}：</span><span>{{ formData.clusterId }}</span></span>
             </div>
             <div style="margin-bottom: 4px !important;">
               <span>{{$t('alertRecord.IPAndPort')}}：</span><span>{{ formData.hostIpAndPort }}</span>
@@ -48,7 +49,10 @@
               <span>{{$t('alertRule.ruleName')}}：</span><span>{{ formData.templateRuleName }}</span>
             </div>
             <div style="margin-bottom: 4px !important;">
-              <span>{{$t('alertRecord.table[6]')}}：</span><span>{{ formData.level }}</span>
+              <span>{{$t('alertRecord.table[6]')}}：</span>
+              <span v-if = "formData.level === 'serious'">{{ $t(`alertRule.serious`) }}</span>
+              <span v-if = "formData.level === 'warn'">{{ $t(`alertRule.warn`) }}</span>
+              <span v-if = "formData.level === 'info'">{{ $t(`alertRule.info`) }}</span>
             </div>
             <div style="margin-bottom: 4px !important;">
               <span>{{$t('alertRecord.table[3]')}}：</span><span>{{ formData.templateName }}</span>

@@ -24,6 +24,7 @@
 package com.nctigba.alert.monitor.controller;
 
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.model.entity.AlertRuleDO;
@@ -41,11 +42,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -67,8 +71,9 @@ public class AlertRuleController extends BaseController {
     }
 
     @GetMapping("/ruleList")
-    public AjaxResult getRuleList() {
-        return AjaxResult.success(alertRuleService.getRuleList());
+    public AjaxResult getRuleList(@RequestParam String ruleTypes) {
+        List<String> ruleTypeList = Arrays.asList(ruleTypes.split(CommonConstants.DELIMITER));
+        return AjaxResult.success(alertRuleService.getRuleList(ruleTypeList));
     }
 
 
@@ -106,35 +111,33 @@ public class AlertRuleController extends BaseController {
      */
     @PostMapping
     public AjaxResult saveRule(@Validated @RequestBody AlertRuleParamDTO alertRule) {
-        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
-        String errorMsg = MessageSourceUtils.get("validateFail");
+        String messages = "";
         if (alertRule.getRuleType().equals(CommonConstants.INDEX_RULE)) {
-            Set<ConstraintViolation<AlertRuleParamDTO>> error =
-                validator.validate(alertRule, AlertRuleDO.IndexRuleGroup.class);
-            if (CollectionUtil.isNotEmpty(error)) {
-                String messages = error.stream().map(item -> item.getPropertyPath() + item.getMessage())
-                    .collect(Collectors.joining(CommonConstants.DELIMITER));
-                return AjaxResult.error(errorMsg + ":" + messages);
-            }
+            messages = validate(alertRule, AlertRuleDO.IndexRuleGroup.class);
             if (alertRule.getIsSilence().equals(CommonConstants.IS_SILENCE)) {
-                error = validator.validate(alertRule, AlertRuleDO.SilenceGroup.class);
-                if (CollectionUtil.isNotEmpty(error)) {
-                    String messages = error.stream().map(item -> item.getPropertyPath() + item.getMessage())
-                        .collect(Collectors.joining(CommonConstants.DELIMITER));
-                    return AjaxResult.error(errorMsg + ":" + messages);
-                }
+                messages += CommonConstants.DELIMITER + validate(alertRule, AlertRuleDO.SilenceGroup.class);
             }
+        } else if (alertRule.getRuleType().equals(CommonConstants.LOG_RULE)) {
+            messages = validate(alertRule, AlertRuleDO.LogRuleGroup.class);
         } else {
-            Set<ConstraintViolation<AlertRuleParamDTO>> error =
-                validator.validate(alertRule, AlertRuleDO.LogRuleGroup.class);
-            if (CollectionUtil.isNotEmpty(error)) {
-                String messages = error.stream().map(item -> item.getPropertyPath() + item.getMessage())
-                    .collect(Collectors.joining(CommonConstants.DELIMITER));
-                return AjaxResult.error(errorMsg + ":" + messages);
-            }
+            messages = validate(alertRule, AlertRuleDO.PluginRuleGroup.class);
+        }
+        String errorMsg = MessageSourceUtils.get("validateFail");
+        if (StrUtil.isNotBlank(messages)) {
+            return AjaxResult.error(errorMsg + ":" + messages);
         }
         alertRuleService.saveRule(alertRule);
         return AjaxResult.success();
+    }
+
+    private String validate(AlertRuleParamDTO alertRule, Class clz) {
+        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+        Set<ConstraintViolation<AlertRuleParamDTO>> error = validator.validate(alertRule, clz);
+        if (CollectionUtil.isEmpty(error)) {
+            return "";
+        }
+        return error.stream().map(item -> item.getPropertyPath() + item.getMessage())
+            .collect(Collectors.joining(CommonConstants.DELIMITER));
     }
 
     /**

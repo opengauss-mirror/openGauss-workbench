@@ -28,12 +28,12 @@ import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.nctigba.alert.monitor.constant.CommonConstants;
+import com.nctigba.alert.monitor.mapper.AlertClusterNodeConfMapper;
+import com.nctigba.alert.monitor.mapper.AlertTemplateMapper;
 import com.nctigba.alert.monitor.model.dto.AlertClusterNodeConfDTO;
 import com.nctigba.alert.monitor.model.entity.AlertClusterNodeConfDO;
 import com.nctigba.alert.monitor.model.entity.AlertTemplateDO;
 import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleDO;
-import com.nctigba.alert.monitor.mapper.AlertClusterNodeConfMapper;
-import com.nctigba.alert.monitor.mapper.AlertTemplateMapper;
 import com.nctigba.alert.monitor.model.query.AlertClusterNodeAndTemplateQuery;
 import com.nctigba.alert.monitor.model.query.AlertClusterNodeConfQuery;
 import com.nctigba.alert.monitor.model.query.AlertTemplateQuery;
@@ -306,7 +306,8 @@ public class AlertClusterNodeConfServiceImplTest {
     public void testGetByClusterNodeIdNull() {
         when(baseMapper.selectList(any())).thenReturn(anyList());
         String clusterNodeId = "node1";
-        AlertClusterNodeConfDO alertClusterNodeConfDO = alertClusterNodeConfService.getByClusterNodeId(clusterNodeId);
+        AlertClusterNodeConfDO alertClusterNodeConfDO = alertClusterNodeConfService.getByClusterNodeId(clusterNodeId,
+            CommonConstants.INSTANCE);
         verify(baseMapper, times(1)).selectList(any());
         assertNotNull(alertClusterNodeConfDO);
         assertNull(alertClusterNodeConfDO.getClusterNodeId());
@@ -319,7 +320,8 @@ public class AlertClusterNodeConfServiceImplTest {
         list.add(alertClusterNodeConfDO);
         when(baseMapper.selectList(any())).thenReturn(list);
         String clusterNodeId = "node1";
-        AlertClusterNodeConfDO alertClusterNodeConfDO1 = alertClusterNodeConfService.getByClusterNodeId(clusterNodeId);
+        AlertClusterNodeConfDO alertClusterNodeConfDO1 = alertClusterNodeConfService.getByClusterNodeId(clusterNodeId
+            , CommonConstants.INSTANCE);
         verify(baseMapper, times(1)).selectList(any());
         assertEquals("node1", alertClusterNodeConfDO1.getClusterNodeId());
     }
@@ -377,7 +379,7 @@ public class AlertClusterNodeConfServiceImplTest {
         AlertTemplateDO alertTemplateDO = new AlertTemplateDO().setId(1L).setTemplateName("name");
         when(templateMapper.selectById(any())).thenReturn(alertTemplateDO);
 
-        List<AlertClusterNodeConfDTO> resultList = alertClusterNodeConfService.getList();
+        List<AlertClusterNodeConfDTO> resultList = alertClusterNodeConfService.getList(CommonConstants.INSTANCE);
 
         verify(clusterNodeService, times(1)).list();
         verify(hostFacade, times(1)).listByIds(set);
@@ -420,7 +422,7 @@ public class AlertClusterNodeConfServiceImplTest {
         List<AlertClusterNodeConfDO> alertClusterNodeConfDOS = new ArrayList<>();
         when(baseMapper.selectList(any())).thenReturn(alertClusterNodeConfDOS);
 
-        List<AlertClusterNodeConfDTO> resultList = alertClusterNodeConfService.getList();
+        List<AlertClusterNodeConfDTO> resultList = alertClusterNodeConfService.getList(CommonConstants.INSTANCE);
 
         verify(clusterNodeService, times(1)).list();
         verify(hostFacade, times(1)).listByIds(set);

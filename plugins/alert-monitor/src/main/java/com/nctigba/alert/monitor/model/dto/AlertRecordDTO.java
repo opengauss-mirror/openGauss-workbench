@@ -35,7 +35,6 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 public class AlertRecordDTO extends AlertRecordDO {
-    private String clusterNodeName;
     private String nodeRole;
     private String hostIpAndPort;
 }

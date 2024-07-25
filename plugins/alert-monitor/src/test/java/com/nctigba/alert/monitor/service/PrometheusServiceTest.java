@@ -54,6 +54,7 @@ import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -504,9 +505,9 @@ public class PrometheusServiceTest {
     public void testQueryRange1() {
         try (MockedStatic<HttpUtil> mockedStatic = mockStatic(HttpUtil.class)) {
             mockedStatic.when(() -> HttpUtil.get(anyString(), anyMap())).thenReturn("");
-            Number[][] result = prometheusService.queryRange("127.0.0.1", "8080", "query",
+            List result = prometheusService.queryRange("127.0.0.1", "8080", "query",
                 LocalDateTime.now().minusHours(1), LocalDateTime.now());
-            assertEquals(0, result.length);
+            assertEquals(0, result.size());
         }
     }
 
@@ -515,9 +516,9 @@ public class PrometheusServiceTest {
         try (MockedStatic<HttpUtil> mockedStatic = mockStatic(HttpUtil.class)) {
             String res = "{\"status\":\"fail\"}";
             mockedStatic.when(() -> HttpUtil.get(anyString(), anyMap())).thenReturn(res);
-            Number[][] result = prometheusService.queryRange("127.0.0.1", "8080", "query",
+            List result = prometheusService.queryRange("127.0.0.1", "8080", "query",
                 LocalDateTime.now().minusHours(1), LocalDateTime.now());
-            assertEquals(0, result.length);
+            assertEquals(0, result.size());
         }
     }
 
@@ -526,9 +527,9 @@ public class PrometheusServiceTest {
         try (MockedStatic<HttpUtil> mockedStatic = mockStatic(HttpUtil.class)) {
             String res = "{\"status\":\"success\"}";
             mockedStatic.when(() -> HttpUtil.get(anyString(), anyMap())).thenReturn(res);
-            Number[][] result = prometheusService.queryRange("127.0.0.1", "8080", "query",
+            List result = prometheusService.queryRange("127.0.0.1", "8080", "query",
                 LocalDateTime.now().minusHours(1), LocalDateTime.now());
-            assertEquals(0, result.length);
+            assertEquals(0, result.size());
         }
     }
 
@@ -537,9 +538,9 @@ public class PrometheusServiceTest {
         try (MockedStatic<HttpUtil> mockedStatic = mockStatic(HttpUtil.class)) {
             String res = "{\"status\":\"success\",\"data\":{\"result\":[]}}";
             mockedStatic.when(() -> HttpUtil.get(anyString(), anyMap())).thenReturn(res);
-            Number[][] result = prometheusService.queryRange("127.0.0.1", "8080", "query",
+            List result = prometheusService.queryRange("127.0.0.1", "8080", "query",
                 LocalDateTime.now().minusHours(1), LocalDateTime.now());
-            assertEquals(0, result.length);
+            assertEquals(0, result.size());
         }
     }
 
@@ -548,9 +549,9 @@ public class PrometheusServiceTest {
         try (MockedStatic<HttpUtil> mockedStatic = mockStatic(HttpUtil.class)) {
             String res = "{\"status\":\"success\",\"data\":{\"result\":[{}]}}";
             mockedStatic.when(() -> HttpUtil.get(anyString(), anyMap())).thenReturn(res);
-            Number[][] result = prometheusService.queryRange("127.0.0.1", "8080", "query",
+            List result = prometheusService.queryRange("127.0.0.1", "8080", "query",
                 LocalDateTime.now().minusHours(1), LocalDateTime.now());
-            assertEquals(0, result.length);
+            assertEquals(0, result.size());
         }
     }
 
@@ -560,9 +561,9 @@ public class PrometheusServiceTest {
             String res = "{\"status\":\"success\",\"data\":{\"result\":[{\"values\":[[1683472020,"
                 + "\"1.5090909090907871\"]]}]}}";
             mockedStatic.when(() -> HttpUtil.get(anyString(), anyMap())).thenReturn(res);
-            Number[][] result = prometheusService.queryRange("127.0.0.1", "8080", "query",
+            List result = prometheusService.queryRange("127.0.0.1", "8080", "query",
                 LocalDateTime.now().minusHours(1), LocalDateTime.now());
-            assertEquals(1, result.length);
+            assertEquals(1, result.size());
         }
     }
 
@@ -816,7 +817,7 @@ public class PrometheusServiceTest {
         List<AlertTemplateRuleItemDO> alertTemplateRuleItems1DO = new ArrayList<>();
         AlertTemplateRuleItemDO alertTemplateRuleItemDO1 = new AlertTemplateRuleItemDO();
         alertTemplateRuleItemDO1.setId(1L).setTemplateRuleId(1L).setRuleItemId(1L).setRuleMark("A")
-            .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue("90").setUnit("%").setRuleExp("100 - avg"
+            .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue(new BigDecimal(90)).setUnit("%").setRuleExp("100 - avg"
                 + "(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance) "
                 + " * 100").setAction("normal");
         alertTemplateRuleItems1DO.add(alertTemplateRuleItemDO1);
@@ -824,7 +825,8 @@ public class PrometheusServiceTest {
         List<AlertTemplateRuleItemDO> alertTemplateRuleItems2DO = new ArrayList<>();
         AlertTemplateRuleItemDO alertTemplateRuleItemDO2 = new AlertTemplateRuleItemDO();
         alertTemplateRuleItemDO2.setId(2L).setTemplateRuleId(2L).setRuleItemId(2L).setRuleMark("A")
-            .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue("90").setUnit("%").setRuleExp("100 - avg"
+            .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue(new BigDecimal(90)).setUnit("%").setRuleExp(
+                "100 - avg"
                 + "(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance) "
                 + " * 100").setAction("normal");
         alertTemplateRuleItems2DO.add(alertTemplateRuleItemDO2);
@@ -832,7 +834,7 @@ public class PrometheusServiceTest {
         List<AlertTemplateRuleItemDO> alertTemplateRuleItems3DO = new ArrayList<>();
         AlertTemplateRuleItemDO alertTemplateRuleItemDO3 = new AlertTemplateRuleItemDO();
         alertTemplateRuleItemDO3.setId(3L).setTemplateRuleId(1L).setRuleItemId(2L).setRuleMark("A")
-            .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue("90").setUnit("%").setRuleExp("100 - avg"
+            .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue(new BigDecimal(90)).setUnit("%").setRuleExp("100 - avg"
                 + "(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance) "
                 + " * 100").setAction("normal");
         alertTemplateRuleItems3DO.add(alertTemplateRuleItemDO3);
@@ -930,7 +932,7 @@ public class PrometheusServiceTest {
             List<AlertTemplateRuleItemDO> alertTemplateRuleItemDOS = new ArrayList<>();
             AlertTemplateRuleItemDO alertTemplateRuleItemDO = new AlertTemplateRuleItemDO();
             alertTemplateRuleItemDO.setId(1L).setTemplateRuleId(1L).setRuleItemId(1L).setRuleMark("A")
-                .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue("90").setUnit("%").setRuleExp("100 - avg"
+                .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue(new BigDecimal(90)).setUnit("%").setRuleExp("100 - avg"
                     + "(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance) "
                     + " * 100").setAction("normal");
             alertTemplateRuleItemDOS.add(alertTemplateRuleItemDO);
@@ -968,7 +970,7 @@ public class PrometheusServiceTest {
             List<AlertTemplateRuleItemDO> alertTemplateRuleItemDOS = new ArrayList<>();
             AlertTemplateRuleItemDO alertTemplateRuleItemDO = new AlertTemplateRuleItemDO();
             alertTemplateRuleItemDO.setId(1L).setTemplateRuleId(1L).setRuleItemId(1L).setRuleMark("A")
-                .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue("90").setUnit("%").setRuleExp("100 - avg"
+                .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue(new BigDecimal(90)).setUnit("%").setRuleExp("100 - avg"
                     + "(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance) "
                     + " * 100").setAction("normal");
             alertTemplateRuleItemDOS.add(alertTemplateRuleItemDO);
@@ -1024,7 +1026,7 @@ public class PrometheusServiceTest {
             List<AlertTemplateRuleItemDO> alertTemplateRuleItemDOS = new ArrayList<>();
             AlertTemplateRuleItemDO alertTemplateRuleItemDO = new AlertTemplateRuleItemDO();
             alertTemplateRuleItemDO.setId(1L).setTemplateRuleId(1L).setRuleItemId(1L).setRuleMark("A")
-                .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue("90").setUnit("%").setRuleExp("100 - avg"
+                .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue(new BigDecimal(90)).setUnit("%").setRuleExp("100 - avg"
                     + "(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance) "
                     + " * 100").setAction("normal");
             alertTemplateRuleItemDOS.add(alertTemplateRuleItemDO);
@@ -1105,7 +1107,7 @@ public class PrometheusServiceTest {
             List<AlertTemplateRuleItemDO> alertTemplateRuleItemDOS = new ArrayList<>();
             AlertTemplateRuleItemDO alertTemplateRuleItemDO = new AlertTemplateRuleItemDO();
             alertTemplateRuleItemDO.setId(1L).setTemplateRuleId(1L).setRuleItemId(1L).setRuleMark("A")
-                .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue("90").setUnit("%").setRuleExp("100 - avg"
+                .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue(new BigDecimal(90)).setUnit("%").setRuleExp("100 - avg"
                     + "(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance) "
                     + " * 100").setAction("normal");
             alertTemplateRuleItemDOS.add(alertTemplateRuleItemDO);
@@ -1143,7 +1145,7 @@ public class PrometheusServiceTest {
             List<AlertTemplateRuleItemDO> alertTemplateRuleItemDOS = new ArrayList<>();
             AlertTemplateRuleItemDO alertTemplateRuleItemDO = new AlertTemplateRuleItemDO();
             alertTemplateRuleItemDO.setId(1L).setTemplateRuleId(1L).setRuleItemId(1L).setRuleMark("A")
-                .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue("90").setUnit("%").setRuleExp("100 - avg"
+                .setRuleExpName("cpuUsage").setOperate(">=").setLimitValue(new BigDecimal(90)).setUnit("%").setRuleExp("100 - avg"
                     + "(rate(agent_cpu_seconds_total{mode=\"idle\",instance=~\"${instances}\"}[5m])) by(instance) "
                     + " * 100").setAction("normal");
             alertTemplateRuleItemDOS.add(alertTemplateRuleItemDO);

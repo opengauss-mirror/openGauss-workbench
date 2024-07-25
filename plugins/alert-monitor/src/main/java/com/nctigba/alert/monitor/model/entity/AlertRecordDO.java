@@ -50,6 +50,10 @@ public class AlertRecordDO {
     private Long id;
     private String clusterNodeId;
     private String clusterId;
+    private String type;
+    private String ip;
+    private String port;
+    private String nodeName;
     @JsonSerialize(using = ToStringSerializer.class)
     private Long templateId;
     private String templateName;

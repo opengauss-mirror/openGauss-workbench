@@ -242,7 +242,7 @@ public class PrometheusServiceImpl implements PrometheusService {
             Map configMap = new ObjectMapper().convertValue(updateConfig, HashMap.class);
             uploadConfigFile(configMap, env.getPath(), CommonConstants.PROMETHEUS_YML);
         } catch (IOException | CryptoException | ServiceException | NullPointerException | BaseException
-                | IORuntimeException e) {
+                 | IORuntimeException e) {
             log.warn("init prometheus configuration fail: {}", e.getMessage());
         }
     }
@@ -497,6 +497,7 @@ public class PrometheusServiceImpl implements PrometheusService {
             List<AlertTemplateRuleDO> alertTemplateRuleDOS = alertTemplateRuleMapper.selectList(
                 Wrappers.<AlertTemplateRuleDO>lambdaQuery().eq(AlertTemplateRuleDO::getTemplateId, templateId)
                     .eq(AlertTemplateRuleDO::getRuleType, CommonConstants.INDEX_RULE)
+                    .eq(AlertTemplateRuleDO::getIsIncluded, CommonConstants.IS_INCLUDED)
                     .eq(AlertTemplateRuleDO::getIsDeleted, CommonConstants.IS_NOT_DELETE)
                     .eq(AlertTemplateRuleDO::getEnable, CommonConstants.ENABLE));
             if (CollectionUtil.isEmpty(alertTemplateRuleDOS)) {

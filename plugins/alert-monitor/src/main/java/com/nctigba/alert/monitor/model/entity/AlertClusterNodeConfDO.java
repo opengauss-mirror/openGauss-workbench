@@ -44,6 +44,7 @@ public class AlertClusterNodeConfDO {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
     private String clusterNodeId;
+    private String type;
     @JsonSerialize(using = ToStringSerializer.class)
     private Long templateId;
     private LocalDateTime updateTime;

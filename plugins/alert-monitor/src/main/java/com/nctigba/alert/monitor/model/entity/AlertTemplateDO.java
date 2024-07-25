@@ -46,6 +46,7 @@ public class AlertTemplateDO {
     @TableId
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
+    private String type;
     private String templateName;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")

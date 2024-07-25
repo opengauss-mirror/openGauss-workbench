@@ -35,6 +35,7 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.nctigba.observability.instance.caller.AlertCaller;
 import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.enums.AgentStatusEnum;
 import com.nctigba.observability.instance.model.dto.ExporterInstallDTO;
@@ -81,6 +82,7 @@ import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.text.MessageFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -113,6 +115,8 @@ public class ExporterInstallService extends AbstractInstaller {
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private IOpsClusterService clusterService;
+    @Autowired
+    private AlertCaller alertCaller;
 
     /**
      * install
@@ -623,6 +627,9 @@ public class ExporterInstallService extends AbstractInstaller {
     /**
      * monitorStatus
      */
+    /**
+     * monitorStatus
+     */
     @Scheduled(fixedRate = CommonConstants.MONITOR_CYCLE, timeUnit = TimeUnit.SECONDS)
     public void monitorStatus() {
         StopWatch stopWatch = new StopWatch();
@@ -633,6 +640,7 @@ public class ExporterInstallService extends AbstractInstaller {
         envList.forEach(e -> {
             e.setHost(hostFacade.getById(e.getHostid()));
         });
+        List<NctigbaEnvDO> alertList = new ArrayList<>();
         for (NctigbaEnvDO env : envList) {
             try {
                 String oldStatus = env.getStatus();
@@ -671,12 +679,41 @@ public class ExporterInstallService extends AbstractInstaller {
             } catch (Exception e) {
                 log.error("exporter at {} is exception: {} ", env.getPath(),e.getMessage());
             }
+            if (AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus().equals(env.getStatus())
+                || AgentStatusEnum.ERROR_PROGRAM_UNHEALTHY.getStatus().equals(env.getStatus())) {
+                alertList.add(env);
+            }
+        }
+        try {
+            if (CollectionUtil.isNotEmpty(alertList)) {
+                alerts(alertList);
+            }
+        } catch (Exception e) {
+            log.error("exporters alert fail: {}, exception is {}", e.getMessage(), e);
         }
         stopWatch.stop();
         if (stopWatch.getTotalTimeSeconds() > CommonConstants.MONITOR_CYCLE) {
             log.error("Exporter check status is over {}s, it takes {}s",
                 CommonConstants.MONITOR_CYCLE, stopWatch.getTotalTimeSeconds());
         }
+    }
+
+    private void alerts(List<NctigbaEnvDO> envList) {
+        List<Map<String, Object>> paramList = envList.stream().map(item -> {
+            Map<String, Object> paramMap = new HashMap<>();
+            paramMap.put("instanceId", item.getId());
+            String publicIp = item.getHost().getPublicIp();
+            paramMap.put("ip", publicIp);
+            Integer port = item.getPort();
+            paramMap.put("port", port);
+            String instance = "Exporter(" + publicIp + ":" + port + ")";
+            paramMap.put("instance", instance);
+            paramMap.put("alertTime", LocalDateTime.now());
+            paramMap.put("pluginCode", CommonConstants.PLUGIN_CODE);
+            paramMap.put("ruleCode", CommonConstants.EXPORTER_EXCEPTION_STATUS);
+            return paramMap;
+        }).collect(Collectors.toList());
+        alertCaller.alerts(paramList);
     }
 
     /**

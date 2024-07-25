@@ -86,7 +86,13 @@
       <el-table size="small" :data="tableDatas" style="width: 100%;" ref="recordTable"
         header-cell-class-name="grid-header" border>
         <el-table-column type="selection" width="40" align="center" header-align="center" />
-        <el-table-column prop="clusterNodeName" min-width="150" :label="$t('alertRecord.table[0]')" />
+        <el-table-column prop="type" min-width="80" :label="$t('alertRecord.table[14]')">
+          <template #default="scope">
+            <div v-if="scope.row.type === 'instance'">{{ $t('app.instance') }}</div>
+            <div v-if="scope.row.type === 'noninstance'">{{ $t('app.noninstance') }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="nodeName" min-width="150" :label="$t('alertRecord.table[0]')" />
         <el-table-column prop="templateName" :label="$t('alertRecord.table[3]')" />
         <el-table-column prop="templateRuleName" :label="$t('alertRecord.table[4]')" />
         <el-table-column prop="templateRuleType" :label="$t('alertRecord.table[5]')">
