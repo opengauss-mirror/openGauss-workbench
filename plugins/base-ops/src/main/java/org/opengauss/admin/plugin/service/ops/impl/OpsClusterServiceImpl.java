@@ -973,7 +973,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
         Connection connection = null;
         try {
-            connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), clusterEntity.getDatabasePassword()).orElseThrow(() -> new OpsException("Failed to establish connection to database"));
+            connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), encryptionUtils.decrypt(clusterEntity.getDatabasePassword())).orElseThrow(() -> new OpsException("Failed to establish connection to database"));
             return querySession(connection, start, end);
         } catch (Exception e) {
             log.error("get connection fail");
@@ -1017,7 +1017,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
         Connection connection = null;
         try {
-            connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), clusterEntity.getDatabasePassword()).orElseThrow(() -> new OpsException("Failed to establish connection to database"));
+            connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), encryptionUtils.decrypt(clusterEntity.getDatabasePassword())).orElseThrow(() -> new OpsException("Failed to establish connection to database"));
             return querySession(connection);
         } catch (Exception e) {
             log.error("get connection fail");
@@ -1100,7 +1100,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         }
         Connection connection = null;
         try {
-            connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), clusterEntity.getDatabasePassword()).orElseThrow(() -> new OpsException("Failed to establish connection to database"));
+            connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), encryptionUtils.decrypt(clusterEntity.getDatabasePassword())).orElseThrow(() -> new OpsException("Failed to establish connection to database"));
             return querySlowSql(connection, start, end);
         } catch (Exception e) {
             log.error("get connection fail");
@@ -1691,7 +1691,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         opsClusterEntity.setClusterId(opsImportEntity.getClusterName());
         opsClusterEntity.setVersion(versionType.equals("ENTERPRISE") ? ENTERPRISE : versionType.equals("LITE") ? LITE : MINIMAL_LIST);
         opsClusterEntity.setVersionNum(versionType.equals("ENTERPRISE") | versionType.equals("LITE") ? resultList.get(2) : resultList.get(1));
-        opsClusterEntity.setDatabasePassword(opsImportEntity.getDatabasePassword());
+        opsClusterEntity.setDatabasePassword(encryptionUtils.encrypt(opsImportEntity.getDatabasePassword()));
         opsClusterEntity.setDatabaseUsername(opsImportEntity.getDatabaseUsername());
         opsClusterEntity.setPort(opsImportEntity.getPort());
         opsClusterEntity.setEnvPath(opsImportEntity.getEnvPath());
@@ -2125,7 +2125,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             Connection connection = null;
             try {
-                connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), clusterEntity.getDatabasePassword()).orElseThrow(() -> new OpsException("Unable to connect to the database"));
+                connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), encryptionUtils.decrypt(clusterEntity.getDatabasePassword())).orElseThrow(() -> new OpsException("Unable to connect to the database"));
                 doMonitor(wsSession, ommSession, clusterEntity.getVersion(), connection, realDataPath, clusterEntity.getEnvPath());
             } catch (Exception e) {
                 log.error("get connection fail , ip:{} , port:{}, username:{}", hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), e);
@@ -3713,7 +3713,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             throw new OpsException("host information does not exist");
         }
         try {
-            connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), clusterEntity.getDatabasePassword()).orElseThrow(() -> new OpsException("Unable to connect to the database"));
+            connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), encryptionUtils.decrypt(clusterEntity.getDatabasePassword())).orElseThrow(() -> new OpsException("Unable to connect to the database"));
             return queryGucSettingList(connection);
         } catch (SQLException | ClassNotFoundException e) {
             String errMsg = "get connection fail: " + e.getMessage();
