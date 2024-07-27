@@ -27,7 +27,7 @@ mybatis-plus:
   configuration:
     mapUnderscoreToCamelCase: true
     cache-enabled: false
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
 
 pagehelper:
   helper-dialect: sqlite

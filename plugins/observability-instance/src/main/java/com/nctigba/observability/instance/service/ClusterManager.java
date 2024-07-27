@@ -45,6 +45,7 @@ import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.opengauss.admin.system.service.ops.IOpsClusterService;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -70,6 +71,9 @@ public class ClusterManager {
     DataSource dataSource;
     @Autowired
     DefaultDataSourceCreator dataSourceCreator;
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
 
     @Autowired(required = false)
     @AutowiredType(Type.MAIN_PLUGIN)
@@ -127,7 +131,7 @@ public class ClusterManager {
                 + "/postgres";
         Properties info = new Properties();
         info.setProperty("user", clusterEntity.getDatabaseUsername());
-        info.setProperty("password", clusterEntity.getDatabasePassword());
+        info.setProperty("password", encryptionUtils.decrypt(clusterEntity.getDatabasePassword()));
         try {
             return DriverManager.getConnection(sourceURL, info);
         } catch (SQLException e) {
