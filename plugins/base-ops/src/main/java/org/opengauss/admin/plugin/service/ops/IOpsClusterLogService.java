@@ -67,4 +67,12 @@ public interface IOpsClusterLogService {
      * @param operateId operateId
      */
     OpsClusterOperateLog selectOperateLogById(String operateId);
+
+    /**
+     * Query the operation log of the cluster
+     *
+     * @param clusterId clusterId
+     * @return log
+     */
+    String queryClusterOperateLog(String clusterId);
 }

@@ -64,11 +64,19 @@ public interface IOpsPackageManagerV2Service extends IService<OpsPackageManagerE
      * download package and save package info
      *
      * @param entity       entity
-     * @param userId       userId
+     * @param userId
      * @param wsBusinessId wsBusinessId
      */
-    void savePackageOnline(OpsPackageManagerEntity entity, Integer userId, String wsBusinessId);
+    void saveOnlinePackage(OpsPackageManagerEntity entity, Integer userId, String wsBusinessId);
 
+    /**
+     * update package info
+     *
+     * @param packageEntity packageEntity
+     * @param userId        userId
+     * @param wsBusinessId  wsBusinessId
+     */
+    void updateOnlinePackage(OpsPackageManagerEntity packageEntity, Integer userId, String wsBusinessId);
     /**
      * checking package name is exist
      *
@@ -77,4 +85,20 @@ public interface IOpsPackageManagerV2Service extends IService<OpsPackageManagerE
      * @return boolean
      */
     boolean hasName(String packageId, String name);
+
+    /**
+     * save package info
+     *
+     * @param pkg    pkg
+     * @param userId userId
+     */
+    void saveUploadPackage(OpsPackageManagerEntity pkg, Integer userId);
+
+    /**
+     * update package info
+     *
+     * @param pkg    pkg
+     * @param userId userId
+     */
+    void updateUploadPackage(OpsPackageManagerEntity pkg, Integer userId);
 }

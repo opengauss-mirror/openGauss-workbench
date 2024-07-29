@@ -13,10 +13,10 @@
  * See the Mulan PSL v2 for more details.
  * -------------------------------------------------------------------------
  *
- * OpsPackageDownloadDTO.java
+ * OpsPackageUploadDTO.java
  *
  * IDENTIFICATION
- * visualtool-common/src/main/java/org/opengauss/admin/common/core/dto/ops/OpsPackageDownloadDTO.java
+ * visualtool-common/src/main/java/org/opengauss/admin/common/core/dto/ops/OpsPackageUploadDTO.java
  *
  * -------------------------------------------------------------------------
  */
@@ -25,6 +25,7 @@ package org.opengauss.admin.common.core.dto.ops;
 
 import lombok.Data;
 import org.opengauss.admin.common.enums.ops.OpenGaussVersionEnum;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -34,7 +35,7 @@ import javax.validation.constraints.NotNull;
  * @date 2024/06/15 09:26
  */
 @Data
-public class OpsPackageDownloadDTO {
+public class OpsPackageUploadDTO {
     /**
      * package name
      */
@@ -54,20 +55,17 @@ public class OpsPackageDownloadDTO {
      * package support openGauss version
      */
     @NotNull(message = "package support openGauss version can not be empty")
-    private OpenGaussVersionEnum openGaussVersion;
+    private OpenGaussVersionEnum packageVersion;
     /**
      * package support openGauss version num
      */
     @NotBlank(message = "package support openGauss version num can not be empty")
-    private String openGaussVersionNum;
+    private String packageVersionNum;
     /**
      * package download url
      */
     @NotBlank(message = "package download url can not be empty")
-    private String downloadUrl;
-    /**
-     * package download ws business id
-     */
-    @NotBlank(message = "package download ws business id can not be empty")
-    private String wsBusinessId;
+    private String packageUrl;
+    @NotNull(message = "package upload file can not be empty")
+    private MultipartFile uploadFile;
 }

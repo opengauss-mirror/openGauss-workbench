@@ -30,6 +30,7 @@ import org.springframework.beans.BeanUtils;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author wangchao
@@ -44,6 +45,11 @@ public class OpsClusterTaskCreateDTO extends OpsClusterTaskCommonDTO {
     public OpsClusterTaskEntity toEntity() {
         OpsClusterTaskEntity target = new OpsClusterTaskEntity();
         BeanUtils.copyProperties(this, target);
+        target.setDatabasePort(getDatabasePort());
         return target;
+    }
+
+    private Integer getDatabasePort() {
+        return Optional.of(getPort()).orElse(5432L).intValue();
     }
 }

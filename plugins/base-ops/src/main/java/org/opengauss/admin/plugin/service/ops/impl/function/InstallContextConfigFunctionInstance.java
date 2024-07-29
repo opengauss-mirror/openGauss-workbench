@@ -23,6 +23,7 @@
 
 package org.opengauss.admin.plugin.service.ops.impl.function;
 
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterTaskNodeEntity;
@@ -30,7 +31,6 @@ import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
 import org.opengauss.admin.plugin.domain.model.ops.node.LiteInstallNodeConfig;
 import org.opengauss.admin.plugin.domain.model.ops.node.MinimalistInstallNodeConfig;
-import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
 import org.opengauss.admin.plugin.enums.ops.DatabaseKernelArch;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.springframework.beans.BeanUtils;
@@ -73,7 +73,7 @@ public class InstallContextConfigFunctionInstance {
                 .stream().collect(Collectors.toMap(val -> val.getHostEntity().getHostId(), Function.identity()));
         for (OpsClusterTaskNodeEntity node : taskNodeList) {
             LiteInstallNodeConfig nodeConfig = new LiteInstallNodeConfig();
-            nodeConfig.setClusterRole(ClusterRoleEnum.valueOf(node.getNodeType()));
+            nodeConfig.setClusterRole(node.getNodeType());
             nodeConfig.setHostId(node.getHostId());
             nodeConfig.setInstallUserId(node.getHostUserId());
             nodeConfig.setRootPassword(getHostRootPassword(hostInfoHolderMap.get(node.getHostId())));
@@ -108,7 +108,7 @@ public class InstallContextConfigFunctionInstance {
             nodeConfig.setRootPassword(getHostRootPassword(hostInfoHolderMap.get(node.getHostId())));
             nodeConfig.setInstallPath(task.getInstallPath());
             nodeConfig.setIsInstallDemoDatabase(true);
-            nodeConfig.setClusterRole(ClusterRoleEnum.valueOf(node.getNodeType()));
+            nodeConfig.setClusterRole(node.getNodeType());
             nodeConfigList.add(nodeConfig);
             config.setNodeConfigList(nodeConfigList);
         }
@@ -134,10 +134,19 @@ public class InstallContextConfigFunctionInstance {
         for (OpsClusterTaskNodeEntity node : taskNodeList) {
             EnterpriseInstallNodeConfig nodeConfig = new EnterpriseInstallNodeConfig();
             BeanUtils.copyProperties(node, nodeConfig);
+            // cm tool will be install at tools path
+            nodeConfig.setCmDataPath(config.getOmToolsPath());
             HostInfoHolder hostInfoHolder = hostInfoHolderMap.get(node.getHostId());
+            OpsHostEntity host = hostInfoHolder.getHostEntity();
+            nodeConfig.setPublicIp(host.getPublicIp());
+            nodeConfig.setPrivateIp(host.getPrivateIp());
+            nodeConfig.setAzName(node.getAzOwner());
+            nodeConfig.setHostname(host.getHostname());
+            nodeConfig.setClusterRole(node.getNodeType());
             Map<String, OpsHostUserEntity> userMap = hostInfoHolder.getHostUserEntities().stream().collect(Collectors.toMap(OpsHostUserEntity::getHostUserId, Function.identity()));
-            nodeConfig.setClusterRole(ClusterRoleEnum.valueOf(node.getNodeType()));
-            nodeConfig.setInstallUsername(userMap.get(node.getHostUserId()).getUsername());
+            OpsHostUserEntity nodeUser = userMap.get(node.getHostUserId());
+            nodeConfig.setInstallUserId(nodeUser.getHostUserId());
+            nodeConfig.setInstallUsername(nodeUser.getUsername());
             nodeConfig.setRootPassword(getHostRootPassword(hostInfoHolder));
             nodeConfigList.add(nodeConfig);
         }

@@ -189,6 +189,7 @@ public interface SshCommandConstants {
 
     String CHMOD_DATA_PATH = "chmod 700 -R {0}";
     String CHOWN = "chown {0} -R {1}";
+    String CHOWN_USER_GROUP = "chown {0}:{1} -R {2}";
     /**
      * switch user
      */
@@ -281,4 +282,5 @@ public interface SshCommandConstants {
     String RESULT_BY_SPLIT_EQUAL = "|awk -F '=' '\\''{print $2}'\\''";
     String THREE_IN_ONE = "{0}{1}{2}";
     String CHANGE_SUB_USER = "su - {0} -c ''{1}''";
+    String CHECK_PERMISSION = "ls -l --time-style=long-iso -d {0}";
 }

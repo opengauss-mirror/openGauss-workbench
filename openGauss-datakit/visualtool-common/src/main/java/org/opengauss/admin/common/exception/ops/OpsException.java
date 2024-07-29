@@ -36,4 +36,26 @@ public class OpsException extends RuntimeException {
         super(message);
         this.message = message;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("OpsException{");
+        sb.append("message='").append(message).append('\'');
+        sb.append(", cause=").append(getCause());
+        sb.append(", stackTrace=").append(getFilteredStackTrace());
+        sb.append('}');
+        return sb.toString();
+    }
+
+    private String getFilteredStackTrace() {
+        StackTraceElement[] stackTrace = getStackTrace();
+        StringBuilder sb = new StringBuilder();
+        for (StackTraceElement element : stackTrace) {
+            if (!element.getClassName().contains("org.opengauss.admin")) {
+                sb.append(element).append(System.lineSeparator());
+            }
+        }
+        return sb.toString();
+    }
 }
