@@ -81,6 +81,7 @@ import static com.nctigba.observability.sql.constant.CommonConstants.PYTHON_VERS
 import static com.nctigba.observability.sql.constant.CommonConstants.RM_FILE;
 import static com.nctigba.observability.sql.constant.CommonConstants.TAR_FILE;
 import static com.nctigba.observability.sql.constant.CommonConstants.UNZIP_VERSION;
+import static com.nctigba.observability.sql.constant.CommonConstants.USER_AUTHORITY;
 import static com.nctigba.observability.sql.constant.CommonConstants.YUM_INSTALL;
 
 /**
@@ -93,6 +94,7 @@ import static com.nctigba.observability.sql.constant.CommonConstants.YUM_INSTALL
 @Service
 public class AgentServiceImpl extends AbstractInstaller implements AgentService {
     private static final String AGENT_USER = "root";
+    private static final int CHECK_COUNT = 3;
     private static final String NAME = "opengauss-ebpf.jar";
     private static final String JDK = "https://mirrors.huaweicloud.com/kunpeng/archive/compiler/bisheng_jdk/";
     private static final String JDKPKG = "bisheng-jdk-8u392-linux-{0}.tar.gz";
@@ -123,8 +125,9 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
      * @param callbackPath Callback path
      * @param rootPassword Root password
      * @param port         Install port
+     * @param username     Install user
      */
-    public void install(WsSession wsSession, String nodeId, int port, String rootPassword, String path,
+    public void install(WsSession wsSession, String nodeId, int port, String username, String rootPassword, String path,
             String callbackPath) {
         // @formatter:off
         var steps = Arrays.asList(
@@ -140,10 +143,10 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
         // step1
         try {
             if (StrUtil.isBlank(callbackPath)) {
-                throw new CustomException("callback host null");
+                throw new CustomException("agent.install.callback.tip");
             }
             if (StrUtil.isBlank(path)) {
-                throw new CustomException("install path null");
+                throw new CustomException("agent.install.installPath.tip");
             }
             var node = clusterManager.getOpsNodeById(nodeId);
             var hostId = node.getHostId();
@@ -151,19 +154,23 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                     Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.AGENT)
                             .eq(NctigbaEnvDO::getNodeid, nodeId));
             if (env != null) {
-                throw new CustomException("agent exists");
+                throw new CustomException("agent.install.agent.tip");
             }
             if (!path.endsWith(File.separator)) {
                 path += File.separator;
             }
-            env = new NctigbaEnvDO().setHostid(hostId).setNodeid(nodeId).setPort(port).setUsername(AGENT_USER)
+            env = new NctigbaEnvDO().setHostid(hostId).setNodeid(nodeId).setPort(port).setUsername(username)
                     .setType(NctigbaEnvDO.envType.AGENT);
             env.setParam("{\"callbackPath\":\"" + callbackPath + "\"}");
             env.setPath(path);
             try (var session = connect(env, rootPassword)) {
+                String userAuth = session.execute(String.format(USER_AUTHORITY, username));
+                if (!"root".equals(username) && !userAuth.contains("wheel") && !userAuth.contains("sudo")) {
+                    throw new CustomException("agent.install.userAuth.tip");
+                }
                 String message = session.execute(String.format(PORT_IS_EXIST, env.getPort()));
                 if (message.contains("true")) {
-                    throw new CustomException("port is exists");
+                    throw new CustomException("agent.install.port.tip");
                 }
                 String installPath = session.execute(String.format(DIRECTORY_IS_EXIST, path));
                 if (installPath.contains("false")) {
@@ -171,7 +178,7 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                 } else {
                     String fileIsEmpty = session.execute(String.format(DIRECTORY_IS_EMPTY, path));
                     if (fileIsEmpty.startsWith("/")) {
-                        throw new CustomException("The installation folder is not empty!");
+                        throw new CustomException("agent.install.installFolder.tip");
                     }
                 }
                 curr = nextStep(wsSession, steps, curr);
@@ -181,18 +188,18 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                 }
                 var python_v = session.execute(PYTHON_VERSION);
                 if (!python_v.toLowerCase().startsWith("python ")) {
-                    throw new CustomException("python version err, curr:" + python_v);
+                    throw new CustomException("agent.install.pythonVersion.tip");
                 }
                 addMsg(wsSession, steps, curr, python_v);
                 // bcc-tool
                 if (!session.test(Command.STAT.parse(BCC_PATH))) {
-                    for (int i = 0; i < 3; i++) {
+                    for (int i = 0; i < CHECK_COUNT; i++) {
                         try {
                             session.execute(String.format(YUM_INSTALL, "bcc-tools"));
                             break;
                         } catch (Exception e) {
                             if (i == 2) {
-                                throw new CustomException("bcc install fail");
+                                throw new CustomException("agent.install.bcc.tip");
                             }
                             addMsg(wsSession, steps, curr, "bcc install fail " + i + ", retrying");
                         }
@@ -206,10 +213,8 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                      var out = new FileOutputStream(graph)) {
                     IoUtil.copy(in, out);
                 }
-                session.execute(String.format(MKDIR_FILE, FLAME_GRAPH_PATH));
-                session.execute(String.format(RM_FILE, FLAME_GRAPH_PATH + "/FlameGraph*"));
-                session.upload(graph.getCanonicalPath(), FLAME_GRAPH_PATH + "/FlameGraph.zip");
-                session.execute(String.format(INSTALL_FLAME_GRAPH, FLAME_GRAPH_PATH));
+                session.upload(graph.getCanonicalPath(), path + "FlameGraph.zip");
+                session.execute(String.format(INSTALL_FLAME_GRAPH, path));
                 // jdk version
                 String jdkVersion = getJavaVersion(env, rootPassword);
                 addMsg(wsSession, steps, curr, jdkVersion);
@@ -253,11 +258,11 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
     private SshSessionUtils connect(NctigbaEnvDO env, String rootPassword) throws IOException {
         OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
         if (hostEntity == null) {
-            throw new CustomException("host not found");
+            throw new CustomException("agent.install.host.tip");
         }
         env.setHost(hostEntity);
-        var user = getUser(hostEntity, AGENT_USER, rootPassword);
-        return SshSessionUtils.connect(hostEntity.getPublicIp(), hostEntity.getPort(), AGENT_USER,
+        var user = getUser(hostEntity, env.getUsername(), rootPassword);
+        return SshSessionUtils.connect(hostEntity.getPublicIp(), hostEntity.getPort(), env.getUsername(),
                 encryptionUtils.decrypt(user.getPassword()));
     }
 
@@ -285,11 +290,11 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                     Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.AGENT)
                             .eq(NctigbaEnvDO::getNodeid, nodeId));
             if (env == null) {
-                throw new CustomException("agent not found");
+                throw new CustomException("agent.uninstall.agent.tip");
             }
             OpsHostEntity hostEntity = hostFacade.getById(node.getHostId());
             if (hostEntity == null) {
-                throw new CustomException("host not found");
+                throw new CustomException("agent.install.host.tip");
             }
             env.setHost(hostEntity);
             if (StrUtil.isBlank(env.getStatus())) {
@@ -541,6 +546,14 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
         return list;
     }
 
+    @Override
+    public String getInstallUser(String nodeId) {
+        NctigbaEnvDO env = envMapper.selectOne(
+                Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getNodeid, nodeId)
+                        .eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.AGENT));
+        return env.getUsername();
+    }
+
     /**
      * Monitor status and auto pull up
      */
@@ -562,6 +575,12 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
             boolean isSkip = AgentStatusEnum.MANUAL_STOP.getStatus().equals(status) || isDuring;
             if (isSkip) {
                 continue;
+            }
+            if (!"root".equals(env.getUsername())) {
+                AgentExceptionVO check = checkPidStatus(env, null);
+                if (!check.isStatus()) {
+                    startAgent(env, null);
+                }
             }
             if (getHealthStatus(env)) {
                 status = AgentStatusEnum.NORMAL.getStatus();
@@ -691,7 +710,7 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
     private NctigbaEnvDO getAgentInfo(String id) {
         NctigbaEnvDO env = envMapper.selectById(id);
         if (env == null) {
-            throw new CustomException("agent not found");
+            throw new CustomException("agent.uninstall.agent.tip");
         }
         env.setHost(hostFacade.getById(env.getHostid()));
         return env;

@@ -135,4 +135,9 @@ public class CommonConstants {
      * Get path by pid
      */
     public static final String PID_PATH = "ls -l /proc/%s |grep cwd|awk '{print $11}'";
+
+    /**
+     * Get user authority
+     */
+    public static final String USER_AUTHORITY = "groups %s";
 }

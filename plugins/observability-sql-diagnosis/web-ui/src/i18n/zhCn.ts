@@ -132,6 +132,7 @@ export default {
     installedAgent: '已安装代理',
     installedProxy: '已安装服务端',
     machine: '物理机',
+    installUser: '安装用户',
     rootPWD: 'Root用户密码',
     proxyPort: '代理端口',
     installPath: '安装目录',

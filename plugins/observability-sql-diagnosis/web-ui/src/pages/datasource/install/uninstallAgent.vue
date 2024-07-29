@@ -20,7 +20,10 @@
                     <el-form-item :label="t('install.collectInstance')" prop="nodeId">
                         <el-input readonly v-model="formData.label" style="width: 300px; margin: 0 4px" />
                     </el-form-item>
-                    <el-form-item :label="t('install.rootPWD')" prop="rootPassword">
+                    <el-form-item :label="t('install.installUser')" prop="username">
+                      <el-input readonly v-model="formData.username" style="width: 300px; margin: 0 4px" />
+                    </el-form-item>
+                    <el-form-item :label="t('install.rootPWD')" prop="rootPassword" v-if="formData.username === ROOT_USER">
                         <el-input v-model="formData.rootPassword" show-password style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                 </el-form>
@@ -41,6 +44,7 @@ import { FormRules, FormInstance } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import WebSocketClass from '../../../utils/websocket'
 import { encryptPassword } from '../../../utils/jsencrypt'
+import ogRequest from '../../../request'
 import moment from 'moment'
 const { t } = useI18n()
 
@@ -60,15 +64,27 @@ watch(
     { immediate: true }
 )
 
+const installUser = ref<string>('')
+const getInstallUser = (nodeId: string) => {
+  ogRequest.get(`/observability/v1/agent/install/${nodeId}`).then(res => {
+    if (res) {
+      installUser.value = res.data ;
+    }
+  })
+}
+
 onMounted(() => {
     formData.label = props.node.label
     formData.nodeId = props.node.data.nodeId
+    getInstallUser(formData.nodeId)
+    formData.username = installUser
 })
 
 // form data
 const initFormData = {
     label: '',
     nodeId: '',
+    username: '',
     rootPassword: '',
 }
 const formData = reactive(cloneDeep(initFormData))
@@ -76,6 +92,7 @@ const connectionFormRef = ref<FormInstance>()
 const connectionFormRules = reactive<FormRules>({
     rootPassword: [{ required: true, message: t('install.proxyRules[1]'), trigger: 'blur' }],
 })
+const ROOT_USER = 'root'
 
 const started = ref(false)
 const installSucceed = ref(false)

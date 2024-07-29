@@ -27,6 +27,7 @@ import com.nctigba.observability.sql.service.AgentService;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,7 +47,7 @@ public class AgentController {
     /**
      * Start agent
      *
-     * @param id Unique ID
+     * @param id      Unique ID
      * @param rootPwd Root password
      * @return AjaxResult
      */
@@ -59,7 +60,7 @@ public class AgentController {
     /**
      * Stop agent
      *
-     * @param id Unique ID
+     * @param id      Unique ID
      * @param rootPwd Root password
      * @return AjaxResult
      */
@@ -77,5 +78,15 @@ public class AgentController {
     @GetMapping("/status")
     public AjaxResult getAgentStatus() {
         return AjaxResult.success(agentService.getAgentStatus());
+    }
+
+    /**
+     * Get install user
+     *
+     * @return AjaxResult
+     */
+    @GetMapping("/install/{nodeId}")
+    public AjaxResult getInstallUser(@PathVariable String nodeId) {
+        return AjaxResult.success("success", agentService.getInstallUser(nodeId));
     }
 }

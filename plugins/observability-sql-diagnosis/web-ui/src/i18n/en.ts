@@ -681,6 +681,7 @@ export default {
     installedAgent: 'installed proxy',
     installedProxy: 'installed server',
     machine: 'machine',
+    installUser: 'install user',
     rootPWD: 'root password',
     installPath: 'Installation path',
     proxyPort: 'proxy port',

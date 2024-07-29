@@ -1,18 +1,14 @@
 <template>
     <div class="dialog">
-        <el-dialog :width="dialogWith" :title="t('install.installAgent')" v-model="visible" :close-on-click-modal="false" draggable @close="closeDialog">
+        <el-dialog :width="dialogWith" :title="t('install.installAgent')" v-model="visible"
+            :close-on-click-modal="false" draggable @close="closeDialog">
             <div class="dialog-content" v-show="installData.length != 0">
                 <div>
                     <el-steps direction="vertical" :active="doingIndex">
-                        <el-step v-for="item in installData" :key="item.name" :title="item.name" >
-                            <template #description >
+                        <el-step v-for="item in installData" :key="item.name" :title="item.name">
+                            <template #description>
                                 <div v-for="msg in item.msg"><b>{{ msg }}</b></div>
-                                <el-input v-if="item.error"
-                                    v-model="item.error"
-                                    :rows="5"
-                                    type="textarea"
-                                    readonly
-                                />
+                                <el-input v-if="item.error" v-model="item.error" :rows="5" type="textarea" readonly />
                             </template>
                         </el-step>
                     </el-steps>
@@ -21,9 +17,17 @@
             <div class="dialog-content" v-loading="started" v-show="installData.length === 0">
                 <el-form :model="formData" :rules="connectionFormRules" ref="connectionFormRef">
                     <el-form-item :label="t('install.collectInstance')" prop="nodeId">
-                        <ClusterCascader width="300" instanceValueKey="nodeId" @getCluster="handleClusterValue" autoSelectFirst notClearable />
+                        <ClusterCascader width="300" instanceValueKey="nodeId" @getCluster="handleClusterValue"
+                            autoSelectFirst notClearable />
                     </el-form-item>
-                    <el-form-item :label="t('install.rootPWD')" prop="rootPassword">
+                    <el-form-item :label="t('install.installUser')" prop="username">
+                        <el-select v-model="formData.username" style="width: 300px; margin: 0 4px">
+                            <el-option v-for="item in hostUserList" :key="item.hostUserId" :label="item.username"
+                                :value="item.username" />
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item :label="t('install.rootPWD')" prop="rootPassword"
+                        v-if="formData.username === ROOT_USER">
                         <el-input v-model="formData.rootPassword" show-password style="width: 300px; margin: 0 4px" />
                     </el-form-item>
                     <el-form-item :label="t('install.proxyPort')" prop="port">
@@ -39,8 +43,10 @@
             </div>
 
             <template #footer>
-                <el-button v-if="installData.length === 0" :loading="started" style="padding: 5px 20px" type="primary" @click="install">{{ $t('install.install') }}</el-button>
-                <el-button v-if="installData.length != 0" style="padding: 5px 20px" @click="back">{{ $t('app.back') }}</el-button>
+                <el-button v-if="installData.length === 0" :loading="started" style="padding: 5px 20px" type="primary"
+                    @click="install">{{ $t('install.install') }}</el-button>
+                <el-button v-if="installData.length != 0" style="padding: 5px 20px" @click="back">{{ $t('app.back')
+                    }}</el-button>
                 <el-button style="padding: 5px 20px" @click="handleCancelModel">{{ $t('app.cancel') }}</el-button>
             </template>
         </el-dialog>
@@ -75,11 +81,14 @@ watch(
 // form data
 const initFormData = {
     nodeId: "",
+    username: "",
     rootPassword: "",
     port: "2321",
     callbackPath: location.protocol + "//" + window.location.host,
     path: ""
 };
+const ROOT_USER = "root";
+const hostUserList = ref<any[]>()
 const formData = reactive(cloneDeep(initFormData));
 const connectionFormRef = ref<FormInstance>();
 const connectionFormRules = reactive<FormRules>({
@@ -91,9 +100,35 @@ const connectionFormRules = reactive<FormRules>({
 })
 // cluster component
 const handleClusterValue = (val: any) => {
-    formData.nodeId = val.length > 1 ? val[1] : ''
+  formData.nodeId = val.length > 1 ? val[1] : ''
+  if (formData.nodeId) {
+    getHostUserList(formData.nodeId);
     formData.path = `${basePath.value}/${formData.nodeId}_diagnosis-agent`
+  }
 }
+
+const getHostUserList = (nodeId: string) => {
+    ogRequest.get(`/observability/v1/environment/hostUser/${nodeId}`).then(res => {
+        if(Array.isArray(res.data)) {
+            hostUserList.value = res.data
+            if (!formData.username) {
+                return
+            }
+            let userList = hostUserList.value.filter(item => item.username === formData.username) || []
+            if (userList.length === 0) {
+                formData.username = ''
+            }
+        }
+    })
+}
+
+watch(() => formData.username,(newValue) => {
+  if(newValue === ROOT_USER) {
+    connectionFormRules.rootPassword = [{ required: true, message: t("install.collectorRules[1]"), trigger: "blur" }]
+  }else {
+    connectionFormRules.rootPassword = [{ required: false, message: t("install.collectorRules[1]"), trigger: "blur" }]
+  }
+});
 
 const started = ref(false)
 const installSucceed = ref(false)
@@ -118,6 +153,7 @@ const sendData = async () => {
     const sendData = {
         key: 'agent',
         nodeId: formData.nodeId,
+        username: formData.username,
         rootPassword: encryptPwd,
         port: formData.port,
         path: formData.path,
@@ -138,7 +174,7 @@ const onWebSocketMessage = (data: Array<any>) => {
                     dialogWith.value = '800px'
                 }
             })
-        } 
+        }
     }
 };
 
@@ -177,7 +213,7 @@ const closeDialog = () => {
 const basePath = ref<string>('')
 const getInstallPath = () => {
     ogRequest.get(`/observability/v1/environment/basePath`).then(res => {
-        if(res) {
+        if (res) {
             basePath.value = res + (res.endsWith('/') ? 'data' : '/data');
         }
     })
