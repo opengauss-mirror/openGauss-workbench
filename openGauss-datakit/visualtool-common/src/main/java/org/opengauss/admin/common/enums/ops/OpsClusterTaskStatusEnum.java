@@ -61,7 +61,11 @@ public enum OpsClusterTaskStatusEnum {
     /**
      * 执行取消
      */
-    CANCELED("CANCELED");
+    CANCELED("CANCELED"),
+    /**
+     * 未知 任务不存在
+     */
+    UNKNOWN("UNKNOWN");
 
     private String status;
 

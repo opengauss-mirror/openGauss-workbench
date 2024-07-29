@@ -30,8 +30,8 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.AjaxResult;
-import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.dto.ops.OpsPackageDownloadDTO;
+import org.opengauss.admin.common.core.dto.ops.OpsPackageUploadDTO;
 import org.opengauss.admin.common.core.dto.ops.PackageDto;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.common.exception.ops.OpsException;
@@ -40,19 +40,20 @@ import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
 import org.opengauss.admin.plugin.domain.model.ops.OpsPackagePathDictVO;
 import org.opengauss.admin.plugin.domain.model.ops.OpsPackageVO;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
-import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerService;
 import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerV2Service;
 import org.opengauss.admin.plugin.service.ops.IOpsPackagePathDictService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import java.io.File;
 import java.util.List;
 import java.util.Objects;
 
 /**
+ * ClusterPackageManagerController
  * @author wangchao
  * @date 2024/06/15 09:26
  */
@@ -64,8 +65,6 @@ public class ClusterPackageManagerController extends BaseController {
     @Resource
     private IOpsPackageManagerV2Service opsPackageManagerV2Service;
     @Resource
-    private IOpsPackageManagerService opsPackageManagerService;
-    @Resource
     private IOpsPackagePathDictService opsPackagePathDictService;
 
     @Value("${installPackage.urlPrefix}")
@@ -76,13 +75,13 @@ public class ClusterPackageManagerController extends BaseController {
         return AjaxResult.success(opsPackagePathDictService.checkCurrentEnvironmentIsOnline());
     }
 
-    @GetMapping("/page/package")
+    @PostMapping("/page/package")
     public TableDataInfo pagePackage(@RequestBody PackageDto dto) {
         IPage<OpsPackageManagerEntity> page = opsPackageManagerV2Service.page(startPage(), getOpsPackageQueryWrapper(dto));
         return getDataTable(page);
     }
 
-    @GetMapping("/list/package")
+    @PostMapping("/list/package")
     public List<OpsPackageManagerEntity> listPackage(@RequestBody PackageDto dto) {
         return opsPackageManagerV2Service.list(getOpsPackageQueryWrapper(dto));
     }
@@ -93,7 +92,7 @@ public class ClusterPackageManagerController extends BaseController {
                 .eq(StrUtil.isNotEmpty(dto.getOs()), OpsPackageManagerEntity::getOs, dto.getOs())
                 .eq(StrUtil.isNotEmpty(dto.getCpuArch()), OpsPackageManagerEntity::getCpuArch, dto.getCpuArch())
                 .eq(StrUtil.isNotEmpty(dto.getOpenGaussVersionNum()), OpsPackageManagerEntity::getPackageVersionNum, dto.getOpenGaussVersionNum())
-                .eq(Objects.nonNull(dto.getOpenGaussVersion()), OpsPackageManagerEntity::getPackageVersion, dto.getOpenGaussVersion().name())
+                .eq(Objects.nonNull(dto.getOpenGaussVersion()), OpsPackageManagerEntity::getPackageVersion, dto.getOpenGaussVersion())
                 .isNotNull(OpsPackageManagerEntity::getPackagePath)
                 .orderByDesc(OpsPackageManagerEntity::getUpdateTime);
         return queryWrapper;
@@ -132,7 +131,7 @@ public class ClusterPackageManagerController extends BaseController {
         }
     }
 
-    @GetMapping("/check/package")
+    @PostMapping("/check/package")
     public AjaxResult checkPackage(@RequestBody List<String> packageIds) {
         try {
             Assert.isTrue(CollectionUtils.isNotEmpty(packageIds), "packageIds 不能为空");
@@ -144,11 +143,11 @@ public class ClusterPackageManagerController extends BaseController {
     }
 
     @PostMapping("/save/online")
-    public AjaxResult saveOnline(@RequestBody OpsPackageDownloadDTO dto) {
+    public AjaxResult online(@RequestBody OpsPackageDownloadDTO dto) {
         Assert.isTrue(opsPackagePathDictService.checkCurrentEnvironmentIsOnline(), "current environment is not online");
         Assert.isTrue(opsPackagePathDictService.checkOsExists(dto.getOs()), "not support os param value " + dto.getOs());
         Assert.isTrue(opsPackagePathDictService.checkCpuArchExists(dto.getCpuArch()), "not support cpuArch param value " + dto.getCpuArch());
-        Assert.isTrue(!opsPackageManagerV2Service.hasName(dto.getPackageId(), dto.getName()), "package name [" + dto.getName() + "] already exists");
+        Assert.isTrue(!opsPackageManagerV2Service.hasName("", dto.getName()), "package name [" + dto.getName() + "] already exists");
         OpsPackageManagerEntity entity = new OpsPackageManagerEntity();
         entity.setOs(dto.getOs());
         entity.setCpuArch(dto.getCpuArch());
@@ -157,36 +156,46 @@ public class ClusterPackageManagerController extends BaseController {
         entity.setPackageUrl(dto.getDownloadUrl());
         entity.setName(dto.getName());
         entity.setType("openGauss");
-        UploadInfo packagePath = new UploadInfo();
-
-        String sysUploadPath = opsPackageManagerService.getSysUploadPath(getUserId());
-        packagePath.setRealPath(sysUploadPath
-                + dto.getOpenGaussVersionNum() + File.separatorChar
-                + dto.getOs() + File.separatorChar
-                + dto.getCpuArch() + File.separatorChar
-                + dto.getName());
-        packagePath.setName(parseDownloadFileName(dto.getDownloadUrl()));
-        entity.setPackagePath(packagePath);
-        opsPackageManagerV2Service.savePackageOnline(entity, getUserId(), dto.getWsBusinessId());
+        opsPackageManagerV2Service.saveOnlinePackage(entity, getUserId(), dto.getWsBusinessId());
         return AjaxResult.success();
     }
 
-    private String parseDownloadFileName(String packageUrl) {
-        return packageUrl.substring(packageUrl.lastIndexOf("/") + 1);
+    @PostMapping("/update/online")
+    public AjaxResult online(@RequestParam("packageId") String packageId, @RequestParam("wsBusinessId") String wsBusinessId) {
+        Assert.isTrue(opsPackagePathDictService.checkCurrentEnvironmentIsOnline(), "current environment is not online");
+        OpsPackageManagerEntity packageEntity = opsPackageManagerV2Service.getById(packageId);
+        Assert.isTrue(Objects.nonNull(packageEntity), "package [" + packageId + "] not exists");
+        opsPackageManagerV2Service.updateOnlinePackage(packageEntity, getUserId(), wsBusinessId);
+        return AjaxResult.success();
+    }
+
+
+    @PostMapping("/update/upload")
+    public AjaxResult upload(@RequestParam("packageId") String packageId, @RequestParam("uploadFile") MultipartFile uploadFile) {
+        Assert.isTrue(StrUtil.isNotEmpty(packageId), "packageId can not be empty");
+        Assert.isTrue(Objects.nonNull(uploadFile), "uploadFile param can not be empty");
+        OpsPackageManagerEntity pkg = opsPackageManagerV2Service.getById(packageId);
+        Assert.isTrue(Objects.nonNull(pkg), "package [" + packageId + "] not exists");
+        pkg.setFile(uploadFile);
+        opsPackageManagerV2Service.updateUploadPackage(pkg, getUserId());
+        return AjaxResult.success();
     }
 
     @PostMapping("/save/upload")
-    public AjaxResult saveUpload(@ModelAttribute OpsPackageVO pkg) {
-        Assert.isTrue(StrUtil.isNotEmpty(pkg.getOs()), "os param can not be empty");
-        Assert.isTrue(StrUtil.isNotEmpty(pkg.getCpuArch()), "cpuArch param can not be empty");
-        Assert.isTrue(StrUtil.isNotEmpty(pkg.getName()), "package name param can not be empty");
-        Assert.isTrue(Objects.nonNull(pkg.getPackageVersion()), "package version param can not be empty");
-        Assert.isTrue(StrUtil.isNotEmpty(pkg.getPackageVersionNum()), "package version num param can not be empty");
-        Assert.isTrue(opsPackagePathDictService.checkOsExists(pkg.getOs()), "not support os param value " + pkg.getOs());
-        Assert.isTrue(opsPackagePathDictService.checkCpuArchExists(pkg.getCpuArch()), "not support cpuArch param value " + pkg.getCpuArch());
-        Assert.isTrue(!opsPackageManagerV2Service.hasName(pkg.getPackageId(), pkg.getName()), "package name [" + pkg.getName() + "] already exists");
+    public AjaxResult upload(@ModelAttribute OpsPackageUploadDTO dto) {
+        Assert.isTrue(StrUtil.isNotEmpty(dto.getOs()), "os param can not be empty");
+        Assert.isTrue(StrUtil.isNotEmpty(dto.getCpuArch()), "cpuArch param can not be empty");
+        Assert.isTrue(StrUtil.isNotEmpty(dto.getName()), "package name param can not be empty");
+        Assert.isTrue(Objects.nonNull(dto.getPackageVersion()), "package version param can not be empty");
+        Assert.isTrue(StrUtil.isNotEmpty(dto.getPackageVersionNum()), "package version num param can not be empty");
+        Assert.isTrue(opsPackagePathDictService.checkOsExists(dto.getOs()), "not support os param value " + dto.getOs());
+        Assert.isTrue(opsPackagePathDictService.checkCpuArchExists(dto.getCpuArch()), "not support cpuArch param value " + dto.getCpuArch());
+        OpsPackageManagerEntity pkg = new OpsPackageManagerEntity();
+        BeanUtils.copyProperties(dto, pkg);
         pkg.setType("openGauss");
-        opsPackageManagerService.savePackage(pkg.toEntity(), getUserId());
+        pkg.setPackageVersion(dto.getPackageVersion().name());
+        pkg.setFile(dto.getUploadFile());
+        opsPackageManagerV2Service.saveUploadPackage(pkg, getUserId());
         return AjaxResult.success();
     }
 }

@@ -24,11 +24,13 @@
 package org.opengauss.admin.plugin.service.ops.impl;
 
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterOperateLog;
+import org.opengauss.admin.plugin.enums.ops.ClusterOperateTypeEnum;
 import org.opengauss.admin.plugin.mapper.ops.OpsClusterOperateLogMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterLogService;
 import org.springframework.stereotype.Service;
@@ -43,7 +45,7 @@ import java.util.Objects;
  * @author wangchao
  * @date 2024/6/22 9:41
  **/
-@Service
+@Service("opsClusterLogService")
 public class OpsClusterLogServiceImpl implements IOpsClusterLogService {
 
     @Resource
@@ -83,5 +85,41 @@ public class OpsClusterLogServiceImpl implements IOpsClusterLogService {
     @Override
     public OpsClusterOperateLog selectOperateLogById(String operateId) {
         return opsClusterOperateLogMapper.selectById(operateId);
+    }
+
+    private static final String OPERATE_LOG_SEPARATOR = " -- ";
+    private static final String OPERATE_LOG_LINE_SEPARATOR = "\\\\r\\\\n";
+
+    @Override
+    public String queryClusterOperateLog(String clusterId) {
+        LambdaQueryWrapper<OpsClusterOperateLog> wrapper = Wrappers.lambdaQuery(OpsClusterOperateLog.class);
+        wrapper.eq(OpsClusterOperateLog::getClusterId, clusterId);
+        List<OpsClusterOperateLog> logList = opsClusterOperateLogMapper.selectList(wrapper);
+        StringBuffer logBuffer = new StringBuffer();
+        logList.forEach(operateLog -> {
+            logBuffer.append(operateLog.getOperateTime()).append(OPERATE_LOG_SEPARATOR)
+                    .append(operateLog.getOperateType()).append(OPERATE_LOG_SEPARATOR)
+                    .append(convertOperateLog(operateLog.getOperateType(), operateLog.getOperateLog()))
+                    .append(System.lineSeparator());
+        });
+        return logBuffer.toString();
+    }
+
+    private String convertOperateLog(ClusterOperateTypeEnum operateType, String operateLog) {
+        if (Objects.equals(operateType, ClusterOperateTypeEnum.CHECK_ENVIRONMENT)) {
+            return formatJsonOperateLog(operateLog);
+        } else if (Objects.equals(operateType, ClusterOperateTypeEnum.INSTALL)) {
+            return operateLog.replaceAll(OPERATE_LOG_LINE_SEPARATOR, System.lineSeparator());
+        } else {
+            return operateLog;
+        }
+    }
+
+    private static String formatJsonOperateLog(String operateLog) {
+        try {
+            return JSONObject.toJSONString(JSONObject.parseObject(operateLog), true);
+        } catch (Exception e) {
+            return operateLog;
+        }
     }
 }

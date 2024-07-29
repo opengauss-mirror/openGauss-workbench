@@ -13,36 +13,31 @@
  * See the Mulan PSL v2 for more details.
  * -------------------------------------------------------------------------
  *
- * OpsClusterTaskNodeVO.java
+ * ClusterNodeEnvCheck.java
  *
  * IDENTIFICATION
- * plugins/base-ops/src/main/java/org/opengauss/admin/plugin/domain/model/ops/OpsClusterTaskNodeVO.java
+ * plugins/base-ops/src/main/java/org/opengauss/admin/plugin/vo/ops/ClusterNodeEnvCheck.java
  *
  * -------------------------------------------------------------------------
  */
 
-package org.opengauss.admin.plugin.domain.model.ops;
+
+package org.opengauss.admin.plugin.vo.ops;
 
 import lombok.Data;
-import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
+import org.opengauss.admin.common.enums.ops.ClusterEnvCheckResultEnum;
+
+import java.util.List;
 
 /**
+ * cluster env check
+ *
  * @author wangchao
- * @date 2024/06/15 09:26
- */
+ * @date 2024/6/22 9:41
+ **/
 @Data
-public class OpsClusterTaskNodeVO {
-    private String clusterNodeId;
+public class ClusterEnvCheck {
     private String clusterId;
-    private String hostId;
-    private String hostIp;
-    private String hostUserId;
-    private String hostUsername;
-    private ClusterRoleEnum nodeType;
-    private String dataPath;
-    private String azOwner;
-    private String azPriority;
-    private Boolean isCmMaster;
-    private String cmDataPath;
-    private Integer cmPort;
+    private ClusterEnvCheckResultEnum result;
+    private List<ClusterNodeEnvCheck> envCheckDetails;
 }

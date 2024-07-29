@@ -25,8 +25,8 @@ package org.opengauss.admin.plugin.domain.model.ops.dto;
 
 import lombok.Data;
 import org.hibernate.validator.constraints.Range;
-import org.opengauss.admin.common.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.enums.ops.DeployTypeEnum;
+import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;

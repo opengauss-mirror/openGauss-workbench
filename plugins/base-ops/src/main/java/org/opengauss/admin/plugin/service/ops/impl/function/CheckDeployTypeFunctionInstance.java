@@ -78,6 +78,7 @@ public class CheckDeployTypeFunctionInstance {
      * @return check function
      */
     public CheckDeployTypeFunction getCheckFunction(OpenGaussVersionEnum version) {
+        Assert.isTrue(Objects.nonNull(version), "OpenGaussVersion can not be null");
         return checkFunctions.get(version);
     }
 }

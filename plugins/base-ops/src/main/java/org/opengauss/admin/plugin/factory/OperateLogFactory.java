@@ -25,11 +25,11 @@ package org.opengauss.admin.plugin.factory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.opengauss.admin.common.utils.spring.SpringUtils;
 import org.opengauss.admin.framework.manager.AsyncManager;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterOperateLog;
 import org.opengauss.admin.plugin.enums.ops.ClusterOperateTypeEnum;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterLogService;
+import org.opengauss.admin.plugin.utils.SpringUtils;
 
 import java.time.LocalDateTime;
 import java.util.Objects;

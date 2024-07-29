@@ -48,6 +48,6 @@ public class RetBuffer {
     }
 
     public void sendText(String text) {
-        buffer.append(text).append(System.getProperty("line.separator"));
+        buffer.append(text).append(System.lineSeparator());
     }
 }

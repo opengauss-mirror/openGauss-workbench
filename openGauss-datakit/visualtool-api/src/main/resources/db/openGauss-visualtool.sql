@@ -764,8 +764,8 @@ COMMENT ON TABLE "public"."sys_user" IS '用户信息表';
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS "public"."sys_user_role" (
-                                                        "user_id" int8 NOT NULL,
-                                                        "role_id" int8 NOT NULL
+    "user_id" int8 NOT NULL,
+    "role_id" int8 NOT NULL
 )
 ;
 COMMENT ON COLUMN "public"."sys_user_role"."user_id" IS '用户ID';
@@ -779,14 +779,8 @@ COMMENT ON TABLE "public"."sys_user_role" IS '用户和角色关联表';
 CREATE TABLE IF NOT EXISTS "public"."sys_white_list" (
     "id" int8 NOT NULL PRIMARY KEY DEFAULT nextval('sq_sys_white_list_id'::regclass),
     "title" varchar(255) COLLATE "pg_catalog"."default",
-    "ip_list" varchar
-(
-    800
-) COLLATE "pg_catalog"."default",
-    "create_time" timestamp
-(
-    6
-)
+    "ip_list" varchar(800) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6)
     )
 ;
 COMMENT
@@ -799,55 +793,50 @@ COMMENT
 ON COLUMN "public"."sys_white_list"."create_time" IS '创建时间';
 
 
-CREATE TABLE IF NOT EXISTS "public"."ops_package_manager"
-(
-    "package_id" varchar
-(
-    255
-) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
-    "os" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "cpu_arch" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "package_version" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "package_version_num" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "package_url" varchar
-(
-    1024
-) COLLATE "pg_catalog"."default",
-    "remark" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "create_by" varchar
-(
-    64
-) COLLATE "pg_catalog"."default",
-    "create_time" timestamp
-(
-    6
-),
-    "update_by" varchar
-(
-    64
-) COLLATE "pg_catalog"."default",
-    "update_time" timestamp
-(
-    6
-)
+CREATE TABLE IF NOT EXISTS "public"."ops_package_manager"(
+    "package_id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "os" varchar(255) COLLATE "pg_catalog"."default",
+    "cpu_arch" varchar(255) COLLATE "pg_catalog"."default",
+    "package_version" varchar(255) COLLATE "pg_catalog"."default",
+    "package_version_num" varchar(255) COLLATE "pg_catalog"."default",
+    "package_url" varchar(1024) COLLATE "pg_catalog"."default",
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6)
     );
 
 
+-- ----------------------------
+-- Table structure for ops_cluster_operate_log
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS "public"."ops_cluster_operate_log" (
+    "operate_id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "cluster_id" varchar(255) COLLATE "pg_catalog"."default",
+    "cluster_node_id" varchar(255) COLLATE "pg_catalog"."default",
+    "operate_type" varchar(255) COLLATE "pg_catalog"."default",
+    "operate_log" text COLLATE "pg_catalog"."default",
+    "operate_time"  timestamp(6),
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6)
+    )
+;
+
+COMMENT ON COLUMN "public"."ops_cluster_operate_log"."operate_id" IS '操作记录Id';
+COMMENT ON COLUMN "public"."ops_cluster_operate_log"."cluster_id" IS '集群ID';
+COMMENT ON COLUMN "public"."ops_cluster_operate_log"."cluster_node_id" IS '集群节点ID';
+COMMENT ON COLUMN "public"."ops_cluster_operate_log"."operate_type" IS '操作类型';
+COMMENT ON COLUMN "public"."ops_cluster_operate_log"."operate_log" IS '操作记录日志';
+COMMENT ON COLUMN "public"."ops_cluster_operate_log"."operate_time" IS '操作时间';
+COMMENT ON COLUMN "public"."ops_cluster_operate_log"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."ops_cluster_operate_log"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."ops_cluster_operate_log"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."ops_cluster_operate_log"."update_time" IS '更新时间';
+COMMENT ON TABLE "public"."ops_cluster_operate_log" IS '集群安装任务操作日志';
 
 CREATE TABLE IF NOT EXISTS "public"."sys_task" (
  "id" int8 NOT NULL DEFAULT nextval('sq_sys_task_id'::regclass),

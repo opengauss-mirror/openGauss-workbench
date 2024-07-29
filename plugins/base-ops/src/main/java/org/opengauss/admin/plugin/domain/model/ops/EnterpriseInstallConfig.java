@@ -132,7 +132,9 @@ public class EnterpriseInstallConfig implements ClusterInstallConfig {
 
         for (EnterpriseInstallNodeConfig enterpriseInstallNodeConfig : nodeConfigList) {
             OpsClusterNodeEntity opsClusterNodeEntity = enterpriseInstallNodeConfig.toOpsClusterNodeEntity();
-            sharingStorageInstallConfig.appendtoOpsClusterNodeEntity(opsClusterNodeEntity);
+            if (Objects.equals(databaseKernelArch, DatabaseKernelArch.SHARING_STORAGE)) {
+                sharingStorageInstallConfig.appendtoOpsClusterNodeEntity(opsClusterNodeEntity);
+            }
             list.add(opsClusterNodeEntity);
         }
         return list;

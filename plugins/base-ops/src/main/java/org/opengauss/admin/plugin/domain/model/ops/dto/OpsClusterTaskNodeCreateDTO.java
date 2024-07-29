@@ -25,9 +25,11 @@ package org.opengauss.admin.plugin.domain.model.ops.dto;
 
 import lombok.Data;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterTaskNodeEntity;
+import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
 import org.springframework.beans.BeanUtils;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author wangchao
@@ -39,8 +41,8 @@ public class OpsClusterTaskNodeCreateDTO {
     private String hostId;
     @NotBlank(message = "hostUserId cannot be empty")
     private String hostUserId;
-    @NotBlank(message = "nodeType cannot be empty")
-    private String nodeType;
+    @NotNull(message = "nodeType cannot be empty")
+    private ClusterRoleEnum nodeType;
     @NotBlank(message = "dataPath cannot be empty")
     private String dataPath;
     private String azOwner;
