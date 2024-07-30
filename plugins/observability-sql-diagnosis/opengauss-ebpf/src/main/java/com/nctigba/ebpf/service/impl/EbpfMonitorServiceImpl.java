@@ -91,20 +91,17 @@ public class EbpfMonitorServiceImpl implements EbpfMonitorService {
                 case EbpfTypeConstants.STACKCOUNT:
                 case EbpfTypeConstants.MEMLEAK:
                     commandMap.put(
-                            type.getType(),
-                            bccPath + String.format(type.getCommand(), tid) + filePath + FileTypeConstants.STACKS
-                                    + pidFile);
+                            type.getType(), "sudo sh -c '" + bccPath + String.format(type.getCommand(), tid) + filePath
+                                    + FileTypeConstants.STACKS + pidFile + "'");
                     break;
                 default:
                     commandMap.put(
-                            type.getType(),
-                            bccPath + String.format(type.getCommand(), tid) + filePath + FileTypeConstants.DEFAULT
-                                    + pidFile);
+                            type.getType(), "sudo sh -c '" + bccPath + String.format(type.getCommand(), tid) + filePath
+                                    + FileTypeConstants.DEFAULT + pidFile + "'");
                     break;
             }
         }
         String execCmd = commandMap.get(monitorType);
-        log.info(execCmd);
         osUtils.execCmd(execCmd);
     }
 }

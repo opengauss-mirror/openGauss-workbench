@@ -74,11 +74,12 @@ public class Installer implements SocketExtract {
                 switch (obj.getStr("key")) {
                     case "agent":
                         agentServiceImpl.install(session, obj.getStr("nodeId"), obj.getInt("port"),
-                                obj.getStr("rootPassword"),
+                                obj.getStr("username"), obj.getStr("rootPassword"),
                                 obj.getStr("path"), obj.getStr("callbackPath"));
                         break;
                     case "uninstall agent":
-                        agentServiceImpl.uninstall(session, obj.getStr("nodeId"), obj.getStr("rootPassword"));
+                        agentServiceImpl.uninstall(session, obj.getStr("nodeId"),
+                                obj.getStr("rootPassword"));
                         break;
                 }
             } catch (Exception e) {
