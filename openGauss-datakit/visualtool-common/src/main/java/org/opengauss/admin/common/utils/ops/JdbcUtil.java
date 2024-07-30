@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcInfo;
 import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.common.exception.ops.OpsException;
+import org.springframework.util.ObjectUtils;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -138,6 +139,47 @@ public class JdbcUtil {
             closeConnection(pgConnection);
         }
         return isAdmin;
+    }
+
+    /**
+     * get openGauss jdbc url
+     *
+     * @param host host ip
+     * @param port port
+     * @param database database name
+     * @param schema schema name
+     * @return String url
+     */
+    public static String getOpengaussJdbcUrl(String host, String port, String database, String schema) {
+        StringBuilder stringBuilder = new StringBuilder("jdbc:opengauss://");
+        stringBuilder.append(host).append(":").append(port).append("/").append(database);
+
+        if (!ObjectUtils.isEmpty(schema)) {
+            stringBuilder.append("?currentSchema=").append(schema);
+        }
+
+        return stringBuilder.toString();
+    }
+
+    /**
+     * determine whether execute query has result
+     *
+     * @param url jdbc url
+     * @param sql sql
+     * @param username database user name
+     * @param password database user password
+     * @return boolean
+     */
+    public static boolean hasResultSetByExecuteQuery(String url, String sql, String username, String password) {
+        try (Connection connection = getConnection(url, username, password);
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
+            return resultSet.next();
+        } catch (SQLException e) {
+            log.error("Failed to execute the query. SQL: {}. ERROR: {}", sql, e.getMessage());
+        }
+
+        return false;
     }
 
     /**

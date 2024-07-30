@@ -21,6 +21,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.utils.SecurityUtils;
 import org.opengauss.admin.plugin.domain.*;
 import org.opengauss.admin.plugin.enums.MainTaskStatus;
@@ -33,6 +35,7 @@ import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationTaskMapper;
 import org.opengauss.admin.plugin.service.*;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
+import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,6 +72,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private EncryptionUtils encryptionUtils;
 
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private OpsFacade opsFacade;
 
     @Autowired
     private MigrationTaskMapper migrationTaskMapper;
@@ -590,11 +596,41 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         resultMap.put("opengauss.database.schema", task.getSourceDb());
         resultMap.put("migration_mode", task.getMigrationModelId() + "");
         resultMap.put("is_adjustKernel_param", task.getIsAdjustKernelParam() + "");
+        setOpengaussClusterParams(resultMap, task.getTargetNodeId());
+
         if (globalParamMap.keySet().size() > 0) {
             resultMap.putAll(globalParamMap);
         }
         setToolsParams(task, resultMap);
         return resultMap;
+    }
+
+    /**
+     * set openGauss cluster params
+     *
+     * @param resultMap params map
+     * @param nodeId target node id
+     */
+    private void setOpengaussClusterParams(Map<String, String> resultMap, String nodeId) {
+        resultMap.put("opengauss.database.iscluster", "false");
+
+        OpsClusterVO opsClusterVO = opsFacade.getOpsClusterVOByNodeId(nodeId);
+
+        if (opsClusterVO != null && opsClusterVO.getClusterNodes().size() > 1) {
+            List<OpsClusterNodeVO> standbyNodes = opsClusterVO.getOtherNodes(nodeId);
+
+            List<String> hostnames = standbyNodes.stream()
+                    .map(OpsClusterNodeVO::getPublicIp)
+                    .collect(Collectors.toList());
+
+            List<String> ports = standbyNodes.stream()
+                    .map(node -> node.getDbPort().toString())
+                    .collect(Collectors.toList());
+
+            resultMap.put("opengauss.database.iscluster", "true");
+            resultMap.put("opengauss.database.standby.hostnames", String.join(",", hostnames));
+            resultMap.put("opengauss.database.standby.ports", String.join(",", ports));
+        }
     }
 
     /**
