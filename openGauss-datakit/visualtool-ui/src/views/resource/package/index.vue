@@ -59,7 +59,7 @@
             <template #cell="{ record }">{{record.packageVersionNum}}</template>
           </a-table-column>
           <a-table-column title="安装来源" data-index="hostLabel" :width="100">
-            <template #cell="{ record }"></template>
+            <template #cell="{ record }">{{record.hostLabel}}</template>
           </a-table-column>
           <a-table-column title="下载地址/离线安装包" data-index="packageUrl" :width="200">
             <template #cell="{ record }">{{record.packageUrl}}</template>
@@ -230,7 +230,7 @@ const searchTag = (inputValue: any) => {
       tag.children.forEach(item => item.disabled = false)
     }
   })
-  getListData(searchFormData)
+  getListData(filter.pageSize, filter.pageNum, searchFormData)
 }
 
 const handleSelected = (keys: (string | number)[]) => {
@@ -243,7 +243,6 @@ const handleSelected = (keys: (string | number)[]) => {
       data.value.selectedData[packageId] = findOne
     }
   })
-  console.log(data.value)
 }
 
 const checkPack = (record: KeyValue) => {
@@ -262,6 +261,7 @@ const checkPack = (record: KeyValue) => {
   }) .catch(error => {
     console.error('260' + error)
   })
+  init()
 }
 
 const checkSelectedPack = () => {
@@ -300,7 +300,7 @@ const checkPackMul = (records: KeyValue) => {
       content: '293 An error occurred while checking packages'
     })
   })
-  getListData()
+  getListData(filter.pageSize, filter.pageNum)
 }
 
 const deleteRows = (record: KeyValue) => {
@@ -309,11 +309,12 @@ const deleteRows = (record: KeyValue) => {
       Message.success({
         content: '删除成功'
       })
-      getListData()
+      getListData(filter.pageSize, filter.pageNum)
     }
   }) .catch(error => {
     console.error('310' + error)
   })
+  init()
 }
 
 const deleteSelectedHosts = () => {
@@ -343,12 +344,12 @@ const deleteMultipleRows = (records: KeyValue) => {
     }
     list.selectedpackageIds = []
     data.value.selectedData = []
+    init()
   }).catch(() => {
     Message.error({
       content: '344 An error occurred while deleting packages'
     })
   })
-  getListData()
 }
 
 const tableEmptyFlag = ref(false)
@@ -382,7 +383,7 @@ const init = () => {
   fetchArch()
   fetchVersion()
   fetchVersionNum()
-  getListData()
+  getListData(filter.pageSize, filter.pageNum)
 }
 const fetchOs = () => {
   parentTags.value.forEach(tag => {
@@ -489,21 +490,19 @@ onUnmounted(() => {
 
 const filter = {
   pageNum: 1,
-  pageSize:1
+  pageSize:10
 }
 const currentPage = (e: number) => {
   filter.pageNum = e
-  getListData()
+  getListData(filter.pageSize, filter.pageNum)
 }
 
 const pageSizeChange = (e: number) => {
   filter.pageSize = e
-  getListData()
+  getListData(filter.pageSize, filter.pageNum)
 }
 
-const rawList = ref([])
-
-const getListData = (formData?: FormData) => new Promise(resolve => {
+const getListData = (pageSize?:number, pageNum?:number, formData?: FormData) => new Promise(resolve => {
   let checkFormValue  = formData?formData.get('name'):null
   const name = checkFormValue !== null ? checkFormValue.toString() : ''
   checkFormValue =  formData?formData.get('os'):null
@@ -515,15 +514,13 @@ const getListData = (formData?: FormData) => new Promise(resolve => {
   checkFormValue = formData?formData.get('packageVersionNum'):null
   const openGaussVersionNum = checkFormValue!== null ?checkFormValue.toString():''
   list.loading = true
-  console.log('listAll')
-  getPackagePage({
+  getPackagePage(pageSize?pageSize:10, pageNum?pageNum:1, {
     name:name,
     os: os,
     cpuArch: cpuArch,
     openGaussVersion: openGaussVersion,
-    openGaussVersionNum: openGaussVersionNum
+    openGaussVersionNum: openGaussVersionNum,
   }).then((res) => {
-    console.log(res)
     list.data = []
     const tempPackage = {
       name: '',
@@ -539,7 +536,6 @@ const getListData = (formData?: FormData) => new Promise(resolve => {
       hostLabel: ''
     }
     res.rows.forEach(item => {
-      console.log(item)
       tempPackage.name = item.name
       tempPackage.type = item.type
       tempPackage.packageId =  item.packageId
@@ -551,7 +547,6 @@ const getListData = (formData?: FormData) => new Promise(resolve => {
       tempPackage.packagePath = item.packagePath
       tempPackage.hostLabel = item.filename?'离线上传':'在线下载'
       list.data.push({...tempPackage})
-      console.log(tempPackage)
     })
     list.page.total = res.total
   }) .finally(() => {

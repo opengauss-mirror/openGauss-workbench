@@ -316,7 +316,7 @@ const handleBeforeRemove = (file: FileItem) => {
 }
 
 // web socket
-const downloadWs = ref<WebSocket<any, any> | undefined>()
+const downloadWs = ref<Socket<any, any> | undefined>()
 const processVisible = ref(false)
 const percentLoading = ref(false)
 const currPercent = ref<number>(0)
@@ -328,31 +328,17 @@ watch(currPercent, (newValue) => {
   }
 })
 
-const downloadPackage = () => {
+const webSocketOpen = () => {
   currPercent.value = 0
-  const fileName =
-    data.formData.name.split('-')[
-    data.formData.name.split('-').length - 1
-      ]
   const socketKey = new Date().getTime()
-  const socketUrl = `ws://localhost:9494/ws/base-ops/downloadPackage_${socketKey}`
+  const wsPrefix = window.location.protocol.includes('https') ? 'wss' : 'ws'
+  const socketUrl = `${wsPrefix}://${window.location.host}/ws/base-ops/downloadPackage_${socketKey}`
   const websocket = new WebSocket(socketUrl)
   wsBusinessId.value = `downloadPackage_${socketKey}`
   websocket.onopen = function(event) {
-    const param = {
-      resourceUrl: data.formData.packageUrl,
-      targetPath: data.targetPath + data.formData.name,
-      fileName: fileName,
-      connectType: 'DOWNLOAD_INSTALL_PACKAGE',
-      businessId: `downloadPackage_${socketKey}`
-    };
-    wsBusinessId.value = param.businessId;
-    download(param).then(() => {
-      processVisible.value = true
-      percentLoading.value = true
-    })
+    wsBusinessId.value = `downloadPackage_${socketKey}`
   }
-
+  downloadWs.value = websocket
   websocket.onmessage = function(event) {
     const messageData = event.data
     if (!isNaN(Number(messageData))) {
@@ -364,17 +350,42 @@ const downloadPackage = () => {
       }
     }
   }
-  websocket.onclose = function(event) {
-    console.log('WebSocket closed:', event.code, event.reason);
-  };
   websocket.onerror = function(error) {
     console.error('WebSocket error:', error);
   }
 }
 
+const downloadPackage = () => {
+  const fileName =
+    data.formData.name.split('-')[
+    data.formData.name.split('-').length - 1
+      ]
+  const param = {
+    resourceUrl: data.formData.packageUrl,
+    targetPath: data.targetPath + data.formData.name,
+    fileName: fileName,
+    connectType: 'DOWNLOAD_INSTALL_PACKAGE',
+    businessId: wsBusinessId.value
+  };
+  download(param).then(() => {
+    simulateDownload()
+    processVisible.value = true
+    percentLoading.value = true
+  })
+}
+const simulateDownload = async () => {
+  try {
+    while (currPercent.value < 100) {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+    downloadWs.value?.destroy()
+  } catch (error) {
+    console.error('Download failed:', error)
+  }
+}
+
 const handleOk = () => {
   processVisible.value = false
-  close()
 }
 
 const getUploadPath = () => {
@@ -470,6 +481,7 @@ const open = (
   packageData?: KeyValue,
   addOptionFlag?: number
 ) => {
+  webSocketOpen()
   getUploadPath()
   fetchVersionNum()
   getSystemSetting()
@@ -567,8 +579,6 @@ const submitLoading = ref(false)
 const submit = async () => {
   if (uploadStatusTag.value) {
     if (data.formData.packageId && data.formData.packageId != ''){
-      const params = { packageId: data.formData.packageId }
-      const dataToSend = { /* 要上传的数据 */ };
       packageUploadUpdate(data.formData.packageId, data.fileList).then((res) => {
         console.log('res594' + res)
       }).catch((error) => {
@@ -590,27 +600,30 @@ const submit = async () => {
         console.log('562' + error)
       })
     }
-
   } else {
-    await downloadPackage()
-    const params = {
-      name: data.formData.name,
-      os: data.formData.os,
-      cpuArch: data.formData.cpuArch,
-      openGaussVersion: data.formData.packageVersion,
-      openGaussVersionNum: data.formData.packageVersionNum,
-      downloadUrl: data.formData.packageUrl,
-      wsBusinessId: wsBusinessId.value
+    console.log('604判断是否修改' + editDisabledFlag.value)
+    if (!editDisabledFlag.value){
+      const params = {
+        name: data.formData.name,
+        os: data.formData.os,
+        cpuArch: data.formData.cpuArch,
+        openGaussVersion: data.formData.packageVersion,
+        openGaussVersionNum: data.formData.packageVersionNum,
+        downloadUrl: data.formData.packageUrl,
+        wsBusinessId: wsBusinessId.value
+      }
+      downloadPackage()
+      batchPackageOnline(params).then((res) => {
+        console.log('570 add success online', res)
+      }).catch((error) => {
+        console.log('572 online', error)
+      })
     }
-    batchPackageOnline(params).then((res) => {
-      console.log('570 add success online', res)
-    }).catch((error) => {
-      console.log('572 online', error)
-    })
   }
   data.show = false
 }
 const close = () => {
+  downloadWs.value?.destroy()
   data.show = false
   data.oldPwd = ''
   Object.assign(data.formData, {

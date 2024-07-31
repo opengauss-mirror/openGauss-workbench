@@ -279,8 +279,8 @@ export const getPackageList = (data: FormData) => {
   return axios.get(`/plugins/base-ops/installPackageManager/v2/list/package`, {data})
 }
 
-export const getPackagePage = (data: KeyValue) => {
-  return axios.post(`/plugins/base-ops/installPackageManager/v2/page/package`, data)
+export const getPackagePage = (pageSize: number, pageNum:number, data: KeyValue) => {
+  return axios.post(`/plugins/base-ops/installPackageManager/v2/page/package/?pageSize=${pageSize}&pageNum=${pageNum}`, data)
 }
 
 export const batchPackageOnline = (data: FormData) => {
@@ -288,7 +288,7 @@ export const batchPackageOnline = (data: FormData) => {
 }
 
 export const batchPackageUpload = (name:KeyValue, os: KeyValue, cpuArch: KeyValue, packageVersion: KeyValue, packageVersionNum: KeyValue, packageUrl: KeyValue) => {
-  return axios.post(`/installPackageManager/v2/save/upload/?name=${name}&os=${os}&cpuArch=${cpuArch}&packageVersion=${packageVersion}&packageVersionNum=${packageVersionNum}&packageUrl=${packageUrl}`)
+  return axios.post(`/plugins/base-ops/installPackageManager/v2/save/upload/?name=${name}&os=${os}&cpuArch=${cpuArch}&packageVersion=${packageVersion}&packageVersionNum=${packageVersionNum}&packageUrl=${packageUrl}`)
 }
 
 export const packageOnlineUpdate = (params: KeyValue) => {
