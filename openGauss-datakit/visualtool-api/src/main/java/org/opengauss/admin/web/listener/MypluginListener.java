@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
@@ -87,6 +88,9 @@ public class MypluginListener implements PluginListener {
         StringWriter errorsWriter = new StringWriter();
         throwable.printStackTrace(new PrintWriter(errorsWriter));
         log.error("plugin[{}] start fail. {}", pluginInfo.getPluginId(), errorsWriter.toString());
+
+        removePluginInstallationPackage(pluginInfo);
+        pluginOperator.unload(pluginInfo.getPluginId());
     }
 
     @Override
@@ -99,5 +103,18 @@ public class MypluginListener implements PluginListener {
         StringWriter errorsWriter = new StringWriter();
         throwable.printStackTrace(new PrintWriter(errorsWriter));
         log.error("plugin[{}] stop fail. {}", pluginInfo.getPluginId(), errorsWriter.toString());
+    }
+
+    private void removePluginInstallationPackage(PluginInfo pluginInfo) {
+        File file = new File(pluginInfo.getPluginPath());
+        if (!file.exists()) {
+            return;
+        }
+
+        if (file.delete()) {
+            log.info("plugin [{}] installation package removed successfully.", pluginInfo.getPluginId());
+        } else {
+            log.error("plugin [{}] installation package removed failed.", pluginInfo.getPluginId());
+        }
     }
 }
