@@ -156,6 +156,7 @@
       :schema="commonParams.schema"
       :tableName="commonParams.tableName"
       :oid="commonParams.oid"
+      @success="handleImportSuccess"
     />
     <ExportFilterDataDialog
       v-if="visibleExportDialog"
@@ -824,6 +825,9 @@
 
   const handleImportData = () => {
     visibleImportDialog.value = true;
+  };
+  const handleImportSuccess = () => {
+    handleRefresh();
   };
   const handleExportCurrentPage = () => {
     exportType.value = 'current';

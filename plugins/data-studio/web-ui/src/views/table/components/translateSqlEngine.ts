@@ -39,8 +39,12 @@ function fn(list: SetFilterTableDataRow[]) {
       rowStr = ')';
     }
     if (item.type == 'normal') {
+      let value = item.value;
+      let value2 = item.value2;
+      if (typeof item.value == 'string') value = value.replaceAll("'", "''");
+      if (typeof item.value2 == 'string') value2 = value2.replaceAll("'", "''");
       if (['=', '!=', '<', '<=', '>', '>='].includes(item.connector)) {
-        rowStr = `${item.key} ${sqlSyntaxMap[item.connector]} ${item.value}`;
+        rowStr = `${item.key} ${sqlSyntaxMap[item.connector]} '${value}'`;
       }
       if (
         [
@@ -50,22 +54,22 @@ function fn(list: SetFilterTableDataRow[]) {
           'doesNotContainCaseInsensitive',
         ].includes(item.connector)
       ) {
-        rowStr = `${item.key} ${sqlSyntaxMap[item.connector]} '%${item.value}%'`;
+        rowStr = `${item.key} ${sqlSyntaxMap[item.connector]} '%${value}%'`;
       }
       if (['beginsWith', 'doesNotBeginWith'].includes(item.connector)) {
-        rowStr = `${item.key} ${sqlSyntaxMap[item.connector]} '${item.value}%'`;
+        rowStr = `${item.key} ${sqlSyntaxMap[item.connector]} '${value}%'`;
       }
       if (['endsWith', 'doesNotEndWith'].includes(item.connector)) {
-        rowStr = `${item.key} ${sqlSyntaxMap[item.connector]} '%${item.value}'`;
+        rowStr = `${item.key} ${sqlSyntaxMap[item.connector]} '%${value}'`;
       }
       if (['isNull', 'isNotNull', 'isEmpty', 'isNotEmpty'].includes(item.connector)) {
         rowStr = `${item.key} ${sqlSyntaxMap[item.connector]}`;
       }
       if (['isBetween', 'isNotBetween'].includes(item.connector)) {
-        rowStr = `${item.key} ${sqlSyntaxMap[item.connector]} ${item.value} AND ${item.value2}`;
+        rowStr = `${item.key} ${sqlSyntaxMap[item.connector]} '${value}' AND '${value2}'`;
       }
       if (['isInList', 'isNotInList'].includes(item.connector)) {
-        rowStr = `${item.key} ${sqlSyntaxMap[item.connector]} (${item.value})`;
+        rowStr = `${item.key} ${sqlSyntaxMap[item.connector]} ('${value}')`;
       }
     }
     return rowStr + logic;
