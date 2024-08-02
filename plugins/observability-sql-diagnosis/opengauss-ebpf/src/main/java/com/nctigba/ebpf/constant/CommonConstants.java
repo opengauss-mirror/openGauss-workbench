@@ -47,12 +47,12 @@ public class CommonConstants {
     /**
      * Kill command
      */
-    public static final String KILL = "kill -2 %s";
+    public static final String KILL = "sudo kill -2 %s";
 
     /**
      * Kill command
      */
-    public static final String KILL_9 = "kill -9 %s";
+    public static final String KILL_9 = "sudo kill -9 %s";
 
     /**
      * Database pid monitor command

@@ -56,4 +56,11 @@ public interface AgentService {
      * @return List
      */
     List<AgentStatusVO> getAgentStatus();
+
+    /**
+     * Get install user
+     *
+     * @return AjaxResult
+     */
+    String getInstallUser(String nodeId);
 }

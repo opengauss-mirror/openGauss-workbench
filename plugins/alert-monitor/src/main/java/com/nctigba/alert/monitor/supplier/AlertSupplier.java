@@ -83,6 +83,12 @@ public class AlertSupplier {
     @Autowired
     private ApplicationContext context;
 
+    /**
+     * saveAlertRule
+     *
+     * @param alertRule AlertRuleParamDTO
+     * @return AjaxResult
+     */
     @Supplier.Method("saveAlertRule")
     public AjaxResult saveAlertRule(AlertRuleParamDTO alertRule) {
         if (StrUtil.isBlank(alertRule.getRuleName()) || StrUtil.isBlank(alertRule.getPluginCode())
@@ -108,6 +114,12 @@ public class AlertSupplier {
         return AjaxResult.success();
     }
 
+    /**
+     * alerts
+     *
+     * @param paramList List<Map<String, Object>>
+     * @return AjaxResult
+     */
     @Supplier.Method("alerts")
     public AjaxResult alerts(List<Map<String, Object>> paramList) {
         if (CollectionUtil.isEmpty(paramList)) {

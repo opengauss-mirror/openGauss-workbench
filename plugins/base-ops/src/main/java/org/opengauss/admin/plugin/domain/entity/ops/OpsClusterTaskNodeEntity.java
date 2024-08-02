@@ -32,6 +32,7 @@ import lombok.EqualsAndHashCode;
 import org.opengauss.admin.plugin.domain.BaseEntity;
 import org.opengauss.admin.common.enums.ops.ClusterEnvCheckResultEnum;
 import org.opengauss.admin.plugin.domain.model.ops.OpsClusterTaskNodeVO;
+import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
 import org.springframework.beans.BeanUtils;
 
 
@@ -51,7 +52,7 @@ public class OpsClusterTaskNodeEntity extends BaseEntity {
     private String clusterId;
     private String hostId;
     private String hostUserId;
-    private String nodeType;
+    private ClusterRoleEnum nodeType;
     private String dataPath;
     private String azOwner;
     private String azPriority;

@@ -35,7 +35,6 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 public class OpsPackageDownloadDTO {
-    private String packageId;
     /**
      * package name
      */

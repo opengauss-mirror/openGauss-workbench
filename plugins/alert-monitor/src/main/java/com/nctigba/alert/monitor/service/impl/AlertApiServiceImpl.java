@@ -25,26 +25,29 @@ package com.nctigba.alert.monitor.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.event.NotifyEvent;
-import com.nctigba.alert.monitor.model.entity.AlertRecordDO;
-import com.nctigba.alert.monitor.model.entity.AlertRecordDetailDO;
-import com.nctigba.alert.monitor.model.entity.AlertTemplateDO;
-import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleDO;
-import com.nctigba.alert.monitor.model.entity.NotifyWayDO;
 import com.nctigba.alert.monitor.mapper.AlertRecordMapper;
+import com.nctigba.alert.monitor.mapper.AlertShieldingMapper;
 import com.nctigba.alert.monitor.mapper.AlertTemplateMapper;
 import com.nctigba.alert.monitor.mapper.AlertTemplateRuleMapper;
 import com.nctigba.alert.monitor.mapper.NotifyMessageMapper;
 import com.nctigba.alert.monitor.mapper.NotifyTemplateMapper;
 import com.nctigba.alert.monitor.mapper.NotifyWayMapper;
+import com.nctigba.alert.monitor.model.entity.AlertRecordDO;
+import com.nctigba.alert.monitor.model.entity.AlertRecordDetailDO;
+import com.nctigba.alert.monitor.model.entity.AlertShieldingDO;
+import com.nctigba.alert.monitor.model.entity.AlertTemplateDO;
+import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleDO;
+import com.nctigba.alert.monitor.model.entity.NotifyWayDO;
 import com.nctigba.alert.monitor.model.query.api.AlertApiReq;
-import com.nctigba.alert.monitor.util.MessageSourceUtils;
-import com.nctigba.alert.monitor.util.TextParserUtils;
 import com.nctigba.alert.monitor.service.AlertApiService;
 import com.nctigba.alert.monitor.service.AlertRecordDetailService;
 import com.nctigba.alert.monitor.service.AlertRecordService;
+import com.nctigba.alert.monitor.util.MessageSourceUtils;
+import com.nctigba.alert.monitor.util.TextParserUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
@@ -106,6 +109,8 @@ public class AlertApiServiceImpl implements AlertApiService {
     @Autowired
     @AutowiredType(AutowiredType.Type.MAIN_PLUGIN)
     private HostFacade hostFacade;
+    @Autowired
+    private AlertShieldingMapper shieldingMapper;
 
 
     /**
@@ -146,9 +151,16 @@ public class AlertApiServiceImpl implements AlertApiService {
 
     private Optional<AlertRecordDO> generateRecord(AlertApiReq alertApiReq, AlertTemplateRuleDO alertTemplateRuleDO) {
         String clusterNodeId = alertApiReq.getLabels().get("instance");
+        List<AlertShieldingDO> shieldingDOList = shieldingMapper.selectList(Wrappers.<AlertShieldingDO>lambdaQuery()
+                .eq(AlertShieldingDO::getIsDeleted, CommonConstants.IS_NOT_DELETE)
+                .eq(AlertShieldingDO::getIsEnable, CommonConstants.IS_ENABLE));
+        boolean isExists = shieldingDOList.stream().anyMatch(f -> f.getClusterNodeIds().contains(clusterNodeId));
+        if (isExists) {
+            return Optional.empty();
+        }
         Long templateId = Long.valueOf(alertApiReq.getLabels().get("templateId"));
         List<AlertRecordDO> alertRecordDOS =
-            recordService.getList(clusterNodeId, templateId, alertTemplateRuleDO.getId());
+                recordService.getList(clusterNodeId, templateId, alertTemplateRuleDO.getId());
         AlertRecordDO alertRecordDO = null;
         DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         if (CollectionUtil.isEmpty(alertRecordDOS)
@@ -161,19 +173,19 @@ public class AlertApiServiceImpl implements AlertApiService {
             alertRecordDO = new AlertRecordDO();
             AlertTemplateDO alertTemplateDO = templateMapper.selectById(templateId);
             alertRecordDO.setClusterNodeId(clusterNodeId).setTemplateId(templateId).setTemplateRuleId(
-                    alertTemplateRuleDO.getId()).setCreateTime(LocalDateTime.now())
-                .setTemplateName(alertTemplateDO.getTemplateName()).setTemplateRuleName(
-                    alertTemplateRuleDO.getRuleName()).setStartTime(alertApiReq.getStartsAt())
-                .setTemplateRuleType(alertTemplateRuleDO.getRuleType()).setLevel(alertTemplateRuleDO.getLevel())
-                .setRecordStatus(CommonConstants.UNREAD_STATUS);
+                            alertTemplateRuleDO.getId()).setCreateTime(LocalDateTime.now())
+                    .setTemplateName(alertTemplateDO.getTemplateName()).setTemplateRuleName(
+                            alertTemplateRuleDO.getRuleName()).setStartTime(alertApiReq.getStartsAt())
+                    .setTemplateRuleType(alertTemplateRuleDO.getRuleType()).setLevel(alertTemplateRuleDO.getLevel())
+                    .setRecordStatus(CommonConstants.UNREAD_STATUS);
         } else {
             alertRecordDO = alertRecordDOS.get(0);
             alertRecordDO.setAlertStatus(alertApiReq.getAlertStatus()).setUpdateTime(LocalDateTime.now());
         }
         List<NotifyWayDO> notifyWayDOS = notifyWayMapper.selectBatchIds(
-            Arrays.asList(alertTemplateRuleDO.getNotifyWayIds().split(CommonConstants.DELIMITER)));
+                Arrays.asList(alertTemplateRuleDO.getNotifyWayIds().split(CommonConstants.DELIMITER)));
         String notifyWayNames = notifyWayDOS.stream().map(item -> item.getName()).collect(
-            Collectors.joining(CommonConstants.DELIMITER));
+                Collectors.joining(CommonConstants.DELIMITER));
         Map<String, String> alertParams = generateAlertParams(alertApiReq);
         alertRecordDO.setNotifyWayIds(alertTemplateRuleDO.getNotifyWayIds()).setNotifyWayNames(notifyWayNames)
             .setEndTime(alertApiReq.getEndsAt()).setDuration(
@@ -209,7 +221,7 @@ public class AlertApiServiceImpl implements AlertApiService {
         Map annotations = alertApiReq.getAnnotations();
         if (CollectionUtil.isNotEmpty(annotations) && annotations.get("value") != null) {
             BigDecimal val = new BigDecimal(annotations.get("value").toString())
-                .setScale(2, BigDecimal.ROUND_HALF_UP);
+                    .setScale(2, BigDecimal.ROUND_HALF_UP);
             alertParams.put("value", val.toString());
         }
         LocalDateTime alertTime = alertApiReq.getStartsAt();
@@ -234,15 +246,16 @@ public class AlertApiServiceImpl implements AlertApiService {
             throw new ServiceException("cluster is not found");
         }
         String nodeName =
-            opsClusterEntity.getClusterId() + "/" + opsHost.getPublicIp() + ":" + opsClusterEntity.getPort()
-                + "(" + opsClusterNodeEntity.getClusterRole() + ")";
+                opsClusterEntity.getClusterId() + "/" + opsHost.getPublicIp() + ":" + opsClusterEntity.getPort()
+                        + "(" + opsClusterNodeEntity.getClusterRole() + ")";
         alertParams.put("nodeName", nodeName);
         alertParams.put("hostname", opsHost.getHostname());
         alertParams.put("port", opsClusterEntity.getPort() != null ? opsClusterEntity.getPort().toString() : "");
         alertParams.put("hostIp", opsHost.getPublicIp());
-        alertParams.put("cluster",
-            StrUtil.isNotBlank(opsClusterEntity.getClusterName()) ? opsClusterEntity.getClusterName()
-                : opsClusterEntity.getClusterId());
+        alertParams.put(
+                "cluster",
+                StrUtil.isNotBlank(opsClusterEntity.getClusterName()) ? opsClusterEntity.getClusterName()
+                        : opsClusterEntity.getClusterId());
         alertParams.put("clusterId", opsClusterEntity.getClusterId());
         return alertParams;
     }

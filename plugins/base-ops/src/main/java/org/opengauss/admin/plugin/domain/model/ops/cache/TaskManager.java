@@ -40,6 +40,10 @@ public class TaskManager {
         TASK_CONTEXT.put(sessionId, future);
     }
 
+    public static int executeCount(String businessPrefix) {
+        return (int) TASK_CONTEXT.keySet().stream().filter(s -> s.startsWith(businessPrefix)).count();
+    }
+
     public static Optional<Future<?>> remove(String sessionId) {
         Future<?> future = TASK_CONTEXT.get(sessionId);
         while (Objects.nonNull(future) && !future.isCancelled()) {

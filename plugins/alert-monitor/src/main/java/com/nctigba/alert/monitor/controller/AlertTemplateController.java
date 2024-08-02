@@ -27,9 +27,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nctigba.alert.monitor.constant.CommonConstants;
-import com.nctigba.alert.monitor.model.dto.AlertRuleParamDTO;
 import com.nctigba.alert.monitor.model.dto.AlertTemplateDTO;
-import com.nctigba.alert.monitor.model.dto.AlertTemplateRuleDTO;
 import com.nctigba.alert.monitor.model.entity.AlertRuleDO;
 import com.nctigba.alert.monitor.model.entity.AlertTemplateDO;
 import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleDO;
@@ -77,6 +75,12 @@ public class AlertTemplateController extends BaseController {
         return getDataTable(page);
     }
 
+    /**
+     * getTemplateList
+     *
+     * @param type String
+     * @return AjaxResult
+     */
     @GetMapping("/list")
     public AjaxResult getTemplateList(@RequestParam String type) {
         List<AlertTemplateDO> list = templateService.getTemplateList(type);

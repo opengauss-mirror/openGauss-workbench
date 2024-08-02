@@ -1463,3 +1463,18 @@ update alert_record_detail set type = 'instance' where type is null or type = ''
 ALTER TABLE alert_record_detail ADD COLUMN ip varchar(100);
 ALTER TABLE alert_record_detail ADD COLUMN port varchar(100);
 ALTER TABLE alert_record_detail ADD COLUMN node_name varchar(200);
+CREATE TABLE IF NOT alert_shielding (
+	id int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
+	rule_name varchar(50) NOT NULL,
+	rule_detail varchar(300) NULL,
+	cluster_node_ids text NOT NULL,
+	type varchar(32) NOT NULL,
+	start_date date NULL,
+	end_date date NULL,
+	start_time time NULL,
+	end_time time NULL,
+	is_enable int8 NULL DEFAULT 1,
+	is_deleted int8 NULL DEFAULT 0,
+	create_time timestamp NULL,
+	update_time timestamp NULL
+);

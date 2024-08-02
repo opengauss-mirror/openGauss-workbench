@@ -58,4 +58,5 @@ public class OpsClusterOperateLog extends BaseEntity {
     private String operateLog;
 
     private LocalDateTime operateTime;
+
 }

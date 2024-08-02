@@ -242,7 +242,7 @@ public class PrometheusServiceImpl implements PrometheusService {
             Map configMap = new ObjectMapper().convertValue(updateConfig, HashMap.class);
             uploadConfigFile(configMap, env.getPath(), CommonConstants.PROMETHEUS_YML);
         } catch (IOException | CryptoException | ServiceException | NullPointerException | BaseException
-                 | IORuntimeException e) {
+                | IORuntimeException e) {
             log.warn("init prometheus configuration fail: {}", e.getMessage());
         }
     }

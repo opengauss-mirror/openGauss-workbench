@@ -34,6 +34,7 @@ import com.nctigba.ebpf.service.MonitorService;
 import com.nctigba.ebpf.service.OsMonitorService;
 import com.nctigba.ebpf.service.ParamMonitorService;
 import com.nctigba.ebpf.util.OSUtils;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -43,6 +44,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -70,6 +73,7 @@ public class MonitorServiceImpl implements MonitorService {
 
     @Override
     public void startMonitor(String tid, String taskId, String monitorType) {
+        log.info("Start monitor:");
         boolean isExist = false;
         for (OsTypeEnum type : OsTypeEnum.values()) {
             if (type.getType().equals(monitorType)) {
@@ -202,52 +206,58 @@ public class MonitorServiceImpl implements MonitorService {
         return true;
     }
 
+    @SneakyThrows
     private boolean stopMonitorAndSendData(File file) {
         String fileName = file.getName();
         String taskId = fileName.substring(0, fileName.indexOf("."));
-        int totalCount = 0;
-        int stopCount = 0;
+        List<String> pidList = new ArrayList<>();
+        List<String> typeList = new ArrayList<>();
+        String sqlTid = "";
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
-            boolean isFinish = false;
             while ((line = reader.readLine()) != null) {
-                totalCount++;
                 String[] split = line.split(",");
-                if (!isFinish && monitor(split[2])) {
-                    isFinish = true;
-                    String newFileName = file.getAbsolutePath().replace(".pid", "_delete.pid");
-                    File newFile = new File(newFileName);
-                    boolean isSuccess = file.renameTo(newFile);
-                    log.info("modify file name:" + isSuccess);
-                }
-                String checkPid = osUtils.exec(String.format(CommonConstants.CHECK_PID, split[0])).toString();
-                if (checkPid != null && checkPid.contains("false")) {
-                    stopCount++;
+                if (split.length < 3) {
                     continue;
                 }
-                osUtils.execCmd(String.format(CommonConstants.KILL, split[0]));
-                if (EbpfTypeConstants.PROFILE.equals(split[1]) || EbpfTypeConstants.OFFCPUTIME.equals(
-                        split[1])
-                        || EbpfTypeConstants.MEMLEAK.equals(split[1])) {
-                    TimeUnit.SECONDS.sleep(2);
-                    sendFileHandler.createSvg(taskId, split[1]);
-                }
-                if (OsTypeConstants.SAR.equals(split[1])) {
-                    sendFileHandler.sendFile(taskId, "cpuCoreNum");
-                }
-                sendFileHandler.sendFile(taskId, split[1]);
-                checkPid = osUtils.exec(String.format(CommonConstants.CHECK_PID, split[0])).toString();
-                if (checkPid != null && checkPid.contains("false")) {
-                    stopCount++;
-                }
-                TimeUnit.SECONDS.sleep(1);
+                pidList.add(split[0]);
+                typeList.add(split[1]);
+                sqlTid = split[2];
             }
-        } catch (IOException | InterruptedException e) {
-            log.error(e.getMessage());
+        } catch (IOException e) {
+            return false;
+        }
+        boolean isStop = monitor(sqlTid);
+        if (!isStop) {
+            return false;
+        }
+        String newFileName = file.getAbsolutePath().replace(".pid", "_delete.pid");
+        File newFile = new File(newFileName);
+        boolean isSuccess = file.renameTo(newFile);
+        log.info("modify file name:" + isSuccess);
+        for (String pid : pidList) {
+            osUtils.execCmd(String.format(CommonConstants.KILL, pid));
+        }
+        TimeUnit.SECONDS.sleep(2);
+        for (String pid : pidList) {
+            String checkPid = osUtils.exec(String.format(CommonConstants.CHECK_PID, pid)).toString();
+            if (checkPid != null && checkPid.contains("true")) {
+                osUtils.execCmd(String.format(CommonConstants.KILL_9, pid));
+            }
+        }
+        for (String monitorType : typeList) {
+            if (EbpfTypeConstants.PROFILE.equals(monitorType) || EbpfTypeConstants.OFFCPUTIME.equals(monitorType)
+                    || EbpfTypeConstants.MEMLEAK.equals(monitorType)) {
+                TimeUnit.SECONDS.sleep(2);
+                sendFileHandler.createSvg(taskId, monitorType);
+            }
+            if (OsTypeConstants.SAR.equals(monitorType)) {
+                sendFileHandler.sendFile(taskId, "cpuCoreNum");
+            }
+            sendFileHandler.sendFile(taskId, monitorType);
         }
         checkOutput(taskId);
-        log.info("totalCount:" + totalCount + "/" + "stopCount:" + stopCount);
-        return totalCount == stopCount;
+        return true;
     }
 
     private void checkOutput(String taskId) {

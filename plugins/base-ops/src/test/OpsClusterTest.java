@@ -374,7 +374,6 @@ public class OpsClusterTest {
         enterpriseInstallConfig.setIsInstallCM(false);
         enterpriseInstallConfig.setCorePath("/opt/openGauss/corefile");
         enterpriseInstallConfig.setPort(5432);
-        enterpriseInstallConfig.setAzName("az1");
         enterpriseInstallConfig.setLogPath("/opt/openGauss/log/omm");
         enterpriseInstallConfig.setEnableDCF(false);
         enterpriseInstallConfig.setOmToolsPath("/opt/openGauss/install/om");

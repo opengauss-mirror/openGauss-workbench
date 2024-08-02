@@ -125,8 +125,8 @@ public class AlertClusterNodeConfServiceImpl
             return;
         }
         List<AlertClusterNodeConfDO> alertClusterNodeConfDOList = newNodeIdList.stream().map(
-            item -> new AlertClusterNodeConfDO().setClusterNodeId(item).setType(type).setTemplateId(templateId).setCreateTime(
-                LocalDateTime.now()).setIsDeleted(CommonConstants.IS_NOT_DELETE)).collect(
+            item -> new AlertClusterNodeConfDO().setClusterNodeId(item).setType(type).setTemplateId(templateId)
+                .setCreateTime(LocalDateTime.now()).setIsDeleted(CommonConstants.IS_NOT_DELETE)).collect(
             Collectors.toList());
         this.saveBatch(alertClusterNodeConfDOList);
         if (type.equalsIgnoreCase(CommonConstants.NONINSTANCE)) {

@@ -57,7 +57,6 @@ public class OsMonitorServiceImpl implements OsMonitorService {
 
     @Override
     public void getCpuMonitorData(String tid, String taskId, String monitorType) {
-        log.info("OsMonitorServiceImpl" + tid + ":" + taskId + ":" + monitorType);
         String fileName = System.getProperty("user.dir") + "/pid/" + taskId + ".pid";
         File file = new File(fileName);
         if (!file.exists()) {
@@ -78,7 +77,7 @@ public class OsMonitorServiceImpl implements OsMonitorService {
         String fileName = outputPath + taskId + monitorType;
         String fileUrl = writeType + fileName + FileTypeConstants.DEFAULT;
         String endTime =
-                "set -m; echo time:$(date '+%Y-%m-%d %H:%M:%S') > " + fileName + FileTypeConstants.DEFAULT;
+                "set -m; echo time:$(date \"+%Y-%m-%d %H:%M:%S\") > " + fileName + FileTypeConstants.DEFAULT;
         String pidPath = System.getProperty("user.dir") + "/pid/" + taskId + ".pid";
         String pidFile = " 2>&1 &  echo $!," + monitorType + "," + tid + " >> " + pidPath;
         HashMap<String, String> commandMap = new HashMap<>();
@@ -91,17 +90,13 @@ public class OsMonitorServiceImpl implements OsMonitorService {
                 case OsTypeConstants.PIDSTAT:
                 case OsTypeConstants.SAR:
                 case OsTypeConstants.SAR_D:
-                    commandMap.put(
-                            type.getType(), type.getCommand() + fileUrl + pidFile);
+                    commandMap.put(type.getType(), "sudo sh -c '" + type.getCommand() + fileUrl + pidFile + "'");
                     break;
                 default:
-                    commandMap.put(
-                            type.getType(),
-                            endTime + " ; " + type.getCommand() + " >> " + fileName + FileTypeConstants.DEFAULT
-                                    + pidFile);
+                    commandMap.put(type.getType(), "sudo sh -c '" + endTime + " ; " + type.getCommand() + " >> "
+                            + fileName + FileTypeConstants.DEFAULT + pidFile + "'");
             }
         }
-        log.info(commandMap.get(monitorType));
         osUtils.execCmd(commandMap.get(monitorType));
     }
 }

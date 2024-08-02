@@ -58,6 +58,7 @@ public class AlertClusterNodeConfController extends BaseController {
     /**
      * getList
      *
+     * @param type String
      * @return AjaxResult
      */
     @GetMapping
@@ -70,6 +71,7 @@ public class AlertClusterNodeConfController extends BaseController {
      * getByClusterNodeId
      *
      * @param clusterNodeId clusterNodeId
+     * @param type String
      * @return AjaxResult
      */
     @GetMapping("/clusterNode/{clusterNodeId}")
@@ -111,6 +113,7 @@ public class AlertClusterNodeConfController extends BaseController {
      * unbind the clusterNodes and rule template
      *
      * @param clusterNodeIds clusterNodeIds
+     * @param type String
      * @return AjaxResult
      */
     @DeleteMapping("/unbind")

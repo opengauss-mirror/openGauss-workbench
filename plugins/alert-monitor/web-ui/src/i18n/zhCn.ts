@@ -27,7 +27,7 @@ export default {
     reset: '重置',
     back: '返回',
     preview: '预览',
-    enable: '启动',
+    enable: '启用',
     disable: '停用',
     test: '测试',
     enableFail: '启动失败',

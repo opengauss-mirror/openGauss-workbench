@@ -32,6 +32,7 @@ import lombok.Data;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author lhf
@@ -66,5 +67,17 @@ public class OpsClusterVO {
         opsClusterVO.setDeployType(opsClusterEntity.getDeployType());
         opsClusterVO.setEnvPath(opsClusterEntity.getEnvPath());
         return opsClusterVO;
+    }
+
+    /**
+     * get other nodes in ops cluster
+     *
+     * @param exceptNodeId except node id
+     * @return List<OpsClusterNodeVO>
+     */
+    public List<OpsClusterNodeVO> getOtherNodes(String exceptNodeId) {
+        return clusterNodes.stream()
+                .filter(node -> !exceptNodeId.equals(node.getNodeId()))
+                .collect(Collectors.toList());
     }
 }

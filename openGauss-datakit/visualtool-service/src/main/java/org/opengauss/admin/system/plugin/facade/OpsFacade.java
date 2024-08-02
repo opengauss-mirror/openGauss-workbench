@@ -49,4 +49,32 @@ public class OpsFacade {
     public CheckSummaryVO check(String clusterId, String rootPassword){
         return opsClusterService.check(clusterId, rootPassword);
     }
+
+    /**
+     * determine whether the node is in ops cluster
+     *
+     * @param nodeId node id
+     * @return boolean
+     */
+    public boolean isNodeInOpsCluster(String nodeId) {
+        return opsClusterService.listCluster().stream()
+                .map(OpsClusterVO::getClusterNodes)
+                .flatMap(List::stream)
+                .anyMatch(node -> nodeId.equals(node.getNodeId()));
+    }
+
+    /**
+     * get opsClusterVO by node id
+     *
+     * @param nodeId node id
+     * @return OpsClusterVO
+     */
+    public OpsClusterVO getOpsClusterVOByNodeId(String nodeId) {
+        for (OpsClusterVO opsClusterVO : listCluster()) {
+            if (opsClusterVO.getClusterNodes().stream().anyMatch(node -> nodeId.equals(node.getNodeId()))) {
+                return opsClusterVO;
+            }
+        }
+        return null;
+    }
 }

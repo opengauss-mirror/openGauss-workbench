@@ -66,10 +66,9 @@ public class MonitorController {
      */
     @PostMapping("/startMonitor")
     public void startMonitor(String tid, String taskId, String monitorType) {
-        log.info(tid + ":" + taskId + ":" + monitorType);
         boolean isEmptyParam = tid == null || taskId == null || monitorType == null;
         if (isEmptyParam) {
-            log.info("Parameter cannot be empty");
+            log.error("Parameter cannot be empty");
         }
         monitorService.startMonitor(tid, taskId, monitorType);
     }

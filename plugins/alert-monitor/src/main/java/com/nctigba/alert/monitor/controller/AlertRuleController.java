@@ -70,6 +70,12 @@ public class AlertRuleController extends BaseController {
         return getDataTable(ruleIPage);
     }
 
+    /**
+     * getRuleList
+     *
+     * @param ruleTypes String
+     * @return AjaxResult
+     */
     @GetMapping("/ruleList")
     public AjaxResult getRuleList(@RequestParam String ruleTypes) {
         List<String> ruleTypeList = Arrays.asList(ruleTypes.split(CommonConstants.DELIMITER));

@@ -343,19 +343,35 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     @Override
     public List<Map<String, Object>> getOpsClusterDbNames(OpsClusterNodeVO clusterNode) {
         List<Map<String, Object>> dbList = new ArrayList<>();
-        if (clusterNode.getHostPort() == 22) {
-            String sql = "select datname from pg_database;";
-            List<Map<String, Object>> resultSet = queryTarget(clusterNode, "", sql);
-            resultSet.forEach(ret -> {
-                Map<String, Object> itemMap = new HashMap<>();
-                String datname = ret.get("datname").toString();
-                itemMap.put("dbName", datname);
-                Integer count = migrationTaskService.countNotFinishByTargetDb(clusterNode.getNodeId(), datname);
-                itemMap.put("isSelect", count == 0);
-                dbList.add(itemMap);
-            });
+        if (clusterNode.getHostPort() != 22
+                || (opsFacade.isNodeInOpsCluster(clusterNode.getNodeId()) && !isPrimaryNodeInCluster(clusterNode))) {
+            return dbList;
         }
+
+        String sql = "select datname from pg_database;";
+        List<Map<String, Object>> resultSet = queryTarget(clusterNode, "", sql);
+        resultSet.forEach(ret -> {
+            Map<String, Object> itemMap = new HashMap<>();
+            String datname = ret.get("datname").toString();
+            itemMap.put("dbName", datname);
+            Integer count = migrationTaskService.countNotFinishByTargetDb(clusterNode.getNodeId(), datname);
+            itemMap.put("isSelect", count == 0);
+            dbList.add(itemMap);
+        });
         return dbList;
+    }
+
+    /**
+     * determine whether the node is primary
+     *
+     * @param clusterNode ops cluster node vo
+     * @return boolean
+     */
+    private boolean isPrimaryNodeInCluster(OpsClusterNodeVO clusterNode) {
+        String sql = "select * from pg_stat_get_wal_senders();";
+        String url = JdbcUtil.getOpengaussJdbcUrl(
+                clusterNode.getPublicIp(), clusterNode.getDbPort().toString(), clusterNode.getDbName(), "");
+        return JdbcUtil.hasResultSetByExecuteQuery(url, sql, clusterNode.getDbUser(), clusterNode.getDbUserPassword());
     }
 
     private List<Map<String, Object>> convertList(ResultSet rs) {

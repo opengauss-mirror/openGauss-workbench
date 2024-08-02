@@ -61,9 +61,11 @@ public class PluginListener implements ApplicationListener<ApplicationEvent> {
                     firstMenu.getMenuId());
                 menuFacade.savePluginMenu(pluginId, "告警规则", "Alert Rule", 25, "vem/alert/alertRule",
                     firstMenu.getMenuId());
-                menuFacade.savePluginMenu(pluginId, "通知模板", "Notify Template", 26, "vem/notify/notifyTemplate",
+                menuFacade.savePluginMenu(pluginId, "告警屏蔽", "Alert Shielding", 26, "vem/alert/AlertShielding",
+                        firstMenu.getMenuId());
+                menuFacade.savePluginMenu(pluginId, "通知模板", "Notify Template", 27, "vem/notify/notifyTemplate",
                     firstMenu.getMenuId());
-                menuFacade.savePluginMenu(pluginId, "通知方式", "Notify Way", 27, "vem/notify/notifyWay",
+                menuFacade.savePluginMenu(pluginId, "通知方式", "Notify Way", 28, "vem/notify/notifyWay",
                     firstMenu.getMenuId());
             }
         }

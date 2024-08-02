@@ -627,9 +627,6 @@ public class ExporterInstallService extends AbstractInstaller {
     /**
      * monitorStatus
      */
-    /**
-     * monitorStatus
-     */
     @Scheduled(fixedRate = CommonConstants.MONITOR_CYCLE, timeUnit = TimeUnit.SECONDS)
     public void monitorStatus() {
         StopWatch stopWatch = new StopWatch();

@@ -146,7 +146,7 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
 
         Connection connection = null;
         try {
-            connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), clusterEntity.getDatabasePassword()).orElseThrow(() -> new OpsException("Unable to connect to the database"));
+            connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), encryptionUtils.decrypt(clusterEntity.getDatabasePassword())).orElseThrow(() -> new OpsException("Unable to connect to the database"));
             return listSnapshot(page.getCurrent(), page.getSize(), connection);
         }catch (Exception e) {
             log.error("get connection fail");

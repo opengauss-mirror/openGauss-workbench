@@ -28,7 +28,7 @@ mybatis-plus:
   # Load the global configuration file
   configuration:
     mapUnderscoreToCamelCase: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
 
 installPackage:
   urlPrefix: https://opengauss.obs.cn-south-1.myhuaweicloud.com

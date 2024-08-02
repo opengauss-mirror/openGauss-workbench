@@ -251,4 +251,14 @@ public class CommonConstants {
      * noninstance
      */
     public static final String NONINSTANCE = "noninstance";
+
+    /**
+     * IS_ENABLE_STATUS
+     */
+    public static final Integer IS_NOT_ENABLE = 0;
+
+    /**
+     * ENABLE_STATUS
+     */
+    public static final Integer IS_ENABLE = 1;
 }

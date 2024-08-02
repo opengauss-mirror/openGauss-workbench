@@ -154,7 +154,7 @@
         </span>
         <span class="footer-right">
           <el-button @click="handleClose">{{ $t('button.cancel') }}</el-button>
-          <el-button type="primary" @click="resetForm(ruleFormRef)">
+          <el-button @click="resetForm(ruleFormRef)">
             {{ $t('button.reset') }}
           </el-button>
           <el-button type="primary" @click="testConnection(ruleFormRef)">

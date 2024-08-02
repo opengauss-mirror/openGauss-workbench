@@ -24,6 +24,7 @@
 package org.opengauss.admin.plugin.domain.model.ops;
 
 import lombok.Data;
+import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
 
 /**
  * @author wangchao
@@ -37,7 +38,7 @@ public class OpsClusterTaskNodeVO {
     private String hostIp;
     private String hostUserId;
     private String hostUsername;
-    private String nodeType;
+    private ClusterRoleEnum nodeType;
     private String dataPath;
     private String azOwner;
     private String azPriority;

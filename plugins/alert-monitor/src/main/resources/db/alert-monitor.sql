@@ -180,6 +180,16 @@ START 20
 CACHE 1;
 END IF;
 
+IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_alert_shielding_id'' )
+THEN
+CREATE SEQUENCE "public"."sq_alert_shielding_id"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 20
+CACHE 1;
+END IF;
+
 RETURN 0;
 END;'
 LANGUAGE plpgsql;
@@ -1708,3 +1718,18 @@ update "public"."alert_record_detail" set type = 'instance' where type is null o
 ALTER TABLE "public"."alert_record_detail" ADD COLUMN "ip" varchar(100);
 ALTER TABLE "public"."alert_record_detail" ADD COLUMN "port" varchar(100);
 ALTER TABLE "public"."alert_record_detail" ADD COLUMN "node_name" varchar(200);
+CREATE TABLE IF NOT EXISTS public.alert_shielding (
+	id int8 NOT NULL PRIMARY KEY DEFAULT nextval('sq_alert_shielding_id'::regclass),
+	rule_name varchar(50) NOT NULL,
+	rule_detail varchar(300) NULL,
+	cluster_node_ids text NOT NULL,
+	type varchar(32) NOT NULL,
+	start_date date NULL,
+	end_date date NULL,
+	start_time time NULL,
+	end_time time NULL,
+	is_enable int1 NULL DEFAULT 1,
+	is_deleted int1 NULL DEFAULT 0,
+	create_time timestamp(6) NULL,
+	update_time timestamp(6) NULL
+);

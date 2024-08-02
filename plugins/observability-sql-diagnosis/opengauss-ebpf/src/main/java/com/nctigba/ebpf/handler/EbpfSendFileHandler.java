@@ -96,7 +96,7 @@ public class EbpfSendFileHandler {
         String svgcmd = null;
         OSUtils osUtils = new OSUtils();
         String ebpfUrl = System.getProperty("user.dir") + "/output/";
-        String fgUrl = urlConfig.getFgUrl();
+        String fgUrl = System.getProperty("user.dir") + "/FlameGraph";
         if (EbpfTypeConstants.PROFILE.equals(monitorType)) {
             svgcmd = "cd " + fgUrl + " &&./flamegraph.pl --title='On-CPU Time' "
                     + ebpfUrl + taskId + monitorType + FileTypeConstants.STACKS + " > " + ebpfUrl + taskId + monitorType

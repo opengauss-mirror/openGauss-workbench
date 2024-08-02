@@ -27,6 +27,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.enums.ops.DeployTypeEnum;
@@ -58,6 +59,7 @@ public class InstallContext implements Cloneable {
     private DeployTypeEnum deployType;
 
     private String installPackagePath;
+    private String installPackageLocalPath;
 
     private EnterpriseInstallConfig enterpriseInstallConfig;
 
@@ -75,6 +77,11 @@ public class InstallContext implements Cloneable {
     private List<HostInfoHolder> hostInfoHolders;
 
     public void checkConfig() {
+        checkRetSessionConfig();
+        checkTaskConfig();
+    }
+
+    public void checkTaskConfig() {
         if (Objects.isNull(openGaussVersion)) {
             throw new OpsException("The OpenGauss version is incorrect");
         }
@@ -97,10 +104,6 @@ public class InstallContext implements Cloneable {
 
         if (StrUtil.isEmpty(clusterId)) {
             throw new OpsException("Cluster ID error");
-        }
-
-        if (Objects.isNull(retSession)) {
-            throw new OpsException("Response connection error");
         }
 
         boolean clusterDeploy = deployType == DeployTypeEnum.CLUSTER;
@@ -149,6 +152,31 @@ public class InstallContext implements Cloneable {
 
             liteInstallConfig.checkConfig();
         }
+    }
+
+    private void checkRetSessionConfig() {
+        if (Objects.isNull(retSession)) {
+            throw new OpsException("Response connection error");
+        }
+    }
+
+    public String getInstallUsername() {
+        if (Objects.isNull(hostInfoHolders)) {
+            return "";
+        }
+        HostInfoHolder hostInfoHolder = hostInfoHolders.get(0);
+        if (Objects.isNull(hostInfoHolder)) {
+            return "";
+        }
+        List<OpsHostUserEntity> hostUserEntities = hostInfoHolder.getHostUserEntities();
+        if (Objects.isNull(hostUserEntities)) {
+            return "";
+        }
+        return hostUserEntities.stream()
+                .map(OpsHostUserEntity::getUsername)
+                .filter(username -> !"root".equals(username))
+                .findFirst()
+                .orElse("");
     }
 
     public OpsClusterEntity toOpsClusterEntity() {

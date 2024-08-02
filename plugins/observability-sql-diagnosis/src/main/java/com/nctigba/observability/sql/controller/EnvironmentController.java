@@ -31,12 +31,15 @@ import com.nctigba.observability.sql.model.entity.NctigbaEnvDO;
 import com.nctigba.observability.sql.model.vo.AgentClusterNodeVO;
 import com.nctigba.observability.sql.model.vo.AgentClusterVO;
 import com.nctigba.observability.sql.service.impl.ClusterManager;
+import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
+import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -53,6 +56,9 @@ public class EnvironmentController {
     @Autowired
     @AutowiredType(Type.PLUGIN_MAIN)
     private HostFacade hostFacade;
+    @Autowired
+    @AutowiredType(Type.PLUGIN_MAIN)
+    private HostUserFacade hostUserFacade;
     @Autowired
     private ClusterManager clusterManager;
 
@@ -133,5 +139,18 @@ public class EnvironmentController {
     @GetMapping("/hosts")
     public List<OpsHostEntity> hosts() {
         return hostFacade.listAll();
+    }
+
+    /**
+     * Get host user
+     *
+     * @param nodeId nodeId
+     * @return List
+     */
+    @GetMapping("/hostUser/{nodeId}")
+    public AjaxResult hostUser(@PathVariable String nodeId) {
+        var node = clusterManager.getOpsNodeById(nodeId);
+        var hostId = node.getHostId();
+        return AjaxResult.success(hostUserFacade.listHostUserByHostId(hostId));
     }
 }

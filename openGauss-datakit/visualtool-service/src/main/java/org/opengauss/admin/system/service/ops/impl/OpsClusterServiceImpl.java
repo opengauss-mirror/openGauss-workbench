@@ -242,7 +242,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 String sourceURL = "jdbc:opengauss://" + hostEntity.getPublicIp() + ":" + clusterEntity.getPort() + "/postgres";
                 Properties info = new Properties();
                 info.setProperty("user", clusterEntity.getDatabaseUsername());
-                info.setProperty("password", clusterEntity.getDatabasePassword());
+                info.setProperty("password", encryptionUtils.decrypt(clusterEntity.getDatabasePassword()));
                 try {
                     Class.forName(driver);
                     connection = DriverManager.getConnection(sourceURL, info);
