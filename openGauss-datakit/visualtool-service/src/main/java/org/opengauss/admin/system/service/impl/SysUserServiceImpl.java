@@ -200,6 +200,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int insertUser(SysUser user) {
+        user.setUserId(null);
         int rows = userMapper.insert(user);
         insertUserRole(user);
         return rows;

@@ -190,6 +190,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int insertRole(SysRole role) {
+        role.setRoleId(null);
         roleMapper.insert(role);
         return insertRoleMenu(role);
     }
