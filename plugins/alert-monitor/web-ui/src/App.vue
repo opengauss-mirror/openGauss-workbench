@@ -5,9 +5,9 @@
                 <my-menu :collapse="collapse" />
             </aside>
             <div class="main" ref="mainDiv">
-                <div class="page" v-if="alertConfigEnv.showMain"><router-view />
+                <div class="page" ><router-view />
                 </div>
-                <AlertConfig class="page" v-else />
+                <!-- <AlertConfig class="page" v-else /> -->
             </div>
         </div>
     </el-config-provider>

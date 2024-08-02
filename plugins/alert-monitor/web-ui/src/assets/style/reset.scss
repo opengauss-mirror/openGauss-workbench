@@ -209,11 +209,6 @@ body {
     color: var(--hw-primary-1);
 }
 
-// textarea
-.el-textarea__inner {
-    background-color: var(--color-fill-2) !important;
-}
-
 .el-textarea__inner:focus {
     background-color: var(--main-background-color) !important;
 }
@@ -225,7 +220,6 @@ body {
         color: var(--primary-6) !important;
         border: none !important;
         background-color: var(--button-1-background) !important;
-        // background-color: var(--el-table-row-hover-bg-color) !important;
     }
 }
 
@@ -305,26 +299,6 @@ body {
     color: var(--primary-6) !important;
     background-color: rgb(255, 255, 255, 0) !important;
     border: 1px solid var(--primary-6) !important;
-}
-
-.el-tag {
-    display: inline-flex;
-    height: 32px;
-    padding: 4px 8px;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-    margin: 3px;
-    border-radius: 2px;
-    border: 1px solid #D9D9D9 !important;
-    background: var(--background-color-1) !important;
-    color: var(--color-1) !important;
-    font-size: 12px;
-    line-height: 20px;
-
-    .el-tag__close {
-        color: var(--color-1) !important;
-    }
 }
 
 .el-form-item--default {
