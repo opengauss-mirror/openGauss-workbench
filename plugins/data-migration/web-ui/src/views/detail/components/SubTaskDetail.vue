@@ -780,8 +780,7 @@ const getSubTaskDetail = () => {
                   'div',
                   null,
                   t('components.SubTaskDetail.5q09xhsvcq44', {
-                    totalDataSize: dataCheckData.value?.total || 0,
-                    totalRowCount: dataCheckData.value?.totalRows || 0,
+                    totalRowCount: dataCheckData.value?.total || 0,
                     totalTableCount: dataCheckData.value?.tableCount || 0,
                     totalTableFinishCount:
                       dataCheckData.value?.completeCount || 0
