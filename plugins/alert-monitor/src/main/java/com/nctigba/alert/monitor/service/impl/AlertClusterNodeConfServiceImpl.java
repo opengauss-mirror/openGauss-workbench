@@ -31,7 +31,9 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.nctigba.alert.monitor.mapper.AlertPluginInfoMapper;
 import com.nctigba.alert.monitor.model.entity.AlertClusterNodeConfDO;
+import com.nctigba.alert.monitor.model.entity.AlertPluginInfoDO;
 import com.nctigba.alert.monitor.model.entity.AlertTemplateDO;
 import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleDO;
 import com.nctigba.alert.monitor.service.AlertScheduleService;
@@ -101,16 +103,19 @@ public class AlertClusterNodeConfServiceImpl
     @Autowired
     private AlertScheduleService alertScheduleService;
 
+    @Autowired
+    private AlertPluginInfoMapper alertPluginInfoMapper;
 
     @Transactional
     public void saveClusterNodeConf(AlertClusterNodeConfQuery alertClusterNodeConfQuery) {
         Long templateId = alertClusterNodeConfQuery.getTemplateId();
         String clusterNodeIds = alertClusterNodeConfQuery.getClusterNodeIds();
+        String type = alertClusterNodeConfQuery.getType();
         List<String> clusterNodeIdList = Arrays.asList(clusterNodeIds.split(CommonConstants.DELIMITER));
         // save new data
         List<AlertClusterNodeConfDO> oldListByTemplateId =
             this.baseMapper.selectList(Wrappers.<AlertClusterNodeConfDO>lambdaQuery()
-                .eq(AlertClusterNodeConfDO::getTemplateId, templateId)
+                .eq(AlertClusterNodeConfDO::getTemplateId, templateId).eq(AlertClusterNodeConfDO::getType, type)
                 .eq(AlertClusterNodeConfDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
         List<String> oldNodeIdListByTemplateId = oldListByTemplateId.stream().map(
             item -> item.getClusterNodeId()).collect(Collectors.toList());
@@ -120,10 +125,14 @@ public class AlertClusterNodeConfServiceImpl
             return;
         }
         List<AlertClusterNodeConfDO> alertClusterNodeConfDOList = newNodeIdList.stream().map(
-            item -> new AlertClusterNodeConfDO().setClusterNodeId(item).setTemplateId(templateId).setCreateTime(
-                LocalDateTime.now()).setIsDeleted(CommonConstants.IS_NOT_DELETE)).collect(
+            item -> new AlertClusterNodeConfDO().setClusterNodeId(item).setType(type).setTemplateId(templateId)
+                .setCreateTime(LocalDateTime.now()).setIsDeleted(CommonConstants.IS_NOT_DELETE)).collect(
             Collectors.toList());
         this.saveBatch(alertClusterNodeConfDOList);
+        if (type.equalsIgnoreCase(CommonConstants.NONINSTANCE)) {
+            delOldClusterNodeConfigs(templateId, clusterNodeIdList);
+            return;
+        }
         Map<Long, String> ruleConfigMap = new HashMap<>();  // use to update the prometheus rule configuration
         oldNodeIdListByTemplateId.addAll(newNodeIdList);
         ruleConfigMap.put(templateId, String.join(CommonConstants.DELIMITER, oldNodeIdListByTemplateId));
@@ -131,19 +140,14 @@ public class AlertClusterNodeConfServiceImpl
         ruleConfigMap.putAll(updateRuleConfigMap);
 
         // delete old data by clusterNodeIdList, which exclude templateId
-        LambdaUpdateWrapper<AlertClusterNodeConfDO> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.set(AlertClusterNodeConfDO::getIsDeleted, CommonConstants.IS_DELETE)
-            .set(AlertClusterNodeConfDO::getUpdateTime, new Timestamp(System.currentTimeMillis()))
-            .ne(AlertClusterNodeConfDO::getTemplateId, templateId).in(AlertClusterNodeConfDO::getClusterNodeId,
-                clusterNodeIdList).eq(AlertClusterNodeConfDO::getIsDeleted, CommonConstants.IS_NOT_DELETE);
-        this.update(null, updateWrapper);
+        delOldClusterNodeConfigs(templateId, clusterNodeIdList);
         // update prometheus rule config
         prometheusService.updateRuleConfig(ruleConfigMap);
         // add log task
         List<AlertTemplateRuleDO> templateRuleList = templateRuleService
             .list(Wrappers.<AlertTemplateRuleDO>lambdaQuery().eq(AlertTemplateRuleDO::getTemplateId, templateId)
-            .eq(AlertTemplateRuleDO::getRuleType, CommonConstants.LOG_RULE)
-            .eq(AlertTemplateRuleDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+                .eq(AlertTemplateRuleDO::getRuleType, CommonConstants.LOG_RULE)
+                .eq(AlertTemplateRuleDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
         Set<Long> ruleIdSet = templateRuleList.stream().map(item -> item.getRuleId()).collect(Collectors.toSet());
         alertScheduleService.addTasks(ruleIdSet);
         // remove old log task
@@ -155,12 +159,22 @@ public class AlertClusterNodeConfServiceImpl
         removeLogTasks(oldTemplateIds, clusterNodeIdList, ruleIdSet);
     }
 
+    // delete old data by clusterNodeIdList, which exclude templateId
+    private void delOldClusterNodeConfigs(Long templateId, List<String> clusterNodeIdList) {
+        LambdaUpdateWrapper<AlertClusterNodeConfDO> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.set(AlertClusterNodeConfDO::getIsDeleted, CommonConstants.IS_DELETE)
+            .set(AlertClusterNodeConfDO::getUpdateTime, new Timestamp(System.currentTimeMillis()))
+            .ne(AlertClusterNodeConfDO::getTemplateId, templateId).in(AlertClusterNodeConfDO::getClusterNodeId,
+                clusterNodeIdList).eq(AlertClusterNodeConfDO::getIsDeleted, CommonConstants.IS_NOT_DELETE);
+        this.update(null, updateWrapper);
+    }
+
     private void removeLogTasks(List<Long> oldTemplateIds, List<String> excludeNodeIds, Set<Long> excludeRuleIds) {
         List<AlertTemplateRuleDO> templateRuleList = templateRuleService.list(
             Wrappers.<AlertTemplateRuleDO>lambdaQuery()
-            .in(AlertTemplateRuleDO::getTemplateId, oldTemplateIds)
-            .eq(AlertTemplateRuleDO::getRuleType, CommonConstants.LOG_RULE)
-            .eq(AlertTemplateRuleDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+                .in(AlertTemplateRuleDO::getTemplateId, oldTemplateIds)
+                .eq(AlertTemplateRuleDO::getRuleType, CommonConstants.LOG_RULE)
+                .eq(AlertTemplateRuleDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
         Set<Long> ruleIds = templateRuleList.stream().filter(item -> !excludeRuleIds.contains(item.getRuleId()))
             .map(item -> item.getRuleId()).collect(Collectors.toSet());
         if (CollectionUtil.isEmpty(ruleIds)) {
@@ -206,10 +220,11 @@ public class AlertClusterNodeConfServiceImpl
     }
 
     @Override
-    public AlertClusterNodeConfDO getByClusterNodeId(String clusterNodeId) {
+    public AlertClusterNodeConfDO getByClusterNodeId(String clusterNodeId, String type) {
         List<AlertClusterNodeConfDO> alertClusterNodeConfDOS = this.baseMapper.selectList(
-            Wrappers.<AlertClusterNodeConfDO>lambdaQuery().eq(AlertClusterNodeConfDO::getClusterNodeId,
-                clusterNodeId).eq(AlertClusterNodeConfDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+            Wrappers.<AlertClusterNodeConfDO>lambdaQuery().eq(AlertClusterNodeConfDO::getClusterNodeId, clusterNodeId)
+                .eq(AlertClusterNodeConfDO::getType, type)
+                .eq(AlertClusterNodeConfDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
         if (CollectionUtil.isEmpty(alertClusterNodeConfDOS)) {
             return new AlertClusterNodeConfDO();
         }
@@ -225,22 +240,41 @@ public class AlertClusterNodeConfServiceImpl
         AlertClusterNodeConfQuery alertClusterNodeConfQuery = new AlertClusterNodeConfQuery();
         alertClusterNodeConfQuery.setTemplateId(alertTemplateDO.getId());
         alertClusterNodeConfQuery.setClusterNodeIds(clusterNodeAndTemplateReq.getClusterNodeIds());
+        alertClusterNodeConfQuery.setType(clusterNodeAndTemplateReq.getType());
         this.saveClusterNodeConf(alertClusterNodeConfQuery);
     }
 
     @Override
-    public List<AlertClusterNodeConfDTO> getList() {
+    public List<AlertClusterNodeConfDTO> getList(String type) {
         List<AlertClusterNodeConfDTO> dtoList = new ArrayList<>();
+        if (type.equalsIgnoreCase(CommonConstants.NONINSTANCE)) {
+            List<AlertPluginInfoDO> pluginInfoList = alertPluginInfoMapper.selectList(new LambdaUpdateWrapper<>());
+            if (CollectionUtil.isEmpty(pluginInfoList)) {
+                return dtoList;
+            }
+            List<String> nodeIds =
+                pluginInfoList.stream().map(item -> item.getId().toString()).collect(Collectors.toList());
+            List<AlertClusterNodeConfDO> alertClusterNodeConfs = getNodeConfByNodeIds(nodeIds, type);
+            for (AlertPluginInfoDO pluginInfo : pluginInfoList) {
+                AlertClusterNodeConfDTO dto = new AlertClusterNodeConfDTO();
+                dto.setClusterNodeId(pluginInfo.getId().toString()).setType(type).setNodeName(pluginInfo.getName());
+                AlertClusterNodeConfDO nodeConf = alertClusterNodeConfs.stream().filter(
+                    item -> item.getClusterNodeId().equals(pluginInfo.getId().toString())).findFirst().orElse(null);
+                if (nodeConf != null) {
+                    AlertTemplateDO alertTemplate = templateMapper.selectById(nodeConf.getTemplateId());
+                    dto.setTemplateId(nodeConf.getTemplateId()).setTemplateName(alertTemplate.getTemplateName());
+                }
+                dtoList.add(dto);
+            }
+            return dtoList;
+        }
         List<OpsClusterNodeEntity> list = clusterNodeService.list();
         Set<String> hostIdSet = list.stream().map(item -> item.getHostId()).collect(Collectors.toSet());
         List<OpsHostEntity> opsHostEntities = hostFacade.listByIds(hostIdSet);
         List<String> clusterIdList = list.stream().map(item -> item.getClusterId()).collect(Collectors.toList());
         List<OpsClusterEntity> opsClusterEntities = clusterService.listByIds(clusterIdList);
         List<String> nodeIdList = list.stream().map(item -> item.getClusterNodeId()).collect(Collectors.toList());
-        List<AlertClusterNodeConfDO> alertClusterNodeConfDOS = this.baseMapper.selectList(
-            Wrappers.<AlertClusterNodeConfDO>lambdaQuery().in(CollectionUtil.isNotEmpty(nodeIdList),
-                AlertClusterNodeConfDO::getClusterNodeId, nodeIdList).eq(AlertClusterNodeConfDO::getIsDeleted,
-                CommonConstants.IS_NOT_DELETE));
+        List<AlertClusterNodeConfDO> alertClusterNodeConfDOS = getNodeConfByNodeIds(nodeIdList, type);
         for (OpsClusterNodeEntity clusterNode : list) {
             OpsHostEntity opsHostEntity =
                 opsHostEntities.stream().filter(
@@ -266,16 +300,27 @@ public class AlertClusterNodeConfServiceImpl
         return dtoList;
     }
 
+    private List<AlertClusterNodeConfDO> getNodeConfByNodeIds(List<String> nodeIds, String type) {
+        return this.baseMapper.selectList(Wrappers.<AlertClusterNodeConfDO>lambdaQuery()
+            .in(CollectionUtil.isNotEmpty(nodeIds), AlertClusterNodeConfDO::getClusterNodeId, nodeIds)
+            .eq(AlertClusterNodeConfDO::getType, type)
+            .eq(AlertClusterNodeConfDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+    }
+
     @Override
     @Transactional
-    public void unbindByIds(String clusterNodeIds) {
+    public void unbindByIds(String clusterNodeIds, String type) {
         List<String> nodeIdList = Arrays.asList(clusterNodeIds.split(","));
         List<AlertClusterNodeConfDO> alertClusterNodeConfDOS =
             this.list(Wrappers.<AlertClusterNodeConfDO>lambdaQuery().in(AlertClusterNodeConfDO::getClusterNodeId,
-                nodeIdList).eq(AlertClusterNodeConfDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+                nodeIdList).eq(AlertClusterNodeConfDO::getType, type).eq(AlertClusterNodeConfDO::getIsDeleted,
+                CommonConstants.IS_NOT_DELETE));
         alertClusterNodeConfDOS.forEach(item -> item.setIsDeleted(CommonConstants.IS_DELETE)
             .setUpdateTime(LocalDateTime.now()));
         this.updateBatchById(alertClusterNodeConfDOS);
+        if (type.equalsIgnoreCase(CommonConstants.NONINSTANCE)) {
+            return;
+        }
 
         Map<Long, String> ruleConfigMap = new HashMap<>();
         List<Long> removeRuleIds = new ArrayList<>();

@@ -191,11 +191,15 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         List<OpsHostEntity> opsHostEntities, List<OpsClusterEntity> opsClusterEntities) {
         AlertRecordDTO alertRecordDto = new AlertRecordDTO();
         BeanUtil.copyProperties(record, alertRecordDto);
+        if (CommonConstants.NONINSTANCE.equals(record.getType())) {
+            alertRecordDto.setHostIpAndPort(record.getIp() + ":" + record.getPort());
+            return alertRecordDto;
+        }
         String clusterNodeId0 = record.getClusterNodeId();
         OpsClusterNodeEntity opsClusterNodeEntity = opsClusterNodeEntities.stream().filter(
             item -> item.getClusterNodeId().equals(clusterNodeId0)).findFirst().orElse(null);
         if (opsClusterNodeEntity == null) {
-            alertRecordDto.setClusterNodeName("").setHostIpAndPort("").setNodeRole("");
+            alertRecordDto.setHostIpAndPort("").setNodeRole("");
             return alertRecordDto;
         }
         OpsHostEntity opsHostEntity = opsHostEntities.stream().filter(
@@ -204,9 +208,9 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             item -> item.getClusterId().equals(opsClusterNodeEntity.getClusterId())).findFirst().get();
         String nodeName = opsClusterEntity.getClusterId() + "/" + opsHostEntity.getPublicIp() + ":"
             + opsClusterEntity.getPort() + "(" + opsClusterNodeEntity.getClusterRole() + ")";
-        alertRecordDto.setClusterNodeName(nodeName).setHostIpAndPort(
+        alertRecordDto.setHostIpAndPort(
             opsHostEntity.getPublicIp() + ":" + opsClusterEntity.getPort()).setNodeRole(
-            opsClusterNodeEntity.getClusterRole().name());
+            opsClusterNodeEntity.getClusterRole().name()).setNodeName(nodeName);
         return alertRecordDto;
     }
 
@@ -347,6 +351,10 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             return alertRecordDto;
         }
         BeanUtil.copyProperties(alertRecordDO, alertRecordDto);
+        if (CommonConstants.NONINSTANCE.equals(alertRecordDO.getType())) {
+            alertRecordDto.setHostIpAndPort(alertRecordDO.getIp() + ":" + alertRecordDO.getPort());
+            return alertRecordDto;
+        }
         String clusterNodeId = alertRecordDto.getClusterNodeId();
         OpsHostEntity opsHostEntity = new OpsHostEntity();
         OpsClusterEntity opsClusterEntity = new OpsClusterEntity();
@@ -363,10 +371,10 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         String nodeName =
             opsClusterEntity.getClusterId() + "/" + opsHostEntity.getPublicIp() + ":" + opsClusterEntity.getPort()
                 + "(" + opsClusterNodeEntity.getClusterRole() + ")";
-        alertRecordDto.setClusterNodeName(nodeName).setHostIpAndPort(
-            opsHostEntity.getPublicIp() + ":" + opsClusterEntity.getPort())
+        alertRecordDto.setHostIpAndPort(
+                opsHostEntity.getPublicIp() + ":" + opsClusterEntity.getPort())
             .setNodeRole(opsClusterNodeEntity.getClusterRole() != null
-            ? opsClusterNodeEntity.getClusterRole().name() : "");
+                ? opsClusterNodeEntity.getClusterRole().name() : "").setNodeName(nodeName);
         return alertRecordDto;
     }
 
@@ -383,7 +391,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
                 templateRuleId));
         List<AlertRelationDTO> relationDtoList = new ArrayList<>();
         NctigbaEnvDO promEnv = envMapper.selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery()
-                .eq(NctigbaEnvDO::getType, NctigbaEnvDO.Type.PROMETHEUS_MAIN));
+            .eq(NctigbaEnvDO::getType, NctigbaEnvDO.Type.PROMETHEUS_MAIN));
         for (AlertTemplateRuleItemDO templateRuleItem : templateRuleItems) {
             String ruleExpName = templateRuleItem.getRuleExpName();
             AlertRuleItemSrcDO ruleItemSrc = ruleItemSrcMapper.selectList(
@@ -458,7 +466,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         String clusterNodeId, Long templateId, Long templateRuleId) {
         return this.list(Wrappers.<AlertRecordDO>lambdaQuery()
             .eq(AlertRecordDO::getClusterNodeId, clusterNodeId).eq(AlertRecordDO::getTemplateId, templateId)
-            .eq(AlertRecordDO::getTemplateRuleId, templateRuleId).orderByDesc(AlertRecordDO::getUpdateTime));
+            .eq(AlertRecordDO::getTemplateRuleId, templateRuleId).orderByDesc(AlertRecordDO::getCreateTime));
     }
 
     private BoolQuery getSearchParams(
@@ -564,7 +572,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         for (int i = 0; i < list.size(); i++) {
             Row row0 = sheet.createRow(i + 1);
             int j = 0;
-            row0.createCell(j++).setCellValue(list.get(i).getClusterNodeName());
+            row0.createCell(j++).setCellValue(list.get(i).getNodeName());
             row0.createCell(j++).setCellValue(list.get(i).getTemplateName());
             row0.createCell(j++).setCellValue(list.get(i).getTemplateRuleName());
             row0.createCell(j++).setCellValue(

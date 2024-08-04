@@ -27,6 +27,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import com.nctigba.alert.monitor.model.entity.AlertConfigDO;
 import com.nctigba.alert.monitor.service.AlertConfigService;
+import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;

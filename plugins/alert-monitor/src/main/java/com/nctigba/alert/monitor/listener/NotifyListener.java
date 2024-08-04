@@ -139,7 +139,7 @@ public class NotifyListener implements ApplicationListener<NotifyEvent> {
             .filter(item -> item.getId().equals(recordDetail.getTemplateRuleId())).findFirst().get();
         List<String> alertNotifyList = Arrays.asList(templateRule.getAlertNotify().split(CommonConstants.DELIMITER));
         String alertStatus = recordDto.getAlertStatus().equals(CommonConstants.FIRING_STATUS) ? "firing" : "recover";
-        if (!alertNotifyList.contains(alertStatus)) {
+        if (!alertNotifyList.contains(alertStatus) && templateRule.getRuleType().equals(CommonConstants.INDEX_RULE)) {
             return false;
         }
         if (recordDto.getRecordStatus().equals(CommonConstants.READ_STATUS)) {
@@ -249,7 +249,7 @@ public class NotifyListener implements ApplicationListener<NotifyEvent> {
         Map<String, String> alertParams = new HashMap<>();
         LocalDateTime alertTime = detail.getStartTime();
         alertParams.put("content", detail.getAlertContent());
-        alertParams.put("level", detail.getLevel());
+        alertParams.put("level", MessageSourceUtils.get("alertRecord." + detail.getLevel(), Locale.getDefault()));
         alertParams.put("alertTime", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(alertTime));
         if (detail.getAlertStatus().equals(CommonConstants.FIRING_STATUS)) {
             alertParams.put("alertStatus", MessageSourceUtils.get("alerting", Locale.getDefault()));
@@ -258,6 +258,12 @@ public class NotifyListener implements ApplicationListener<NotifyEvent> {
         }
         String clusterNodeId = detail.getClusterNodeId();
         alertParams.put("clusterNodeId", clusterNodeId);
+        if (CommonConstants.NONINSTANCE.equals(detail.getType())) {
+            alertParams.put("hostIp", detail.getIp());
+            alertParams.put("port", detail.getPort());
+            alertParams.put("nodeName", detail.getNodeName());
+            return alertParams;
+        }
         OpsClusterNodeEntity opsClusterNodeEntity = clusterNodeService.getById(clusterNodeId);
         if (opsClusterNodeEntity == null) {
             throw new ServiceException("cluster node is not found");
@@ -270,8 +276,8 @@ public class NotifyListener implements ApplicationListener<NotifyEvent> {
         if (opsClusterEntity == null) {
             throw new ServiceException("cluster is not found");
         }
-        String nodeName =
-            opsClusterEntity.getClusterId() + "/" + opsHost.getPublicIp() + ":" + opsClusterEntity.getPort()
+        String nodeName = StrUtil.isNotBlank(detail.getNodeName()) ? detail.getNodeName()
+            : opsClusterEntity.getClusterId() + "/" + opsHost.getPublicIp() + ":" + opsClusterEntity.getPort()
                 + "(" + opsClusterNodeEntity.getClusterRole() + ")";
         alertParams.put("nodeName", nodeName);
         alertParams.put("hostname", opsHost.getHostname());

@@ -1675,6 +1675,49 @@ create INDEX idx_alert_template_rule_template_id on public.alert_template_rule(t
 create INDEX idx_alert_template_rule_item_template_rule_id on public.alert_template_rule_item(template_rule_id);
 create INDEX idx_alert_rule_item_rule_id on public.alert_rule_item(rule_id);
 
+-- 20240930
+ALTER TABLE "public"."alert_rule" ADD COLUMN "plugin_code" varchar(100);
+ALTER TABLE "public"."alert_rule" ADD COLUMN "rule_code" varchar(100);
+COMMENT ON COLUMN "public"."alert_rule"."rule_type" IS '规则类型，index为指标，log为日志, plugin为插件';
+COMMENT ON COLUMN "public"."alert_rule"."plugin_code" IS '插件标识';
+COMMENT ON COLUMN "public"."alert_rule"."rule_code" IS '规则标识';
+
+ALTER TABLE "public"."alert_template" ADD COLUMN "type" varchar(100) default 'instance';
+COMMENT ON COLUMN "public"."alert_template_rule"."type" IS '模板类型，instance为实例，noninstance为非实例';
+update "public"."alert_template" set type = 'instance' where type is null or type = '';
+
+ALTER TABLE "public"."alert_template_rule" ADD COLUMN "plugin_code" varchar(100);
+ALTER TABLE "public"."alert_template_rule" ADD COLUMN "rule_code" varchar(100);
+COMMENT ON COLUMN "public"."alert_template_rule"."rule_type" IS '规则类型，index为指标，log为日志, plugin为插件';
+COMMENT ON COLUMN "public"."alert_template_rule"."plugin_code" IS '插件标识';
+COMMENT ON COLUMN "public"."alert_template_rule"."rule_code" IS '规则标识';
+
+CREATE TABLE IF NOT EXISTS public.alert_plugin_info (
+	id int8 NOT NULL PRIMARY KEY,
+	name varchar(50) NOT NULL,
+	is_deleted int1 NULL DEFAULT 0,
+	create_time timestamp(6) NULL,
+	update_time timestamp(6) NULL
+);
+insert into public.alert_plugin_info(id, name, is_deleted, create_time) values (1, '非实例告警', 0, now());
+
+ALTER TABLE public.alert_cluster_node_conf add COLUMN "type" varchar(100) default 'instance';
+COMMENT ON COLUMN "public"."alert_cluster_node_conf"."type" IS '类型，instance为实例，noninstance为非实例';
+update "public"."alert_cluster_node_conf" set type = 'instance' where type is null or type = '';
+
+ALTER TABLE "public"."alert_record" ADD COLUMN "type" varchar(100) default 'instance';
+COMMENT ON COLUMN "public"."alert_record"."type" IS '类型，instance为实例，noninstance为非实例';
+update "public"."alert_record" set type = 'instance' where type is null or type = '';
+ALTER TABLE "public"."alert_record" ADD COLUMN "ip" varchar(100);
+ALTER TABLE "public"."alert_record" ADD COLUMN "port" varchar(100);
+ALTER TABLE "public"."alert_record" ADD COLUMN "node_name" varchar(200);
+
+ALTER TABLE "public"."alert_record_detail" ADD COLUMN "type" varchar(100) default 'instance';
+COMMENT ON COLUMN "public"."alert_record_detail"."type" IS '类型，instance为实例，noninstance为非实例';
+update "public"."alert_record_detail" set type = 'instance' where type is null or type = '';
+ALTER TABLE "public"."alert_record_detail" ADD COLUMN "ip" varchar(100);
+ALTER TABLE "public"."alert_record_detail" ADD COLUMN "port" varchar(100);
+ALTER TABLE "public"."alert_record_detail" ADD COLUMN "node_name" varchar(200);
 CREATE TABLE IF NOT EXISTS public.alert_shielding (
 	id int8 NOT NULL PRIMARY KEY DEFAULT nextval('sq_alert_shielding_id'::regclass),
 	rule_name varchar(50) NOT NULL,

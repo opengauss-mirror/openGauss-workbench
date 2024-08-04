@@ -64,6 +64,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.thymeleaf.TemplateEngine;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -190,7 +191,7 @@ public class AlertRecordServiceImplTest {
         assertEquals("test", dto.getClusterId());
         assertEquals("127.0.0.1:80", dto.getHostIpAndPort());
         assertEquals("MASTER", dto.getNodeRole());
-        assertEquals("test/127.0.0.1:80(MASTER)", dto.getClusterNodeName());
+        assertEquals("test/127.0.0.1:80(MASTER)", dto.getNodeName());
     }
 
     @Test
@@ -239,7 +240,7 @@ public class AlertRecordServiceImplTest {
         assertEquals(1, result.getTotal());
         AlertRecordDTO dto = result.getRecords().get(0);
         assertEquals(alertRecordDO.getId(), dto.getId());
-        assertEquals("test/127.0.0.1:80(MASTER)", dto.getClusterNodeName());
+        assertEquals("test/127.0.0.1:80(MASTER)", dto.getNodeName());
     }
 
     @Test
@@ -362,7 +363,7 @@ public class AlertRecordServiceImplTest {
         assertEquals("test", dto.getClusterId());
         assertEquals("127.0.0.1:80", dto.getHostIpAndPort());
         assertEquals("MASTER", dto.getNodeRole());
-        assertEquals("test/127.0.0.1:80(MASTER)", dto.getClusterNodeName());
+        assertEquals("test/127.0.0.1:80(MASTER)", dto.getNodeName());
     }
 
     @Test
@@ -435,7 +436,7 @@ public class AlertRecordServiceImplTest {
                 .setTemplateRuleType(CommonConstants.INDEX_RULE);
             when(baseMapper.selectById(any())).thenReturn(alertRecordDO);
             AlertTemplateRuleItemDO ruleItem = new AlertTemplateRuleItemDO();
-            ruleItem.setRuleExpName("ruleExpName").setUnit("unit").setLimitValue("10").setRuleExp("ruleExp");
+            ruleItem.setRuleExpName("ruleExpName").setUnit("unit").setLimitValue(new BigDecimal(10)).setRuleExp("ruleExp");
             List<AlertTemplateRuleItemDO> ruleItemList = new ArrayList<>();
             ruleItemList.add(ruleItem);
             when(templateRuleItemMapper.selectList(any())).thenReturn(ruleItemList);
@@ -450,7 +451,7 @@ public class AlertRecordServiceImplTest {
             String name = "ruleExpName";
             mockedStatic.when(() -> MessageSourceUtils.get(any())).thenReturn(name);
 
-            Number[][] datas = new Number[0][0];
+            List datas = new ArrayList();
             when(prometheusService.queryRange(any(), any(), any(), any(), any())).thenReturn(datas);
             List<AlertRelationDTO> relationDataList = alertRecordService.getRelationData(any());
             verify(baseMapper, times(1)).selectById(any());

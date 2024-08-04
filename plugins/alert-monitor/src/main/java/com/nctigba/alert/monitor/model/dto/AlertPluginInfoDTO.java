@@ -16,30 +16,30 @@
  *  AlertClusterNodeConfDTO.java
  *
  *  IDENTIFICATION
- *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/model/dto/AlertClusterNodeConfDTO.java
+ *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/model/dto/AlertPluginInfoDTO.java
  *
  *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.alert.monitor.model.dto;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
-import lombok.experimental.Accessors;
+
+import java.time.LocalDateTime;
 
 /**
+ * AlertPluginInfoDTO
+ *
  * @author wuyuebin
- * @date 2023/5/22 10:36
- * @description
+ * @since 2024/7/22 18:36
  */
 @Data
-@Accessors(chain = true)
-public class AlertClusterNodeConfDTO {
-    private String clusterNodeId;
-    private String nodeName;
-    private String type;
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long templateId;
-    private String templateName;
+public class AlertPluginInfoDTO {
+    private String pluginCode;
+    private String ruleCode;
+    private String instanceId;
+    private String instance;
+    private String ip;
+    private String port;
+    private LocalDateTime alertTime;
 }

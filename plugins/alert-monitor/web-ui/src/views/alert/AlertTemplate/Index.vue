@@ -40,9 +40,15 @@
               </template>
             </el-table-column>
             <el-table-column prop="templateName" :label="$t('alertTemplate.table[0]')" />
-            <el-table-column :label="$t('alertTemplate.table[1]')">
+            <el-table-column prop="type" :label="$t('alertTemplate.table[1]')">
               <template #default="scope">
-                <el-link :underline="false" type="primary" style="margin-right: 10px" size="small" @click="editTemplate(scope.row.id)">{{
+                <div v-if="scope.row.type === 'instance'">{{ $t('app.instance') }}</div>
+                <div v-if="scope.row.type === 'noninstance'">{{ $t('app.noninstance') }}</div>
+              </template>
+            </el-table-column>
+            <el-table-column :label="$t('alertTemplate.table[2]')">
+              <template #default="scope">
+                <el-link :underline="false" type="primary" style="margin-right: 10px" size="small" @click="editTemplate(scope.row.id, scope.row.type)">{{
                   $t('app.edit') }}</el-link>
                 <el-link :underline="false" type="primary" size="small" @click="delTemplate(scope.row.id)">{{
                   $t('app.delete') }}</el-link>
@@ -130,7 +136,7 @@
     </el-row>
   </div>
   <div v-else>
-    <TemplateDetail :templateId="curId" :state="state" @updateTemplate="updateTemplate"
+    <TemplateDetail :templateId="curId" :type="curType" :state="state" @updateTemplate="updateTemplate"
       @cancelTemplate="cancelTemplate" />
   </div>
 </template>
@@ -148,6 +154,7 @@ const { t } = useI18n();
 
 const showMain = ref<boolean>(true)
 const curId = ref<number>()
+const curType = ref<string>('instance')
 const state = ref<string>()
 const offsetHeight = ref<number>()
 const page = reactive({
@@ -236,7 +243,7 @@ watch(ruleRes, (ruleRes: any) => {
 const showRuleExpDesc = (rule: any) => {
   const alertRuleItemList = rule.alertRuleItemList;
   if (!alertRuleItemList || alertRuleItemList.length === 0) {
-    return '';
+    return '/';
   }
 
   if (rule.ruleType === 'index') {
@@ -263,7 +270,7 @@ const showRuleExpDesc = (rule: any) => {
 
 const showRuleExpComb = (ruleExpComb: String) => {
   if (!ruleExpComb) {
-    return ''
+    return '/'
   }
   return ruleExpComb.split(' ').map((item: String) => {
     if (item === 'and' || item === 'or') {
@@ -312,9 +319,10 @@ const addTemplate = () => {
   state.value = 'add'
   showMain.value = false
 }
-const editTemplate = (id: number) => {
+const editTemplate = (id: number, type: string) => {
   state.value = 'edit'
   curId.value = id
+  curType.value = type
   showMain.value = false
 }
 const updateTemplate = () => {
@@ -323,10 +331,12 @@ const updateTemplate = () => {
   }
   search()
   curId.value = undefined
+  curType.value = 'instance'
   showMain.value = true
 }
 const cancelTemplate = () => {
   curId.value = undefined
+  curType.value = 'instance'
   showMain.value = true
 }
 const delTemplate = (id: number) => {

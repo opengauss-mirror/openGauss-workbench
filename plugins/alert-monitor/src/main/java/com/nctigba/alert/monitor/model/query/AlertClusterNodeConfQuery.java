@@ -39,4 +39,6 @@ public class AlertClusterNodeConfQuery {
     private String clusterNodeIds;
     @NotNull
     private Long templateId;
+    @NotBlank
+    private String type;
 }

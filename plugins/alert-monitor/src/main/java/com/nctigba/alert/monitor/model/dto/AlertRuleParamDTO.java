@@ -81,17 +81,17 @@ public class AlertRuleParamDTO {
     @NotNull(groups = AlertRuleDO.IndexRuleGroup.class)
     @EnumInteger(values = {0, 1})
     private Integer isRepeat;
-    @NotBlank
+    @NotBlank(groups = {AlertRuleDO.IndexRuleGroup.class, AlertRuleDO.LogRuleGroup.class})
     @EnumString(values = {CommonConstants.SECOND, CommonConstants.MINUTE, CommonConstants.HOUR, CommonConstants.DAY})
     private String notifyDurationUnit;
-    @NotNull
+    @NotNull(groups = {AlertRuleDO.IndexRuleGroup.class, AlertRuleDO.LogRuleGroup.class})
     private Integer notifyDuration;
     @NotBlank
     private String ruleContent;
-    @NotBlank
+    @NotBlank(groups = {AlertRuleDO.IndexRuleGroup.class, AlertRuleDO.LogRuleGroup.class})
     private String ruleExpComb;
     @NotBlank
-    @EnumString(values = {CommonConstants.LOG_RULE, CommonConstants.INDEX_RULE})
+    @EnumString(values = {CommonConstants.LOG_RULE, CommonConstants.INDEX_RULE, CommonConstants.PLUGIN_RULE})
     private String ruleType;
     @NotBlank
     @EnumString(values = {CommonConstants.SERIOUS, CommonConstants.WARN, CommonConstants.INFO})
@@ -118,8 +118,13 @@ public class AlertRuleParamDTO {
     private LocalDateTime createTime;
     private Integer isDeleted;
     @Valid
-    @NotEmpty
+    @NotEmpty(groups = {AlertRuleDO.IndexRuleGroup.class, AlertRuleDO.LogRuleGroup.class})
     private List<AlertRuleItemDO> alertRuleItemList;
+
+    @NotBlank(groups = AlertRuleDO.PluginRuleGroup.class)
+    private String pluginCode;
+    @NotBlank(groups = AlertRuleDO.PluginRuleGroup.class)
+    private String ruleCode;
 
     private List<Long> templateRuleIds;
 }

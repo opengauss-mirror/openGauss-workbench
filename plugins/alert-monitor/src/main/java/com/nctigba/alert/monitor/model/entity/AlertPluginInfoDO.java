@@ -13,10 +13,10 @@
  *  See the Mulan PSL v2 for more details.
  *  -------------------------------------------------------------------------
  *
- *  AlertRecordDetailDO.java
+ *  AlertConfigDO.java
  *
  *  IDENTIFICATION
- *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/model/entity/AlertRecordDetailDO.java
+ *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/model/entity/AlertPluginInfoDO.java
  *
  *  -------------------------------------------------------------------------
  */
@@ -26,54 +26,35 @@ package com.nctigba.alert.monitor.model.entity;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.nctigba.alert.monitor.constant.CommonConstants;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 
 /**
- * AlertRecordDetail
+ * AlertPluginInfoDO
  *
- * @since 2023/11/23 16:16
+ * @author wuyuebin
+ * @since 2024/7/19 10:42
  */
 @Data
 @Accessors(chain = true)
-@TableName("alert_record_detail")
-public class AlertRecordDetailDO {
+@TableName("alert_plugin_info")
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class AlertPluginInfoDO {
     @TableId
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long recordId;
-    private String clusterNodeId;
-    private String clusterId;
-    private String type;
-    private String ip;
-    private String port;
-    private String nodeName;
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long templateId;
-    private String templateName;
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long templateRuleId;
-    private String templateRuleName;
-    private String templateRuleType;
-    private String level;
-    private String notifyWayIds;
-    private String notifyWayNames;
-    private Integer alertStatus;
-    private Integer notifyStatus;
+    private String name;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime startTime;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime endTime;
-    private String alertContent;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createTime;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
-    private Integer isDeleted = CommonConstants.IS_NOT_DELETE;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createTime;
+    private Integer isDeleted;
 }

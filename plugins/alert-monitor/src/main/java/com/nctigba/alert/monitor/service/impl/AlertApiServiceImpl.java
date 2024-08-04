@@ -68,6 +68,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -161,8 +162,11 @@ public class AlertApiServiceImpl implements AlertApiService {
         List<AlertRecordDO> alertRecordDOS =
                 recordService.getList(clusterNodeId, templateId, alertTemplateRuleDO.getId());
         AlertRecordDO alertRecordDO = null;
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         if (CollectionUtil.isEmpty(alertRecordDOS)
-                || alertRecordDOS.get(0).getAlertStatus().equals(CommonConstants.RECOVER_STATUS)) {
+            || alertRecordDOS.get(0).getAlertStatus().equals(CommonConstants.RECOVER_STATUS)
+            || !df.format(alertApiReq.getStartsAt()).equals(df.format(alertRecordDOS.get(0).getStartTime()))
+        ) {
             if (alertApiReq.getAlertStatus().equals(CommonConstants.RECOVER_STATUS)) {
                 return Optional.empty();
             }
@@ -184,22 +188,22 @@ public class AlertApiServiceImpl implements AlertApiService {
                 Collectors.joining(CommonConstants.DELIMITER));
         Map<String, String> alertParams = generateAlertParams(alertApiReq);
         alertRecordDO.setNotifyWayIds(alertTemplateRuleDO.getNotifyWayIds()).setNotifyWayNames(notifyWayNames)
-                .setEndTime(alertApiReq.getEndsAt()).setDuration(
-                        Duration.between(alertRecordDO.getStartTime(), alertRecordDO.getEndTime()).toSeconds())
-                .setClusterId(alertParams.get("clusterId")).setAlertStatus(alertApiReq.getAlertStatus())
-                .setAlertContent(TextParserUtils.parse(alertTemplateRuleDO.getRuleContent(), alertParams));
+            .setEndTime(alertApiReq.getEndsAt()).setDuration(
+                Duration.between(alertRecordDO.getStartTime(), alertRecordDO.getEndTime()).toSeconds())
+            .setClusterId(alertParams.get("clusterId")).setAlertStatus(alertApiReq.getAlertStatus())
+            .setAlertContent(TextParserUtils.parse(alertTemplateRuleDO.getRuleContent(), alertParams))
+            .setType(CommonConstants.INSTANCE);
         AlertRecordDetailDO detail = new AlertRecordDetailDO();
         detail.setClusterId(alertRecordDO.getClusterId()).setRecordId(alertRecordDO.getId())
-                .setLevel(alertRecordDO.getLevel()).setNotifyWayIds(alertRecordDO.getNotifyWayIds())
-                .setNotifyWayNames(alertRecordDO.getNotifyWayNames()).setClusterNodeId(alertRecordDO.getClusterNodeId())
-                .setAlertContent(alertRecordDO.getAlertContent()).setAlertStatus(alertRecordDO.getAlertStatus())
-                .setTemplateId(alertRecordDO.getTemplateId()).setTemplateName(alertRecordDO.getTemplateName())
-                .setTemplateRuleId(alertRecordDO.getTemplateRuleId())
-                .setTemplateRuleName(alertRecordDO.getTemplateRuleName()).setAlertContent(
-                        alertRecordDO.getAlertContent())
-                .setTemplateRuleType(alertRecordDO.getTemplateRuleType())
-                .setStartTime(alertRecordDO.getStartTime()).setEndTime(alertRecordDO.getEndTime())
-                .setNotifyStatus(CommonConstants.UNSEND).setCreateTime(LocalDateTime.now());
+            .setLevel(alertRecordDO.getLevel()).setNotifyWayIds(alertRecordDO.getNotifyWayIds())
+            .setNotifyWayNames(alertRecordDO.getNotifyWayNames()).setClusterNodeId(alertRecordDO.getClusterNodeId())
+            .setAlertContent(alertRecordDO.getAlertContent()).setAlertStatus(alertRecordDO.getAlertStatus())
+            .setTemplateId(alertRecordDO.getTemplateId()).setTemplateName(alertRecordDO.getTemplateName())
+            .setTemplateRuleId(alertRecordDO.getTemplateRuleId()).setType(CommonConstants.INSTANCE)
+            .setTemplateRuleName(alertRecordDO.getTemplateRuleName()).setAlertContent(alertRecordDO.getAlertContent())
+            .setTemplateRuleType(alertRecordDO.getTemplateRuleType())
+            .setStartTime(alertRecordDO.getStartTime()).setEndTime(alertRecordDO.getEndTime())
+            .setNotifyStatus(CommonConstants.UNSEND).setCreateTime(LocalDateTime.now());
         List<AlertRecordDetailDO> details = new ArrayList<>();
         details.add(detail);
         alertRecordDO.setRecordDetailList(details);
@@ -210,6 +214,10 @@ public class AlertApiServiceImpl implements AlertApiService {
         Map<String, String> labels = alertApiReq.getLabels();
         Map<String, String> alertParams = new HashMap<>();
         alertParams.putAll(labels);
+        String level = labels.get("level");
+        if (StrUtil.isNotBlank(level)) {
+            alertParams.put("level", MessageSourceUtils.get("alertRecord." + level, Locale.getDefault()));
+        }
         Map annotations = alertApiReq.getAnnotations();
         if (CollectionUtil.isNotEmpty(annotations) && annotations.get("value") != null) {
             BigDecimal val = new BigDecimal(annotations.get("value").toString())

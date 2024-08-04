@@ -38,7 +38,7 @@
           <el-radio v-for="item in levelList" :key="item" :label="item">{{ $t(`alertRule.${item}`) }}</el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item :label="$t('alertRule.ruleItem')" prop="ruleItem">
+      <el-form-item :label="$t('alertRule.ruleItem')" prop="ruleItem" v-if="formData.ruleType !== 'plugin'">
         <el-row v-for="(item, index ) in formData.alertRuleItemList" :key="item.id"
           style="margin-bottom: 5px;width: 100%">
           <div v-if="formData.ruleType === 'log'" class="rule">
@@ -98,7 +98,15 @@
           <span style="margin: 5px;"><el-button type="primary" @click="addItem" circle :icon="Plus"></el-button></span>
         </div>
       </el-form-item>
-      <el-form-item :label="$t('alertRule.ruleExpComb')" prop="ruleExpComb">
+      <el-form-item :label="$t('alertRule.pluginCode')" prop="pluginCode" v-if="formData.ruleType === 'plugin'">
+        <el-input v-model="formData.pluginCode" :placeholder="$t('alertRule.pluginCodePlaceholder')"
+          :disabled="disabled" ></el-input>
+      </el-form-item>
+      <el-form-item :label="$t('alertRule.ruleCode')" prop="ruleCode" v-if="formData.ruleType === 'plugin'">
+        <el-input v-model="formData.ruleCode" :placeholder="$t('alertRule.ruleCodePlaceholder')"
+          :disabled="disabled"></el-input>
+      </el-form-item>
+      <el-form-item :label="$t('alertRule.ruleExpComb')" prop="ruleExpComb" v-if="formData.ruleType !== 'plugin'">
         <span v-for="(item, index) in ruleExpComb" style="margin: 0 5px">
           <el-select v-model="ruleExpComb[index]" v-if="index % 2 === 1" style="width: 60px;" :disabled="disabled">
             <el-option v-for="item0 in logicSymbolList" :key="item0" :value="item0" :label="$t(`alertRule.${item0}`)" />
@@ -136,7 +144,7 @@
           </el-form-item>
         </el-col>
       </el-row>
-      <el-form-item :label="$t('alertRule.notifyDuration')" prop="notifyDuration">
+      <el-form-item :label="$t('alertRule.notifyDuration')" prop="notifyDuration" v-if="formData.ruleType !== 'plugin'">
         <el-input v-model="formData.notifyDuration" style="width: 200px;margin-right: 5px;" :disabled="disabled">
           <template #append>
             <el-select v-model="formData.notifyDurationUnit" :disabled="disabled" style="width: 80px;">
@@ -330,9 +338,11 @@ const formData = ref<any>({
     ruleItemExpSrcList: [],
     params: {},
     paramsExplanation: {}
-  }]
+  }],
+  pluginCode: '',
+  ruleCode: '',
 })
-const ruleTypeList = reactive(['index', 'log'])
+const ruleTypeList = reactive(['index', 'log', 'plugin'])
 const levelList = reactive(['serious', 'warn', 'info'])
 const ruleExpComb = ref<string[]>(['A'])
 const ruleMarkList = ref<string[]>(['A'])
@@ -627,6 +637,12 @@ const formRules = reactive<FormRules>({
   ],
   notifyWay: [
     { required: true, validator: checkNotifyWay, trigger: 'blur' },
+  ],
+  pluginCode: [
+    { required: true, message: t('alertRule.pluginCodePlaceholder'), trigger: 'blur' },
+  ],
+  ruleCode: [
+    { required: true, message: t('alertRule.ruleCodePlaceholder'), trigger: 'blur' },
   ]
 })
 
@@ -659,16 +675,22 @@ const getTemplateRule = async (ruleId: any) => {
 }
 
 const save = () => {
-  for (let ruleItem of formData.value.alertRuleItemList) {
-    let params = ruleItem.params
-    if (params && Object.keys(params).length > 0) {
-      ruleItem.ruleExpParam = JSON.stringify(params)
-      parseContent(ruleItem.ruleExp, params)
-    } else {
-      ruleItem.ruleExpParam = ''
+  if (formData.value.ruleType === 'index' || formData.value.ruleType === 'log') {
+    for (let ruleItem of formData.value.alertRuleItemList) {
+      let params = ruleItem.params
+      if (params && Object.keys(params).length > 0) {
+        ruleItem.ruleExpParam = JSON.stringify(params)
+        parseContent(ruleItem.ruleExp, params)
+      } else {
+        ruleItem.ruleExpParam = ''
+      }
     }
+    formData.value.ruleExpComb = ruleExpComb.value.join(' ')
+  } else {
+    formData.value.ruleExpComb = ''
+    formData.value.alertRuleItemList = []
   }
-  formData.value.ruleExpComb = ruleExpComb.value.join(' ')
+  
   formData.value.alertNotify = alertNotifyList.value.join(',')
   formData.value.notifyWayIds = notifyWayIdArr.value.join(',')
   if (silenceTimes.value.length > 0) {

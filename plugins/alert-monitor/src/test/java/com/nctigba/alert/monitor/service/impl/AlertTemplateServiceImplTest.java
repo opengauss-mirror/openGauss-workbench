@@ -26,6 +26,12 @@ package com.nctigba.alert.monitor.service.impl;
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.nctigba.alert.monitor.constant.CommonConstants;
+import com.nctigba.alert.monitor.mapper.AlertRuleItemMapper;
+import com.nctigba.alert.monitor.mapper.AlertRuleMapper;
+import com.nctigba.alert.monitor.mapper.AlertTemplateMapper;
+import com.nctigba.alert.monitor.mapper.AlertTemplateRuleItemMapper;
+import com.nctigba.alert.monitor.mapper.AlertTemplateRuleMapper;
 import com.nctigba.alert.monitor.model.dto.AlertTemplateDTO;
 import com.nctigba.alert.monitor.model.entity.AlertClusterNodeConfDO;
 import com.nctigba.alert.monitor.model.entity.AlertRuleDO;
@@ -33,11 +39,6 @@ import com.nctigba.alert.monitor.model.entity.AlertRuleItemDO;
 import com.nctigba.alert.monitor.model.entity.AlertTemplateDO;
 import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleDO;
 import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleItemDO;
-import com.nctigba.alert.monitor.mapper.AlertRuleItemMapper;
-import com.nctigba.alert.monitor.mapper.AlertRuleMapper;
-import com.nctigba.alert.monitor.mapper.AlertTemplateMapper;
-import com.nctigba.alert.monitor.mapper.AlertTemplateRuleItemMapper;
-import com.nctigba.alert.monitor.mapper.AlertTemplateRuleMapper;
 import com.nctigba.alert.monitor.model.query.AlertTemplateQuery;
 import com.nctigba.alert.monitor.model.query.AlertTemplateRuleQuery;
 import com.nctigba.alert.monitor.service.AlertClusterNodeConfService;
@@ -169,7 +170,7 @@ public class AlertTemplateServiceImplTest {
         List<AlertTemplateDO> list = new ArrayList<>();
         when(baseMapper.selectList(any())).thenReturn(list);
 
-        List<AlertTemplateDO> templateList = alertTemplateService.getTemplateList();
+        List<AlertTemplateDO> templateList = alertTemplateService.getTemplateList(CommonConstants.INSTANCE);
 
         verify(baseMapper, times(1)).selectList(any());
         assertEquals(list, templateList);

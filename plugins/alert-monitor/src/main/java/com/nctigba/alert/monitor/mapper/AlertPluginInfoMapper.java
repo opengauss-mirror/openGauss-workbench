@@ -13,33 +13,26 @@
  *  See the Mulan PSL v2 for more details.
  *  -------------------------------------------------------------------------
  *
- *  AlertClusterNodeConfDTO.java
+ *  AlertConfigMapper.java
  *
  *  IDENTIFICATION
- *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/model/dto/AlertClusterNodeConfDTO.java
+ *  plugins/alert-monitor/src/main/java/com/nctigba/alert/monitor/mapper/AlertPluginInfoMapper.java
  *
  *  -------------------------------------------------------------------------
  */
 
-package com.nctigba.alert.monitor.model.dto;
+package com.nctigba.alert.monitor.mapper;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import lombok.Data;
-import lombok.experimental.Accessors;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.nctigba.alert.monitor.model.entity.AlertPluginInfoDO;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
+ * AlertPluginInfoMapper
+ *
  * @author wuyuebin
- * @date 2023/5/22 10:36
- * @description
+ * @since 2024/7/19 11:09
  */
-@Data
-@Accessors(chain = true)
-public class AlertClusterNodeConfDTO {
-    private String clusterNodeId;
-    private String nodeName;
-    private String type;
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long templateId;
-    private String templateName;
+@Mapper
+public interface AlertPluginInfoMapper extends BaseMapper<AlertPluginInfoDO> {
 }

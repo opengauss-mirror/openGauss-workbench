@@ -497,6 +497,7 @@ public class PrometheusServiceImpl implements PrometheusService {
             List<AlertTemplateRuleDO> alertTemplateRuleDOS = alertTemplateRuleMapper.selectList(
                 Wrappers.<AlertTemplateRuleDO>lambdaQuery().eq(AlertTemplateRuleDO::getTemplateId, templateId)
                     .eq(AlertTemplateRuleDO::getRuleType, CommonConstants.INDEX_RULE)
+                    .eq(AlertTemplateRuleDO::getIsIncluded, CommonConstants.IS_INCLUDED)
                     .eq(AlertTemplateRuleDO::getIsDeleted, CommonConstants.IS_NOT_DELETE)
                     .eq(AlertTemplateRuleDO::getEnable, CommonConstants.ENABLE));
             if (CollectionUtil.isEmpty(alertTemplateRuleDOS)) {

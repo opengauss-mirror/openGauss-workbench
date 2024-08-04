@@ -23,6 +23,7 @@
 
 package com.nctigba.alert.monitor.controller;
 
+import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.model.dto.AlertClusterNodeConfDTO;
 import com.nctigba.alert.monitor.model.entity.AlertClusterNodeConfDO;
 import com.nctigba.alert.monitor.model.query.AlertClusterNodeAndTemplateQuery;
@@ -68,19 +69,19 @@ public class AlertClusterNodeConfControllerTest {
     @Test
     public void testGetList() {
         List<AlertClusterNodeConfDTO> list = new ArrayList<>();
-        when(alertClusterNodeConfService.getList()).thenReturn(list);
-        AjaxResult result = alertClusterNodeConfController.getList();
-        verify(alertClusterNodeConfService, times(1)).getList();
+        when(alertClusterNodeConfService.getList(CommonConstants.INSTANCE)).thenReturn(list);
+        AjaxResult result = alertClusterNodeConfController.getList(CommonConstants.INSTANCE);
+        verify(alertClusterNodeConfService, times(1)).getList(CommonConstants.INSTANCE);
         assertEquals(list, result.get("data"));
     }
 
     @Test
     public void testGetByClusterNodeId() {
         AlertClusterNodeConfDO alertClusterNodeConfDO = new AlertClusterNodeConfDO();
-        when(alertClusterNodeConfService.getByClusterNodeId(anyString())).thenReturn(alertClusterNodeConfDO);
+        when(alertClusterNodeConfService.getByClusterNodeId(anyString(), CommonConstants.INSTANCE)).thenReturn(alertClusterNodeConfDO);
         String clusterNodeId = "node1";
-        AjaxResult result = alertClusterNodeConfController.getByClusterNodeId(clusterNodeId);
-        verify(alertClusterNodeConfService, times(1)).getByClusterNodeId(anyString());
+        AjaxResult result = alertClusterNodeConfController.getByClusterNodeId(clusterNodeId, CommonConstants.INSTANCE);
+        verify(alertClusterNodeConfService, times(1)).getByClusterNodeId(anyString(), CommonConstants.INSTANCE);
         assertEquals(alertClusterNodeConfDO, result.get("data"));
     }
 
