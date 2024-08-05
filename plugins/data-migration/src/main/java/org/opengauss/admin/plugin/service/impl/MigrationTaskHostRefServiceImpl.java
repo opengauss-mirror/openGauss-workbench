@@ -344,7 +344,9 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     public List<Map<String, Object>> getOpsClusterDbNames(OpsClusterNodeVO clusterNode) {
         List<Map<String, Object>> dbList = new ArrayList<>();
         if (clusterNode.getHostPort() != 22
-                || (opsFacade.isNodeInOpsCluster(clusterNode.getNodeId()) && !isPrimaryNodeInCluster(clusterNode))) {
+                || (opsFacade.isNodeInOpsCluster(clusterNode.getNodeId())
+                && opsFacade.getOpsClusterVOByNodeId(clusterNode.getNodeId()).getClusterNodes().size() > 1
+                && !isPrimaryNodeInCluster(clusterNode))) {
             return dbList;
         }
 
