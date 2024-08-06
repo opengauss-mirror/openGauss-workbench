@@ -185,7 +185,7 @@ CREATE TABLE IF NOT EXISTS "public"."tb_migration_task" (
   "id" int8 NOT NULL DEFAULT nextval('sq_migration_task_id'::regclass),
   "source_node_id" varchar(64) COLLATE "pg_catalog"."default",
   "source_db" varchar(255) COLLATE "pg_catalog"."default",
-  "source_tables" varchar(255) COLLATE "pg_catalog"."default",
+  "source_tables" text COLLATE "pg_catalog"."default",
   "target_node_id" varchar(64) COLLATE "pg_catalog"."default",
   "target_db" varchar(255) COLLATE "pg_catalog"."default",
   "migration_operations" varchar(255) COLLATE "pg_catalog"."default",
@@ -289,7 +289,7 @@ CREATE OR REPLACE FUNCTION add_migration_task_source_tables_field_func() RETURNS
 IF
 ( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''tb_migration_task'' AND COLUMN_NAME = ''source_tables'' ) = 0
 THEN
-ALTER TABLE public.tb_migration_task ADD COLUMN source_tables VARCHAR;
+ALTER TABLE public.tb_migration_task ADD COLUMN source_tables text;
 COMMENT ON COLUMN "public"."tb_migration_task"."source_tables" IS ''源端表'';
 END IF;
 RETURN 0;

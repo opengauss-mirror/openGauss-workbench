@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS "tb_migration_task" (
     "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "source_node_id" varchar(64) ,
     "source_db" varchar(255) ,
-    "source_tables" varchar(255) ,
+    "source_tables" text ,
     "target_node_id" varchar(64) ,
     "target_db" varchar(255) ,
     "migration_operations" varchar(255) ,
@@ -286,7 +286,7 @@ CREATE OR REPLACE FUNCTION add_migration_task_source_tables_field_func() RETURNS
 IF
 ( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''tb_migration_task'' AND COLUMN_NAME = ''source_tables'' ) = 0
 THEN
-ALTER TABLE public.tb_migration_task ADD COLUMN source_tables VARCHAR;
+ALTER TABLE public.tb_migration_task ADD COLUMN source_tables text;
 COMMENT ON COLUMN "public"."tb_migration_task"."source_tables" IS ''源端表'';
 END IF;
 RETURN 0;
