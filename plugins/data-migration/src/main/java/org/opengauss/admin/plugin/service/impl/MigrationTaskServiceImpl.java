@@ -596,12 +596,13 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         resultMap.put("opengauss.database.schema", task.getSourceDb());
         resultMap.put("migration_mode", task.getMigrationModelId() + "");
         resultMap.put("is_adjustKernel_param", task.getIsAdjustKernelParam() + "");
-        setOpengaussClusterParams(resultMap, task.getTargetNodeId());
 
         if (globalParamMap.keySet().size() > 0) {
             resultMap.putAll(globalParamMap);
         }
         setToolsParams(task, resultMap);
+
+        setOpengaussClusterParams(resultMap, task.getTargetNodeId());
         return resultMap;
     }
 
@@ -630,6 +631,8 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             resultMap.put("opengauss.database.iscluster", "true");
             resultMap.put("opengauss.database.standby.hostnames", String.join(",", hostnames));
             resultMap.put("opengauss.database.standby.ports", String.join(",", ports));
+
+            resultMap.put("8.1.slot.drop.on.stop", "'false'");
         }
     }
 
