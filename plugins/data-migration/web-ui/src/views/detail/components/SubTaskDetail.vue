@@ -633,7 +633,6 @@ const getSubTaskDetail = () => {
                   null,
                   t('components.SubTaskDetail.5q09xhsvcq41', {
                     totalDataSize: fullData.value?.total?.data || 0,
-                    totalRowCount: fullData.value?.total?.record || 0,
                     cost: fullData.value?.total?.time || 0
                   })
                 )
@@ -709,7 +708,6 @@ const getSubTaskDetail = () => {
                   null,
                   t('components.SubTaskDetail.5q09xhsvcq41', {
                     totalDataSize: fullData.value?.total?.data || 0,
-                    totalRowCount: fullData.value?.total?.record || 0,
                     cost: fullData.value?.total?.time || 0
                   })
                 )

@@ -136,7 +136,7 @@
             "5q09vm8iktw0": "zookeeper+kafka log",
             "5q09wjm47ow0": "schema-registry log",
             "5q09xhsvcq40": "Total migration objects: {total}, not started: {totalWaitCount}, migrating: {totalRunningCount}, successful: {totalFinishCount}, failed: {totalErrorCount}",
-            "5q09xhsvcq41": "Total data size：{totalDataSize}MB，total rows：{totalRowCount}，cost：{cost}s",
+            "5q09xhsvcq41": "Total data size：{totalDataSize}MB，cost：{cost}s",
             "5q09xhsvcq42": "speed: {speed}MB/s",
             "5q09xhsvcq43": "Total data size：{total}, not started{totalWaitCount}，checking：{totalRunningCount}，successful：{totalFinishCount}，failed：{totalErrorCount}",
             "5q09xhsvcq44": "Total rows：{totalRowCount}，total tables：{totalTableCount}，finished tables：{totalTableFinishCount}",
