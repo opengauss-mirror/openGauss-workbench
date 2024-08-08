@@ -65,7 +65,7 @@ public class AlertTemplateRuleItemDO {
     @NotBlank(groups = AlertTemplateRuleDO.IndexRuleGroup.class)
     @EnumString(values = {"normal", "increase", "decrease"})
     private String action;
-    @EnumString(values = {">", ">=", "=", "<=", "<", "!="})
+    @EnumString(values = {">", ">=", "==", "<=", "<", "!="})
     private String operate;
     @JsonSerialize(using = ToStringSerializer.class)
     private BigDecimal limitValue;
