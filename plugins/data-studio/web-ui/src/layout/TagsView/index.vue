@@ -147,6 +147,7 @@
     return AppStore.connectedDatabase.map((item) => {
       return {
         label: `${item.name}@${item.connectInfoName}`,
+        platform: item.platform,
         rootId: item.rootId,
         connectInfoName: item.connectInfoName,
         dbname: item.name,
@@ -413,7 +414,7 @@ ${curStr}`
   };
 
   const createTerminal = () => {
-    const { dbname, rootId, uuid } = AppStore.currentTerminalInfo;
+    const { dbname, rootId, uuid, platform } = AppStore.currentTerminalInfo;
     const connectInfoName = AppStore.connectListMap.find((item) => item.id == rootId)?.connectInfo
       .name;
     if (!(uuid && connectInfoName)) return ElMessage.warning(t('message.noConnectionAvailable'));
@@ -426,6 +427,7 @@ ${curStr}`
       query: {
         title,
         fileName: title,
+        platform,
         rootId,
         connectInfoName,
         uuid,
@@ -443,7 +445,7 @@ ${curStr}`
 
   const createSameTerminal = (tag) => {
     contextMenu.visible = false;
-    const { connectInfoName, rootId, dbname, uuid } = tag.query;
+    const { connectInfoName, rootId, dbname, uuid, platform } = tag.query;
     const terminalNum = TagsViewStore.maxTerminalNum + 1;
     const title = `${dbname}@${connectInfoName}(${terminalNum})`;
     const time = Date.now();
@@ -452,6 +454,7 @@ ${curStr}`
       query: {
         title,
         fileName: title,
+        platform,
         rootId,
         connectInfoName,
         uuid,

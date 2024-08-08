@@ -107,6 +107,23 @@ body {
   }
 }
 
+html.dark {
+  .el-table  {
+    .el-table__cell.add {
+      background-color: #7dbd89 !important;
+      .el-select__placeholder {
+        color: #606266 !important;
+      }
+    }
+    .el-table-selection-row {
+      .el-table__cell.add {
+        color: #000;
+        background-color: #186A3B !important;
+      }
+    }
+  }
+}
+
 .common-dialog-wrapper {
   .el-dialog__body {
     padding-top: 5px;

@@ -31,12 +31,14 @@ export interface ConnectedDatabase {
   name: string;
   rootId: string;
   uuid: string;
+  platform?: string;
 }
 export interface LastestConnectDatabase {
   rootId: string;
   connectInfoName: string;
   name: string;
   uuid: string;
+  platform?: string;
   connectTime: null | number;
 }
 export interface CurrentTerminalInfo {
@@ -45,6 +47,7 @@ export interface CurrentTerminalInfo {
   connectInfoName: string;
   dbname: string;
   uuid: string;
+  platform?: string;
 }
 
 export const useAppStore = defineStore({
@@ -107,6 +110,7 @@ export const useAppStore = defineStore({
             connectInfoName: this.lastestConnectDatabase.connectInfoName,
             dbname: this.lastestConnectDatabase.name,
             uuid: this.lastestConnectDatabase.uuid,
+            platform: this.lastestConnectDatabase.platform,
           };
         }
       } else {

@@ -471,6 +471,11 @@
                 name: item,
                 prop: item,
                 element: 'input',
+                attributes: {
+                  autosize: true,
+                  type: 'textarea',
+                  resize: 'none',
+                },
                 show: !dataTabHideColumns.includes(item),
                 multipleOrder: order || null,
                 systemTypeNum: res.data.typeNum[index],
