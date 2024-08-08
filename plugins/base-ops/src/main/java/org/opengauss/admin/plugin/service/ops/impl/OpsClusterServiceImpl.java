@@ -89,6 +89,7 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
@@ -126,11 +127,8 @@ import static org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum.*;
  * @author lhf
  * @date 2022/8/6 17:38
  **/
-@Slf4j
 @Service
 public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClusterEntity> implements IOpsClusterService {
-    private static String[] dependencyPackageNames = {"libaio-devel", "flex", "bison", "ncurses-devel", "glibc-devel",
-            "patch", "readline-devel"};
     private static final Logger log = LoggerFactory.getLogger(OpsClusterServiceImpl.class);
 
     private int importSuccessCount;
@@ -2501,75 +2499,25 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return System.getProperty("user.dir");
     }
 
+    @Resource
+    OpsClusterEnvService opsClusterEnvService;
     @Override
     public HostEnv env(String hostId, OpenGaussSupportOSEnum expectedOs, String rootPassword) {
-        OpsHostEntity hostEntity = hostFacade.getById(hostId);
-        if (Objects.isNull(hostEntity)) {
-            throw new OpsException("host information does not exist");
-        }
-
-        List<OpsHostUserEntity> hostUserEntities = hostUserFacade.listHostUserByHostId(hostId);
-        if (CollUtil.isEmpty(hostUserEntities)) {
-            throw new OpsException("Host user information does not exist");
-        }
-        // use root check env
-        OpsHostUserEntity userEntity = hostUserEntities
-                .stream()
-                .filter(hostUser -> PermissionUtils.hasRootPermission(hostUser.getUsername()))
-                .findFirst()
-                .orElseThrow(() -> new OpsException("user information does not exist"));
-        String encryptedRootPass = rootPassword;
-
-        if (StrUtil.isEmpty(userEntity.getPassword()) && StrUtil.isEmpty(encryptedRootPass)){
-            throw new OpsException("root password cannot be empty");
-        }
-
-        if (StrUtil.isNotEmpty(userEntity.getPassword())) {
-            encryptedRootPass = userEntity.getPassword();
-        }
-        Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(), encryptionUtils.decrypt(encryptedRootPass))
-                .orElseThrow(() -> new OpsException("Failed to establish connection with host"));
-
-        HostEnv hostEnv = new HostEnv();
-
-        try {
-            CountDownLatch countDownLatch = new CountDownLatch(2);
-            threadPoolTaskExecutor.submit(() -> {
-                hostEnv.setHardwareEnv(hardwareEnvDetect(session, expectedOs));
-                countDownLatch.countDown();
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                hostEnv.setSoftwareEnv(softwareEnvDetect(session, expectedOs));
-                countDownLatch.countDown();
-            });
-
-            try {
-                countDownLatch.await();
-            } catch (InterruptedException e) {
-                log.error("waiting for thread to be interrupted", e);
-            }
-        } finally {
-            if (Objects.nonNull(session) && session.isConnected()) {
-                session.disconnect();
-            }
-        }
-
-        return hostEnv;
+        return opsClusterEnvService.env(hostId, expectedOs, rootPassword);
     }
 
     @Override
     public Map<String, Integer> threadPoolMonitor() {
         Map<String, Integer> res = new HashMap<>();
-        int activeCount = threadPoolTaskExecutor.getActiveCount();
-        int poolSize = threadPoolTaskExecutor.getPoolSize();
-        int corePoolSize = threadPoolTaskExecutor.getCorePoolSize();
-        int keepAliveSeconds = threadPoolTaskExecutor.getKeepAliveSeconds();
-
-        res.put("activeCount", activeCount);
-        res.put("poolSize", poolSize);
-        res.put("corePoolSize", corePoolSize);
-        res.put("keepAliveSeconds", keepAliveSeconds);
+//        int activeCount = threadPoolTaskExecutor.getActiveCount();
+//        int poolSize = threadPoolTaskExecutor.getPoolSize();
+//        int corePoolSize = threadPoolTaskExecutor.getCorePoolSize();
+//        int keepAliveSeconds = threadPoolTaskExecutor.getKeepAliveSeconds();
+//
+//        res.put("activeCount", activeCount);
+//        res.put("poolSize", poolSize);
+//        res.put("corePoolSize", corePoolSize);
+//        res.put("keepAliveSeconds", keepAliveSeconds);
         return res;
     }
 
@@ -3248,462 +3196,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         }
     }
 
-
-    private SoftwareEnv softwareEnvDetect(Session session, OpenGaussSupportOSEnum expectedOs) {
-        SoftwareEnv softwareEnv = new SoftwareEnv();
-
-        List<EnvProperty> envProperties = new CopyOnWriteArrayList<>();
-        softwareEnv.setEnvProperties(envProperties);
-
-        CountDownLatch countDownLatch = new CountDownLatch(4);
-
-        threadPoolTaskExecutor.submit(() -> {
-            // software
-            envProperties.add(dependencyPropertyDetect(session, expectedOs));
-            countDownLatch.countDown();
-        });
-
-        threadPoolTaskExecutor.submit(() -> {
-            // firewalld
-            envProperties.add(firewallPropertyDetect(session));
-            countDownLatch.countDown();
-        });
-
-        threadPoolTaskExecutor.submit(() -> {
-            // user
-            envProperties.add(installUserPropertyDetect(session));
-            countDownLatch.countDown();
-        });
-
-        threadPoolTaskExecutor.submit(() -> {
-            // other
-            envProperties.add(otherPropertyDetect(session));
-            countDownLatch.countDown();
-        });
-
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            log.error("waiting for thread to be interrupted", e);
-        }
-
-        envProperties.sort(Comparator.comparingInt(EnvProperty::getSortNum));
-
-        return softwareEnv;
-    }
-
-    private EnvProperty otherPropertyDetect(Session session) {
-        EnvProperty otherProperty = new EnvProperty();
-        otherProperty.setName("other");
-        otherProperty.setSortNum(4);
-        otherProperty.setStatus(HostEnvStatusEnum.NORMAL);
-        return otherProperty;
-    }
-
-    private EnvProperty installUserPropertyDetect(Session session) {
-        EnvProperty installUserProperty = new EnvProperty();
-        installUserProperty.setName("install user");
-        installUserProperty.setSortNum(3);
-        installUserProperty.setStatus(HostEnvStatusEnum.NORMAL);
-        return installUserProperty;
-    }
-
-    private EnvProperty firewallPropertyDetect(Session session) {
-        EnvProperty firewallProperty = new EnvProperty();
-        firewallProperty.setName("firewall");
-        firewallProperty.setSortNum(2);
-
-        try {
-            JschResult jschResult = null;
-            try {
-                jschResult = jschUtil.executeCommand(SshCommandConstants.FIREWALL, session);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (jschResult.getExitCode() == 0) {
-                String firewallStatus = jschResult.getResult();
-                try {
-
-                    if ("inactive".equals(firewallStatus)) {
-                        firewallProperty.setStatus(HostEnvStatusEnum.NORMAL);
-                    } else {
-                        firewallProperty.setStatus(HostEnvStatusEnum.ERROR);
-                        firewallProperty.setStatusMessage("Please turn off the firewall");
-                    }
-                } catch (Exception e) {
-                    log.error("Parse command response error", e);
-                    firewallProperty.setStatus(HostEnvStatusEnum.ERROR);
-                    firewallProperty.setStatusMessage("Please turn off the firewall");
-                }
-            } else {
-                firewallProperty.setStatus(HostEnvStatusEnum.ERROR);
-                firewallProperty.setStatusMessage("Please turn off the firewall");
-            }
-        } catch (IOException e) {
-            log.error("Parse command response error：", e);
-            firewallProperty.setStatus(HostEnvStatusEnum.ERROR);
-            firewallProperty.setStatusMessage("Please turn off the firewall");
-        }
-
-        return firewallProperty;
-    }
-
-    private EnvProperty dependencyPropertyDetect(Session session, OpenGaussSupportOSEnum expectedOs) {
-        EnvProperty dependencyProperty = new EnvProperty();
-        dependencyProperty.setName("software dependency");
-        dependencyProperty.setSortNum(1);
-        try {
-            JschResult jschResult = jschUtil.executeCommand(SshCommandConstants.DEPENDENCY, session);
-            List<String> dependencyPackages = Arrays.stream(dependencyPackageNames).map(
-                    dependency -> dependency + "." + expectedOs.getCpuArch()).collect(Collectors.toList());
-            String dependency = jschResult.getResult();
-            List<String> notInstalledPackages = new ArrayList<>();
-            for (String dependencyPackage : dependencyPackages) {
-                if (!dependency.contains(dependencyPackage)) {
-                    notInstalledPackages.add(dependencyPackage);
-                }
-            }
-            dependencyProperty.setStatus(HostEnvStatusEnum.NORMAL);
-            if (!notInstalledPackages.isEmpty()) {
-                dependencyProperty.setStatus(HostEnvStatusEnum.ERROR);
-                dependencyProperty.setStatusMessage("not installed dependencies:"
-                        + StringUtils.join(notInstalledPackages, ","));
-            }
-        } catch (Exception e) {
-            log.error("Execute command exception：", e);
-            dependencyProperty.setStatus(HostEnvStatusEnum.ERROR);
-            dependencyProperty.setStatusMessage(e.getMessage());
-        }
-        return dependencyProperty;
-    }
-
-    private HardwareEnv hardwareEnvDetect(Session session, OpenGaussSupportOSEnum expectedOs) {
-        HardwareEnv hardwareEnv = new HardwareEnv();
-        List<EnvProperty> envProperties = new CopyOnWriteArrayList<>();
-        hardwareEnv.setEnvProperties(envProperties);
-
-        CountDownLatch countDownLatch = new CountDownLatch(6);
-
-        threadPoolTaskExecutor.submit(() -> {
-            // os
-            envProperties.add(osPropertyDetect(session, expectedOs));
-            countDownLatch.countDown();
-        });
-
-
-        threadPoolTaskExecutor.submit(() -> {
-            // os version
-            envProperties.add(osVersionPropertyDetect(session));
-            countDownLatch.countDown();
-        });
-
-        threadPoolTaskExecutor.submit(() -> {
-            // memory
-            envProperties.add(freeMemoryPropertyDetect(session));
-            countDownLatch.countDown();
-        });
-
-        threadPoolTaskExecutor.submit(() -> {
-            // CPU Core Num
-            envProperties.add(cpuCoreNumPropertyDetect(session));
-            countDownLatch.countDown();
-        });
-
-        threadPoolTaskExecutor.submit(() -> {
-            // CPU
-            envProperties.add(cpuFrequencyPropertyDetect(session));
-            countDownLatch.countDown();
-        });
-
-        threadPoolTaskExecutor.submit(() -> {
-            // Disk
-            envProperties.add(freeHardDiskPropertyDetect(session));
-            countDownLatch.countDown();
-        });
-
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            log.error("waiting for thread to be interrupted", e);
-        }
-
-        envProperties.sort(Comparator.comparingInt(EnvProperty::getSortNum));
-
-        return hardwareEnv;
-    }
-
-    private EnvProperty freeHardDiskPropertyDetect(Session session) {
-        EnvProperty freeHardDiskProperty = new EnvProperty();
-        freeHardDiskProperty.setName("free hard disk space");
-        freeHardDiskProperty.setSortNum(6);
-        try {
-            JschResult jschResult = null;
-            try {
-                jschResult = jschUtil.executeCommand(SshCommandConstants.FREE_HARD_DISK, session);
-            } catch (InterruptedException e) {
-                throw new OpsException("waiting for thread to be interrupted");
-            }
-            if (jschResult.getExitCode() == 0) {
-                String freeHardDisk = jschResult.getResult();
-                try {
-                    int freeHardDiskGB = calcDisk(freeHardDisk);
-                    freeHardDiskProperty.setValue(freeHardDiskGB + "G");
-
-                    freeHardDiskProperty.setStatus(HostEnvStatusEnum.NORMAL);
-
-                    int suggestedNum = 2;
-                    if (freeHardDiskGB < suggestedNum) {
-                        freeHardDiskProperty.setStatus(HostEnvStatusEnum.ERROR);
-                        freeHardDiskProperty.setStatusMessage("min 2.0GB");
-                    }
-                } catch (Exception e) {
-                    log.error("Parse command response error", e);
-                    freeHardDiskProperty.setStatus(HostEnvStatusEnum.ERROR);
-                    freeHardDiskProperty.setStatusMessage("min 2.0GB");
-                }
-            } else {
-                freeHardDiskProperty.setStatus(HostEnvStatusEnum.ERROR);
-                freeHardDiskProperty.setStatusMessage("min 2.0GB");
-            }
-        } catch (IOException e) {
-            log.error("Parse command response error：", e);
-            freeHardDiskProperty.setStatus(HostEnvStatusEnum.ERROR);
-            freeHardDiskProperty.setStatusMessage("min 2.0GB");
-        }
-        return freeHardDiskProperty;
-    }
-
-    private Integer calcDiskUsed(String diskInfo, String path) {
-        Integer res = 0;
-        String[] split = diskInfo.split("\n");
-
-        for (String s : split) {
-            String[] s1 = s.replaceAll( "\\s+", " " ).split(" ");
-            if ("/".equals(s1[5])) {
-                return Integer.parseInt(s1[4].substring(0, s1[4].length()-1));
-            }
-
-            if (path.contains(s1[5])) {
-                return Integer.parseInt(s1[4].substring(0, s1[4].length() - 1));
-            }
-        }
-
-        if (res == 0) {
-            for (String s : split) {
-                String[] s1 = s.replaceAll( "\\s+", " " ).split(" ");
-                int used = Integer.parseInt(s1[4].substring(0, s1[4].length() - 1));
-                if (used > res) {
-                    res = used;
-                }
-            }
-        }
-
-        return res;
-    }
-
-    private int calcDisk(String freeHardDisk) {
-        Integer res = 0;
-        String[] split = freeHardDisk.split("\n");
-        for (String s : split) {
-            try {
-                res += Integer.parseInt(s.replace("G", " ").trim());
-            } catch (Exception ignore) {
-
-            }
-        }
-        return res;
-    }
-
-    private EnvProperty cpuFrequencyPropertyDetect(Session session) {
-        EnvProperty cpuFrequencyProperty = new EnvProperty();
-        cpuFrequencyProperty.setName("CPU frequency");
-        cpuFrequencyProperty.setSortNum(5);
-        try {
-            JschResult jschResult = null;
-            try {
-                jschResult = jschUtil.executeCommand(SshCommandConstants.CPU_FREQUENCY, session);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (jschResult.getExitCode() == 0) {
-                String cpuFrequency = jschResult.getResult();
-                try {
-                    cpuFrequencyProperty.setValue(cpuFrequency);
-
-                    double cpuCoreNum = Double.parseDouble(cpuFrequency.substring(0, cpuFrequency.length() - 3));
-                    cpuFrequencyProperty.setStatus(HostEnvStatusEnum.NORMAL);
-
-                    int suggestedNum = 2;
-                    if (cpuCoreNum < suggestedNum) {
-                        cpuFrequencyProperty.setStatus(HostEnvStatusEnum.WARMING);
-                        cpuFrequencyProperty.setStatusMessage("min 2.0GHz");
-                    }
-                } catch (Exception e) {
-                    log.error("Parse command response error", e);
-                    cpuFrequencyProperty.setStatus(HostEnvStatusEnum.WARMING);
-                    cpuFrequencyProperty.setStatusMessage("min 2.0GHz");
-                }
-            } else {
-                cpuFrequencyProperty.setStatus(HostEnvStatusEnum.WARMING);
-                cpuFrequencyProperty.setStatusMessage("min 2.0GHz");
-            }
-        } catch (IOException e) {
-            log.error("Parse command response error：", e);
-            cpuFrequencyProperty.setStatus(HostEnvStatusEnum.WARMING);
-            cpuFrequencyProperty.setStatusMessage("min 2.0GHz");
-        }
-        return cpuFrequencyProperty;
-    }
-
-    private EnvProperty cpuCoreNumPropertyDetect(Session session) {
-        EnvProperty cpuCoreNumProperty = new EnvProperty();
-        cpuCoreNumProperty.setName("Number of CPU cores");
-        cpuCoreNumProperty.setSortNum(4);
-        try {
-            JschResult jschResult = null;
-            try {
-                jschResult = jschUtil.executeCommand(SshCommandConstants.CPU_CORE_NUM, session);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (jschResult.getExitCode() == 0) {
-                String cpuCore = jschResult.getResult();
-                try {
-                    cpuCoreNumProperty.setValue(cpuCore);
-
-                    int cpuCoreNum = Integer.parseInt(cpuCore);
-                    cpuCoreNumProperty.setStatus(HostEnvStatusEnum.NORMAL);
-
-                    int suggestedNum = 8;
-                    if (cpuCoreNum < suggestedNum) {
-                        cpuCoreNumProperty.setStatus(HostEnvStatusEnum.ERROR);
-                        cpuCoreNumProperty.setStatusMessage("Minimum 8 cores");
-                    }
-                } catch (Exception e) {
-                    log.error("Parse command response error", e);
-                    cpuCoreNumProperty.setStatus(HostEnvStatusEnum.ERROR);
-                    cpuCoreNumProperty.setStatusMessage("Minimum 8 cores");
-                }
-            } else {
-                cpuCoreNumProperty.setStatus(HostEnvStatusEnum.ERROR);
-                cpuCoreNumProperty.setStatusMessage("Minimum 8 cores");
-            }
-        } catch (IOException e) {
-            log.error("Parse command response error：", e);
-            cpuCoreNumProperty.setStatus(HostEnvStatusEnum.ERROR);
-            cpuCoreNumProperty.setStatusMessage("Minimum 8 cores");
-        }
-        return cpuCoreNumProperty;
-    }
-
-    private EnvProperty freeMemoryPropertyDetect(Session session) {
-        EnvProperty freeMemoryProperty = new EnvProperty();
-        freeMemoryProperty.setName("available memory");
-        freeMemoryProperty.setSortNum(3);
-        try {
-            JschResult jschResult = null;
-            try {
-                jschResult = jschUtil.executeCommand(SshCommandConstants.FREE_MEMORY, session);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (jschResult.getExitCode() == 0) {
-                String freeMemory = jschResult.getResult();
-                try {
-                    freeMemoryProperty.setValue(freeMemory + "GB");
-
-                    int freeMemoryGB = Integer.parseInt(freeMemory);
-                    freeMemoryProperty.setStatus(HostEnvStatusEnum.NORMAL);
-
-                    int suggestedGB = 32;
-                    if (freeMemoryGB < suggestedGB) {
-                        freeMemoryProperty.setStatus(HostEnvStatusEnum.WARMING);
-                        freeMemoryProperty.setStatusMessage("32GB or more is recommended");
-                    }
-                } catch (Exception e) {
-                    log.error("Parse command response error", e);
-                    freeMemoryProperty.setStatus(HostEnvStatusEnum.ERROR);
-                    freeMemoryProperty.setStatusMessage("32GB or more is recommended");
-                }
-            } else {
-                freeMemoryProperty.setStatus(HostEnvStatusEnum.ERROR);
-                freeMemoryProperty.setStatusMessage("32GB or more is recommended");
-            }
-        } catch (IOException e) {
-            log.error("Parse command response error：", e);
-            freeMemoryProperty.setStatus(HostEnvStatusEnum.ERROR);
-            freeMemoryProperty.setStatusMessage("32GB or more is recommended");
-        }
-
-        return freeMemoryProperty;
-    }
-
-    private EnvProperty osVersionPropertyDetect(Session session) {
-        EnvProperty osVersionProperty = new EnvProperty();
-        osVersionProperty.setName("operating system version");
-        osVersionProperty.setSortNum(2);
-        try {
-            JschResult jschResult = null;
-            try {
-                jschResult = jschUtil.executeCommand(SshCommandConstants.OS_VERSION, session);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (jschResult.getExitCode() == 0) {
-                String osVersion = jschResult.getResult();
-                try {
-                    osVersionProperty.setValue(osVersion);
-                    osVersionProperty.setStatus(HostEnvStatusEnum.NORMAL);
-                } catch (Exception e) {
-                    log.error("Parse command response error", e);
-                    osVersionProperty.setStatus(HostEnvStatusEnum.ERROR);
-                    osVersionProperty.setStatusMessage("Only supports openEuler 20.03LTS and CentOS 7.6 operating systems");
-                }
-            } else {
-                osVersionProperty.setValue("unknown");
-                osVersionProperty.setStatus(HostEnvStatusEnum.ERROR);
-                osVersionProperty.setStatusMessage("Only supports openEuler 20.03LTS and CentOS 7.6 operating systems");
-            }
-        } catch (IOException e) {
-            log.error("Parse command response error：", e);
-            osVersionProperty.setStatus(HostEnvStatusEnum.ERROR);
-            osVersionProperty.setStatusMessage("Only supports openEuler 20.03LTS and CentOS 7.6 operating systems");
-        }
-
-        return osVersionProperty;
-    }
-
-    private EnvProperty osPropertyDetect(Session session, OpenGaussSupportOSEnum expectedOs) {
-        EnvProperty osProperty = new EnvProperty();
-        osProperty.setName("operating system");
-        osProperty.setSortNum(1);
-
-        try {
-            String os = getOS(session);
-            String cpuArch = getCpuArch(session);
-            osProperty.setValue(os);
-
-            if (expectedOs.match(os, cpuArch)) {
-                osProperty.setStatus(HostEnvStatusEnum.NORMAL);
-            } else {
-                osProperty.setStatus(HostEnvStatusEnum.ERROR);
-                osProperty.setStatusMessage("The operating system does not match the installation package information");
-            }
-
-            if( !"centos".equalsIgnoreCase( os.trim() ) ) {
-                osProperty.setStatus(HostEnvStatusEnum.WARMING);
-                osProperty.setStatusMessage("Please check if the umask value is 0022");
-            }
-        } catch (Exception e) {
-            log.error("Parse command response error：", e);
-
-            osProperty.setStatus(HostEnvStatusEnum.ERROR);
-            osProperty.setStatusMessage("Only supports openEuler 20.03LTS and CentOS 7.6 operating systems");
-        }
-
-        return osProperty;
-    }
-
     private List<String> getAllFiles(String path) {
         List<String> fileList = new ArrayList<>();
         File file = new File(path);
@@ -3845,6 +3337,34 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             log.error(errMsg);
             throw new OpsException(errMsg);
         }
+        return res;
+    }
+
+    private Integer calcDiskUsed(String diskInfo, String path) {
+        Integer res = 0;
+        String[] split = diskInfo.split("\n");
+
+        for (String s : split) {
+            String[] s1 = s.replaceAll("\\s+", " ").split(" ");
+            if ("/".equals(s1[5])) {
+                return Integer.parseInt(s1[4].substring(0, s1[4].length() - 1));
+            }
+
+            if (path.contains(s1[5])) {
+                return Integer.parseInt(s1[4].substring(0, s1[4].length() - 1));
+            }
+        }
+
+        if (res == 0) {
+            for (String s : split) {
+                String[] s1 = s.replaceAll("\\s+", " ").split(" ");
+                int used = Integer.parseInt(s1[4].substring(0, s1[4].length() - 1));
+                if (used > res) {
+                    res = used;
+                }
+            }
+        }
+
         return res;
     }
 }

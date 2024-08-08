@@ -91,6 +91,10 @@ public enum BusinessType {
      */
     BATCH_INSTALL,
     /**
+     * re install
+     */
+    RE_INSTALL,
+    /**
      * copy
      */
     COPY

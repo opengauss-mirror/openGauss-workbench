@@ -81,4 +81,8 @@ public enum OpsClusterTaskStatusEnum {
     public static boolean isPending(OpsClusterTaskStatusEnum taskStatusEnum) {
         return Objects.equals(taskStatusEnum, PENDING);
     }
+
+    public static boolean isFailed(OpsClusterTaskStatusEnum taskStatusEnum) {
+        return Objects.equals(taskStatusEnum, FAILED) && Objects.equals(taskStatusEnum, CANCELED);
+    }
 }
