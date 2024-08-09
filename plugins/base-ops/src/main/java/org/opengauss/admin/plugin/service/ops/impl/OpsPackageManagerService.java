@@ -228,7 +228,8 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
 
         try {
             try {
-                Process tar = Runtime.getRuntime().exec("tar -jxf " + installPackagePath + " -C " + tempAbsoluteFolder);
+                Process tar = Runtime.getRuntime().exec(
+                        "tar -xvf " + installPackagePath + " -C " + tempAbsoluteFolder);
                 int exitCode = tar.waitFor();
                 if (0 != exitCode) {
                     throw new OpsException("Failed to decompress the installation package with exitCode " + exitCode);

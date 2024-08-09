@@ -50,6 +50,7 @@ import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
 import java.io.IOException;
@@ -386,8 +387,11 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         // unzip install pack
         wsUtil.sendText(installContext.getRetSession(), "START_UNZIP_INSTALL_PACKAGE");
         decompress(jschUtil, rootSession, pkgPath, installPackageFullPath, retSession, "-xvf");
-        // unzip CM
-        decompress(jschUtil, rootSession, pkgPath, pkgPath + "/openGauss-" + installContext.getOpenGaussVersionNum() + omPackagePostfix(installContext.getOs()), retSession, "-zxvf");
+
+        // unzip OM
+        String omPackage = getOMPackage(pkgPath, rootSession);
+        decompress(jschUtil, rootSession, pkgPath,
+                pkgPath + System.getProperty("file.separator") + omPackage, retSession, "-zxvf");
         wsUtil.sendText(installContext.getRetSession(), "END_UNZIP_INSTALL_PACKAGE");
 
         // write xml
@@ -642,9 +646,10 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
                 targetPath + System.getProperty("file.separator")
                         + FileUtil.getName(upgradeContext.getUpgradePackagePath()),
                 upgradeContext.getRetSession(), "-xvf");
+
+        String omPackage = getOMPackage(targetPath, rootSession);
         decompress(jschUtil, rootSession, targetPath,
-                targetPath
-                        + "/openGauss-"+upgradeContext.getVersionNum()+upgradeContext.getOs().getOmPackagePostfix(),
+                targetPath + System.getProperty("file.separator") + omPackage,
                 upgradeContext.getRetSession(), "-zxvf");
 
         try {
@@ -667,6 +672,39 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         } catch (Exception e) {
             log.error("gs_preinstall failed", e);
             throw new OpsException("gs_preinstall failed");
+        }
+    }
+
+    private String getOMPackage(String path, Session rootSession) {
+        String command = MessageFormat.format(SshCommandConstants.GET_OM_PACKAGE, path);
+
+        try {
+            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
+
+            if (jschResult.getExitCode() != 0) {
+                log.error("Failed to obtain the OM package by command: {}. Exit code: {}",
+                        command, jschResult.getExitCode());
+                throw new OpsException("Failed to obtain the OM package.");
+            }
+
+            String commandResult = jschResult.getResult().trim();
+
+            if (commandResult.contains(String.valueOf((char) 10))) {
+                String errorMsg = "One OM package is expected to be queried, but multiple OM packages are queried.";
+                log.error(errorMsg);
+                throw new OpsException(errorMsg);
+            }
+
+            if (ObjectUtils.isEmpty(commandResult)) {
+                String errorMsg = "No OM package is found.";
+                log.error(errorMsg);
+                throw new OpsException(errorMsg);
+            }
+
+            return commandResult;
+        } catch (IOException | InterruptedException e) {
+            log.error("Failed to obtain the OM package by command: {}. Error: {}", command, e.getMessage());
+            throw new OpsException("Failed to obtain the OM package.");
         }
     }
 
