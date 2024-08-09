@@ -372,6 +372,7 @@ const checkUploadFil = (uploadFlag:number) => {
   const uid = data.uid
   formDataUploadFil.append('uuid', uid)
   formDataUploadFil.append('isInvoke', uploadFlag)
+  formDataUploadFil.append('currentLocale', currentLocale.value)
   bulkImportany(formDataUploadFil).then(response => {
     console.log('waiting for response')
   })
@@ -441,7 +442,7 @@ const startProgressBar = () => {
 }
 
 const downLoadModule = () => {
-  let url='/host/downloadTemplate';
+  let url=`/host/downloadTemplate/${currentLocale.value}`;
   axios.get(url,{responseType: 'blob',headers: {'Content-Type':'application/json;application/octet-stream'}
   })
     .then((res)=>{

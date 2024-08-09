@@ -87,18 +87,40 @@ public class HostController extends BaseController {
         return AjaxResult.success(uuid);
     }
 
+    /**
+     * Invoke related file handling operations.
+     *
+     * @param uuid The unique identifier of the file.
+     * @param isInvoke A flag that indicates whether to perform file processing;
+     *                 0 means to process, and non-zero means not to process.
+     * @param currentLocale The current user's locale, used for internationalization support.
+     * @return AjaxResult The result of the method execution,
+     *          which includes whether the operation was successful, along with related messages and data.
+     */
     @PostMapping("/invokeFile")
-    public AjaxResult invokeFile(@RequestParam String uuid, @RequestParam Integer isInvoke) {
+    public AjaxResult invokeFile(
+            @RequestParam String uuid,
+            @RequestParam Integer isInvoke,
+            @RequestParam String currentLocale
+    ) {
         if (isInvoke == 0) {
-            hostService.invokeFile(uuid, fileStreamMap);
+            hostService.invokeFile(uuid, fileStreamMap, currentLocale);
         }
         fileStreamMap.remove(uuid);
         return AjaxResult.success();
     }
 
-    @GetMapping("/downloadTemplate")
-    public void downloadTemplate(HttpServletResponse response) {
-        hostService.downloadTemplate(response);
+    /**
+     * Download the template file,
+     * and download the corresponding template file based on the currently selected language.
+     *
+     * @param response HTTP response object, used to send files to the client.
+     * @param currentLocale The current user's locale,
+     *                      used to determine which version of the template to download.
+     */
+    @GetMapping("/downloadTemplate/{currentLocale}")
+    public void downloadTemplate(HttpServletResponse response, @PathVariable String currentLocale) {
+        hostService.downloadTemplate(response, currentLocale);
     }
 
     @GetMapping("/downloadErrorExcel/{uuid}")
