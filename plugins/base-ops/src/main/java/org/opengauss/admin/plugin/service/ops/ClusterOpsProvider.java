@@ -63,16 +63,6 @@ public interface ClusterOpsProvider {
     }
 
     /**
-     * get om installation package postfix
-     *
-     * @param os OpenGaussSupportOSEnum
-     * @return om installation package postfix
-     */
-    default String omPackagePostfix(OpenGaussSupportOSEnum os) {
-        return os.getOmPackagePostfix();
-    }
-
-    /**
      * perform installation
      *
      * @param installContext installation context

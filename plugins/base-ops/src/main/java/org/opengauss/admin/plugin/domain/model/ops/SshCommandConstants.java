@@ -283,4 +283,9 @@ public interface SshCommandConstants {
     String THREE_IN_ONE = "{0}{1}{2}";
     String CHANGE_SUB_USER = "su - {0} -c ''{1}''";
     String CHECK_PERMISSION = "ls -l --time-style=long-iso -d {0}";
+
+    /**
+     * command to get openGauss OM package
+     */
+    String GET_OM_PACKAGE = "ls {0} | grep -i 'om.*\\.tar\\.gz'";
 }

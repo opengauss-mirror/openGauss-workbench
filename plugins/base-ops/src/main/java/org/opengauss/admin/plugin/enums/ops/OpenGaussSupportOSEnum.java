@@ -36,16 +36,15 @@ import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
 @AllArgsConstructor
 public enum OpenGaussSupportOSEnum {
     CENTOS_X86_64("centos", "x86_64",
-            SshCommandConstants.INSTALL_DEPENDENCY, "-CentOS-64bit-om.tar.gz"),
+            SshCommandConstants.INSTALL_DEPENDENCY),
     OPENEULER_AARCH64("openEuler", "aarch64",
-            SshCommandConstants.INSTALL_DEPENDENCY_OPENEULER_ARCH64, "-openEuler-64bit-om.tar.gz"),
+            SshCommandConstants.INSTALL_DEPENDENCY_OPENEULER_ARCH64),
     OPENEULER_X86_64("openEuler", "x86_64",
-            SshCommandConstants.INSTALL_DEPENDENCY_OPENEULER_X86, "-openEuler-64bit-om.tar.gz");
+            SshCommandConstants.INSTALL_DEPENDENCY_OPENEULER_X86);
 
     private String osId;
     private String cpuArch;
     private String dependencyCommand;
-    private String omPackagePostfix;
 
     public static OpenGaussSupportOSEnum of(String osInfo, String osVersionInfo, String cpuArchInfo) {
         OsSupportMap osMapEnum = OsSupportMap.of(osInfo, osVersionInfo, cpuArchInfo);
