@@ -84,20 +84,20 @@
     <div v-if="data.status === fileStatusEnum.fileParsing" class = "['upload_box']" :style="{ height: 'auto' }">
       <div class = "content_box">
         <div v-if="data.formLoaFlag === formLoaFlaEnum.anyWin" style="text-align: center">
-          <img src="@/assets/images/ops/bulkimport-ing.png" alt="Icon">
+          <img :src="currentLocale === 'zh-CN' ? require('@/assets/images/ops/bulkimport-ing.png') : require('@/assets/images/ops/bulkimport-ing-en.png')" alt="Icon">
           <br><svg-icon icon-class="file-search-suc" style="font-size: 100px"></svg-icon><br>
           <p :style="{ color: 'gray'}" >{{$t('bulk.BulkImport.5exv06n8x1kn0')}}</p>
           <br><p :style="{ color: 'light-gray'}" >{{ $t('bulk.BulkImport.5exv06n8x1kh1')}}</p>
         </div>
         <div v-if="data.formLoaFlag === formLoaFlaEnum.loadErr" style="text-align: center">
-          <img src="@/assets/images/ops/bulkimport-fail.png" alt="Icon">
+          <img :src="currentLocale === 'zh-CN' ? require('@/assets/images/ops/bulkimport-fail.png') : require('@/assets/images/ops/bulkimport-fail-en.png')" alt="Icon">
           <br><svg-icon icon-class="file-search-fail" style="font-size: 100px"></svg-icon><br>
           <p :style="{ color: 'red'}" style="display: inline;">{{ $t('bulk.BulkImport.5exv06n8x1kx0')}}</p>
           <p :style="{ color: 'grey'}" style="display: inline;">{{ $t('bulk.BulkImport.5exv06n8x1ke0')}}</p>
           <a-button :style="{ color: 'lightblue'}" @click = "reupload" style="display: inline;">{{ $t('bulk.BulkImport.5exv06n8x1ko0')}}</a-button>
         </div>
         <div v-if="data.formLoaFlag === formLoaFlaEnum.loadWin" style="text-align: center">
-          <img src="@/assets/images/ops/bulkimport-import.png" alt="Icon">
+          <img :src="currentLocale === 'zh-CN' ? require('@/assets/images/ops/bulkimport-import.png') : require('@/assets/images/ops/bulkimport-import-en.png')" alt="Icon">
           <!--        <p :style="{ color: 'gray'}" >{{ $t('bulk.BulkImport.5exv06n8x1ki1')}}</p>-->
           <div class = 'inflexside'>
             <div class = 'progress'>
@@ -107,7 +107,7 @@
           </div>
         </div>
         <div v-if="data.formLoaFlag === formLoaFlaEnum.loadSuc" style="text-align: center">
-          <img src="@/assets/images/ops/bulkimport-done.png" alt="Icon">
+          <img :src="currentLocale === 'zh-CN' ? require('@/assets/images/ops/bulkimport-done.png') : require('@/assets/images/ops/bulkimport-done-en.png')" alt="Icon">
           <br><p :style="{ color: 'grey'}" style="display: inline;">{{ $t('bulk.BulkImport.5exv06n8x1ki1')}} {{totalNum}} {{ $t('bulk.BulkImport.5exv06n8x1kj1')}}</p><br>
           <p :style="{ color: 'lightgreen'}" style="display: inline;">{{sucNum}} {{ $t('bulk.BulkImport.5exv06n8x1kk1')}}</p>
           <p :style="{ color: 'grey'}" style="display: inline;">{{ $t('bulk.BulkImport.5exv06n8x1kl1')}}</p>
@@ -128,8 +128,10 @@ import { nextTick, reactive, ref, toRaw, computed, onMounted, onBeforeUnmount } 
 import { useI18n } from 'vue-i18n'
 import axios from 'axios'
 import {bulkImporErrPlan, bulkImportany, bulkuploadPhy} from '@/api/ops'
+import useLocale from "@/hooks/locale";
 
 const { t } = useI18n()
+const { changeLocale, currentLocale } = useLocale()
 
 enum fileStatusEnum {
   unLoad = 0,
@@ -449,7 +451,7 @@ const downLoadModule = () => {
         const URL = window.URL || window.webkitURL;
         let herf = URL.createObjectURL(blob);
         link.href = herf;
-        link.download = "模板.xlsx";
+        link.download = currentLocale.value === 'zh-CN' ? '模板.xlsx' : 'Template.xlsx';
         link.click();
         window.URL.revokeObjectURL(herf);
       }
@@ -472,7 +474,7 @@ const downLoadErrRep = () => {
         link.href = herf;
         const date = new Date();
         const formattedDate = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}${date.getHours().toString().padStart(2, '0')}${date.getMinutes().toString().padStart(2, '0')}${date.getSeconds().toString().padStart(2, '0')}`;
-        link.download = `错误报告_${formattedDate}.xlsx`;
+        link.download = currentLocale.value === 'zh-CN' ? `错误报告_${formattedDate}.xlsx` : `Error Report_${formattedDate}.xlsx`;
         link.click();
         window.URL.revokeObjectURL(herf);
       }

@@ -704,7 +704,11 @@
             "5mphf11tfjw0": "operation",
             "5mphf11tfr80": "Not detected",
             "5mphf11tfx80": "Not available",
-            "5mphf11tg780": "available"
+            "5mphf11tg780": "available",
+            "5mphf11rr090": "Bulk Import",
+            "5mphf11rr590": "Bulk Delete",
+            "5mphf11rr890": "All selected hosts have been deleted.",
+            "5mphf11rr990": "Some hosts were not successfully deleted."
         }
     },
     "label": {
@@ -718,6 +722,42 @@
             "5pbjv7b0yd00": "Create Label",
             "5pbjv7b0yk40": "Edit Label",
             "5pbjv7b0yso0": "Label Manage"
+        }
+    },
+    "bulk": {
+        "BulkImport": {
+            "5exv06n8x1kh0": "Bulk Import",
+            "5exv06n8x1ki0": "Choose File",
+            "5exv06n8x1kj0": "Drag files here or",
+            "5exv06n8x1kk0": "File Parsing",
+            "5exv06n8x1kl0": "Import to Server",
+            "5exv06n8x1km0": "Import Completed",
+            "5exv06n8x1kn0": "File is being parsed, please wait a moment.",
+            "5exv06n8x1ko0": "Re-upload",
+            "5exv06n8x1kp0": "You can still replace the file by dragging and dropping it into the area below.",
+            "5exv06n8x1kq0": "File uploaded successfully.",
+            "5exv06n8x1kr0": "Re-import",
+            "5exv06n8x1ks0": "Completed",
+            "5exv06n8x1kt0": "Download Error Report",
+            "5exv06n8x1ku0": "Import Template Download",
+            "5exv06n8x1kv0": "File is uploading",
+            "5exv06n8x1kx0": "File Parsing Failed",
+            "5exv06n8x1ky0": "Only Excel files are supported for upload, with a maximum size of 200MB.",
+            "5exv06n8x1kz0": "Delete",
+            "5exv06n8x1ka0": "Okay",
+            "5exv06n8x1kb0": "Cancel",
+            "5exv06n8x1kw0": "File upload failed, an Excel file is required. Please upload again.",
+            "5exv06n8x1kc0": "File upload failed, the file must be under 200MB. Please upload again.",
+            "5exv06n8x1kd0": "File upload failed, only one file is allowed. Please upload again.",
+            "5exv06n8x1ke0": ",please modify the file and",
+            "5exv06n8x1kf0": "File upload failed due to an unknown reason, please upload again.",
+            "5exv06n8x1kh1": "Please do not refresh the interface.",
+            "5exv06n8x1ki1": "Total imported",
+            "5exv06n8x1kj1": "entries of data",
+            "5exv06n8x1kk1": "entries",
+            "5exv06n8x1kl1": "Import successful，",
+            "5exv06n8x1km1": "Import failed",
+            "5exv06n8x1kn1": "Download Error Report"
         }
     },
     "az": {
