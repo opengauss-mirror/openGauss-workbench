@@ -56,39 +56,49 @@ public class ShellUtil {
      * Connect Timeout
      */
     private static final Integer CONNECT_TIMEOUT = 5000;
+    private static final Integer MAX_RETRY_COUNT = 20;
+    private static final Integer RETRY_TIME = 5000;
 
     /**
      * execute command
      *
      * @param shellInfo shell information
-     * @param commands commands
+     * @param command command
      */
-    public static void execCommand(ShellInfoVo shellInfo, String... commands) {
-        execCommand(shellInfo.getIp(), shellInfo.getPort(), shellInfo.getUsername(), shellInfo.getPassword(), commands);
+    public static void execCommand(ShellInfoVo shellInfo, String command) {
+        execCommand(shellInfo.getIp(), shellInfo.getPort(), shellInfo.getUsername(), shellInfo.getPassword(), command);
     }
 
     /**
      * execute command and get result
      *
      * @param shellInfo shell information
-     * @param commands commands
+     * @param command command
      * @return JschResult
      */
-    public static JschResult execCommandGetResult(ShellInfoVo shellInfo, String... commands) {
+    public static JschResult execCommandGetResult(ShellInfoVo shellInfo, String command) {
         return execCommandGetResult(
-                shellInfo.getIp(), shellInfo.getPort(), shellInfo.getUsername(), shellInfo.getPassword(), commands);
+                shellInfo.getIp(), shellInfo.getPort(), shellInfo.getUsername(), shellInfo.getPassword(), command);
     }
 
-    public static void execCommand(String host, Integer port, String user, String password, String... commands) {
-        Session session = JschUtil.openSession(host, port, user, password);
+    /**
+     * execute command
+     *
+     * @param host host
+     * @param port port
+     * @param user user
+     * @param password password
+     * @param command command
+     */
+    public static void execCommand(String host, Integer port, String user, String password, String command) {
+        Session session = null;
         ChannelExec channelExec = null;
         try {
+            session = getSession(host, port, user, password, command);
             channelExec = (ChannelExec) session.openChannel("exec");
-            for (String command : commands) {
-                channelExec.setCommand(command);
-            }
+            channelExec.setCommand(command);
             channelExec.connect();
-        } catch (JSchException e) {
+        } catch (JSchException | JschRuntimeException | InterruptedException e) {
             log.error("exec command error, message: {}", e.getMessage());
         } finally {
             JschUtil.close(channelExec);
@@ -103,50 +113,28 @@ public class ShellUtil {
      * @param port     connection port of the executing machine
      * @param user     connection username of the executing machine
      * @param password connection password of the executing machine
-     * @param commands execute command
+     * @param command  execute command
      * @return exec result
      */
-    public static JschResult execCommandGetResult(String host, Integer port, String user, String password, String... commands) {
+    public static JschResult execCommandGetResult(String host, Integer port, String user, String password,
+                                                    String command) {
         Session session = null;
         ChannelExec channelExec = null;
         JschResult jschResult = new JschResult();
         InputStream in = null;
         InputStreamReader isr = null;
         try {
-            StringBuilder sb = new StringBuilder(16);
-            session = JschUtil.openSession(host, port, user, password, CONNECT_TIMEOUT);
+            session = getSession(host, port, user, password, command);
             channelExec = (ChannelExec) session.openChannel("exec");
-            for (String command : commands) {
-                channelExec.setCommand(command + " 2>&1");
-            }
+            channelExec.setCommand(command + " 2>&1");
             channelExec.connect();
             in = channelExec.getInputStream();
             isr = new InputStreamReader(in, StandardCharsets.UTF_8);
-            BufferedReader reader = new BufferedReader(isr);
-            String buffer;
-            while ((buffer = reader.readLine()) != null) {
-                sb.append("\n").append(buffer);
-            }
-            reader.close();
-
-            int exitCode = channelExec.getExitStatus();
-            // see http://epaul.github.io/jsch-documentation/simple.javadoc/com/jcraft/jsch/Channel.html#getExitStatus--
-            // the exit status returned by the remote command, or -1,
-            // if the command not yet terminated (or this channel type has no command)
-            while (exitCode < 0) {
-                exitCode = channelExec.getExitStatus();
-                if (exitCode >= 0) {
-                    break;
-                }
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    log.warn("wait shell result exception: " + e.getMessage());
-                }
-            }
+            String result = getResult(isr);
+            int exitCode = getExitCode(channelExec);
             jschResult.setExitCode(exitCode);
-            jschResult.setResult(sb.toString());
-        } catch (JSchException | JschRuntimeException | IOException e) {
+            jschResult.setResult(result);
+        } catch (JSchException | JschRuntimeException | IOException | InterruptedException e) {
             log.error("exec command error, message: {}", e.getMessage());
             jschResult.setExitCode(-1);
             jschResult.setResult(e.getMessage());
@@ -168,9 +156,60 @@ public class ShellUtil {
                 }
             }
         }
-
         return jschResult;
     }
+
+    private static int getExitCode(ChannelExec channelExec) {
+        int exitCode = channelExec.getExitStatus();
+        // see http://epaul.github.io/jsch-documentation/simple.javadoc/com/jcraft/jsch/Channel.html#getExitStatus--
+        // the exit status returned by the remote command, or -1,
+        // if the command not yet terminated (or this channel type has no command)
+        while (exitCode < 0) {
+            exitCode = channelExec.getExitStatus();
+            if (exitCode >= 0) {
+                break;
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                log.warn("wait shell result exception: " + e.getMessage());
+            }
+        }
+        return exitCode;
+    }
+
+    private static String getResult(InputStreamReader isr) throws IOException {
+        StringBuilder sb = new StringBuilder(16);
+        try (BufferedReader reader = new BufferedReader(isr)) {
+            String buffer;
+            while ((buffer = reader.readLine()) != null) {
+                sb.append("\n").append(buffer);
+            }
+        }
+        return sb.toString();
+    }
+
+    private static Session getSession(String host, Integer port, String user, String password, String command)
+            throws InterruptedException, JschRuntimeException {
+        int maxRetryCount = (command.contains("jar") || command.contains("checkResult")) ? MAX_RETRY_COUNT : 1;
+        int count = 0;
+        Session session = null;
+        while (count < maxRetryCount) {
+            try {
+                session = JschUtil.openSession(host, port, user, password, CONNECT_TIMEOUT);
+                break;
+            } catch (JschRuntimeException e) {
+                if (count == maxRetryCount - 1) {
+                    log.error("fail to get session, count:{}", count);
+                    throw e;
+                }
+                Thread.sleep(RETRY_TIME);
+            }
+            count++;
+        }
+        return session;
+    }
+
 
     @Deprecated
     public static void rmDir(String host, Integer port, String user, String password, String path) {

@@ -231,8 +231,8 @@ public class PortalHandle {
      * @param command  command
      * @return check result
      */
-    public static boolean checkBeforeMigration(MigrationHostPortalInstall host, MigrationTask task,
-                                               String portalJarName, Map<String, String> paramMap, String command) {
+    public static JschResult checkBeforeMigration(MigrationHostPortalInstall host, MigrationTask task,
+                                                String portalJarName, Map<String, String> paramMap, String command) {
         log.info("run host info: {}", JSON.toJSONString(host));
         String portalHome = host.getInstallPath() + "portal/";
         String params = paramMap.entrySet().stream().map(p -> {
@@ -245,21 +245,8 @@ public class PortalHandle {
         commandSb.append(" -Dorder=").append(command);
         commandSb.append(" -Dskip=true -jar ").append(portalHome).append(portalJarName);
         log.info("check before migration,host: {}, command: {}", host.getHost(), commandSb);
-        JschResult checkResult = ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getRunUser(),
+        return ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getRunUser(),
                 host.getRunPassword(), commandSb.toString());
-        if (!checkResult.isOk()) {
-            log.error("exec checkBeforeMigration command failed.");
-        } else {
-            log.info("exec checkBeforeMigration command result {}", checkResult.getResult());
-            if (checkResult.getResult().contains("verify migration success.")) {
-                return true;
-            } else if (checkResult.getResult().contains("verify migration failed.")) {
-                return false;
-            } else {
-                log.error("verify exception.");
-            }
-        }
-        return false;
     }
 
     /**

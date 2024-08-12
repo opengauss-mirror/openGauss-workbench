@@ -21,6 +21,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.utils.SecurityUtils;
@@ -508,19 +509,27 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
      * @return check result
      */
     public boolean execMigrationCheck(MigrationHostPortalInstall installHost, MigrationTask t,
-        List<MigrationTaskGlobalParam> globalParams, String command) {
-        if (!PortalHandle.checkBeforeMigration(installHost, t, installHost.getJarName(), getTaskParam(globalParams, t),
-            command)) {
-            log.error("taskId={} check before migration failed, command is {}.", t.getId(), command);
-            String checkResult = PortalHandle.getPortalCheckResult(installHost, t.getId());
-            MigrationTask update = MigrationTask.builder().id(t.getId()).build();
-            update.setStatusDesc(checkResult);
-            update.setExecStatus(TaskStatus.CHECK_ERROR.getCode());
-            updateById(update);
-            migrationMainTaskService.updateStatus(t.getMainTaskId(), MainTaskStatus.CHECK_MIGRATION);
-            return false;
+                                      List<MigrationTaskGlobalParam> globalParams, String command) {
+        JschResult checkResult = PortalHandle.checkBeforeMigration(installHost, t, installHost.getJarName(),
+                getTaskParam(globalParams, t), command);
+        MigrationTask update = MigrationTask.builder().id(t.getId()).build();
+        if (checkResult.getResult().contains("verify migration success.")) {
+            return true;
         }
-        return true;
+        if (!checkResult.isOk()) {
+            log.error("exec checkBeforeMigration command failed.");
+            update.setExecStatus(TaskStatus.MIGRATION_ERROR.getCode());
+            update.setStatusDesc(checkResult.getResult());
+        }
+        if (checkResult.getResult().contains("verify migration failed.")) {
+            log.info("exec checkBeforeMigration command result {}", checkResult.getResult());
+            update.setExecStatus(TaskStatus.CHECK_ERROR.getCode());
+            String result = PortalHandle.getPortalCheckResult(installHost, t.getId());
+            update.setStatusDesc(result);
+        }
+        updateById(update);
+        migrationMainTaskService.updateStatus(t.getMainTaskId(), MainTaskStatus.CHECK_MIGRATION);
+        return false;
     }
 
     /**
