@@ -564,7 +564,7 @@ CREATE OR REPLACE FUNCTION init_migration_data_fuc() RETURNS integer AS 'BEGIN
         INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
         VALUES (4, ''sink.initialSize'', ''5'', ''初始化连接池大小'');
         INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
-        VALUES (5, ''sink.debezium-time-period'', ''1'', ''Debezium增量校验时间段：24*60单位：分钟，即每隔1小时增量校验一次。'');
+        VALUES (5, ''sink.debezium-time-period'', ''1'', ''Debezium增量校验时间段：24*60单位：分钟，即每隔1分钟增量校验一次'');
         INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
         VALUES (7, ''source.query-dop'', ''8'', ''source端数据库并行查询会话配置'');
         INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
@@ -576,7 +576,7 @@ CREATE OR REPLACE FUNCTION init_migration_data_fuc() RETURNS integer AS 'BEGIN
         INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
         VALUES (12, ''source.debezium-num-period'', ''1000'', ''Debezium增量校验数量的阈值，默认值为1000，应大于100'');
         INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
-        VALUES (11, ''source.debezium-time-period'', ''1'', ''Debezium增量校验时间段：24*60单位：分钟，即每隔1小时增量校验一次'');
+        VALUES (11, ''source.debezium-time-period'', ''1'', ''Debezium增量校验时间段：24*60单位：分钟，即每隔1分钟增量校验一次'');
         INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
         VALUES (13, ''rules.enable'', ''true'', ''规则过滤，true代表开启，false代表关闭'');
         INSERT INTO "public"."tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
@@ -631,7 +631,6 @@ END;'
     LANGUAGE plpgsql;
 select init_migration_data_fuc();
 DROP FUNCTION init_migration_data_fuc;
-
 
 CREATE OR REPLACE FUNCTION add_migration_task_status_desc_field_func() RETURNS integer AS 'BEGIN
 IF
@@ -872,7 +871,7 @@ SET "param_key"     = 'sink.initialSize', "param_value"   = '5', "param_desc"   
 WHERE "id" = 4;
 
 UPDATE "public"."tb_migration_task_init_global_param"
-SET "param_key"     = 'sink.debezium-time-period', "param_value"   = '1', "param_desc"    = 'Debezium增量校验时间段：24*60单位：分钟，即每隔1小时增量校验一次。',
+SET "param_key"     = 'sink.debezium-time-period', "param_value"   = '1', "param_desc"    = 'Debezium增量校验时间段：24*60单位：分钟，即每隔1分钟增量校验一次',
     "param_type"    = 2, "param_extends" = NULL, "param_rules" = '[1,99999]'
 WHERE "id" = 5;
 
@@ -903,7 +902,7 @@ WHERE "id" = 10;
 
 UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_key"     = 'source.debezium-time-period', "param_value"   = '1',
-    "param_desc"    = 'Debezium增量校验时间段：24*60单位：分钟，即每隔1小时增量校验一次',
+    "param_desc"    = 'Debezium增量校验时间段：24*60单位：分钟，即每隔1分钟增量校验一次',
     "param_type"    = 2, "param_extends" = NULL, "param_rules" = '[1,99999]'
 WHERE "id" = 11;
 
