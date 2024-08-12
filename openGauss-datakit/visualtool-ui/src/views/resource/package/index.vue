@@ -246,9 +246,9 @@ const handleSelected = (keys: (string | number)[]) => {
 }
 
 const checkPack = (record: KeyValue) => {
-  let tempPackageId = []
-  tempPackageId.push(JSON.stringify(record.packageId))
-  checkPackage(tempPackageId).then((res: KeyValue) => {
+  let templist = []
+  templist.push(record.packageId)
+  checkPackage(templist).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       Message.success({
         content: '检查通过'
@@ -265,42 +265,32 @@ const checkPack = (record: KeyValue) => {
 }
 
 const checkSelectedPack = () => {
-  const selectedRecords = list.selectedpackageIds.map((packageId: string | number) => {
-    return data.value.selectedData[packageId]
+  let selectedRecord = []
+  list.selectedpackageIds.forEach((item) => {
+    selectedRecord.push(item)
   })
-  if (selectedRecords.length > 0) {
-    checkPackMul(selectedRecords)
+  if (selectedRecord.length > 0) {
+    checkPackMul(selectedRecord)
   } else {
     Message.warning(t('请至少选择一个安装包'))
   }
 }
 
-const checkPackMul = (records: KeyValue) => {
-  const checkPromises = records.map((record) => {
-    let tempPackageId = []
-    tempPackageId.push(JSON.stringify(record.packageId))
-    return checkPackage(tempPackageId)
-  })
-  Promise.all(checkPromises).then((responses) => {
-    let allSuccess = true
-    responses.forEach((res) => {
-      if (Number(res.code) !== 200) {
-        allSuccess = false
-      }
-    })
-    if (allSuccess) {
-      Message.success(t('检查全部通过'))
+const checkPackMul = (records: any) => {
+  checkPackage(records).then((res: KeyValue) => {
+    if (Number(res.code) === 200) {
+      Message.success({
+        content: '检查全部通过'
+      })
     } else {
-      Message.error(t('检查未全部通过'))
+      Message.error({
+        content: '检查未全部通过'
+      })
     }
-    list.selectedpackageIds = []
-    data.value.selectedData = {}
-  }).catch(() => {
-    console.error({
-      content: '293 An error occurred while checking packages'
-    })
+  }) .catch(error => {
+    console.error('260' + error)
   })
-  getListData(filter.pageSize, filter.pageNum)
+  getListData(filter.pageSize, filter.pageNum, searchFormData)
 }
 
 const deleteRows = (record: KeyValue) => {
@@ -309,7 +299,7 @@ const deleteRows = (record: KeyValue) => {
       Message.success({
         content: '删除成功'
       })
-      getListData(filter.pageSize, filter.pageNum)
+      getListData(filter.pageSize, filter.pageNum, searchFormData)
     }
   }) .catch(error => {
     console.error('310' + error)
@@ -494,12 +484,12 @@ const filter = {
 }
 const currentPage = (e: number) => {
   filter.pageNum = e
-  getListData(filter.pageSize, filter.pageNum)
+  getListData(filter.pageSize, filter.pageNum, searchFormData)
 }
 
 const pageSizeChange = (e: number) => {
   filter.pageSize = e
-  getListData(filter.pageSize, filter.pageNum)
+  getListData(filter.pageSize, filter.pageNum, searchFormData)
 }
 
 const getListData = (pageSize?:number, pageNum?:number, formData?: FormData) => new Promise(resolve => {

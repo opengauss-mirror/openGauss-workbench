@@ -54,6 +54,7 @@
             allow-clear
             placeholder="请输入版本号"
             :options="packageVersionNum"
+            :default-value="tempVersionNum"
             :inputmode="true"
             @blur="insertVersionNum"
             @search="searchVersionNum"
@@ -508,7 +509,6 @@ const open = (
     })
     getPackageUrl()
   } else {
-    console.log('update packageData')
     Object.assign(data.formData, {
       packageId: packageData.packageId,
       name: packageData.name,
@@ -531,12 +531,9 @@ const open = (
     }
   }
   if (addOptionFlag === 0) {
-    console.log('insert type' + addOptionFlag, + typeof (addOptionFlag))
-    console.log('0000')
     getPackageUrl()
     uploadStatusTag.value = false
   } else if (addOptionFlag === 1) {
-    console.log('1111')
     data.formData.name = packageData.name?packageData.name:''
     uploadStatusTag.value = true
   }
@@ -593,15 +590,13 @@ const submit = async () => {
         packageUrl: data.formData.packageUrl,
         packageVersion: data.formData.packageVersion
       }
-      console.log(params)
-      batchPackageUpload(params.name,params.os, params.cpuArch,params.packageVersion, params.packageVersionNum, params.packageUrl).then((res) => {
+      batchPackageUpload(params.name,params.os, params.cpuArch,params.packageVersion, params.packageVersionNum, params.packageUrl,data.fileList[0]).then((res) => {
         console.log('res560' + res)
       }).catch((error) => {
         console.log('562' + error)
       })
     }
   } else {
-    console.log('604判断是否修改' + editDisabledFlag.value)
     if (!editDisabledFlag.value){
       const params = {
         name: data.formData.name,
@@ -623,33 +618,40 @@ const submit = async () => {
   data.show = false
 }
 const close = () => {
-  downloadWs.value?.destroy()
-  data.show = false
-  data.oldPwd = ''
-  Object.assign(data.formData, {
-    name: '',
-    type: 'openGauss',
-    packageId: '',
-    os: '',
-    cpuArch: '',
-    packageVersion: '',
-    packageVersionNum: '',
-    packageUrl: '',
-    packagePath: {},
-    remark: ''
-  })
-  tempOs.value = OS.CENTOS
-  tempArch.value = CpuArch.X86_64
-  tempVersion.value = OpenGaussVersionEnum.MINIMAL_LIST
-  tempVersionNum.value = ''
-  uploadStatusTag.value = false
-  console.log('close')
-  nextTick(() => {
-    formRef.value?.clearValidate()
-    formRef.value?.resetFields()
-    data.fileList = []
-    data.formData.packagePath = {}
-  })
+  try {
+    if (downloadWs && downloadWs instanceof WebSocket && typeof downloadWs.close === 'function') {
+      downloadWs.close(1000, 'Normal closure');
+    }
+  } catch (error) {
+    console.error('Error closing WebSocket:', error);
+  } finally {
+    data.show = false
+    data.oldPwd = ''
+    Object.assign(data.formData, {
+      name: '',
+      type: 'openGauss',
+      packageId: '',
+      os: '',
+      cpuArch: '',
+      packageVersion: '',
+      packageVersionNum: '',
+      packageUrl: '',
+      packagePath: {},
+      remark: ''
+    })
+    tempOs.value = OS.CENTOS
+    tempArch.value = CpuArch.X86_64
+    tempVersion.value = OpenGaussVersionEnum.MINIMAL_LIST
+    tempVersionNum.value = ''
+    uploadStatusTag.value = false
+    nextTick(() => {
+      formRef.value?.clearValidate()
+      formRef.value?.resetFields()
+      data.fileList = []
+      data.formData.packagePath = {}
+    })
+  }
+
 }
 </script>
 
