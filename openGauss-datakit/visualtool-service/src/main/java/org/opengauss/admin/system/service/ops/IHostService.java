@@ -85,9 +85,22 @@ public interface IHostService extends IService<OpsHostEntity> {
      */
     boolean edit(String hostId, HostBody hostBody);
 
-    void invokeFile(String uuid, HashMap<String, InputStream> fileStreamMap);
+    /**
+     * Parse the Excel file.
+     *
+     * @param uuid The unique identifier of the file.
+     * @param fileStreamMap Excel file
+     * @param currentLocale current language
+     */
+    void invokeFile(String uuid, HashMap<String, InputStream> fileStreamMap, String currentLocale);
 
-    void downloadTemplate(HttpServletResponse response);
+    /**
+     * download template
+     *
+     * @param response HTTP response object
+     * @param currentLocale current language
+     */
+    void downloadTemplate(HttpServletResponse response, String currentLocale);
 
     void downloadErrorExcel(HttpServletResponse response, String uuid);
 

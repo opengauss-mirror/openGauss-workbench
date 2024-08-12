@@ -1,11 +1,11 @@
 package org.opengauss.admin.common.core.domain.model.ops;
 
 import com.alibaba.excel.annotation.ExcelProperty;
+import com.alibaba.excel.annotation.write.style.ColumnWidth;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.opengauss.admin.common.utils.excel.IsAdminConverter;
 import org.opengauss.admin.common.utils.excel.TagsConverter;
 
 import java.util.List;
@@ -20,6 +20,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@ColumnWidth(15)
 public class ErrorHostRecord {
     @ExcelProperty("序号")
     private Integer id;
@@ -36,12 +37,14 @@ public class ErrorHostRecord {
     @ExcelProperty("用户密码")
     @ToString.Exclude
     private String password;
-    @ExcelProperty(value = "是否为管理员", converter = IsAdminConverter.class)
-    private Integer isAdmin;
+    @ExcelProperty(value = "是否为管理员（是|否）")
+    private String isAdmin;
     @ExcelProperty(value = "标签", converter = TagsConverter.class)
     private List<String> tags;
+    @ColumnWidth(25)
     @ExcelProperty("备注")
     private String remark;
+    @ColumnWidth(20)
     @ExcelProperty("时间戳")
     private String timestamp;
 }

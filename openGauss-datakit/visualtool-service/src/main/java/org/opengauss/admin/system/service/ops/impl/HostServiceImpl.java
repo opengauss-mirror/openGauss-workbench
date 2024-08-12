@@ -86,6 +86,7 @@ import java.util.stream.Collectors;
 @Service
 public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> implements IHostService {
 
+    private String isSwitchingLanguage;
     @Autowired
     private IHostUserService hostUserService;
     @Autowired
@@ -136,7 +137,8 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     }
 
     @Override
-    public void invokeFile(String uuid, HashMap<String, InputStream> fileStreamMap) {
+    public void invokeFile(String uuid, HashMap<String, InputStream> fileStreamMap, String currentLocale) {
+        isSwitchingLanguage = currentLocale;
         ExecutorService executor = Executors.newCachedThreadPool();
         RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
         RequestContextHolder.setRequestAttributes(attributes, true);
@@ -157,14 +159,21 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     }
 
     @Override
-    public void downloadTemplate(HttpServletResponse response) {
+    public void downloadTemplate(HttpServletResponse response, String currentLocale) {
         try {
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             response.setCharacterEncoding("utf-8");
             String fileName = URLEncoder.encode("模板", "UTF-8").replaceAll("\\+", "%20");
             response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
             OutputStream out = response.getOutputStream();
-            EasyExcel.write(out, HostRecord.class).sheet("模板").doWrite(new ArrayList<HostRecord>());
+            if ("zh-CN".equals(currentLocale)) {
+                EasyExcel.write(out, HostRecord.class).sheet("模板").doWrite(new ArrayList<HostRecord>());
+            } else {
+                EasyExcel.write(out, HostRecord.class)
+                        .head(head(0))
+                        .sheet("Template")
+                        .doWrite(new ArrayList<HostRecord>());
+            }
             out.flush();
             out.close();
         } catch (IOException e) {
@@ -182,7 +191,14 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             String fileName = URLEncoder.encode("错误报告" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()), "UTF-8").replaceAll("\\+", "%20");
             response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
             OutputStream out = response.getOutputStream();
-            EasyExcel.write(out, ErrorHostRecord.class).sheet("错误报告").doWrite(errorhostRecords);
+            if ("zh-CN".equals(isSwitchingLanguage)) {
+                EasyExcel.write(out, ErrorHostRecord.class).sheet("错误报告").doWrite(errorhostRecords);
+            } else {
+                EasyExcel.write(out, ErrorHostRecord.class)
+                        .head(head(1))
+                        .sheet("Error Report")
+                        .doWrite(errorhostRecords);
+            }
             out.flush();
             out.close();
         } catch (IOException e) {
@@ -212,7 +228,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     }
 
     private List<HostRecord> readExcelFile(InputStream inputStream) {
-        HostRecordDataListener hostRecordDataListener = new HostRecordDataListener(this);
+        HostRecordDataListener hostRecordDataListener = new HostRecordDataListener(this, isSwitchingLanguage);
         return EasyExcel.read(inputStream, HostRecord.class, hostRecordDataListener).sheet().doReadSync();
     }
 
@@ -304,6 +320,29 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         }
     }
 
+    private List<List<String>> createBaseHeaders() {
+        return new ArrayList<>(Arrays.asList(
+                Arrays.asList("id"),
+                Arrays.asList("name"),
+                Arrays.asList("privateIP"),
+                Arrays.asList("publicIP"),
+                Arrays.asList("port"),
+                Arrays.asList("userName"),
+                Arrays.asList("password"),
+                Arrays.asList("isAdmin(yes|no)"),
+                Arrays.asList("tags"),
+                Arrays.asList("remark")
+        ));
+    }
+
+    private List<List<String>> head(int tempOrerro) {
+        List<List<String>> headers = createBaseHeaders();
+        if (tempOrerro == 1) {
+            headers.add(Arrays.asList("timestamp"));
+        }
+        return headers;
+    }
+
     private synchronized void addHostRecordToErrorMap(String uuid, Cache<String, List<ErrorHostRecord>> errorExcel, HostRecord hostRecord) {
         List<ErrorHostRecord> list = errorExcel.getIfPresent(uuid);
         if (list == null) {
@@ -328,8 +367,8 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     }
 
     private boolean isAdminUser(HostRecord hostRecord) {
-        Integer isAdmin = hostRecord.getIsAdmin();
-        return isAdmin == 0 ? true : false;
+        String isAdmin = hostRecord.getIsAdmin();
+        return "是".equals(isAdmin) || "yes".equals(isAdmin) ? true : false;
     }
 
     private List<String> addAllTagsToNewCollection(List<String> tags) {
