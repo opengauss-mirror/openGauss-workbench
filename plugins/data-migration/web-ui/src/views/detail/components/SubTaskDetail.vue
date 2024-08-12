@@ -160,13 +160,13 @@
                             <span
                               >{{ $t('components.SubTaskDetail.5q0a5opxm3c4')
                               }}<strong
-                                >{{ dataCheckData.total || 0 }}MB</strong
+                                >{{ dataCheckData.total || 0 }}行</strong
                               ></span
                             >
                             <span
                               >{{ $t('components.SubTaskDetail.5q0a5opxm3c5')
                               }}<strong
-                                >{{ dataCheckData.avgSpeed || 0 }}MB/s</strong
+                                >{{ dataCheckData.avgSpeed || 0 }}行/s</strong
                               ></span
                             >
                             <span
