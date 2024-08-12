@@ -39,19 +39,19 @@ import java.util.Objects;
  * @date 2024/6/22 9:41
  **/
 @Service
-public class CheckDeployTypeFunctionInstance {
+public class CheckDeployTypeService {
     private Map<OpenGaussVersionEnum, CheckDeployTypeFunction> checkFunctions = new HashMap<>();
 
     private final CheckDeployTypeFunction lite = (deployType, size) -> {
-        Assert.isTrue(size == 1, "Lite version,host node number must be 1");
+        if (Objects.equals(deployType, DeployTypeEnum.SINGLE_NODE)) {
+            Assert.isTrue(size == 1, "Lite version single node deployment mode, host node number must be 1");
+        } else {
+            Assert.isTrue(size == 1, "Lite version cluster deployment mode, host node number must be 2");
+        }
     };
 
     private final CheckDeployTypeFunction minimal = (deployType, size) -> {
-        if (Objects.equals(deployType, DeployTypeEnum.SINGLE_NODE)) {
-            Assert.isTrue(size == 1, "minimal list version single node deployment mode, host node number must be 1");
-        } else {
-            Assert.isTrue(size == 2, "minimal list version cluster deployment mode, host node number must be 2");
-        }
+        Assert.isTrue(size == 1, "minimal list version,host node number must be 1");
     };
 
     private final CheckDeployTypeFunction enterprise = (deployType, size) -> {
@@ -65,20 +65,15 @@ public class CheckDeployTypeFunctionInstance {
     /**
      * constructor
      */
-    public CheckDeployTypeFunctionInstance() {
+    public CheckDeployTypeService() {
         checkFunctions.put(OpenGaussVersionEnum.LITE, lite);
         checkFunctions.put(OpenGaussVersionEnum.MINIMAL_LIST, minimal);
         checkFunctions.put(OpenGaussVersionEnum.ENTERPRISE, enterprise);
     }
 
-    /**
-     * get check function by OpenGaussVersionEnum
-     *
-     * @param version version
-     * @return check function
-     */
-    public CheckDeployTypeFunction getCheckFunction(OpenGaussVersionEnum version) {
+    public void check(OpenGaussVersionEnum version, DeployTypeEnum deployType, int size) {
         Assert.isTrue(Objects.nonNull(version), "OpenGaussVersion can not be null");
-        return checkFunctions.get(version);
+        Assert.isTrue(Objects.nonNull(deployType), "DeployTypeEnum can not be null");
+        checkFunctions.get(version).check(deployType, size);
     }
 }

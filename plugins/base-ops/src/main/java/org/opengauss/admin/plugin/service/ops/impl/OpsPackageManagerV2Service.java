@@ -112,7 +112,16 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
         List<OpsPackageManagerEntity> packageEntityList = list(new LambdaQueryWrapper<OpsPackageManagerEntity>()
                 .in(OpsPackageManagerEntity::getPackageId, packageIds));
         if (CollectionUtils.isEmpty(packageEntityList)) {
-            return;
+            log.error("packageId {} is not exist", packageIds);
+            throw new OpsException("packageId " + packageIds + " is not exist");
+        }
+        if (packageIds.size() != packageEntityList.size()) {
+            List<String> notExistIds = packageEntityList.stream()
+                    .map(OpsPackageManagerEntity::getPackageId)
+                    .filter(packageId -> !packageIds.contains(packageId))
+                    .collect(Collectors.toList());
+            log.error("packageId {} is not exist", notExistIds);
+            throw new OpsException("packageId " + notExistIds + " is not exist");
         }
         packageEntityList.stream().forEach(entry -> {
             File file = new File(entry.getRealPath());
@@ -121,6 +130,7 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
                 wrapper.set("package_path", "").eq("package_id", entry.getPackageId());
                 update(wrapper);
             }
+            log.info("checking package list, packageId: {}, realPath: {}", entry.getPackageId(), entry.getRealPath());
         });
     }
 

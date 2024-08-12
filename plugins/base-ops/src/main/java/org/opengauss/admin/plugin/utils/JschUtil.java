@@ -568,8 +568,6 @@ public class JschUtil {
                 break;
             }
 
-            sleep();
-
             autoResponse(autoResponse, resultStrBuilder, out);
         }
 
@@ -613,14 +611,6 @@ public class JschUtil {
         }
     }
 
-    private void sleep() throws InterruptedException {
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            throw new InterruptedException();
-        }
-    }
-
     private JschResult buildJschResultWithSerialResponse(ChannelExec channelExec,
         WsSession wsSession, Map<String, List<String>> autoResponse) throws Exception {
         JschResult jschResult = new JschResult();
@@ -649,7 +639,6 @@ public class JschUtil {
                 jschResult.setExitCode(exitStatus);
                 break;
             }
-            sleep();
             if (CollUtil.isNotEmpty(autoResponse)) {
                 autoResponse.forEach((k, v) -> {
                     if (resultStrBuilder.toString().trim().endsWith(k.trim())) {
@@ -862,9 +851,10 @@ public class JschUtil {
             }
             percent = this.count * 100 / max;
 
-            log.info("Completed " + this.count + "(" + percent
-                    + "%) out of " + max + ".");
-
+            if (percent % 10 == 0) {
+                log.info("Completed " + this.count + "(" + percent
+                        + "%) out of " + max + ".");
+            }
             wsUtil.sendText(wsSession, percent + "%");
 
             return true;

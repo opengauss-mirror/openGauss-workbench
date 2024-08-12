@@ -52,6 +52,10 @@ public class HostUserFacade {
         return hostUserService.listHostUserByHostId(hostId);
     }
 
+    public OpsHostUserEntity getHostUserByUsername(String hostId, String username) {
+        return hostUserService.getHostUserByUsername(hostId,username);
+    }
+
     public void removeByHostId(String hostId) {
         hostUserService.removeByHostId(hostId);
     }

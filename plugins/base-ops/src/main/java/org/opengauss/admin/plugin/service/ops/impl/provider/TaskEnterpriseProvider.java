@@ -1,0 +1,478 @@
+/*
+ * Copyright (c) 2024 Huawei Technologies Co.,Ltd.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ * -------------------------------------------------------------------------
+ *
+ * AbstractTaskProvider.java
+ *
+ * IDENTIFICATION
+ * base-ops/src/main/java/org/opengauss/admin/plugin/service/ops/impl/provider/AbstractTaskProvider.java
+ *
+ * -------------------------------------------------------------------------
+ */
+
+package org.opengauss.admin.plugin.service.ops.impl.provider;
+
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.jcraft.jsch.Session;
+import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.enums.ops.OpsClusterTaskStatusEnum;
+import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
+import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
+import org.opengauss.admin.plugin.domain.model.ops.*;
+import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
+import org.opengauss.admin.plugin.enums.ops.*;
+import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
+import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
+import org.opengauss.admin.plugin.service.ops.IOpsClusterTaskService;
+import org.opengauss.admin.plugin.service.ops.impl.function.GenerateClusterConfigXmlInstance;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.text.MessageFormat;
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * TaskEnterpriseProvider
+ *
+ * @author wangchao
+ * @date 2024/06/15 09:26
+ */
+@Slf4j
+@Service
+public class TaskEnterpriseProvider extends AbstractTaskProvider {
+    @Resource
+    private IOpsClusterTaskService opsClusterTaskService;
+    @Resource
+    private IOpsClusterService opsClusterService;
+    @Resource
+    private IOpsClusterNodeService opsClusterNodeService;
+    @Resource
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
+    @Resource
+    private GenerateClusterConfigXmlInstance generateClusterConfigXmlInstance;
+
+    @Override
+    public OpenGaussVersionEnum version() {
+        return OpenGaussVersionEnum.ENTERPRISE;
+    }
+
+    @Override
+    public void install(InstallContext installContext) {
+        log.info("Start installing Enterprise Edition");
+        String clusterId = installContext.getClusterId();
+        boolean isInstallSucc = true;
+        try {
+            installContext.getRetBuffer().sendText("Start installing Enterprise Edition");
+            doInstall(installContext);
+
+            OpsClusterContext opsClusterContext = new OpsClusterContext();
+            OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
+            List<OpsClusterNodeEntity> opsClusterNodeEntities =
+                    installContext.getEnterpriseInstallConfig().toOpsClusterNodeEntityList();
+            opsClusterContext.setOpsClusterEntity(opsClusterEntity);
+            opsClusterContext.setOpsClusterNodeEntityList(opsClusterNodeEntities);
+
+            sendOperateLog(installContext, "CREATE_REMOTE_USER");
+            createEnterpriseRemoteUser(installContext, opsClusterContext);
+
+            sendOperateLog(installContext, "SAVE_INSTALL_CONTEXT");
+            saveContext(installContext);
+            sendOperateLog(installContext, "FINISH");
+            log.info("The installation is complete");
+        } catch (OpsException e) {
+            log.error("install failed：", e);
+            isInstallSucc = false;
+            throw new OpsException("The installation is failed.");
+        } finally {
+            if (!isInstallSucc) {
+                cleanResource(installContext);
+                opsClusterTaskService.updateClusterTaskStatus(clusterId, OpsClusterTaskStatusEnum.FAILED);
+            } else {
+                opsClusterTaskService.updateClusterTaskStatus(clusterId, OpsClusterTaskStatusEnum.SUCCESS);
+            }
+        }
+    }
+
+    private String prepareCleanClusterDir(InstallContext installContext) {
+        String delCmd = "";
+        try {
+            // remove intall path software
+            String installPackagePathPath = installContext.getEnterpriseInstallConfig().getInstallPackagePath();
+            log.info("install package path : {}", installPackagePathPath);
+
+            String delInstallPath = MessageFormat.format(SshCommandConstants.DEL_FILE, installPackagePathPath + "/*");
+            log.info("delete install package path : {}", delInstallPath);
+            String installDataPath = installContext.getEnterpriseInstallConfig().getInstallPath();
+            String delAppPath = MessageFormat.format(SshCommandConstants.DEL_FILE, installDataPath);
+            log.info("delete app path : {}", delAppPath);
+            String delTmpPath = MessageFormat.format(SshCommandConstants.DEL_FILE,
+                    installContext.getEnterpriseInstallConfig().getTmpPath());
+            log.info("delete tmp path : {}", delTmpPath);
+            String delOmPath = MessageFormat.format(SshCommandConstants.DEL_FILE,
+                    installContext.getEnterpriseInstallConfig().getOmToolsPath());
+            log.info("delete om path : {}", delOmPath);
+            delCmd = delInstallPath + " || echo \"delInstallPath failed\"; "
+                    + delAppPath + " || echo \"delAppPath failed\"; "
+                    + delTmpPath + " || echo \"delTmpPath failed\"; "
+                    + delOmPath + " || echo \"delOmPath failed\"; ";
+            if (installContext.getEnterpriseInstallConfig().getDatabaseKernelArch() ==
+                    DatabaseKernelArch.SHARING_STORAGE) {
+                String dssHome = installContext.getEnterpriseInstallConfig().
+                        getSharingStorageInstallConfig().getDssHome();
+                String delDssHome = MessageFormat.format(SshCommandConstants.DEL_FILE, dssHome);
+                delCmd += delDssHome + " || echo \"delDssHome failed\"; ";
+            }
+
+            EnterpriseInstallNodeConfig masterNodeConfig = installContext.getEnterpriseInstallConfig().
+                    getNodeConfigList()
+                    .stream().filter(nodeConfig -> nodeConfig.getClusterRole() == ClusterRoleEnum.MASTER)
+                    .findFirst().orElseThrow(() -> new OpsException("Master node information not found"));
+            String delDataPath = MessageFormat.format(SshCommandConstants.DEL_FILE, masterNodeConfig.getDataPath());
+            delCmd += delDataPath + " || echo \"delDataPath failed\"; ";
+            if (installContext.getEnterpriseInstallConfig().getIsInstallCM()) {
+                String delCmPath = MessageFormat.format(SshCommandConstants.DEL_FILE, masterNodeConfig.getCmDataPath());
+                delCmd += delCmPath + " || echo \"delCmPath failed\"; ";
+
+            }
+            return delCmd;
+        } catch (OpsException e) {
+            log.error("delete cmd : {}", delCmd);
+            return delCmd;
+        }
+    }
+
+    private void cleanResource(InstallContext installContext) {
+        String delCmd = prepareCleanClusterDir(installContext);
+        for (HostInfoHolder hostInfoHolder : installContext.getHostInfoHolders()) {
+            Session currentRoot = createSessionWithRootUser(hostInfoHolder);
+            opsHostRemoteService.executeCommand(delCmd, currentRoot, installContext.getRetBuffer(), "remove install path");
+
+            // remove env file
+            String delEnvFile = MessageFormat.format(SshCommandConstants.DEL_FILE, installContext.getEnvPath());
+            opsHostRemoteService.executeCommand(delEnvFile, currentRoot, installContext.getRetBuffer(), "remove env file");
+            currentRoot.disconnect();
+        }
+        log.error("clean resource success");
+    }
+
+    private void doInstall(InstallContext installContext) {
+        RetBuffer retBuffer = installContext.getRetBuffer();
+
+        // Master node configuration information
+        EnterpriseInstallNodeConfig masterNodeConfig = installContext.getEnterpriseInstallConfig().getNodeConfigList().stream().filter(nodeConfig -> nodeConfig.getClusterRole() == ClusterRoleEnum.MASTER).findFirst().orElseThrow(() -> new OpsException("Master node information not found"));
+        String masterHostId = masterNodeConfig.getHostId();
+        String installUsername = masterNodeConfig.getInstallUsername();
+        for (HostInfoHolder hostInfoHolder : installContext.getHostInfoHolders()) {
+            Session currentRoot = createSessionWithRootUser(hostInfoHolder);
+            installDependency(currentRoot, retBuffer, installContext.getOs());
+            currentRoot.disconnect();
+        }
+
+        // root
+        HostInfoHolder masterHostInfoHolder = getHostInfoHolder(installContext, masterHostId);
+        Session rootSession = createSessionWithRootUser(masterHostInfoHolder);
+
+        // prepare path
+        String pkgPath = preparePath(installContext.getEnterpriseInstallConfig().getInstallPackagePath());
+        // ensure dir
+        ensureDirExist(rootSession, pkgPath, retBuffer);
+        // ensure dir permission
+        ensureLevel2DirPermission(rootSession, installUsername, pkgPath, retBuffer);
+        ensureEnvPathPermission(rootSession, installContext.getEnvPath(), retBuffer);
+
+        // scp
+        sendOperateLog(installContext, "START_SCP_INSTALL_PACKAGE");
+        String installPackageFullPath = scpInstallPackageToMasterNode(rootSession, installContext.getInstallPackageLocalPath(), pkgPath, retBuffer);
+        sendOperateLog(installContext, "END_SCP_INSTALL_PACKAGE");
+
+        // unzip install pack
+        sendOperateLog(installContext, "START_UNZIP_INSTALL_PACKAGE");
+        decompress(rootSession, pkgPath, installPackageFullPath, retBuffer, "-xvf");
+        // unzip CM
+        decompress(rootSession, pkgPath, pkgPath + "openGauss-" + installContext.getOpenGaussVersionNum(), retBuffer, "-zxvf");
+        sendOperateLog(installContext, "END_UNZIP_INSTALL_PACKAGE");
+
+        // write xml
+        sendOperateLog(installContext, "START_GEN_XML_CONFIG");
+        String xml = generateClusterConfigXmlInstance.generate(installContext);
+        log.info("Generated xml information：{}", xml);
+        String xmlConfigFullPath = ensureXmlConfigFullPath(rootSession, pkgPath, xml, retBuffer);
+        sendOperateLog(installContext, "END_GEN_XML_CONFIG");
+
+        String group = checkInstallUserGroup(installUsername, rootSession, retBuffer);
+
+        HostInfoHolder masterHostHolder = getHostInfoHolder(installContext, masterHostId);
+        OpsHostUserEntity masterRootUserInfo = getHostUserInfoByUsername(masterHostHolder, "root");
+        OpsHostUserEntity installUserInfo = getHostUserInfo(masterHostHolder, masterNodeConfig.getInstallUserId());
+
+        // ensure dir permission
+        sendOperateLog(installContext, "START_EXE_PREINSTALL_COMMAND");
+        preInstall(group, pkgPath, masterNodeConfig, xmlConfigFullPath, rootSession, retBuffer, encryptionUtils.decrypt(masterRootUserInfo.getPassword()), encryptionUtils.decrypt(installUserInfo.getPassword()), installContext.getEnvPath());
+        sendOperateLog(installContext, "END_EXE_PREINSTALL_COMMAND");
+
+        Session ommSession = createSessionWithUserId(masterHostHolder, false, masterNodeConfig.getInstallUserId());
+        // install
+        sendOperateLog(installContext, "START_EXE_INSTALL_COMMAND");
+        ensureInstallCommand(installContext, xmlConfigFullPath, ommSession, retBuffer);
+        sendOperateLog(installContext, "END_EXE_INSTALL_COMMAND");
+    }
+
+    private void ensureInstallCommand(InstallContext installContext, String xmlConfigFullPath, Session ommSession, RetBuffer retBuffer) {
+        String installCommand = MessageFormat.format(SshCommandConstants.ENTERPRISE_INSTALL, xmlConfigFullPath);
+        try {
+            Map<String, String> autoResponse = new HashMap<>();
+            autoResponse.put("(yes/no)?", "yes");
+            autoResponse.put("Please enter password for database:", installContext
+                    .getEnterpriseInstallConfig()
+                    .getDatabasePassword());
+            autoResponse.put("Please repeat for database:", installContext.getEnterpriseInstallConfig().getDatabasePassword());
+
+            installCommand = addCommandOfLoadEnvironmentVariable(installCommand, installContext.getEnvPath());
+            opsHostRemoteService.executeCommand(installCommand, ommSession, installContext.getRetBuffer(), autoResponse);
+        } catch (Exception e) {
+            log.error("install failed：", e);
+            throw new OpsException("install failed");
+        }
+    }
+
+
+    private String checkInstallUserGroup(String installUsername, Session rootSession, RetBuffer retBuffer) {
+        String userGroupCommand = "groups " + installUsername + " | awk -F ':' '{print $2}' | sed 's/\\\"//g'";
+        return opsHostRemoteService.executeCommand(userGroupCommand, rootSession, retBuffer, "query user group");
+    }
+
+    private String ensureXmlConfigFullPath(Session rootSession, String pkgPath, String xml, RetBuffer retBuffer) {
+        String xmlConfigFullPath = pkgPath + "cluster_config.xml";
+        String createClusterConfigXmlCommand = MessageFormat.format(SshCommandConstants.FILE_CREATE, xml, xmlConfigFullPath);
+        opsHostRemoteService.executeCommand(createClusterConfigXmlCommand, rootSession, retBuffer, "create xml configuration file");
+        return xmlConfigFullPath;
+    }
+
+
+    private void preInstall(String group, String pkgPath, EnterpriseInstallNodeConfig masterNodeConfig, String xmlConfigFullPath, Session rootSession, RetBuffer retBuffer, String rootPassword, String installUserPassword, String envPath) {
+        String gsPreInstall = MessageFormat.format(SshCommandConstants.GS_PREINSTALL_INTERACTIVE,
+                pkgPath + "script/",
+                masterNodeConfig.getInstallUsername(),
+                group, xmlConfigFullPath);
+        gsPreInstall = wrapperEnvSep(gsPreInstall, envPath);
+        try {
+            Map<String, String> autoResponse = new HashMap<>();
+            autoResponse.put("(yes/no)?", "yes");
+            autoResponse.put("Please enter password for root\r\nPassword:", rootPassword);
+            autoResponse.put("Please enter password for current user["
+                    + masterNodeConfig.getInstallUsername()
+                    + "].\r\nPassword:", installUserPassword);
+            // for compatibility with 5.1.0
+            autoResponse.put("Please enter password for current user[root].\r\nPassword:", rootPassword);
+            opsHostRemoteService.executeCommand(gsPreInstall, rootSession, retBuffer, autoResponse);
+        } catch (Exception e) {
+            log.error("gs_preinstall failed：", e);
+            throw new OpsException("gs_preinstall failed");
+        }
+    }
+
+    private void saveContext(InstallContext installContext) {
+        OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext.getEnterpriseInstallConfig().toOpsClusterNodeEntityList();
+
+        opsClusterService.save(opsClusterEntity);
+        for (OpsClusterNodeEntity opsClusterNodeEntity : opsClusterNodeEntities) {
+            opsClusterNodeEntity.setClusterId(opsClusterEntity.getClusterId());
+        }
+        opsClusterNodeService.saveBatch(opsClusterNodeEntities);
+    }
+
+    @Override
+    public void restart(OpsClusterContext opsClusterContext) {
+        log.info("Start rebooting Enterprise Edition");
+        List<String> restartNodeIds = opsClusterContext.getOpNodeIds();
+        if (CollUtil.isEmpty(restartNodeIds)) {
+            restartNodeIds = opsClusterContext.getOpsClusterNodeEntityList().stream().map(OpsClusterNodeEntity::getClusterNodeId).collect(Collectors.toList());
+        }
+
+        if (CollUtil.isEmpty(restartNodeIds)) {
+            log.error("No nodes to restart");
+        }
+
+        if (opsClusterContext.getOpsClusterNodeEntityList().size() == restartNodeIds.size()) {
+            doRestartCluster(opsClusterContext);
+        } else {
+            for (String restartNodeId : restartNodeIds) {
+                doRestartNode(restartNodeId, opsClusterContext);
+            }
+        }
+    }
+
+    private void doRestartCluster(OpsClusterContext opsClusterContext) {
+        OpsClusterNodeEntity startNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
+        RetBuffer retBuffer = opsClusterContext.getRetBuffer();
+        Session ommUserSession = createSessionWithUserId(opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
+        OmStatusModel omStatusModel = omStatus(ommUserSession, retBuffer, opsClusterContext.getOpsClusterEntity().getEnvPath());
+        if (Objects.isNull(omStatusModel)) {
+            throw new OpsException("gs_om status fail");
+        }
+        String command = omStatusModel.isInstallCm() ? "cm_ctl stop && cm_ctl start" : "gs_om -t restart";
+        command = addCommandOfLoadEnvironmentVariable(command, opsClusterContext.getOpsClusterEntity().getEnvPath());
+        opsHostRemoteService.executeCommand(command, ommUserSession, retBuffer, "restart cluster");
+    }
+
+
+    private void doRestartNode(String restartNodeId, OpsClusterContext opsClusterContext) {
+        doStopNode(restartNodeId, opsClusterContext);
+        doStartNode(restartNodeId, opsClusterContext);
+    }
+
+    @Override
+    public void start(OpsClusterContext opsClusterContext) {
+        log.info("Get started with Enterprise Edition");
+        List<String> startNodeIds = opsClusterContext.getOpNodeIds();
+        if (CollUtil.isEmpty(startNodeIds)) {
+            startNodeIds = opsClusterContext.getOpsClusterNodeEntityList().stream().map(OpsClusterNodeEntity::getClusterNodeId).collect(Collectors.toList());
+        }
+
+        if (CollUtil.isEmpty(startNodeIds)) {
+            log.error("No node to start");
+        }
+
+        if (opsClusterContext.getOpsClusterNodeEntityList().size() == startNodeIds.size()) {
+            doStartCluster(opsClusterContext);
+        } else {
+            for (String startNodeId : startNodeIds) {
+                doStartNode(startNodeId, opsClusterContext);
+            }
+        }
+    }
+
+    private void doStartCluster(OpsClusterContext opsClusterContext) {
+        OpsClusterNodeEntity startNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
+        RetBuffer retBuffer = opsClusterContext.getRetBuffer();
+        Session ommUserSession = createSessionWithUserId(opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
+        OmStatusModel omStatusModel = omStatus(ommUserSession, retBuffer, opsClusterContext.getOpsClusterEntity().getEnvPath());
+        if (Objects.isNull(omStatusModel)) {
+            throw new OpsException("gs_om status fail");
+        }
+        String command = omStatusModel.isInstallCm() ? " cm_ctl start " : " gs_om -t start ";
+        command = addCommandOfLoadEnvironmentVariable(command, opsClusterContext.getOpsClusterEntity().getEnvPath());
+        opsHostRemoteService.executeCommand(command, ommUserSession, retBuffer, "start cluster");
+    }
+
+    private void doStartNode(String startNodeId, OpsClusterContext opsClusterContext) {
+        OpsClusterNodeEntity startNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().stream().filter(opsClusterNodeEntity -> opsClusterNodeEntity.getClusterNodeId().equals(startNodeId)).findFirst().orElse(null);
+        if (Objects.isNull(startNodeEntity)) {
+            log.error("Boot node information not found:{}", startNodeId);
+        }
+
+        RetBuffer retBuffer = opsClusterContext.getRetBuffer();
+        String dataPath = startNodeEntity.getDataPath();
+        log.info("Login to start user");
+        Session ommUserSession = createSessionWithUserId(opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
+        OmStatusModel omStatusModel = omStatus(ommUserSession, retBuffer, opsClusterContext.getOpsClusterEntity().getEnvPath());
+        if (Objects.isNull(omStatusModel)) {
+            throw new OpsException("gs_om status fail");
+        }
+
+        String command = null;
+        if (omStatusModel.isInstallCm()) {
+            String hostId = startNodeEntity.getHostId();
+            OpsHostEntity opsHostEntity = opsClusterContext.getHostInfoHolders().stream().map(HostInfoHolder::getHostEntity).filter(host -> host.getHostId().equalsIgnoreCase(hostId)).findFirst().orElseThrow(() -> new OpsException("no host found"));
+            String hostname = opsHostEntity.getHostname();
+            String nodeId = omStatusModel.getHostnameMapNodeId().get(hostname);
+
+            if (StrUtil.isNotEmpty(nodeId)) {
+                command = "cm_ctl start -n " + nodeId + " -D " + dataPath;
+            }
+        } else {
+            command = MessageFormat.format(SshCommandConstants.LITE_START, dataPath);
+        }
+
+        command = addCommandOfLoadEnvironmentVariable(command, opsClusterContext.getOpsClusterEntity().getEnvPath());
+        opsHostRemoteService.executeCommand(command, ommUserSession, retBuffer, "start cluster node");
+    }
+
+    @Override
+    public void stop(OpsClusterContext opsClusterContext) {
+        log.info("Start Stop Enterprise Edition");
+        List<String> stopNodeIds = opsClusterContext.getOpNodeIds();
+        if (CollUtil.isEmpty(stopNodeIds)) {
+            stopNodeIds = opsClusterContext.getOpsClusterNodeEntityList().stream().map(OpsClusterNodeEntity::getClusterNodeId).collect(Collectors.toList());
+        }
+
+        if (CollUtil.isEmpty(stopNodeIds)) {
+            log.error("no node to stop");
+        }
+
+        if (opsClusterContext.getOpsClusterNodeEntityList().size() == stopNodeIds.size()) {
+            doStopCluster(opsClusterContext);
+        } else {
+            for (String stopNodeId : stopNodeIds) {
+                doStopNode(stopNodeId, opsClusterContext);
+            }
+        }
+    }
+
+    private void doStopCluster(OpsClusterContext opsClusterContext) {
+        OpsClusterNodeEntity startNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
+        RetBuffer retBuffer = opsClusterContext.getRetBuffer();
+        Session ommUserSession = createSessionWithUserId(opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
+        OmStatusModel omStatusModel = omStatus(ommUserSession, retBuffer, opsClusterContext.getOpsClusterEntity().getEnvPath());
+        if (Objects.isNull(omStatusModel)) {
+            throw new OpsException("gs_om status fail");
+        }
+
+        String command = omStatusModel.isInstallCm() ? "cm_ctl stop" : "gs_om -t stop";
+        command = addCommandOfLoadEnvironmentVariable(command, opsClusterContext.getOpsClusterEntity().getEnvPath());
+        opsHostRemoteService.executeCommand(command, ommUserSession, retBuffer, "stop cluster");
+    }
+
+    private void doStopNode(String stopNodeId, OpsClusterContext opsClusterContext) {
+        OpsClusterNodeEntity stopNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().stream().filter(opsClusterNodeEntity -> opsClusterNodeEntity.getClusterNodeId().equals(stopNodeId)).findFirst().orElse(null);
+        if (Objects.isNull(stopNodeEntity)) {
+            log.error("No stop node information found:{}", stopNodeId);
+        }
+
+        RetBuffer retBuffer = opsClusterContext.getRetBuffer();
+        String dataPath = stopNodeEntity.getDataPath();
+        log.info("login stop user");
+        Session ommUserSession = createSessionWithUserId(opsClusterContext.getHostInfoHolders(), false, stopNodeEntity.getHostId(), stopNodeEntity.getInstallUserId());
+        OmStatusModel omStatusModel = omStatus(ommUserSession, retBuffer, opsClusterContext.getOpsClusterEntity().getEnvPath());
+        if (Objects.isNull(omStatusModel)) {
+            throw new OpsException("gs_om status fail");
+        }
+
+        String command = null;
+        if (omStatusModel.isInstallCm()) {
+            String hostId = stopNodeEntity.getHostId();
+            OpsHostEntity opsHostEntity = opsClusterContext.getHostInfoHolders().stream().map(HostInfoHolder::getHostEntity).filter(host -> host.getHostId().equalsIgnoreCase(hostId)).findFirst().orElseThrow(() -> new OpsException("no host found"));
+            String hostname = opsHostEntity.getHostname();
+            String nodeId = omStatusModel.getHostnameMapNodeId().get(hostname);
+
+            if (StrUtil.isNotEmpty(nodeId)) {
+                command = "cm_ctl stop -n " + nodeId + " -D " + dataPath;
+            }
+        } else {
+            command = MessageFormat.format(SshCommandConstants.LITE_STOP, dataPath);
+        }
+
+        command = addCommandOfLoadEnvironmentVariable(command, opsClusterContext.getOpsClusterEntity().getEnvPath());
+        opsHostRemoteService.executeCommand(command, ommUserSession, retBuffer, "stop cluster node");
+    }
+}

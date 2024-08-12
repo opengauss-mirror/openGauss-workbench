@@ -65,6 +65,10 @@ public interface SshCommandConstants {
      */
     String FREE_HARD_DISK = "df -BG | awk -F ' ' '{print $4}' | sort";
     /**
+     * free hard disk space dir
+     */
+    String DIR_FREE_HARD_DISK = "df -BG {0} | awk -F ' ' '{print $4}' | sort";
+    /**
      * rely
      */
     String DEPENDENCY = "yum list installed | egrep 'libaio-devel|flex|bison|ncurses-devel|glibc-devel|patch|redhat" +
@@ -89,7 +93,7 @@ public interface SshCommandConstants {
      */
     String CHANGE_OMM_PASSWORD = "passwd omm";
 
-    String LIMITS_CHECK = "cat /etc/security/limits.conf | grep 1048576";
+    String LIMITS_CHECK = " cat /etc/security/limits.conf | grep 1048576 ";
 
     String LIMITS = "echo -e \"* hard nofile 1048576\\n* soft nofile 1048576\\n* hard nproc 1048576\\n* soft nproc 1048576\" >> /etc/security/limits.conf";
 

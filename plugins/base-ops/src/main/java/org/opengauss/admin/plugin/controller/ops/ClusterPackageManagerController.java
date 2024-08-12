@@ -49,6 +49,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Objects;
 
@@ -61,7 +62,6 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/installPackageManager/v2")
 public class ClusterPackageManagerController extends BaseController {
-
     @Resource
     private IOpsPackageManagerV2Service opsPackageManagerV2Service;
     @Resource
@@ -82,7 +82,7 @@ public class ClusterPackageManagerController extends BaseController {
     }
 
     @PostMapping("/list/package")
-    public List<OpsPackageManagerEntity> listPackage(@RequestBody PackageDto dto) {
+    public List<OpsPackageManagerEntity> listPackage(@Valid @RequestBody PackageDto dto) {
         return opsPackageManagerV2Service.list(getOpsPackageQueryWrapper(dto));
     }
 
@@ -143,7 +143,7 @@ public class ClusterPackageManagerController extends BaseController {
     }
 
     @PostMapping("/save/online")
-    public AjaxResult online(@RequestBody OpsPackageDownloadDTO dto) {
+    public AjaxResult online(@Valid @RequestBody OpsPackageDownloadDTO dto) {
         Assert.isTrue(opsPackagePathDictService.checkCurrentEnvironmentIsOnline(), "current environment is not online");
         Assert.isTrue(opsPackagePathDictService.checkOsExists(dto.getOs()), "not support os param value " + dto.getOs());
         Assert.isTrue(opsPackagePathDictService.checkCpuArchExists(dto.getCpuArch()), "not support cpuArch param value " + dto.getCpuArch());
