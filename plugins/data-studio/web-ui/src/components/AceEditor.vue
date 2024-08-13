@@ -309,6 +309,10 @@
     return aceEditor.blur();
   };
 
+  const setEditorFocus = () => {
+    return aceEditor.focus();
+  };
+
   const hasBreakPoint = (line: number, type: keyof typeof breakPointType) => {
     let breakpoints = aceEditor.session.getBreakpoints();
     return breakpoints[line] === breakPointType[type];
@@ -407,6 +411,31 @@
     copyToClickBoard(str);
   };
 
+  // Only fill in keywords, but the color will not change
+  const setCompleteData = (data) => {
+    const languageTools = ace.require("ace/ext/language_tools");
+    languageTools.addCompleter({
+      getCompletions: function(editor, session, pos, prefix, callback) {
+        if (prefix.length == 0) {
+          return callback(null, []);
+        } else {
+          return callback(null, data);
+        }
+      }
+    });
+  }
+
+  const setHighlightRules = (newRulesData) => {
+    const session = aceEditor.getSession();
+    session.setMode('ace/mode/sql', function () {
+      const rules = session.$mode.$highlightRules.getRules();
+      rules.start.unshift(...newRulesData);
+      session.$mode.$tokenizer = null;
+      session.bgTokenizer.setTokenizer(session.$mode.getTokenizer());
+      session.bgTokenizer.start(0);
+    });
+  }
+
   onMounted(() => {
     initEditor();
     window.addEventListener('resize', resize);
@@ -425,6 +454,7 @@
   defineExpose({
     getValue,
     setValue,
+    setEditorFocus,
     getSelectionValue,
     getAllSelectionValue,
     getAllLineDecorations,
@@ -437,6 +467,8 @@
     setAnnotations,
     getAnnotations,
     clearAnnotations,
+    setCompleteData,
+    setHighlightRules,
   });
 </script>
 

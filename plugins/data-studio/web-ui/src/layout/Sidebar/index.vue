@@ -1047,6 +1047,7 @@
           connectInfoName: listItem.connectInfo.name,
           name: item.label,
           uuid: item.uuid,
+          platform: listItem.connectInfo.type,
           isConnect: item.isConnect,
           connectTime: item.connectTime,
         }));
@@ -1149,7 +1150,7 @@
   };
   const handleOpenNewTerminal = () => {
     treeContext.databaseVisible = false;
-    const { name: connectInfoName, id: rootId } = currentContextNodeData.connectInfo;
+    const { name: connectInfoName, id: rootId, type: platform } = currentContextNodeData.connectInfo;
     const dbname = currentContextNodeData.label;
     const terminalNum = TagsViewStore.maxTerminalNum + 1;
     const title = `${dbname}@${connectInfoName}(${terminalNum})`;
@@ -1159,6 +1160,7 @@
       query: {
         title,
         fileName: title,
+        platform,
         rootId,
         connectInfoName,
         uuid: currentContextNodeData.uuid,
@@ -2208,6 +2210,7 @@
             connectInfoName: connectInfo.name,
             name: connectData.dataName,
             uuid: connectionid,
+            platform: connectInfo.type,
             isConnect: true,
             connectTime: Date.now(),
           },
@@ -2220,12 +2223,14 @@
       refreshConnectListMap();
       if (!TagsViewStore.visitedViews.find((item) => item.name == 'home' && item.query?.rootId)) {
         const connectInfoName = AppStore.connectListMap[0].connectInfo.name;
+        const platform = AppStore.connectListMap[0].connectInfo.type;
         const { uuid, name: dbname } = (
           AppStore.connectListMap[0]?.connectedDatabase as ConnectedDatabase[]
         ).filter((item) => item.isConnect)[0];
         router.replace({
           path: '/home',
           query: {
+            platform,
             rootId: AppStore.connectListMap[0].id,
             connectInfoName,
             uuid,
@@ -2248,6 +2253,7 @@
             connectInfoName: connectInfo.name,
             name: connectData.dataName,
             uuid: connectionid,
+            platform: connectInfo.type,
             isConnect: true,
             connectTime: Date.now(),
           },

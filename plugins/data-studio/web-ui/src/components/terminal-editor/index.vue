@@ -113,6 +113,7 @@
   import { changeRunningTagStatus } from '@/hooks/tagRunning';
   import { interceptHttpDisconnection } from '@/utils/activateDisconnection';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
+  import type { Platform } from '@/types/system';
 
   const route = useRoute();
   const router = useRouter();
@@ -124,10 +125,12 @@
     defineProps<{
       editorType: 'sql' | 'debug' | 'debugChild';
       initValue?: string;
+      initPlatform?: string;
     }>(),
     {
       editorType: 'sql',
       initValue: '',
+      initPlatform: '',
     },
   );
   const barStatusMap = {
@@ -179,6 +182,7 @@
   const editorWrapper = ref<HTMLElement>();
   const editorHeight = ref('calc(100% - 4px)');
   const editorRef = ref();
+  const platform = ref(route.query.platform as Platform);
   const ws = reactive({
     name: '',
     webUser: '',
@@ -597,6 +601,7 @@
       loading.value?.close();
       ElMessageBox.alert(res.msg, t('common.error'), {
         dangerouslyUseHTMLString: true,
+        callback: () => editorRef.value.setEditorFocus(),
       });
       const d = new Date();
       res.msg &&

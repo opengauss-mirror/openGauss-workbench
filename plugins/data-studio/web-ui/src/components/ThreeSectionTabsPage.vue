@@ -3,7 +3,7 @@
     <div class="tabs">
       <slot name="tabs" />
     </div>
-    <div class="center-container">
+    <div :class="['center-container', { 'center-container-flex': props.isCenterFlex }]">
       <slot name="center-container" />
     </div>
     <div class="page-button" v-if="slots['page-bottom-button']">
@@ -14,6 +14,14 @@
 
 <script lang="ts" setup>
   const slots = useSlots();
+  const props = withDefaults(
+    defineProps<{
+      isCenterFlex?: boolean;
+    }>(),
+    {
+      isCenterFlex: true,
+    },
+  );
 </script>
 
 <style lang="scss" scoped>
@@ -36,9 +44,11 @@
   }
   .center-container {
     flex: 1;
+    overflow: auto;
+  }
+  .center-container-flex {
     display: flex;
     flex-basis: auto;
-    overflow: auto;
   }
   .table-container {
     flex: 1;

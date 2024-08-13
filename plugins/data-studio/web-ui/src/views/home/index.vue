@@ -31,9 +31,11 @@
             const connectInfoName = AppStore.connectListMap[0].connectInfo.name;
             const uuid = AppStore.connectListMap[0].connectedDatabase[0]?.uuid;
             const dbname = AppStore.connectListMap[0].connectedDatabase[0]?.name;
+            const platform = AppStore.connectListMap[0].connectInfo.type;
             router.replace({
               path: '/home',
               query: {
+                platform,
                 rootId: AppStore.connectListMap[0].id,
                 connectInfoName,
                 uuid,
