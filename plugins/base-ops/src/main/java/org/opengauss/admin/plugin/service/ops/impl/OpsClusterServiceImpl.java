@@ -129,7 +129,16 @@ import static org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum.*;
  **/
 @Service
 public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClusterEntity> implements IOpsClusterService {
+
     private static final Logger log = LoggerFactory.getLogger(OpsClusterServiceImpl.class);
+
+    private static final String ENTER_CONSTANT = "ENTERPRISE";
+
+    private static final String LITE_CONSTANT = "LITE";
+
+    private static final String MINI_CONSTANT = "MINIMAL_LIST";
+
+    private static final String OTHER_CONSTANT = "OTHER";
 
     private int importSuccessCount;
 
@@ -1604,31 +1613,34 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return importSuccessCount;
     }
 
-    private String rootUserJudgeOpenGaussVersion(Session session, List<String> rootCommandList) {
-        String versionType = null;
-        int count = 0;
+    private String getOpenGaussVersion(Session session,
+    List<String> rootCommandList, OpsImportEntity opsImportEntity) {
         try {
             try {
                 jschUtil.executeCommand(rootCommandList.get(0), session);
-                versionType = "ENTERPRISE";
+                return ENTER_CONSTANT;
             } catch (OpsException opsException) {
                 log.warn(opsException.getMessage());
-                count++;
             }
             try {
                 jschUtil.executeCommand(rootCommandList.get(1), session);
-                versionType = "LITE";
+                return LITE_CONSTANT;
             } catch (OpsException opsException) {
                 log.warn(opsException.getMessage());
-                count++;
             }
-            if (count == 2) {
-                versionType = "MINIMAL_LIST";
+            try {
+                jschUtil.executeCommand(rootCommandList.get(2), session);
+                return MINI_CONSTANT;
+            } catch (OpsException opsException) {
+                log.warn(opsException.getMessage());
             }
+            markErrorInfo(opsImportEntity);
+            opsImportEntity.setErrorInfo("please check the env path");
+            return OTHER_CONSTANT;
         } catch (IOException | InterruptedException e) {
-            log.error("rootJudgeOpenGaussVersion error" + e);
+            log.error("getOpenGaussVersion error" + e);
         }
-        return versionType;
+        return OTHER_CONSTANT;
     }
 
     private void markErrorInfo(OpsImportEntity opsImportEntity) {
@@ -1683,7 +1695,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private String judgeLocalRole(List<String> resultList, OpsParseExcelEntity opsParseExcelEntity) {
         String localRole = null;
-        if (opsParseExcelEntity.getVersionType().equals("ENTERPRISE")) {
+        if (opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)) {
             int selectCommandLength = 4;
             try {
                 if (resultList.get(selectCommandLength - 1).equals("Primary")) {
@@ -1700,7 +1712,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 opsParseExcelEntity.getOpsImportEntity()
                         .setErrorInfo("please check if envFile has GAUSSHOME and PGDATA!");
             }
-        } else if (opsParseExcelEntity.getVersionType().equals("LITE")) {
+        } else if (opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT)) {
             try {
                 masterIsNormal = true;
                 String selectLocal = MessageFormat.format(CHANGE_SUB_USER,
@@ -1723,15 +1735,17 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private void packingClusterInfo(List<String> resultList, OpsParseExcelEntity opsParseExcelEntity) {
         opsClusterEntity.setClusterId(opsParseExcelEntity.getOpsImportEntity().getClusterName());
-        opsClusterEntity.setVersion(opsParseExcelEntity.getVersionType().equals("ENTERPRISE")
-                ? ENTERPRISE : opsParseExcelEntity.getVersionType().equals("LITE") ? LITE : MINIMAL_LIST);
-        opsClusterEntity.setVersionNum(opsParseExcelEntity.getVersionType().equals("ENTERPRISE")
-                | opsParseExcelEntity.getVersionType().equals("LITE") ? resultList.get(2) : resultList.get(1));
+        opsClusterEntity.setVersion(opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)
+            ? ENTERPRISE : opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT) ? LITE : MINIMAL_LIST);
+        opsClusterEntity.setVersionNum(opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)
+            | opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT) ? resultList.get(2) : resultList.get(1));
         opsClusterEntity.setDatabasePassword(encryptionUtils
-                .encrypt(opsParseExcelEntity.getOpsImportEntity().getDatabasePassword()));
+            .encrypt(opsParseExcelEntity.getOpsImportEntity().getDatabasePassword()));
         opsClusterEntity.setDatabaseUsername(opsParseExcelEntity.getOpsImportEntity().getDatabaseUsername());
         opsClusterEntity.setPort(opsParseExcelEntity.getOpsImportEntity().getPort());
-        opsClusterEntity.setEnvPath(opsParseExcelEntity.getOpsImportEntity().getEnvPath());
+        opsClusterEntity.setEnvPath(opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)
+            | opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT)
+            ? opsParseExcelEntity.getOpsImportEntity().getEnvPath() : "~/.bashrc");
         opsClusterEntity.setInstallPath(resultList.get(0));
         OpsClusterNodeEntity opsClusterNodeEntity = new OpsClusterNodeEntity();
         opsClusterNodeEntity.setClusterNodeId(StrUtil.uuid());
@@ -1746,10 +1760,18 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         opsClusterNodeEntity.setHostId(opsParseExcelEntity.getHostAndUserId().getHostId() + "");
         opsClusterNodeEntity.setInstallUserId(opsParseExcelEntity.getHostAndUserId().getHostUserId() + "");
         opsClusterNodeEntity.setInstallPath(resultList.get(0));
-        opsClusterNodeEntity.setDataPath(opsParseExcelEntity.getVersionType().equals("ENTERPRISE")
-            | opsParseExcelEntity.getVersionType().equals("LITE") ? resultList.get(1) : resultList.get(0) + "/data");
+        opsClusterNodeEntity.setDataPath(opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)
+            | opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT)
+            ? resultList.get(1) : resultList.get(0) + "/data");
         opsClusterNodeEntity.setClusterId(opsParseExcelEntity.getOpsImportEntity().getClusterName());
         opsClusterNodeEntityList.add(opsClusterNodeEntity);
+    }
+
+    private String getMiniCommand(String installUsername) {
+        String versionNum = MessageFormat.format(THREE_IN_ONE, "", "gsql -V|awk '\\''{print $3}'\\''", "");
+        String miniGAUSSHOME = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP,
+                "GAUSSHOME=", "~/.bashrc"), "", RESULT_BY_SPLIT_EQUAL);
+        return MessageFormat.format(CHANGE_SUB_USER, installUsername, miniGAUSSHOME + ";" + versionNum);
     }
 
     private void selectClusterInfo(OpsParseExcelEntity opsParseExcelEntity) {
@@ -1757,9 +1779,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             "GAUSSHOME=", opsParseExcelEntity.getOpsImportEntity().getEnvPath()), "", RESULT_BY_SPLIT_EQUAL);
         String versionNum = MessageFormat.format(THREE_IN_ONE, "source "
             + opsParseExcelEntity.getOpsImportEntity().getEnvPath(),
-            ";gsql -V| grep -oP \"\\d+\\.\\d+\\.\\d+\"", "");
+            ";gsql -V|awk '\\''{print $3}'\\''", "");
         String command = null;
-        if (opsParseExcelEntity.getVersionType().equals("ENTERPRISE")) {
+        if (opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)) {
             String enterGAUSSHOME = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP,
                 "GAUSSHOME=", opsParseExcelEntity.getOpsImportEntity().getEnvPath()),
                 "|grep app", RESULT_BY_SPLIT_EQUAL);
@@ -1771,16 +1793,16 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             command = MessageFormat.format(CHANGE_SUB_USER, opsParseExcelEntity.getOpsImportEntity()
                 .getInstallUsername(), enterGAUSSHOME + ";" + enterPGDATA
                 + ";" + versionNum + ";" + enterJudgeMasterOrSlave);
-        } else if (opsParseExcelEntity.getVersionType().equals("LITE")) {
+        } else if (opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT)) {
             String liteGAUSSDATA = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP,
                 "GAUSSDATA=", opsParseExcelEntity.getOpsImportEntity().getEnvPath()), "", RESULT_BY_SPLIT_EQUAL);
             command = MessageFormat.format(CHANGE_SUB_USER,
                 opsParseExcelEntity.getOpsImportEntity().getInstallUsername(),
                 liteAndMiniGAUSSHOME + ";" + liteGAUSSDATA + ";" + versionNum);
+        } else if (opsParseExcelEntity.getVersionType().equals(MINI_CONSTANT)) {
+            command = getMiniCommand(opsParseExcelEntity.getOpsImportEntity().getInstallUsername());
         } else {
-            command = MessageFormat.format(CHANGE_SUB_USER,
-                opsParseExcelEntity.getOpsImportEntity().getInstallUsername(),
-                liteAndMiniGAUSSHOME + ";" + versionNum);
+            throw new OpsException("please check the env path is or not correct.");
         }
         List<String> resultList = new ArrayList<>();
         try {
@@ -1794,7 +1816,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         } catch (IOException | InterruptedException e) {
             log.error("command fail, please check the excel info and database envFile!");
         }
-        if (opsParseExcelEntity.getVersionType().equals("ENTERPRISE")) {
+        if (opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)) {
             checkEnterNodesNum(opsParseExcelEntity);
         }
         packingClusterInfo(resultList, opsParseExcelEntity);
@@ -1850,10 +1872,13 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         String liteCommand = MessageFormat.format(CHANGE_SUB_USER, opsImportEntity.getInstallUsername(),
                 MessageFormat.format(THREE_IN_ONE, "source " + opsImportEntity.getEnvPath(),
                         ";gsql -V|grep -i \"openGauss-lite\"", ""));
+        String miniCommand = MessageFormat.format(CHANGE_SUB_USER, opsImportEntity.getInstallUsername(),
+                MessageFormat.format(THREE_IN_ONE, "", "gsql -V", ""));
         List<String> rootCommandList = new ArrayList<>();
         rootCommandList.add(omCommand);
         rootCommandList.add(liteCommand);
-        return rootUserJudgeOpenGaussVersion(session, rootCommandList);
+        rootCommandList.add(miniCommand);
+        return getOpenGaussVersion(session, rootCommandList, opsImportEntity);
     }
 
     private void closeSession(Session session) {
