@@ -887,7 +887,7 @@
             "5mpmu0laqc80": "Cluster ID",
             "5mpmu0laqiw0": "Please enter the cluster ID",
             "5mpmu0laqow0": "Host IP address",
-            "5mpmu0laqss0": "Please select the host IP address",
+            "5mpmu0laqss0": "Please select the host IP address.If there is no host information, please go to the Resources -> Server interface to add the host information.",
             "5mpmu0laqwo0": "Please enter the root password",
             "5mpmu0lar0c0": "Install user",
             "5mpmu0lar480": "Installation directory",
@@ -1057,7 +1057,7 @@
             "5mpn813gw100": "Database password",
             "5mpn813gw4c0": "Back to home page",
             "5mpn813gw7w0": "Cluster operation and maintenance",
-            "5mpn813gwbk0": "Please select the host"
+            "5mpn813gwbk0": "Please select the host.If there is no host information, please go to the Resources -> Server interface to add the host information."
         }
     },
     "upgrade": {
