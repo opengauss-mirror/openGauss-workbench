@@ -640,7 +640,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                     .build();
             thirdPartySoftwareConfig.replacePathHome(physicalInstallParams.getRunUser());
             log.error("thirdPartySoftwareConfig = {}", thirdPartySoftwareConfig);
-            migrationThirdPartySoftwareInstanceService.save(thirdPartySoftwareConfig);
+            migrationThirdPartySoftwareInstanceService.saveRecord(thirdPartySoftwareConfig);
         } else {
             thirdPartySoftwareConfig = migrationThirdPartySoftwareInstanceService.getById(install.getKafkaBindId());
             if (thirdPartySoftwareConfig == null) {
