@@ -1868,12 +1868,13 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private String judgeVersionType(Session session, OpsImportEntity opsImportEntity) {
         String omCommand = MessageFormat.format(CHANGE_SUB_USER, opsImportEntity.getInstallUsername(),
-                MessageFormat.format(THREE_IN_ONE, "source " + opsImportEntity.getEnvPath(), ";gs_om -t view", ""));
+            String.format("source %s;gs_om -t view&&[ -f %s ]",
+            opsImportEntity.getEnvPath(), opsImportEntity.getEnvPath()));
         String liteCommand = MessageFormat.format(CHANGE_SUB_USER, opsImportEntity.getInstallUsername(),
-                MessageFormat.format(THREE_IN_ONE, "source " + opsImportEntity.getEnvPath(),
-                        ";gsql -V|grep -i \"openGauss-lite\"", ""));
+            String.format("source %s;gsql -V|grep -i \"openGauss-lite\"&&[ -f %s ]",
+            opsImportEntity.getEnvPath(), opsImportEntity.getEnvPath()));
         String miniCommand = MessageFormat.format(CHANGE_SUB_USER, opsImportEntity.getInstallUsername(),
-                MessageFormat.format(THREE_IN_ONE, "", "gsql -V", ""));
+            String.format("gsql -V&&[ -f %s ]", opsImportEntity.getEnvPath()));
         List<String> rootCommandList = new ArrayList<>();
         rootCommandList.add(omCommand);
         rootCommandList.add(liteCommand);
