@@ -69,4 +69,19 @@ public interface MigrationMqInstanceService extends IService<MigrationThirdParty
      * @return String
      */
     String removeInstance(String host);
+
+    /**
+     * save third party software config
+     *
+     * @param thirdPartySoftwareConfig third party software config
+     */
+    void saveRecord(MigrationThirdPartySoftwareConfig thirdPartySoftwareConfig);
+
+    /**
+     * get one third party software config by kafka ip
+     *
+     * @param kafkaIp kafka ip
+     * @return MigrationThirdPartySoftwareConfig
+     */
+    MigrationThirdPartySoftwareConfig getOneByKafkaIp(String kafkaIp);
 }

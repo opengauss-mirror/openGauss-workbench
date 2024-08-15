@@ -13,6 +13,7 @@
 
 package org.opengauss.admin.plugin.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.exceptions.MybatisPlusException;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -24,6 +25,7 @@ import org.opengauss.admin.plugin.mapper.MigrationThirdPartySoftwareInstanceMapp
 import org.opengauss.admin.plugin.service.MigrationMqInstanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -77,7 +79,8 @@ public class MigrationMqInstanceServiceImpl extends ServiceImpl<MigrationThirdPa
     @Override
     public List<String> listBindHostsByPortalHost(String host) {
         LambdaQueryWrapper<MigrationThirdPartySoftwareConfig> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MigrationThirdPartySoftwareConfig::getKafkaIp, host);
+        wrapper.eq(MigrationThirdPartySoftwareConfig::getKafkaIp, host)
+                .isNotNull(MigrationThirdPartySoftwareConfig::getBindPortalHost);
         MigrationThirdPartySoftwareConfig thirdPartySoftwareConfig = getOne(wrapper);
         if (thirdPartySoftwareConfig == null) {
             return null;
@@ -111,13 +114,13 @@ public class MigrationMqInstanceServiceImpl extends ServiceImpl<MigrationThirdPa
                 // 没有绑定其他的kafka 需要删除自己部署的kafka
                 wrapper.clear();
                 wrapper.eq(MigrationThirdPartySoftwareConfig::getKafkaIp, host);
-                MigrationThirdPartySoftwareConfig removeSoftWareRecord = getOne(wrapper);
+                List<MigrationThirdPartySoftwareConfig> removeSoftWareRecord = list(wrapper);
                 remove(wrapper);
                 if (removeSoftWareRecord == null) {
                     log.info("remove soft ware record is null");
                     return null;
                 }
-                return removeSoftWareRecord.getInstallDir();
+                return removeSoftWareRecord.get(0).getInstallDir();
             } else {
                 // 绑定了其他的kafka 在绑定列表里删除
                 String bindPortalHost = thirdPartySoftwareConfig.getBindPortalHost();
@@ -131,5 +134,24 @@ public class MigrationMqInstanceServiceImpl extends ServiceImpl<MigrationThirdPa
             log.error("MybatisPlusException :", e);
         }
         return null;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveRecord(MigrationThirdPartySoftwareConfig thirdPartySoftwareConfig) {
+        MigrationThirdPartySoftwareConfig newThirdPartySoftwareConfig = new MigrationThirdPartySoftwareConfig();
+        BeanUtil.copyProperties(thirdPartySoftwareConfig, newThirdPartySoftwareConfig);
+        MigrationThirdPartySoftwareConfig old = getOneByKafkaIp(thirdPartySoftwareConfig.getKafkaIp());
+        if (old != null) {
+            newThirdPartySoftwareConfig.setId(old.getId());
+        }
+        saveOrUpdate(newThirdPartySoftwareConfig);
+    }
+
+    @Override
+    public MigrationThirdPartySoftwareConfig getOneByKafkaIp(String kafkaIp) {
+        LambdaQueryWrapper<MigrationThirdPartySoftwareConfig> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(MigrationThirdPartySoftwareConfig::getKafkaIp, kafkaIp).last("limit 1");
+        return getOne(queryWrapper);
     }
 }
