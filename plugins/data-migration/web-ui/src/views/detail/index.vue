@@ -150,6 +150,7 @@
                     <p v-if="judgeKeyExist(record.statusDesc,'mysql_encryption') === true">{{ parseMysqlEncryption(record.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(record.statusDesc,'sql_compatibility') === true">{{ parseOpenGaussBDB(record.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(record.statusDesc,'replication_slots') === true">{{ parseReplicationNumber(record.statusDesc) }}</p>
+                    <p v-if="judgeKeyExist(record.statusDesc,'enable_slot_log') === true">{{ parseEnableSlotLog(record.statusDesc) }}</p>
                   </div>
                 </template>
               </a-popover>
@@ -691,6 +692,22 @@ const parseReplicationNumber = (content) => {
     result = result + t('detail.index.5qtkk97a2e55')
   } else if (obj.replication_slots.result === 1){
     result = result + obj.replication_slots.replication_number + t('detail.index.5qtkk97a2e56')
+  }
+  return result
+}
+
+const parseEnableSlotLog = (content) => {
+  var obj = JSON.parse(content)
+  var result=t('detail.index.5qtkk97a2e58')
+  console.log('obj.enable_slot_log', obj.enable_slot_log)
+  if (obj.enable_slot_log.result === 0) {
+    result = result + t('detail.index.5qtkk97a2e59')
+  } else if (obj.enable_slot_log.result === 1) {
+    result = result + t('detail.index.5qtkk97a2e60') + obj.enable_slot_log.expected_value + t('detail.index.5qtkk97a2e35')
+  } else if (obj.enable_slot_log.result === 2) {
+    result = result + obj.enable_slot_log.error_message + t('detail.index.5qtkk97a2e35')
+  } else {
+    result = result + t('detail.index.5qtkk97a2e40') + t('detail.index.5qtkk97a2e35')
   }
   return result
 }
