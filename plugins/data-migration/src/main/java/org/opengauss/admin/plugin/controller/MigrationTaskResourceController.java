@@ -27,11 +27,13 @@ package org.opengauss.admin.plugin.controller;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
+import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
@@ -237,7 +239,8 @@ public class MigrationTaskResourceController extends BaseController {
      * find tables
      */
     @PostMapping("/tables/{dbName}")
-    public AjaxResult getTables(@PathVariable String dbName, String url, String username, String password) {
-        return AjaxResult.success(migrationTaskHostRefService.getTablesBySourceDb(dbName, url, username, password));
+    public TableDataInfo getTables(@PathVariable String dbName, String url, String username, String password) {
+        IPage<Object> page = migrationTaskHostRefService.pageByDB(startPage(), dbName, url, username, password);
+        return getDataTable(page);
     }
 }

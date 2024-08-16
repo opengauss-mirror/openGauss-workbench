@@ -24,6 +24,8 @@
 
 package org.opengauss.admin.plugin.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.UploadInfo;
@@ -99,11 +101,12 @@ public interface MigrationTaskHostRefService extends IService<MigrationTaskHostR
     /**
      * find tables task
      *
+     * @param page      page
      * @param dbName    database name
      * @param url       source database connection
      * @param username  username of db connection
      * @param password  password of db connection
      * @return tables
      */
-    List<Object> getTablesBySourceDb(String dbName, String url, String username, String password);
+    IPage<Object> pageByDB(Page page, String dbName, String url, String username, String password);
 }
