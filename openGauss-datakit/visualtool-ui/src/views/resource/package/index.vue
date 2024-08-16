@@ -53,7 +53,7 @@
             <template #cell="{ record }">{{record.cpuArch}}</template>
           </a-table-column>
           <a-table-column title="openGauss版本" data-index="packageVersion" :width="150">
-            <template #cell="{ record }">{{record.packageVersion}}</template>
+            <template #cell="{ record }">{{translateVersion(record.packageVersion)}}</template>
           </a-table-column>
           <a-table-column title="版本号" data-index="packageVersionNum" :width="100">
             <template #cell="{ record }">{{record.packageVersionNum}}</template>
@@ -108,6 +108,7 @@ import {hostPage, checkPackage, delPackage, getVersionNum, getPackageList, getPa
 import Socket from '@/utils/websocket'
 import WujieVue from 'wujie-vue3'
 import { useI18n } from 'vue-i18n'
+import useLocale from '@/hooks/locale'
 import AddPack from "./AddPack.vue"
 import {CpuArch, OS} from "../../../../../../plugins/base-ops/web-ui/src/types/os"
 import {OpenGaussVersionEnum} from "@/types/ops/install"
@@ -243,6 +244,28 @@ const handleSelected = (keys: (string | number)[]) => {
       data.value.selectedData[packageId] = findOne
     }
   })
+}
+
+const { currentLocale } = useLocale()
+const translateVersion = (version:OpenGaussVersionEnum)=>{
+  if(currentLocale.value=== 'en-US'){
+    switch (version) {
+    case OpenGaussVersionEnum.ENTERPRISE:
+      return 'Enterprise'
+    case OpenGaussVersionEnum.MINIMAL_LIST:
+      return 'Simplified'
+    case OpenGaussVersionEnum.LITE:
+      return 'Lite'
+  }
+  }
+  switch (version) {
+    case OpenGaussVersionEnum.ENTERPRISE:
+      return '企业版'
+    case OpenGaussVersionEnum.MINIMAL_LIST:
+      return '极简版'
+    case OpenGaussVersionEnum.LITE:
+      return '轻量版'
+  }
 }
 
 const checkPack = (record: KeyValue) => {
