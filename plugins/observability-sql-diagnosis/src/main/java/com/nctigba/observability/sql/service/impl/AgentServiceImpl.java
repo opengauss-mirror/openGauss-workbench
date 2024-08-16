@@ -164,8 +164,8 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
             env.setParam("{\"callbackPath\":\"" + callbackPath + "\"}");
             env.setPath(path);
             try (var session = connect(env, rootPassword)) {
-                String userAuth = session.execute(String.format(USER_AUTHORITY, username));
-                if (!"root".equals(username) && !userAuth.contains("wheel") && !userAuth.contains("sudo")) {
+                String userAuth = session.execute(USER_AUTHORITY);
+                if (!"root".equals(username) && userAuth.contains("false")) {
                     throw new CustomException("agent.install.userAuth.tip");
                 }
                 String message = session.execute(String.format(PORT_IS_EXIST, env.getPort()));

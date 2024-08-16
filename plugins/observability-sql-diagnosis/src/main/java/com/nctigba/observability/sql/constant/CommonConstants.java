@@ -139,5 +139,5 @@ public class CommonConstants {
     /**
      * Get user authority
      */
-    public static final String USER_AUTHORITY = "groups %s";
+    public static final String USER_AUTHORITY = "sudo -n true 2>/dev/null && echo \"true\" || echo \"false\"";
 }

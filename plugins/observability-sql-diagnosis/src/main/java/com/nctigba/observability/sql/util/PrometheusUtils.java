@@ -30,8 +30,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.constant.PrometheusConstants;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.NctigbaEnvMapper;
 import com.nctigba.observability.sql.model.dto.point.MetricDataDTO;
 import com.nctigba.observability.sql.model.dto.point.PrometheusDataDTO;
@@ -73,12 +73,11 @@ public class PrometheusUtils {
 
     private String getPrometheusUrl() {
         var env = envMapper.selectOne(
-                Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.PROMETHEUS));
+                Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.PROMETHEUS_MAIN));
         if (env == null) {
             throw new HisDiagnosisException("Prometheus not found");
         }
-        var host = hostFacade.getById(env.getHostid());
-        return "http://" + host.getPublicIp() + ":" + env.getPort();
+        return "http://127.0.0.1:" + env.getPort();
     }
 
     public Object rangeQuery(String paramId, String item, String start, String end, String step) {

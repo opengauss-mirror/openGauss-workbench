@@ -113,6 +113,7 @@ public class NctigbaEnvDO {
 
     public enum envType {
         PROMETHEUS,
+        PROMETHEUS_MAIN,
         NODE_EXPORTER,
         OPENGAUSS_EXPORTER,
         EXPORTER,
