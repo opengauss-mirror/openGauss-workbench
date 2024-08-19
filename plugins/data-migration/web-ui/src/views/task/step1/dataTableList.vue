@@ -4,7 +4,7 @@
       <span class="close" @click="closeModal">&times;</span>
       <div class="header-list">
         <div style="display: grid; grid-template-columns: auto auto">
-          <h2>源端数据库：{{ tempdbname }}所选表</h2><br>
+          <h2>{{$t('step1.index.5q091ixigjo1') + tempdbname + " "+ $t('step1.index.5q091ixigro4') }}</h2><br>
         </div>
       </div>
       <div class="scrollable-list">

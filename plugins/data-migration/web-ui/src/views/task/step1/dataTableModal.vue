@@ -3,12 +3,12 @@
     <div class="modal-content"  @mousedown="startDrag">
       <div class="header">
         <div style="display: grid; grid-template-columns: auto auto;">
-          <h2>源端数据库：{{ tempdbname }}</h2><br>
-          <p v-if = "selectedTbl.length > 0" style="color: red">已选中的选项: {{ selectedTbl.length }}</p>
+          <h2>{{$t('step1.index.5q091ixigjo1') + tempdbname }}</h2><br>
+          <p v-if = "selectedTbl.length > 0" style="color: red">{{$t('step1.index.5q091ixigjo2') + selectedTbl.length }}</p>
         </div>
         <input type="text"
               v-model="inputValue"
-              placeholder="输入表的名称进行搜索...">
+              :placeholder="$t('step1.index.5q091ixigjo5')">
       </div>
       <span class="close" @click="closeModal">&times;</span>
       <div v-if="search" class="scrollable">
@@ -16,7 +16,7 @@
           <ul>
             <li>
               <label>
-                <input type="checkbox" v-model="selectAll" @change="selectAllItems"> 全选
+                <input type="checkbox" v-model="selectAll" @change="selectAllItems"> {{$t('step1.index.5q091ixigjo6') }}
               </label>
             </li>
             <li v-for="( item, index) in data" :key="index" >
@@ -41,8 +41,8 @@
         </div>
       </div>
       <div v-if="search" style = 'display: flex; justify-content: center; gap: 40px;' class="footer">
-        <button class="add-sub-btn" type="submit" @click='submitSelection'>确定</button>
-        <button  @click = 'closeModal'>取消</button>
+        <button class="add-sub-btn" type="submit" @click='submitSelection'>{{$t('step1.index.5q091ixigjo3')}}</button>
+        <button  @click = 'closeModal'>{{$t('step1.index.5q091ixigjo4')}}</button>
       </div>
     </div>
   </div>
