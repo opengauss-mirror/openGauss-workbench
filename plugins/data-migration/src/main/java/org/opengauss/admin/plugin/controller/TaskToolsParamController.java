@@ -125,7 +125,8 @@ public class TaskToolsParamController {
         }
         LambdaQueryWrapper<TbMigrationTaskGlobalToolsParam> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(TbMigrationTaskGlobalToolsParam::getParamKey, globalToolsParam.getParamKey())
-                .eq(TbMigrationTaskGlobalToolsParam::getConfigId, globalToolsParam.getConfigId());
+                .eq(TbMigrationTaskGlobalToolsParam::getConfigId, globalToolsParam.getConfigId())
+                .eq(TbMigrationTaskGlobalToolsParam::getPortalHostID, globalToolsParam.getPortalHostID());
         TbMigrationTaskGlobalToolsParam toolsParam = globalToolsParamService.getOne(wrapper);
         if (toolsParam == null) {
             log.info("start save tools param :{}", globalToolsParam);
@@ -138,6 +139,7 @@ public class TaskToolsParamController {
             toolsParam.setParamValue(globalToolsParam.getParamValue());
             toolsParam.setParamChangeValue(globalToolsParam.getParamChangeValue());
             toolsParam.setParamValueType(globalToolsParam.getParamValueType());
+            toolsParam.setParamDesc(globalToolsParam.getParamDesc());
             return AjaxResult.success(globalToolsParamService.saveOrUpdate(toolsParam));
         }
     }
