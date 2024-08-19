@@ -373,7 +373,8 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         String sql = "select * from pg_stat_get_wal_senders();";
         String url = JdbcUtil.getOpengaussJdbcUrl(
                 clusterNode.getPublicIp(), clusterNode.getDbPort().toString(), clusterNode.getDbName(), "");
-        return JdbcUtil.hasResultSetByExecuteQuery(url, sql, clusterNode.getDbUser(), clusterNode.getDbUserPassword());
+        return JdbcUtil.hasResultSetByExecuteQuery(url, sql, clusterNode.getDbUser(),
+            encryptionUtils.decrypt(clusterNode.getDbUserPassword()));
     }
 
     private List<Map<String, Object>> convertList(ResultSet rs) {
@@ -442,7 +443,9 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
      * @return result list
      */
     private List<Map<String, Object>> queryTarget(OpsClusterNodeVO clusterNode, String schema, String sql) {
-        return queryBySqlOnOpengauss(clusterNode.getPublicIp(), clusterNode.getDbPort().toString(), clusterNode.getDbName(), clusterNode.getDbUser(), clusterNode.getDbUserPassword(), schema, sql);
+        return queryBySqlOnOpengauss(clusterNode.getPublicIp(), clusterNode.getDbPort().toString(),
+            clusterNode.getDbName(), clusterNode.getDbUser(),
+            encryptionUtils.decrypt(clusterNode.getDbUserPassword()), schema, sql);
     }
 
     /**
