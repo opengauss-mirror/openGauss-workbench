@@ -640,8 +640,6 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             resultMap.put("opengauss.database.iscluster", "true");
             resultMap.put("opengauss.database.standby.hostnames", String.join(",", hostnames));
             resultMap.put("opengauss.database.standby.ports", String.join(",", ports));
-
-            resultMap.put("8.1.slot.drop.on.stop", "'false'");
         }
     }
 
