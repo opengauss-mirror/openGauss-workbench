@@ -90,12 +90,12 @@
         <a-button class="-primary" type="text" @click="addPackInstall('create',searchInfoPackage,0)">在线下载</a-button>
       </div>
     </div>
+    <addPack
+      ref="addPackRef"
+      @finish="addPackClose()"
+      @submit="addPackSubmit()"
+    ></addPack>
   </div>
-  <addPack
-    ref="addPackRef"
-    @finish="addPackClose()"
-    @submit="addPackSubmit()"
-  ></addPack>
 </template>
 
 
