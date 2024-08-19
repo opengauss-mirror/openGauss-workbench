@@ -33,7 +33,7 @@
                     </a-popover>
                     <div v-else class="add-sub-task" style="width:278px;" @mouseover="showButtonSourceDB(nodeData)" @mouseleave="hideButtonSourceDB">
                       <span>{{ nodeData?.title }}</span>
-                      <a-button type="primary" size="mini" @click="dataTblWin(nodeData)" v-if="checkBtnShow(nodeData)" class="add-sub-btn">选择数据表</a-button>
+                      <a-button type="primary" size="mini" @click="dataTblWin(nodeData)" v-if="checkBtnShow(nodeData)" class="add-sub-btn">{{$t('step1.index.5q091ixigdc1')}}</a-button>
                     </div>
                   </template>
                   <span v-else>
@@ -111,10 +111,10 @@
         <template #columns>
           <a-table-column :title="$t('step1.index.5q091ixigro0')" data-index="sourceNodeName" :width="200" ellipsis tooltip></a-table-column>
           <a-table-column :title="$t('step1.index.5q091ixigug0')" data-index="sourceDBName" :width="200" ellipsis tooltip></a-table-column>
-          <a-table-column :title="$t('数据表')" data-index="seletedTblNum" :width="150" ellipsis tooltip>
+          <a-table-column :title="$t('step1.index.5q091ixigro1')" data-index="seletedTblNum" :width="150" ellipsis tooltip>
             <template #cell="{ record }">
               <a-button v-if="record.sourceTables && record.sourceTables !== ''" @click="showTblList(record.sourceDBName, record.sourceTables)">{{ record.seletedTblNum }}</a-button>
-              <p v-else>全部</p>
+              <p v-else>{{ $t('step1.index.5q091ixigro3') }}</p>
             </template>
           </a-table-column>
           <a-table-column :title="$t('step1.index.5q091ixigy80')" data-index="targetNodeName" :width="200" ellipsis tooltip></a-table-column>
@@ -318,13 +318,13 @@ const comTblLen = () => {
   let retString = ''
   if (selectedData.value && Array.isArray(selectedData.value) && selectedData.value.length > 0) {
     if (selectedData.value[0] === '') {
-      retString = '全部'
+      retString=t('step1.index.5q091ixigro3')
     } else {
-      retString = '已选择' + selectedData.value.length + '张表'
+      retString = t('step1.index.5q091ixigro2') + selectedData.value.length
     }
   }
   if (retString === '') {
-    retString = '全部'
+    retString = t('step1.index.5q091ixigro3')
   }
   return retString
 }
