@@ -130,7 +130,7 @@
                             v-if="
                               item.statusId === SUB_TASK_STATUS.FULL_RUNNING
                             "
-                            class="status-text"
+                            :class="{'status-text':true,'status-text-en':currentLocale==='en-US'}"
                           >
                             <span
                               >{{ $t('components.SubTaskDetail.5q0a5opxm3c1')
@@ -156,7 +156,7 @@
                           v-if="item.statusId === SUB_TASK_STATUS.FULL_CHECKING"
                           class="info-row"
                         >
-                          <div class="status-text">
+                          <div :class="{'status-text':true,'status-text-en':currentLocale==='en-US'}">
                             <span
                               >{{ $t('components.SubTaskDetail.5q0a5opxm3c4')
                               }}<strong
@@ -345,6 +345,9 @@ import BigDataList from './BigDataList.vue'
 import dayjs from 'dayjs'
 import { useI18n } from 'vue-i18n'
 import { MIGRATION_MODE, SUB_TASK_STATUS } from '@/utils/constants'
+import useLocale from '@/hooks/locale'
+
+const { currentLocale } = useLocale()
 
 const { t } = useI18n()
 
@@ -974,6 +977,9 @@ onBeforeUnmount(() => {
                   span {
                     margin-right: 10px;
                   }
+                }
+                .status-text-en{
+                  left:215px;
                 }
               }
 
