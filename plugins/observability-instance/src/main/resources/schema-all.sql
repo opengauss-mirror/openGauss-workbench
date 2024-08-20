@@ -10,3 +10,4 @@ ALTER TABLE public.nctigba_env ADD nodeid varchar NULL;
 ALTER TABLE public.nctigba_env ADD status varchar NULL;
 ALTER TABLE public.nctigba_env ADD update_time timestamp NULL;
 ALTER TABLE public.nctigba_env ADD param varchar NULL;
+ALTER TABLE public.nctigba_env ADD err_status_msg varchar NULL;

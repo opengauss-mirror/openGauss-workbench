@@ -58,6 +58,7 @@ public class PageController extends ControllerConfig {
             MetricsValue.MEM_USED,
             MetricsValue.MEM_FREE,
             MetricsValue.MEM_CACHE,
+            MetricsValue.MEM_AVAILABLE,
             MetricsValue.SWAP_TOTAL,
             MetricsValue.SWAP_USED,
             MetricsValue.SWAP_FREE,

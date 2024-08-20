@@ -46,6 +46,7 @@
             <el-table-column prop="MEM_USED" :label="$t('resourceMonitor.memory.usedMemory')" />
             <el-table-column prop="MEM_FREE" :label="$t('resourceMonitor.memory.freeMemory')" />
             <el-table-column prop="MEM_CACHE" :label="$t('resourceMonitor.memory.cachedMemory')" />
+            <el-table-column prop="MEM_AVAILABLE" :label="$t('resourceMonitor.memory.availableMemory')" />
             <el-table-column prop="MEMORY_DB_USED_CURR" :label="$t('resourceMonitor.memory.dbMemory')" />
           </el-table>
         </div>
@@ -404,6 +405,7 @@ watch(
         MEM_FREE: baseData.MEM_FREE ? byteToMB(baseData.MEM_FREE) + 'MB' : '',
         MEM_TOTAL: baseData.MEM_TOTAL ? byteToMB(baseData.MEM_TOTAL) + 'MB' : '',
         MEM_USED: baseData.MEM_USED ? byteToMB(baseData.MEM_USED) + 'MB' : '',
+        MEM_AVAILABLE: baseData.MEM_AVAILABLE ? byteToMB(baseData.MEM_AVAILABLE) + 'MB' : '',
         MEMORY_DB_USED_CURR: baseData.MEMORY_DB_USED_CURR ? byteToMB(baseData.MEMORY_DB_USED_CURR) + 'MB' : '',
       },
     ]

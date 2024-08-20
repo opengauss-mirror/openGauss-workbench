@@ -81,6 +81,7 @@ public interface CollectTemplateNodeService extends IService<CollectTemplateNode
      *
      * @param nodeId String
      * @param templateId String
+     * @param promId String
      */
-    void setNodePrometheusConfig(String nodeId, Integer templateId);
+    void setNodePrometheusConfig(String nodeId, Integer templateId, String promId);
 }

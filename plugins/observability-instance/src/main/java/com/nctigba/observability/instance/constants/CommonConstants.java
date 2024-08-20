@@ -72,7 +72,8 @@ public class CommonConstants {
     /**
      * Check if the port exists
      */
-    public static final String PORT_IS_EXIST = "source /etc/profile && lsof -ti :%s && echo 'true' || echo 'false'";
+    public static final String PORT_IS_EXIST = "source /etc/profile && lsof -i :%s | grep LISTEN  && echo 'true' || "
+        + "echo 'false'";
 
     /**
      * Get pid by port

@@ -25,14 +25,28 @@
 package com.nctigba.observability.instance.controller;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollectionUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.nctigba.observability.instance.mapper.NctigbaEnvMapper;
+import com.nctigba.observability.instance.mapper.PromAgentRelationMapper;
 import com.nctigba.observability.instance.model.AjaxResult;
 import com.nctigba.observability.instance.model.dto.SetNodeTemplateDirectDTO;
+import com.nctigba.observability.instance.model.entity.AgentNodeRelationDO;
+import com.nctigba.observability.instance.model.entity.NctigbaEnvDO;
+import com.nctigba.observability.instance.model.entity.PromAgentRelationDO;
 import com.nctigba.observability.instance.model.vo.CollectTemplateListVO;
+import com.nctigba.observability.instance.service.AgentNodeRelationService;
 import com.nctigba.observability.instance.service.CollectTemplateMetricsService;
 import com.nctigba.observability.instance.service.CollectTemplateNodeService;
 import com.nctigba.observability.instance.service.CollectTemplateService;
+import com.nctigba.observability.instance.service.PrometheusService;
+import com.nctigba.observability.instance.util.MessageSourceUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -60,6 +74,18 @@ public class CollectConfigController {
     @Autowired
     CollectTemplateMetricsService collectTemplateMetricsService;
 
+    @Autowired
+    AgentNodeRelationService agentNodeRelationService;
+    @Autowired
+    private PromAgentRelationMapper promAgentRelationMapper;
+    @Autowired
+    private NctigbaEnvMapper envMapper;
+    @AutowiredType(AutowiredType.Type.MAIN_PLUGIN)
+    @Autowired
+    private HostFacade hostFacade;
+    @Autowired
+    private PrometheusService prometheusService;
+
     /**
      * Set node template direct
      *
@@ -72,8 +98,36 @@ public class CollectConfigController {
     @PostMapping(value = "/v1/templates/action", params = "action=setNodeTemplateDirect")
     public AjaxResult setNodeTemplateDirect(
             @RequestBody SetNodeTemplateDirectDTO setNodeTemplateDirectDTO) {
+        List<AgentNodeRelationDO> agentNodeRelList = agentNodeRelationService.list(
+            Wrappers.<AgentNodeRelationDO>lambdaQuery().eq(AgentNodeRelationDO::getNodeId,
+                setNodeTemplateDirectDTO.getNodeId()));
+        if (CollectionUtil.isEmpty(agentNodeRelList)) {
+            collectTemplateNodeService.setNodeTemplateDirect(setNodeTemplateDirectDTO);
+            return AjaxResult.success();
+        }
+        String envAgentId = agentNodeRelList.get(0).getEnvId();
+        List<PromAgentRelationDO> promAgentRelList = promAgentRelationMapper.selectList(
+            Wrappers.<PromAgentRelationDO>lambdaQuery().eq(PromAgentRelationDO::getEnvAgentId, envAgentId));
+        if (CollectionUtil.isEmpty(promAgentRelList)) {
+            NctigbaEnvDO agentEnv = envMapper.selectById(envAgentId);
+            OpsHostEntity agentHost = hostFacade.getById(agentEnv.getHostid());
+            Object obj = agentHost.getPublicIp() + ":" + agentEnv.getPort();
+            throw new CustomException(MessageSourceUtils.get("collect.prom_not_found1", obj));
+        }
+        String envPromId = promAgentRelList.get(0).getEnvPromId();
+        NctigbaEnvDO promEnv = envMapper.selectById(envPromId);
+        if (promEnv == null) {
+            throw new CustomException(MessageSourceUtils.get("collect.prom_not_found2"));
+        }
+        OpsHostEntity promHost = hostFacade.getById(promEnv.getHostid());
+        promEnv.setHost(promHost);
+        boolean isHealth = prometheusService.getHealthStatus(promEnv);
+        if (!isHealth) {
+            Object obj = promHost.getPublicIp() + ":" + promEnv.getPort();
+            throw new CustomException(MessageSourceUtils.get("collect.prom_status_exception", obj));
+        }
         Integer templateId = collectTemplateNodeService.setNodeTemplateDirect(setNodeTemplateDirectDTO);
-        collectTemplateNodeService.setNodePrometheusConfig(setNodeTemplateDirectDTO.getNodeId(), templateId);
+        collectTemplateNodeService.setNodePrometheusConfig(setNodeTemplateDirectDTO.getNodeId(), templateId, envPromId);
         return AjaxResult.success();
     }
 

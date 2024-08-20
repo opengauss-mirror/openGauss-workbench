@@ -243,6 +243,7 @@ export default {
       usedMemory: 'Used Memory',
       freeMemory: 'Free Memory',
       cachedMemory: 'Cached Memory',
+      availableMemory: 'Available Memory',
       dbMemory: 'Database Memory Usage',
       interactiveAreaUsage: 'Interactive Area Usage',
       totalExchangeArea: 'Total Exchange Area',

@@ -218,7 +218,7 @@
     </el-col>
     <el-col :span="8">
       <my-card
-        :title="$t('resourceMonitor.network.UDPQty')"
+        :title="$t('resourceMonitor.network.udpQty')"
         height="300"
         :bodyPadding="false"
         :showBtns="true"

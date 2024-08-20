@@ -34,6 +34,7 @@ public enum MetricsValue {
     MEM_USED(Type.OS, "agent_free_Mem_used_bytes{host='ogbrench'}"),
     MEM_FREE(Type.OS, "agent_free_Mem_free_bytes{host='ogbrench'}"),
     MEM_CACHE(Type.OS, "agent_free_Mem_cache_bytes{host='ogbrench'}"),
+    MEM_AVAILABLE(Type.OS, "agent_free_Mem_available_bytes{host='ogbrench'}"),
     SWAP_TOTAL(Type.OS, "agent_free_Swap_total_bytes{host='ogbrench'}"),
     SWAP_USED(Type.OS, "agent_free_Swap_used_bytes{host='ogbrench'}"),
     SWAP_FREE(Type.OS, "agent_free_Swap_free_bytes{host='ogbrench'}"),

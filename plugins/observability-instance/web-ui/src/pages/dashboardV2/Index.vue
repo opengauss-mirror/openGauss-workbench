@@ -214,6 +214,7 @@ const msgBtn = ref<string>('')
 const timer = ref<any>(null)
 onMounted(() => {
   dashboardTabKey.value = tabKeys.Home
+  getOpsClusterDatas()
   if (!clusterNodeId.value) {
     selectInstanceTip.value = t('instanceMonitor.selectInstance')
     isShowMsg.value = true
@@ -261,10 +262,12 @@ watch(opsClusterData, (res: Res) => {
     clusterList.value = treeTransform(res)
 
     nextTick(() => {
-      let paramsId = router.currentRoute.value.query.nodeId as string
-      let nodeId = window.$wujie?.props.data.nodeId as string
-      if (nodeId) toChangeClusterByNodeId(nodeId);
-      else if (paramsId) toChangeClusterByNodeId(paramsId); 
+      if (!clusterNodeId.value || Array.isArray(clusterNodeId.value) && clusterNodeId.value.length === 0) {
+        let paramsId = router.currentRoute.value.query.nodeId as string
+        let nodeId = window.$wujie?.props.data.nodeId as string
+        if (nodeId) toChangeClusterByNodeId(nodeId);
+        else if (paramsId) toChangeClusterByNodeId(paramsId);
+      }
     })
   }
 })
@@ -474,6 +477,7 @@ const updateClusterList = (isShow: boolean) => {
   border-radius: 4px;
   background: #fff;
   box-shadow: 0px 8px 20px 0px rgba(0, 0, 0, 0.2);
+  word-wrap : break-word;
   .title-row {
     display: flex;
     flex-direction: row;
