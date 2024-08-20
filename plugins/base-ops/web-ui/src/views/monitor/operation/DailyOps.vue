@@ -1404,6 +1404,7 @@ const handleGucSettingComplete = (clusterData: KeyValue, clusterIndex: number) =
         }
 
         .path-c {
+          line-height: 25px;
           width: 150px;
           overflow: hidden;
           text-overflow: ellipsis;
