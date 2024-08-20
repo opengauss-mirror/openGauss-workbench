@@ -344,6 +344,13 @@
             "5mplmzbrpas0": "Cluster backup"
         },
         "DailyOps": {
+            "sl3u5s5cf2y0": "Cluster Manager",
+            "sl3u5s5cf2y1": "Usage Guide",
+            "sl3u5s5cf2y2": "Create a Parallel Installation Task",
+            "sl3u5s5cf2y3": "Install a Cluster",
+            "sl3u5s5cf2y4": "CPU Utilization TOP5",
+            "sl3u5s5cf2y5": "Memory Utilization TOP5",
+            "sl3u5s5cf2y6": "Session TOP5",
             "else1": "core",
             "else2": "Instance",
             "else3": "count",

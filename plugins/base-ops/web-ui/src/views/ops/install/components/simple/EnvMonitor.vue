@@ -46,10 +46,11 @@
                       </div>
                       <div style="min-width: 500px;" class="flex-row-start">
                         <div class="mr">
+                          <icon-close-circle-fill v-if="item.status === hostEnvStatusEnum.ERROR" style="color: red"
+                              :size="20"></icon-close-circle-fill>
                           <icon-check-circle-fill v-if="item.status === hostEnvStatusEnum.NORMAL" style="color: green"
                             :size="20"></icon-check-circle-fill>
-                          <icon-exclamation-circle-fill
-                            v-if="item.status === hostEnvStatusEnum.WARMING || item.status === hostEnvStatusEnum.ERROR"
+                          <icon-exclamation-circle-fill v-if="item.status === hostEnvStatusEnum.WARMING"
                             style="color: orange" :size="20" />
                           <icon-info-circle-fill v-if="item.status === hostEnvStatusEnum.INFO" style="color: gray"
                             :size="20" />
