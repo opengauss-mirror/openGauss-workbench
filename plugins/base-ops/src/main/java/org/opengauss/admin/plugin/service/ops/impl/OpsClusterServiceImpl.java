@@ -37,23 +37,18 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.Session;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.exception.ops.OpsException;
-import org.opengauss.admin.common.utils.PermissionUtils;
 import org.opengauss.admin.plugin.domain.entity.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.cache.SSHChannelManager;
 import org.opengauss.admin.plugin.domain.model.ops.cache.TaskManager;
 import org.opengauss.admin.plugin.domain.model.ops.cache.WsConnectorManager;
 import org.opengauss.admin.plugin.domain.model.ops.env.EnvProperty;
-import org.opengauss.admin.plugin.domain.model.ops.env.HardwareEnv;
 import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;
-import org.opengauss.admin.plugin.domain.model.ops.env.SoftwareEnv;
 import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
 import org.opengauss.admin.plugin.domain.model.ops.node.LiteInstallNodeConfig;
 import org.opengauss.admin.plugin.domain.model.ops.node.MinimalistInstallNodeConfig;
@@ -116,6 +111,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import static org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants.*;
 import static org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum.MASTER;
 import static org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum.SLAVE;
@@ -129,7 +125,7 @@ import static org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum.*;
  **/
 @Service
 public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClusterEntity> implements IOpsClusterService {
-
+    private static final List<String> MONITOR_DEPENDENCY_LIST = List.of("procps-ng", "grep", "coreutils");
     private static final Logger log = LoggerFactory.getLogger(OpsClusterServiceImpl.class);
 
     private static final String ENTER_CONSTANT = "ENTERPRISE";
@@ -2189,21 +2185,20 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
 
     @Override
-    public void monitor(String clusterId, String hostId, String businessId, ClusterRoleEnum role) {
+    public String monitor(String clusterId, String hostId, String businessId, ClusterRoleEnum role) {
         OpsClusterEntity clusterEntity = getById(clusterId);
         if (Objects.isNull(clusterEntity)) {
             throw new OpsException("Cluster information does not exist");
         }
-
         List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService.listClusterNodeByClusterId(clusterId);
         if (CollUtil.isEmpty(opsClusterNodeEntities)) {
             throw new OpsException("Cluster node information does not exist");
         }
-
-        OpsClusterNodeEntity nodeEntity = opsClusterNodeEntities.stream().filter(opsClusterNodeEntity -> opsClusterNodeEntity.getHostId().equals(hostId)).findFirst().orElseThrow(() -> new OpsException("Cluster node information does not exist"));
-
+        OpsClusterNodeEntity nodeEntity = opsClusterNodeEntities.stream()
+                .filter(opsClusterNodeEntity -> opsClusterNodeEntity.getHostId().equals(hostId))
+                .findFirst()
+                .orElseThrow(() -> new OpsException("Cluster node information does not exist"));
         String installUserId = nodeEntity.getInstallUserId();
-
         OpsHostEntity hostEntity = hostFacade.getById(hostId);
         if (Objects.isNull(hostEntity)) {
             throw new OpsException("Node host information does not exist");
@@ -2212,15 +2207,52 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         if (Objects.isNull(hostUserEntity)) {
             throw new OpsException("Node installation user information does not exist");
         }
-
         OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(hostId);
         if (Objects.isNull(rootUserEntity)) {
             throw new OpsException("Node root user information does not exist");
         }
+        WsSession wsSession = wsConnectorManager.getSession(businessId).orElseThrow(() ->
+                new OpsException("response session does not exist"));
+        Session ommSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(),
+                hostUserEntity.getUsername(), encryptionUtils.decrypt(hostUserEntity.getPassword()))
+                .orElseThrow(() -> new OpsException("Install user connection failed"));
+        String dataPath = getDataPath(role, nodeEntity, clusterEntity);
+        Future<?> future = getMonitorFuture(hostEntity, clusterEntity, wsSession, ommSession, dataPath);
+        TaskManager.registry(businessId, future);
+        return checkDependencies(ommSession, hostEntity.getCpuArch());
+    }
 
-        WsSession wsSession = wsConnectorManager.getSession(businessId).orElseThrow(() -> new OpsException("response session does not exist"));
-        Session ommSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserEntity.getUsername(), encryptionUtils.decrypt(hostUserEntity.getPassword())).orElseThrow(() -> new OpsException("Install user connection failed"));
+    private Future<?> getMonitorFuture(OpsHostEntity hostEntity, OpsClusterEntity clusterEntity, WsSession wsSession,
+                                    Session ommSession, String dataPath) {
+        return threadPoolTaskExecutor.submit(() -> {
+            Connection connection = null;
+            try {
+                connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(),
+                        clusterEntity.getDatabaseUsername(),
+                        encryptionUtils.decrypt(clusterEntity.getDatabasePassword()))
+                        .orElseThrow(() -> new OpsException("Unable to connect to the database"));
+                doMonitor(wsSession, ommSession, clusterEntity.getVersion(), connection, dataPath,
+                        clusterEntity.getEnvPath());
+            } catch (Exception e) {
+                log.error("get connection fail , ip:{} , port:{}, username:{}", hostEntity.getPublicIp(),
+                        clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), e);
+            } finally {
+                if (Objects.nonNull(connection)) {
+                    try {
+                        connection.close();
+                    } catch (SQLException e) {
+                        log.error("close connection occurred an error, error message:{}", e.getMessage());
+                    }
+                }
+                if (Objects.nonNull(ommSession) && ommSession.isConnected()) {
+                    ommSession.disconnect();
+                }
+                wsUtil.close(wsSession);
+            }
+        });
+    }
 
+    private String getDataPath(ClusterRoleEnum role, OpsClusterNodeEntity nodeEntity, OpsClusterEntity clusterEntity) {
         String dataPath = nodeEntity.getDataPath();
         if (OpenGaussVersionEnum.MINIMAL_LIST == clusterEntity.getVersion()) {
             if (clusterEntity.getDeployType() == DeployTypeEnum.CLUSTER) {
@@ -2233,34 +2265,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 dataPath = dataPath + "/single_node";
             }
         }
-
-
-        String realDataPath = dataPath;
-        Future<?> future = threadPoolTaskExecutor.submit(() -> {
-            Connection connection = null;
-            try {
-                connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), encryptionUtils.decrypt(clusterEntity.getDatabasePassword())).orElseThrow(() -> new OpsException("Unable to connect to the database"));
-                doMonitor(wsSession, ommSession, clusterEntity.getVersion(), connection, realDataPath, clusterEntity.getEnvPath());
-            } catch (Exception e) {
-                log.error("get connection fail , ip:{} , port:{}, username:{}", hostEntity.getPublicIp(), clusterEntity.getPort(), clusterEntity.getDatabaseUsername(), e);
-            } finally {
-                if (Objects.nonNull(connection)) {
-                    try {
-                        connection.close();
-                    } catch (SQLException e) {
-
-                    }
-                }
-
-                if (Objects.nonNull(ommSession) && ommSession.isConnected()) {
-                    ommSession.disconnect();
-                }
-
-                wsUtil.close(wsSession);
-            }
-
-        });
-        TaskManager.registry(businessId, future);
+        return dataPath;
     }
 
     @Override
@@ -2906,6 +2911,12 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             }
         }
 
+    }
+
+    private String checkDependencies(Session rootSession, String cpuArch) {
+        List<String> missDependencies = opsClusterEnvService.getMissingList(rootSession, cpuArch,
+                SshCommandConstants.MONITOR_DEPENDENCY, MONITOR_DEPENDENCY_LIST);
+        return String.join(",", missDependencies);
     }
 
     private List<Map<String, String>> sessionMemoryTop10(Connection connection) {

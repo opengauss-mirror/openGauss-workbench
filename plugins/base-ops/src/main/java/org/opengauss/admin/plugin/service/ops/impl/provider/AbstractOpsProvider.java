@@ -24,34 +24,33 @@
 package org.opengauss.admin.plugin.service.ops.impl.provider;
 
 import cn.hutool.core.util.StrUtil;
+import com.jcraft.jsch.Session;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
-import org.opengauss.admin.plugin.enums.ops.GucSettingContextEnum;
 import org.opengauss.admin.plugin.enums.ops.DatabaseKernelArch;
+import org.opengauss.admin.plugin.enums.ops.GucSettingContextEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.service.ops.ClusterOpsProvider;
 import org.opengauss.admin.plugin.service.ops.impl.ClusterOpsProviderManager;
+import org.opengauss.admin.plugin.service.ops.impl.OpsClusterEnvService;
 import org.opengauss.admin.plugin.utils.JschUtil;
 import org.opengauss.admin.plugin.vo.ops.GucSettingVO;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
-import com.jcraft.jsch.Session;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * @author lhf
@@ -59,6 +58,9 @@ import java.util.stream.Collectors;
  **/
 @Slf4j
 public abstract class AbstractOpsProvider implements ClusterOpsProvider, InitializingBean {
+
+    @Autowired
+    private OpsClusterEnvService opsClusterEnvService;
 
     protected Session beforeInstall(JschUtil jschUtil, EncryptionUtils encryptionUtils, InstallContext installContext, String installPath, String dataPath, String pkgPath, String hostId, String installUserId, String installUserName, String decompressArgs) {
         WsSession retSession = installContext.getRetSession();
@@ -166,31 +168,14 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
 
     protected void installDependency(JschUtil jschUtil, Session rootSession, WsSession retSession,
                                      OpenGaussSupportOSEnum expectedOs) {
-        boolean dependencyCorrect = false;
-        String[] dependencyPackageNames = {"libaio-devel", "flex", "bison", "ncurses-devel", "glibc-devel",
-                "patch", "readline-devel"};
-        try {
-            JschResult jschResult = jschUtil.executeCommand(SshCommandConstants.DEPENDENCY, rootSession);
-            List<String> dependencyPackages = Arrays.stream(dependencyPackageNames).map(
-                    dependency -> dependency + "." + expectedOs.getCpuArch()).collect(Collectors.toList());
-            String dependency = jschResult.getResult();
-            List<String> notInstalledPackages = new ArrayList<>();
-            for (String dependencyPackage : dependencyPackages) {
-                if (!dependency.contains(dependencyPackage)) {
-                    notInstalledPackages.add(dependencyPackage);
-                }
-            }
-            if (notInstalledPackages.isEmpty()) {
-                dependencyCorrect = true;
-            }
-        } catch (Exception e) {
-            log.error("Execute command exception：", e);
-        }
-        if (dependencyCorrect) {
-            log.info("dependencyCorrect，skip install dependency");
+        List<String> dependencyPackageNames = List.of("libaio-devel", "flex", "bison", "ncurses-devel", "glibc-devel",
+                "patch", "readline-devel", "coreutils", "procps-ng", "openssh-clients", "unzip", "lsof", "grep", "tar");
+        String queryCommand = "yum list installed | egrep 'libaio-devel|flex|bison|ncurses-devel|glibc-devel|patch|"
+                + "redhat-lsb-core|readline-devel|lsscsi|coreutils|procps-ng|openssh-clients|unzip|lsof|grep|tar'";
+        if (opsClusterEnvService.getMissingList(rootSession, expectedOs.getCpuArch(), queryCommand,
+                dependencyPackageNames).isEmpty()) {
             return;
         }
-
         try {
             retSession.getSession().getBasicRemote().sendText("START_INSTALL_DEPENDENCY");
         } catch (IOException e) {

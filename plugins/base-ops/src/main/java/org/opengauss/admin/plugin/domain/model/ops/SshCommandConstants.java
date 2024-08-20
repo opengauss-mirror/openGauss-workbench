@@ -73,10 +73,18 @@ public interface SshCommandConstants {
      */
     String DIR_FREE_HARD_DISK = "df -BG {0} | awk -F ' ' '{print $4}' | sort";
     /**
-     * rely
+     * install dependencies
      */
     String DEPENDENCY = "yum list installed | egrep 'libaio-devel|flex|bison|ncurses-devel|glibc-devel|patch|redhat" +
             "-lsb-core|readline-devel|lsscsi'";
+    /**
+     * base dependencies
+     */
+    String BASE_DEPENDENCY = "yum list installed | egrep 'coreutils|procps-ng|openssh-clients|unzip|lsof|grep|tar'";
+    /**
+     * monitor dependencies
+     */
+    String MONITOR_DEPENDENCY = "yum list installed | egrep 'coreutils|procps-ng|grep'";
     /**
      * firewall
      */
@@ -280,11 +288,24 @@ public interface SshCommandConstants {
      * Delete file
      */
     String DEL_FILE = "rm -rf {0}";
-    String INSTALL_DEPENDENCY = "yum install -y wget net-tools python3 bzip2 expect libaio-devel flex bison ncurses-devel glibc-devel patch redhat-lsb readline-devel";
-
-    String INSTALL_DEPENDENCY_OPENEULER_X86 = "yum install -y wget net-tools python3 bzip2 expect libaio-devel flex bison ncurses-devel glibc-devel patch readline-devel libnsl tar";
-
-    String INSTALL_DEPENDENCY_OPENEULER_ARCH64 = "yum install -y wget net-tools python3 bzip2 expect libaio-devel flex bison ncurses-devel glibc-devel patch readline-devel tar";
+    /**
+     * CentOs install dependencies
+     */
+    String INSTALL_DEPENDENCY = "yum install -y wget net-tools python3 bzip2 expect libaio-devel flex bison "
+            + "ncurses-devel glibc-devel patch redhat-lsb readline-devel coreutils procps-ng openssh-clients unzip "
+            + "lsof grep tar";
+    /**
+     * OPENEULER_X86 install dependencies
+     */
+    String INSTALL_DEPENDENCY_OPENEULER_X86 = "yum install -y wget net-tools python3 bzip2 expect libaio-devel flex "
+            + "bison ncurses-devel glibc-devel patch readline-devel libnsl coreutils procps-ng openssh-clients unzip "
+            + "lsof grep tar";
+    /**
+     * OPENEULER_ARCH64 install dependencies
+     */
+    String INSTALL_DEPENDENCY_OPENEULER_ARCH64 = "yum install -y wget net-tools python3 bzip2 expect libaio-devel "
+            + "flex bison ncurses-devel glibc-devel patch readline-devel coreutils procps-ng openssh-clients unzip "
+            + "lsof grep tar";
 
     /**
      * upadmin command for lun path
