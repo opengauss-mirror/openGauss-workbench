@@ -434,3 +434,115 @@ export const listEnterpriseCluster = () => {
 export const listSupportOsName = () => {
   return axios.get('/opsCluster/listSupportOsName')
 }
+
+export const delPackage = (packageId: string) => {
+  return axios.delete(`/installPackageManager/${packageId}`)
+}
+
+export const checkPackage = (data: KeyValue) => {
+  return axios.post(`/installPackageManager/v2/check/package/`, data)
+}
+
+export const getVersionNum = () => {
+  return axios.get(`/installPackageManager/v2/list/version/number`)
+}
+
+export const getPackageList = (data: KeyValue) => {
+  return axios.post(`/installPackageManager/v2/list/package`, data)
+}
+
+export const getPackagePage = (data: KeyValue) => {
+  return axios.post(`/installPackageManager/v2/page/package`, data)
+}
+
+export const batchPackageOnline = (data: FormData) => {
+  return axios.post(`/installPackageManager/v2/save/online`, data)
+}
+
+export const batchPackageUpload = (name:KeyValue, os: KeyValue, cpuArch: KeyValue, packageVersion: KeyValue, packageVersionNum: KeyValue, packageUrl: KeyValue, file:any) => {
+  return axios.post(`/installPackageManager/v2/save/upload/?name=${name}&os=${os}&cpuArch=${cpuArch}&packageVersion=${packageVersion}&packageVersionNum=${packageVersionNum}&packageUrl=${packageUrl}`, file)
+}
+
+export const packageOnlineUpdate = (packageId:string, wsBusinessId:string) => {
+  return axios.post(`/installPackageManager/v2/update/online/?packageId=${packageId}&wsBusinessId=${wsBusinessId}`)
+}
+
+export const packageUploadUpdate = (params: KeyValue, data: KeyValue) => {
+  return axios.post(`/installPackageManager/v2/update/upload${params}`, data)
+}
+
+export const checkNetStatus = () => {
+  return axios.get(`/installPackageManager/v2/check/online`)
+}
+
+export const checkVersionNumber = (params: KeyValue) => {
+  return axios.get(`/installPackageManager/v2/check/version/number`, {params:params})
+}
+
+export const getHostIp = (params: KeyValue) => {
+  return axios.get(`/clusterTask/host/list`, {params})
+}
+
+export const getHostUser = (hostId: string) => {
+  return axios.get(`/clusterTask/hostUser/${hostId}`)
+}
+
+export const getHostInfo = (hostIp: string) => {
+  return axios.get(`/clusterTask/host/${hostIp}`)
+}
+
+export const createClusterTask = (data: KeyValue) => {
+  return axios.post(`/clusterTask/create`, data)
+}
+
+export const checkDiskSpace = (data: KeyValue, hostId: string) => {
+  return axios.post(`/clusterTask/check/host/disk/space/${hostId}`, data)
+}
+
+export const checkPortExist = (hostId: string, hostPort: number, clusterId: string) => {
+  return axios.get(`/clusterTask/hostPort/${hostId}/${hostPort}?taskId=${clusterId}`)
+}
+
+export const checkClusternameExist = (clusterName: string, clusterId: string) => {
+  return axios.get(`/clusterTask/check/name?clusterName=${clusterName}&clusterId=${clusterId}`)
+}
+
+export const checkClusterExist = (hostIp: string, hostUsername: number) => {
+  return axios.get(`/clusterTask/check/host?hostIp=${hostIp}&hostUsername=${hostUsername}`)
+}
+
+export const batchClusterNodes = (clusterId: string) => {
+  return axios.get(`/clusterTask/detail/${clusterId}`)
+}
+
+export const updateClusterTask = (data: KeyValue) => {
+  return axios.post(`/clusterTask/update`, data)
+}
+
+export const clusterEnvCheck = (clusterId: string) => {
+  return axios.post(`/clusterTask/check/environment?taskId=${clusterId}`)
+}
+
+export const envCheckResult = (clusterId: string) => {
+  return axios.get(`/clusterTask/get/environment?taskId=${clusterId}`)
+}
+
+export const fetchAZList = () => {
+  return axios.get(`/clusterTask/list/az`)
+}
+
+export const createClustertaskNode = (data: KeyValue) => {
+  return axios.post(`/cluster/task/node/create`, data)
+}
+
+export const updateClustertaskNode = (data: KeyValue) => {
+  return axios.post(`/cluster/task/node/update`, data)
+}
+
+export const deleteClustertaskNode = (clusterId: string, clusterNodeId: string, data: KeyValue) => {
+  return axios.post(`/cluster/task/node/delete?clusterId=${clusterId}&nodeId=${clusterNodeId}`, data)
+}
+
+export const checkCluster = (clusterId: string) => {
+  return axios.post(`/clusterTask/check?clusterId=${clusterId}`)
+}

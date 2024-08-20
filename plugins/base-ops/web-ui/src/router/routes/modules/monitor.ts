@@ -82,7 +82,17 @@ const MONITOR: AppRouteRecordRaw = {
         requiresAuth: true,
         roles: ['*']
       }
-    }
+    },
+    {
+      path: '/monitor/operation/step',
+      name: 'step',
+      component: () => import('@/views/monitor/operation/task/index.vue'),
+      meta: {
+        title: '步骤页面',
+        requiresAuth: true,
+        roles: ['*']
+      }
+    },
   ]
 }
 
