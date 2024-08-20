@@ -230,7 +230,7 @@ public class JschUtil {
             wsUtil.sendText(retSession, command);
         }
 
-        log.info("Execute an order:{}", command);
+        log.debug("Execute an order:{}", command);
         if (Objects.nonNull(autoResponse)) {
             HashMap<String, List<String>> autoClone = new HashMap<>();
             autoClone.putAll(autoResponse);
@@ -326,7 +326,7 @@ public class JschUtil {
      */
     public JschResult executeCommand(String command, Session session, WsSession wsSession,
         Map<String, String> autoResponse, boolean handleErrorBeforeExit) throws IOException, InterruptedException {
-        log.info("Execute an order:{}", command);
+        log.debug("Execute an order:{}", command);
         wsUtil.sendText(wsSession, command);
 
         if (Objects.nonNull(autoResponse)) {

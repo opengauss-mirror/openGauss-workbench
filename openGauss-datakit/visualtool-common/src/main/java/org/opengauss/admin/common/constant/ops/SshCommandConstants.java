@@ -85,7 +85,7 @@ public interface SshCommandConstants {
      */
     String CHANGE_OMM_PASSWORD = "passwd omm";
 
-    String LIMITS_CHECK = "cat /etc/security/limits.conf | grep 1048576";
+    String LIMITS_CHECK = " cat /etc/security/limits.conf | grep 1048576 ";
 
     String LIMITS = "echo -e \"* hard nofile 1048576\\n* soft nproc 1048576\\n* hard nproc 1048576\\n* soft nproc 1048576\" >> /etc/security/limits.conf";
 

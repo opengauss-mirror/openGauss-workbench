@@ -27,7 +27,6 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.enums.ops.DeployTypeEnum;
@@ -38,7 +37,10 @@ import org.opengauss.admin.plugin.enums.ops.DatabaseKernelArch;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author lhf
@@ -47,7 +49,7 @@ import java.util.Objects;
 @Slf4j
 @Data
 public class InstallContext implements Cloneable {
-
+    private String installUsername;
     private OpenGaussVersionEnum openGaussVersion;
 
     private String openGaussVersionNum;
@@ -73,6 +75,7 @@ public class InstallContext implements Cloneable {
     private RetBuffer retBuffer;
 
     private String envPath;
+    private String envAbsolutePath;
 
     private List<HostInfoHolder> hostInfoHolders;
 
@@ -113,7 +116,8 @@ public class InstallContext implements Cloneable {
                 throw new OpsException("The enterprise version is incorrectly installed and configured");
             }
 
-            int nodeSize = CollUtil.isEmpty(enterpriseInstallConfig.getNodeConfigList()) ? 0 : enterpriseInstallConfig.getNodeConfigList().size();
+            int nodeSize = CollUtil.isEmpty(enterpriseInstallConfig.getNodeConfigList()) ? 0 :
+                    enterpriseInstallConfig.getNodeConfigList().size();
             if (enterpriseInstallConfig.getDatabaseKernelArch() == DatabaseKernelArch.MASTER_SLAVE) {
                 try {
                     String[] splitVersionNums = openGaussVersionNum.split("[_-]");
@@ -134,7 +138,8 @@ public class InstallContext implements Cloneable {
                 throw new OpsException("The minimalist version was incorrectly installed and configured");
             }
 
-            int nodeSize = CollUtil.isEmpty(minimalistInstallConfig.getNodeConfigList()) ? 0 : minimalistInstallConfig.getNodeConfigList().size();
+            int nodeSize = CollUtil.isEmpty(minimalistInstallConfig.getNodeConfigList()) ? 0 :
+                    minimalistInstallConfig.getNodeConfigList().size();
             if (nodeSize > 1) {
                 throw new OpsException("The minimalist version can only be installed on a single host");
             }
@@ -145,7 +150,8 @@ public class InstallContext implements Cloneable {
                 throw new OpsException("The lightweight version was incorrectly installed and configured");
             }
 
-            int nodeSize = CollUtil.isEmpty(liteInstallConfig.getNodeConfigList()) ? 0 : liteInstallConfig.getNodeConfigList().size();
+            int nodeSize = CollUtil.isEmpty(liteInstallConfig.getNodeConfigList()) ? 0 :
+                    liteInstallConfig.getNodeConfigList().size();
             if (clusterDeploy && nodeSize < 2) {
                 throw new OpsException("In cluster mode, a maximum of two nodes can be installed");
             }
@@ -160,25 +166,6 @@ public class InstallContext implements Cloneable {
         }
     }
 
-    public String getInstallUsername() {
-        if (Objects.isNull(hostInfoHolders)) {
-            return "";
-        }
-        HostInfoHolder hostInfoHolder = hostInfoHolders.get(0);
-        if (Objects.isNull(hostInfoHolder)) {
-            return "";
-        }
-        List<OpsHostUserEntity> hostUserEntities = hostInfoHolder.getHostUserEntities();
-        if (Objects.isNull(hostUserEntities)) {
-            return "";
-        }
-        return hostUserEntities.stream()
-                .map(OpsHostUserEntity::getUsername)
-                .filter(username -> !"root".equals(username))
-                .findFirst()
-                .orElse("");
-    }
-
     public OpsClusterEntity toOpsClusterEntity() {
         OpsClusterEntity opsClusterEntity = new OpsClusterEntity();
         opsClusterEntity.setCreateTime(new Date());
@@ -188,8 +175,8 @@ public class InstallContext implements Cloneable {
         opsClusterEntity.setInstallMode(installMode);
         opsClusterEntity.setDeployType(deployType);
         opsClusterEntity.setDatabaseUsername("gaussdb");
-        if (envPath == null || envPath.equals("")) {
-            opsClusterEntity.setEnvPath("~/.bashrc");
+        if (StrUtil.isEmpty(envPath)) {
+            opsClusterEntity.setEnvPath(SshCommandConstants.DEFAULT_ENV_BASHRC);
         } else {
             opsClusterEntity.setEnvPath(envPath);
         }
@@ -215,5 +202,16 @@ public class InstallContext implements Cloneable {
         }
 
         return opsClusterEntity;
+    }
+
+    /**
+     * Get host info holder map
+     *
+     * @return map
+     */
+    public Map<String, HostInfoHolder> getHostInfoHolderMap() {
+        return hostInfoHolders
+                .stream()
+                .collect(Collectors.toMap(val -> val.getHostEntity().getHostId(), Function.identity()));
     }
 }

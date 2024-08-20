@@ -53,4 +53,12 @@ public class AzFacade {
         return opsAzService.getById(id);
     }
 
+    /**
+     * List all AZs
+     *
+     * @return List of AZs
+     */
+    public List<OpsAzEntity> listAll() {
+        return opsAzService.list();
+    }
 }

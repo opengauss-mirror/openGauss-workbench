@@ -83,6 +83,6 @@ public enum OpsClusterTaskStatusEnum {
     }
 
     public static boolean isFailed(OpsClusterTaskStatusEnum taskStatusEnum) {
-        return Objects.equals(taskStatusEnum, FAILED) && Objects.equals(taskStatusEnum, CANCELED);
+        return Objects.equals(taskStatusEnum, FAILED) || Objects.equals(taskStatusEnum, CANCELED);
     }
 }

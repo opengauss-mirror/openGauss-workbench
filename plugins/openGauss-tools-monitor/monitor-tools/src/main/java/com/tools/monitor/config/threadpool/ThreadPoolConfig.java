@@ -23,13 +23,13 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @Configuration
 public class ThreadPoolConfig {
     // Core thread pool size
-    private int coreThreadPoolSize = 40;
+    private int coreThreadPoolSize = 10;
 
     // Maximum number of threads that can be created
-    private int maxThreadPoolSize = 100;
+    private int maxThreadPoolSize = 20;
 
     // Maximum queue length
-    private int maxQueueCapacity = 1200;
+    private int maxQueueCapacity = 2000;
 
     // The idle time allowed by the thread pool to maintain threads
     private int monitorMaxThreadAliveSeconds = 400;

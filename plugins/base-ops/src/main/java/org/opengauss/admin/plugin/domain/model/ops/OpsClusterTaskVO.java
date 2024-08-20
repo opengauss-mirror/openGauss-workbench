@@ -25,6 +25,7 @@ package org.opengauss.admin.plugin.domain.model.ops;
 
 import lombok.Data;
 import org.opengauss.admin.common.enums.ops.OpsClusterTaskStatusEnum;
+import org.opengauss.admin.plugin.enums.ops.DeployTypeEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 
 import java.util.List;
@@ -39,6 +40,8 @@ import java.util.List;
 public class OpsClusterTaskVO {
     private String clusterId;
     private String hostIp;
+    private String hostId;
+    private String hostUserId;
     private String hostUsername;
     private String os;
     private String cpuArch;
@@ -61,6 +64,7 @@ public class OpsClusterTaskVO {
     private Boolean enableDcf;
     private Boolean enableGenerateEnvironmentVariableFile;
     private String xmlConfigPath;
+    private DeployTypeEnum deployType;
     private Integer clusterNodeNum;
     private OpsClusterTaskStatusEnum status;
     private List<OpsClusterTaskNodeVO> clusterNodes;

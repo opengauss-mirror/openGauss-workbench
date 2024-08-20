@@ -45,7 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * JschRetBufferUtil
  *
  * @author wangchao
- * @date 2024/6/22 9:41
+ * @since  2024/6/22 9:41
  **/
 @Slf4j
 @Component
@@ -182,7 +182,7 @@ public class JschRetBufferUtil {
      */
     public JschResult executeCommand(String command, Session session, RetBuffer retBuffer,
                                      Map<String, String> autoResponse, boolean handleErrorBeforeExit) throws IOException, InterruptedException {
-        log.info("Execute an order:{}", command);
+        log.debug("Execute an order:{}", command);
         if (Objects.nonNull(retBuffer)) {
             retBuffer.sendText(command);
         }
@@ -323,7 +323,7 @@ public class JschRetBufferUtil {
         JschResult jschResult = new JschResult();
         StringBuilder resultStrBuilder = new StringBuilder();
         // The output of the script execution is an input stream to the program\
-        try (InputStream in = channelExec.getInputStream(); OutputStream out = channelExec.getOutputStream();) {
+        try (InputStream in = channelExec.getInputStream(); OutputStream out = channelExec.getOutputStream()) {
             // Read the input stream from the remote host and get the script execution results
             byte[] tmp = new byte[1024];
             while (true) {
@@ -358,8 +358,6 @@ public class JschRetBufferUtil {
         }
 
 
-
-
         channelExec.disconnect();
         jschResult.setResult(resultStrBuilder.toString().trim());
         return jschResult;
@@ -372,9 +370,9 @@ public class JschRetBufferUtil {
             autoResponse.forEach((k, v) -> {
                 if (resultStrBuilder.toString().trim().endsWith(k.trim())) {
                     try {
-                        out.write((v.trim() + System.getProperty("line.separator")).getBytes(StandardCharsets.UTF_8));
+                        out.write((v.trim() + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
                         out.flush();
-                        resultStrBuilder.append(v.trim() + System.getProperty("line.separator"));
+                        resultStrBuilder.append(v.trim() + System.lineSeparator());
                     } catch (IOException e) {
                         log.error("Automatic response exception", e);
                     }
@@ -411,12 +409,10 @@ public class JschRetBufferUtil {
                 return true;
             }
             percent = this.count * 100 / max;
-
-            log.info("Completed " + this.count + "(" + percent
-                    + "%) out of " + max + ".");
-
+            if (percent % 10 == 0) {
+                log.info("Completed " + this.count + "(" + percent + "%) out of " + max + ".");
+            }
             wsUtil.sendText(wsSession, percent + "%");
-
             return true;
         }
 

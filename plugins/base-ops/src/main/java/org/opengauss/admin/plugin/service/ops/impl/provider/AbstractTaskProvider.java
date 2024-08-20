@@ -47,13 +47,26 @@ import java.util.stream.Collectors;
  * AbstractTaskProvider
  *
  * @author wangchao
- * @date 2024/06/15 09:26
+ * @since 2024/06/15 09:26
  */
 @Slf4j
 public abstract class AbstractTaskProvider implements ClusterTaskProvider, InitializingBean {
     @Resource
     protected OpsHostRemoteService opsHostRemoteService;
 
+    /**
+     * before install config
+     *
+     * @param installContext  install context
+     * @param installPath     install path
+     * @param dataPath        data path
+     * @param pkgPath         pkg path
+     * @param hostId          host id
+     * @param installUserId   install user id
+     * @param installUserName install user name
+     * @param decompressArgs  decompress args
+     * @return session
+     */
     protected Session beforeInstall(InstallContext installContext, String installPath, String dataPath, String pkgPath,
                                     String hostId, String installUserId, String installUserName, String decompressArgs) {
         RetBuffer retBuffer = installContext.getRetBuffer();
@@ -72,9 +85,9 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
 
             log.info("Copy the installation package to the target host");
             // scp
-            String installPackageFullPath = scpInstallPackageToMasterNode(rootSession, installContext.getInstallPackageLocalPath(), pkgPath, retBuffer);
+            String installPackageFullPath = scpInstallPackageToMasterNode(rootSession,
+                    installContext.getInstallPackageLocalPath(), pkgPath, retBuffer);
             retBuffer.sendText("END_SCP_INSTALL_PACKAGE");
-
 
             log.info("set kernel.sem");
             // SEM
@@ -100,11 +113,20 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
         return createSessionWithUserId(installContext.getHostInfoHolders(), false, hostId, installUserId);
     }
 
+    /**
+     * ensure dir two lever permission
+     *
+     * @param rootSession     session
+     * @param installUserName user name
+     * @param targetPath      path
+     * @param retBuffer       buffer
+     */
     protected void ensureLevel2DirPermission(Session rootSession, String installUserName, String targetPath, RetBuffer retBuffer) {
         String[] split = targetPath.split("/");
         if (split.length >= 3) {
             String targetParent2LevelPath = "/" + split[1] + "/" + split[2];
-            String chown = MessageFormat.format(SshCommandConstants.CHOWN_USER_GROUP, installUserName, installUserName, targetParent2LevelPath);
+            String chown = MessageFormat.format(SshCommandConstants.CHOWN_USER_GROUP, installUserName,
+                    installUserName, targetParent2LevelPath);
             opsHostRemoteService.executeCommand(chown, rootSession, retBuffer);
         }
     }
@@ -117,10 +139,10 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
      * @return String
      */
     protected String wrapperEnvSep(String command, String envPath) {
-        if (StrUtil.isNotEmpty(envPath)) {
-            command = command + " --sep-env-file=" + envPath;
+        if (isNotSepEnv(envPath)) {
+            return command;
         }
-        return command;
+        return command + " --sep-env-file=" + envPath;
     }
 
     /**
@@ -131,14 +153,21 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
      * @return String
      */
     protected String wrapperLiteEnvSep(String command, String envPath) {
-        if (StrUtil.isNotEmpty(envPath)) {
-            command = command + " --env-sep-file " + envPath;
+        if (isNotSepEnv(envPath)) {
+            return command;
         }
-        return command;
+        return command + " --env-sep-file " + envPath;
     }
 
+    /**
+     * Ensure env file permission
+     *
+     * @param rootSession rootSession
+     * @param envPath     envPath
+     * @param retSession  retSession
+     */
     protected void ensureEnvPathPermission(Session rootSession, String envPath, RetBuffer retSession) {
-        if (StrUtil.isEmpty(envPath)) {
+        if (isNotSepEnv(envPath)) {
             return;
         }
         String touchEnvSep = "touch \"" + envPath + "\"";
@@ -147,6 +176,17 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
         opsHostRemoteService.executeCommand(permissionEnv, rootSession, retSession, "chmod envFile");
     }
 
+    protected boolean isNotSepEnv(String envPath) {
+        return StrUtil.isEmpty(envPath) || SshCommandConstants.DEFAULT_ENV_BASHRC.equalsIgnoreCase(envPath);
+    }
+
+    /**
+     * Install dependency
+     *
+     * @param rootSession rootSession
+     * @param retBuffer   retBuffer
+     * @param expectedOs  expectedOs
+     */
     protected void installDependency(Session rootSession, RetBuffer retBuffer,
                                      OpenGaussSupportOSEnum expectedOs) {
         boolean dependencyCorrect = false;
@@ -187,9 +227,16 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
         retBuffer.sendText("END_INSTALL_DEPENDENCY");
     }
 
+    /**
+     * check and reset linux os limits config
+     *
+     * @param rootSession rootSession
+     * @param retBuffer   retBuffer
+     */
     protected void ensureLimits(Session rootSession, RetBuffer retBuffer) {
         String limitsCheck = SshCommandConstants.LIMITS_CHECK;
-        String limitsCheckRes = opsHostRemoteService.executeCommand(limitsCheck, rootSession, retBuffer, "Detect ulimit");
+        String limitsCheckRes = opsHostRemoteService.executeCommandThenReturnEmpty(limitsCheck, rootSession,
+                retBuffer, "Detect ulimit");
         if (StrUtil.isNotEmpty(limitsCheckRes)) {
             return;
         }
@@ -197,28 +244,76 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
         opsHostRemoteService.executeCommand(limits, rootSession, retBuffer, "set ulimit");
     }
 
-    protected String scpInstallPackageToMasterNode(Session rootSession, String sourcePath, String targetPath, RetBuffer retSession) {
+    /**
+     * scp install package to target node dir
+     *
+     * @param rootSession rootSession
+     * @param sourcePath  sourcePath
+     * @param targetPath  targetPath
+     * @param retSession  retSession
+     * @return String
+     */
+    protected String scpInstallPackageToMasterNode(Session rootSession, String sourcePath, String targetPath,
+                                                   RetBuffer retSession) {
         String installPackageFileName = sourcePath.substring(sourcePath.lastIndexOf("/") + 1);
         String installPackageFullPath = targetPath + installPackageFileName;
         opsHostRemoteService.executeUpload(rootSession, retSession, sourcePath, installPackageFullPath);
         return installPackageFullPath;
     }
 
+    /**
+     * set kernel.sem config
+     *
+     * @param rootSession rootSession
+     * @param retBuffer   retBuffer
+     */
     protected void sem(Session rootSession, RetBuffer retBuffer) {
-        String command = SshCommandConstants.SEM;
-        opsHostRemoteService.executeCommand(command, rootSession, retBuffer, "set kernel.sem");
+        String kernelSemValue = opsHostRemoteService.executeCommand(SshCommandConstants.CHECK_SEM, rootSession,
+                retBuffer, "check kernel.sem");
+        if (!SshCommandConstants.SEM_VALUE.equals(kernelSemValue)) {
+            opsHostRemoteService.executeCommand(SshCommandConstants.SEM, rootSession, retBuffer, "set kernel.sem");
+        }
     }
 
-    protected void decompress(Session rootSession, String targetPath, String installPackageFullPath, RetBuffer retBuffer, String decompressArgs) {
-        String command = MessageFormat.format(SshCommandConstants.DECOMPRESS, decompressArgs, installPackageFullPath, targetPath);
+    /**
+     * decompress target install package
+     *
+     * @param rootSession            rootSession
+     * @param targetPath             targetPath
+     * @param installPackageFullPath installPackageFullPath
+     * @param retBuffer              retBuffer
+     * @param decompressArgs         decompressArgs
+     */
+    protected void decompress(Session rootSession, String targetPath, String installPackageFullPath,
+                              RetBuffer retBuffer, String decompressArgs) {
+        String command = MessageFormat.format(SshCommandConstants.DECOMPRESS, decompressArgs,
+                installPackageFullPath, targetPath);
         opsHostRemoteService.executeCommand(command, rootSession, retBuffer, "Unzip the installation package");
     }
 
-    protected Session createSessionWithUserId(InstallContext installContext, boolean root, String hostId, String userId) {
+    /**
+     * create session with hostid and userId
+     *
+     * @param installContext installContext
+     * @param root           is root user
+     * @param hostId         hostId
+     * @param userId         userId
+     * @return Session
+     */
+    protected Session createSessionWithUserId(InstallContext installContext, boolean root,
+                                              String hostId, String userId) {
         HostInfoHolder hostInfoHolder = getHostInfoHolder(installContext, hostId);
         return createSessionWithUserId(hostInfoHolder, root, userId);
     }
 
+    /**
+     * create session with root userId
+     *
+     * @param hostInfoHolder hostInfoHolder
+     * @param root           is root user
+     * @param userId         userId
+     * @return Session
+     */
     protected Session createSessionWithUserId(HostInfoHolder hostInfoHolder, boolean root, String userId) {
         if (root) {
             return createSessionWithRootUser(hostInfoHolder);
@@ -228,11 +323,27 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
         return opsHostRemoteService.getHostUserSession(hostEntity, hostUser);
     }
 
-    protected Session createSessionWithUserId(List<HostInfoHolder> hostInfoHolders, boolean root, String hostId, String installUserId) {
+    /**
+     * create session with root userId
+     *
+     * @param hostInfoHolders hostInfoHolder list
+     * @param root            is root user
+     * @param hostId          hostId
+     * @param installUserId   userId
+     * @return Session
+     */
+    protected Session createSessionWithUserId(List<HostInfoHolder> hostInfoHolders, boolean root,
+                                              String hostId, String installUserId) {
         HostInfoHolder hostInfoHolder = getHostInfoHolder(hostInfoHolders, hostId);
         return createSessionWithUserId(hostInfoHolder, root, installUserId);
     }
 
+    /**
+     * create root user session with hostInfoHolder
+     *
+     * @param hostInfoHolder hostInfoHolder
+     * @return Session
+     */
     protected Session createSessionWithRootUser(HostInfoHolder hostInfoHolder) {
         OpsHostUserEntity hostUser = getHostUserInfoByUsername(hostInfoHolder, "root");
         if (Objects.isNull(hostUser) || StrUtil.isEmpty(hostUser.getPassword())) {
@@ -241,34 +352,53 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
         return opsHostRemoteService.getHostUserSession(hostInfoHolder.getHostEntity(), hostUser);
     }
 
-    protected void chmodFullPath(Session rootSession, String path, RetBuffer wsSession) {
+    /**
+     * chmod full path
+     *
+     * @param rootSession root session
+     * @param path        path
+     * @param retBuffer   retBuffer
+     */
+    protected void chmodFullPath(Session rootSession, String path, RetBuffer retBuffer) {
         String chmod = MessageFormat.format(SshCommandConstants.CHMOD, path);
-        opsHostRemoteService.executeCommand(chmod, rootSession, wsSession, "grant permission");
+        opsHostRemoteService.executeCommand(chmod, rootSession, retBuffer, "grant permission");
     }
 
-    protected void ensureDirUserGroupPermission(Session rootSession, String installUserName, String targetPath, RetBuffer wsSession) {
-        chmodFullPathAndParentPath(rootSession, targetPath, wsSession);
-        String chown = MessageFormat.format(SshCommandConstants.CHOWN_USER_GROUP, installUserName, installUserName, targetPath);
-        opsHostRemoteService.executeCommand(chown, rootSession, wsSession, "grant permission");
-        try {
-        } catch (OpsException e) {
-            log.error("Failed to grant permission", e);
-            throw new OpsException("Failed to grant permission");
-        }
+    /**
+     * ensure dir user group permission
+     *
+     * @param rootSession     rootSession
+     * @param installUserName installUserName
+     * @param targetPath      targetPath
+     * @param retBuffer       retBuffer
+     */
+    protected void ensureDirUserGroupPermission(Session rootSession, String installUserName,
+                                                String targetPath, RetBuffer retBuffer) {
+        chmodFullPathAndParentPath(rootSession, targetPath, retBuffer);
+        String chown = MessageFormat.format(SshCommandConstants.CHOWN_USER_GROUP, installUserName,
+                installUserName, targetPath);
+        opsHostRemoteService.executeCommand(chown, rootSession, retBuffer, "grant permission");
     }
 
-    protected void chmodFullPathAndParentPath(Session rootSession, String path, RetBuffer wsSession) {
-        int parentPermission = getPathPermission(rootSession, path, wsSession);
+    /**
+     * chmod full path with parent path permission
+     *
+     * @param rootSession rootSession
+     * @param path        path
+     * @param retBuffer   retBuffer
+     */
+    protected void chmodFullPathAndParentPath(Session rootSession, String path, RetBuffer retBuffer) {
+        int parentPermission = getPathPermission(rootSession, path, retBuffer);
         if (parentPermission < 755) {
-            chmodFullPath(rootSession, path, wsSession);
+            chmodFullPath(rootSession, path, retBuffer);
         }
         String parentPath = getParentPath(path);
         if (StrUtil.isNotEmpty(parentPath) && !parentPath.equals("/")) {
-            chmodFullPathAndParentPath(rootSession, parentPath, wsSession);
+            chmodFullPathAndParentPath(rootSession, parentPath, retBuffer);
         }
     }
 
-    protected int getPathPermission(Session rootSession, String path, RetBuffer wsSession) {
+    private int getPathPermission(Session rootSession, String path, RetBuffer wsSession) {
         String checkPermissionCommand = MessageFormat.format(SshCommandConstants.CHECK_PERMISSION, path);
         int parentPermission = 41;
         try {
@@ -335,7 +465,7 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
         return owner;
     }
 
-    public static String getParentPath(String dir) {
+    private String getParentPath(String dir) {
         String[] split = dir.split("/");
         int length = split.length;
         if (length > 1) {
@@ -346,49 +476,80 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
         return "";
     }
 
-    protected void chmod(Session rootSession, String path, RetBuffer wsSession) {
+    /**
+     * chmod
+     *
+     * @param rootSession rootSession
+     * @param path        path
+     * @param retBuffer   retBuffer
+     */
+    protected void chmod(Session rootSession, String path, RetBuffer retBuffer) {
         if (StrUtil.isNotEmpty(path) && path.indexOf("/", 1) > 0) {
             path = path.substring(0, path.indexOf("/", 1));
         }
         String chmod = MessageFormat.format(SshCommandConstants.CHMOD, path);
-        opsHostRemoteService.executeCommand(chmod, rootSession, wsSession, "grant permission");
+        opsHostRemoteService.executeCommand(chmod, rootSession, retBuffer, "grant permission");
     }
 
-    protected void chmodDataPath(Session rootSession, String path, RetBuffer wsSession) {
+    private void chmodDataPath(Session rootSession, String path, RetBuffer wsSession) {
         String chmod = MessageFormat.format(SshCommandConstants.CHMOD_DATA_PATH, path);
         opsHostRemoteService.executeCommand(chmod, rootSession, wsSession, "grant permission");
     }
 
-    protected void ensureStrictPermission(Session rootSession, String installUserName, String targetPath, RetBuffer wsSession) {
+    private void ensureStrictPermission(Session rootSession, String installUserName, String targetPath,
+                                        RetBuffer wsSession) {
         chmodFullPath(rootSession, targetPath, wsSession);
-        String chown = MessageFormat.format(SshCommandConstants.CHOWN_USER_GROUP, installUserName, installUserName, targetPath);
+        String chown = MessageFormat.format(SshCommandConstants.CHOWN_USER_GROUP, installUserName,
+                installUserName, targetPath);
         opsHostRemoteService.executeCommand(chown, rootSession, wsSession, "grant permission");
     }
 
-    protected void ensureDataPathPermission(Session rootSession, String installUserName, String targetPath, RetBuffer wsSession) {
+    private void ensureDataPathPermission(Session rootSession, String installUserName,
+                                          String targetPath, RetBuffer wsSession) {
         chmodDataPath(rootSession, targetPath, wsSession);
-        String chown = MessageFormat.format(SshCommandConstants.CHOWN_USER_GROUP, installUserName, installUserName, targetPath);
+        String chown = MessageFormat.format(SshCommandConstants.CHOWN_USER_GROUP, installUserName,
+                installUserName, targetPath);
         opsHostRemoteService.executeCommand(chown, rootSession, wsSession, "grant permission");
     }
 
+    /**
+     * ensure dir exist
+     *
+     * @param rootSession rootSession
+     * @param targetPath  targetPath
+     * @param retBuffer   retBuffer
+     */
     protected void ensureDirExist(Session rootSession, String targetPath, RetBuffer retBuffer) {
         String command = MessageFormat.format(SshCommandConstants.MK_DIR, targetPath);
         opsHostRemoteService.executeCommand(command, rootSession, retBuffer, "create installation directory");
     }
 
+    /**
+     * prepare Path ,path must end with /
+     *
+     * @param path path
+     * @return path
+     */
     protected String preparePath(String path) {
         if (StrUtil.isEmpty(path) || path.endsWith("/")) {
             return path;
         }
-
         return path + "/";
     }
 
-    protected OmStatusModel omStatus(Session ommUserSession, RetBuffer retBuffer, String envPath) {
+    /**
+     * os status
+     *
+     * @param ommUserSession ommUserSession
+     * @param retBuffer      retBuffer
+     * @param envFile        envFile
+     * @return OmStatusModel
+     */
+    protected OmStatusModel omStatus(Session ommUserSession, RetBuffer retBuffer, String envFile) {
         OmStatusModel omStatusModel = new OmStatusModel();
         try {
             String statusCommand = "gs_om -t status --detail";
-            statusCommand = addCommandOfLoadEnvironmentVariable(statusCommand, envPath);
+            statusCommand = addCommandOfLoadEnvironmentVariable(statusCommand, envFile);
             String result = opsHostRemoteService.executeCommand(statusCommand, ommUserSession, retBuffer);
             Map<String, String> nodeIdMapHostname = new HashMap<>();
             Map<String, String> hostnameMapNodeId = new HashMap<>();
@@ -399,7 +560,8 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
             if (omStatusModel.isInstallCm()) {
                 int datanodeStateIndex = result.indexOf("[  CMServer State   ]");
                 if (datanodeStateIndex < 0) {
-
+                    log.warn("CM server status is empty");
+                    retBuffer.sendText("CM server status is empty");
                 } else {
                     int splitIndex = result.indexOf("------------------", datanodeStateIndex);
                     String dataNodeStateStr = result.substring(splitIndex);
@@ -424,6 +586,12 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
         return omStatusModel;
     }
 
+    /**
+     * Create a remote user for enterprise clusters
+     *
+     * @param installContext    installContext
+     * @param opsClusterContext opsClusterContext
+     */
     protected void createEnterpriseRemoteUser(InstallContext installContext, OpsClusterContext opsClusterContext) {
         RetBuffer retSession = installContext.getRetBuffer();
         opsClusterContext.setRetBuffer(retSession);
@@ -454,11 +622,13 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
             String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(port));
             try {
                 Map<String, String> response = new HashMap<>();
-                String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN AUDITADMIN SYSADMIN PASSWORD \"{0}\";\\q", databasePassword);
+                String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN AUDITADMIN " +
+                        "SYSADMIN PASSWORD \"{0}\";\\q", databasePassword);
                 response.put("openGauss=#", createUser);
                 if (enterpriseInstallConfig.getDatabaseKernelArch().equals(DatabaseKernelArch.MASTER_SLAVE)
                         || enterpriseInstallNodeConfig.getIsCMMaster()) {
-                    clientLoginOpenGauss = addCommandOfLoadEnvironmentVariable(clientLoginOpenGauss, installContext.getEnvPath());
+                    clientLoginOpenGauss = addCommandOfLoadEnvironmentVariable(clientLoginOpenGauss,
+                            installContext.getEnvPath());
                     opsHostRemoteService.executeCommand(clientLoginOpenGauss, session, retSession, response);
                 }
             } catch (Exception e) {
@@ -471,6 +641,13 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
         restart(opsClusterContext);
     }
 
+    /**
+     * get host info holder
+     *
+     * @param installContext installContext
+     * @param hostId         hostId
+     * @return HostInfoHolder
+     */
     protected HostInfoHolder getHostInfoHolder(InstallContext installContext, String hostId) {
         return installContext.getHostInfoHolders()
                 .stream()
@@ -479,6 +656,13 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
                 .orElseThrow(() -> new OpsException("host information does not exist"));
     }
 
+    /**
+     * get host info holder list
+     *
+     * @param hostInfoHolders hostInfoHolders
+     * @param hostId          hostId
+     * @return HostInfoHolder
+     */
     protected HostInfoHolder getHostInfoHolder(List<HostInfoHolder> hostInfoHolders, String hostId) {
         return hostInfoHolders
                 .stream()
@@ -487,10 +671,13 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
                 .orElseThrow(() -> new OpsException("host information does not exist"));
     }
 
-    protected OpsHostEntity getHostInfo(HostInfoHolder hostInfoHolder) {
-        return hostInfoHolder.getHostEntity();
-    }
-
+    /**
+     * get host user info by username
+     *
+     * @param hostInfoHolder hostInfoHolder
+     * @param username       username
+     * @return OpsHostUserEntity
+     */
     protected OpsHostUserEntity getHostUserInfoByUsername(HostInfoHolder hostInfoHolder, String username) {
         return hostInfoHolder.getHostUserEntities()
                 .stream()
@@ -499,6 +686,13 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
                 .orElseThrow(() -> new OpsException("Installation user information does not exist"));
     }
 
+    /**
+     * get host user info by userId
+     *
+     * @param hostInfoHolder hostInfoHolder
+     * @param userId         userId
+     * @return OpsHostUserEntity
+     */
     protected OpsHostUserEntity getHostUserInfo(HostInfoHolder hostInfoHolder, String userId) {
         return hostInfoHolder.getHostUserEntities()
                 .stream()
@@ -507,6 +701,37 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
                 .orElseThrow(() -> new OpsException("Installation user information does not exist"));
     }
 
+    /**
+     * cleanResource
+     *
+     * @param installContext installContext
+     */
+    protected void cleanResource(InstallContext installContext) {
+        String delCmd = prepareCleanClusterDir(installContext);
+        for (HostInfoHolder hostInfoHolder : installContext.getHostInfoHolders()) {
+            Session currentRoot = createSessionWithRootUser(hostInfoHolder);
+            opsHostRemoteService.executeCommand(delCmd, currentRoot, installContext.getRetBuffer(),
+                    "remove install path");
+            currentRoot.disconnect();
+        }
+        log.warn("clean resource success");
+    }
+
+    /**
+     * prepareCleanClusterDir
+     *
+     * @param installContext installContext
+     * @return String
+     */
+    protected abstract String prepareCleanClusterDir(InstallContext installContext);
+
+    /**
+     * addCommandOfLoadEnvironmentVariable
+     *
+     * @param command command
+     * @param env     env
+     * @return String
+     */
     protected String addCommandOfLoadEnvironmentVariable(String command, String env) {
         if (StrUtil.isNotEmpty(env)) {
             command = "source " + env + " && " + command;
@@ -514,6 +739,12 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
         return command;
     }
 
+    /**
+     * sendOperateLog
+     *
+     * @param installContext installContext
+     * @param context        context
+     */
     protected void sendOperateLog(InstallContext installContext, String context) {
         installContext.getRetBuffer().sendText(context);
     }

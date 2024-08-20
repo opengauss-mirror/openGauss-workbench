@@ -89,7 +89,8 @@ public class ImportClusterBody {
                 throw new OpsException("The enterprise version is incorrectly installed and configured");
             }
 
-            int nodeSize = CollUtil.isEmpty(enterpriseInstallConfig.getNodeConfigList()) ? 0 : enterpriseInstallConfig.getNodeConfigList().size();
+            int nodeSize = CollUtil.isEmpty(enterpriseInstallConfig.getNodeConfigList()) ? 0 :
+                    enterpriseInstallConfig.getNodeConfigList().size();
             if (clusterDeploy && enterpriseInstallConfig.getIsInstallCM() && nodeSize < 2) {
                 throw new OpsException("In cluster mode, a maximum of two nodes can be installed");
             }
@@ -104,7 +105,8 @@ public class ImportClusterBody {
                 throw new OpsException("The minimalist version was incorrectly installed and configured");
             }
 
-            int nodeSize = CollUtil.isEmpty(minimalistInstallConfig.getNodeConfigList()) ? 0 : minimalistInstallConfig.getNodeConfigList().size();
+            int nodeSize = CollUtil.isEmpty(minimalistInstallConfig.getNodeConfigList()) ? 0 :
+                    minimalistInstallConfig.getNodeConfigList().size();
             if (nodeSize > 1) {
                 throw new OpsException("The minimalist version can only be installed on a single host");
             }
@@ -119,7 +121,8 @@ public class ImportClusterBody {
                 throw new OpsException("The lightweight version was incorrectly installed and configured");
             }
 
-            int nodeSize = CollUtil.isEmpty(liteInstallConfig.getNodeConfigList()) ? 0 : liteInstallConfig.getNodeConfigList().size();
+            int nodeSize = CollUtil.isEmpty(liteInstallConfig.getNodeConfigList()) ? 0 :
+                    liteInstallConfig.getNodeConfigList().size();
             if (clusterDeploy && nodeSize < 2) {
                 throw new OpsException("In cluster mode, a maximum of two nodes can be installed");
             }
@@ -141,8 +144,8 @@ public class ImportClusterBody {
         opsClusterEntity.setInstallMode(installMode);
         opsClusterEntity.setDeployType(deployType);
         opsClusterEntity.setClusterName(clusterName);
-        if (envPath == null || envPath.equals("")) {
-            opsClusterEntity.setEnvPath("~/.bashrc");
+        if (StrUtil.isEmpty(envPath)) {
+            opsClusterEntity.setEnvPath(SshCommandConstants.DEFAULT_ENV_BASHRC);
         } else {
             opsClusterEntity.setEnvPath(envPath);
         }
@@ -158,9 +161,10 @@ public class ImportClusterBody {
             opsClusterEntity.setPort(enterpriseInstallConfig.getPort());
             opsClusterEntity.setEnableDcf(enterpriseInstallConfig.getEnableDCF());
             opsClusterEntity.setInstallPackagePath(enterpriseInstallConfig.getInstallPackagePath());
-            if (StrUtil.isEmpty(xmlConfigPath)){
-                opsClusterEntity.setXmlConfigPath(enterpriseInstallConfig.getInstallPackagePath()+"/cluster_config.xml");
-            }else {
+            if (StrUtil.isEmpty(xmlConfigPath)) {
+                opsClusterEntity.setXmlConfigPath(enterpriseInstallConfig.getInstallPackagePath()
+                        + "/cluster_config.xml");
+            } else {
                 opsClusterEntity.setXmlConfigPath(xmlConfigPath);
             }
         } else if (openGaussVersion == OpenGaussVersionEnum.LITE) {
@@ -174,7 +178,6 @@ public class ImportClusterBody {
             opsClusterEntity.setDatabasePassword(minimalistInstallConfig.getDatabasePassword());
             opsClusterEntity.setInstallPackagePath(minimalistInstallConfig.getInstallPackagePath());
         }
-
         return opsClusterEntity;
     }
 }

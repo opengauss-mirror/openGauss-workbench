@@ -43,8 +43,10 @@ import org.opengauss.admin.plugin.service.ops.IOpsClusterTaskService;
 import org.opengauss.admin.plugin.service.ops.impl.function.GenerateClusterConfigXmlInstance;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -78,7 +80,6 @@ public class TaskEnterpriseProvider extends AbstractTaskProvider {
     @Override
     public void install(InstallContext installContext) {
         log.info("Start installing Enterprise Edition");
-        String clusterId = installContext.getClusterId();
         boolean isInstallSucc = true;
         try {
             installContext.getRetBuffer().sendText("Start installing Enterprise Edition");
@@ -101,18 +102,15 @@ public class TaskEnterpriseProvider extends AbstractTaskProvider {
         } catch (OpsException e) {
             log.error("install failed：", e);
             isInstallSucc = false;
-            throw new OpsException("The installation is failed.");
+            throw new OpsException("The installation is failed " + e.getMessage());
         } finally {
             if (!isInstallSucc) {
                 cleanResource(installContext);
-                opsClusterTaskService.updateClusterTaskStatus(clusterId, OpsClusterTaskStatusEnum.FAILED);
-            } else {
-                opsClusterTaskService.updateClusterTaskStatus(clusterId, OpsClusterTaskStatusEnum.SUCCESS);
             }
         }
     }
 
-    private String prepareCleanClusterDir(InstallContext installContext) {
+    protected String prepareCleanClusterDir(InstallContext installContext) {
         String delCmd = "";
         try {
             // remove intall path software
@@ -160,19 +158,6 @@ public class TaskEnterpriseProvider extends AbstractTaskProvider {
         }
     }
 
-    private void cleanResource(InstallContext installContext) {
-        String delCmd = prepareCleanClusterDir(installContext);
-        for (HostInfoHolder hostInfoHolder : installContext.getHostInfoHolders()) {
-            Session currentRoot = createSessionWithRootUser(hostInfoHolder);
-            opsHostRemoteService.executeCommand(delCmd, currentRoot, installContext.getRetBuffer(), "remove install path");
-
-            // remove env file
-            String delEnvFile = MessageFormat.format(SshCommandConstants.DEL_FILE, installContext.getEnvPath());
-            opsHostRemoteService.executeCommand(delEnvFile, currentRoot, installContext.getRetBuffer(), "remove env file");
-            currentRoot.disconnect();
-        }
-        log.error("clean resource success");
-    }
 
     private void doInstall(InstallContext installContext) {
         RetBuffer retBuffer = installContext.getRetBuffer();
@@ -208,7 +193,8 @@ public class TaskEnterpriseProvider extends AbstractTaskProvider {
         sendOperateLog(installContext, "START_UNZIP_INSTALL_PACKAGE");
         decompress(rootSession, pkgPath, installPackageFullPath, retBuffer, "-xvf");
         // unzip CM
-        decompress(rootSession, pkgPath, pkgPath + "openGauss-" + installContext.getOpenGaussVersionNum(), retBuffer, "-zxvf");
+        String omPackage = getOMPackage(pkgPath, rootSession);
+        decompress(rootSession, pkgPath, pkgPath + omPackage, retBuffer, "-zxvf");
         sendOperateLog(installContext, "END_UNZIP_INSTALL_PACKAGE");
 
         // write xml
@@ -254,6 +240,27 @@ public class TaskEnterpriseProvider extends AbstractTaskProvider {
         }
     }
 
+    private String getOMPackage(String path, Session rootSession) {
+        String command = MessageFormat.format(SshCommandConstants.GET_OM_PACKAGE, path);
+        try {
+            String commandResult = opsHostRemoteService.executeCommand(command, rootSession, "get om package name");
+            if (commandResult.contains(String.valueOf((char) 10))) {
+                String errorMsg = "One OM package is expected to be queried, but multiple OM packages are queried.";
+                log.error(errorMsg);
+                throw new OpsException(errorMsg);
+            }
+            if (ObjectUtils.isEmpty(commandResult)) {
+                String errorMsg = "No OM package is found.";
+                log.error(errorMsg);
+                throw new OpsException(errorMsg);
+            }
+            return commandResult;
+        } catch (OpsException e) {
+            log.error("Failed to obtain the OM package by command: {}. Error: {}", command, e.getMessage());
+            throw new OpsException("Failed to obtain the OM package.");
+        }
+    }
+
 
     private String checkInstallUserGroup(String installUsername, Session rootSession, RetBuffer retBuffer) {
         String userGroupCommand = "groups " + installUsername + " | awk -F ':' '{print $2}' | sed 's/\\\"//g'";
@@ -274,20 +281,15 @@ public class TaskEnterpriseProvider extends AbstractTaskProvider {
                 masterNodeConfig.getInstallUsername(),
                 group, xmlConfigFullPath);
         gsPreInstall = wrapperEnvSep(gsPreInstall, envPath);
-        try {
-            Map<String, String> autoResponse = new HashMap<>();
-            autoResponse.put("(yes/no)?", "yes");
-            autoResponse.put("Please enter password for root\r\nPassword:", rootPassword);
-            autoResponse.put("Please enter password for current user["
-                    + masterNodeConfig.getInstallUsername()
-                    + "].\r\nPassword:", installUserPassword);
-            // for compatibility with 5.1.0
-            autoResponse.put("Please enter password for current user[root].\r\nPassword:", rootPassword);
-            opsHostRemoteService.executeCommand(gsPreInstall, rootSession, retBuffer, autoResponse);
-        } catch (Exception e) {
-            log.error("gs_preinstall failed：", e);
-            throw new OpsException("gs_preinstall failed");
-        }
+        Map<String, String> autoResponse = new HashMap<>();
+        autoResponse.put("(yes/no)?", "yes");
+        autoResponse.put("Please enter password for root\r\nPassword:", rootPassword);
+        autoResponse.put("Please enter password for current user["
+                + masterNodeConfig.getInstallUsername()
+                + "].\r\nPassword:", installUserPassword);
+        // for compatibility with 5.1.0
+        autoResponse.put("Please enter password for current user[root].\r\nPassword:", rootPassword);
+        opsHostRemoteService.executeCommand(gsPreInstall, rootSession, retBuffer, autoResponse);
     }
 
     private void saveContext(InstallContext installContext) {

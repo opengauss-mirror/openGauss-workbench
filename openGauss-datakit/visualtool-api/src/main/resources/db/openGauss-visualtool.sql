@@ -319,6 +319,129 @@ ALTER TABLE "public"."ops_cluster_node"
 ALTER
 COLUMN "cluster_node_id" TYPE varchar(255) USING "cluster_node_id"::varchar(255);
 
+
+
+-- ----------------------------
+-- Table structure for ops_cluster_task
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS "public"."ops_cluster_task" (
+                                                           "cluster_id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "host_id" varchar(255) COLLATE "pg_catalog"."default",
+    "host_user_id" varchar(255) COLLATE "pg_catalog"."default",
+    "os" varchar(255) COLLATE "pg_catalog"."default",
+    "cpu_arch" varchar(255) COLLATE "pg_catalog"."default",
+    "version" varchar(255) COLLATE "pg_catalog"."default",
+    "version_num" varchar(255) COLLATE "pg_catalog"."default",
+    "package_name" varchar(255) COLLATE "pg_catalog"."default",
+    "package_id" varchar(255) COLLATE "pg_catalog"."default",
+    "cluster_name" varchar(255) COLLATE "pg_catalog"."default",
+    "database_username" varchar(255) COLLATE "pg_catalog"."default",
+    "database_password" varchar(255) COLLATE "pg_catalog"."default",
+    "database_port" int4 DEFAULT 5432,
+    "install_package_path" varchar(255) COLLATE "pg_catalog"."default",
+    "install_path" varchar(255) COLLATE "pg_catalog"."default",
+    "log_path" varchar(255) COLLATE "pg_catalog"."default",
+    "tmp_path" varchar(255) COLLATE "pg_catalog"."default",
+    "om_tools_path" varchar(255) COLLATE "pg_catalog"."default",
+    "core_path" varchar(255) COLLATE "pg_catalog"."default",
+    "env_path" varchar(255) COLLATE "pg_catalog"."default",
+    "enable_cm_tool" int4 DEFAULT 0,
+    "enable_dcf" int4 DEFAULT 0,
+    "enable_generate_environment_variable_file" int4 DEFAULT 0,
+    "xml_config_path" varchar(255) COLLATE "pg_catalog"."default",
+    "deploy_type" varchar(255) COLLATE "pg_catalog"."default",
+    "cluster_node_num" int4 DEFAULT 1,
+    "status" varchar(255) COLLATE "pg_catalog"."default",
+    "execute_time" timestamp(6),
+    "env_check_result" varchar(255) COLLATE "pg_catalog"."default",
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6)
+    )
+;
+COMMENT ON COLUMN "public"."ops_cluster_task"."cluster_id" IS '集群ID';
+COMMENT ON COLUMN "public"."ops_cluster_task"."host_id" IS '服务器IP';
+COMMENT ON COLUMN "public"."ops_cluster_task"."host_user_id" IS '安装服务器用户ID';
+COMMENT ON COLUMN "public"."ops_cluster_task"."os" IS '操作系统名称';
+COMMENT ON COLUMN "public"."ops_cluster_task"."cpu_arch" IS 'CPU架构';
+COMMENT ON COLUMN "public"."ops_cluster_task"."version" IS '数据库版本';
+COMMENT ON COLUMN "public"."ops_cluster_task"."version_num" IS '数据库版本号';
+COMMENT ON COLUMN "public"."ops_cluster_task"."package_name" IS '安装包名称';
+COMMENT ON COLUMN "public"."ops_cluster_task"."package_id" IS '安装包ID';
+COMMENT ON COLUMN "public"."ops_cluster_task"."cluster_name" IS '集群名称';
+COMMENT ON COLUMN "public"."ops_cluster_task"."database_username" IS '数据库用户名称';
+COMMENT ON COLUMN "public"."ops_cluster_task"."database_password" IS '数据库密码';
+COMMENT ON COLUMN "public"."ops_cluster_task"."database_port" IS '数据库端口';
+COMMENT ON COLUMN "public"."ops_cluster_task"."install_package_path" IS '安装包路径';
+COMMENT ON COLUMN "public"."ops_cluster_task"."install_path" IS '安装路径';
+COMMENT ON COLUMN "public"."ops_cluster_task"."log_path" IS 'log路径';
+COMMENT ON COLUMN "public"."ops_cluster_task"."tmp_path" IS 'tmp路径';
+COMMENT ON COLUMN "public"."ops_cluster_task"."om_tools_path" IS 'om工具安装路径';
+COMMENT ON COLUMN "public"."ops_cluster_task"."core_path" IS 'core 路径';
+COMMENT ON COLUMN "public"."ops_cluster_task"."env_path" IS '环境变量路径';
+COMMENT ON COLUMN "public"."ops_cluster_task"."enable_cm_tool" IS '是否安装CM工具';
+COMMENT ON COLUMN "public"."ops_cluster_task"."enable_dcf" IS '是否dcf';
+COMMENT ON COLUMN "public"."ops_cluster_task"."enable_generate_environment_variable_file" IS '是否分离环境变量文件';
+COMMENT ON COLUMN "public"."ops_cluster_task"."xml_config_path" IS 'xml安装配置路径';
+COMMENT ON COLUMN "public"."ops_cluster_task"."deploy_type" IS '集群部署类型';
+COMMENT ON COLUMN "public"."ops_cluster_task"."cluster_node_num" IS '集群节点数量';
+COMMENT ON COLUMN "public"."ops_cluster_task"."status" IS '安装任务执行状态';
+COMMENT ON COLUMN "public"."ops_cluster_task"."execute_time" IS '任务执行时间';
+COMMENT ON COLUMN "public"."ops_cluster_task"."env_check_result" IS '环境检查结果';
+COMMENT ON COLUMN "public"."ops_cluster_task"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."ops_cluster_task"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."ops_cluster_task"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."ops_cluster_task"."update_time" IS '更新时间';
+COMMENT ON TABLE "public"."ops_cluster_task" IS 'openGauss集群安装任务表';
+
+
+
+-- ----------------------------
+-- Table structure for ops_cluster_task_node
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS "public"."ops_cluster_task_node" (
+                                                                "cluster_node_id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "cluster_id" varchar(255) COLLATE "pg_catalog"."default",
+    "host_id" varchar(255) COLLATE "pg_catalog"."default",
+    "host_user_id" varchar(255) COLLATE "pg_catalog"."default",
+    "node_type" varchar(255) COLLATE "pg_catalog"."default",
+    "data_path" varchar(255) COLLATE "pg_catalog"."default",
+    "az_owner" varchar(255) COLLATE "pg_catalog"."default",
+    "az_priority" varchar(255) COLLATE "pg_catalog"."default",
+    "env_check_result" varchar(255) COLLATE "pg_catalog"."default",
+    "env_check_detail" text COLLATE "pg_catalog"."default",
+    "is_cm_master" int4 DEFAULT 0,
+    "cm_data_path" varchar(255) COLLATE "pg_catalog"."default",
+    "cm_port" int4 DEFAULT 0,
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
+    "update_by" varchar(64) COLLATE "pg_catalog"."default",
+    "update_time" timestamp(6)
+    )
+;
+
+COMMENT ON COLUMN "public"."ops_cluster_task_node"."cluster_node_id" IS '集群节点ID';
+COMMENT ON COLUMN "public"."ops_cluster_task_node"."cluster_id" IS '集群ID';
+COMMENT ON COLUMN "public"."ops_cluster_task_node"."host_id" IS '节点服务器Id';
+COMMENT ON COLUMN "public"."ops_cluster_task_node"."host_user_id" IS '节点用户ID';
+COMMENT ON COLUMN "public"."ops_cluster_task_node"."node_type" IS '节点类型';
+COMMENT ON COLUMN "public"."ops_cluster_task_node"."data_path" IS '数据路径';
+COMMENT ON COLUMN "public"."ops_cluster_task_node"."az_owner" IS '所属AZ';
+COMMENT ON COLUMN "public"."ops_cluster_task_node"."az_priority" IS 'AZ优先级';
+COMMENT ON COLUMN "public"."ops_cluster_task_node"."env_check_result" IS '环境检查结果';
+COMMENT ON COLUMN "public"."ops_cluster_task_node"."env_check_detail" IS '环境检查详情';
+COMMENT ON COLUMN "public"."ops_cluster_task_node"."is_cm_master" IS '是否CM主节点';
+COMMENT ON COLUMN "public"."ops_cluster_task_node"."cm_data_path" IS 'CM数据路径';
+COMMENT ON COLUMN "public"."ops_cluster_task_node"."cm_port" IS 'CM端口';
+COMMENT ON COLUMN "public"."ops_cluster_task_node"."create_by" IS '创建者';
+COMMENT ON COLUMN "public"."ops_cluster_task_node"."create_time" IS '创建时间';
+COMMENT ON COLUMN "public"."ops_cluster_task_node"."update_by" IS '更新者';
+COMMENT ON COLUMN "public"."ops_cluster_task_node"."update_time" IS '更新时间';
+COMMENT ON TABLE "public"."ops_cluster_task_node" IS '集群安装任务节点信息';
+
 -- ----------------------------
 -- Table structure for ops_encryption
 -- ----------------------------

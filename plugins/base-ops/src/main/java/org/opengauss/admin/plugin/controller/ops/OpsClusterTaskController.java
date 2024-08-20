@@ -21,7 +21,6 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.plugin.controller.ops;
 
 import cn.hutool.core.collection.CollectionUtil;
@@ -37,10 +36,10 @@ import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterTaskEntity;
-import org.opengauss.admin.plugin.domain.model.ops.dto.OpsClusterTaskCreateDTO;
+import org.opengauss.admin.plugin.domain.model.ops.dto.OpsClusterTaskDTO;
 import org.opengauss.admin.plugin.domain.model.ops.dto.OpsClusterTaskQueryParamDTO;
-import org.opengauss.admin.plugin.domain.model.ops.dto.OpsClusterTaskUpdateDTO;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterTaskService;
+import org.opengauss.admin.plugin.service.ops.impl.OpsHostRemoteService;
 import org.springframework.util.Assert;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -52,7 +51,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Operation and maintenance cluster task operations
+ * cluster task operations
  *
  * @author wangchao
  * @date 2024/6/22 9:41
@@ -61,9 +60,10 @@ import java.util.Objects;
 @RequestMapping("/clusterTask")
 @Validated
 public class OpsClusterTaskController extends BaseController {
-
     @Resource
     private IOpsClusterTaskService opsClusterTaskService;
+    @Resource
+    private OpsHostRemoteService opsHostRemoteService;
 
     /**
      * query host info by ip
@@ -76,6 +76,27 @@ public class OpsClusterTaskController extends BaseController {
         Assert.isTrue(StrUtil.isNotEmpty(hostIp), "host ip cannot be empty");
         Assert.isTrue(IpUtils.mayBeIPAddress(hostIp), "ipaddress " + hostIp + "is invalid");
         return AjaxResult.success(opsClusterTaskService.getHostByIp(hostIp));
+    }
+
+    /**
+     * get az list
+     *
+     * @return az list
+     */
+    @GetMapping("/list/az")
+    public AjaxResult listAz() {
+        return AjaxResult.success(opsHostRemoteService.listAllAz());
+    }
+
+    /**
+     * get az info by id
+     *
+     * @param azId azId
+     * @return az
+     */
+    @GetMapping("/az/{azId}")
+    public AjaxResult getAzInfo(@PathVariable String azId) {
+        return AjaxResult.success(opsHostRemoteService.getAzById(azId));
     }
 
     /**
@@ -102,6 +123,7 @@ public class OpsClusterTaskController extends BaseController {
     @GetMapping("/hostUser/{hostId}")
     public AjaxResult hostUser(@PathVariable String hostId) {
         Assert.isTrue(StrUtil.isNotEmpty(hostId), "host id cannot be empty");
+        Assert.isTrue(!StrUtil.equalsIgnoreCase(hostId, "null"), "host id cannot be empty");
         return AjaxResult.success(opsClusterTaskService.listHostUserByHostId(hostId));
     }
 
@@ -113,12 +135,32 @@ public class OpsClusterTaskController extends BaseController {
      * @return check result
      */
     @GetMapping("/hostPort/{hostId}/{hostPort}")
-    public AjaxResult hostPort(@PathVariable String hostId, @PathVariable Integer hostPort) {
+    public AjaxResult hostPort(@RequestParam(name = "taskId") String taskId, @PathVariable String hostId,
+                               @PathVariable Integer hostPort) {
         Assert.isTrue(StrUtil.isNotEmpty(hostId), "host id cannot be empty");
         Assert.isTrue(hostPort >= 1024 && hostPort <= 65535, "server port must be between 1024 and 65535");
-        return AjaxResult.success(opsClusterTaskService.checkHostPort(hostId, hostPort));
+        return AjaxResult.success(opsClusterTaskService.checkHostPort(taskId, hostId, hostPort));
     }
 
+    /**
+     * check cluster all port
+     *
+     * @param clusterId cluster id
+     * @return check result
+     */
+    @GetMapping("/check/cluster/port")
+    public AjaxResult checkTaskHostPort(@RequestParam(name = "clusterId") String clusterId) {
+        Assert.isTrue(StrUtil.isNotEmpty(clusterId), "cluster id cannot be empty");
+        return AjaxResult.success(opsClusterTaskService.checkTaskHostPort(clusterId));
+    }
+
+    /**
+     * check host path disk space
+     *
+     * @param hostId host
+     * @param paths  paths
+     * @return check result
+     */
     @PostMapping("/check/host/disk/space/{hostId}")
     public AjaxResult checkHostDiskSpace(@PathVariable String hostId, @RequestBody List<String> paths) {
         Assert.isTrue(StrUtil.isNotEmpty(hostId), "host id cannot be empty");
@@ -148,9 +190,10 @@ public class OpsClusterTaskController extends BaseController {
      * @return clusterNameExist
      */
     @GetMapping("/check/name")
-    public AjaxResult checkClusterName(@RequestParam(name = "clusterName") String clusterName) {
+    public AjaxResult checkClusterName(@RequestParam(name = "clusterName") String clusterName,
+                                       @RequestParam(name = "clusterId") String clusterId) {
         Assert.isTrue(StrUtil.isNotEmpty(clusterName), "cluster name cannot be empty");
-        return AjaxResult.success(opsClusterTaskService.checkClusterNameExist(clusterName));
+        return AjaxResult.success(opsClusterTaskService.checkClusterNameExist(clusterId, clusterName));
     }
 
     /**
@@ -189,10 +232,26 @@ public class OpsClusterTaskController extends BaseController {
      */
     @Log(title = "cluster_task", businessType = BusinessType.INSERT)
     @PostMapping("/create")
-    public AjaxResult createClusterTask(@RequestBody @Valid OpsClusterTaskCreateDTO dto) {
+    public AjaxResult createClusterTask(@RequestBody @Valid OpsClusterTaskDTO dto) {
         try {
             Assert.isTrue(Objects.nonNull(dto), "cluster task create param cannot be null");
             return AjaxResult.success(opsClusterTaskService.createClusterTask(dto));
+        } catch (OpsException ex) {
+            return AjaxResult.error(ex.getMessage());
+        }
+    }
+
+    /**
+     * check cluster task
+     *
+     * @param clusterId cluster id
+     * @return check result
+     */
+    @PostMapping("/check")
+    public AjaxResult checkClusterTask(@RequestParam("clusterId") String clusterId) {
+        try {
+            Assert.isTrue(StrUtil.isNotEmpty(clusterId), "cluster id must be not empty");
+            return AjaxResult.success(opsClusterTaskService.checkClusterTask(clusterId));
         } catch (OpsException ex) {
             return AjaxResult.error(ex.getMessage());
         }
@@ -206,7 +265,7 @@ public class OpsClusterTaskController extends BaseController {
      */
     @Log(title = "cluster_task", businessType = BusinessType.UPDATE)
     @PostMapping("/update")
-    public AjaxResult updateClusterTask(@RequestBody @Valid OpsClusterTaskUpdateDTO dto) {
+    public AjaxResult updateClusterTask(@RequestBody @Valid OpsClusterTaskDTO dto) {
         try {
             Assert.isTrue(Objects.nonNull(dto), "cluster task update param cannot be null");
             Assert.isTrue(StrUtil.isNotEmpty(dto.getClusterId()), "cluster id cannot be empty");
@@ -264,6 +323,7 @@ public class OpsClusterTaskController extends BaseController {
     public AjaxResult checkClusterEnvironment(@RequestParam String taskId) {
         try {
             Assert.isTrue(StrUtil.isNotEmpty(taskId), "cluster task id cannot be empty");
+            opsClusterTaskService.checkClusterTask(taskId);
             return AjaxResult.success(opsClusterTaskService.checkClusterInstallEnvironment(taskId));
         } catch (OpsException ex) {
             return AjaxResult.error(ex.getMessage());
@@ -337,7 +397,7 @@ public class OpsClusterTaskController extends BaseController {
      * @param taskIds cluster task ids
      * @return batch install status
      */
-    @GetMapping("/batch/install/status")
+    @PostMapping("/batch/install/status")
     public AjaxResult getBatchInstallTaskStatus(@RequestBody List<String> taskIds) {
         try {
             Assert.isTrue(CollectionUtils.isNotEmpty(taskIds), "cluster task ids cannot be empty");
@@ -346,7 +406,6 @@ public class OpsClusterTaskController extends BaseController {
             return AjaxResult.error(ex.getMessage());
         }
     }
-
 
     /**
      * copy cluster task by old cluster task id
