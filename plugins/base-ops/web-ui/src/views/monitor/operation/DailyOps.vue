@@ -1,6 +1,272 @@
 <template>
-  <div class="daily-ops-c">
-    <div v-if="showClusterInfo">
+  <div class="daily-ops-c" style="background-color:rgb(246 246 246);">
+    <div>
+      <span style="font-size: 20px;">{{ $t('operation.DailyOps.sl3u5s5cf2y0') }}</span>
+      <div style="float:right">
+        <a-link class="my-link">{{ $t('operation.DailyOps.sl3u5s5cf2y1') }}</a-link>&nbsp;&nbsp;
+        <a-link class="my-link">{{ $t('operation.DailyOps.5mplp1xbyqc0') }}</a-link>&nbsp;&nbsp;
+
+        <a-button class="my-button" @click="editClusterTask">{{ $t('operation.DailyOps.sl3u5s5cf2y2') }}</a-button> &nbsp;
+        <a-button class="my-button blueColor" @click="clusterInstall">{{ $t('operation.DailyOps.sl3u5s5cf2y3') }}</a-button> &nbsp;
+      </div>
+    </div>
+    <br><br>
+
+    <div class="barDiv" style="display: inline-block;width: 30%;">
+      <span>{{ $t('operation.DailyOps.sl3u5s5cf2y4') }}</span>
+      <div :key="0" class="echart" :id="'mychart' + 0" :style="state.myChartStyle"></div>
+    </div>
+    <div class="barDiv" style="display: inline-block;width: 30%;">
+      <span>{{ $t('operation.DailyOps.sl3u5s5cf2y5') }}</span>
+      <div :key="1" class="echart" :id="'mychart' + 1" :style="state.myChartStyle"></div>
+    </div>
+    <div class="barDiv" style="display: inline-block;width: 30%;">
+      <span>{{ $t('operation.DailyOps.sl3u5s5cf2y6') }}</span>
+      <div :key="2" class="echart" :id="'mychart' + 2" :style="state.myChartStyle"></div>
+    </div>
+    <br><br>
+    <div style="border-bottom:1px solid #cecece;">
+      <a-link class="my-link" :style="clusterMenuText" @click="clusterMenu" style="border-radius:0px">{{ $t('集群列表') }}</a-link>
+      <a-link class="my-link" :style="parallelInstallTaskText" @click="parallelInstallTask" style="border-radius:0px">{{ $t('并行安装任务') }}</a-link>
+    </div>
+    <br><br>
+
+    <div v-if="list.pageTag === 'installTask'">
+      <div style="border-bottom:1px solid #cecece;">
+        <a-link class="my-link" :style="taskTable" @click="taskMenu" >{{ $t('任务列表') }}</a-link>
+        <a-link class="my-link" :style="draftBox" @click="switchDraft">{{ $t('草稿箱') }}</a-link>
+      </div>
+      <br>
+      <a-button class="my-button blueColor" @click="editClusterTask">{{ $t('创建并行安装任务') }}</a-button> &nbsp;
+      <a-button class="my-button" @click="batchExecute" :seleMsg="seleMsg" v-if="list.status.status != 'DRAFT'">{{ $t('批量执行') }}</a-button> &nbsp;
+      <task-execute ref="batchExecuteRef" @finish="watchExecuteStatus" @ok="watchExecuteStatus"></task-execute>
+      <a-popconfirm
+        :content="$t('packageManage.index.5myq5c8zms40')"
+        :ok-text="$t('packageManage.index.5myq5c8zn100')"
+        :cancel-text="$t('packageManage.index.5myq5c8zn7k0')"
+        @ok="deleteSelectedTaskId"
+      >
+        <a-button class="my-button">
+          {{ $t('删除') }}
+        </a-button>
+      </a-popconfirm>
+      <br><br>
+
+      <a-cascader
+        labelInValue
+        :field-names="{label:'value', value:'name', children:'children' }"
+        expand-child
+        v-model="selectedOptionsValue.value"
+        :options="parentTags"
+        @change="searchTag"
+        allow-clear
+        style="width: 100%"
+        multiple
+        :placeholder="$t('请选择合适标签')"
+      ></a-cascader>
+
+      <br><br>
+
+      <a-table
+        v-if="list.status.status !== 'DRAFT'"
+        class="d-a-table-row"
+        :data="list.data"
+        rowKey="clusterId"
+        :columns="columnsTaskMenu"
+        :pagination="list.page"
+        @page-change="currentPage"
+        :row-selection="list.rowSelection"
+        @selection-change="handleSelectedChange"
+      >
+        <template #clusterId="{ record }">
+          <div class="clusterId">
+            <a-link class="more" @click="exportClusterId(record.clusterId)">
+              {{record.clusterId}}
+            </a-link>
+          </div>
+        </template>
+        <template #status="{ record }">
+            <span v-if="record.status === 'PENDING'">
+              {{ $t('待执行') }}
+            </span>
+            <span v-if="record.status === 'WAITING'">
+              <a-spin :loading="true">{{ $t('执行等待中') }}</a-spin>
+            </span>
+            <span v-if="record.status === 'RUNNING'">
+              <a-spin :loading="true">{{ $t('执行中') }}</a-spin>
+            </span>
+            <span v-if="record.status === 'SUCCESS'">
+              {{ $t('执行成功') }}
+            </span>
+            <span v-if="record.status === 'FAILED'">
+              {{ $t('执行失败') }}
+              <a-tooltip content="This is a Tooltip" position="right">
+                <icon-question-circle style="cursor: pointer;margin-left: 3px;" size="15" />
+                <template #content>
+                  <p>{{record.remark}}</p>
+                </template>
+              </a-tooltip>
+            </span>
+        </template>
+        <template #version="{ record }">
+            <span v-if="record.version === 'ENTERPRISE'">
+              {{ $t('企业版') }} {{record.versionNum}}
+            </span>
+          <span v-if="record.version === 'LITE'">
+              {{ $t('轻量版') }} {{record.versionNum}}
+            </span>
+          <span v-if="record.version === 'MINIMAL_LIST'">
+              {{ $t('极简版') }} {{record.versionNum}}
+            </span>
+        </template>
+        <template #clusterNodeNum="{ record }">
+            <span v-if="record.deployType === 'CLUSTER' && record.clusterNodeNum > 1">
+              {{ $t('一主') }}{{record.clusterNodeNum - 1}}{{ $t('备') }}
+            </span>
+            <span v-else>
+              {{ $t('单节点') }}
+            </span>
+        </template>
+        <template #operation="{ record }">
+          <div class="operationDiv">
+            <span>
+              <a-popconfirm
+                :content="$t('确定要执行吗?')"
+                :ok-text="$t('packageManage.index.5myq5c8zn100')"
+                :cancel-text="$t('packageManage.index.5myq5c8zn7k0')"
+                @ok="record.status === 'PENDING' ? execute(record.clusterId) : reExecute(record.clusterId)"
+              >
+                <a-link class="more" v-if="record.status === 'PENDING'">
+                  {{ $t('一键执行') }}
+                </a-link>
+                <a-link class="more" v-else>
+                  {{ $t('重新执行') }}
+                </a-link>
+              </a-popconfirm>
+            </span>
+
+            <a-link class="more" @click="copy(record.clusterId)">
+              {{ $t('复制') }}
+            </a-link>
+
+            <a-dropdown trigger="click">
+              <a-link class="more">
+                {{ $t('更多') }}
+              </a-link>
+              <template #content>
+                <a-doption  @click="logDownload(record)">
+                  <a-space>
+                    <span>
+                      {{ $t('执行日志下载') }}
+                    </span>
+                  </a-space>
+                </a-doption>
+                <a-doption  @click="editClusterTask(record)">
+                  <a-space>
+                    <span>
+                      {{ $t('编辑') }}
+                    </span>
+                  </a-space>
+                </a-doption>
+                <a-doption @click="singleRowDelete(record)">
+                  <a-space>
+                    <span>
+                      {{ $t('删除') }}
+                    </span>
+                  </a-space>
+                </a-doption>
+              </template>
+            </a-dropdown>
+          </div>
+        </template>
+      </a-table>
+      <a-table
+        v-else
+        class="d-a-table-row"
+        :data="list.data"
+        rowKey="clusterId"
+        :columns="columnsDraft"
+        :pagination="list.page"
+        @page-change="currentPage"
+        :row-selection="list.rowSelection"
+        @selection-change="handleSelectedChange"
+      >
+        <template #clusterId="{ record }">
+          <div class="clusterId">
+            <a-link class="more" @click="exportClusterId(record.clusterId)">
+              {{record.clusterId}}
+            </a-link>
+          </div>
+        </template>
+
+        <template #version="{ record }">
+            <span v-if="record.version === 'ENTERPRISE'">
+              {{ $t('企业版') }} {{record.versionNum}}
+            </span>
+          <span v-if="record.version === 'LITE'">
+              {{ $t('轻量版') }} {{record.versionNum}}
+            </span>
+          <span v-if="record.version === 'MINIMAL_LIST'">
+              {{ $t('极简版') }} {{record.versionNum}}
+            </span>
+        </template>
+        <template #clusterNodeNum="{ record }">
+            <span v-if="record.deployType === 'CLUSTER' && record.clusterNodeNum > 1">
+              {{ $t('一主') }}{{record.clusterNodeNum - 1}}{{ $t('备') }}
+            </span>
+            <span v-else>
+              {{ $t('单节点') }}
+            </span>
+        </template>
+        <template #operation="{ record }">
+          <div class="operationDiv">
+            <a-link class="more" @click="editClusterTask(record)">
+              {{ $t('编辑') }}
+            </a-link>
+
+            <a-link class="more" @click="copy(record.clusterId)">
+              {{ $t('复制') }}
+            </a-link>
+            <a-dropdown trigger="click">
+              <a-link class="more">
+                {{ $t('更多') }}
+              </a-link>
+              <template #content>
+                <a-doption  @click="logDownload(record)">
+                  <a-space>
+                    <span>
+                      {{ $t('执行日志下载') }}
+                    </span>
+                  </a-space>
+                </a-doption>
+                <a-doption  @click="record.envCheckResult === 'SUCCESS' ? publish(record.clusterId) : envCheck(record.clusterId, record.hostIp, record.hostUsername)">
+                  <a-space>
+                    <span>
+                      <span v-if="record.envCheckResult === 'SUCCESS'">
+                        {{ $t('发布') }}
+                      </span>
+                      <span v-else>
+                        {{ $t('环境检测') }}
+                      </span>
+                    </span>
+                  </a-space>
+                </a-doption>
+                <a-doption @click="singleRowDelete(record)">
+                  <a-space>
+                    <span>
+                      {{ $t('删除') }}
+                    </span>
+                  </a-space>
+                </a-doption>
+              </template>
+            </a-dropdown>
+          </div>
+        </template>
+      </a-table>
+      <div v-if="anyMenuOpen" class="overlay" @click="closeAllMenus"></div>
+    </div>
+
+    <div v-if="showClusterInfo && list.pageTag === 'clusterInfo'">
       <div
         v-for="(clusterData, index) in data.clusterList"
         :key="index"
@@ -75,7 +341,7 @@
                         <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xbzew0') }}:</div>
                         <div
                           class="flex-row"
-                          v-if="clusterData.deployType === 'CLUSTER' || clusterData.clusterNodes.length > 1"
+                          v-if="clusterData.deployType === 'CLUSTER' && clusterData.clusterNodes.length > 1"
                         >
                           <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xbzmw0') }}</div>
                           <div class="value-color ft-lg ft-b mr-s">{{ clusterData.clusterNodes.length - 1 }}</div>
@@ -401,8 +667,30 @@
 
 <script lang="ts" setup>
 import { KeyValue } from '@/types/global'
-import { onBeforeUnmount, onMounted, reactive, ref, computed } from 'vue'
-import { clusterMonitor, delCluster, uninstallOpenGauss, clusterList, start, stop, restart, switchover, generateconf, build, clusterBackup } from '@/api/ops'
+import {onBeforeUnmount, onMounted, reactive, ref, computed, onUnmounted, toRaw, watch} from 'vue'
+import {
+  clusterMonitor,
+  delCluster,
+  uninstallOpenGauss,
+  clusterList,
+  start,
+  stop,
+  restart,
+  switchover,
+  generateconf,
+  build,
+  clusterBackup,
+  clusterTaskPage,
+  copyTask,
+  batchDeleteTask,
+  clusterLogDownload,
+  clusterEnvCheck,
+  submitCluster,
+  executeTask,
+  checkTaskStatus,
+  getVersionNum,
+  reExecuteTask,
+} from '@/api/ops'
 import { useWinBox } from 'vue-winbox'
 import 'xterm/css/xterm.css'
 import { Terminal } from 'xterm'
@@ -416,6 +704,15 @@ import HostPwdDlg from './HostPwdDlg.vue'
 import GucSettingDrawer from './GucSettingDrawer.vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
+import * as echarts from 'echarts';
+import { Message } from '@arco-design/web-vue'
+import taskExecute from './taskExecute.vue'
+import axios from 'axios'
+import {useRoute, useRouter} from 'vue-router';
+import _ from 'lodash';
+import isEqual from 'lodash/isEqual';
+import {CpuArch, OS} from "@/types/os";
+
 const data: {
   loading: boolean,
   clusterList: KeyValue[],
@@ -425,6 +722,747 @@ const data: {
   loading: false,
   socketArr: []
 })
+
+
+
+const list = reactive<KeyValue>({
+  selectedDraftData:[],
+  selectedDraftTaskIds:[],
+  selectedDraftPage:[],
+  selectedData:[],
+  selectTaskIds: [],
+  selectedPage:[],
+  data: [],
+  page: {
+    total: 100,
+    pageSize: 10,
+    'show-total': true,
+  },
+  loading: false,
+  rowSelection: {
+    type: 'checkbox',
+    showCheckedAll: true
+  },
+  status: {},
+  mutiSearchData: {},
+  os: {},
+  cpuArch: {},
+  openGaussVersion: {},
+  openGaussVersionNum: {},
+  pageTag: 'clusterInfo',
+})
+//并行安装任务
+const parallelInstallTask = () => {
+  if (data.socketArr.length) {
+    data.socketArr.forEach((item: Socket<any, any>) => {
+      if (item) {
+        item.destroy()
+      }
+    })
+  }
+  watchExecuteStatus();
+  list.pageTag = 'installTask';
+  if (parallelInstallTaskText.value.borderBottom === '') {
+    parallelInstallTaskText.value.color = '#0077ff';
+    parallelInstallTaskText.value.borderBottom = '1px solid #0077ff';
+    clusterMenuText.value.color = '';
+    clusterMenuText.value.borderBottom = '';
+  }
+}
+//集群列表
+const clusterMenu = () => {
+  clearInterval(intervalRefresh);
+  getList()
+  list.pageTag = 'clusterInfo';
+  if (clusterMenuText.value.borderBottom === '') {
+    clusterMenuText.value.color = '#0077ff';
+    clusterMenuText.value.borderBottom = '1px solid #0077ff';
+    parallelInstallTaskText.value.color = '';
+    parallelInstallTaskText.value.borderBottom = '';
+  }
+}
+
+//并行安装任务变色
+const parallelInstallTaskText = ref({
+  color: '',
+  borderBottom: '',
+})
+
+//集群列表变色
+const clusterMenuText = ref({
+  color: '#0077ff',
+  borderBottom: '1px solid #0077ff', //初始边框大小及颜色
+})
+
+const route = useRoute();
+const router = useRouter();
+
+//跳转任务详情
+const exportClusterId = (clusterId) => {
+  router.push({ path: '/monitor/taskDetails', query: { clusterId: clusterId } });
+};
+//检查所有信息是否可以发布
+const isPublish = (clusterId: string) => {
+  console.log(clusterId);
+}
+
+//调用环境监测接口
+const envCheck = (clusterId: string, hostIp: string, hostUsername: string) => {
+  if (hostIp !== null || hostUsername !== null) {
+    clusterEnvCheck(clusterId)
+      .then((res) => {
+        if (Number(res.code) === 200) {
+          if (res.data.result === 'SUCCESS') {
+            Message.success("环境监测成功!");
+            Message.success(res.msg);
+            getDraftListData();
+          }
+        }
+      }).catch(error => {
+      Message.error("checkEnv infoError:"+error);
+    })
+  } else {
+    Message.error("请先编辑集群IP")
+  }
+};
+//跳转新增集群页面
+const editClusterTask = (record) => {
+  router.push({ name:'step', params: { record: JSON.stringify(toRaw(record)) } });
+}
+//跳转集群安装界面
+const clusterInstall = () => {
+  router.push({ name: 'OpsInstall', params: {} });
+}
+
+const state = reactive({
+  chartData: [
+    { xData: ["CAT1", "CAT2", "CAT3", "CAT4", "CAT5"], yData: [23, 24, 18, 25, 27] },
+    { xData: ["DOG1", "DOG2", "DOG3", "DOG4", "DOG5"], yData: [15, 12, 19, 20, 17] },
+    { xData: ["BIRD1", "BIRD2", "BIRD3", "BIRD4", "BIRD5"], yData: [22, 28, 21, 26, 23] }
+  ],
+  myChartStyle: { float: "right", width: "100%", height: "344px", marginRight: "2%" },
+});
+
+const initEcharts = () => {
+  state.chartData.forEach((data, index) => {
+    const myChart = echarts.init(document.getElementById(`mychart${index}`));
+    const option = {
+      title: {
+        text: '84',
+        subtext: '最大值（%）',
+        left: 'right' // 标题的水平位置
+      },
+      xAxis: {
+        data: data.xData
+      },
+      yAxis: {
+        name:'利用率（%）',
+      },
+      series: [
+        {
+          type: "bar",
+          data: data.yData,
+          barWidth: '15%' // 使用百分比来自动适应容器宽度
+        }
+      ]
+    };
+    myChart.setOption(option);
+    window.addEventListener("resize", () => {
+      myChart.resize();
+    });
+  });
+}
+
+const filter = reactive({
+  name: '',
+  openGaussVersion: '',
+  pageNum: 1,
+  pageSize: 10,
+})
+//发布
+const publish = (clusterId: number) => {
+  submitCluster(clusterId)
+    .then((res: KeyValue) => {
+      if (Number(res.code) === 200) {
+        Message.success("发布" + res.msg);
+        getDraftListData();
+      }
+    })
+    .catch(() => {
+      Message.error("发布失败error")
+    })
+}
+//一键执行
+const execute = (clusterId: number) => {
+  executeTask([clusterId])
+    .then((res: KeyValue) => {
+      if (Number(res.code) === 200) {
+        Message.success(res.data[clusterId]);
+        checkExecuteStatus(clusterId)
+      }
+    })
+    .catch(() => {
+      console.log("执行失败!")
+    })
+}
+//重新执行
+const reExecute = (clusterId: number) => {
+  reExecuteTask(clusterId)
+    .then((res: KeyValue) => {
+      if (Number(res.code) === 200) {
+        Message.success(res.msg);
+        checkExecuteStatus(clusterId);
+      }
+    })
+    .catch(() => {
+      console.log("执行失败!")
+    })
+    .finally(() => {
+      getListData();
+    })
+}
+
+//查询执行状态
+const checkExecuteStatus = (clusterId: number) => {
+  checkTaskStatus([clusterId])
+    .then((res: KeyValue) => {
+      if (Number(res.code) === 200) {
+        console.log('checkExecuteStatus')
+        watchExecuteStatus();
+      }
+    })
+    .catch((error) => {
+      console.log('checkExecuteStatusError:' + error)
+    })
+}
+//草稿箱
+const switchDraft = () => {
+  if (draftBox.value.backgroundColor === '') {
+    draftBox.value.backgroundColor = '#0077ff';
+    draftBox.value.color = 'white';
+    taskTable.value.backgroundColor = '';
+    taskTable.value.color = '';
+  }
+  filter.pageNum = 1
+  list.status = {"status":"DRAFT"};
+  getListData();
+}
+//任务列表
+const taskMenu = () => {
+  if (taskTable.value.backgroundColor === '') {
+    taskTable.value.backgroundColor = '#0077ff';
+    taskTable.value.color = 'white';
+    draftBox.value.backgroundColor = '';
+    draftBox.value.color = '';
+  }
+  filter.pageNum = 1
+  list.status = {};
+  getListData();
+}
+//页码跳转
+const currentPage = (e: number) => {
+  filter.pageNum = e
+  getListData()
+}
+
+//任务列表变色
+const taskTable = ref({
+  backgroundColor: '#0077ff', // 初始背景色为默认值
+  color: 'white'
+})
+//草稿箱变色
+const draftBox = ref({
+  backgroundColor: '', // 初始背景色为默认值
+})
+
+//定时器3秒一次刷新
+let intervalRefresh: NodeJS.Timeout | null = null
+
+//定时器函数
+const watchExecuteStatus = () => {
+  intervalRefresh = setInterval(() => {
+    getListData()
+  }, 3000)
+}
+
+//初始化任务列表
+const initTaskMenu = () => {
+  list.mutiSearchData = {
+    "os": list.os.os ? list.os.os : null,
+    "cpuArch": list.cpuArch.cpuArch ? list.cpuArch.cpuArch : null,
+    "openGaussVersion": list.openGaussVersion.openGaussVersion ? list.openGaussVersion.openGaussVersion : null,
+    "openGaussVersionNum": list.openGaussVersionNum.openGaussVersionNum ? list.openGaussVersionNum.openGaussVersionNum : null,
+    "status": list.status.status ? list.status.status : null
+  };
+  clusterTaskPage(list.mutiSearchData, filter)
+    .then((res: KeyValue) => {
+      if (Number(res.code) === 200) {
+        list.data = res.rows;
+        list.page.total = res.total;
+        let flag = false;
+        list.data.forEach(item => {
+          if (item.status === 'RUNNING' || item.status === 'WAITING') {
+            flag = true;
+          }
+        })
+        if (!flag) {
+          clearInterval(intervalRefresh)
+        }
+      }
+    }).catch(error => {
+    Message.error("initTaskMenu infoError:"+error);
+  });
+}
+
+//调后端任务列表接口填充数据
+const getListData = () => {
+  initTaskMenu()
+}
+//调后端草稿接口填充数据
+const getDraftListData = () => {
+  list.status = {"status":"DRAFT"};
+  initTaskMenu()
+}
+
+//挂载柱状图和集群列表数据
+onMounted(() => {
+  watch(() => route.path, (newPath, oldPath) => {
+    if (newPath !== oldPath) {
+      console.log('Route changed from', oldPath, 'to', newPath);
+      if (route.params.status !== 'DRAFT') {
+        taskMenu();
+        console.log(route.params.status)
+      } else {
+        switchDraft();
+        console.log(route.params.status)
+      }
+    }
+  });
+  init()
+  initEcharts();
+  getListData();
+});
+onUnmounted(() => {
+  clearInterval(intervalRefresh);
+});
+//集群列表表头
+const columnsTaskMenu = computed(() => [
+  {title: "任务ID", dataIndex: 'clusterId', width: 130, slotName: 'clusterId',},
+  {title: '集群名称', dataIndex: 'clusterName',width: 110, },
+  {title: '任务状态', dataIndex: 'status', width: 70, slotName: 'status',},
+  {title: '服务器IP', dataIndex: 'hostIp', width: 80,},
+  {title: '安装用户', width: 60, dataIndex: 'hostUsername'},
+  {title: '端口', width: 50, dataIndex: 'databasePort', slotName: 'databasePort',},
+  {title: '服务器系统', dataIndex: 'os', width: 60,},
+  {title: 'CPU架构', dataIndex: 'cpuArch',width: 50, },
+  {title: 'OpenGauss版本号', width: 30, dataIndex: 'version', slotName: 'version',},
+  {title: '节点数量', dataIndex: 'clusterNodeNum', width: 80, slotName: 'clusterNodeNum',},
+  {title: '任务创建时间', dataIndex: 'createTime', width: 110,
+    sortable: {sortDirections: ['ascend', 'descend']}
+  },
+  {title: '任务更新时间', dataIndex: 'updateTime', width: 110,
+    sortable: {sortDirections: ['ascend', 'descend']}
+  },
+  {title: '操作', slotName: 'operation', width: 100},
+])
+
+//草稿箱表头
+const columnsDraft = computed(() => [
+  {title: "任务ID", dataIndex: 'clusterId', width: 130, slotName: 'clusterId',},
+  {title: '服务器IP', dataIndex: 'hostIp', width: 80,},
+  {title: '安装用户', width: 50, dataIndex: 'hostUsername'},
+  {title: '服务器系统', dataIndex: 'os', width: 70,},
+  {title: 'CPU架构', dataIndex: 'cpuArch',width: 70, },
+  {title: '集群名称', dataIndex: 'clusterName',width: 110, },
+  {title: 'OpenGauss版本号', width: 100, dataIndex: 'version', slotName: 'version',},
+  {title: '节点数量', dataIndex: 'clusterNodeNum', width: 50, slotName: 'clusterNodeNum',},
+  {title: '集群端口号', dataIndex: 'databasePort', width: 50},
+  {title: '环境变量地址', dataIndex: 'envPath', width: 150},
+  {title: '操作', slotName: 'operation', width: 100},
+])
+
+//////////////////////////////////////////////////////////操作里面的弹窗
+const showMenus = reactive(new Array(list.data.length).fill(false));
+
+// 响应式数据，用于跟踪是否有任何菜单是打开的
+const anyMenuOpen = ref(false);
+
+// 方法：切换指定行的菜单显示状态
+const toggleMenu = (index) => {
+  showMenus[index] = !showMenus[index];
+  anyMenuOpen.value = anyMenuOpen.value || showMenus[index];
+  showMenus.forEach((show, i) => {
+    if (i !== index) {
+      showMenus[i] = false;
+    }
+  });
+};
+
+// 方法：处理指定行菜单项的点击事件
+const handleMenuClick = (index, option) => {
+  console.log('Clicked on row', index, 'with option:', option);
+  showMenus[index] = false;
+  anyMenuOpen.value = showMenus.some(isOpen => isOpen);
+};
+
+// 方法：关闭所有菜单
+const closeAllMenus = () => {
+  showMenus.fill(false);
+  anyMenuOpen.value = false;
+};
+
+let globalClickHandler = (event) => {
+  if (!event.target.closest('.menuToggle') && !event.target.closest('.context-menu')) {
+    closeAllMenus();
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('click', globalClickHandler);
+});
+
+// 组件卸载时移除事件监听
+onUnmounted(() => {
+  document.removeEventListener('click', globalClickHandler);
+});
+///////////////////////////////////////////////////////////////////////
+//搜索框
+const initOs = [OS.OPEN_EULER, OS.CENTOS]
+const initArch = [CpuArch.X86_64, CpuArch.AARCH64]
+const initVersion = [OpenGaussVersionEnum.MINIMAL_LIST, OpenGaussVersionEnum.LITE, OpenGaussVersionEnum.ENTERPRISE]
+const init = () => {
+  fetchOs()
+  fetchArch()
+  fetchVersion()
+  fetchVersionNum()
+  getListData()
+}
+const fetchOs = () => {
+  parentTags.value.forEach(tag => {
+    if (tag.name === 'os') {
+      initOs.forEach(child => {
+        const newChild = {
+          name: child,
+          disabled: false
+        }
+        tag.children.push(newChild)
+      })
+    }
+  })
+}
+const fetchArch = () => {
+  parentTags.value.forEach(tag => {
+    if (tag.name === 'cpuArch') {
+      initArch.forEach(child => {
+        const newChild = {
+          name: child,
+          disabled: false
+        }
+        tag.children.push(newChild)
+      })
+    }
+  })
+}
+const fetchVersion = () => {
+  parentTags.value.forEach(tag => {
+    if (tag.name === 'openGaussVersion') {
+      initVersion.forEach(child => {
+        const newChild = {
+          name: child,
+          disabled: false
+        }
+        tag.children.push(newChild)
+      })
+    }
+  })
+}
+let countVersionNum = 0
+const fetchVersionNum = () => {
+  getVersionNum().then(res => {
+    if (Number(res.code) === 200) {
+      parentTags.value.forEach(tag => {
+        if (tag.name === 'openGaussVersionNum') {
+          res.data.forEach(child => {
+            const newChild = {
+              name: child,
+              disabled: false
+            }
+            tag.children.push(newChild)
+            countVersionNum = countVersionNum + 1
+          })
+        }
+      })
+    }
+  }) .catch(error => {
+    console.error(error)
+  })
+}
+
+const parentTags = ref([
+  { name: 'os',
+    value:'操作系统',
+    children: [],
+    disabled: false
+  },
+  { name: 'cpuArch',
+    value:'cpu架构',
+    children: [],
+    disabled: false
+  },
+  { name: 'openGaussVersion',
+    value:'openGauss版本',
+    children: [],
+    disabled: false
+  },
+  { name: 'openGaussVersionNum',
+    value:'版本号',
+    children: [],
+    disabled: false
+  },
+])
+const selectedOptionsValue = reactive({value:''})
+const searchFormData = new FormData
+const searchTag = (inputValue: any) => {
+  const entries = searchFormData.entries()
+  for (const [key, value] of entries) {
+    searchFormData.delete(key)
+  }
+  const selectedTagGroups =  ref<string[]>([])
+  const alertFlag = new Map()
+  alertFlag.set('os', 2)
+  alertFlag.set('cpuArch', 2)
+  alertFlag.set('openGaussVersion', 3)
+  alertFlag.set('openGaussVersionNum', countVersionNum)
+  const alertNum = new Map([...alertFlag])
+  list.os = {}
+  list.cpuArch = {}
+  list.openGaussVersion = {}
+  list.openGaussVersionNum = {}
+  selectedOptionsValue.value = inputValue
+  const osFlag = ref(0)
+  const cpuArchFlag = ref(0)
+  const openGaussVersionFlag = ref(0)
+  const openGaussVersionNumFlag = ref(0)
+  inputValue.forEach(item => {
+      parentTags.value.forEach(tag => {
+        if (tag.children.some(piece => piece.name.includes(item))){
+          let tempname = alertFlag.get(tag.name) - 1
+          console.log(tempname)
+          alertFlag.set(tag.name, tempname)
+          console.log(tag.name, item)
+          console.log(tag.children)
+          if (tag.name === 'os') {
+            osFlag.value += 1
+            list.os = {"os":item}
+          }
+          if (tag.name === 'cpuArch') {
+            cpuArchFlag.value += 1;
+            list.cpuArch = {"cpuArch":item}
+          }
+          if (tag.name === 'openGaussVersion') {
+            openGaussVersionFlag.value += 1;
+            list.openGaussVersion = {"openGaussVersion":item}
+          }
+          if (tag.name === 'openGaussVersionNum') {
+            openGaussVersionNumFlag.value += 1;
+            list.openGaussVersionNum = {"openGaussVersionNum":item}
+          }
+          if(osFlag.value === alertNum.get("os")) {list.os = {"os":null}}
+          if(cpuArchFlag.value === alertNum.get("cpuArch")) {list.cpuArch = {"cpuArch":null}}
+          if(openGaussVersionFlag.value === alertNum.get("openGaussVersion")) {list.openGaussVersion = {"openGaussVersion":null}}
+          if(openGaussVersionNumFlag.value === alertNum.get("openGaussVersionNum")) {list.openGaussVersionNum = {"openGaussVersionNum":null}}
+          searchFormData.append(tag.name, item)
+          tag.disabled = true
+          selectedTagGroups.value.push(tag.name)
+        }
+      })
+    })
+  parentTags.value.forEach(tag => {
+    if (alertFlag.get(tag.name)  == 0) {
+      Message.error('同一个父级标签只能选择一个子级标签,' + tag.name + '标签下有多项')
+      let tempnum = alertNum.get(tag.name)
+      selectedOptionsValue.value.splice( -tempnum)
+    }
+    if (selectedTagGroups.value.includes(tag.name)) {
+      tag.disabled = false
+      tag.children.forEach(item =>{
+        if (item.name !== searchFormData.get(tag.name)){
+          item.disabled = true
+        }
+      })
+    } else {
+      tag.disabled = false
+      tag.children.forEach(item => item.disabled = false)
+    }
+  })
+  if(osFlag.value === alertNum.get("os")){
+    parentTags.value.forEach(tag => {
+      if (tag.name === 'os') {
+        tag.disabled = false
+        tag.children.forEach(item =>{
+          item.disabled = false
+        })
+      }
+    })
+  }
+  if(cpuArchFlag.value === alertNum.get("cpuArch")){
+    parentTags.value.forEach(tag => {
+      if (tag.name === 'cpuArch') {
+        tag.disabled = false
+        tag.children.forEach(item =>{
+          item.disabled = false
+        })
+      }
+    })
+  }
+  if(openGaussVersionFlag.value === alertNum.get("openGaussVersion")){
+    parentTags.value.forEach(tag => {
+      if (tag.name === 'openGaussVersion') {
+        tag.disabled = false
+        tag.children.forEach(item =>{
+          item.disabled = false
+        })
+      }
+    })
+  }
+  if(openGaussVersionNumFlag.value === alertNum.get("openGaussVersionNum")){
+    parentTags.value.forEach(tag => {
+      if (tag.name === 'openGaussVersionNum') {
+        tag.disabled = false
+        tag.children.forEach(item =>{
+          item.disabled = false
+        })
+      }
+    })
+  }
+  getListData()
+}
+////////////////////////////////////////////////////////////////////////////////
+//复制
+const copy = (clusterId: KeyValue) => {
+  copyTask(clusterId)
+    .then((res: KeyValue) => {
+      if (Number(res.code) === 200) {
+        getListData();
+      }
+    }).catch(error => {
+    console.error("copyTask error:"+error);
+  });
+}
+
+//删除单行
+const singleRowDelete = (record: KeyValue) => {
+  batchDeleteTask([record.clusterId])
+    .then((res: KeyValue) => {
+      if (Number(res.code) === 200) {
+        Message.success("删除" + record.clusterId + "成功!")
+      }
+    }).catch(error => {
+    console.error("DeleteTask error:"+error);
+  }).finally(() => {
+    if (list.status.status !== 'DRAFT') {
+      getListData();
+    } else {
+      getDraftListData();
+    }
+  })
+}
+//日志下载
+const logDownload = (record: KeyValue) => {
+  console.log('logDownload');
+  console.log(record.clusterId);
+  clusterLogDownload(record.clusterId)
+    .then((res)=>{
+      if (res) {
+        const blob = new Blob([res]);
+        const link = document.createElement("a");
+        const URL = window.URL || window.webkitURL;
+        let herf = URL.createObjectURL(blob);
+        link.href = herf;
+        link.download = "OPERATE_LOG_"+record.clusterName+".log";
+        link.click();
+        window.URL.revokeObjectURL(herf);
+      }
+    }).catch((err)=>{
+    console.log("error:"+err);
+  })
+}
+//选中复选框并填充进一个数组selectedHostIds和selectedData中
+const handleSelectedChange = (keys: (string | number)[]) => {
+  if (list.status.status !== 'DRAFT') {
+    list.selectTaskIds = keys;
+    list.selectTaskIds.forEach((clusterId: string | number) => {
+      const findOne = list.data.find((item: KeyValue) => { return item.clusterId === clusterId})
+      if (!list.selectedPage.some(item => _.isEqual(item, findOne)) && findOne) {
+        list.selectedPage.push(findOne)
+      }
+    })
+    list.selectedData = [];
+    list.selectTaskIds.forEach((clusterId: string | number) => {
+      const findOne = list.selectedPage.find(item => { return item.clusterId === clusterId})
+      if (findOne) {
+        list.selectedData.push(findOne)
+      }
+    })
+  } else {
+    list.selectedDraftTaskIds = keys;
+    list.selectedDraftTaskIds.forEach((clusterId: string | number) => {
+      const findOne = list.data.find((item: KeyValue) => { return item.clusterId === clusterId})
+      if (!list.selectedDraftPage.some(item => _.isEqual(item, findOne)) && findOne) {
+        list.selectedDraftPage.push(findOne)
+      }
+    })
+    list.selectedDraftData = [];
+    list.selectedDraftTaskIds.forEach((clusterId: string | number) => {
+      const findOne = list.selectedDraftPage.find(item => { return item.clusterId === clusterId})
+      if (findOne) {
+        list.selectedDraftData.push(findOne)
+      }
+    })
+  }
+
+}
+
+//删除多选框选中的多行
+const deleteSelectedTaskId = () => {
+  if (list.selectedData.length > 0 && list.status.status !== 'DRAFT') {
+    batchDeleteTask(list.selectTaskIds)
+      .then((res: KeyValue) => {
+        if (Number(res.code) === 200) {
+          Message.success("删除成功!")
+        }
+      }).catch(error => {
+      Message.error("DeleteTask error:"+error);
+    }).finally(() => {
+      taskMenu();
+    })
+  } else if (list.selectedDraftData.length > 0 && list.status.status === 'DRAFT') {
+    batchDeleteTask(list.selectedDraftTaskIds)
+      .then((res: KeyValue) => {
+        if (Number(res.code) === 200) {
+          Message.success("删除成功!")
+        }
+      }).catch(error => {
+      Message.error("DeleteTask error:"+error);
+    }).finally(() => {
+      switchDraft();
+    })
+  }else {
+    Message.warning("请至少选择一行删除")
+  }
+};
+
+//批量执行弹窗
+const batchExecuteRef = ref<null | InstanceType<typeof taskExecute>>(null)
+
+const batchExecute = () => {
+  if (list.selectedData.length > 0) {
+    console.log(list.selectTaskIds)
+    batchExecuteRef.value?.open(list.selectTaskIds, list.selectedData)
+  } else {
+    Message.warning('请至少选择一行执行')
+  }
+}
 
 onMounted(() => {
   getList()
@@ -1327,8 +2365,6 @@ const handleGucSettingComplete = (clusterData: KeyValue, clusterIndex: number) =
 
 .daily-ops-c {
   padding: 20px 20px 0px;
-  overflow-y: auto;
-  height: calc(100vh - 130px);
 
   .empty-icon-size {
     width: 100px;
@@ -1490,4 +2526,41 @@ const handleGucSettingComplete = (clusterData: KeyValue, clusterIndex: number) =
   width: 100%;
   height: 80%;
 }
+
+.echart {
+  float: left;
+  width: 100%;
+  height: 400px;
+  box-sizing: border-box; /* 确保 padding 和 border 不会增加额外宽度 */
+}
+.barDiv{
+  background-color: white;
+  margin-right: 20px;
+}
+span{
+  color: rgb(0, 0, 0);
+}
+.my-button{
+  border: 1px solid rgb(206, 206, 206);
+}
+.my-button:hover{
+  color:white;
+  background-color: rgb(51 112 232);
+}
+.blueColor {
+  background-color: #0077ff;
+  color: white;
+}
+.more{
+  color: #3291fe;
+}
+.my-link {
+  height: 100%;
+  width: 92px;
+  //border: 1px solid black;
+  //border-bottom: 0px;
+  cursor: pointer;
+  color: black;
+}
+
 </style>

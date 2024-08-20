@@ -546,3 +546,37 @@ export const deleteClustertaskNode = (clusterId: string, clusterNodeId: string, 
 export const checkCluster = (clusterId: string) => {
   return axios.post(`/clusterTask/check?clusterId=${clusterId}`)
 }
+
+export const clusterTaskPage = (mutiSearchData: KeyValue, data: KeyValue) => {
+  return axios.post("/clusterTask/page", mutiSearchData, {
+    params: data
+  })
+}
+
+export const copyTask = (clusterId: KeyValue) => {
+  return axios.post(`/clusterTask/copy?taskId=${clusterId}`)
+}
+
+export const batchDeleteTask = (clusterIds: any) => {
+  return axios.post(`/clusterTask/delete`, clusterIds)
+}
+
+export const clusterLogDownload = (clusterId: string) => {
+  return axios.get(`/opsClusterLog/download/log?clusterId=${clusterId}`,{responseType: 'blob',headers: {'Content-Type':'application/json;application/octet-stream'}})
+}
+
+export const submitCluster = (clusterId: string) => {
+  return axios.post(`/clusterTask/confirm?taskId=${clusterId}`)
+}
+
+export const executeTask = (clusterIds: any) => {
+  return axios.post(`/clusterTask/batch/install`, clusterIds)
+}
+
+export const checkTaskStatus = (clusterIds: any) => {
+  return axios.post(`/clusterTask/batch/install/status`, clusterIds)
+}
+
+export const reExecuteTask = (clusterId: number) => {
+  return axios.post(`/clusterTask/re/install?taskId=${clusterId}`)
+}

@@ -345,6 +345,13 @@
             "5mplmzbrpas0": "集群备份"
         },
         "DailyOps": {
+            "sl3u5s5cf2y0": "集群管理",
+            "sl3u5s5cf2y1": "使用指南",
+            "sl3u5s5cf2y2": "创建并行安装任务",
+            "sl3u5s5cf2y3": "安装集群",
+            "sl3u5s5cf2y4": "CPU利用率TOP5",
+            "sl3u5s5cf2y5": "内存占有率TOP5",
+            "sl3u5s5cf2y6": "会话TOP5",
             "else1": "核",
             "else2": "实例",
             "else3": "个",

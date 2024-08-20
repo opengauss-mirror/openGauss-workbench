@@ -24,6 +24,16 @@ const MONITOR: AppRouteRecordRaw = {
       }
     },
     {
+      path: '/monitor/taskDetails',
+      name: 'taskDetails',
+      component: () => import('@/views/monitor/operation/taskDetails.vue'),
+      meta: {
+        title: '任务详情',
+        requiresAuth: true,
+        roles: ['*']
+      }
+    },
+    {
       path: '/monitor/basic',
       name: 'MonitorBasic',
       component: () => import('@/views/monitor/monitor/index.vue'),
