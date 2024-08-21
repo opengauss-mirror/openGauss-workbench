@@ -186,39 +186,14 @@ const list = reactive({
 
 const route = useRoute();
 
-// const editClusterId = () => {
-//   list.clusterId = route.query.clusterId;
-//   console.log('list.clusterId');
-//   console.log(list.clusterId);
-// }
-// init()
 onMounted(() => {
-  // init()
-  // jointNodeName();
   checkEnv();
 })
 
-// //拼接节点名称
-// const jointNodeName = () => {
-//
-//   list.nodes.forEach((item, index) => {
-//     list.nodeIndex.push(index);
-//     if (index === 0) {
-//       item = '主节点: ' + item
-//     } else {
-//       item = '备节点: ' + item
-//     }
-//     list.nodeName.push(item);
-//   })
-// }
-
-
-//调用环境检查接口
 const checkEnv = async () => {
   await init()
    clusterEnvCheck(props.clusterId)
     .then((res) => {
-      console.log("Number(res.code):"+Number(res.code))
       if (Number(res.code) === 200) {
         list.result = res.data.result
         list.envCheckDetails = res.data.envCheckDetails;
@@ -288,17 +263,11 @@ const fetchHostIp = () => {
   }) .finally(() => {
     list.clusterId = []
     list.clusterId.push(props.clusterId)
-    console.log('list.clusterId' + list.clusterId)
     list.nodes = []
     props.message.forEach((item, index) => {
-      console.log('276', item.hostId)
       let tempPublicIp = hostIdIp.get(item.hostId)
-      console.log(hostIdIp)
-      console.log('278', tempPublicIp)
       let tempPrivateIp = hostPuPr.get(tempPublicIp)
-      console.log(hostPuPr)
       let tempIp = tempPublicIp + '(' + tempPrivateIp + ')'
-      console.log('280' + tempIp)
       listNodes.push(tempIp)
       activeCluster.value.push(index)
     })

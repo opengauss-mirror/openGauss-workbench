@@ -458,7 +458,6 @@ const formRef = ref<null | FormInstance>(null)
 const emits = defineEmits([`finish`])
 const submitLoading = ref(false)
 const submit = () => {
-  console.log('510', uploadStatusTag.value)
   if (uploadStatusTag.value) {
     const params = {
       name: data.formData.name,
@@ -469,9 +468,9 @@ const submit = () => {
       packageVersion: data.formData.packageVersion
     }
     batchPackageUpload(params.name,params.os, params.cpuArch,params.packageVersion, params.packageVersionNum, params.packageUrl).then((res) => {
-      console.log('res560' + res)
+      console.log('res' + res)
     }).catch((error) => {
-      console.log('562' + error)
+      console.log('' + error)
     })
   } else {
     const params = {
@@ -484,9 +483,9 @@ const submit = () => {
       wsBusinessId: wsBusinessId.value
     }
     batchPackageOnline(params).then((res) => {
-      console.log('570 add success online', res)
+      console.log(' add success online', res)
     }).catch((error) => {
-      console.log('572 online', error)
+      console.log(' online', error)
     })
   }
   data.show = false

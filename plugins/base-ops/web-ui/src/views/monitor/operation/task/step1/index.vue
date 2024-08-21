@@ -161,7 +161,7 @@
                 <span class="form-helper-text">用于登录数据库时的凭证， 请输入高安全度密码</span>
               </template>
             </a-form-item>
-            <a-form-item label="是否单节点安装">
+            <a-form-item label="部署类型">
               <a-radio-group v-model="data.deployType" @change="clusterModeChange" type="button">
                 <a-radio value="SINGLE_NODE">单节点安装</a-radio>
                 <a-radio value="CLUSTER">多节点安装</a-radio>
@@ -486,7 +486,6 @@ const fetchSameOs = () => {
 const chooseVer = (versionType:any) =>{
   data.packageVersion = versionType
   currVersion.value = versionType
-  data.clusterNodes.length = 0
   if (versionType === OpenGaussVersionEnum.ENTERPRISE && data.hostUser !== null && data.hostUser !== '') {
     data.logPath = '/opt/' + data.hostUser + '/openGauss/log/omm'
     data.tmpPath = '/opt/' + data.hostUser + '/openGauss/tmp'
@@ -509,7 +508,6 @@ const clusterNodesLimit = ref(0)
 const clusterModeChange = (input) => {
   if (input === "SINGLE_NODE") {
     clusterNodesLimit.value = 0
-    data.clusterNodes.length = 1
     data.deployType = "SINGLE_NODE"
   } else {
     data.deployType = "CLUSTER"
@@ -572,9 +570,46 @@ const initMasterNode = () => {
       }) .catch((error) => {
         console.error(error)
       }) .finally(() => {
+        if( !data.clusterId || data.clusterId === '' ){
+          data.clusterNodes.length = 0
+          const newData = {
+            "order" : 1,
+            "clusterNodeId": '',
+            "clusterId": data.clusterId?data.clusterId:'',
+            "hostId": data.hostId,
+            "hostIp": data.hostIp,
+            "hostUser": data.hostUser,
+            "hostUserId": data.hostUserId,
+            "nodeType": "MASTER",
+            "dataPath": data.hostUser?'/opt/' + data.hostUser + '/openGauss/data/dn' : '/opt/openGauss/data/dn',
+            "azOwner": data.packageVersion === OpenGaussVersionEnum.ENTERPRISE? azOwnerList.value[0]: '',
+            "azPriority": data.packageVersion === OpenGaussVersionEnum.ENTERPRISE? '1' : '',
+            "isCMMaster": data.enableCmTool,
+            "cmDataPath": tempCMPath,
+            "cmPort": tempCMPort,
+            "editing": checkMasterPort
+          }
+          if (newData.editing) {
+            tempEditCluster.value = JSON.parse(JSON.stringify(newData))
+          }
+          data.clusterNodes.push(newData)
+          masterHostIp.value = data.hostIp
+          clusterOrder.value = 1
+        } else {
+          data.clusterNodes[0].hostIp = data.hostIp
+          data.clusterNodes[0].hostId = data.hostId
+          data.clusterNodes[0].hostUser = data.hostUser
+          data.clusterNodes[0].hostUserId = data.hostUserId
+          masterHostIp.value = data.hostIp
+        }
+      })
+    } else {
+      if( !data.clusterId || data.clusterId === '' ){
         data.clusterNodes.length = 0
         const newData = {
           "order" : 1,
+          "clusterNodeId": '',
+          "clusterId": data.clusterId?data.clusterId:'',
           "hostId": data.hostId,
           "hostIp": data.hostIp,
           "hostUser": data.hostUser,
@@ -586,35 +621,18 @@ const initMasterNode = () => {
           "isCMMaster": data.enableCmTool,
           "cmDataPath": tempCMPath,
           "cmPort": tempCMPort,
-          "editing": checkMasterPort
-        }
-        if (newData.editing) {
-          tempEditCluster.value = JSON.parse(JSON.stringify(newData))
+          "editing": false
         }
         data.clusterNodes.push(newData)
         masterHostIp.value = data.hostIp
         clusterOrder.value = 1
-      })
-    } else {
-      data.clusterNodes.length = 0
-      const newData = {
-        "order" : 1,
-        "hostId": data.hostId,
-        "hostIp": data.hostIp,
-        "hostUser": data.hostUser,
-        "hostUserId": data.hostUserId,
-        "nodeType": "MASTER",
-        "dataPath": data.hostUser?'/opt/' + data.hostUser + '/openGauss/data/dn' : '/opt/openGauss/data/dn',
-        "azOwner": data.packageVersion === OpenGaussVersionEnum.ENTERPRISE? azOwnerList.value[0]: '',
-        "azPriority": data.packageVersion === OpenGaussVersionEnum.ENTERPRISE? '1' : '',
-        "isCMMaster": data.enableCmTool,
-        "cmDataPath": tempCMPath,
-        "cmPort": tempCMPort,
-        "editing": false
+      } else {
+        // data.clusterNodes[0].hostIp = data.hostIp
+        // data.clusterNodes[0].hostId = data.hostId
+        // data.clusterNodes[0].hostUser = data.hostUser
+        // data.clusterNodes[0].hostUserId = data.hostUserId
+        masterHostIp.value = data.hostIp
       }
-      data.clusterNodes.push(newData)
-      masterHostIp.value = data.hostIp
-      clusterOrder.value = 1
     }
   }
 }
@@ -651,6 +669,8 @@ const wsBusinessId = ref('')
 const webSocketOpen = () => {
   currPercent.value = 0
   const socketKey = new Date().getTime()
+  // const wsPrefix = window.location.protocol.includes('https') ? 'wss' : 'ws'
+  // const socketUrl = `${wsPrefix}://192.168.0.114:19494/ws/base-ops/downloadPackage_${socketKey}`
   const wsPrefix = window.location.protocol.includes('https') ? 'wss' : 'ws'
   const socketUrl = `${wsPrefix}://${window.location.host}/ws/base-ops/downloadPackage_${socketKey}`
   const websocket = new WebSocket(socketUrl)
@@ -829,6 +849,8 @@ const addColumn = () => {
   let tempCMPort = data.packageVersion === OpenGaussVersionEnum.ENTERPRISE && data.enableCmTool === true ? data.clusterNodes[0].cmPort : 1
   const newData = {
     "order": clusterOrder.value,
+    "clusterNodeId": '',
+    "clusterId": data.clusterId?data.clusterId:'',
     "hostId": '',
     "hostUser": data.hostUser,
     "hostUserId": data.hostUserId,
@@ -941,7 +963,6 @@ const checkCmPort = (inputValue:string) => {
 }
 
 const deleteRows = (record:any) => {
-  data.clusterNodes = data.clusterNodes.filter(item => item.order !== record.order)
   if (record.clusterId && record.clusterId !== '' && record.clusterNodeId && record.clusterNodeId !== '') {
     deleteClustertaskNode(record.clusterId, record.clusterNodeId, {
       "clusterNodeId": record.clusterNodeId,
@@ -960,6 +981,8 @@ const deleteRows = (record:any) => {
         console.error(res)
         Message.error(res.data)
         record.editing = true
+      } else {
+        data.clusterNodes = data.clusterNodes.filter(item => item.order !== record.order)
       }
     }) .catch((error) => {
       console.error(error)
@@ -980,39 +1003,39 @@ const saveCluster = async (record: any) => {
   if (record.order === 1) {
     editFlag.hostIp = true
   }
-  let checkHostIpPromise = new Promise ((resolve) => {
-    if (record.order !== 1) {
-      if (!tempEditCluster.value.hostIp || tempEditCluster.value.hostIp === '') {
-        Message.error('ip不可为空')
-      } else {
-        if (tempEditCluster.value.hostIp === masterHostIp.value) {
-          Message.error("所选ip与主机ip相同，请重新选择")
+    let checkHostIpPromise = new Promise ((resolve) => {
+      if (record.order !== 1) {
+        if (!tempEditCluster.value.hostIp || tempEditCluster.value.hostIp === '') {
+          Message.error('ip不可为空')
         } else {
-          let tempHostId = hostIpId.get(tempEditCluster.value.hostIp)
-          let tempFlag = false
-          getHostUser(tempHostId).then((res) => {
-            res.data.forEach(item => {
-              if (item.username === data.hostUser) {
-                tempFlag = true
-                tempEditCluster.value.hostIp = inputValue
-                tempEditCluster.value.hostId = item.hostId
-                editFlag.hostIp = true
+          if (tempEditCluster.value.hostIp === masterHostIp.value) {
+            Message.error("所选ip与主机ip相同，请重新选择")
+          } else {
+            let tempHostId = hostIpId.get(tempEditCluster.value.hostIp)
+            let tempFlag = false
+            getHostUser(tempHostId).then((res) => {
+              res.data.forEach(item => {
+                if (item.username === data.hostUser) {
+                  tempFlag = true
+                  tempEditCluster.value.hostIp = getIpById(item.hostId)
+                  tempEditCluster.value.hostId = item.hostId
+                  editFlag.hostIp = true
+                }
+              })
+              if (!tempFlag) {
+                Message.error("所选ip不存在该用户，请重新选择ip或在该ip新增用户")
               }
+            }) .catch((error) => {
+              console.error(error)
+            }) .finally(() => {
+              resolve(editFlag.hostIp)
             })
-            if (!tempFlag) {
-              Message.error("所选ip不存在该用户，请重新选择ip或在该ip新增用户")
-            }
-          }) .catch((error) => {
-            console.error(error)
-          }) .finally(() => {
-            resolve(editFlag.hostIp)
-          })
+          }
         }
+      } else {
+        resolve(editFlag.hostIp)
       }
-    } else {
-      resolve(editFlag.hostIp)
-    }
-  })
+    })
   let checkCmPortPromise = new Promise ((resolve) => {
     if (!editFlag.CmPort && tempEditCluster.value.cmPort && tempEditCluster.value.hostIp && data.enableCmTool) {
       checkPortExist(hostIpId.get(tempEditCluster.value.hostIp), tempEditCluster.value.cmPort, data.clusterId) .then((res) => {
@@ -1099,10 +1122,10 @@ const saveCluster = async (record: any) => {
           updateClustertaskNode({
             "clusterNodeId": record.clusterNodeId,
             "clusterId": data.clusterId,
-            "hostId": record.hostId,
-            "hostUserId": record.hostUserId,
+            "hostId": (!record.hostId && record.order == 1)? data.hostId: record.hostId,
+            "hostUserId": data.hostUserId,
             "nodeType": record.nodeType,
-            "dataPath": record.dataPath,
+            "dataPath": !record.dataPath ? "/opt/" + data.hostUser + "/openGauss/data/dn": record.dataPath,
             "azOwner": record.azOwner,
             "azPriority": record.azPriority,
             "isCMMaster": record.isCMMaster,
@@ -1110,9 +1133,19 @@ const saveCluster = async (record: any) => {
             "cmPort": record.cmPort
           }) .then((res) => {
             if(Number(res.code) !== 200) {
-              console.error(res)
               Message.error(res.data)
               record.editing = true
+            } else if (record.order === 1){
+              masterHostIp.value = data.hostIp
+              record.hostIp = data.hostIp
+              record.hostUser = data.hostUser
+              record.hostId = data.hostId
+              record.hostUserId = data.hostUserId
+            } else{
+              record.hostUser = data.hostUser
+            }
+            if(!record.dataPath) {
+              record.dataPath =  "/opt/" + data.hostUser + "/openGauss/data/dn"
             }
           }) .catch((error) => {
             console.error(error)
@@ -1552,7 +1585,7 @@ const init = () => {
             "isCMMaster": item.isCMMaster,
             "cmDataPath": item.cmDataPath,
             "cmPort": item.cmPort,
-            "editing": false
+            "editing": (!item.hostId && res.data.version !== OpenGaussVersionEnum.MINIMAL_LIST)
           }
           data.clusterNodes.push(newData)
         })
@@ -1606,6 +1639,7 @@ const init = () => {
       console.error(error)
     })
   } else {
+    currVersion.value = OpenGaussVersionEnum.MINIMAL_LIST
     data.port = 5432
     data.installPath = ''
     data.installPackagePath = ''
@@ -1638,9 +1672,9 @@ const init = () => {
 const tempClusterId = ref('')
 
 watch(() => props.clusterId, (newVal) => {
-  console.log('Received new data:', newVal)
-  init()
-}, { immediate: true })
+    console.log('Received new data:', newVal)
+    init()
+  }, { immediate: true })
 watch(() => props.createClusterId, (newVal) => {
   console.log('Received create cluster ID:', newVal)
   data.clusterId = newVal
