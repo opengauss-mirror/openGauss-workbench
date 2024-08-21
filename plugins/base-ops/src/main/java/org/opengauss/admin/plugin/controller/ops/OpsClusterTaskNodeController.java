@@ -36,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
@@ -64,6 +65,17 @@ public class OpsClusterTaskNodeController extends BaseController {
     @PostMapping("/create")
     public AjaxResult createClusterTaskNode(@RequestBody @Valid OpsClusterTaskNodeDTO insertDto) {
         return AjaxResult.success(clusterTaskNodeProvider.createClusterTaskNode(insertDto));
+    }
+
+    /**
+     * list cluster node list
+     *
+     * @param clusterId cluster id
+     * @return list
+     */
+    @GetMapping("/list")
+    public AjaxResult listClusterTaskNode(@RequestParam("clusterId") String clusterId) {
+        return AjaxResult.success(clusterTaskNodeProvider.listClusterTaskNode(clusterId));
     }
 
     /**

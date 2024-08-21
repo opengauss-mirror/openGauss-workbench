@@ -248,4 +248,14 @@ public interface IOpsClusterTaskService extends IService<OpsClusterTaskEntity> {
      * @param count     current cluster node count
      */
     void modifyClusterNodeCount(String clusterId, int count);
+
+    /**
+     * check host and user can install cluster
+     *
+     * @param clusterId  clusterId
+     * @param hostId     hostId
+     * @param hostUserId hostUserId
+     * @return check result
+     */
+    boolean checkHostAndUserInstallCluster(String clusterId, String hostId, String hostUserId);
 }

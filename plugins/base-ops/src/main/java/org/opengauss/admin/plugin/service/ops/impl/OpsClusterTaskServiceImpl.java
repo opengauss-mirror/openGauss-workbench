@@ -313,7 +313,7 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
             OpsHostEntity host = opsHostRemoteService.getHost(hostId);
             String nodePublicIp = host.getPublicIp();
             OpsHostUserEntity hostUser = opsHostRemoteService.getOpsHostUser(node.getHostUserId());
-            boolean canInstall = checkHostInstanceCanInstallClusterNodeById(clusterId, hostId, node.getHostUserId());
+            boolean canInstall = checkHostAndUserInstallCluster(clusterId, hostId, node.getHostUserId());
             Assert.isTrue(canInstall, clusterId + " host has cluster installation task: "
                     + nodePublicIp + "_(" + hostUser.getUsername() + ")");
 
@@ -362,7 +362,7 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         Assert.isTrue(Objects.nonNull(host), "host is not exist: " + hostIp);
         OpsHostUserEntity userEntity = opsHostRemoteService.getHostUserByUsername(host.getHostId(), hostUsername);
         Assert.isTrue(Objects.nonNull(userEntity), "host user is not exist: " + hostIp + " " + hostUsername);
-        return checkHostInstanceCanInstallClusterNodeById("", host.getHostId(), userEntity.getHostUserId());
+        return checkHostAndUserInstallCluster("", host.getHostId(), userEntity.getHostUserId());
     }
 
     /**
@@ -374,7 +374,7 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
      * @param hostUserId hostUserId
      * @return boolean
      */
-    private boolean checkHostInstanceCanInstallClusterNodeById(String clusterId, String hostId, String hostUserId) {
+    public boolean checkHostAndUserInstallCluster(String clusterId, String hostId, String hostUserId) {
         return opsClusterTaskNodeService.count(Wrappers.lambdaQuery(OpsClusterTaskNodeEntity.class)
                 .select(OpsClusterTaskNodeEntity::getClusterNodeId)
                 .notIn(StrUtil.isNotEmpty(clusterId), OpsClusterTaskNodeEntity::getClusterId, clusterId)
