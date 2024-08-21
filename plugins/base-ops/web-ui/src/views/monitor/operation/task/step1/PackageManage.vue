@@ -270,6 +270,7 @@ const submit = () => {
 
 }
 const close = () => {
+  console.log('关闭')
   data.show = false
 }
 

@@ -65,10 +65,11 @@ import Step1 from './step1'
 import Step2 from './step2'
 import Step3 from './step3'
 import {
+  batchClusterNodes,
   checkCluster,
   createClusterTask, createClustertaskNode, envCheckResult,
   submitCluster,
-  updateClusterTask
+  updateClusterTask, updateClustertaskNode
 } from "@/api/ops";
 import {useRoute, useRouter} from "vue-router";
 import {OpenGaussVersionEnum} from "@/types/ops/install";
@@ -205,7 +206,10 @@ const editFlag  = ref(true)
 
 const saveUpdateCulster = async () => {
   if (editFlag.value && (!subTaskConfig.value.clusterId || subTaskConfig.value.clusterId === '') && currentStep.value === 1) {
-    if (subTaskConfig.value.deployType !== "SINGLE_NODE" && subTaskConfig.value.packageVersion !== OpenGaussVersionEnum.ENTERPRISE && clusterTaskList.clusterNodes.length < 2){
+    let nodeSaveFlag = 0
+    if (subTaskConfig.value.deployType === "CLUSTER"
+      && subTaskConfig.value.packageVersion !== OpenGaussVersionEnum.MINIMAL_LIST
+      && clusterTaskList.clusterNodes.length < 2){
       Message.error('当前选择多节点模式，请至少输入两个节点数据')
     } else {
       clusterTaskList.hostId = subTaskConfig.value.hostId
@@ -260,7 +264,6 @@ const saveUpdateCulster = async () => {
           clusterId.value = res.msg
           createClusterId.value = clusterId.value
           saveFlag.value = true
-          let nodeSaveFlag = false
           clusterTaskList.clusterNodes.forEach((record) => {
             createClustertaskNode({
               "clusterNodeId": '',
@@ -276,15 +279,19 @@ const saveUpdateCulster = async () => {
               "cmPort": record.cmPort
             }) .then((res) => {
               if(Number(res.code) !== 200) {
-                console.error(res)
-                Message.error(res.data)
                 Message.error('保存草稿箱失败')
+                saveFlag.value = false
               } else {
-                Message.success('保存草稿箱成功')
-                saveFlag.value = true
+                nodeSaveFlag = nodeSaveFlag + 1
               }
             }) .catch((error) => {
               console.error(error)
+            }) .finally(() => {
+              if (subTaskConfig.value.deployType === "SINGLE_NODE" && clusterTaskList.clusterNodes.length > 1){
+                Message.error('当前选择单节点模式，请删除多余节点')
+              } else if (nodeSaveFlag === clusterTaskList.clusterNodes.length) {
+                saveFlag.value = true
+              }
             })
           })
         } else {
@@ -292,12 +299,27 @@ const saveUpdateCulster = async () => {
         }
       }) .catch((error) => {
         Message.error('保存草稿箱失败' + error)
+      }) .finally(() => {
+        if (subTaskConfig.value.deployType === "SINGLE_NODE" && clusterTaskList.clusterNodes.length > 1){
+          Message.error('当前选择单节点模式，请删除多余节点')
+        } else if (nodeSaveFlag === clusterTaskList.clusterNodes.length) {
+          saveFlag.value = true
+        }
       })
     }
-  } else if (editFlag.value && currentStep.value === 1) {
-    if (subTaskConfig.value.deployType !== "SINGLE_NODE" && subTaskConfig.value.packageVersion !== OpenGaussVersionEnum.ENTERPRISE && clusterTaskList.clusterNodes.length < 2) {
+    if (nodeSaveFlag === clusterTaskList.clusterNodes.length) {
+      saveFlag.value = true
+    }
+    if (saveFlag.value) {
+      Message.success('保存草稿箱成功')
+    }
+  } else if (editFlag.value && currentStep.value === 1 && subTaskConfig.value.clusterId !== '') {
+    if (subTaskConfig.value.deployType === "CLUSTER"
+      && subTaskConfig.value.packageVersion !== OpenGaussVersionEnum.MINIMAL_LIST
+      && clusterTaskList.clusterNodes.length < 2) {
       Message.error('当前选择多节点模式，请至少输入两个节点数据')
     } else {
+      let clusterSaveFlag = true
       clusterTaskList.hostId = subTaskConfig.value.hostId
       clusterTaskList.hostUserId = subTaskConfig.value.hostUserId
       clusterTaskList.os = subTaskConfig.value.os
@@ -321,9 +343,9 @@ const saveUpdateCulster = async () => {
       clusterTaskList.enableGenerateEnvironmentVariableFile = subTaskConfig.value.enableGenerateEnvironmentVariableFile
       clusterTaskList.xmlConfigPath = subTaskConfig.value.xmlConfigPath
       clusterTaskList.deployType = subTaskConfig.value.deployType
-      clusterId.value = tempClusterId.value
+      clusterId.value = subTaskConfig.value.clusterId?subTaskConfig.value.clusterId:tempClusterId.value
       updateClusterTask({
-        "clusterId": tempClusterId.value,
+        "clusterId": clusterId.value,
         "hostId": clusterTaskList.hostId,
         "hostUserId": clusterTaskList.hostUserId,
         "os": clusterTaskList.os,
@@ -349,44 +371,76 @@ const saveUpdateCulster = async () => {
         "deployType": clusterTaskList.deployType
       }).then((res) => {
         if (res.code === 200) {
-          clusterId.value = tempClusterId.value
-          if (!tempClusterId.value || tempClusterId.value === '') {
-            clusterTaskList.clusterNodes.forEach((record) => {
-              createClustertaskNode({
-                "clusterNodeId": '',
-                "clusterId": clusterId.value,
-                "hostId": record.hostId,
-                "hostUserId": record.hostUserId,
-                "nodeType": record.nodeType,
-                "dataPath": record.dataPath,
-                "azOwner": record.azOwner,
-                "azPriority": record.azPriority,
-                "isCMMaster": record.isCMMaster,
-                "cmDataPath": record.cmDataPath,
-                "cmPort": record.cmPort
-              }).then((res) => {
-                if (Number(res.code) !== 200) {
-                  console.error(res)
-                  Message.error(res.data)
-                  Message.error('保存草稿箱失败')
-                } else {
-                  Message.success('保存草稿箱成功')
-                  saveFlag.value = true
+          batchClusterNodes(clusterId.value).then((res) => {
+            if (res.code === 200) {
+              const clusterNodesMap = new Map(res.data.clusterNodes.map(item => [item.clusterNodeId, item]))
+              let countUpdateFlag = 0
+              clusterTaskList.clusterNodes.forEach((item) => {
+                if (item.clusterNodeId) {
+                  const itemClusterNode = clusterNodesMap.get(item.clusterNodeId)
+                  if (itemClusterNode
+                    && (!itemClusterNode.hostId || itemClusterNode.hostId !== item.hostId)
+                    && (!itemClusterNode.hostUserId || itemClusterNode.hostUserId !== item.hostUserId)) {
+                      updateClustertaskNode({
+                        "clusterNodeId": item.clusterNodeId,
+                        "clusterId": item.clusterId,
+                        "hostId": item.hostId,
+                        "hostUserId": item.hostUserId,
+                        "nodeType": item.nodeType,
+                        "dataPath": item.dataPath,
+                        "azOwner": item.azOwner,
+                        "azPriority": item.azPriority,
+                        "isCMMaster": item.isCMMaster,
+                        "cmDataPath": item.cmDataPath,
+                        "cmPort": item.cmPort
+                      }) .then((response) => {
+                        if(Number(response.code) !== 200) {
+                          console.error(response)
+                          Message.error('385   ' +response.data)
+                          clusterSaveFlag = false
+                        } else {
+                          clusterSaveFlag = true
+                          countUpdateFlag = countUpdateFlag + 1
+                        }
+                      }) .catch((error) => {
+                        console.error('updateClusterNode' + error)
+                        clusterSaveFlag = false
+                      }) .finally(() => {
+                        if (clusterSaveFlag) {
+                          saveFlag.value = true
+                        } else {
+                          saveFlag.value = false
+                        }
+                      })
+                  } else {
+                    countUpdateFlag = countUpdateFlag + 1
+                  }
                 }
-              }).catch((error) => {
-                console.error(error)
               })
-            })
-          } else {
-            saveFlag.value = true
-            Message.success('保存草稿箱成功')
-          }
+              if (subTaskConfig.value.deployType === "SINGLE_NODE" && clusterTaskList.clusterNodes.length > 1){
+                Message.error('当前选择单节点模式，请删除多余节点')
+              }
+            }
+          }) .catch((error) => {
+            console.error((error))
+            clusterSaveFlag = false
+            saveFlag.value = false
+          }) .finally(() => {
+            if (clusterSaveFlag) {
+              saveFlag.value = true
+            } else {
+              saveFlag.value = false
+            }
+          })
         } else {
           Message.error('保存草稿箱失败')
         }
       }).catch((error) => {
         Message.error('保存草稿箱失败' + error)
       })
+    }
+    if (saveFlag.value) {
+      Message.success('保存草稿箱成功')
     }
   }
 }
@@ -401,12 +455,15 @@ const saveConfig = async () => {
   tempFlag = clusterTaskList.corePath === subTaskConfig.value.corePath ? tempFlag && true : false
   tempFlag = clusterTaskList.envPath === subTaskConfig.value.envPath ? tempFlag && true : false
   clusterTaskList.clusterNodes = []
+  editFlag.value = true
   subTaskConfig.value.clusterNodes.forEach((item) => {
     if (item.editing === true) {
       editFlag.value = false
       Message.error('仍有节点处于编辑状态，无法保存')
     }
     const newData = {
+      "clusterNodeId": item.clusterNodeId,
+      "clusterId": item.clusterId,
       "hostId": item.hostId,
       "hostUserId": item.hostUserId,
       "nodeType": item.nodeType,
@@ -420,18 +477,18 @@ const saveConfig = async () => {
     clusterTaskList.clusterNodes.push(newData)
   })
   if (currentStep.value === 1) {
-    editFlag.value = true
     const formRuleCheck = stepOneComp.value
-    const isValid = formRuleCheck.validateAllFields()
-    if (isValid) {
-      try {
-        await saveUpdateCulster()
-      } catch (error) {
-        console.error('Error executing parts:', error)
+      const isValid = formRuleCheck.validateAllFields()
+      if (isValid && editFlag.value) {
+        try {
+          await saveUpdateCulster()
+        } catch (error) {
+          console.error('Error executing parts:', error)
+        }
       }
-    }
   } else {
     Message.success('保存草稿箱成功')
+    saveFlag.value = true
   }
 }
 
@@ -453,20 +510,24 @@ const init = () => {
   if (route) {
     const tempRecord = route.params.record?JSON.parse(route.params.record):''
     tempClusterId.value = tempRecord.clusterId
+  } else {
+    tempClusterId.value = ''
   }
+  clusterId.value = ''
+  createClusterId.value = ''
 }
 
 const route = useRoute()
 onMounted(() => {
-  init()
+ init()
 })
 const previousPath = ref(route.fullPath)
 watch(() => route.fullPath, (newPath) => {
-  if (newPath !== previousPath.value) {
-    previousPath.value = newPath
-    init()
-  }
-}, { immediate: true })
+    if (newPath !== previousPath.value) {
+      previousPath.value = newPath
+      init()
+    }
+  }, { immediate: true })
 
 </script>
 
@@ -540,12 +601,12 @@ watch(() => route.fullPath, (newPath) => {
     font-size: medium;
   }
   .rectangle {
-    width: calc(33.33% - 20px);
-    height: 32px;
-    background-color: red;
-    margin: 0;
-    float: left;
-  }
+     width: calc(33.33% - 20px);
+     height: 32px;
+     background-color: red;
+     margin: 0;
+     float: left;
+   }
 }
 
 </style>

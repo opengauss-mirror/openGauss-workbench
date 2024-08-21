@@ -136,7 +136,6 @@ const props = defineProps({
 })
 
 const route = useRoute();
-console.log(route.query.clusterId)
 
 const data = reactive({
   selectedOption: 'colony_name01',
@@ -167,8 +166,6 @@ const getListData = () => {
         tempPackageData.name = res.data.name
         tempPackageData.fileName = res.fileName
       }
-      console.log('166')
-      console.log(tempPackageData)
     })
   }).catch(error => {
     console.error("taskMenu infoError:"+error);
@@ -177,7 +174,6 @@ const getListData = () => {
 const hostIdIp = new FormData
 const hostPuPr = new FormData
 const getClusterData = () => {
-  console.log(props.message)
   const param = {
     os: '',
     osVersion: '',
