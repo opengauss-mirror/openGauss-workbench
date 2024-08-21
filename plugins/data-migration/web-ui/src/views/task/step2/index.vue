@@ -49,6 +49,16 @@
         <template #columns>
           <a-table-column :title="$t('step2.index.5q092waawag0')" data-index="sourceNodeName"></a-table-column>
           <a-table-column :title="$t('step2.index.5q092waawdo0')" data-index="sourceDBName"></a-table-column>
+          <a-table-column :title="$t('step1.index.5q091ixigro1')" data-index="seletedTblNum" :width="150" ellipsis tooltip>
+            <template #cell="{ record }">
+              <a-button v-if="record.sourceTables && record.sourceTables !== ''" @click="showTblList(record.sourceDBName, record.sourceTables)">
+                {{ record.seletedTblNum==='全部' ?
+                $t('step1.index.5q091ixigro3') :
+                $t('step1.index.5q091ixigro2',{num:record.seletedTblNum||record.sourceTables?.split(',')?.length}) }}
+              </a-button>
+              <p v-else>{{ $t('step1.index.5q091ixigro3') }}</p>
+            </template>
+          </a-table-column>
           <a-table-column :title="$t('step2.index.5q092waawh80')" data-index="targetNodeName"></a-table-column>
           <a-table-column :title="$t('step2.index.5q092waawk00')" data-index="targetDBName"></a-table-column>
           <a-table-column :title="$t('step2.index.5q092wab7280')" data-index="mode">
@@ -73,7 +83,7 @@
         </template>
       </a-table>
     </div>
-
+    <dataTblList v-if="dataTblListRef" @close="showTblListClose" :seleDBMsgaft="seleDBMsgaft" > </dataTblList>
     <!-- params config -->
     <params-config v-model:open="paramsConfigVisible" :mode="configMode" :global-params="props.globalParams" :count-use-default="countUseDefault" :task-info="subTaskInfo" @syncGlobalParams="syncGlobalParams" @syncTaskParams="syncTaskParams" />
   </div>
@@ -82,6 +92,7 @@
 <script setup>
 import { reactive, ref, onMounted, toRaw } from 'vue'
 import ParamsConfig from './components/ParamsConfig.vue'
+import dataTblList from '../step1/dataTableList.vue'
 import useTheme from '@/hooks/theme'
 
 const { currentTheme } = useTheme()
@@ -130,6 +141,22 @@ const syncTaskParams = params => {
   originData.splice(idx, 1, toRaw(subTaskInfo.value))
   emits('syncConfig', toRaw(originData))
   getFilterData()
+}
+
+const dataTblListRef = ref (false)
+const seleDBMsgaft = reactive({
+  dbName: '',
+  TblList: ''
+})
+
+const showTblList = (dbName, TblList) => {
+  seleDBMsgaft.dbName = dbName
+  seleDBMsgaft.TblList = TblList
+  dataTblListRef.value = true
+}
+
+const showTblListClose = () => {
+  dataTblListRef.value = false
 }
 
 const handleParamsConfig = (mode, row) => {
