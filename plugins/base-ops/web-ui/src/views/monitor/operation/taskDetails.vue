@@ -2,33 +2,33 @@
   <div class="clusterManage">
     <div class="header">
       <div>
-        <a-link type="primary" @click="clusterManage">集群管理</a-link> /
+        <a-link type="primary" @click="clusterManage">{{$t('operation.DailyOps.sl3u5s5cf2y0')}}</a-link> /
         <select style="border: 0px;font-weight: bold;">
           <option>{{list.data.clusterName}}</option>
         </select>
       </div>
       <div class="operation">
-        <a-link @click="logDownload">执行日志下载</a-link>&nbsp;&nbsp;
-        <a-link @click="copy">复制</a-link>&nbsp;&nbsp;
-        <a-link @click="editClusterTask">编辑</a-link>&nbsp;&nbsp;
-        <a-link @click="singleRowDelete">删除</a-link>&nbsp;&nbsp;
-        <a-button class="execute" @click="reExecute">重新执行</a-button>&nbsp;&nbsp;
+        <a-link @click="logDownload">{{$t('operation.DailyOps.sl3u5s5cf224')}}</a-link>&nbsp;&nbsp;
+        <a-link @click="copy">{{$t('operation.DailyOps.sl3u5s5cf222')}}</a-link>&nbsp;&nbsp;
+        <a-link @click="editClusterTask">{{$t('operation.DailyOps.sl3u5s5cf225')}}</a-link>&nbsp;&nbsp;
+        <a-link @click="singleRowDelete">{{$t('operation.DailyOps.sl3u5s5cf212')}}</a-link>&nbsp;&nbsp;
+        <a-button class="execute" @click="reExecute">{{$t('operation.DailyOps.sl3u5s5cf221')}}</a-button>&nbsp;&nbsp;
       </div>
       <p class="clusterName">{{list.data.clusterName}}</p>
     </div>
     <div class="hostInfo">
-      <span style="font-weight: bold;">服务器信息</span><br><br>
+      <span style="font-weight: bold;">{{$t('operation.DailyOps.sl3u5s5cf228')}}</span><br><br>
       <table>
         <tr>
-          <td class="key">服务器IP</td>
+          <td class="key">{{$t('operation.DailyOps.sl3u5s5cf229')}}</td>
           <td class="value">{{ list.data.hostIp }}</td>
-          <td class="key">安装用户</td>
+          <td class="key">{{$t('operation.DailyOps.else16')}}</td>
           <td class="value">{{ list.data.hostUsername }}</td>
-          <td class="key">服务器系统</td>
+          <td class="key">{{$t('operation.DailyOps.sl3u5s5cf230')}}</td>
           <td class="value">{{ list.data.os }}</td>
         </tr>
         <tr>
-          <td class="key">CPU架构</td>
+          <td class="key">{{$t('operation.DailyOps.sl3u5s5cf231')}}</td>
           <td class="value">{{ list.data.cpuArch }}</td>
           <td class="key"></td>
           <td class="value"></td>
@@ -39,63 +39,68 @@
     </div>
     <br>
     <div class="clusterInfo">
-      <span style="font-weight: bold;">集群信息</span><br><br>
+      <span style="font-weight: bold;">{{$t('enterprise.InstallPrompt.5mpmb9e6puk0')}}</span><br><br>
       <table>
         <tr>
-          <td class="key">集群名称</td>
+          <td class="key">{{$t('enterprise.ClusterConfig.5mpm3ku3hn40')}}</td>
           <td class="value">{{ list.data.clusterName }}</td>
-          <td class="key">openGauss版本</td>
-          <td class="value" v-if="list.data.version === 'ENTERPRISE'">企业版</td>
-          <td class="value" v-if="list.data.version === 'LITE'">轻量版</td>
-          <td class="value" v-if="list.data.version === 'MINIMAL_LIST'">极简版</td>
-          <td class="key">版本号</td>
+          <td class="key">{{$t('operation.DailyOps.sl3u5s5cf232')}}</td>
+          <td class="value" v-if="list.data.version === 'ENTERPRISE'">{{$t('operation.DailyOps.5mplp1xc4fg0')}}</td>
+          <td class="value" v-if="list.data.version === 'LITE'">{{$t('operation.DailyOps.5mplp1xc4b40')}}</td>
+          <td class="value" v-if="list.data.version === 'MINIMAL_LIST'">{{$t('operation.DailyOps.5mplp1xc46o0')}}</td>
+          <td class="key">{{$t('packageManage.index.5myq5c8zp680')}}</td>
           <td class="value">{{ list.data.versionNum }}</td>
         </tr>
         <tr>
-          <td class="key">集群节点数量</td>
+          <td class="key">{{$t('operation.DailyOps.sl3u5s5cf233')}}</td>
           <td class="value">
             <span v-if="list.data.deployType === 'CLUSTER' && list.data.clusterNodeNum > 1">
-              一主{{list.data.clusterNodeNum - 1}}备
+              {{$t('operation.DailyOps.5mplp1xbzmw0')}}{{list.data.clusterNodeNum - 1}}{{$t('operation.DailyOps.5mplp1xbztc0')}}
             </span>
             <span v-else>
-              单节点
+              {{$t('operation.DailyOps.5mplp1xc0000')}}
             </span>
           </td>
-          <td class="key">集群端口号</td>
+          <td class="key">{{$t('operation.DailyOps.sl3u5s5cf234')}}</td>
           <td class="value">{{ list.data.databasePort }}</td>
-          <td class="key">环境变量地址</td>
+          <td class="key">{{$t('operation.DailyOps.sl3u5s5cf235')}}</td>
           <td class="value">{{ list.data.envPath }}</td>
         </tr>
         <tr>
-          <td class="key">安装目录</td>
+          <td class="key">{{$t('enterprise.ClusterConfig.5mpm3ku3hv40')}}</td>
           <td class="value">{{ list.data.installPath }}</td>
-          <td class="key">软件包路径</td>
+          <td class="key">{{$t('components.OfflineInstall.5mpn1nwazgw0')}}</td>
           <td class="value">{{ list.data.installPackagePath }}</td>
-          <td class="key">日志目录</td>
+          <td class="key">{{$t('enterprise.ClusterConfig.5mpm3ku3i6s0')}}</td>
           <td class="value">{{ list.data.logPath }}</td>
         </tr>
         <tr>
-          <td class="key">临时文件目录</td>
+          <td class="key">{{$t('enterprise.ClusterConfig.5mpm3ku3ie40')}}</td>
           <td class="value">{{ list.data.tmpPath }}</td>
-          <td class="key">数据库工具目录</td>
+          <td class="key">{{$t('enterprise.ClusterConfig.5mpm3ku3il80')}}</td>
           <td class="value">{{ list.data.omToolsPath }}</td>
-          <td class="key">数据库core目录</td>
+          <td class="key">{{$t('enterprise.ClusterConfig.5mpm3ku3is00')}}</td>
           <td class="value">{{ list.data.corePath }}</td>
         </tr>
         <tr>
-          <td class="key">是否安装CM</td>
-          <td class="value">{{ list.data.enableCmTool }}</td>
-          <td class="key">是否环境分离</td>
-          <td class="value">{{ list.data.enableGenerateEnvironmentVariableFile }}</td>
-          <td class="key" v-if="list.data.enableGenerateEnvironmentVariableFile">环境分离路径</td>
+          <td class="key">{{$t('operation.DailyOps.sl3u5s5cf236')}}</td>
+          <td class="value">{{ list.data.enableCmTool ? $t('enterprise.InstallPrompt.5mpmb9e6r4g0') : $t('enterprise.InstallPrompt.5mpmb9e6r800') }}</td>
+          <td class="key">{{$t('operation.DailyOps.sl3u5s5cf237')}}</td>
+          <td class="value">{{ list.data.enableGenerateEnvironmentVariableFile ? $t('enterprise.InstallPrompt.5mpmb9e6r4g0') : $t('enterprise.InstallPrompt.5mpmb9e6r800') }}</td>
+          <td class="key" v-if="list.data.enableGenerateEnvironmentVariableFile">{{$t('operation.DailyOps.sl3u5s5cf238')}}</td>
           <td class="value" v-if="list.data.enableGenerateEnvironmentVariableFile">{{ list.data.envPath }}</td>
         </tr>
         <tr>
-          <td class="key">数据库密码</td>
+          <td class="key">{{$t('enterprise.ClusterConfig.5mpm3ku3jdg0')}}</td>
           <td class="value">
-            <span v-if="data.visible">******</span>
-            <span v-if="!data.visible">{{ list.data.databasePassword }}</span>
-            <button @click="changeVisible">{{data.visible?'显示':'隐藏'}} </button>
+            <span v-if="data.visible">
+              ******
+              <img src="@/assets/images/modeling/ops/preview-close.png" @click="changeVisible" style="vertical-align: middle;width:20px;"/>
+            </span>
+            <span v-if="!data.visible" style="height:20px;">
+              {{ list.data.databasePassword }}
+              <img src="@/assets/images/modeling/ops/preview-open.png" @click="changeVisible" style="vertical-align: middle;width:20px"/>
+            </span>
           </td>
           <td class="key"></td>
           <td class="value"></td>
@@ -106,24 +111,24 @@
     </div>
     <br>
     <div class="nodeInfo">
-      <span style="font-weight: bold;">节点信息</span><br><br>
+      <span style="font-weight: bold;">{{$t('components.AuditLog.5mplidlifr40')}}</span><br><br>
       <div v-for="(item, index) in list.data.clusterNodes" >
-        <span style="font-weight: bold;">节点{{index+1}}</span><br><br>
+        <span style="font-weight: bold;">{{$t('wdr.GenerateWdrDlg.5mpm0eufzyg0')}}{{index+1}}</span><br><br>
         <table>
           <tr>
-            <td class="key">节点类型</td>
+            <td class="key">{{$t('operation.DailyOps.sl3u5s5cf239')}}</td>
             <td class="value">{{item.nodeType}}</td>
-            <td class="key">IP地址</td>
+            <td class="key">{{$t('operation.HostPwdDlg.IpAddress')}}</td>
             <td class="value">{{item.hostIp}}</td>
-            <td class="key">安装用户</td>
+            <td class="key">{{$t('enterprise.NodeConfig.5mpme7w6bak0')}}</td>
             <td class="value">{{item.hostUsername}}</td>
           </tr>
           <tr>
-            <td class="key">数据路径</td>
+            <td class="key">{{$t('enterprise.NodeConfig.5mpme7w6brs0')}}</td>
             <td class="value">{{item.dataPath}}</td>
-            <td class="key">所属AZ</td>
+            <td class="key">{{$t('enterprise.NodeConfig.5mpme7w6aj40')}}</td>
             <td class="value">{{item.azOwner}}</td>
-            <td class="key">AZ优先级</td>
+            <td class="key">{{$t('operation.DailyOps.sl3u5s5cf240')}}</td>
             <td class="value">{{item.azPriority}}</td>
           </tr>
         </table>
@@ -140,6 +145,9 @@ import {KeyValue} from "@/types/global";
 import axios from "axios";
 import {batchDeleteTask, clusterLogDownload, copyTask, reExecuteTask} from "@/api/ops";
 import {Message} from "@arco-design/web-vue";
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const route = useRoute();
 const router = useRouter();
@@ -157,9 +165,8 @@ const editClusterTask = () => {
 const copy = () => {
   copyTask(list.data.clusterId)
     .then(res => {
-      console.log("Number(res.code):"+Number(res.code))
       if (Number(res.code) === 200) {
-        Message.success("复制" + list.data.clusterId + "成功!")
+        Message.success("copy" + list.data.clusterId + "success!")
       }
     }).catch(error => {
     console.error("copyTask error:"+error);
@@ -172,7 +179,7 @@ const singleRowDelete = () => {
   batchDeleteTask([list.data.clusterId])
     .then(res => {
       if (Number(res.code) === 200) {
-        Message.success("删除" + list.data.clusterId + "成功!")
+        Message.success("delete" + list.data.clusterId + "success!")
       }
     })
     .catch(error => {
@@ -217,7 +224,6 @@ onMounted(() => {
 
 //调用集群任务详情接口
 const taskMenu = axios.get(`/clusterTask/detail/${route.query.clusterId}`).then((res) => {
-  console.log("Number(res.code):"+Number(res.code))
   if (Number(res.code) === 200) {
     list.data = res.data;
     console.log(list.data);
