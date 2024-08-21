@@ -26,19 +26,19 @@
     </div>
     <br><br>
     <div style="border-bottom:1px solid #cecece;">
-      <a-link class="my-link" :style="clusterMenuText" @click="clusterMenu" style="border-radius:0px">{{ $t('集群列表') }}</a-link>
-      <a-link class="my-link" :style="parallelInstallTaskText" @click="parallelInstallTask" style="border-radius:0px">{{ $t('并行安装任务') }}</a-link>
+      <a-link class="my-link" :style="clusterMenuText" @click="clusterMenu" style="border-radius:0px">{{ $t('operation.DailyOps.sl3u5s5cf2y7') }}</a-link>
+      <a-link class="my-link" :style="parallelInstallTaskText" @click="parallelInstallTask" style="border-radius:0px">{{ $t('operation.DailyOps.sl3u5s5cf2y8') }}</a-link>
     </div>
     <br><br>
 
     <div v-if="list.pageTag === 'installTask'">
       <div style="border-bottom:1px solid #cecece;">
-        <a-link class="my-link" :style="taskTable" @click="taskMenu" >{{ $t('任务列表') }}</a-link>
-        <a-link class="my-link" :style="draftBox" @click="switchDraft">{{ $t('草稿箱') }}</a-link>
+        <a-link class="my-link" :style="taskTable" @click="taskMenu" >{{ $t('operation.DailyOps.sl3u5s5cf2y9') }}</a-link>
+        <a-link class="my-link" :style="draftBox" @click="switchDraft">{{ $t('operation.DailyOps.sl3u5s5cf210') }}</a-link>
       </div>
       <br>
-      <a-button class="my-button blueColor" @click="editClusterTask">{{ $t('创建并行安装任务') }}</a-button> &nbsp;
-      <a-button class="my-button" @click="batchExecute" :seleMsg="seleMsg" v-if="list.status.status != 'DRAFT'">{{ $t('批量执行') }}</a-button> &nbsp;
+      <a-button class="my-button blueColor" @click="editClusterTask">{{ $t('operation.DailyOps.sl3u5s5cf2y2') }}</a-button> &nbsp;
+      <a-button class="my-button" @click="batchExecute" :seleMsg="seleMsg" v-if="list.status.status != 'DRAFT'">{{ $t('operation.DailyOps.sl3u5s5cf211') }}</a-button> &nbsp;
       <task-execute ref="batchExecuteRef" @finish="watchExecuteStatus" @ok="watchExecuteStatus"></task-execute>
       <a-popconfirm
         :content="$t('packageManage.index.5myq5c8zms40')"
@@ -47,7 +47,7 @@
         @ok="deleteSelectedTaskId"
       >
         <a-button class="my-button">
-          {{ $t('删除') }}
+          {{ $t('operation.DailyOps.sl3u5s5cf212') }}
         </a-button>
       </a-popconfirm>
       <br><br>
@@ -62,7 +62,7 @@
         allow-clear
         style="width: 100%"
         multiple
-        :placeholder="$t('请选择合适标签')"
+        :placeholder="$t('operation.DailyOps.sl3u5s5cf213')"
       ></a-cascader>
 
       <br><br>
@@ -87,19 +87,19 @@
         </template>
         <template #status="{ record }">
             <span v-if="record.status === 'PENDING'">
-              {{ $t('待执行') }}
+              {{ $t('operation.DailyOps.sl3u5s5cf214') }}
             </span>
             <span v-if="record.status === 'WAITING'">
-              <a-spin :loading="true">{{ $t('执行等待中') }}</a-spin>
+              <a-spin :loading="true">{{ $t('operation.DailyOps.sl3u5s5cf215') }}</a-spin>
             </span>
             <span v-if="record.status === 'RUNNING'">
-              <a-spin :loading="true">{{ $t('执行中') }}</a-spin>
+              <a-spin :loading="true">{{ $t('operation.DailyOps.sl3u5s5cf216') }}</a-spin>
             </span>
             <span v-if="record.status === 'SUCCESS'">
-              {{ $t('执行成功') }}
+              {{ $t('operation.DailyOps.sl3u5s5cf217') }}
             </span>
             <span v-if="record.status === 'FAILED'">
-              {{ $t('执行失败') }}
+              {{ $t('operation.DailyOps.sl3u5s5cf218') }}
               <a-tooltip content="This is a Tooltip" position="right">
                 <icon-question-circle style="cursor: pointer;margin-left: 3px;" size="15" />
                 <template #content>
@@ -110,68 +110,68 @@
         </template>
         <template #version="{ record }">
             <span v-if="record.version === 'ENTERPRISE'">
-              {{ $t('企业版') }} {{record.versionNum}}
+              {{ $t('operation.DailyOps.5mplp1xc4fg0') }} {{record.versionNum}}
             </span>
           <span v-if="record.version === 'LITE'">
-              {{ $t('轻量版') }} {{record.versionNum}}
+              {{ $t('operation.DailyOps.5mplp1xc4b40') }} {{record.versionNum}}
             </span>
           <span v-if="record.version === 'MINIMAL_LIST'">
-              {{ $t('极简版') }} {{record.versionNum}}
+              {{ $t('operation.DailyOps.5mplp1xc46o0') }} {{record.versionNum}}
             </span>
         </template>
         <template #clusterNodeNum="{ record }">
             <span v-if="record.deployType === 'CLUSTER' && record.clusterNodeNum > 1">
-              {{ $t('一主') }}{{record.clusterNodeNum - 1}}{{ $t('备') }}
+              {{ $t('operation.DailyOps.5mplp1xbzmw0') }}{{record.clusterNodeNum - 1}}{{ $t('operation.DailyOps.5mplp1xbztc0') }}
             </span>
             <span v-else>
-              {{ $t('单节点') }}
+              {{ $t('operation.DailyOps.5mplp1xc0000') }}
             </span>
         </template>
         <template #operation="{ record }">
           <div class="operationDiv">
             <span>
               <a-popconfirm
-                :content="$t('确定要执行吗?')"
+                :content="$t('operation.DailyOps.sl3u5s5cf219')"
                 :ok-text="$t('packageManage.index.5myq5c8zn100')"
                 :cancel-text="$t('packageManage.index.5myq5c8zn7k0')"
                 @ok="record.status === 'PENDING' ? execute(record.clusterId) : reExecute(record.clusterId)"
               >
                 <a-link class="more" v-if="record.status === 'PENDING'">
-                  {{ $t('一键执行') }}
+                  {{ $t('operation.DailyOps.sl3u5s5cf220') }}
                 </a-link>
                 <a-link class="more" v-else>
-                  {{ $t('重新执行') }}
+                  {{ $t('operation.DailyOps.sl3u5s5cf221') }}
                 </a-link>
               </a-popconfirm>
             </span>
 
             <a-link class="more" @click="copy(record.clusterId)">
-              {{ $t('复制') }}
+              {{ $t('operation.DailyOps.sl3u5s5cf222') }}
             </a-link>
 
             <a-dropdown trigger="click">
               <a-link class="more">
-                {{ $t('更多') }}
+                {{ $t('operation.DailyOps.sl3u5s5cf223') }}
               </a-link>
               <template #content>
                 <a-doption  @click="logDownload(record)">
                   <a-space>
                     <span>
-                      {{ $t('执行日志下载') }}
+                      {{ $t('operation.DailyOps.sl3u5s5cf224') }}
                     </span>
                   </a-space>
                 </a-doption>
                 <a-doption  @click="editClusterTask(record)">
                   <a-space>
                     <span>
-                      {{ $t('编辑') }}
+                      {{ $t('operation.DailyOps.sl3u5s5cf225') }}
                     </span>
                   </a-space>
                 </a-doption>
                 <a-doption @click="singleRowDelete(record)">
                   <a-space>
                     <span>
-                      {{ $t('删除') }}
+                      {{ $t('operation.DailyOps.sl3u5s5cf212') }}
                     </span>
                   </a-space>
                 </a-doption>
@@ -200,42 +200,42 @@
         </template>
 
         <template #version="{ record }">
-            <span v-if="record.version === 'ENTERPRISE'">
-              {{ $t('企业版') }} {{record.versionNum}}
-            </span>
+          <span v-if="record.version === 'ENTERPRISE'">
+            {{ $t('operation.DailyOps.5mplp1xc4fg0') }} {{record.versionNum}}
+          </span>
           <span v-if="record.version === 'LITE'">
-              {{ $t('轻量版') }} {{record.versionNum}}
-            </span>
+            {{ $t('operation.DailyOps.5mplp1xc4b40') }} {{record.versionNum}}
+          </span>
           <span v-if="record.version === 'MINIMAL_LIST'">
-              {{ $t('极简版') }} {{record.versionNum}}
-            </span>
+            {{ $t('operation.DailyOps.5mplp1xc46o0') }} {{record.versionNum}}
+          </span>
         </template>
         <template #clusterNodeNum="{ record }">
-            <span v-if="record.deployType === 'CLUSTER' && record.clusterNodeNum > 1">
-              {{ $t('一主') }}{{record.clusterNodeNum - 1}}{{ $t('备') }}
-            </span>
-            <span v-else>
-              {{ $t('单节点') }}
-            </span>
+          <span v-if="record.deployType === 'CLUSTER' && record.clusterNodeNum > 1">
+            {{ $t('operation.DailyOps.5mplp1xbzmw0') }}{{record.clusterNodeNum - 1}}{{ $t('operation.DailyOps.5mplp1xbztc0') }}
+          </span>
+          <span v-else>
+            {{ $t('operation.DailyOps.5mplp1xc0000') }}
+          </span>
         </template>
         <template #operation="{ record }">
           <div class="operationDiv">
             <a-link class="more" @click="editClusterTask(record)">
-              {{ $t('编辑') }}
+              {{ $t('operation.DailyOps.sl3u5s5cf225') }}
             </a-link>
 
             <a-link class="more" @click="copy(record.clusterId)">
-              {{ $t('复制') }}
+              {{ $t('operation.DailyOps.sl3u5s5cf222') }}
             </a-link>
             <a-dropdown trigger="click">
               <a-link class="more">
-                {{ $t('更多') }}
+                {{ $t('operation.DailyOps.sl3u5s5cf223') }}
               </a-link>
               <template #content>
                 <a-doption  @click="logDownload(record)">
                   <a-space>
                     <span>
-                      {{ $t('执行日志下载') }}
+                      {{ $t('operation.DailyOps.sl3u5s5cf224') }}
                     </span>
                   </a-space>
                 </a-doption>
@@ -243,10 +243,10 @@
                   <a-space>
                     <span>
                       <span v-if="record.envCheckResult === 'SUCCESS'">
-                        {{ $t('发布') }}
+                        {{ $t('operation.DailyOps.sl3u5s5cf226') }}
                       </span>
                       <span v-else>
-                        {{ $t('环境检测') }}
+                        {{ $t('operation.DailyOps.sl3u5s5cf227') }}
                       </span>
                     </span>
                   </a-space>
@@ -254,7 +254,7 @@
                 <a-doption @click="singleRowDelete(record)">
                   <a-space>
                     <span>
-                      {{ $t('删除') }}
+                      {{ $t('operation.DailyOps.sl3u5s5cf212') }}
                     </span>
                   </a-space>
                 </a-doption>
@@ -618,7 +618,7 @@
     </div>
     <div
       class="full-w full-h flex-col"
-      v-if="showInit"
+      v-if="showInit && list.pageTag === 'clusterInfo'"
     >
       <svg-icon
         icon-class="ops-empty"
@@ -645,7 +645,7 @@
     </div>
     <div
       class="full-h flex-col"
-      v-if="data.loading"
+      v-if="data.loading && list.pageTag === 'clusterInfo'"
     >
       <a-spin :tip="$t('operation.DailyOps.5mplp1xc4200')" />
     </div>
@@ -722,7 +722,6 @@ const data: {
   loading: false,
   socketArr: []
 })
-
 
 
 const list = reactive<KeyValue>({
@@ -813,7 +812,6 @@ const envCheck = (clusterId: string, hostIp: string, hostUsername: string) => {
       .then((res) => {
         if (Number(res.code) === 200) {
           if (res.data.result === 'SUCCESS') {
-            Message.success("环境监测成功!");
             Message.success(res.msg);
             getDraftListData();
           }
@@ -822,7 +820,7 @@ const envCheck = (clusterId: string, hostIp: string, hostUsername: string) => {
       Message.error("checkEnv infoError:"+error);
     })
   } else {
-    Message.error("请先编辑集群IP")
+    Message.error("please edit cluster IP!")
   }
 };
 //跳转新增集群页面
@@ -849,14 +847,14 @@ const initEcharts = () => {
     const option = {
       title: {
         text: '84',
-        subtext: '最大值（%）',
+        subtext: t('operation.DailyOps.sl3u5s5cf254'),
         left: 'right' // 标题的水平位置
       },
       xAxis: {
         data: data.xData
       },
       yAxis: {
-        name:'利用率（%）',
+        name: t('operation.DailyOps.sl3u5s5cf255'),
       },
       series: [
         {
@@ -884,12 +882,12 @@ const publish = (clusterId: number) => {
   submitCluster(clusterId)
     .then((res: KeyValue) => {
       if (Number(res.code) === 200) {
-        Message.success("发布" + res.msg);
+        Message.success(res.msg);
         getDraftListData();
       }
     })
     .catch(() => {
-      Message.error("发布失败error")
+      console.log("publish fail!")
     })
 }
 //一键执行
@@ -902,7 +900,7 @@ const execute = (clusterId: number) => {
       }
     })
     .catch(() => {
-      console.log("执行失败!")
+      console.log("execute fail!")
     })
 }
 //重新执行
@@ -915,7 +913,7 @@ const reExecute = (clusterId: number) => {
       }
     })
     .catch(() => {
-      console.log("执行失败!")
+      console.log("rexecute fail!!")
     })
     .finally(() => {
       getListData();
@@ -927,7 +925,6 @@ const checkExecuteStatus = (clusterId: number) => {
   checkTaskStatus([clusterId])
     .then((res: KeyValue) => {
       if (Number(res.code) === 200) {
-        console.log('checkExecuteStatus')
         watchExecuteStatus();
       }
     })
@@ -1047,38 +1044,38 @@ onUnmounted(() => {
 });
 //集群列表表头
 const columnsTaskMenu = computed(() => [
-  {title: "任务ID", dataIndex: 'clusterId', width: 130, slotName: 'clusterId',},
-  {title: '集群名称', dataIndex: 'clusterName',width: 110, },
-  {title: '任务状态', dataIndex: 'status', width: 70, slotName: 'status',},
-  {title: '服务器IP', dataIndex: 'hostIp', width: 80,},
-  {title: '安装用户', width: 60, dataIndex: 'hostUsername'},
-  {title: '端口', width: 50, dataIndex: 'databasePort', slotName: 'databasePort',},
-  {title: '服务器系统', dataIndex: 'os', width: 60,},
-  {title: 'CPU架构', dataIndex: 'cpuArch',width: 50, },
-  {title: 'OpenGauss版本号', width: 30, dataIndex: 'version', slotName: 'version',},
-  {title: '节点数量', dataIndex: 'clusterNodeNum', width: 80, slotName: 'clusterNodeNum',},
-  {title: '任务创建时间', dataIndex: 'createTime', width: 110,
+  {title: t('operation.DailyOps.sl3u5s5cf244'), dataIndex: 'clusterId', width: 130, slotName: 'clusterId',},
+  {title: t('operation.ClusterBackupDlg.5mplmzbrntg0'), dataIndex: 'clusterName',width: 110, },
+  {title: t('operation.DailyOps.sl3u5s5cf245'), dataIndex: 'status', width: 70, slotName: 'status',},
+  {title: t('operation.DailyOps.sl3u5s5cf246'), dataIndex: 'hostIp', width: 80,},
+  {title: t('enterprise.NodeConfig.5mpme7w6bak0'), width: 60, dataIndex: 'hostUsername'},
+  {title: t('enterprise.ClusterConfig.5mpm3ku3iz80'), width: 50, dataIndex: 'databasePort', slotName: 'databasePort',},
+  {title: t('operation.DailyOps.sl3u5s5cf230'), dataIndex: 'os', width: 60,},
+  {title: t('operation.DailyOps.sl3u5s5cf231'), dataIndex: 'cpuArch',width: 50, },
+  {title: t('operation.DailyOps.sl3u5s5cf247'), width: 30, dataIndex: 'version', slotName: 'version',},
+  {title: t('operation.DailyOps.5mplp1xbzew0'), dataIndex: 'clusterNodeNum', width: 80, slotName: 'clusterNodeNum',},
+  {title: t('operation.DailyOps.sl3u5s5cf248'), dataIndex: 'createTime', width: 110,
     sortable: {sortDirections: ['ascend', 'descend']}
   },
-  {title: '任务更新时间', dataIndex: 'updateTime', width: 110,
+  {title: t('operation.DailyOps.sl3u5s5cf249'), dataIndex: 'updateTime', width: 110,
     sortable: {sortDirections: ['ascend', 'descend']}
   },
-  {title: '操作', slotName: 'operation', width: 100},
+  {title: t('operation.DailyOps.5mplp1xc20k0'), slotName: 'operation', width: 100},
 ])
 
 //草稿箱表头
 const columnsDraft = computed(() => [
-  {title: "任务ID", dataIndex: 'clusterId', width: 130, slotName: 'clusterId',},
-  {title: '服务器IP', dataIndex: 'hostIp', width: 80,},
-  {title: '安装用户', width: 50, dataIndex: 'hostUsername'},
-  {title: '服务器系统', dataIndex: 'os', width: 70,},
-  {title: 'CPU架构', dataIndex: 'cpuArch',width: 70, },
-  {title: '集群名称', dataIndex: 'clusterName',width: 110, },
-  {title: 'OpenGauss版本号', width: 100, dataIndex: 'version', slotName: 'version',},
-  {title: '节点数量', dataIndex: 'clusterNodeNum', width: 50, slotName: 'clusterNodeNum',},
-  {title: '集群端口号', dataIndex: 'databasePort', width: 50},
-  {title: '环境变量地址', dataIndex: 'envPath', width: 150},
-  {title: '操作', slotName: 'operation', width: 100},
+  {title: t('operation.DailyOps.sl3u5s5cf244'), dataIndex: 'clusterId', width: 130, slotName: 'clusterId',},
+  {title: t('operation.DailyOps.sl3u5s5cf246'), dataIndex: 'hostIp', width: 80,},
+  {title: t('enterprise.NodeConfig.5mpme7w6bak0'), width: 50, dataIndex: 'hostUsername'},
+  {title: t('operation.DailyOps.sl3u5s5cf230'), dataIndex: 'os', width: 70,},
+  {title: t('operation.DailyOps.sl3u5s5cf231'), dataIndex: 'cpuArch',width: 70, },
+  {title: t('operation.ClusterBackupDlg.5mplmzbrntg0'), dataIndex: 'clusterName',width: 110, },
+  {title: t('operation.DailyOps.sl3u5s5cf247'), width: 100, dataIndex: 'version', slotName: 'version',},
+  {title: t('operation.DailyOps.5mplp1xbzew0'), dataIndex: 'clusterNodeNum', width: 50, slotName: 'clusterNodeNum',},
+  {title: t('enterprise.ClusterConfig.5mpm3ku3iz80'), dataIndex: 'databasePort', width: 50},
+  {title: t('operation.DailyOps.sl3u5s5cf235'), dataIndex: 'envPath', width: 150},
+  {title: t('operation.DailyOps.5mplp1xc20k0'), slotName: 'operation', width: 100},
 ])
 
 //////////////////////////////////////////////////////////操作里面的弹窗
@@ -1125,7 +1122,7 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', globalClickHandler);
 });
-///////////////////////////////////////////////////////////////////////
+//
 //搜索框
 const initOs = [OS.OPEN_EULER, OS.CENTOS]
 const initArch = [CpuArch.X86_64, CpuArch.AARCH64]
@@ -1279,7 +1276,7 @@ const searchTag = (inputValue: any) => {
     })
   parentTags.value.forEach(tag => {
     if (alertFlag.get(tag.name)  == 0) {
-      Message.error('同一个父级标签只能选择一个子级标签,' + tag.name + '标签下有多项')
+      Message.error(t('operation.DailyOps.sl3u5s5cf250') + tag.name + t('operation.DailyOps.sl3u5s5cf251'))
       let tempnum = alertNum.get(tag.name)
       selectedOptionsValue.value.splice( -tempnum)
     }
@@ -1337,7 +1334,7 @@ const searchTag = (inputValue: any) => {
   }
   getListData()
 }
-////////////////////////////////////////////////////////////////////////////////
+//
 //复制
 const copy = (clusterId: KeyValue) => {
   copyTask(clusterId)
@@ -1355,7 +1352,7 @@ const singleRowDelete = (record: KeyValue) => {
   batchDeleteTask([record.clusterId])
     .then((res: KeyValue) => {
       if (Number(res.code) === 200) {
-        Message.success("删除" + record.clusterId + "成功!")
+        Message.success("delete" + record.clusterId + "success!")
       }
     }).catch(error => {
     console.error("DeleteTask error:"+error);
@@ -1429,7 +1426,7 @@ const deleteSelectedTaskId = () => {
     batchDeleteTask(list.selectTaskIds)
       .then((res: KeyValue) => {
         if (Number(res.code) === 200) {
-          Message.success("删除成功!")
+          Message.success("success!")
         }
       }).catch(error => {
       Message.error("DeleteTask error:"+error);
@@ -1440,7 +1437,7 @@ const deleteSelectedTaskId = () => {
     batchDeleteTask(list.selectedDraftTaskIds)
       .then((res: KeyValue) => {
         if (Number(res.code) === 200) {
-          Message.success("删除成功!")
+          Message.success("success!")
         }
       }).catch(error => {
       Message.error("DeleteTask error:"+error);
@@ -1448,7 +1445,7 @@ const deleteSelectedTaskId = () => {
       switchDraft();
     })
   }else {
-    Message.warning("请至少选择一行删除")
+    Message.warning(t('operation.DailyOps.sl3u5s5cf252'))
   }
 };
 
@@ -1460,7 +1457,7 @@ const batchExecute = () => {
     console.log(list.selectTaskIds)
     batchExecuteRef.value?.open(list.selectTaskIds, list.selectedData)
   } else {
-    Message.warning('请至少选择一行执行')
+    Message.warning(t('operation.DailyOps.sl3u5s5cf253'))
   }
 }
 
@@ -2556,9 +2553,7 @@ span{
 }
 .my-link {
   height: 100%;
-  width: 92px;
-  //border: 1px solid black;
-  //border-bottom: 0px;
+  padding: 0px 20px;
   cursor: pointer;
   color: black;
 }

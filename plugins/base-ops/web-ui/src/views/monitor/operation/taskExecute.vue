@@ -7,19 +7,17 @@
     @ok="batchExecute"
     unmountOnClose
   >
-    <div style="display: flex; align-items: center; justify-content: center;background-color:#FFEBD1;border-radius:8px;">
+    <div style="display: flex; align-items: center; justify-content: center;background-color:#FFEBD1;border-radius:8px;height: auto;padding:10px;">
       <img src="@/assets/images/modeling/ops/task-warning.png" class="task-warning">
-      <div
-        style="
+      <div style="
         width: 599px;
-        height: 48px;
-        padding-top: 13px;
-        padding-left: 8px;">
-        执行任务会在目标主机进行数据库安装，请谨慎执行
+        padding-left: 8px;"
+      >
+        {{ $t('operation.DailyOps.sl3u5s5cf242') }}
       </div>
     </div>
 
-    <div style="display:inline-block;color:#576372">确定要执行以下任务吗?</div>
+    <div style="display:inline-block;color:#576372">{{ $t('operation.DailyOps.sl3u5s5cf241') }}</div>
     <a-table
       style="margin-top:8px"
       :data="list.selectedData"
@@ -29,19 +27,19 @@
     >
       <template #status="{ record }">
         <span v-if="record.status === 'PENDING'">
-              待执行
+              {{ $t('operation.DailyOps.sl3u5s5cf214') }}
             </span>
         <span v-if="record.status === 'WAITING'">
-              <a-spin :loading="true">执行等待中</a-spin>
+              <a-spin :loading="true">{{ $t('operation.DailyOps.sl3u5s5cf215') }}</a-spin>
             </span>
         <span v-if="record.status === 'RUNNING'">
-              <a-spin :loading="true">执行中</a-spin>
+              <a-spin :loading="true">{{ $t('operation.DailyOps.sl3u5s5cf216') }}</a-spin>
             </span>
         <span v-if="record.status === 'SUCCESS'">
-              执行成功
+              {{ $t('operation.DailyOps.sl3u5s5cf217') }}
             </span>
         <span v-if="record.status === 'FAILED'">
-              执行失败
+              {{ $t('operation.DailyOps.sl3u5s5cf218') }}
             </span>
       </template>
     </a-table>
@@ -53,11 +51,15 @@ import {reactive, computed, watch, toRaw, onMounted} from 'vue'
 import {checkTaskStatus, executeTask} from "@/api/ops";
 import {Message} from "@arco-design/web-vue";
 
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
 const data = reactive<KeyValue>({
   show: false,
-  title: '执行确认',
+  title: '',
 })
-
+console.log('typeof data.title')
+console.log(data.title)
 const filter = reactive({
   name: '',
   packageVersion: '',
@@ -70,6 +72,7 @@ const currentPage = (e: number) => {
 }
 
 const open = (selectTaskIds: string[], taskSeleData: object[]) => {
+  data.title = t('operation.DailyOps.sl3u5s5cf243')
   data.show = true;
   list.page.total = taskSeleData.length
   list.selectedData = toRaw(taskSeleData);
@@ -82,7 +85,7 @@ const batchExecute = () => {
   executeTask(list.selectTaskIds)
     .then((res: KeyValue) => {
       if (Number(res.code) === 200) {
-        Message.success("执行" + res.msg);
+        Message.success(res.msg);
         checkExecuteStatus();
       }
     })
@@ -111,11 +114,11 @@ const list = reactive<KeyValue>({
 })
 
 const columns = computed(() => [
-  {title: "任务ID", dataIndex: 'clusterId', width: 90},
-  {title: '任务状态', dataIndex: 'status',width: 1, slotName: 'status'},
-  {title: '服务器IP', dataIndex: 'hostIp', width: 60,},
-  {title: '安装用户', width: 1, dataIndex: 'hostUsername'},
-  {title: '服务器系统', dataIndex: 'os', width: 50,},
+  {title: t('operation.DailyOps.sl3u5s5cf244'), dataIndex: 'clusterId', width: 90},
+  {title: t('operation.DailyOps.sl3u5s5cf245'), dataIndex: 'status',width: 1, slotName: 'status'},
+  {title: t('operation.DailyOps.sl3u5s5cf246'), dataIndex: 'hostIp', width: 60,},
+  {title: t('enterprise.NodeConfig.5mpme7w6bak0'), width: 1, dataIndex: 'hostUsername'},
+  {title: t('operation.DailyOps.sl3u5s5cf230'), dataIndex: 'os', width: 50,},
 ])
 
 </script>
