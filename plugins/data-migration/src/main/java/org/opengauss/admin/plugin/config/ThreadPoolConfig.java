@@ -44,9 +44,9 @@ public class ThreadPoolConfig {
 
     private int corePoolSize = 10;
 
-    private int maxPoolSize = 30;
+    private int maxPoolSize = 20;
 
-    private int queueCapacity = 100;
+    private int queueCapacity = 2000;
 
     private int keepAliveSeconds = 30;
 

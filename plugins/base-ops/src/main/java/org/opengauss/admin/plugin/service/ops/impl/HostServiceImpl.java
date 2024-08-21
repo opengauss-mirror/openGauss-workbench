@@ -24,11 +24,8 @@
 package org.opengauss.admin.plugin.service.ops.impl;
 
 import cn.hutool.core.util.StrUtil;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.enums.ops.DiskQueryMethodEnum;
 import org.opengauss.admin.plugin.domain.model.ops.JschResult;
@@ -36,12 +33,10 @@ import org.opengauss.admin.plugin.domain.model.ops.LunPathManager;
 import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
 import org.opengauss.admin.plugin.service.ops.IHostService;
 import org.opengauss.admin.plugin.utils.JschUtil;
-import org.opengauss.admin.system.plugin.facade.HostFacade;
-import org.opengauss.admin.system.plugin.facade.HostUserFacade;
-import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -55,35 +50,14 @@ import java.util.Objects;
 @Service
 public class HostServiceImpl implements IHostService {
     @Autowired
-    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-    private HostFacade hostFacade;
-    @Autowired
-    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-    private HostUserFacade hostUserFacade;
-    @Autowired
     private JschUtil jschUtil;
-    @Autowired
-    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-    private EncryptionUtils encryptionUtils;
 
+    @Resource
+    private OpsHostRemoteService opsHostRemoteService;
 
     @Override
     public boolean pathEmpty(String id, String path, String rootPassword) {
-        OpsHostEntity hostEntity = hostFacade.getById(id);
-        if (Objects.isNull(hostEntity)){
-            throw new OpsException("host information not found");
-        }
-
-        OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(id);
-        if (Objects.nonNull(rootUserEntity) && StrUtil.isNotEmpty(rootUserEntity.getPassword())){
-            rootPassword = rootUserEntity.getPassword();
-        }
-
-        if (StrUtil.isEmpty(rootPassword)){
-            throw new OpsException("root password does not exist");
-        }
-
-        Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root", encryptionUtils.decrypt(rootPassword)).orElseThrow(() -> new OpsException("Failed to establish connection with host"));
+        Session rootSession = opsHostRemoteService.createRootSession(id, rootPassword);
         try {
             return pathEmpty(rootSession,path);
         }finally {
@@ -96,9 +70,8 @@ public class HostServiceImpl implements IHostService {
     private boolean pathEmpty(Session rootSession, String path) {
         String command = "ls " + path + " | wc -l";
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
-
-            return StrUtil.equalsIgnoreCase("0",StrUtil.trim(jschResult.getResult())) || jschResult.getResult().contains("No such file or directory");
+            String pathEmpty = opsHostRemoteService.executeCommand(command, rootSession, "path empty");
+            return StrUtil.equals("0", pathEmpty) || pathEmpty.contains("No such file or directory");
         } catch (Exception e) {
             log.error("Failed to probe data directory",e);
             throw new OpsException("Failed to probe data directory");
@@ -107,21 +80,7 @@ public class HostServiceImpl implements IHostService {
 
     @Override
     public boolean portUsed(String id, Integer port, String rootPassword) {
-        OpsHostEntity hostEntity = hostFacade.getById(id);
-        if (Objects.isNull(hostEntity)){
-            throw new OpsException("host information not found");
-        }
-
-        OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(id);
-        if (Objects.nonNull(rootUserEntity) && StrUtil.isNotEmpty(rootUserEntity.getPassword())){
-            rootPassword = rootUserEntity.getPassword();
-        }
-
-        if (StrUtil.isEmpty(rootPassword)){
-            throw new OpsException("Failed to check port status: root password does not exist");
-        }
-
-        Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root", encryptionUtils.decrypt(rootPassword)).orElseThrow(() -> new OpsException("Failed to establish connection with host"));
+        Session rootSession = opsHostRemoteService.createRootSession(id, rootPassword);
         try {
             return portUsed(rootSession,port);
         }finally {
@@ -133,23 +92,7 @@ public class HostServiceImpl implements IHostService {
 
     @Override
     public boolean fileExist(String id, String file, String rootPassword) {
-        OpsHostEntity hostEntity = hostFacade.getById(id);
-        if (Objects.isNull(hostEntity)){
-            throw new OpsException("host information not found");
-        }
-
-        OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(id);
-        if (Objects.nonNull(rootUserEntity) && StrUtil.isNotEmpty(rootUserEntity.getPassword())){
-            rootPassword = rootUserEntity.getPassword();
-        }
-
-        if (StrUtil.isEmpty(rootPassword)){
-            throw new OpsException("root password does not exist");
-        }
-
-        Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(),
-                "root", encryptionUtils.decrypt(rootPassword)).orElseThrow(() ->
-                new OpsException("Failed to establish connection with host"));
+        Session rootSession = opsHostRemoteService.createRootSession(id, rootPassword);
         try {
             return fileExist(rootSession,file);
         } catch (OpsException e) {
@@ -218,22 +161,7 @@ public class HostServiceImpl implements IHostService {
 
     @Override
     public List<String> scsiLunQuery(String id, String rootPassword) {
-        OpsHostEntity hostEntity = hostFacade.getById(id);
-        if (Objects.isNull(hostEntity)){
-            throw new OpsException("host information not found");
-        }
-
-        OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(id);
-        if (Objects.nonNull(rootUserEntity) && StrUtil.isNotEmpty(rootUserEntity.getPassword())){
-            rootPassword = rootUserEntity.getPassword();
-        }
-
-        if (StrUtil.isEmpty(rootPassword)){
-            throw new OpsException("root password does not exist");
-        }
-
-        Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
-                encryptionUtils.decrypt(rootPassword)).orElseThrow(() -> new OpsException("Failed to establish connection with host"));
+        Session rootSession = opsHostRemoteService.createRootSession(id, rootPassword);
         try {
             return scsiLunQuery(rootSession);
         } finally {
@@ -245,21 +173,7 @@ public class HostServiceImpl implements IHostService {
 
     @Override
     public List<String> nvmeLunQuery(String id, String rootPassword) {
-        OpsHostEntity hostEntity = hostFacade.getById(id);
-        if (Objects.isNull(hostEntity)){
-            throw new OpsException("host information not found");
-        }
-
-        OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(id);
-        if (Objects.nonNull(rootUserEntity) && StrUtil.isNotEmpty(rootUserEntity.getPassword())){
-            rootPassword = rootUserEntity.getPassword();
-        }
-
-        if (StrUtil.isEmpty(rootPassword)){
-            throw new OpsException("root password does not exist");
-        }
-
-        Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root", encryptionUtils.decrypt(rootPassword)).orElseThrow(() -> new OpsException("Failed to establish connection with host"));
+        Session rootSession = opsHostRemoteService.createRootSession(id, rootPassword);
         try {
             return nvmeLunQuery(rootSession);
         } finally {
@@ -295,7 +209,6 @@ public class HostServiceImpl implements IHostService {
         String command = "[ -f '"+ file +"' ]";
         try {
             jschUtil.executeCommand(command, rootSession);
-
             return true;
         } catch (Exception e) {
             log.error("Failed to find file",e);
@@ -317,11 +230,11 @@ public class HostServiceImpl implements IHostService {
 
         String command = "lsof -i:"+port;
         try {
-            jschUtil.executeCommand(command, rootSession);
-
-            return true;
+            String checkPortUsed = opsHostRemoteService.executeCommandThenReturnEmpty(command, rootSession,
+                    null, "check port used");
+            return StrUtil.isNotEmpty(checkPortUsed);
         } catch (Exception e) {
-            log.error("Failed to probe port",e);
+            log.error("Failed to probe port", e.getMessage());
             return false;
         }
     }

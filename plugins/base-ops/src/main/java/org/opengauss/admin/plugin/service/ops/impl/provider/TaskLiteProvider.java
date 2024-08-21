@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
  * Cluster Installation Service Provider Specification
  *
  * @author wangchao
- * @date 2024/6/22 9:41
+ * @since 2024/6/22 9:41
  **/
 @Slf4j
 @Service
@@ -89,9 +89,9 @@ public class TaskLiteProvider extends AbstractTaskProvider {
         sendOperateLog(installContext, "CREATE_REMOTE_USER");
         OpsClusterContext opsClusterContext = new OpsClusterContext();
         OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
-        List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext.getLiteInstallConfig().toOpsClusterNodeEntityList();
+        List<OpsClusterNodeEntity> clusterNodes = installContext.getLiteInstallConfig().toOpsClusterNodeEntityList();
         opsClusterContext.setOpsClusterEntity(opsClusterEntity);
-        opsClusterContext.setOpsClusterNodeEntityList(opsClusterNodeEntities);
+        opsClusterContext.setOpsClusterNodeEntityList(clusterNodes);
 
         createRemoteUser(installContext, opsClusterContext);
 
@@ -127,7 +127,8 @@ public class TaskLiteProvider extends AbstractTaskProvider {
             String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(port));
             try {
                 Map<String, String> response = new HashMap<>();
-                String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN AUDITADMIN SYSADMIN PASSWORD \"{0}\";\\q", databasePassword);
+                String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN AUDITADMIN SYSADMIN" +
+                        " PASSWORD \"{0}\";\\q", databasePassword);
                 response.put("openGauss=#", createUser);
                 clientLoginOpenGauss = addCommandOfLoadEnvironmentVariable(clientLoginOpenGauss, installContext.getEnvPath());
                 opsHostRemoteService.executeCommand(clientLoginOpenGauss, session, retBuffer, response);
@@ -142,48 +143,60 @@ public class TaskLiteProvider extends AbstractTaskProvider {
     }
 
     private void installSingleNode(InstallContext installContext) {
-        sendOperateLog(installContext, "START_SINGLE");
-        log.info("Start installing Single Node Lite");
-        LiteInstallNodeConfig installNodeConfig = installContext.getLiteInstallConfig().getNodeConfigList().get(0);
-
-        String installPath = preparePath(installNodeConfig.getInstallPath());
-        String pkgPath = preparePath(installContext.getLiteInstallConfig().getInstallPackagePath());
-        String dataPath = preparePath(installNodeConfig.getDataPath());
-        String hostId = installNodeConfig.getHostId();
-        String databasePassword = installContext.getLiteInstallConfig().getDatabasePassword();
-        Integer port = installContext.getLiteInstallConfig().getPort();
-
-        String installUserId = installNodeConfig.getInstallUserId();
-        String installUserName = null;
-        if (StrUtil.isEmpty(installUserId)) {
-            sendOperateLog(installContext, "CREATE_INSTALL_USER");
-            OpsHostUserEntity installUser = createInstallUser(installContext, hostId);
-            installUserId = installUser.getHostUserId();
-            installUserName = installUser.getUsername();
-        } else {
-            HostInfoHolder hostInfoHolder = getHostInfoHolder(installContext, hostId);
-            OpsHostUserEntity installUser = getHostUserInfo(hostInfoHolder, installUserId);
-            installUserName = installUser.getUsername();
-        }
-
-        if (StrUtil.isEmpty(installUserId)) {
-            throw new OpsException("Installation user ID does not exist");
-        }
-
-        Session installUserSession = beforeInstall(installContext, pkgPath, dataPath, pkgPath, hostId, installUserId, installUserName, "-xvf");
-
+        boolean isInstallSucc = true;
+        Session installUserSession = null;
         try {
+            sendOperateLog(installContext, "START_SINGLE");
+            log.info("Start installing Single Node Lite");
+            LiteInstallNodeConfig installNodeConfig = installContext.getLiteInstallConfig().getNodeConfigList().get(0);
+
+            String pkgPath = preparePath(installContext.getLiteInstallConfig().getInstallPackagePath());
+
+            String hostId = installNodeConfig.getHostId();
+
+            String installUserId = installNodeConfig.getInstallUserId();
+            String installUserName;
+            if (StrUtil.isEmpty(installUserId)) {
+                sendOperateLog(installContext, "CREATE_INSTALL_USER");
+                OpsHostUserEntity installUser = createInstallUser(installContext, hostId);
+                installUserId = installUser.getHostUserId();
+                installUserName = installUser.getUsername();
+            } else {
+                HostInfoHolder hostInfoHolder = getHostInfoHolder(installContext, hostId);
+                OpsHostUserEntity installUser = getHostUserInfo(hostInfoHolder, installUserId);
+                installUserName = installUser.getUsername();
+            }
+
+            if (StrUtil.isEmpty(installUserId)) {
+                throw new OpsException("Installation user ID does not exist");
+            }
+
+            String dataPath = preparePath(installNodeConfig.getDataPath());
+            installUserSession = beforeInstall(installContext, pkgPath, dataPath, pkgPath, hostId, installUserId,
+                    installUserName, "-xvf");
+
             log.info("perform installation");
             sendOperateLog(installContext, "START_EXE_INSTALL_COMMAND");
             // install
-            String command = MessageFormat.format(SshCommandConstants.LITE_SINGLE_INSTALL, databasePassword, pkgPath, dataPath, installPath, String.valueOf(port));
+            String databasePassword = installContext.getLiteInstallConfig().getDatabasePassword();
+            Integer port = installContext.getLiteInstallConfig().getPort();
+            String installPath = preparePath(installNodeConfig.getInstallPath());
+            String command = MessageFormat.format(SshCommandConstants.LITE_SINGLE_INSTALL, databasePassword, pkgPath,
+                    dataPath, installPath, String.valueOf(port));
             command = wrapperLiteEnvSep(command, installContext.getEnvPath());
-            opsHostRemoteService.executeCommand(command, installUserSession, installContext.getRetBuffer(), "Lite single node installation");
+            opsHostRemoteService.executeCommand(command, installUserSession, installContext.getRetBuffer(),
+                    "Lite single node installation");
             sendOperateLog(installContext, "END_EXE_INSTALL_COMMAND");
             log.info("The installation is complete");
+        } catch (OpsException ex) {
+            isInstallSucc = false;
+            throw new OpsException(ex.getMessage());
         } finally {
             if (Objects.nonNull(installUserSession) && installUserSession.isConnected()) {
                 installUserSession.disconnect();
+            }
+            if (!isInstallSucc) {
+                cleanResource(installContext);
             }
         }
     }
@@ -197,19 +210,21 @@ public class TaskLiteProvider extends AbstractTaskProvider {
         OpsHostUserEntity hostRootUser = opsHostRemoteService.getHostRootUser(hostId);
         Session rootSession = opsHostRemoteService.getHostUserSession(hostEntity, hostRootUser);
         try {
-            String result = opsHostRemoteService.executeCommand(SshCommandConstants.OMM_USER, rootSession, installContext.getRetBuffer(), "query omm user");
+            String result = opsHostRemoteService.executeCommand(SshCommandConstants.OMM_USER, rootSession,
+                    installContext.getRetBuffer(), "query omm user");
             if (StrUtil.isNotEmpty(result) && "1".equals(result)) {
                 throw new OpsException("Please enter the omm user login password");
             }
 
             String password = StrUtil.uuid();
-            opsHostRemoteService.executeCommand(SshCommandConstants.CREATE_OMM_USER, rootSession, installContext.getRetBuffer(), "create omm user");
+            opsHostRemoteService.executeCommand(SshCommandConstants.CREATE_OMM_USER, rootSession,
+                    installContext.getRetBuffer(), "create omm user");
 
             try {
                 Map<String, String> autoResponse = new HashMap<>();
                 autoResponse.put("password:", password);
-                autoResponse.put("password:", password);
-                opsHostRemoteService.executeCommand(SshCommandConstants.CHANGE_OMM_PASSWORD, rootSession, installContext.getRetBuffer(), autoResponse);
+                opsHostRemoteService.executeCommand(SshCommandConstants.CHANGE_OMM_PASSWORD, rootSession,
+                        installContext.getRetBuffer(), autoResponse);
             } catch (OpsException e) {
                 log.error("Failed to modify omm user password", e);
                 throw new OpsException("Failed to modify omm user password");
@@ -228,7 +243,10 @@ public class TaskLiteProvider extends AbstractTaskProvider {
                 installContext.setHostInfoHolders(hostInfoHolders);
             }
 
-            HostInfoHolder hostHolder = hostInfoHolders.stream().filter(holder -> holder.getHostEntity().getHostId().equals(hostId)).findFirst().orElseThrow(() -> new OpsException("host information not found"));
+            HostInfoHolder hostHolder = hostInfoHolders
+                    .stream()
+                    .filter(holder -> holder.getHostEntity().getHostId().equals(hostId))
+                    .findFirst().orElseThrow(() -> new OpsException("host information not found"));
             List<OpsHostUserEntity> hostUserEntities = hostHolder.getHostUserEntities();
             if (Objects.isNull(hostUserEntities)) {
                 hostUserEntities = new ArrayList<>();
@@ -245,31 +263,56 @@ public class TaskLiteProvider extends AbstractTaskProvider {
     }
 
     private void installCluster(InstallContext installContext) {
-        sendOperateLog(installContext, "START_CLUSTER");
-        log.info("Start installing the Lite cluster");
-        List<LiteInstallNodeConfig> installNodeConfigList = installContext.getLiteInstallConfig().getNodeConfigList();
+        boolean isInstallSucc = false;
+        try {
+            sendOperateLog(installContext, "START_CLUSTER");
+            log.info("Start installing the Lite cluster");
+            List<LiteInstallNodeConfig> installNodeConfigList = installContext
+                    .getLiteInstallConfig()
+                    .getNodeConfigList();
 
-        LiteInstallNodeConfig masterNodeConfig = installNodeConfigList.stream().filter(nodeConfig -> ClusterRoleEnum.MASTER == nodeConfig.getClusterRole()).findFirst().orElseThrow(() -> new OpsException("Master node configuration not found"));
-        LiteInstallNodeConfig slaveNodeConfig = installNodeConfigList.stream().filter(nodeConfig -> ClusterRoleEnum.SLAVE == nodeConfig.getClusterRole()).findFirst().orElseThrow(() -> new OpsException("Master node configuration not found"));
+            LiteInstallNodeConfig masterNodeConfig = installNodeConfigList.stream()
+                    .filter(nodeConfig -> Objects.equals(ClusterRoleEnum.MASTER, nodeConfig.getClusterRole()))
+                    .findFirst().orElseThrow(() -> new OpsException("Master node configuration not found"));
+            LiteInstallNodeConfig slaveNodeConfig = installNodeConfigList.stream()
+                    .filter(nodeConfig -> Objects.equals(ClusterRoleEnum.SLAVE, nodeConfig.getClusterRole()))
+                    .findFirst().orElseThrow(() -> new OpsException("Master node configuration not found"));
 
-        installMaster(masterNodeConfig, slaveNodeConfig, installContext);
-        installSlave(masterNodeConfig, slaveNodeConfig, installContext);
+            installMaster(masterNodeConfig, slaveNodeConfig, installContext);
+            installSlave(masterNodeConfig, slaveNodeConfig, installContext);
 
-        log.info("Cluster installation is complete");
+            log.info("Cluster installation is complete");
+        } catch (OpsException ex) {
+            isInstallSucc = false;
+            throw new OpsException(ex.getMessage());
+        } finally {
+            if (!isInstallSucc) {
+                cleanResource(installContext);
+            }
+        }
     }
 
-    private void installSlave(LiteInstallNodeConfig masterNodeConfig, LiteInstallNodeConfig slaveNodeConfig, InstallContext installContext) {
+    private void installSlave(LiteInstallNodeConfig masterNodeConfig, LiteInstallNodeConfig slaveNodeConfig,
+                              InstallContext installContext) {
         sendOperateLog(installContext, "START_SLAVE");
         log.info("Start installing the standby node");
         String installPath = preparePath(slaveNodeConfig.getInstallPath());
-        String pkgPath = preparePath(installContext.getLiteInstallConfig().getInstallPackagePath());
+
         String dataPath = preparePath(slaveNodeConfig.getDataPath());
         String masterHostId = masterNodeConfig.getHostId();
         String slaveHostId = slaveNodeConfig.getHostId();
         String hostId = slaveNodeConfig.getHostId();
         String databasePassword = installContext.getLiteInstallConfig().getDatabasePassword();
-        HostInfoHolder masterHostInfo = installContext.getHostInfoHolders().stream().filter(hostInfoHolder -> masterHostId.equals(hostInfoHolder.getHostEntity().getHostId())).findFirst().orElseThrow(() -> new OpsException("Master node configuration not found"));
-        HostInfoHolder slaveHostInfo = installContext.getHostInfoHolders().stream().filter(hostInfoHolder -> slaveHostId.equals(hostInfoHolder.getHostEntity().getHostId())).findFirst().orElseThrow(() -> new OpsException("The host information of the standby node does not exist"));
+        HostInfoHolder masterHostInfo = installContext.getHostInfoHolders()
+                .stream()
+                .filter(hostInfoHolder -> masterHostId.equals(hostInfoHolder.getHostEntity().getHostId()))
+                .findFirst()
+                .orElseThrow(() -> new OpsException("Master node configuration not found"));
+        HostInfoHolder slaveHostInfo = installContext.getHostInfoHolders()
+                .stream()
+                .filter(hostInfoHolder -> slaveHostId.equals(hostInfoHolder.getHostEntity().getHostId()))
+                .findFirst()
+                .orElseThrow(() -> new OpsException("The host information of the standby node does not exist"));
 
         String installUserId = slaveNodeConfig.getInstallUserId();
         String installUserName = null;
@@ -298,20 +341,23 @@ public class TaskLiteProvider extends AbstractTaskProvider {
         }
 
         slaveNodeConfig.setInstallUserId(installUserId);
-        Session installUserSession = beforeInstall(installContext, pkgPath, dataPath, pkgPath, slaveHostId, installUserId, installUserName, "-xvf");
+        String pkgPath = preparePath(installContext.getLiteInstallConfig().getInstallPackagePath());
+        Session installUserSession = beforeInstall(installContext, pkgPath, dataPath, pkgPath, slaveHostId,
+                installUserId, installUserName, "-xvf");
 
         try {
             log.info("perform installation");
             // install
-            String command = MessageFormat.format(SshCommandConstants.LITE_SLAVE_INSTALL, databasePassword, pkgPath, dataPath, installPath,
-                    slaveHostInfo.getHostEntity().getPrivateIp(),
+            String command = MessageFormat.format(SshCommandConstants.LITE_SLAVE_INSTALL, databasePassword,
+                    pkgPath, dataPath, installPath, slaveHostInfo.getHostEntity().getPrivateIp(),
                     String.valueOf(installContext.getLiteInstallConfig().getPort() + 1),
                     masterHostInfo.getHostEntity().getPrivateIp(),
                     String.valueOf(installContext.getLiteInstallConfig().getPort() + 1),
                     String.valueOf(installContext.getLiteInstallConfig().getPort()));
             command = wrapperLiteEnvSep(command, installContext.getEnvPath());
             sendOperateLog(installContext, "START_EXE_INSTALL_COMMAND");
-            opsHostRemoteService.executeCommand(command, installUserSession, installContext.getRetBuffer(), "light version" + ClusterRoleEnum.SLAVE + "Node installation ");
+            opsHostRemoteService.executeCommand(command, installUserSession, installContext.getRetBuffer(),
+                    "light version" + ClusterRoleEnum.SLAVE + "Node installation ");
             sendOperateLog(installContext, "END_EXE_INSTALL_COMMAND");
             log.info("Standby node installation is complete");
         } finally {
@@ -321,7 +367,8 @@ public class TaskLiteProvider extends AbstractTaskProvider {
         }
     }
 
-    private void installMaster(LiteInstallNodeConfig masterNodeConfig, LiteInstallNodeConfig slaveNodeConfig, InstallContext installContext) {
+    private void installMaster(LiteInstallNodeConfig masterNodeConfig, LiteInstallNodeConfig slaveNodeConfig,
+                               InstallContext installContext) {
         sendOperateLog(installContext, "START_MASTER");
         log.info("Start installing the master node");
         String installPath = preparePath(masterNodeConfig.getInstallPath());
@@ -331,8 +378,16 @@ public class TaskLiteProvider extends AbstractTaskProvider {
         String slaveHostId = slaveNodeConfig.getHostId();
         String hostId = masterNodeConfig.getHostId();
         String databasePassword = installContext.getLiteInstallConfig().getDatabasePassword();
-        HostInfoHolder masterHostInfo = installContext.getHostInfoHolders().stream().filter(hostInfoHolder -> masterHostId.equals(hostInfoHolder.getHostEntity().getHostId())).findFirst().orElseThrow(() -> new OpsException("Master node host information does not exist"));
-        HostInfoHolder slaveHostInfo = installContext.getHostInfoHolders().stream().filter(hostInfoHolder -> slaveHostId.equals(hostInfoHolder.getHostEntity().getHostId())).findFirst().orElseThrow(() -> new OpsException("The host information of the standby node does not exist"));
+        HostInfoHolder masterHostInfo = installContext.getHostInfoHolders()
+                .stream()
+                .filter(hostInfoHolder -> masterHostId.equals(hostInfoHolder.getHostEntity().getHostId()))
+                .findFirst()
+                .orElseThrow(() -> new OpsException("Master node host information does not exist"));
+        HostInfoHolder slaveHostInfo = installContext.getHostInfoHolders()
+                .stream()
+                .filter(hostInfoHolder -> slaveHostId.equals(hostInfoHolder.getHostEntity().getHostId()))
+                .findFirst()
+                .orElseThrow(() -> new OpsException("The host information of the standby node does not exist"));
 
         String installUserId = masterNodeConfig.getInstallUserId();
         String installUserName = null;
@@ -362,19 +417,21 @@ public class TaskLiteProvider extends AbstractTaskProvider {
 
         masterNodeConfig.setInstallUserId(installUserId);
 
-        Session installUserSession = beforeInstall(installContext, pkgPath, dataPath, pkgPath, masterHostId, installUserId, installUserName, "-xvf");
+        Session installUserSession = beforeInstall(installContext, pkgPath, dataPath, pkgPath, masterHostId,
+                installUserId, installUserName, "-xvf");
         try {
             log.info("perform installation");
             // install
-            String command = MessageFormat.format(SshCommandConstants.LITE_MASTER_INSTALL, databasePassword, pkgPath, dataPath, installPath,
-                    masterHostInfo.getHostEntity().getPrivateIp(),
+            String command = MessageFormat.format(SshCommandConstants.LITE_MASTER_INSTALL, databasePassword,
+                    pkgPath, dataPath, installPath, masterHostInfo.getHostEntity().getPrivateIp(),
                     String.valueOf(installContext.getLiteInstallConfig().getPort() + 1),
                     slaveHostInfo.getHostEntity().getPrivateIp(),
                     String.valueOf(installContext.getLiteInstallConfig().getPort() + 1),
                     String.valueOf(installContext.getLiteInstallConfig().getPort()));
             command = wrapperLiteEnvSep(command, installContext.getEnvPath());
             installContext.getRetBuffer().sendText("START_EXE_INSTALL_COMMAND");
-            opsHostRemoteService.executeCommand(command, installUserSession, installContext.getRetBuffer(), "light version" + ClusterRoleEnum.MASTER + "Node installation");
+            opsHostRemoteService.executeCommand(command, installUserSession, installContext.getRetBuffer(),
+                    "light version" + ClusterRoleEnum.MASTER + "Node installation");
             installContext.getRetBuffer().sendText("END_EXE_INSTALL_COMMAND");
             log.info("Master node installation is complete");
         } finally {
@@ -386,7 +443,9 @@ public class TaskLiteProvider extends AbstractTaskProvider {
 
     private void saveContext(InstallContext installContext) {
         OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
-        List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext.getLiteInstallConfig().toOpsClusterNodeEntityList();
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext
+                .getLiteInstallConfig()
+                .toOpsClusterNodeEntityList();
 
         opsClusterService.save(opsClusterEntity);
         for (OpsClusterNodeEntity opsClusterNodeEntity : opsClusterNodeEntities) {
@@ -400,7 +459,8 @@ public class TaskLiteProvider extends AbstractTaskProvider {
         log.info("Start restarting the lite version");
         List<String> restartNodeIds = opsClusterContext.getOpNodeIds();
         if (CollUtil.isEmpty(restartNodeIds)) {
-            restartNodeIds = opsClusterContext.getOpsClusterNodeEntityList().stream().map(OpsClusterNodeEntity::getClusterNodeId).collect(Collectors.toList());
+            restartNodeIds = opsClusterContext.getOpsClusterNodeEntityList()
+                    .stream().map(OpsClusterNodeEntity::getClusterNodeId).collect(Collectors.toList());
         }
         if (CollUtil.isEmpty(restartNodeIds)) {
             log.error("No nodes to restart");
@@ -415,7 +475,10 @@ public class TaskLiteProvider extends AbstractTaskProvider {
         log.info("start up lite version");
         List<String> startNodeIds = opsClusterContext.getOpNodeIds();
         if (CollUtil.isEmpty(startNodeIds)) {
-            startNodeIds = opsClusterContext.getOpsClusterNodeEntityList().stream().map(OpsClusterNodeEntity::getClusterNodeId).collect(Collectors.toList());
+            startNodeIds = opsClusterContext.getOpsClusterNodeEntityList()
+                    .stream()
+                    .map(OpsClusterNodeEntity::getClusterNodeId)
+                    .collect(Collectors.toList());
         }
         if (CollUtil.isEmpty(startNodeIds)) {
             log.error("No node to start");
@@ -431,9 +494,7 @@ public class TaskLiteProvider extends AbstractTaskProvider {
         List<String> stopNodeIds = opsClusterContext.getOpNodeIds();
         if (CollUtil.isEmpty(stopNodeIds)) {
             stopNodeIds = opsClusterContext.getOpsClusterNodeEntityList()
-                    .stream()
-                    .map(OpsClusterNodeEntity::getClusterNodeId)
-                    .collect(Collectors.toList());
+                    .stream().map(OpsClusterNodeEntity::getClusterNodeId).collect(Collectors.toList());
         }
 
         if (CollUtil.isEmpty(stopNodeIds)) {
@@ -447,7 +508,10 @@ public class TaskLiteProvider extends AbstractTaskProvider {
 
 
     private void doStopNode(String stopNodeId, OpsClusterContext opsClusterContext) {
-        OpsClusterNodeEntity stopNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().stream().filter(opsClusterNodeEntity -> opsClusterNodeEntity.getClusterNodeId().equals(stopNodeId)).findFirst().orElse(null);
+        OpsClusterNodeEntity stopNodeEntity = opsClusterContext.getOpsClusterNodeEntityList()
+                .stream()
+                .filter(opsClusterNodeEntity -> opsClusterNodeEntity.getClusterNodeId().equals(stopNodeId))
+                .findFirst().orElse(null);
         if (Objects.isNull(stopNodeEntity)) {
             log.error("Stop node info not found: {}", stopNodeId);
         }
@@ -455,15 +519,18 @@ public class TaskLiteProvider extends AbstractTaskProvider {
         RetBuffer retBuffer = opsClusterContext.getRetBuffer();
         String dataPath = stopNodeEntity.getDataPath();
         log.info("login stop user");
-        Session restartUserSession = createSessionWithUserId(opsClusterContext.getHostInfoHolders(), false, stopNodeEntity.getHostId(), stopNodeEntity.getInstallUserId());
+        Session restartUserSession = createSessionWithUserId(opsClusterContext.getHostInfoHolders(), false,
+                stopNodeEntity.getHostId(), stopNodeEntity.getInstallUserId());
         String restartCommand = MessageFormat.format(SshCommandConstants.LITE_STOP, dataPath);
-        restartCommand = addCommandOfLoadEnvironmentVariable(restartCommand, opsClusterContext.getOpsClusterEntity().getEnvPath());
+        String envPath = opsClusterContext.getOpsClusterEntity().getEnvPath();
+        restartCommand = addCommandOfLoadEnvironmentVariable(restartCommand, envPath);
         opsHostRemoteService.executeCommand(restartCommand, restartUserSession, retBuffer, "stop cluster node");
     }
 
     private void doStartNode(String startNodeId, OpsClusterContext opsClusterContext) {
         OpsClusterNodeEntity startNodeEntity = opsClusterContext.getOpsClusterNodeEntityList()
-                .stream().filter(opsClusterNodeEntity -> opsClusterNodeEntity.getClusterNodeId().equals(startNodeId))
+                .stream()
+                .filter(opsClusterNodeEntity -> opsClusterNodeEntity.getClusterNodeId().equals(startNodeId))
                 .findFirst().orElse(null);
         if (Objects.isNull(startNodeEntity)) {
             log.error("Boot node information not found:{}", startNodeId);
@@ -471,21 +538,35 @@ public class TaskLiteProvider extends AbstractTaskProvider {
 
         String dataPath = startNodeEntity.getDataPath();
         log.info("Login to start user");
-        Session restartUserSession = createSessionWithUserId(opsClusterContext.getHostInfoHolders(), false, startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
+        Session restartUserSession = createSessionWithUserId(opsClusterContext.getHostInfoHolders(), false,
+                startNodeEntity.getHostId(), startNodeEntity.getInstallUserId());
         String restartCommand = MessageFormat.format(SshCommandConstants.LITE_START, dataPath);
-        restartCommand = addCommandOfLoadEnvironmentVariable(restartCommand, opsClusterContext.getOpsClusterEntity().getEnvPath());
-        opsHostRemoteService.executeCommand(restartCommand, restartUserSession, opsClusterContext.getRetBuffer(), "start cluster node");
+        String envPath = opsClusterContext.getOpsClusterEntity().getEnvPath();
+        restartCommand = addCommandOfLoadEnvironmentVariable(restartCommand, envPath);
+        opsHostRemoteService.executeCommand(restartCommand, restartUserSession, opsClusterContext.getRetBuffer(),
+                "start cluster node");
     }
 
     private void doRestartNode(String restartNodeId, OpsClusterContext opsClusterContext) {
-        OpsClusterNodeEntity restartNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().stream().filter(opsClusterNodeEntity -> opsClusterNodeEntity.getClusterNodeId().equals(restartNodeId)).findFirst().orElse(null);
+        OpsClusterNodeEntity restartNodeEntity = opsClusterContext.getOpsClusterNodeEntityList()
+                .stream()
+                .filter(opsClusterNodeEntity -> opsClusterNodeEntity.getClusterNodeId().equals(restartNodeId))
+                .findFirst().orElse(null);
         if (Objects.isNull(restartNodeEntity)) {
             log.error("No restart node information found:{}", restartNodeId);
         }
         log.info("login restart user");
-        Session restartUserSession = createSessionWithUserId(opsClusterContext.getHostInfoHolders(), false, restartNodeEntity.getHostId(), restartNodeEntity.getInstallUserId());
+        Session restartUserSession = createSessionWithUserId(opsClusterContext.getHostInfoHolders(), false,
+                restartNodeEntity.getHostId(), restartNodeEntity.getInstallUserId());
         String restartCommand = MessageFormat.format(SshCommandConstants.LITE_RESTART, restartNodeEntity.getDataPath());
-        restartCommand = addCommandOfLoadEnvironmentVariable(restartCommand, opsClusterContext.getOpsClusterEntity().getEnvPath());
-        opsHostRemoteService.executeCommand(restartCommand, restartUserSession, opsClusterContext.getRetBuffer(), "restart cluster node");
+        String envPath = opsClusterContext.getOpsClusterEntity().getEnvPath();
+        restartCommand = addCommandOfLoadEnvironmentVariable(restartCommand, envPath);
+        opsHostRemoteService.executeCommand(restartCommand, restartUserSession, opsClusterContext.getRetBuffer(),
+                "restart cluster node");
+    }
+
+    @Override
+    protected String prepareCleanClusterDir(InstallContext installContext) {
+        return null;
     }
 }

@@ -27,6 +27,7 @@ import cn.hutool.core.util.StrUtil;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsAzEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
@@ -36,10 +37,10 @@ import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
 import org.opengauss.admin.plugin.service.ops.IHostService;
 import org.opengauss.admin.plugin.utils.JschRetBufferUtil;
 import org.opengauss.admin.plugin.utils.JschUtil;
+import org.opengauss.admin.system.plugin.facade.AzFacade;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -57,15 +58,15 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class OpsHostRemoteService {
     private static final Map<String, Session> SESSION_MAP = new ConcurrentHashMap<>();
-
+    @Resource
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private AzFacade azFacade;
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostFacade hostFacade;
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostUserFacade hostUserFacade;
-    @Resource
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
     @Resource
     private IHostService hostService;
     @Resource
@@ -123,8 +124,8 @@ public class OpsHostRemoteService {
     /**
      * get host root user by hostId, service called from plugin-main hostFacade
      *
-     * @param hostId
-     * @return
+     * @param hostId hostId
+     * @return host root user
      */
     public OpsHostUserEntity getHostRootUser(String hostId) {
         OpsHostUserEntity userEntity = hostUserFacade.getHostUserByUsername(hostId, "root");
@@ -148,38 +149,52 @@ public class OpsHostRemoteService {
         Assert.isTrue(StrUtil.isNotEmpty(hostUser.getPassword()), "hostUser password does not exist");
         Session cacheSession = getCacheSession(host.getHostId(), hostUser.getHostUserId());
         if (Objects.isNull(cacheSession)) {
-            cacheSession = jschUtil.getSession(host.getPublicIp(), host.getPort(), hostUser.getUsername(), encryptionUtils.decrypt(hostUser.getPassword()))
+            cacheSession = jschUtil.getSession(host.getPublicIp(), host.getPort(), hostUser.getUsername(),
+                            encryptionUtils.decrypt(hostUser.getPassword()))
                     .orElseThrow(() -> new OpsException("Failed to establish connection with host"));
             cacheSession(host.getHostId(), hostUser.getHostUserId(), cacheSession);
         }
         return cacheSession;
     }
 
+    /**
+     * get host disk space
+     *
+     * @param rootSession  rootSession
+     * @param topLevelPath topLevelPath
+     * @return result
+     */
     public int checkHostDiskSpace(Session rootSession, String topLevelPath) {
         String command = SshCommandConstants.DIR_FREE_HARD_DISK.replace("{0}", topLevelPath);
         String freeHardDisk = executeJschCommand(rootSession, command);
-        int freeHardDiskGB = calcDisk(freeHardDisk);
-        return freeHardDiskGB;
+        return translateDiskFreeSpaceUnitGb(freeHardDisk);
     }
 
-    private int calcDisk(String freeHardDisk) {
+    private int translateDiskFreeSpaceUnitGb(String freeHardDisk) {
         int res = 0;
         String[] split = freeHardDisk.split("\n");
         for (String s : split) {
             try {
                 res += Integer.parseInt(s.replace("G", " ").trim());
-            } catch (Exception ignore) {
-
+            } catch (NumberFormatException ingore) {
             }
         }
         return res;
     }
 
+    /**
+     * execute command
+     *
+     * @param rootSession rootSession
+     * @param command     command
+     * @return result
+     */
     public String executeJschCommand(Session rootSession, String command) {
         try {
             JschResult jschResult = jschUtil.executeCommand(command, rootSession);
             if (jschResult.getExitCode() != 0) {
-                log.error("Failed to execute command : {} ,exitCode:{},res:{}", command, jschResult.getExitCode(), jschResult.getResult());
+                log.error("Failed to execute command : {} ,exitCode:{},res:{}", command,
+                        jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to get system information");
             }
             return jschResult.getResult().trim();
@@ -189,44 +204,120 @@ public class OpsHostRemoteService {
         }
     }
 
-    public void closeHostRootSession(Session session) {
-        if (Objects.nonNull(session) && session.isConnected()) {
-            session.disconnect();
-        }
-    }
-
+    /**
+     * get host list by host ids
+     *
+     * @param hostIds hostIds
+     * @return host list
+     */
     public List<OpsHostEntity> getOpsHostList(List<String> hostIds) {
         return hostFacade.listByIds(hostIds);
     }
 
+    /**
+     * get host user list by host user ids
+     *
+     * @param hostUserIds hostUserIds
+     * @return host user list
+     */
     public List<OpsHostUserEntity> getOpsHostUserList(List<String> hostUserIds) {
         return hostUserFacade.listByIds(hostUserIds);
     }
 
+    /**
+     * get host user by host user id
+     *
+     * @param hostUserId hostUserId
+     * @return host user
+     */
+    public OpsHostUserEntity getOpsHostUser(String hostUserId) {
+        return hostUserFacade.getById(hostUserId);
+    }
+
+    /**
+     * get host user list by host id
+     *
+     * @param hostId hostId
+     * @return host user list
+     */
     public List<OpsHostUserEntity> listHostUserByHostId(String hostId) {
         return hostUserFacade.listHostUserByHostId(hostId);
     }
 
+    /**
+     * get host by host ip
+     *
+     * @param hostIp hostIp
+     * @return host
+     */
     public OpsHostEntity getByPublicIp(String hostIp) {
         return hostFacade.getByPublicIp(hostIp);
     }
 
+    /**
+     * check port used
+     *
+     * @param hostId   hostId
+     * @param hostPort hostPort
+     * @return true if port used
+     */
     public boolean portUsed(String hostId, Integer hostPort) {
         return hostService.portUsed(hostId, hostPort, null);
     }
 
+    /**
+     * get host user list by host id
+     *
+     * @return host user list
+     */
     public List<OpsHostEntity> listAll() {
         return hostFacade.listAll();
     }
 
+    /**
+     * get host user by host id and username
+     *
+     * @param hostId       hostId
+     * @param hostUsername hostUsername
+     * @return host user
+     */
     public OpsHostUserEntity getHostUserByUsername(String hostId, String hostUsername) {
         return hostUserFacade.getHostUserByUsername(hostId, hostUsername);
     }
+
+    /**
+     * get  az
+     *
+     * @return az list
+     */
+    public List<OpsAzEntity> listAllAz() {
+        return azFacade.listAll();
+    }
+
+    /**
+     * get az by az id
+     *
+     * @param azId azId
+     * @return az
+     */
+    public OpsAzEntity getAzById(String azId) {
+        return azFacade.getById(azId);
+    }
+
+    /**
+     * execute command
+     *
+     * @param command     command
+     * @param rootSession rootSession
+     * @param desc        desc
+     * @return result
+     */
     public String executeCommand(String command, Session rootSession, String desc) {
         try {
             JschResult jschResult = jschRetBufferUtil.executeCommand(command, rootSession);
             if (0 != jschResult.getExitCode()) {
-                log.error("Failed to execute command {} , exit code: {}, log: {}", command, jschResult.getExitCode(), jschResult.getResult());
+                log.error("Failed to execute command {} , exit code: {}, log: {}", command,
+                        jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to execute command");
             }
             return jschResult.getResult().trim();
@@ -236,12 +327,46 @@ public class OpsHostRemoteService {
         }
     }
 
+    /**
+     * execute command
+     *
+     * @param command     command
+     * @param rootSession rootSession
+     * @param retBuffer   retBuffer
+     * @param desc        desc
+     * @return result
+     */
     public String executeCommand(String command, Session rootSession, RetBuffer retBuffer, String desc) {
         try {
             JschResult jschResult = jschRetBufferUtil.executeCommandWithRetBuffer(command, rootSession, retBuffer);
             if (0 != jschResult.getExitCode()) {
-                log.error("Failed to execute command {} , exit code: {}, log: {}", command, jschResult.getExitCode(), jschResult.getResult());
+                log.error("Failed to execute command {} , exit code: {}, log: {}", command,
+                        jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to execute command");
+            }
+            return jschResult.getResult().trim();
+        } catch (Exception e) {
+            log.error("Failed to execute command {} {}", desc, command, e);
+            throw new OpsException("Failed to execute command : " + desc);
+        }
+    }
+
+    /**
+     * execute command then return empty
+     *
+     * @param command     command
+     * @param rootSession rootSession
+     * @param retBuffer   retBuffer
+     * @param desc        desc
+     * @return result
+     */
+    public String executeCommandThenReturnEmpty(String command, Session rootSession, RetBuffer retBuffer, String desc) {
+        try {
+            JschResult jschResult = jschRetBufferUtil.executeCommand(command, rootSession, retBuffer,
+                    null, false);
+            if (0 != jschResult.getExitCode()) {
+                log.error("Failed to execute command {} , exit code: {}, log: {}", command,
+                        jschResult.getExitCode(), jschResult.getResult());
             }
             return jschResult.getResult().trim();
         } catch (Exception e) {
@@ -256,9 +381,11 @@ public class OpsHostRemoteService {
 
     public String executeCommand(String command, Session rootSession, RetBuffer retBuffer, Map<String, String> autoResponse) {
         try {
-            JschResult jschResult = jschRetBufferUtil.executeCommandWithRetBufferAndAutoResponse(command, rootSession, retBuffer, autoResponse);
+            JschResult jschResult = jschRetBufferUtil
+                    .executeCommandWithRetBufferAndAutoResponse(command, rootSession, retBuffer, autoResponse);
             if (0 != jschResult.getExitCode()) {
-                log.error("Failed to execute command {} , exit code: {}, log: {}", command, jschResult.getExitCode(), jschResult.getResult());
+                log.error("Failed to execute command {} , exit code: {}, log: {}", command,
+                        jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to execute command");
             }
             return jschResult.getResult().trim();
@@ -273,4 +400,20 @@ public class OpsHostRemoteService {
     }
 
 
+    public Session createRootSession(String hostId, String rootPassword) {
+        OpsHostEntity hostEntity = getHost(hostId);
+        if (Objects.isNull(hostEntity)) {
+            throw new OpsException("host information not found");
+        }
+
+        OpsHostUserEntity rootUserEntity = getHostRootUser(hostId);
+        if (Objects.nonNull(rootUserEntity) && StrUtil.isNotEmpty(rootUserEntity.getPassword())) {
+            rootPassword = rootUserEntity.getPassword();
+        }
+
+        if (StrUtil.isEmpty(rootPassword)) {
+            throw new OpsException("root password does not exist");
+        }
+        return getHostUserSession(hostEntity, rootUserEntity);
+    }
 }

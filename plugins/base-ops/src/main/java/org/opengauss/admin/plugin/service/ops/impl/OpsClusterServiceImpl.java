@@ -2535,15 +2535,14 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @Override
     public Map<String, Integer> threadPoolMonitor() {
         Map<String, Integer> res = new HashMap<>();
-//        int activeCount = threadPoolTaskExecutor.getActiveCount();
-//        int poolSize = threadPoolTaskExecutor.getPoolSize();
-//        int corePoolSize = threadPoolTaskExecutor.getCorePoolSize();
-//        int keepAliveSeconds = threadPoolTaskExecutor.getKeepAliveSeconds();
-//
-//        res.put("activeCount", activeCount);
-//        res.put("poolSize", poolSize);
-//        res.put("corePoolSize", corePoolSize);
-//        res.put("keepAliveSeconds", keepAliveSeconds);
+        int activeCount = threadPoolTaskExecutor.getActiveCount();
+        int poolSize = threadPoolTaskExecutor.getPoolSize();
+        int corePoolSize = threadPoolTaskExecutor.getCorePoolSize();
+        int keepAliveSeconds = threadPoolTaskExecutor.getKeepAliveSeconds();
+        res.put("activeCount", activeCount);
+        res.put("poolSize", poolSize);
+        res.put("corePoolSize", corePoolSize);
+        res.put("keepAliveSeconds", keepAliveSeconds);
         return res;
     }
 
@@ -2774,7 +2773,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setTime(System.currentTimeMillis());
                 } catch (Exception e) {
-                    log.error("time error : ", e);
+                    log.error("time error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -2786,7 +2785,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setCpu(cpu(ommSession));
                 } catch (Exception e) {
-                    log.error("cpu monitor error : ", e);
+                    log.error("cpu monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -2797,7 +2796,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setMemory(memory(ommSession));
                 } catch (Exception e) {
-                    log.error("memory monitor error : ", e);
+                    log.error("memory monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -2808,7 +2807,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setNet(net(ommSession));
                 } catch (Exception e) {
-                    log.error("net monitor error : ", e);
+                    log.error("net monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -2819,7 +2818,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setState(state(ommSession, version, dataPath, envPath));
                 } catch (Exception e) {
-                    log.error("state monitor error : ", e);
+                    log.error("state monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -2830,7 +2829,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setLock(lock(connection));
                 } catch (Exception e) {
-                    log.error("lock monitor error : ", e);
+                    log.error("lock monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -2841,7 +2840,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setSession(session(connection));
                 } catch (Exception e) {
-                    log.error("session monitor error : ", e);
+                    log.error("session monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -2852,7 +2851,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setConnectNum(connectNum(connection));
                 } catch (Exception e) {
-                    log.error("connectNum monitor error : ", e);
+                    log.error("connectNum monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -2863,7 +2862,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setSessionMemoryTop10(sessionMemoryTop10(connection));
                 } catch (Exception e) {
-                    log.error("sessionMemoryTop10 monitor error : ", e);
+                    log.error("sessionMemoryTop10 monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -2874,7 +2873,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setKernel(kernel(ommSession));
                 } catch (Exception e) {
-                    log.error("kernel monitor error : ", e);
+                    log.error("kernel monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -2885,7 +2884,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setMemorySize(memorySize(ommSession));
                 } catch (Exception e) {
-                    log.error("memorySize monitor error : ", e);
+                    log.error("memorySize monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -2895,7 +2894,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             try {
                 countDownLatch.await();
             } catch (InterruptedException e) {
-                log.error("waiting for thread to be interrupted", e);
+                log.error("waiting for thread to be interrupted {}", e.getMessage());
                 throw new OpsException("monitor error");
             }
 

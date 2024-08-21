@@ -30,12 +30,14 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.enums.ops.OpsClusterTaskStatusEnum;
+import org.opengauss.admin.common.enums.ops.OpsHostPortUsedStatusEnum;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterTaskEntity;
 import org.opengauss.admin.plugin.domain.model.ops.OpsClusterTaskVO;
-import org.opengauss.admin.plugin.domain.model.ops.dto.OpsClusterTaskCreateDTO;
 import org.opengauss.admin.plugin.domain.model.ops.dto.OpsClusterTaskQueryParamDTO;
-import org.opengauss.admin.plugin.domain.model.ops.dto.OpsClusterTaskUpdateDTO;
+import org.opengauss.admin.plugin.domain.model.ops.dto.OpsClusterTaskDTO;
 import org.opengauss.admin.plugin.vo.ops.ClusterEnvCheck;
+import org.opengauss.admin.plugin.vo.ops.TaskStatusVo;
+import org.opengauss.admin.plugin.vo.ops.ClusterPortVo;
 
 import java.util.List;
 import java.util.Map;
@@ -79,14 +81,14 @@ public interface IOpsClusterTaskService extends IService<OpsClusterTaskEntity> {
      * @param dto dto
      * @return task id
      */
-    String createClusterTask(OpsClusterTaskCreateDTO dto);
+    String createClusterTask(OpsClusterTaskDTO dto);
 
     /**
      * update ops cluster task
      *
      * @param dto dto
      */
-    void updateClusterTask(OpsClusterTaskUpdateDTO dto);
+    void updateClusterTask(OpsClusterTaskDTO dto);
 
     /**
      * confirm ops cluster task
@@ -122,19 +124,11 @@ public interface IOpsClusterTaskService extends IService<OpsClusterTaskEntity> {
     /**
      * check cluster name exist
      *
+     * @param clusterId   cluster id
      * @param clusterName cluster name
      * @return boolean
      */
-    boolean checkClusterNameExist(String clusterName);
-
-    /**
-     * check host instance can install cluster node
-     *
-     * @param hostIp       host ip
-     * @param hostUsername host username
-     * @return boolean
-     */
-    boolean checkHostInstanceCanInstallClusterNode(String hostIp, String hostUsername);
+    boolean checkClusterNameExist(String clusterId, String clusterName);
 
     /**
      * get host user by host id
@@ -155,11 +149,20 @@ public interface IOpsClusterTaskService extends IService<OpsClusterTaskEntity> {
     /**
      * check host port
      *
+     * @param taskId   taskId
      * @param hostId   host id
      * @param hostPort host port
-     * @return boolean
+     * @return OpsHostPortUsedStatusEnum
      */
-    boolean checkHostPort(String hostId, Integer hostPort);
+    OpsHostPortUsedStatusEnum checkHostPort(String taskId, String hostId, Integer hostPort);
+
+    /**
+     * check cluster install prot info
+     *
+     * @param clusterId cluster id
+     * @return port used info
+     */
+    Map<String, ClusterPortVo> checkTaskHostPort(String clusterId);
 
     /**
      * batch install cluster
@@ -184,15 +187,16 @@ public interface IOpsClusterTaskService extends IService<OpsClusterTaskEntity> {
      * @param taskIds taskIds
      * @return status
      */
-    Map<String, OpsClusterTaskStatusEnum> getBatchInstallTaskStatus(List<String> taskIds);
+    Map<String, TaskStatusVo> getBatchInstallTaskStatus(List<String> taskIds);
 
     /**
      * update cluster task status
      *
      * @param clusterId                clusterId
      * @param opsClusterTaskStatusEnum opsClusterTaskStatusEnum
+     * @param remark                   remark
      */
-    void updateClusterTaskStatus(String clusterId, OpsClusterTaskStatusEnum opsClusterTaskStatusEnum);
+    void updateClusterTaskStatus(String clusterId, OpsClusterTaskStatusEnum opsClusterTaskStatusEnum, String remark);
 
     /**
      * get host list
@@ -204,5 +208,44 @@ public interface IOpsClusterTaskService extends IService<OpsClusterTaskEntity> {
      */
     List<OpsHostEntity> getHostList(String os, String osVersion, String cpuArch);
 
+    /**
+     * reset task status to draft
+     *
+     * @param clusterId clusterId
+     */
+    void resetTaskStatusDraft(String clusterId);
+
+    /**
+     * full check cluster task : node nums, disk space, host port ,deploy type
+     *
+     * @param clusterId cluster id
+     * @return check result
+     */
+    boolean checkClusterTask(String clusterId);
+
+    /**
+     * check host user can install cluster node
+     *
+     * @param hostIp       host ip
+     * @param hostUsername username
+     * @return can install
+     */
+    boolean checkHostInstanceCanInstallClusterNode(String hostIp, String hostUsername);
+
+    /**
+     * check host paths disk space
+     *
+     * @param hostId host id
+     * @param paths  host path
+     * @return check result
+     */
     Map<String, String> checkHostDiskSpace(String hostId, List<String> paths);
+
+    /**
+     * modify cluster node count
+     *
+     * @param clusterId cluster id
+     * @param count     current cluster node count
+     */
+    void modifyClusterNodeCount(String clusterId, int count);
 }

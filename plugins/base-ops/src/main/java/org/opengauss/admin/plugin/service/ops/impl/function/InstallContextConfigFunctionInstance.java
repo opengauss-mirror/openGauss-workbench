@@ -67,10 +67,8 @@ public class InstallContextConfigFunctionInstance {
         config.setPort(task.getDatabasePort());
         config.setDatabaseUsername(task.getDatabaseUsername());
         config.setDatabasePassword(task.getDatabasePassword());
-
         List<LiteInstallNodeConfig> nodeConfigList = new ArrayList<>();
-        Map<String, HostInfoHolder> hostInfoHolderMap = installContext.getHostInfoHolders()
-                .stream().collect(Collectors.toMap(val -> val.getHostEntity().getHostId(), Function.identity()));
+        Map<String, HostInfoHolder> hostInfoHolderMap = installContext.getHostInfoHolderMap();
         for (OpsClusterTaskNodeEntity node : taskNodeList) {
             LiteInstallNodeConfig nodeConfig = new LiteInstallNodeConfig();
             nodeConfig.setClusterRole(node.getNodeType());
@@ -99,8 +97,7 @@ public class InstallContextConfigFunctionInstance {
         config.setDatabaseUsername(task.getDatabaseUsername());
         config.setDatabasePassword(task.getDatabasePassword());
         List<MinimalistInstallNodeConfig> nodeConfigList = new ArrayList<>();
-        Map<String, HostInfoHolder> hostInfoHolderMap = installContext.getHostInfoHolders()
-                .stream().collect(Collectors.toMap(val -> val.getHostEntity().getHostId(), Function.identity()));
+        Map<String, HostInfoHolder> hostInfoHolderMap = installContext.getHostInfoHolderMap();
         for (OpsClusterTaskNodeEntity node : taskNodeList) {
             MinimalistInstallNodeConfig nodeConfig = new MinimalistInstallNodeConfig();
             nodeConfig.setHostId(node.getHostId());
@@ -129,8 +126,7 @@ public class InstallContextConfigFunctionInstance {
         config.setIsInstallCM(task.getEnableCmTool());
 
         List<EnterpriseInstallNodeConfig> nodeConfigList = new ArrayList<>();
-        Map<String, HostInfoHolder> hostInfoHolderMap = installContext.getHostInfoHolders()
-                .stream().collect(Collectors.toMap(val -> val.getHostEntity().getHostId(), Function.identity()));
+        Map<String, HostInfoHolder> hostInfoHolderMap = installContext.getHostInfoHolderMap();
         for (OpsClusterTaskNodeEntity node : taskNodeList) {
             EnterpriseInstallNodeConfig nodeConfig = new EnterpriseInstallNodeConfig();
             BeanUtils.copyProperties(node, nodeConfig);

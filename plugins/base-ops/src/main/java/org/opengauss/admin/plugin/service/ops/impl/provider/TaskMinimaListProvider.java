@@ -111,6 +111,7 @@ public class TaskMinimaListProvider extends AbstractTaskProvider {
         nodeConfig.setInstallUserId(installUserId);
         sendOperateLog(installContext, "BEFORE INSTALL");
         Session installUserSession = beforeInstall(installContext, installPath, dataPath, pkgPath, hostId, installUserId, installUserName, "-jxf");
+        boolean isInstallSucc = true;
         try {
             log.info("perform installation");
             // install
@@ -133,9 +134,15 @@ public class TaskMinimaListProvider extends AbstractTaskProvider {
             saveContext(installContext);
             sendOperateLog(installContext, "FINISH");
             log.info("The installation is complete");
+        } catch (OpsException ex) {
+            isInstallSucc = false;
+            throw new OpsException("Installation failed " + ex.getMessage());
         } finally {
             if (Objects.nonNull(installUserSession) && installUserSession.isConnected()) {
                 installUserSession.disconnect();
+            }
+            if (!isInstallSucc) {
+                cleanResource(installContext);
             }
         }
     }
@@ -444,7 +451,7 @@ public class TaskMinimaListProvider extends AbstractTaskProvider {
             opsHostRemoteService.executeCommand(command, installUserSession, retBuffer, autoResponse);
         } catch (Exception e) {
             log.error("installation error", e);
-            throw new OpsException("installation error");
+            throw new OpsException("installation error " + e.getMessage());
         }
         sendOperateLog(installContext, "END_EXE_INSTALL_COMMAND");
     }
@@ -467,5 +474,31 @@ public class TaskMinimaListProvider extends AbstractTaskProvider {
             return SshCommandConstants.MINIMAL_LIST_CLUSTER_INSTALL;
         }
         throw new OpsException("Unsupported deployment method：" + deployType);
+    }
+
+    @Override
+    protected String prepareCleanClusterDir(InstallContext installContext) {
+        String delCmd = "";
+        try {
+            MinimalistInstallNodeConfig nodeConfig = getSingleInstallNodeConfig(installContext);
+            String installPath = preparePath(nodeConfig.getInstallPath());
+            String pkgPath = preparePath(installContext.getMinimalistInstallConfig().getInstallPackagePath());
+            // remove intall path software
+            log.info("install package path : {}", pkgPath);
+
+            String delInstallPath = MessageFormat.format(SshCommandConstants.DEL_FILE, pkgPath + "/*");
+            log.info("delete install package path : {}", delInstallPath);
+
+            delCmd = delInstallPath + " || echo \"delInstallPath failed\"; ";
+
+            String delDataPath = MessageFormat.format(SshCommandConstants.DEL_FILE, installPath);
+
+            delCmd += delDataPath + " || echo \"delDataPath failed\"; ";
+
+            return delCmd;
+        } catch (OpsException e) {
+            log.error("delete cmd : {}", delCmd);
+            return delCmd;
+        }
     }
 }

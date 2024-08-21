@@ -38,7 +38,7 @@ public class ThreadPoolConfig {
     private static final int CORE_POOL_SIZE = 15;
     private static final int MAX_POOL_SIZE = 2 * CORE_POOL_SIZE;
     private static final int KEEPALIVE_SECONDS = 60;
-    private static final int QUERY_CAPACITY = 128;
+    private static final int QUERY_CAPACITY = 1200;
     private static final int AVAIL_TERMINATION_MILLIS = 60;
     private static final String THREAD_NAME_PREFIX = "ebpf-";
 

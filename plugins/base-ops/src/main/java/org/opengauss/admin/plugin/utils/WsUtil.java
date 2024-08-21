@@ -56,7 +56,7 @@ public class WsUtil {
                     try {
                         session.getBasicRemote().sendText(message);
                     } catch (IOException e) {
-                        log.error("Failed to send a message：", e);
+                        log.error("Failed to send a message：{}", e.getMessage());
                     }
                 } else {
                     log.error("Connection closed");
@@ -74,7 +74,7 @@ public class WsUtil {
                 try {
                     session.close();
                 } catch (IOException e) {
-                    log.error("close websocket session error : ", e);
+                    log.error("close websocket session error : {}", e.getMessage());
                 }
             }
         }

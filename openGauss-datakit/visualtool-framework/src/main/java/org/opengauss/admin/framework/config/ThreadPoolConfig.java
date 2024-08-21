@@ -41,11 +41,11 @@ import java.util.concurrent.ThreadPoolExecutor;
  **/
 @Configuration
 public class ThreadPoolConfig {
-    private int corePoolSize = 50;
+    private int corePoolSize = 10;
 
-    private int maxPoolSize = 2000;
+    private int maxPoolSize = 20;
 
-    private int queueCapacity = 1000;
+    private int queueCapacity = 2000;
 
     private int keepAliveSeconds = 300;
 

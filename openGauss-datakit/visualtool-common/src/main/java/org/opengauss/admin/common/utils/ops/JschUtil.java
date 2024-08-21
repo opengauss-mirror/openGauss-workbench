@@ -156,7 +156,7 @@ public class JschUtil {
      */
     public JschResult executeCommand(String command, Session session, WsSession wsSession,
                                      Map<String, String> autoResponse) throws IOException, InterruptedException {
-        log.info("Execute an order{}", command);
+        log.debug("Execute an order {}", command);
 
         ChannelExec channel = null;
         try {
@@ -342,8 +342,6 @@ public class JschUtil {
                 break;
             }
 
-            sleep();
-
             autoResponse(autoResponse, resultStrBuilder, out);
         }
 
@@ -384,14 +382,6 @@ public class JschUtil {
                     }
                 }
             });
-        }
-    }
-
-    private void sleep() throws InterruptedException {
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            throw new InterruptedException();
         }
     }
 

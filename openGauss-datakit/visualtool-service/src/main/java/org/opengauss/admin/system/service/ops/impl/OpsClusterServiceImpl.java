@@ -248,7 +248,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     connection = DriverManager.getConnection(sourceURL, info);
                     doMonitor(wsSession, ommSession, clusterEntity.getVersion(), connection, realDataPath, clusterEntity.getEnvPath());
                 } catch (Exception e) {
-                    log.error("Failed to obtain a connection", e);
+                    log.error("Failed to obtain a connection {}", e.getMessage());
                 }
             } finally {
                 if (Objects.nonNull(connection)) {
@@ -427,7 +427,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setTime(System.currentTimeMillis());
                 } catch (Exception e) {
-                    log.error("time error : ", e);
+                    log.error("time error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -439,7 +439,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setCpu(cpu(ommSession));
                 } catch (Exception e) {
-                    log.error("cpu monitor error : ", e);
+                    log.error("cpu monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -450,7 +450,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setMemory(memory(ommSession));
                 } catch (Exception e) {
-                    log.error("memory monitor error : ", e);
+                    log.error("memory monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -461,7 +461,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setNet(net(ommSession));
                 } catch (Exception e) {
-                    log.error("net monitor error : ", e);
+                    log.error("net monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -472,7 +472,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setState(state(ommSession, version, dataPath, envPath));
                 } catch (Exception e) {
-                    log.error("state monitor error : ", e);
+                    log.error("state monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -483,7 +483,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setLock(lock(connection));
                 } catch (Exception e) {
-                    log.error("lock monitor error : ", e);
+                    log.error("lock monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -494,7 +494,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setSession(session(connection));
                 } catch (Exception e) {
-                    log.error("session monitor error : ", e);
+                    log.error("session monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -505,7 +505,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setConnectNum(connectNum(connection));
                 } catch (Exception e) {
-                    log.error("connectNum monitor error : ", e);
+                    log.error("connectNum monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -516,7 +516,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setSessionMemoryTop10(sessionMemoryTop10(connection));
                 } catch (Exception e) {
-                    log.error("sessionMemoryTop10 monitor error : ", e);
+                    log.error("sessionMemoryTop10 monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -527,7 +527,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setKernel(kernel(ommSession));
                 } catch (Exception e) {
-                    log.error("kernel monitor error : ", e);
+                    log.error("kernel monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -538,7 +538,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 try {
                     nodeMonitorVO.setMemorySize(memorySize(ommSession));
                 } catch (Exception e) {
-                    log.error("memorySize monitor error : ", e);
+                    log.error("memorySize monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -548,15 +548,13 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             try {
                 countDownLatch.await();
             } catch (InterruptedException e) {
-                log.error("waiting for thread to be interrupted", e);
-                throw new OpsException("monitor error");
+                log.error("monitor await thread is interrupted {}", e.getMessage());
             }
-
             wsUtil.sendText(wsSession, JSON.toJSONString(nodeMonitorVO));
             try {
                 TimeUnit.SECONDS.sleep(1L);
             } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
+                log.error("monitor sleep is interrupted {}", e.getMessage());
             }
         }
 
@@ -573,7 +571,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 res.add(model);
             }
         } catch (Exception e) {
-            log.error("Failed to query session memory top10", e);
+            log.error("Failed to query session memory top10 {}", e.getMessage());
             throw new OpsException("Failed to query session memory top10");
         }
 
@@ -590,7 +588,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 res = resultSet.getString("count");
             }
         } catch (Exception e) {
-            log.error("Failed to query the number of connections", e);
+            log.error("Failed to query the number of connections  {}", e.getMessage());
             throw new OpsException("Failed to query the number of connections");
         }
 
@@ -607,7 +605,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 res = resultSet.getString("count");
             }
         } catch (Exception e) {
-            log.error("Failed to query the number of connections", e);
+            log.error("Failed to query the number of connections {}", e.getMessage());
             throw new OpsException("Failed to query the number of connections");
         }
 
@@ -624,7 +622,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 res = resultSet.getString("count");
             }
         } catch (Exception e) {
-            log.error("Failed to query the number of connections", e);
+            log.error("Failed to query the number of connections {}", e.getMessage());
             throw new OpsException("Failed to query the number of connections");
         }
 
@@ -634,7 +632,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public CheckSummaryVO check(String clusterId,String rootPassword) {
+    public CheckSummaryVO check(String clusterId, String rootPassword) {
         OpsClusterEntity clusterEntity = getById(clusterId);
         if (clusterEntity.getVersionNum().equals("5.1.0")) {
             throw new OpsException("Unsupported openGauss version: 5.1.0");
@@ -667,11 +665,11 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             throw new OpsException("User root was not found");
         }
 
-        if (StrUtil.isEmpty(rootUserEntity.getPassword()) && StrUtil.isEmpty(rootPassword)){
+        if (StrUtil.isEmpty(rootUserEntity.getPassword()) && StrUtil.isEmpty(rootPassword)) {
             throw new OpsException("root password cannot be empty");
         }
 
-        if (StrUtil.isEmpty(rootUserEntity.getPassword())){
+        if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
             rootUserEntity.setPassword(rootPassword);
         }
 
@@ -715,7 +713,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
             }
         } catch (Exception e) {
-            log.error("One-click self-test results", e);
+            log.error("One-click self-test results {}", e.getMessage());
             if (Objects.nonNull(session) && session.isConnected()) {
                 session.disconnect();
             }
@@ -735,7 +733,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 return jschResult.getResult();
             }
         } catch (Exception e) {
-            log.error("Failed to query memory size", e);
+            log.error("Failed to query memory size {}", e.getMessage());
             throw new OpsException("Failed to query memory size");
         }
     }
@@ -750,7 +748,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 return jschResult.getResult();
             }
         } catch (Exception e) {
-            log.error("Failed to query the number of cores", e);
+            log.error("Failed to query the number of cores {}", e.getMessage());
             throw new OpsException("Failed to query the number of cores");
         }
     }
@@ -815,18 +813,11 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                             nodeState.put(s1[1], state.trim());
                             nodeRole.put(s1[1], s1[6]);
                         }
-//                        if (s1.length == 9) {
-//                            nodeState.put(s1[1], s1[8].trim());
-//                            nodeRole.put(s1[1],s1[7].trim());
-//                        }else if (s1.length == 8){
-//                            nodeState.put(s1[1],s1[7].trim());
-//                            nodeRole.put(s1[1],s1[6].trim());
-//                        }
                     }
                 }
                 return JSON.toJSONString(res);
             } catch (IOException e) {
-                log.error("Failed to get status information", e);
+                log.error("Failed to get status information {}", e.getMessage());
                 throw new OpsException("Failed to get status information");
             }
         } else {
@@ -850,7 +841,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     return "true";
                 }
             } catch (IOException e) {
-                log.error("Failed to get status information", e);
+                log.error("Failed to get status information {}", e.getMessage());
                 throw new OpsException("Failed to get status information");
             }
         }
@@ -883,7 +874,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 res.add(nodeNetMonitor);
             }
         } catch (IOException e) {
-            log.error("Failed to get network information", e);
+            log.error("Failed to get network information {}", e.getMessage());
             throw new OpsException("Failed to get network information");
         }
 
@@ -906,7 +897,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
             return jschResult.getResult();
         } catch (IOException e) {
-            log.error("Failed to get memory usage", e);
+            log.error("Failed to get memory usage {}", e.getMessage());
             throw new OpsException("Failed to get memory usage");
         }
     }
@@ -927,7 +918,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
             return jschResult.getResult();
         } catch (IOException e) {
-            log.error("Failed to get cpu usage", e);
+            log.error("Failed to get cpu usage {}", e.getMessage());
             throw new OpsException("Failed to get cpu usage");
         }
     }

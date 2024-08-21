@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Technologies Co.,Ltd.
+ * Copyright (c) 2024-2024 Huawei Technologies Co.,Ltd.
  *
  * openGauss is licensed under Mulan PSL v2.
  * You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -13,10 +13,10 @@
  * See the Mulan PSL v2 for more details.
  * -------------------------------------------------------------------------
  *
- * OpsClusterTaskNodeUpdateDTO.java
+ * OpsClusterTaskNodeDTO.java
  *
  * IDENTIFICATION
- * plugins/base-ops/src/main/java/org/opengauss/admin/plugin/domain/model/ops/dto/OpsClusterTaskNodeUpdateDTO.java
+ * plugins/base-ops/src/main/java/org/opengauss/admin/plugin/domain/model/ops/dto/OpsClusterTaskNodeDTO.java
  *
  * -------------------------------------------------------------------------
  */
@@ -25,22 +25,42 @@ package org.opengauss.admin.plugin.domain.model.ops.dto;
 
 import lombok.Data;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterTaskNodeEntity;
+import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
 import org.springframework.beans.BeanUtils;
 
-import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 /**
+ * OpsClusterTaskNodeDTO
+ *
  * @author wangchao
- * @date 2024/06/15 09:26
+ * @since 2024/06/15 09:26
  */
 @Data
-public class OpsClusterTaskNodeUpdateDTO extends OpsClusterTaskNodeCreateDTO {
-    @NotEmpty(message = "clusterNodeId不能为空")
+public class OpsClusterTaskNodeDTO {
     private String clusterNodeId;
-
-    @NotEmpty(message = "clusterId不能为空")
+    @NotBlank(message = "clusterId cannot be empty")
     private String clusterId;
+    @NotBlank(message = "hostIp cannot be empty")
+    private String hostId;
+    @NotBlank(message = "hostUserId cannot be empty")
+    private String hostUserId;
+    @NotNull(message = "nodeType cannot be empty")
+    private ClusterRoleEnum nodeType;
+    @NotBlank(message = "dataPath cannot be empty")
+    private String dataPath;
+    private String azOwner;
+    private String azPriority;
+    private Boolean isCMMaster;
+    private String cmDataPath;
+    private Integer cmPort = 5433;
 
+    /**
+     * Convert to entity.
+     *
+     * @return the entity
+     */
     public OpsClusterTaskNodeEntity toEntity() {
         OpsClusterTaskNodeEntity opsClusterTaskNodeEntity = new OpsClusterTaskNodeEntity();
         BeanUtils.copyProperties(this, opsClusterTaskNodeEntity);

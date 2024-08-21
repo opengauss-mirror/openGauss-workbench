@@ -25,9 +25,13 @@ package org.opengauss.admin.plugin.domain.model.ops;
 
 /**
  * @author lhf
- * @date 2022/8/10 14:51
+ * @since 2022/8/10 14:51
  **/
 public interface SshCommandConstants {
+    /**
+     * default bashrc
+     */
+    String DEFAULT_ENV_BASHRC = "~/.bashrc";
     /**
      * query operating system
      */
@@ -87,16 +91,28 @@ public interface SshCommandConstants {
      */
     String CREATE_OMM_USER = "useradd omm";
 
+    /**
+     * OMM user password
+     */
     String CHANGE_OMM_PASSWORD_TEMPLATE = "passwd {0}";
     /**
      * Modify OMM password
      */
     String CHANGE_OMM_PASSWORD = "passwd omm";
 
+    /**
+     * limit check
+     */
     String LIMITS_CHECK = " cat /etc/security/limits.conf | grep 1048576 ";
 
+    /**
+     * limit
+     */
     String LIMITS = "echo -e \"* hard nofile 1048576\\n* soft nofile 1048576\\n* hard nproc 1048576\\n* soft nproc 1048576\" >> /etc/security/limits.conf";
 
+    /**
+     * check hostname
+     */
     String HOSTNAME = "cat /etc/hostname | sed 's/\\\"//g'";
     /**
      * decompress
@@ -105,7 +121,15 @@ public interface SshCommandConstants {
     /**
      * SEMMNI
      */
-    String SEM = "sysctl -w kernel.sem=\"50100 128256000 50100 2560\"";
+    String SEM = "echo 'kernel.sem = 250 6400000 1000 25600' | sudo tee -a /etc/sysctl.conf && sysctl -p";
+    /**
+     * SEM MNI
+     */
+    String SEM_VALUE = "250 6400000 1000 25600";
+    /**
+     * check sem
+     */
+    String CHECK_SEM = "sysctl kernel.sem | awk '{for(i=3;i<=NF;i++) printf $i (i<NF?\" \":\"\\n\")}'";
     /**
      * Minimalist single node installation
      */
@@ -191,8 +215,17 @@ public interface SshCommandConstants {
      */
     String CHMOD = "chmod 755 -R {0}";
 
+    /**
+     * grant permission
+     */
     String CHMOD_DATA_PATH = "chmod 700 -R {0}";
+    /**
+     * grant permission
+     */
     String CHOWN = "chown {0} -R {1}";
+    /**
+     * grant permission
+     */
     String CHOWN_USER_GROUP = "chown {0}:{1} -R {2}";
     /**
      * switch user
@@ -243,6 +276,9 @@ public interface SshCommandConstants {
      * network usage
      */
     String NET = "cat /proc/net/dev";
+    /**
+     * Delete file
+     */
     String DEL_FILE = "rm -rf {0}";
     String INSTALL_DEPENDENCY = "yum install -y wget net-tools python3 bzip2 expect libaio-devel flex bison ncurses-devel glibc-devel patch redhat-lsb readline-devel";
 
@@ -287,7 +323,6 @@ public interface SshCommandConstants {
     String THREE_IN_ONE = "{0}{1}{2}";
     String CHANGE_SUB_USER = "su - {0} -c ''{1}''";
     String CHECK_PERMISSION = "ls -l --time-style=long-iso -d {0}";
-
     /**
      * command to get openGauss OM package
      */

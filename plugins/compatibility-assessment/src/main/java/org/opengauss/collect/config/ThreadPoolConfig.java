@@ -37,11 +37,11 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @Slf4j
 @Configuration
 public class ThreadPoolConfig {
-    private final int coreThreadPoolSize = 40;
+    private final int coreThreadPoolSize = 10;
 
-    private final int maxThreadPoolSize = 100;
+    private final int maxThreadPoolSize = 20;
 
-    private final int maxQueueCapacity = 1200;
+    private final int maxQueueCapacity = 2000;
 
     private final int monitorMaxThreadAliveSeconds = 400;
 

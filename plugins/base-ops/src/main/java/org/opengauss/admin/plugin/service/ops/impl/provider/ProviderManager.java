@@ -21,7 +21,6 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.plugin.service.ops.impl.provider;
 
 import cn.hutool.core.collection.CollUtil;
@@ -39,6 +38,7 @@ import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
 import org.opengauss.admin.plugin.domain.model.ops.HostInfoHolder;
 import org.opengauss.admin.plugin.domain.model.ops.InstallContext;
 import org.opengauss.admin.plugin.domain.model.ops.RetBuffer;
+import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
 import org.opengauss.admin.plugin.domain.model.ops.cache.TaskManager;
 import org.opengauss.admin.plugin.enums.ops.InstallModeEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
@@ -66,7 +66,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * ProviderManager
  *
  * @author wangchao
- * @date 2024/6/22 9:41
+ * @since  2024/6/22 9:41
  **/
 @Slf4j
 @Service
@@ -117,7 +117,7 @@ public class ProviderManager {
      */
     private String getPackageLocalPath(String packageId) {
         OpsPackageManagerEntity packageEntity = opsPackageManagerV2Service.getById(packageId);
-        Assert.isTrue(Objects.nonNull(packageEntity), "package " + packageId + "not exist");
+        Assert.isTrue(Objects.nonNull(packageEntity), "package " + packageId + " not exist");
         UploadInfo packagePath = packageEntity.getPackagePath();
         return packagePath.getRealPath() + "/" + packagePath.getName();
     }
@@ -164,13 +164,15 @@ public class ProviderManager {
             installContext.setOpenGaussVersionNum(task.getVersionNum());
             installContext.setInstallMode(InstallModeEnum.OFF_LINE);
             installContext.setInstallPackagePath(task.getInstallPackagePath());
+            OpsHostUserEntity installUser = hostUserFacade.getById(task.getHostUserId());
+            installContext.setInstallUsername(installUser.getUsername());
             installContext.setInstallPackageLocalPath(getPackageLocalPath(task.getPackageId()));
             installContext.setEnvPath(task.getEnvPath());
             installContext.setDeployType(task.getDeployType());
-
-            List<OpsClusterTaskNodeEntity> taskNodeList = opsClusterTaskNodeService.listByClusterTaskId(installContext.getClusterId());
-            populateInstallContextHostHolder(installContext, taskNodeList);
+            String clusterId = installContext.getClusterId();
+            List<OpsClusterTaskNodeEntity> taskNodeList = opsClusterTaskNodeService.listByClusterTaskId(clusterId);
             populateInstallEnvPath(installContext);
+            populateInstallContextHostHolder(installContext, taskNodeList);
             populateInstallContextOs(installContext);
             populateInstallContextInstallConfig(installContext, task, taskNodeList);
         } catch (Exception e) {
@@ -181,15 +183,22 @@ public class ProviderManager {
 
     private void populateInstallEnvPath(InstallContext installContext) {
         String envPath = installContext.getEnvPath();
-        if (StrUtil.isEmpty(envPath) || "~/.bashrc".equals(envPath)) {
-            envPath = "/home/" + installContext.getInstallUsername() + "/.bashrc";
+        if (StrUtil.isEmpty(envPath)) {
+            envPath = SshCommandConstants.DEFAULT_ENV_BASHRC;
             installContext.setEnvPath(envPath);
+        }
+        if (SshCommandConstants.DEFAULT_ENV_BASHRC.equals(envPath)) {
+            installContext.setEnvAbsolutePath("/home/" + installContext.getInstallUsername() + "/.bashrc");
+        } else {
+            installContext.setEnvAbsolutePath(envPath);
         }
     }
 
-    private void populateInstallContextInstallConfig(InstallContext installContext, OpsClusterTaskEntity task, List<OpsClusterTaskNodeEntity> taskNodeList) {
+    private void populateInstallContextInstallConfig(InstallContext installContext, OpsClusterTaskEntity task,
+                                                     List<OpsClusterTaskNodeEntity> taskNodeList) {
         OpenGaussVersionEnum version = installContext.getOpenGaussVersion();
-        InstallContextConfigFunction installContextConfig = installContextConfigFunctionInstance.getInstallContextConfig(version);
+        InstallContextConfigFunction installContextConfig =
+                installContextConfigFunctionInstance.getInstallContextConfig(version);
         installContextConfig.accept(installContext, task, taskNodeList);
     }
 
@@ -207,7 +216,8 @@ public class ProviderManager {
         installContext.setOs(OpenGaussSupportOSEnum.of(host.getOs(), host.getOsVersion(), host.getCpuArch()));
     }
 
-    private void populateInstallContextHostHolder(InstallContext installContext, List<OpsClusterTaskNodeEntity> entityNodeList) {
+    private void populateInstallContextHostHolder(InstallContext installContext,
+                                                  List<OpsClusterTaskNodeEntity> entityNodeList) {
         List<HostInfoHolder> hostInfoHolders = new ArrayList<>();
         entityNodeList.forEach(node -> {
             OpsHostEntity host = hostFacade.getById(node.getHostId());
@@ -229,6 +239,7 @@ public class ProviderManager {
         String clusterId = installContext.getClusterId();
         RetBuffer retBuffer = installContext.getRetBuffer();
         boolean isInstallSucc = true;
+        String remark = "";
         try {
             retBuffer.sendText("START_EXECUTE_INSTALL_PROVIDER");
             clusterTaskProviderManager
@@ -242,13 +253,15 @@ public class ProviderManager {
             retBuffer.sendText("FINAL_EXECUTE_EXIT_CODE:-1");
             OperateLogFactory.operateInstall(clusterId, retBuffer.getRetBuffer());
             isInstallSucc = false;
+            remark = e.getMessage();
             throw new OpsException(e.getMessage());
-
         } finally {
             if (!isInstallSucc) {
-                opsClusterTaskService.updateClusterTaskStatus(clusterId, OpsClusterTaskStatusEnum.FAILED);
+                opsClusterTaskService.updateClusterTaskStatus(clusterId, OpsClusterTaskStatusEnum.FAILED, remark);
+
             } else {
-                opsClusterTaskService.updateClusterTaskStatus(clusterId, OpsClusterTaskStatusEnum.SUCCESS);
+                opsClusterTaskService.updateClusterTaskStatus(clusterId, OpsClusterTaskStatusEnum.SUCCESS,
+                        "Install completed");
             }
         }
     }
