@@ -35,13 +35,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.Objects;
 
 /**
  * OpsClusterTaskNodeProviderService
  *
  * @author wangchao
- * @since  2024/6/22 9:41
+ * @since 2024/6/22 9:41
  **/
 @Service("clusterTaskNodeProvider")
 public class OpsClusterTaskNodeProviderService {
@@ -65,9 +66,13 @@ public class OpsClusterTaskNodeProviderService {
         String clusterId = insertDto.getClusterId();
         OpsClusterTaskEntity taskEntity = opsClusterTaskService.getById(clusterId);
         Assert.isTrue(Objects.nonNull(taskEntity), "cluster task id can not exists " + clusterId);
+        int nodeCount = taskEntity.getClusterNodeNum() + 1;
         String clusterNodeId = opsClusterTaskNodeService.saveClusterTaskNode(insertDto);
-        opsClusterTaskService.modifyClusterNodeCount(clusterId, taskEntity.getClusterNodeNum() + 1);
+        opsClusterTaskService.modifyClusterNodeCount(clusterId, nodeCount);
         opsClusterTaskService.resetTaskStatusDraft(clusterId);
+        boolean canInstall = opsClusterTaskService.checkHostAndUserInstallCluster(clusterId, insertDto.getHostId(),
+                insertDto.getHostUserId());
+        Assert.isTrue(canInstall, clusterId + " host has cluster installation task");
         return clusterNodeId;
     }
 
@@ -89,6 +94,9 @@ public class OpsClusterTaskNodeProviderService {
         Assert.isTrue(Objects.nonNull(node), "cluster node is not exists " + clusterNodeId);
         String msg = opsClusterTaskNodeService.updateClusterTaskNode(updateDto);
         opsClusterTaskService.resetTaskStatusDraft(clusterId);
+        boolean canInstall = opsClusterTaskService.checkHostAndUserInstallCluster(clusterId, updateDto.getHostId(),
+                updateDto.getHostUserId());
+        Assert.isTrue(canInstall, clusterId + " host has cluster installation task");
         return msg;
     }
 
@@ -111,5 +119,15 @@ public class OpsClusterTaskNodeProviderService {
         opsClusterTaskService.modifyClusterNodeCount(clusterId, nodeCount);
         opsClusterTaskService.resetTaskStatusDraft(clusterId);
         return msg;
+    }
+
+    /**
+     * list cluster node list
+     *
+     * @param clusterId cluster
+     * @return node list
+     */
+    public List<OpsClusterTaskNodeEntity> listClusterTaskNode(String clusterId) {
+        return opsClusterTaskNodeService.listByClusterTaskId(clusterId);
     }
 }

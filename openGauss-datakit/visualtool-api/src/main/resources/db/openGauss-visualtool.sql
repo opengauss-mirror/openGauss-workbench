@@ -350,7 +350,7 @@ CREATE TABLE IF NOT EXISTS "public"."ops_cluster_task" (
     "enable_generate_environment_variable_file" int4 DEFAULT 0,
     "xml_config_path" varchar(255) COLLATE "pg_catalog"."default",
     "deploy_type" varchar(255) COLLATE "pg_catalog"."default",
-    "cluster_node_num" int4 DEFAULT 1,
+    "cluster_node_num" int4 DEFAULT 0,
     "status" varchar(255) COLLATE "pg_catalog"."default",
     "execute_time" timestamp(6),
     "env_check_result" varchar(255) COLLATE "pg_catalog"."default",

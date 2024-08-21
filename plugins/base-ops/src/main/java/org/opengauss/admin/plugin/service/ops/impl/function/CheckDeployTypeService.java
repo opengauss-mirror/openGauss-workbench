@@ -46,7 +46,7 @@ public class CheckDeployTypeService {
         if (Objects.equals(deployType, DeployTypeEnum.SINGLE_NODE)) {
             Assert.isTrue(size == 1, "Lite version single node deployment mode, host node number must be 1");
         } else {
-            Assert.isTrue(size == 1, "Lite version cluster deployment mode, host node number must be 2");
+            Assert.isTrue(size == 2, "Lite version cluster deployment mode, host node number must be 2");
         }
     };
 
