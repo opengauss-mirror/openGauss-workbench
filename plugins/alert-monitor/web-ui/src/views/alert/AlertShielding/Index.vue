@@ -48,15 +48,15 @@
         <el-table-column prop="ruleDetail" :label="$t(`alertShielding.ruleDetail`)" />
         <el-table-column header-align="center" :label="$t(`alertShielding.shieldInstance`)">
           <template #default="{ row }">
-            <div v-if="row.clusterNodeList.length > 0">
+            <div v-if="row.clusterNodeList.length > 0" >
               <el-tag type="info" style="margin-right: 10px;">{{ row.clusterNodeList[0].nodeName }}</el-tag>
-              <el-popover trigger="hover" :width="230">
+              <el-popover trigger="hover" :width="280" >
                 <template #reference>
                   <el-tag type="info" v-if="row.clusterNodeList.length > 1">+{{ row.clusterNodeList.length-1 }}</el-tag>
                 </template>
                 <template #default>
                   <span v-for="(node, index) in row.clusterNodeList">
-                    <el-tag type="info" v-if="index > 0">{{ node.nodeName }}</el-tag>
+                    <el-tag type="info" v-if="index > 0" style="white-space: normal; display: inline-block; word-break: break-word; height: auto;">{{ node.nodeName }}</el-tag>
                   </span>
                 </template>
               </el-popover>
@@ -69,7 +69,7 @@
               {{$t(`alertShielding.schedule`)}}{{ row.startDate }} ~  {{ row.endDate }} <br> {{$t(`alertShielding.everyday`)}} {{ row.startTime }} ~  {{ row.endTime }}
             </template>
             <template v-else-if="row.type === 'b'">
-              {{$t(`alertShielding.timeRangeSchedule`)}}{{ row.startDate }} ~ {{ row.endDate }}
+              {{$t(`alertShielding.timeRangeSchedule`)}}{{ row.startDate }} {{ row.startTime }} ~ {{ row.endDate }} {{ row.endTime }}
             </template>
             <template v-else>
               {{$t(`alertShielding.permanent`)}}
