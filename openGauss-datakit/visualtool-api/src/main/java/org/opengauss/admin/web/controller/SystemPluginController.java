@@ -198,7 +198,7 @@ public class SystemPluginController extends BaseController {
     @ApiImplicitParam(name = "id", value = "pluginId", paramType = "path", required = true)
     public AjaxResult stop(@PathVariable("id") String id) {
         try {
-            Integer count = sysMenuService.countMenuHasOtherPluginSubmenuByPluginId(id);
+            Integer count = sysMenuService.countMenuHasOtherEnablePluginSubmenuByPluginId(id);
             if (count > 0) {
                 return AjaxResult.error(ResponseCode.PLUGIN_MENU_HAS_OTHER_PLUGIN_SUBMENU_UNINSTALL_ERROR.code());
             }

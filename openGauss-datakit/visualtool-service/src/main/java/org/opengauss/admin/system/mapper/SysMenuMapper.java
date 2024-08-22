@@ -82,6 +82,14 @@ public interface SysMenuMapper extends BaseMapper<SysMenu> {
     Integer countParentMenuHasOtherPluginSubmenusByPluginId(@Param("pluginId") String pluginId);
 
     /**
+     * According to the plugin, get the parent menu that has other enable plugin submenus
+     *
+     * @param pluginId pluginId
+     * @return parentMenu num
+     */
+    Integer countParentMenuHasOtherEnablePluginSubmenusByPluginId(@Param("pluginId") String pluginId);
+
+    /**
      * Obtain the parent menu ID based on the plugin ID
      *
      * @param pluginId pluginId
