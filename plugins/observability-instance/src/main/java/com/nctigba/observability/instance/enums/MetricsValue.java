@@ -58,7 +58,7 @@ public enum MetricsValue {
                     + "/(rate(agent_disk_rd_ios_total{host='ogbrench'}[1m])+"
                     + "rate(agent_disk_wr_ios_total{host='ogbrench'}[1m]))) by (device) > 0",
             "{device}"),
-    IO_UTIL(Type.OS, "sum(rate(agent_disk_tot_ticks_total{host='ogbrench'}[5m])) by(device) / 1000", "{device}"),
+    IO_UTIL(Type.OS, "sum(rate(agent_disk_tot_ticks_total{host='ogbrench'}[5m])) by(device) / 10", "{device}"),
 
     // network table
     NETWORK_RXPCK(Type.OS, "max(rate(agent_network_receive_packets_total{host='ogbrench'}[5m])) by (device)",
