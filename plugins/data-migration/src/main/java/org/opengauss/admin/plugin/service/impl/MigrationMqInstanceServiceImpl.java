@@ -26,6 +26,7 @@ import org.opengauss.admin.plugin.service.MigrationMqInstanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -116,7 +117,7 @@ public class MigrationMqInstanceServiceImpl extends ServiceImpl<MigrationThirdPa
                 wrapper.eq(MigrationThirdPartySoftwareConfig::getKafkaIp, host);
                 List<MigrationThirdPartySoftwareConfig> removeSoftWareRecord = list(wrapper);
                 remove(wrapper);
-                if (removeSoftWareRecord == null) {
+                if (ObjectUtils.isEmpty(removeSoftWareRecord)) {
                     log.info("remove soft ware record is null");
                     return null;
                 }

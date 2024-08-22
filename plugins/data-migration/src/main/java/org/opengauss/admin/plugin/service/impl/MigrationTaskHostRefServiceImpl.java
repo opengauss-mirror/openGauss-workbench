@@ -555,34 +555,11 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             return result;
         }
 
-        MigrationHostPortalInstall physicalInstallParams = new MigrationHostPortalInstall();
-        physicalInstallParams.setRunHostId(hostId);
-        physicalInstallParams.setHost(opsHost.getPublicIp());
-        physicalInstallParams.setPort(opsHost.getPort());
-        physicalInstallParams.setRunUser(hostUser.getUsername());
-        physicalInstallParams.setHostUserId(hostUser.getHostUserId());
-        physicalInstallParams.setRunPassword(hostUser.getPassword());
-        physicalInstallParams.setInstallPath(realInstallPath);
-        checkPkgName(install);
-        checkJarName(install);
-        physicalInstallParams.setJarName(install.getJarName());
-        physicalInstallParams.setPkgName(install.getPkgName());
-        physicalInstallParams.setInstallStatus(PortalInstallStatus.INSTALLING.getCode());
-        physicalInstallParams.setInstallType(install.getInstallType());
-        physicalInstallParams.setFile(install.getFile());
-        if (physicalInstallParams.getInstallType().equals(PortalInstallType.ONLINE_INSTALL.getCode())) {
-            physicalInstallParams.setPkgDownloadUrl(install.getPkgDownloadUrl());
-            physicalInstallParams.setPkgUploadPath(null);
-        }
+        MigrationHostPortalInstall physicalInstallParams =
+                preparePhysicalInstallParams(opsHost, hostUser, install, realInstallPath);
+
         if (PortalInstallType.IMPORT_INSTALL.getCode().equals(install.getInstallType())) {
-            //  offline or online mode remains unchanged
-            physicalInstallParams.setInstallType(
-                    oldInstall == null ? PortalInstallType.ONLINE_INSTALL.getCode() : oldInstall.getInstallType());
-            boolean isInstallSuccess = PortalHandle.checkInstallStatusAndUpdate(physicalInstallParams,
-                    encryptionUtils.decrypt(hostUser.getPassword()));
-            physicalInstallParams.setInstallStatus(isInstallSuccess
-                    ? PortalInstallStatus.INSTALLED.getCode() : PortalInstallStatus.INSTALL_ERROR.getCode());
-            migrationHostPortalInstallHostService.saveRecord(physicalInstallParams);
+            handleImportInstallation(physicalInstallParams);
             return AjaxResult.success();
         }
         MigrationThirdPartySoftwareConfig thirdPartySoftwareConfig = saveThirdPartySoftwareRecord(install,
@@ -624,6 +601,50 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         ShellInfoVo userShellInfo = ShellInfoVo.getInstance(
                 opsHost, installUser.getUsername(), encryptionUtils.decrypt(installUser.getPassword()));
         checkJavaEnv(userShellInfo);
+    }
+
+    private MigrationHostPortalInstall preparePhysicalInstallParams(
+            OpsHostEntity opsHost, OpsHostUserEntity hostUser, MigrationHostPortalInstall install, String installPath) {
+        MigrationHostPortalInstall physicalInstallParams = new MigrationHostPortalInstall();
+        physicalInstallParams.setRunHostId(opsHost.getHostId());
+        physicalInstallParams.setHost(opsHost.getPublicIp());
+        physicalInstallParams.setPort(opsHost.getPort());
+        physicalInstallParams.setRunUser(hostUser.getUsername());
+        physicalInstallParams.setHostUserId(hostUser.getHostUserId());
+        physicalInstallParams.setRunPassword(hostUser.getPassword());
+        physicalInstallParams.setInstallPath(installPath);
+        checkPkgName(install);
+        checkJarName(install);
+        physicalInstallParams.setJarName(install.getJarName());
+        physicalInstallParams.setPkgName(install.getPkgName());
+        physicalInstallParams.setInstallStatus(PortalInstallStatus.INSTALLING.getCode());
+        physicalInstallParams.setInstallType(install.getInstallType());
+        physicalInstallParams.setFile(install.getFile());
+
+        if (physicalInstallParams.getInstallType().equals(PortalInstallType.ONLINE_INSTALL.getCode())) {
+            physicalInstallParams.setPkgDownloadUrl(install.getPkgDownloadUrl());
+            physicalInstallParams.setPkgUploadPath(null);
+        }
+        return physicalInstallParams;
+    }
+
+    private void handleImportInstallation(MigrationHostPortalInstall physicalInstallParams) {
+        physicalInstallParams.setInstallType(PortalInstallType.IMPORT_INSTALL.getCode());
+        boolean isInstallSuccess = PortalHandle.checkInstallStatusAndUpdate(physicalInstallParams,
+                encryptionUtils.decrypt(physicalInstallParams.getRunPassword()));
+        migrationHostPortalInstallHostService.saveRecord(physicalInstallParams);
+
+        if (isInstallSuccess) {
+            threadPoolTaskExecutor.submit(() -> {
+                physicalInstallParams.setRunPassword(encryptionUtils.decrypt(physicalInstallParams.getRunPassword()));
+                loadTaskConfigParams(physicalInstallParams);
+                migrationHostPortalInstallHostService.updateStatus(
+                        physicalInstallParams.getRunHostId(), PortalInstallStatus.INSTALLED.getCode());
+            });
+        } else {
+            migrationHostPortalInstallHostService.updateStatus(
+                    physicalInstallParams.getRunHostId(), PortalInstallStatus.INSTALL_ERROR.getCode());
+        }
     }
 
     private MigrationThirdPartySoftwareConfig saveThirdPartySoftwareRecord(
@@ -787,6 +808,9 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         for (ToolsConfigEnum configEnum : ToolsConfigEnum.values()) {
             Map<String, Object> toolConfigs = toolsConfig.get(configEnum.getType());
             for (Map.Entry<String, Object> toolConfig : toolConfigs.entrySet()) {
+                if (toolConfig.getKey().matches("^\\d\\.\\d\\..*")) {
+                    continue;
+                }
                 TbMigrationTaskGlobalToolsParam taskGlobalToolsParam = new TbMigrationTaskGlobalToolsParam();
                 taskGlobalToolsParam.setConfigId(configEnum.getType());
                 taskGlobalToolsParam.setParamKey(toolConfig.getKey());
