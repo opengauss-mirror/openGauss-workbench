@@ -29,9 +29,12 @@
             @click="tabChange(2)"
             >{{ $t('components.SubTaskDetail.5q09prnzmfw0') }}</span
           >
-          <a-button @click="getSubTaskDetail" :loading="loading">{{
-            $t('detail.index.5q09asiwg4g0')
-          }}</a-button>
+          <a-button v-if="isRefresh.visible" @click="startGetSubTaskDetail" :loading="loading">{{
+              $t('detail.index.5q09asiwg4g0')
+            }}</a-button>
+          <a-button v-if="!isRefresh.visible" @click="stopGetSubTaskDetail" :loading="loading">{{
+              $t('detail.index.5q09asiwg4g1')
+            }}</a-button>
         </div>
         <span class="task-status">
           {{ $t('components.SubTaskDetail.5q09prnzn6c0') }}
@@ -339,7 +342,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount, h } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount, h, reactive } from 'vue'
 import { subTaskDetail, downloadLog } from '@/api/detail'
 import BigDataList from './BigDataList.vue'
 import dayjs from 'dayjs'
@@ -500,6 +503,19 @@ const handleDownloadLog = (url) => {
       window.URL.revokeObjectURL(herf)
     }
   })
+}
+
+const isRefresh = reactive({
+  visible: false,
+});
+
+const stopGetSubTaskDetail = () => {
+  isRefresh.visible = !isRefresh.visible;
+  clearInterval(timer)
+}
+const startGetSubTaskDetail = () => {
+  isRefresh.visible = !isRefresh.visible;
+  timer = setInterval(() => {getSubTaskDetail()}, 6000)
 }
 
 const getSubTaskDetail = () => {
