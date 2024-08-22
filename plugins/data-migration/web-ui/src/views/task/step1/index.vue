@@ -31,8 +31,11 @@
                         <p>Port: {{ nodeData?.port }}</p>
                       </template>
                     </a-popover>
-                    <div v-else class="add-sub-task" style="width:278px;" @mouseover="showButtonSourceDB(nodeData)" @mouseleave="hideButtonSourceDB">
+                    <div v-else class="add-sub-task" style="width:250px;" @mouseover="showButtonSourceDB(nodeData)" @mouseleave="hideButtonSourceDB">
                       <span>{{ nodeData?.title }}</span>
+                      <span v-if="selecTblbf===nodeData?.title">
+                        {{isSelectAll? $t('step1.index.5q091ixigro3'): $t('step1.index.5q091ixigro5',{num:tblListShowflag})}}
+                      </span>
                       <a-button type="primary" size="mini" @click="dataTblWin(nodeData)" v-if="checkBtnShow(nodeData)" class="add-sub-btn">{{$t('step1.index.5q091ixigdc1')}}</a-button>
                     </div>
                   </template>
@@ -51,7 +54,6 @@
         <div v-if="selectSourceDB.sourceDBName" class="selected-db-con">
           <span class="selected-info">{{$t('step1.index.5q091ixiggs0')}}</span>
           <span class="selected-db">{{ selectSourceDB.sourceDBName }}</span>
-          <span class="selected-info" v-if="tblListShowflag.value > 0" >已选择{{ tblListShowflag.value }}个数据表</span>
         </div>
       </div>
       <div class="form-center">
@@ -113,7 +115,11 @@
           <a-table-column :title="$t('step1.index.5q091ixigug0')" data-index="sourceDBName" :width="200" ellipsis tooltip></a-table-column>
           <a-table-column :title="$t('step1.index.5q091ixigro1')" data-index="seletedTblNum" :width="150" ellipsis tooltip>
             <template #cell="{ record }">
-              <a-button v-if="record.sourceTables && record.sourceTables !== ''" @click="showTblList(record.sourceDBName, record.sourceTables)">{{ record.seletedTblNum }}</a-button>
+              <a-button v-if="record.sourceTables && record.sourceTables !== ''" @click="showTblList(record.sourceDBName, record.sourceTables)">
+              {{ record.seletedTblNum==='全部' ?
+                $t('step1.index.5q091ixigro3') :
+                $t('step1.index.5q091ixigro2',{num:record.seletedTblNum||record.sourceTables?.split(',')?.length}) }}
+              </a-button>
               <p v-else>{{ $t('step1.index.5q091ixigro3') }}</p>
             </template>
           </a-table-column>
@@ -279,7 +285,9 @@ const dataTblWinClose = () => {
   selectedTblColumn.value = !(selectedData.value.length === 0 && selectedTblColumn.value === false)
 }
 
+const isSelectAll=ref(false)
 const handleTableSeleted = (data) => {
+  isSelectAll.value=false
   selectedData.value = data.selectedValue
   selecTblbf.value = data.selecTbl
   tblListShowflag.value = selectedData.value.length
@@ -287,6 +295,9 @@ const handleTableSeleted = (data) => {
     selectedTblColumn.value = true
   } else {
     tblListShowflag.value = 0
+  }
+  if(selectedData.value===''){
+    isSelectAll.value=true
   }
 }
 
@@ -318,13 +329,13 @@ const comTblLen = () => {
   let retString = ''
   if (selectedData.value && Array.isArray(selectedData.value) && selectedData.value.length > 0) {
     if (selectedData.value[0] === '') {
-      retString=t('step1.index.5q091ixigro3')
+      retString= '全部'
     } else {
-      retString = t('step1.index.5q091ixigro2') + selectedData.value.length
+      retString = selectedData.value.length
     }
   }
   if (retString === '') {
-    retString = t('step1.index.5q091ixigro3')
+    retString = '全部'
   }
   return retString
 }
