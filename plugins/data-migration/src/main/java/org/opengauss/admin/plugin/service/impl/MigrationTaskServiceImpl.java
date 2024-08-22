@@ -609,7 +609,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         if (globalParamMap.keySet().size() > 0) {
             resultMap.putAll(globalParamMap);
         }
-        setToolsParams(task, resultMap);
+        setToolsParams(resultMap, task.getRunHostId());
 
         setOpengaussClusterParams(resultMap, task.getTargetNodeId());
         return resultMap;
@@ -646,21 +646,16 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     /**
      * 组装从页面传入的参数 修改的参数 configId.typeId.parma=parmaValue 删除的参数 删除的配置文件名称=删除的key，删除的key 新增的参数
      *
-     * @author: www
-     * @date: 2023/11/27 11:36
-     * @description: msg
-     * @since: 1.1
-     * @version: 1.1
-     * @param task task
+     * @param runHostId run host id
      * @param resultMap result
      */
-    private void setToolsParams(MigrationTask task, Map<String, String> resultMap) {
+    private void setToolsParams(Map<String, String> resultMap, String runHostId) {
         HashMap<String, String> toolsParamsMap = new HashMap<>();
-        setModParam(task, toolsParamsMap);
+        setModParam(toolsParamsMap, runHostId);
         // 删除的参数
-        setDeleteParam(toolsParamsMap);
+        setDeleteParam(toolsParamsMap, runHostId);
         // 新增的参数
-        setNewAddParam(toolsParamsMap);
+        setNewAddParam(toolsParamsMap, runHostId);
         if (!toolsParamsMap.isEmpty()) {
             resultMap.putAll(toolsParamsMap);
         }
@@ -670,11 +665,11 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         return "'" + source + "'";
     }
 
-    private void setModParam(MigrationTask task, HashMap<String, String> toolsParamsMap) {
+    private void setModParam(HashMap<String, String> toolsParamsMap, String runHostId) {
         // 修改的参数
         LambdaQueryWrapper<TbMigrationTaskGlobalToolsParam> toolsParamQueryWrapper = new LambdaQueryWrapper<>();
         toolsParamQueryWrapper.isNotNull(TbMigrationTaskGlobalToolsParam::getParamChangeValue);
-        toolsParamQueryWrapper.eq(TbMigrationTaskGlobalToolsParam::getPortalHostID, task.getRunHostId());
+        toolsParamQueryWrapper.eq(TbMigrationTaskGlobalToolsParam::getPortalHostID, runHostId);
         toolsParamQueryWrapper.and(record -> record.eq(TbMigrationTaskGlobalToolsParam::getDeleteFlag,
                         TbMigrationTaskGlobalToolsParam.DeleteFlagEnum.USED.getDeleteFlag())
                 .or().isNull(TbMigrationTaskGlobalToolsParam::getDeleteFlag));
@@ -694,13 +689,14 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         });
     }
 
-    private void setNewAddParam(HashMap<String, String> toolsParamsMap) {
+    private void setNewAddParam(HashMap<String, String> toolsParamsMap, String runHostId) {
         LambdaQueryWrapper<TbMigrationTaskGlobalToolsParam> toolsParamQueryWrapper = new LambdaQueryWrapper<>();
         toolsParamQueryWrapper.clear();
         toolsParamQueryWrapper.eq(TbMigrationTaskGlobalToolsParam::getNewParamFlag,
                         TbMigrationTaskGlobalToolsParam.NewParamFlagEnum.NEW_PARAM.getNewParamFlag())
                 .eq(TbMigrationTaskGlobalToolsParam::getDeleteFlag,
                         TbMigrationTaskGlobalToolsParam.DeleteFlagEnum.USED.getDeleteFlag());
+        toolsParamQueryWrapper.eq(TbMigrationTaskGlobalToolsParam::getPortalHostID, runHostId);
         List<TbMigrationTaskGlobalToolsParam> newParam = toolsParamService.list(toolsParamQueryWrapper);
         newParam.forEach(toolsParam -> {
             toolsParamsMap.put(NEW_PARAM_PREFIX + toolsParam.getConfigId() + "." + toolsParam.getParamValueType()
@@ -712,10 +708,11 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         });
     }
 
-    private void setDeleteParam(HashMap<String, String> toolsParamsMap) {
+    private void setDeleteParam(HashMap<String, String> toolsParamsMap, String runHostId) {
         LambdaQueryWrapper<TbMigrationTaskGlobalToolsParam> toolsParamQueryWrapper = new LambdaQueryWrapper<>();
         toolsParamQueryWrapper.eq(TbMigrationTaskGlobalToolsParam::getDeleteFlag,
                 TbMigrationTaskGlobalToolsParam.DeleteFlagEnum.DELETE.getDeleteFlag());
+        toolsParamQueryWrapper.eq(TbMigrationTaskGlobalToolsParam::getPortalHostID, runHostId);
         List<TbMigrationTaskGlobalToolsParam> deleteParams = toolsParamService.list(toolsParamQueryWrapper);
         if (Objects.nonNull(deleteParams)) {
             setDeleteToolsParams(deleteParams, ToolsConfigEnum.CHAMELEON_CONFIG, toolsParamsMap);
