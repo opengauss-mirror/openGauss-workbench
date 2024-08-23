@@ -561,6 +561,7 @@
                       ></a-table-column>
                       <a-table-column
                         :title="$t('components.ParamsConfig.5q0aazsppr80')"
+                        :width="300"
                       >
                         <template #cell="{ record, rowIndex }">
                           <a-form-item
