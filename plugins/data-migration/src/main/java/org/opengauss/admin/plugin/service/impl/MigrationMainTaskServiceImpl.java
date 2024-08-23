@@ -235,7 +235,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         tasks.stream().forEach(t -> {
             t.setTaskParams(migrationTaskParamService.selectByTaskId(t.getId()));
             t.setIsSystemAdmin(JdbcUtil.judgeSystemAdmin(t.getTargetDbHost(), t.getTargetDbPort(), t.getTargetDbUser(),
-                t.getTargetDbPass()));
+                encryptionUtils.decrypt(t.getTargetDbPass())));
         });
         dto.setTasks(tasks);
         List<MigrationTaskHostRef> hosts = migrationTaskHostRefService.listByMainTaskId(taskId);
@@ -529,8 +529,9 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             stringBuilder.append("SELECT r.rolcanlogin AS rolcanlogin, r.rolreplication AS rolreplication ");
             stringBuilder.append("FROM pg_roles r WHERE r.rolname = current_user");
             List<Map<String, Object>> userPermiseResults = migrationTaskHostRefService.queryBySqlOnOpengauss(
-                    subTask.getTargetDbHost(), subTask.getTargetDbPort(), "postgres",
-                    subTask.getTargetDbUser(), subTask.getTargetDbPass(), "public", stringBuilder.toString());
+                subTask.getTargetDbHost(), subTask.getTargetDbPort(), "postgres",
+                subTask.getTargetDbUser(), encryptionUtils.decrypt(subTask.getTargetDbPass()),
+                "public", stringBuilder.toString());
             boolean checkUserPermiseIsOk = false;
             if (userPermiseResults.size() > 0) {
                 Map<String, Object> singleMap = userPermiseResults.get(0);

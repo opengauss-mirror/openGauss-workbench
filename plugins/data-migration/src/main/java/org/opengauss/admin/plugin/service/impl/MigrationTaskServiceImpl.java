@@ -598,7 +598,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         resultMap.put("mysql.database.name", task.getSourceDb());
         resultMap.put("mysql.database.table", task.getSourceTables());
         resultMap.put("opengauss.user.name", task.getTargetDbUser());
-        resultMap.put("opengauss.user.password", escapeChars(task.getTargetDbPass()));
+        resultMap.put("opengauss.user.password", escapeChars(encryptionUtils.decrypt(task.getTargetDbPass())));
         resultMap.put("opengauss.database.host", task.getTargetDbHost());
         resultMap.put("opengauss.database.port", task.getTargetDbPort());
         resultMap.put("opengauss.database.name", task.getTargetDb());
