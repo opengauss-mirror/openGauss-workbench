@@ -112,6 +112,15 @@
         )
     </select>
 
+    <select id="countParentMenuHasOtherEnablePluginSubmenusByPluginId" parameterType="String" resultType="Integer">
+        select count(1) from sys_menu t
+        where t.plugin_id=#{pluginId} and exists(
+            select 1 from sys_menu s where s.parent_id=t.menu_id
+            and s.plugin_id is not null and s.plugin_id &lt;&gt; t.plugin_id
+            and s.status=0
+        )
+    </select>
+
     <select id="selectParentMenuIdByPluginId" parameterType="String" resultType="Integer">
         SELECT distinct parent_id as menu_id from sys_menu where plugin_id= #{pluginId} and parent_id != 0
         and  parent_id not in (SELECT menu_id from sys_menu where plugin_id= #{pluginId})

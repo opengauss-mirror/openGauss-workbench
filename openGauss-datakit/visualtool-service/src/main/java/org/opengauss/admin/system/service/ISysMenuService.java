@@ -125,6 +125,14 @@ public interface ISysMenuService extends IService<SysMenu> {
     Integer countMenuHasOtherPluginSubmenuByPluginId(String pluginId);
 
     /**
+     * According to the plugin, get the parent menu that has other plugin submenus
+     *
+     * @param pluginId pluginId
+     * @return parentMenu num
+     */
+    Integer countMenuHasOtherEnablePluginSubmenuByPluginId(String pluginId);
+
+    /**
      * Determine whether the menu is assigned
      *
      * @param menuId Menu ID

@@ -307,6 +307,11 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         return menuMapper.countParentMenuHasOtherPluginSubmenusByPluginId(pluginId);
     }
 
+    @Override
+    public Integer countMenuHasOtherEnablePluginSubmenuByPluginId(String pluginId) {
+        return menuMapper.countParentMenuHasOtherEnablePluginSubmenusByPluginId(pluginId);
+    }
+
     /**
      * Determine whether the menu is assigned
      *
