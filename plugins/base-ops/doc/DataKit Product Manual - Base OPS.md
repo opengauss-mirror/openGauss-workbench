@@ -501,6 +501,55 @@ openLooKeng的配置界面上的高级配置用户在不填写时，默认按照
 
 ![](_resources/import-cluster-ok.png)
 
+#### 3.3.4 批量导入
+
+批量导入为新增功能，且为了简化导入集群用户需要填写的信息，导入后只存储了数据库的数据路径和安装路径，用户在导入模板中只需要填写集群名、内外网IP、安装用户、数据库安装用户（非初始用户）、数据库密码、集群端口号、环境文件路径即可进行导入，相关详细步骤如下。
+
+##### 3.3.4.1 批量导入步骤--下载导入模板
+
+首先点击【批量导入】按钮进入批量导入界面。
+
+![](_resources/bulkImport-entrance.png)
+
+其次，点击导入下载模板进行下载
+
+![](_resources/bulkImport-downloadTemplate.png)
+
+##### 3.3.4.2 批量导入步骤--编辑导入模板
+
+模板中存在一个示例，可以根据示例来进行填写（注意：极简版一主一备需要填写两个相同的IP,集群对应的端口只填写主或者备机的任意一个即可）
+
+![](_resources/bulkImport-editTemplate.png)
+##### 3.3.4.3 批量导入步骤--上传导入文件
+
+填写完成后，点击上传文件，并选中已经编辑好的文件。
+
+![](_resources/bulkImport-upload.png)
+
+之后点击确定即可开始解析。
+
+![](_resources/bulkImport-confirm.png)
+
+##### 3.3.4.4 批量导入步骤--解析导入文件
+
+解析过程中不要中途关闭，不然会导致无法查看错误报告。
+
+![](_resources/bulkImport-parseExcel.png)
+
+##### 3.3.4.5 批量导入步骤--下载错误报告
+
+解析完成后，点击下载错误报告，查看错误日志
+
+![](_resources/bulkImport-downErrorReport.png)
+
+##### 3.3.4.6 批量导入步骤--查看错误报告
+
+错误报告一般会提示用户主要错误在哪里，所以需要学会看报错信息。("check publicIp, installUsername and envPath"这个报错大概率是环境变量的报错，可以重点排查里面的相关字段，企业版：GAUSSHOME（安装目录）、PGDATA（数据目录）；轻量版：GAUSSHOME、GAUSSDATA（数据目录）；极简版：GAUSSHOME。如果以上字段中某些不存在，可能会报错，所以需要添加或者将相关字段对应修改。分离环境变量可以如实填写路径即可，未分离环境变量时可以填写~/.bashrc)
+
+（此外，如果环境分离文件路径填写错误，但是该文件如果存在，也可能导致导入成功，请填写时注意！）
+
+![](_resources/bulkImport-errorInfo.png)
+
 ### 3.4 集群升级
 
 #### 3.4.1 升级配置
