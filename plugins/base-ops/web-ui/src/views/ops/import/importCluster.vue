@@ -19,21 +19,21 @@
              @drop.prevent="handleDrop"
         >
           <svg-icon icon-class="clouduploadsharp" style="font-size: 100px"></svg-icon>
-          <p class="content" >{{ $t ('将文件拖至此处 或')}}</p>
+          <p class="content" >{{ $t ('components.BatchImport.5mpmzg3zt1o0')}}</p>
           <input ref="uploadFileRef" style="display: none" type="file" name="file" @change="uploadchange"/>
-          <a-button class="mr" @click = "uploadFilClick" :style="{ backgroundColor: 'red', color: 'white'}">{{ $t ('选择文件')}}</a-button>
+          <a-button class="mr" @click = "uploadFilClick" :style="{ backgroundColor: 'red', color: 'white'}">{{ $t ('components.BatchImport.5mpmzg3zt1o1')}}</a-button>
         </div>
       </div>
-      <div><a style="float:left; text-align:left" class="content">{{ $t ('仅支持上传Excel格式文件，大小不超过200MB')}}</a>
+      <div><a style="float:left; text-align:left" class="content">{{ $t ('components.BatchImport.5mpmzg3zesl0')}}</a>
         <a-link style="float:right; text-align:right " class="btn" @click="downLoadModule">
           <svg-icon icon-class="download" class = "icon.xg"></svg-icon>
-          <a class="mr" type="text" style="color: red" download = "模板.xlsx">{{ $t ('导入模板下载')}}</a>
+          <a class="mr" type="text" style="color: red" download = "模板.xlsx">{{ $t ('components.BatchImport.5mpmzg3zesl1')}}</a>
         </a-link>
       </div>
     </div>
     <div v-if="data.status === fileStatusEnum.formLoading" >
       <div v-if="data.formLoaFlag === formLoaFlaEnum.waiting">
-        <p>{{ $t ('文件上传中')}}</p>
+        <p>{{ $t ('components.BatchImport.5mpmzg3zesl2')}}</p>
         <p>{{data.files.name}}</p>
         <div class = 'inflexside'>
           <div class = 'progress'>
@@ -44,8 +44,8 @@
       </div>
     </div>
     <div v-if="data.formLoaFlag === formLoaFlaEnum.formWin">
-      <a-button class = 'btn' @click = "reupload">{{ $t ('重新上传')}}</a-button>
-      <p>{{ $t ('您仍可以通过拖拽文件到下方区域进行文件替换')}}</p>
+      <a-button class = 'btn' @click = "reupload">{{ $t ('components.BatchImport.5mpmzg3zesl3')}}</a-button>
+      <p>{{ $t ('components.BatchImport.5mpmzg3zesl4')}}</p>
       <div :class="['upload_box']" :style="{ height: '5px' }">
         <div class="content_box"
              ref="dropArea"
@@ -56,41 +56,50 @@
         >
           <svg-icon icon-class="file-zip" style="font-size: 100px"></svg-icon>
           <p style="float:left; text-align:left">{{data.files.name}}</p>
-          <a-button class = "mr" @click = "reupload" style="float:right; text-align:right">{{ $t ('删除')}}</a-button>
+          <a-button class = "mr" @click = "reupload" style="float:right; text-align:right">{{ $t ('components.BatchImport.5mpmzg3zesl5')}}</a-button>
           <p :style="{ color: 'lightgrey'} " >{{(data.files.size / 1024).toFixed(2) }}KB</p>
           <input ref="uploadFileRef" style="display: none" type="file" name="file" @change="uploadchange"/>
         </div>
       </div>
       <div v-if="data.formstatus === 'pass'" >
-        <p>{{ $t ('文件上传成功')}}</p>
+        <p>{{ $t ('components.BatchImport.5mpmzg3zesl6')}}</p>
         <div style="text-align: center;">
-          <a-button class = 'mr' @click = "anaFilClick">{{ $t ('确定')}}</a-button>
-          <a-button class = 'mr' @click = "handleClose">{{ $t ('取消')}}</a-button>
+          <a-button class = 'mr' @click = "anaFilClick">{{ $t ('components.BatchImport.5mpmqndzeok0')}}</a-button>
+          <a-button class = 'mr' @click = "handleClose">{{ $t ('components.BatchImport.5mpmqndzeok1')}}</a-button>
         </div>
       </div>
-      <div v-else-if="data.formstatus === 'tooBig'"><p>{{ $t('文件上传失败，需上传200M以下文件，请重新上传')}}</p></div>
-      <div v-else-if="data.formstatus === 'mul'"><p>{{ $t('文件上传失败，需上传单个文件，请重新上传')}}</p></div>
-      <div v-else-if="data.formstatus === 'formErr'"><p>{{ $t('文件上传失败，需上传Excel格式的文件，请重新上传')}}</p></div>
-      <div v-else><p>{{ $t(',请修改文件并')}} + {{data.formstatus}}</p></div>
+      <div v-else-if="data.formstatus === 'tooBig'"><p>{{ $t('components.BatchImport.5mpmeddf3zl0')}}</p></div>
+      <div v-else-if="data.formstatus === 'mul'"><p>{{ $t('components.BatchImport.5mpmeddf3zl1')}}</p></div>
+      <div v-else-if="data.formstatus === 'formErr'"><p>{{ $t('components.BatchImport.5mpmeddf3zl2')}}</p></div>
+      <div v-else><p>{{ $t('components.BatchImport.5mpmeddf3zl3')}} + {{data.formstatus}}</p></div>
     </div>
 
     <div v-if="data.status === fileStatusEnum.fileParsing" class = "['upload_box']" :style="{ height: 'auto' }">
       <div class = "content_box">
         <div v-if="data.formLoaFlag === formLoaFlaEnum.anyWin" style="text-align: center">
           <img src="@/assets/images/modeling/ops/bulkimport-ing.png" alt="Icon">
+          <div class="steps"><span>1 {{ $t('components.BatchImport.5mpmqndzeok2')}}</span>
+            <span>2 {{ $t('components.BatchImport.5mpmqndzeok3')}}</span>
+            <span>3 {{ $t('components.BatchImport.5mpmqndzeok4')}}</span></div>
           <br><svg-icon icon-class="file-search-suc" style="font-size: 100px"></svg-icon><br>
-          <p :style="{ color: 'gray'}" >{{$t('文件解析中，请稍等')}}</p>
-          <br><p :style="{ color: 'light-gray'}" >{{ $t('请不要刷新界面')}}</p>
+          <p :style="{ color: 'gray'}" >{{$t('components.BatchImport.5mpmeddf3zl4')}}</p>
+          <br><p :style="{ color: 'light-gray'}" >{{ $t('components.BatchImport.5mpmeddf3zl5')}}</p>
         </div>
         <div v-if="data.formLoaFlag === formLoaFlaEnum.loadErr" style="text-align: center">
           <img src="@/assets/images/modeling/ops/bulkimport-fail.png" alt="Icon">
+          <div class="steps"><span>1 {{ $t('components.BatchImport.5mpmqndzeok2')}}</span>
+            <span>2 {{ $t('components.BatchImport.5mpmqndzeok3')}}</span>
+            <span>3 {{ $t('components.BatchImport.5mpmqndzeok4')}}</span></div>
           <br><svg-icon icon-class="file-search-fail" style="font-size: 100px"></svg-icon><br>
-          <p :style="{ color: 'red'}" style="display: inline;">{{ $t('文件解析失败')}}</p>
-          <p :style="{ color: 'grey'}" style="display: inline;">{{ $t(',请修改文件并')}}</p>
-          <a-button :style="{ color: 'rgb(5, 158, 247)'}" @click = "reupload" style="display: inline;">{{ $t('重新上传')}}</a-button>
+          <p :style="{ color: 'red'}" style="display: inline;">{{ $t('components.BatchImport.5mpmeddf3zl7')}}</p>
+          <p :style="{ color: 'grey'}" style="display: inline;">{{ $t('components.BatchImport.5mpmeddf3zl3')}}</p>
+          <a-button :style="{ color: 'rgb(5, 158, 247)'}" @click = "reupload" style="display: inline;">{{ $t('components.BatchImport.5mpmzg3zesl3')}}</a-button>
         </div>
         <div v-if="data.formLoaFlag === formLoaFlaEnum.loadWin" style="text-align: center">
           <img src="@/assets/images/modeling/ops/bulkimport-import.png" alt="Icon">
+          <div class="steps"><span>1 {{ $t('components.BatchImport.5mpmqndzeok2')}}</span>
+            <span>2 {{ $t('components.BatchImport.5mpmqndzeok3')}}</span>
+            <span>3 {{ $t('components.BatchImport.5mpmqndzeok4')}}</span></div>
           <!--        <p :style="{ color: 'gray'}" >{{ $t('bulk.BulkImport.5exv06n8x1ki1')}}</p>-->
           <div class = 'inflexside'>
             <div class = 'progress'>
@@ -101,14 +110,17 @@
         </div>
         <div v-if="data.formLoaFlag === formLoaFlaEnum.loadSuc" style="text-align: center">
           <img src="@/assets/images/modeling/ops/bulkimport-done.png" alt="Icon">
-          <br><p :style="{ color: 'grey'}" style="display: inline;">{{ $t('共导入')}} {{totalNum}} {{ $t('条数据')}}</p><br>
-          <p :style="{ color: 'lightgreen'}" style="display: inline;">{{sucNum}} {{ $t('条')}}</p>
-          <p :style="{ color: 'grey'}" style="display: inline;">{{ $t('导入成功，')}}</p>
-          <p :style="{ color: 'red'}" style="display: inline;">{{totalNum-sucNum}} {{ $t('条')}}</p>
-          <p :style="{ color: 'grey'}" style="display: inline;">{{ $t('导入失败')}}</p><br>
-          <br><a-button :style="{ color: 'red'}" @click = "downLoadErrRep" style="display: inline;">{{ $t('下载错误报告')}}</a-button><br>
-          <br><a-button @click = "open" :style="{ backgroundColor: 'red', color: 'white'}">{{ $t('重新导入')}}</a-button>
-          <a-button @click = "handleClose">&emsp;{{ $t('完成')}}&emsp; </a-button>
+          <div class="steps"><span>1 {{ $t('components.BatchImport.5mpmqndzeok2')}}</span>
+            <span>2 {{ $t('components.BatchImport.5mpmqndzeok3')}}</span>
+            <span>3 {{ $t('components.BatchImport.5mpmqndzeok4')}}</span></div>
+          <br><p :style="{ color: 'grey'}" style="display: inline;">{{ $t('components.BatchImport.5mpmqndzeok5',{totalNum:totalNum})}}</p><br>
+          <p :style="{ color: 'lightgreen'}" style="display: inline;"> {{ $t('components.BatchImport.5mpmewrfzse0',{num:sucNum})}}</p>
+          <p :style="{ color: 'grey'}" style="display: inline;">{{ $t('components.BatchImport.5mpmewrfzse1')}}</p>
+          <p :style="{ color: 'red'}" style="display: inline;"> {{ $t('components.BatchImport.5mpmewrfzse0',{num:totalNum-sucNum})}}</p>
+          <p :style="{ color: 'grey'}" style="display: inline;">{{ $t('components.BatchImport.5mpmewrfzse3')}}</p><br>
+          <br><a-button :style="{ color: 'red'}" @click = "downLoadErrRep" style="display: inline;">{{ $t('components.BatchImport.5mpmewrfzse4')}}</a-button><br>
+          <br><a-button @click = "open" :style="{ backgroundColor: 'red', color: 'white'}">{{ $t('components.BatchImport.5mpmewrfzse5')}}</a-button>
+          <a-button @click = "handleClose">&emsp;{{ $t('components.BatchImport.5mpmewrfzse6')}}&emsp; </a-button>
         </div>
       </div>
     </div>
@@ -148,7 +160,7 @@ const progressWidth = ref(0)
 
 const data = reactive<KeyValue>({
   show: false,
-  title: t('批量导入'),
+  title: t('components.ChooseVersion.5mpmxod901g1'),
   status: fileStatusEnum.unLoad,
   // formstatus:'ready',
   files: [],
@@ -173,7 +185,7 @@ const open = () => {
   data.files = []
   data.fileCount = 0
 
-  data.title = t('批量导入')
+  data.title = t('components.ChooseVersion.5mpmxod901g1')
   data.formstatus = 'untest'
   data.percent = 0
   data.formLoaFlag = formLoaFlaEnum.waiting
@@ -418,7 +430,7 @@ const downLoadModule = () => {
         const URL = window.URL || window.webkitURL;
         let herf = URL.createObjectURL(blob);
         link.href = herf;
-        link.download = "模板.xlsx";
+        link.download = `${t('components.BatchImport.5mpmertfggy0')}.xlsx`;
         link.click();
         window.URL.revokeObjectURL(herf);
       }
@@ -438,7 +450,7 @@ const downLoadErrRep = () => {
         const URL = window.URL || window.webkitURL;
         let herf = URL.createObjectURL(blob);
         link.href = herf;
-        link.download = "错误报告.xlsx";
+        link.download = `${t('components.BatchImport.5mpmertfggy1')}.xlsx`;
         link.click();
         window.URL.revokeObjectURL(herf);
       }
@@ -465,7 +477,7 @@ function handleBeforeUnload(event: BeforeUnloadEvent) {
     event.returnValue = '';
   } else if (refreshCount.value === 1) {
     // 在此调用自定义的确认对话框
-    const confirmationMessage = '数据可能会丢失，确定要刷新页面吗？';
+    const confirmationMessage = t('components.BatchImport.5mpmeddf3zl6');
     if (!confirm(confirmationMessage)) {
       event.preventDefault();
       event.returnValue = '';
@@ -496,6 +508,11 @@ defineExpose({
 
 </script>
 <style scoped lang="scss">
+  .steps {
+     display: flex;
+     justify-content: space-between;
+     padding:0 95px
+    }
 .upload_box {
   background-color: rgba(255, 255, 255, 1);
   position: relative;

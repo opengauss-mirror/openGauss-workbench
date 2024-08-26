@@ -31,7 +31,7 @@
             type="primary"
             @click="addHostbulk"
           >
-            批量导入
+          {{ $t('components.ChooseVersion.5mpmxod901g1') }}
           </a-button>
           <import-cluster ref="addHostBulkRef"></import-cluster>
         </div>
