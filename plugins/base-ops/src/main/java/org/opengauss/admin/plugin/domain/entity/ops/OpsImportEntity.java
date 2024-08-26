@@ -1,6 +1,7 @@
 package org.opengauss.admin.plugin.domain.entity.ops;
 
 import com.alibaba.excel.annotation.ExcelProperty;
+import com.alibaba.excel.annotation.write.style.ColumnWidth;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,27 +13,28 @@ import java.util.Objects;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@ColumnWidth(25)
 public class OpsImportEntity {
-    @ExcelProperty("集群名")
+    @ExcelProperty(index = 0)
     private String clusterName;
-    @ExcelProperty("内网IP")
+    @ExcelProperty(index = 1)
     private String privateIp;
-    @ExcelProperty("外网IP")
+    @ExcelProperty(index = 2)
     private String publicIp;
-    @ExcelProperty("安装用户")
+    @ExcelProperty(index = 3)
     private String installUsername;
-    @ExcelProperty("数据库用户名")
+    @ExcelProperty(index = 4)
     private String databaseUsername;
     @ToString.Exclude
-    @ExcelProperty("数据库密码")
+    @ExcelProperty(index = 5)
     private String databasePassword;
-    @ExcelProperty("端口号")
+    @ExcelProperty(index = 6)
     private Integer port;
-    @ExcelProperty("环境分离文件路径")
+    @ExcelProperty(index = 7)
     private String envPath;
-    @ExcelProperty("执行状态")
+    @ExcelProperty(index = 8)
     private String importStatus;
-    @ExcelProperty("报错信息")
+    @ExcelProperty(index = 9)
     private String errorInfo;
 
     public void checkConfig() {

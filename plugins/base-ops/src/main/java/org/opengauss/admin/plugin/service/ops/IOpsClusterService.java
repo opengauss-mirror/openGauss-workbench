@@ -124,7 +124,13 @@ public interface IOpsClusterService extends IService<OpsClusterEntity> {
 
     void batchConfigGucSetting(GucSettingDto gucSettingDto);
 
-    void downloadImportFile(HttpServletResponse response);
+    /**
+     * download import cluster Template
+     *
+     * @param response downLoad Response
+     * @param currentLocale The current language version being used
+     */
+    void downloadImportFile(HttpServletResponse response, String currentLocale);
 
     List<OpsImportEntity> uploadImportFile(MultipartFile file);
 
@@ -132,5 +138,12 @@ public interface IOpsClusterService extends IService<OpsClusterEntity> {
 
     int importSuccessCount();
 
-    void downloadErrorFile(HttpServletResponse response, List<OpsImportEntity> usersList);
+    /**
+     * download import cluster Error Report
+     *
+     * @param response downLoad Response
+     * @param usersList Include the cluster information to be imported
+     * @param currentLocale The current language version being used
+     */
+    void downloadErrorFile(HttpServletResponse response, List<OpsImportEntity> usersList, String currentLocale);
 }
