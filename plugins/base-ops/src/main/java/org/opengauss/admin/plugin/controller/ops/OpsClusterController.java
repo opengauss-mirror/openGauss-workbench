@@ -236,8 +236,8 @@ public class OpsClusterController extends BaseController {
 
     @GetMapping("/monitor")
     public AjaxResult monitor(@RequestParam String clusterId, @RequestParam String hostId, @RequestParam String businessId, @RequestParam(required = false, defaultValue = "MASTER")ClusterRoleEnum role) {
-        opsClusterService.monitor(clusterId, hostId, businessId, role);
-        return AjaxResult.success();
+        String tipMessage = opsClusterService.monitor(clusterId, hostId, businessId, role);
+        return AjaxResult.success(tipMessage);
     }
 
     @GetMapping("/listHost")

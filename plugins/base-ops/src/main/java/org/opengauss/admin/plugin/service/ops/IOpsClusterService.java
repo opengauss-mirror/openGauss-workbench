@@ -91,7 +91,16 @@ public interface IOpsClusterService extends IService<OpsClusterEntity> {
 
     void importCluster(ImportClusterBody importClusterBody);
 
-    void monitor(String clusterId, String hostId, String businessId, ClusterRoleEnum role);
+    /**
+     * monitor
+     *
+     * @param clusterId clusterId
+     * @param hostId hostId
+     * @param businessId businessId
+     * @param role role
+     * @return String
+     */
+    String monitor(String clusterId, String hostId, String businessId, ClusterRoleEnum role);
 
     List<OpsHostEntity> listClusterHost(String clusterId);
 

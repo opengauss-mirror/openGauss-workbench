@@ -331,7 +331,9 @@
             "5mplmn5z2a00": "锁",
             "5mplmn5z2ms0": "会话",
             "5mplmn5z30k0": "连接数",
-            "5mplmn5z37w0": "占用内存最多的会话TOP10"
+            "5mplmn5z37w0": "占用内存最多的会话TOP10",
+            "5mplmn5z3e90": "请开启enable_thread_pool参数",
+            "5mplmn5z41w0": "主机缺少依赖包："
         }
     },
     "operation": {

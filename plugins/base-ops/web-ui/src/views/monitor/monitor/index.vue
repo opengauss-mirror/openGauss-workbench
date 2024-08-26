@@ -1,7 +1,11 @@
 <template>
   <div class="cluster-monitor-container">
     <div class="top full-w mb">
-      <div class="label-color ft-b ft-m">{{ $t('monitor.index.5mplmn5z06k0') }}</div>
+      <div class="label-color ft-b ft-m">{{ $t('monitor.index.5mplmn5z06k0') }}
+        <span style="color: grey; font-size: 12px" v-if="data.tip !==''">
+           {{ $t('monitor.index.5mplmn5z41w0') }}{{data.tip}}
+        </span>
+      </div>
       <div class="flex-row">
         <div class="flex-row mr">
           <div class="label-color top-label mr-s">{{ $t('monitor.index.5mplmn5z19w0') }}</div>
@@ -86,9 +90,14 @@
       </div>
     </div>
     <div class="session-top-ten-c">
-      <div class="label-color ft-lg ft-b mb">{{ $t('monitor.index.5mplmn5z37w0') }}</div>
+      <div class="label-color ft-lg ft-b mb">{{ $t('monitor.index.5mplmn5z37w0') }}
+        <span style="color: grey; font-size: 12px" v-if="data.sessionTop.series[0].data[0].value === 0">
+         {{$t('monitor.index.5mplmn5z3e90')}}
+        </span>
+      </div>
       <v-chart
         class="echart-sesion"
+        v-if="data.sessionTop.series[0].data[0].value !== 0"
         :option="data.sessionTop"
       ></v-chart>
     </div>
@@ -118,7 +127,8 @@ const data = reactive<KeyValue>({
   clusterListLoading: false,
   clusterList: [],
   hostListLoading: false,
-  hostList: []
+  hostList: [],
+  tip: ''
 })
 
 const instanceWebSocket = ref<Socket<any, any> | undefined>()
@@ -208,6 +218,9 @@ const openWebSocket = () => {
     clusterMonitor(param).then((res: KeyValue) => {
       if (Number(res.code) !== 200) {
         instanceWebSocket.value?.destroy()
+      }
+      if (res.msg != null) {
+        data.tip = res.msg
       }
     }).catch(() => {
       instanceWebSocket.value?.destroy()

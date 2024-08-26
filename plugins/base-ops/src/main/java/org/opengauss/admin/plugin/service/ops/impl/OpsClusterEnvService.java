@@ -24,23 +24,29 @@
 package org.opengauss.admin.plugin.service.ops.impl;
 
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
-import org.opengauss.admin.plugin.domain.model.ops.*;
+import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
 import org.opengauss.admin.plugin.domain.model.ops.env.EnvProperty;
 import org.opengauss.admin.plugin.domain.model.ops.env.HardwareEnv;
 import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;
 import org.opengauss.admin.plugin.domain.model.ops.env.SoftwareEnv;
-import org.opengauss.admin.plugin.enums.ops.*;
+import org.opengauss.admin.plugin.enums.ops.HostEnvStatusEnum;
+import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 /**
@@ -52,8 +58,11 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class OpsClusterEnvService {
-    private static String[] dependencyPackageNames = {"libaio-devel", "flex", "bison", "ncurses-devel", "glibc-devel",
-            "patch", "readline-devel"};
+    private static final List<String> DEPENDENCY_PACKAGE_NAMES = List.of("libaio-devel", "flex", "bison",
+            "ncurses-devel", "glibc-devel", "patch", "readline-devel");
+    private static final List<String> BASE_DEPENDENCY_LIST = List.of("coreutils", "procps-ng", "openssh-clients",
+            "unzip", "lsof", "tar");
+
     @Resource
     private OpsHostRemoteService opsHostRemoteService;
     @Resource
@@ -125,7 +134,7 @@ public class OpsClusterEnvService {
 
         threadPoolTaskExecutor.submit(() -> {
             // software
-            envProperties.add(dependencyPropertyDetect(session, expectedOs));
+            envProperties.add(dependencyPropertyDetect(session, expectedOs.getCpuArch()));
             countDownLatch.countDown();
         });
 
@@ -143,7 +152,7 @@ public class OpsClusterEnvService {
 
         threadPoolTaskExecutor.submit(() -> {
             // other
-            envProperties.add(otherPropertyDetect(session));
+            envProperties.add(otherPropertyDetect(session, expectedOs.getCpuArch()));
             countDownLatch.countDown();
         });
 
@@ -158,11 +167,11 @@ public class OpsClusterEnvService {
         return softwareEnv;
     }
 
-    private EnvProperty otherPropertyDetect(Session session) {
-        EnvProperty otherProperty = new EnvProperty();
+    private EnvProperty otherPropertyDetect(Session session, String cpuArch) {
+        EnvProperty otherProperty = getEnvProperty(session, cpuArch, SshCommandConstants.BASE_DEPENDENCY,
+                BASE_DEPENDENCY_LIST);
         otherProperty.setName("other");
         otherProperty.setSortNum(4);
-        otherProperty.setStatus(HostEnvStatusEnum.NORMAL);
         return otherProperty;
     }
 
@@ -194,32 +203,49 @@ public class OpsClusterEnvService {
         return firewallProperty;
     }
 
-    private EnvProperty dependencyPropertyDetect(Session session, OpenGaussSupportOSEnum expectedOs) {
-        EnvProperty dependencyProperty = new EnvProperty();
+    private EnvProperty dependencyPropertyDetect(Session session, String cpuArch) {
+        EnvProperty dependencyProperty = getEnvProperty(session, cpuArch, SshCommandConstants.DEPENDENCY,
+                DEPENDENCY_PACKAGE_NAMES);
         dependencyProperty.setName("software dependency");
         dependencyProperty.setSortNum(1);
-        try {
-            List<String> dependencyPackages = Arrays.stream(dependencyPackageNames).map(
-                    dependency -> dependency + "." + expectedOs.getCpuArch()).collect(Collectors.toList());
-            String dependency = opsHostRemoteService.executeCommand(SshCommandConstants.DEPENDENCY, session, "software dependency");
-            List<String> notInstalledPackages = new ArrayList<>();
-            for (String dependencyPackage : dependencyPackages) {
-                if (!dependency.contains(dependencyPackage)) {
-                    notInstalledPackages.add(dependencyPackage);
-                }
-            }
-            dependencyProperty.setStatus(HostEnvStatusEnum.NORMAL);
-            if (!notInstalledPackages.isEmpty()) {
-                dependencyProperty.setStatus(HostEnvStatusEnum.ERROR);
-                dependencyProperty.setStatusMessage("not installed dependencies:"
-                        + StringUtils.join(notInstalledPackages, ","));
-            }
-        } catch (Exception e) {
-            log.error("Execute command exception：", e);
-            dependencyProperty.setStatus(HostEnvStatusEnum.ERROR);
-            dependencyProperty.setStatusMessage(e.getMessage());
-        }
         return dependencyProperty;
+    }
+
+    private EnvProperty getEnvProperty(Session session, String cpuArch, String queryCommand,
+                                    List<String> dependencies) {
+        EnvProperty envProperty = new EnvProperty();
+        List<String> notInstalledPackages = getMissingList(session, cpuArch, queryCommand, dependencies);
+        if (CollectionUtils.isEmpty(notInstalledPackages)) {
+            envProperty.setStatus(HostEnvStatusEnum.NORMAL);
+        } else {
+            envProperty.setStatus(HostEnvStatusEnum.ERROR);
+            envProperty.setStatusMessage("not installed dependencies:"
+                    + StringUtils.join(notInstalledPackages, ","));
+        }
+        return envProperty;
+    }
+
+    /**
+     * get uninstalled dependencies
+     *
+     * @param session session
+     * @param cpuArch session
+     * @param queryCommand queryCommand
+     * @param dependencies dependencies
+     * @return uninstalled dependencies
+     */
+    public List<String> getMissingList(Session session, String cpuArch, String queryCommand,
+                                        List<String> dependencies) {
+        String queryResult = opsHostRemoteService.executeCommand(queryCommand, session, "check dependencies");
+        List<String> dependencyPackages = dependencies.stream().map(
+                dependency -> dependency + "." + cpuArch).collect(Collectors.toList());
+        List<String> notInstalledPackages = new ArrayList<>();
+        for (String dependencyPackage : dependencyPackages) {
+            if (!queryResult.contains(dependencyPackage)) {
+                notInstalledPackages.add(dependencyPackage);
+            }
+        }
+        return notInstalledPackages;
     }
 
     private HardwareEnv hardwareEnvDetect(Session session, OpenGaussSupportOSEnum expectedOs) {

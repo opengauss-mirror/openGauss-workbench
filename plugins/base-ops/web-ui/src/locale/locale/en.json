@@ -330,7 +330,9 @@
             "5mplmn5z2a00": "lock",
             "5mplmn5z2ms0": "Conversation",
             "5mplmn5z30k0": "Connection number",
-            "5mplmn5z37w0": "TOP10 Sessions with the Largest Memory Usage"
+            "5mplmn5z37w0": "TOP10 Sessions with the Largest Memory Usage",
+            "5mplmn5z3e90": "Please enable the enable_thread_pool parameter",
+            "5mplmn5z41w0": "The host lack dependency packages:"
         }
     },
     "operation": {
