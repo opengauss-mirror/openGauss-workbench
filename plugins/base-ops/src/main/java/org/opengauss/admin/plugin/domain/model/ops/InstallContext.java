@@ -34,8 +34,10 @@ import org.opengauss.admin.plugin.enums.ops.InstallModeEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.enums.ops.DatabaseKernelArch;
+import org.springframework.util.ObjectUtils;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -210,6 +212,9 @@ public class InstallContext implements Cloneable {
      * @return map
      */
     public Map<String, HostInfoHolder> getHostInfoHolderMap() {
+        if (ObjectUtils.isEmpty(hostInfoHolders)) {
+            return new HashMap<>();
+        }
         return hostInfoHolders
                 .stream()
                 .collect(Collectors.toMap(val -> val.getHostEntity().getHostId(), Function.identity()));
