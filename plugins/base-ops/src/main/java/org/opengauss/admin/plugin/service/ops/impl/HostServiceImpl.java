@@ -68,12 +68,13 @@ public class HostServiceImpl implements IHostService {
     }
 
     private boolean pathEmpty(Session rootSession, String path) {
-        String command = "ls " + path + " | wc -l";
+        String command = "ls " + path;
         try {
-            String pathEmpty = opsHostRemoteService.executeCommand(command, rootSession, "path empty");
-            return StrUtil.equals("0", pathEmpty) || pathEmpty.contains("No such file or directory");
-        } catch (Exception e) {
-            log.error("Failed to probe data directory",e);
+            JschResult jschResult = opsHostRemoteService.executeCommand(command, rootSession, null, null, false);
+            String pathEmpty = jschResult.getResult().trim();
+            return StrUtil.equals("", pathEmpty) || pathEmpty.contains("No such file or directory");
+        } catch (OpsException e) {
+            log.error("Failed to probe data directory ", e);
             throw new OpsException("Failed to probe data directory");
         }
     }
