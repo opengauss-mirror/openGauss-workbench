@@ -148,6 +148,11 @@ const saveConfig = () => {
       })
     })
   } else {
+    params.tasks.forEach(item => {
+      if (item.taskParams && (item.taskParams.length === 0 || item.taskParams[0].paramKey !== "rules.enable")) {
+        item.taskParams.unshift({paramKey: "rules.enable", paramValue: "true", paramDesc: "规则过滤，true代表开启，false代表关闭"})
+      }
+    })
     migrationSave(params).then(() => {
       Message.success('Save success')
       window.$wujie?.bus.$emit('data-migration-update')
