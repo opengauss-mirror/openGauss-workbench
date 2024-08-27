@@ -31,6 +31,8 @@ import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import lombok.extern.slf4j.Slf4j;
@@ -1135,17 +1137,28 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
      * @param url       source database connection
      * @param username  username of db connection
      * @param password  password of db connection
-     * @return tables
+     * @return page result
      */
     @Override
-    public List<Object> getTablesBySourceDb(String dbName, String url, String username, String password) {
-        String sql = String.format("SELECT table_name FROM information_schema.tables " +
-                "WHERE table_schema = '%s' and Table_type = 'BASE TABLE'", dbName);
+    public IPage<Object> pageByDB(Page page, String dbName, String url, String username, String password) {
+        long offset = (page.getCurrent() - 1) * page.getSize();
+        String sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = '%s' "
+                + "and Table_type = 'BASE TABLE' LIMIT %d OFFSET %d";
+        String sqlFormat = String.format(sql, dbName, page.getSize(), offset);
         List<Object> tables = new ArrayList<>();
-        List<Map<String, Object>> rs = querySource(url, username, password, sql);
+        List<Map<String, Object>> rs = querySource(url, username, password, sqlFormat);
         for (Map<String, Object> map : rs) {
             tables.addAll(map.values());
         }
-        return tables;
+
+        String countSql = String.format("SELECT count(1) as total FROM information_schema.tables "
+                + "WHERE table_schema = '%s' and Table_type = 'BASE TABLE'", dbName);
+        List<Map<String, Object>> rsCount = querySource(url, username, password, countSql);
+        if (rsCount.size() > 0) {
+            long count = Long.parseLong(rsCount.get(0).get("total").toString());
+            page.setTotal(count);
+        }
+        page.setRecords(tables);
+        return page;
     }
 }
