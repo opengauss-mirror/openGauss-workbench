@@ -45,6 +45,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -392,6 +393,27 @@ public class OpsHostRemoteService {
         } catch (Exception e) {
             log.error("Failed to execute command {}", command, e);
             throw new OpsException("Failed to execute command");
+        }
+    }
+
+    /**
+     * execute command
+     *
+     * @param command command
+     * @param rootSession rootSession
+     * @param retBuffer retBuffer
+     * @param autoResponse autoResponse
+     * @param shouldHandleErrorBeforeExit shouldHandleErrorBeforeExit
+     * @return JschResult
+     */
+    public JschResult executeCommand(String command, Session rootSession, RetBuffer retBuffer,
+                                     Map<String, String> autoResponse, boolean shouldHandleErrorBeforeExit) {
+        try {
+            return jschRetBufferUtil
+                    .executeCommand(command, rootSession, retBuffer, autoResponse, shouldHandleErrorBeforeExit);
+        } catch (IOException | InterruptedException e) {
+            log.error("Failed to execute command {}", command, e);
+            throw new OpsException("Failed to execute command: " + command);
         }
     }
 
