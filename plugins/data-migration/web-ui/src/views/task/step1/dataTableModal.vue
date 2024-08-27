@@ -1,65 +1,171 @@
 <template>
   <div class="modal" :style="{ top: posY + 'px', left: posX + 'px' }">
     <div class="modal-content"  @mousedown="startDrag">
-      <div class="header">
+      <div class="header" >
         <div style="display: grid; grid-template-columns: auto auto;">
-          <h2>{{$t('step1.index.5q091ixigjo1') + tempdbname }}</h2><br>
-          <p v-if = "selectedTbl.length > 0" style="color: red">{{$t('step1.index.5q091ixigjo2') + selectedTbl.length }}</p>
+          <h2>{{$t('step1.index.5q091ixigjo1')}} {{ tempdbname }}</h2><br>
+          <p v-if="selectedTbllength > 0" style="color: red">{{$t('step1.index.5q091ixih2h0')}} {{selectedTbllength}}</p>
         </div>
-        <input type="text"
-              v-model="inputValue"
-              :placeholder="$t('step1.index.5q091ixigjo5')">
+        <span class="close" @click="closeModal">&times;</span>
+        <a-input
+          v-model="searchTblNam"
+          :placeholder= "$t('step1.index.5q091ixih2i0')"
+          style="margin-bottom: 10px;"
+        />
       </div>
-      <span class="close" @click="closeModal">&times;</span>
-      <div v-if="search" class="scrollable">
-        <div class="checkbox-list">
-          <ul>
-            <li>
-              <label>
-                <input type="checkbox" v-model="selectAll" @change="selectAllItems"> {{$t('step1.index.5q091ixigjo6') }}
-              </label>
-            </li>
-            <li v-for="( item, index) in data" :key="index" >
-              <label>
-                <input type="checkbox" v-model="selectedTbl" :value="item"> {{ item }}
-              </label>
-            </li>
-          </ul>
+      <div class="content">
+        <a-table
+          row-key="name"
+          showCheckedAll="true"
+          v-model:selected-keys="selectedTblCurrent"
+          sticky-header
+          :data="formattedData"
+          :loading="isLoading"
+          :pagination="false"
+          :row-selection="rowSelection"
+          @selection-change="handleSelected"
+          @select-all="handleSelectAllChange"
+          v-if="searchTblNam.length <= 0"
+          style="overflow-y: auto"
+        >
+          <template #columns>
+            <a-table-column :title="$t('step1.index.5q091ixih5i0')" data-index="name" :width="100" ellipsis tooltip></a-table-column>
+          </template>
+        </a-table>
+        <a-table
+          row-key="name"
+          v-model:selected-keys="searchTblCurrent"
+          sticky-header
+          :data="filteredItems"
+          :pagination="false"
+          :row-selection="rowSelection"
+          :loading="isLoading"
+          @selection-change="handleSearchSelected"
+          v-else
+        >
+          <template #columns>
+            <a-table-column :title="$t('step1.index.5q091ixih5i0')" data-index="name" :width="100" ellipsis tooltip></a-table-column>
+          </template>
+        </a-table>
+      </div>
+      <div class="footer">
+        <div style="justify-content: right">
+          <a-pagination
+            class="custom-pagination"
+            show-total
+            show-jumper
+            show-page-size
+            defaultPageSize="50"
+            :total="totalNum"
+            :current="currentPage"
+            :page-size="pageSize"
+            :page-size-options="pageSizeOptions"
+            layout="->, total, sizes, prev, pager, next, jumper"
+            @change="handlePageChange"
+            @page-size-change="pageSizeChange"
+          />
         </div>
-
-      </div>
-      <div v-else class="scrollable">
-        <div class="checkbox-list">
-          <ul>
-            <li v-for="(item, index) in sorteedTbl" :key="index" >
-              <label>
-                <input type="checkbox" v-model="selectedTbl" :value="item"
-                > {{ item }}
-              </label>
-            </li>
-          </ul>
+        <div style = 'display: flex; justify-content: center; gap: 40px;' >
+          <button class="primary" type="submit" @click='handleSubmit'>{{$t('step1.index.5q091ixigjo3')}}</button>
+          <button  @click = 'closeModal'>{{$t('step1.index.5q091ixigjo4')}}</button>
         </div>
-      </div>
-      <div v-if="search" style = 'display: flex; justify-content: center; gap: 40px;' class="footer">
-        <button class="add-sub-btn" type="submit" @click='submitSelection'>{{$t('step1.index.5q091ixigjo3')}}</button>
-        <button  @click = 'closeModal'>{{$t('step1.index.5q091ixigjo4')}}</button>
       </div>
     </div>
   </div>
-
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import {computed, reactive, ref, watch} from 'vue'
 import { defineEmits } from 'vue'
 import { getdataTbl } from '@/api/detail'
+import {Form} from "@arco-design/web-vue";
+import {useRowSelection} from "@arco-design/web-vue/es/table/hooks/use-row-selection";
 
+const selectedTblCurrent = ref([])
+const searchTblCurrent = ref([])
 const selectedTbl = ref([])
 const winCon = ref(false)
-const search = ref(true)
-const inputValue = ref('')
-const data = ref()
+const isLoading = ref(false)
+const data = reactive( {
+  value: [],
+  totalNum: 0
+})
+const formattedData = computed(() => {
+  return data.value.map(item => ({ name: item }))
+})
+const currentPage = ref(1)
+const pageSize = ref(50)
+const totalNum = ref(0)
+const pageSizeOptions = ref([50, 100, 200, 500])
+const rowSelection = reactive({
+  type: 'checkbox',
+  showCheckedAll: true,
+  onlyCurrent: false
+})
+const searchTblNam = ref('');
 const selectAll = ref(false)
+const filteredItems = computed(() => {
+  isLoading.value = true
+  const query = searchTblNam.value.toLowerCase()
+  const filtered = data.value.filter(item => item.toLowerCase().includes(query))
+  totalNum.value = searchTblNam.value.length > 0? filtered.length: data.totalNum
+  const filteredCurrentPage = filtered.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value)
+  isLoading.value = false
+  return filteredCurrentPage.map(item => ({ name: item }))
+})
+
+const pageSizeChange = (e) => {
+  pageSize.value = e
+  fetchTblList()
+}
+const handlePageChange = (pageNum) => {
+  currentPage.value = pageNum
+  fetchTblList()
+}
+const selectedTbllength = ref(0)
+const handleSelected = (keys) => {
+  selectedTblCurrent.value = keys
+  searchTblCurrent.value = [...selectedTblCurrent.value]
+  selectedTbllength.value =  Object.keys(searchTblCurrent.value).length
+}
+const handleSearchSelected = (keys) => {
+  if (searchTblNam.value.length > 0) {
+    searchTblCurrent.value = searchTblCurrent.value.concat(keys)
+    selectedTblCurrent.value = [...searchTblCurrent.value]
+  }
+}
+
+const handleSelectAllChange = (checked) => {
+  if (checked) {
+    selectedTblCurrent.value = filteredItems.value
+  } else {
+    selectedTblCurrent.value = selectedTblCurrent.value.filter(item => !filteredItems.value.includes(item))
+  }
+  selectAll.value = checked
+}
+const emits = defineEmits(['close', 'data-selected'])
+const handleSubmit = () => {
+  let pagenum = data.totalNum / pageSize.value
+  Object.entries(selectedTblCurrent.value).forEach(([key, array]) => {
+    selectedTbl.value.push(array)
+  });
+  let dataToSend = {
+    selectedValue: selectedTbl.value,
+    selecTbl: tempdbname.value
+  }
+  if (selectedTbl.value.length === data.totalNum && data.totalNum !== 0) {
+    dataToSend.selectedValue = ''
+    emits('data-selected', dataToSend)
+  } else {
+    emits('data-selected', dataToSend)
+  }
+  closeModal()
+}
+
+const closeModal = () => {
+  winCon.value = false
+  emits('close')
+}
 
 const props = defineProps({
   seleDBMsg: {
@@ -70,121 +176,90 @@ const props = defineProps({
 
 winCon.value = true
 
-watch(() => props.seleDBMsg, async (newValue) => {
+watch(() => props.seleDBMsg,  (newValue) => {
   if (newValue) {
-    await fetchTblList()
+    init()
   }
 })
 
-let piecePreTbl = ''
+watch(
+  () => searchTblNam.value.length,
+  (newValue) => {
+    if (newValue === 0) {
+      totalNum.value = data.totalNum
+    }
+  }
+)
 
+let piecePreTbl = ''
+const selectAllPage = ref(false)
 const tempdbname = ref('')
-async function fetchTblList () {
-  const formData = new FormData()
+const useInFo = new FormData
+const tableAllSele = ref(false)
+const getTblSelec = async() => {
   const { dbName, url, username, password, seletedTbl } = props.seleDBMsg
   tempdbname.value = dbName
   const c = computed(() => `${url}/${dbName}`)
   let preseletedTbl = ''
-  let tempAllSele = false
+  tableAllSele.value = false
   if (seletedTbl) {
     preseletedTbl = JSON.stringify(seletedTbl)
     if (preseletedTbl && (preseletedTbl === '"全部"' || preseletedTbl === '全部')) {
-      tempAllSele = true
+      tableAllSele.value = true
     } else if (preseletedTbl) {
       piecePreTbl = preseletedTbl.split(',')
     }
   }
-  formData.append('url', c.value)
-  formData.append('username', username)
-  formData.append('password', password)
-  try {
-    await getdataTbl(formData, dbName)
-      .then(response => {
-        data.value = response.data
-        if (tempAllSele) {
+  useInFo.append('url', c.value)
+  useInFo.append('username', username)
+  useInFo.append('password', password)
+}
+
+async function fetchTblList () {
+  isLoading.value = false
+  await getdataTbl(useInFo,tempdbname.value, pageSize.value, currentPage.value)
+    .then(response => {
+      if (Number(response.code) === 200){
+        data.value = response.rows
+        totalNum.value = response.total
+        data.totalNum = response.total
+        if (tableAllSele.value) {
           data.value.forEach(item => {
-            selectedTbl.value.push(item)
+            selectedTblCurrent.value.push(item)
           })
-          selectAll.value = true
+          selectAllPage.value = true
         } else {
           if (piecePreTbl.length > 0) {
+            let tempId = 0
             data.value.forEach(item => {
               let found = false
               for (let i = 0; i < piecePreTbl.length; i++) {
                 let str = piecePreTbl[i].toString().replace(/[\[\]"]/g, '')
                 if (str === item) {
                   found = true
-                  break
                 }
-              }
-              if (found) {
-                selectedTbl.value.push(item)
+                if (found) {
+                  if (!selectedTblCurrent.value.some(tip => tip.name === item)) {
+                    selectedTblCurrent.value.push(item)
+                    tempId = tempId + 1
+                  }
+                }
+                found = false
               }
             })
           }
         }
-        winCon.value = true
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error)
-      })
-  } catch (error) {
-    console.error('Error fetching data:', error)
-  }
-}
-
-// eslint-disable-next-line vue/return-in-computed-property
-const sorteedTbl = computed(() => {
-  if (inputValue.value.length > 0) {
-    let filteredData
-    filteredData = data.value.filter(item => {
-      if (typeof item === 'string') {
-        return item.toLowerCase().includes(inputValue.value)
       }
-      return false
+      searchTblCurrent.value = [...selectedTblCurrent.value]
+      selectedTbllength.value =  Object.keys(searchTblCurrent.value).length
+      console.log(searchTblCurrent.value)
     })
-    return filteredData
-  }
-})
-
-watch(inputValue, (newValue) => {
-  search.value = newValue.trim() === ''
-})
-
-watch(selectedTbl, (val) => {
-  selectAll.value = val.length === data.value.length
-})
-
-const selectAllItems = () => {
-  if (selectAll.value) {
-    selectedTbl.value = [...data.value]
-  } else {
-    selectedTbl.value = []
-  }
+    .catch(error => {
+      console.error('Error fetching data:', error)
+    })
 }
 
-const emits = defineEmits(['close', 'data-selected'])
-
-const closeModal = () => {
-  winCon.value = false
-  emits('close')
-}
-
-const submitSelection = () => {
-  let dataToSend = {
-    selectedValue: selectedTbl.value,
-    selecTbl: tempdbname.value
-  }
-  if (selectedTbl.value.length === data.value.length && data.value.length !== 0) {
-    dataToSend.selectedValue = ''
-    emits('data-selected', dataToSend)
-  } else {
-    emits('data-selected', dataToSend)
-  }
-  closeModal()
-}
-
-const posX = ref(80)
+const posX = ref(300)
 const posY = ref(80)
 let dragging = false
 let mouseX = 0
@@ -215,11 +290,20 @@ const drag = (event) => {
   }
 }
 
-fetchTblList()
+const init = () => {
+  selectedTblCurrent.value = []
+  selectedTbl.value.length = []
+  selectedTbllength.value = 0
+  getTblSelec()
+  fetchTblList()
+  winCon.value = true
+}
+
+init()
 
 </script>
 
-<style>
+<style scoped>
 .modal {
   position: absolute;
   cursor: move;
@@ -237,10 +321,9 @@ fetchTblList()
   padding: 20px;
   border-radius: 5px;
   width: 100%;
-  height: 90%;
+  height: 100%;
   max-width: 800px;
   position: relative;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5)
@@ -249,7 +332,7 @@ fetchTblList()
   cursor: move;
   background-color: #f0f0f0;
   padding: 10px;
-  position: static;
+  position: sticky;
   top: 0;
   z-index: 102;
 }
@@ -259,21 +342,17 @@ fetchTblList()
 .header p {
   font-size: x-large;
 }
-.scrollable {
+.content {
   cursor: move;
-  height: 60%;
-  flex: 1;
+  background-color: white;
+  border-radius: 5px;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
 }
-
-.checkbox-list {
-  padding: 10px;
-}
-
-.checkbox-list label {
-  font-size: large;
-}
-
 .footer {
   background-color: #f0f0f0;
   padding: 10px;
@@ -296,4 +375,18 @@ fetchTblList()
   color: rgba(0, 0, 0, 0.8);
 }
 
+:deep(.arco-table .arco-table-cell) {
+  padding: 0px 16px;
+}
+
+:deep(.arco-table .arco-table-td) {
+  font-size: 16px;
+}
+
+:deep(.arco-table-container .arco-table-content-scroll-x) {
+  overflow-y: auto;
+}
+:deep(.arco-input-wrapper .arco-input) {
+  background-color: white;
+}
 </style>

@@ -44,6 +44,6 @@ export function getEntryKey () {
   return axios.get('/encryption/getKey')
 }
 
-export function getdataTbl (formData, dbName) {
-  return axios.post(`/plugins/data-migration/resource/tables/${dbName}`, formData)
+export function getdataTbl (formData, dbName, pageSize, pageNum) {
+  return axios.post(`/plugins/data-migration/resource/tables/${dbName}?pageSize=${pageSize}&pageNum=${pageNum}`, formData)
 }
