@@ -31,6 +31,7 @@ import com.nctigba.datastudio.model.dto.DatabaseSequenceDdlDTO;
 import com.nctigba.datastudio.model.dto.DatabaseViewDdlDTO;
 import com.nctigba.datastudio.model.query.DatabaseMetaArrayIdSchemaQuery;
 import com.nctigba.datastudio.model.query.ExportQuery;
+import com.nctigba.datastudio.model.query.ExportResultQuery;
 import com.nctigba.datastudio.model.query.SelectDataQuery;
 import com.nctigba.datastudio.service.DatabaseFunctionSPService;
 import com.nctigba.datastudio.service.DatabaseSequenceService;
@@ -80,6 +81,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.nctigba.datastudio.constants.CommonConstants.CURRENT_VALUE;
+import static com.nctigba.datastudio.constants.CommonConstants.DEFAULT_EXPORT_DATA_FILE_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.FUNCTION;
 import static com.nctigba.datastudio.constants.CommonConstants.IS_CALLED;
 import static com.nctigba.datastudio.constants.CommonConstants.IS_PACKAGE;
@@ -96,6 +98,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.TABLE;
 import static com.nctigba.datastudio.constants.CommonConstants.UNDERLINE;
 import static com.nctigba.datastudio.constants.CommonConstants.VIEW;
 import static com.nctigba.datastudio.constants.SqlConstants.COMMA;
+import static com.nctigba.datastudio.constants.SqlConstants.COUNT_FROM_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.COUNT_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.COURSE_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.CREATE_SCHEMA_SQL;
@@ -109,6 +112,7 @@ import static com.nctigba.datastudio.constants.SqlConstants.PROC_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.QUERY_OID_BY_PACKAGE;
 import static com.nctigba.datastudio.constants.SqlConstants.QUOTES;
 import static com.nctigba.datastudio.constants.SqlConstants.RIGHT_BRACKET;
+import static com.nctigba.datastudio.constants.SqlConstants.SELECT_FROM_LIMIT;
 import static com.nctigba.datastudio.constants.SqlConstants.SELECT_KEYWORD_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.SEMICOLON;
 import static com.nctigba.datastudio.constants.SqlConstants.SEQUENCE_SQL;
@@ -246,10 +250,12 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
         log.info("ExportService exportExcel columnSb: " + columnSb);
 
         String tableName = request.getTableName();
-        String sql = SELECT_KEYWORD_SQL + columnSb.deleteCharAt(columnSb.length() - 1)
-                + FROM_KEYWORD_SQL + DebugUtils.needQuoteName(request.getSchema())
-                + POINT + DebugUtils.needQuoteName(tableName) + SEMICOLON;
-
+        String sql = request.getSql();
+        if (Strings.isBlank(sql)) {
+            sql = SELECT_KEYWORD_SQL + columnSb.deleteCharAt(columnSb.length() - 1)
+                    + FROM_KEYWORD_SQL + DebugUtils.needQuoteName(request.getSchema())
+                    + POINT + DebugUtils.needQuoteName(tableName);
+        }
         String fileName = getDataFileName(tableName) + ".xlsx";
         if (request.getFileType().equals("Excel(xls)")) {
             fileName = getDataFileName(tableName) + ".xls";
@@ -262,22 +268,21 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
     private void exportExcelFile(ExportQuery request, String sql, String fileName, HttpServletResponse response)
             throws SQLException, IOException {
         log.info("ExportService getXssfWorkBook startTime: " + System.currentTimeMillis());
+        response.reset();
+        response.setContentType("application/octet-stream");
+        response.setHeader("Content-Disposition", URLEncoder.encode(fileName, StandardCharsets.UTF_8));
+        response.addHeader("Response-Type", "blob");
+        response.setCharacterEncoding(request.getEncoding());
+        int count = 0;
+        String tableName = request.getTableName();
+        String sql2exe = sql.replace(";", "");
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement();
                 SXSSFWorkbook sxssfWorkbook = new SXSSFWorkbook();
-                OutputStream outputStream = response.getOutputStream()
+                OutputStream outputStream = response.getOutputStream();
+                ResultSet countResult = statement.executeQuery(String.format(COUNT_FROM_SQL, sql2exe));
         ) {
-            response.reset();
-            response.setContentType("application/octet-stream");
-            response.setHeader("Content-Disposition", URLEncoder.encode(fileName, StandardCharsets.UTF_8));
-            response.addHeader("Response-Type", "blob");
-            response.setCharacterEncoding(request.getEncoding());
-
-            int count = 0;
-            String tableName = request.getTableName();
-            ResultSet countResult = statement.executeQuery(String.format(COUNT_SQL,
-                    DebugUtils.needQuoteName(request.getSchema()), DebugUtils.needQuoteName(tableName)));
             while (countResult.next()) {
                 count = countResult.getInt("count");
             }
@@ -285,7 +290,7 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
 
             String timeStamp = new SimpleDateFormat("HHmmssSSS").format(new Date());
             connection.setAutoCommit(false);
-            statement.execute(String.format(COURSE_SQL, "DS_" + timeStamp, sql));
+            statement.execute(String.format(COURSE_SQL, "DS_" + timeStamp, sql2exe));
             log.info("ExportService getXssfWorkBook timeStamp: " + "DS_" + timeStamp);
 
             int page = count == 0 ? 1 : (int) Math.ceil((double) count / 1000000);
@@ -398,16 +403,21 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
 
     private String composeQuerySql(ExportQuery request, boolean isExport) {
         StringBuilder sb = new StringBuilder();
-        sb.append("COPY ").append(DebugUtils.needQuoteName(request.getSchema())).append(POINT)
-                .append(DebugUtils.needQuoteName(request.getTableName()));
-        List<String> columnList = request.getColumnList();
-        sb.append(LEFT_BRACKET);
-        if (CollectionUtils.isEmpty(columnList)) {
-            sb.append(request.getColumnString());
+        sb.append("COPY ");
+        if (Strings.isBlank(request.getSql())) {
+            sb.append(DebugUtils.needQuoteName(request.getSchema())).append(POINT)
+                    .append(DebugUtils.needQuoteName(request.getTableName()));
+            List<String> columnList = request.getColumnList();
+            sb.append(LEFT_BRACKET);
+            if (CollectionUtils.isEmpty(columnList)) {
+                sb.append(request.getColumnString());
+            } else {
+                sb.append(DebugUtils.listToString(columnList, COMMA));
+            }
+            sb.append(RIGHT_BRACKET);
         } else {
-            sb.append(DebugUtils.listToString(columnList, COMMA));
+            sb.append(LEFT_BRACKET).append(request.getSql()).append(RIGHT_BRACKET);
         }
-        sb.append(RIGHT_BRACKET);
         if (isExport) {
             sb.append(" TO STDOUT");
         } else {
@@ -840,5 +850,25 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
         String ddl = String.format(SET_VALUE_SQL, sequence, currentVal, isCalled);
         log.info("ExportService getSequenceData ddl: " + ddl);
         return ddl;
+    }
+
+    @Override
+    public void exportResult(ExportResultQuery request, HttpServletResponse response) throws IOException, SQLException {
+        log.info("ExportService exportResult request: " + request);
+        String sql = request.getSql().trim();
+        if (sql.endsWith(";")) {
+            sql = sql.substring(0, sql.length() - 1);
+        }
+        if (request.getPageSize() != null && request.getPageNum() != null) {
+            request.setSql(String.format(SELECT_FROM_LIMIT, sql, request.getPageSize(),
+                    (request.getPageNum() - 1) * request.getPageSize()));
+        } else {
+            request.setSql(sql);
+        }
+        request.setTableName(DEFAULT_EXPORT_DATA_FILE_NAME);
+        request.setDelimiter(null);
+        request.setEncoding("UTF-8");
+        exportTableData(request, response);
+        log.info("ExportService exportResult end");
     }
 }

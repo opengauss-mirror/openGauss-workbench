@@ -295,7 +295,7 @@
             node.connectInfo = `${node.publicIp}:${node.dbPort}/${node.dbName}`;
             node.sourceType = type;
             node.sourceName = t('connection.contentCenter');
-            node.edition = `${item.version} ${item.versionNum}`;
+            node.edition = `${item.version || ''} ${item.versionNum || ''}`;
           });
           list = list.concat(item.clusterNodes);
         }

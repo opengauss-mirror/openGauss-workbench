@@ -42,6 +42,8 @@
 
   const route = useRoute();
   const UserStore = useUserStore();
+  const platform = ref(route.query.platform as Platform);
+  provide('platform', platform);
   const commonParams = reactive({
     connectionName: '',
     schema: '',
@@ -83,6 +85,7 @@
         pageNum: 1,
         pageSize: 100,
         pageTotal: 0,
+        dataSize: 0,
       },
       rowKey: '',
       component: markRaw(Data),
@@ -112,6 +115,7 @@
       Object.assign(params, {
         pageNum: dataMap.Data.page.pageNum,
         pageSize: dataMap.Data.page.pageSize,
+        dataSize: dataMap.Data.page.dataSize,
       });
     }
     api[type](params)
@@ -144,6 +148,7 @@
             pageNum: res.pageNum || 0,
             pageSize: res.pageSize || 0,
             pageTotal: res.pageTotal || 0,
+            dataSize: res.dataSize || 0,
           });
         }
       })

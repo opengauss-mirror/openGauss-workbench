@@ -69,7 +69,8 @@ public class SqlHistoryTemplateDAO implements ApplicationRunner {
                         + ");");
         String[] sqlList = {
                 "alter table sqlHistory add column errMes varchar(512);",
-                "alter table sqlHistory add column updateCount integer;"
+                "alter table sqlHistory add column updateCount integer;",
+                "alter table sqlHistory alter column sql type clob;"
         };
         for (String s : sqlList) {
             try {

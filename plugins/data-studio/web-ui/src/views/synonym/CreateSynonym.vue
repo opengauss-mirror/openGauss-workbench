@@ -102,7 +102,6 @@
   const editorPreRef = ref();
   const refreshParams = reactive({
     rootId: route.query.rootId as string,
-    schemaContentCollectId: route.query.schemaContentCollectId as string,
   });
 
   const form = reactive({

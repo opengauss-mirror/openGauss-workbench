@@ -55,6 +55,12 @@ export const constantRoutes: Array<RouteRecordRaw> = [
         meta: { title: '', icon: 'tablespace', keepAlive: true },
       },
       {
+        path: '/privilege/:id',
+        component: () => import('@/views/privilege/index.vue'),
+        name: 'privilege',
+        meta: { title: '', icon: 'key1', keepAlive: true },
+      },
+      {
         path: '/createTable/:id(\\d+)',
         component: () => import('@/views/createTable/index.vue'),
         name: 'createTable',

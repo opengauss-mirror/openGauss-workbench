@@ -36,6 +36,11 @@ export default {
     noData: 'No Data',
     donotAskAgain: `Don't ask again`,
   },
+  page: {
+    page: 'Page',
+    dataSize: 'Total',
+    globalPageSize: 'Global Page Size',
+  },
   button: {
     confirm: 'Confirm',
     clear: 'Clear',
@@ -63,6 +68,7 @@ export default {
     lock: 'Lock',
     unlock: 'Unlock',
     unlock2: 'Unlock',
+    executeUploadFile: 'Execute SQL file',
   },
   utils: {
     colorError: 'Wrong {name} color value',
@@ -88,6 +94,10 @@ export default {
     copyFail: 'Copy failed!',
     enabledSuccess: 'Successfully enabled!',
     disabledSuccess: 'Disabled successfully!',
+    uploadSuccess: 'Upload successful',
+    uploadFail: 'Upload failed',
+    refreshSuccess: 'Refresh successful',
+    refreshFail: 'Refresh failed',
     noConnectionSelectorTips: 'Please connect',
     testConnectionSuccess: 'Connected, taking {time}ms',
     testConnectionSuccessTips: 'Current information can be connected',
@@ -105,6 +115,7 @@ export default {
       'The connection will be disconnected before deleting the database. Are you sure you want to delete the {name} database?',
     deleteMode: 'Are you sure you want to delete the {name} schema?',
     deleteRecord: 'Are you sure you want to delete the current record?',
+    backfillRecord: 'Are you sure you want to backfill the current record?',
     saveData: 'There is unsaved data in table {name}. Do you need to save the changes?',
     selectedData: 'Please select data',
     editTableGuide:
@@ -289,6 +300,7 @@ export default {
     contentCenter: 'Content Center',
     customConnection: 'Custom Connection',
     database: 'Database',
+    databaseName: 'Database Name',
     databaseType: 'Database Type',
     databaseType_holder: 'Please select a database type',
     host: 'Host',
@@ -339,6 +351,7 @@ export default {
     authorizedUsersRoles: 'Authorized Users/Roles',
     privilegeSelection: 'Privilege Selection',
     sqlPreview: 'Sql Preview',
+    backfill: 'Backfill',
     objects: 'Objects',
     operationLog: 'Operation Log',
   },
@@ -387,6 +400,7 @@ export default {
   export: {
     ddl: 'Export DDL',
     ddlData: 'Export DDL & Data',
+    sqlFile: 'Export Table SQl',
     tableData: 'Export Table Data',
     batchDdl: 'Batch Export DDL',
     batchDdlData: 'Batch Export DDL & Data',
@@ -431,6 +445,8 @@ export default {
     importSql: 'Import SQL',
     importSqlText: 'Please choose the import format:',
     SQLAssistant: 'SQL assistant',
+    uploadSqlFile: 'Upload SQL File',
+    resultOfExecution: 'Result Of Execution',
   },
   resultTab: {
     message: 'Message',
@@ -708,6 +724,7 @@ export default {
     mode: 'Schema',
     table: 'Table',
     column: 'Column',
+    ifNotExists: 'IF Not EXISTS',
   },
   synonym: {
     base: 'General',

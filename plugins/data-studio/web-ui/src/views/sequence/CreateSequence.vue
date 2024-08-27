@@ -120,12 +120,12 @@
   const { t } = useI18n();
   const loading = ref(null);
 
+  const platform = ref(route.query.platform as Platform);
   const currentTabName = ref('Base');
   const ruleFormRef = ref<FormInstance>();
   const editorPreRef = ref();
   const refreshParams = reactive({
     rootId: route.query.rootId as string,
-    schemaContentCollectId: route.query.schemaContentCollectId as string,
   });
 
   const form = reactive({
@@ -136,9 +136,9 @@
     maxValue: '',
     cache: '',
     isCycle: false,
-    tableSchema: route.query.schema,
+    tableSchema: route.query.schema || undefined,
     tableName: '',
-    schema: route.query.schema,
+    schema: route.query.schema || undefined,
     tableColumn: '',
     connectionName: route.query.connectInfoName,
     uuid: route.query.uuid,

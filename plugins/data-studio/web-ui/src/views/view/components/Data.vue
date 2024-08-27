@@ -11,7 +11,7 @@
         :key="item.label"
         :prop="item.label"
         :label="item.label"
-        :min-width="item.minWidth"
+        :min-width="tableColumnWidth[item.label]"
         align="center"
       />
     </AdvancedTable>
@@ -21,6 +21,7 @@
       v-model:pageNum="page.pageNum"
       v-model:pageSize="page.pageSize"
       v-model:pageTotal="page.pageTotal"
+      :dataSize="page.dataSize"
       @firstPage="handleFirstPage"
       @lastPage="handleLastPage"
       @previousPage="handlePreviousPage"
@@ -33,11 +34,13 @@
 
 <script lang="ts" setup>
   import Toolbar from './Toolbar.vue';
+  import { getFlexColumnWidth } from '@/utils';
 
   interface Page {
     pageNum: number;
     pageSize: number;
     pageTotal: number;
+    dataSize: number;
   }
   const props = withDefaults(
     defineProps<{
@@ -55,6 +58,7 @@
         pageNum: 1,
         pageSize: 100,
         pageTotal: 0,
+        dataSize: 0,
       }),
       rowKey: '',
       loading: false,
@@ -65,6 +69,18 @@
     (e: 'getData'): void;
     (e: 'update:page', value: Page): void;
   }>();
+
+  const tableColumnWidth = ref({});
+  watch(
+    () => props.data,
+    () => {
+      const obj = {};
+      props.data.columns.forEach((c) => {
+        obj[c.label] = getFlexColumnWidth(props.data.data, c.label);
+      });
+      tableColumnWidth.value = obj;
+    },
+  );
 
   const page = computed({
     get: () => props.page,

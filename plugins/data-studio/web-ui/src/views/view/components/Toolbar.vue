@@ -39,6 +39,7 @@
             <el-option :label="`300/${t('common.page')}`" :value="300" />
             <el-option :label="`500/${t('common.page')}`" :value="500" />
           </el-select>
+          <div class="total" v-if="item.type == 'dataSize'">{{ $t('page.dataSize') + $t('common.colon') + dataSize }}</div>
         </div>
       </template>
     </div>
@@ -56,6 +57,7 @@
       pageNum?: number;
       pageSize?: number;
       pageTotal?: number;
+      dataSize?: number;
       sort?: boolean;
       filter?: boolean;
     }>(),
@@ -73,6 +75,8 @@
     (e: 'update:sort', value: boolean): void;
     (e: 'update:filter', value: boolean): void;
   }>();
+
+  const platform = inject<Ref<Platform>>('platform');
 
   const commonButton = computed(() => {
     return [

@@ -281,7 +281,13 @@ public class ConnectionWrapper implements Connection {
 
     @Override
     public boolean isValid(int timeout) throws SQLException {
-        return this.connection.isValid(timeout);
+        try {
+            this.connection.isValid(timeout);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return false;
+        }
+        return true;
     }
 
     @Override

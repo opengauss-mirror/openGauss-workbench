@@ -22,14 +22,16 @@
         </div>
       </div>
     </template>
-    <input
-      v-if="displayButton.importFile?.show"
-      type="file"
-      id="uploadInput"
-      ref="uploadInput"
-      accept=".sql"
-      style="display: none"
-    />
+    <div>
+      <input
+        v-if="displayButton.importFile?.show"
+        type="file"
+        id="uploadInput"
+        ref="uploadInput"
+        accept=".sql"
+        style="display: none"
+      />
+    </div>
   </div>
 </template>
 
@@ -73,8 +75,10 @@
     (e: 'coverageRate'): void;
     (e: 'importFile', value: string): void;
     (e: 'exportFile'): void;
+    (e: 'showHistory'): void;
   }>();
 
+  const platform = inject<Ref<Platform>>('platform');  
   const uploadInput = ref<HTMLInputElement>(null);
 
   const handleCompile = () => {

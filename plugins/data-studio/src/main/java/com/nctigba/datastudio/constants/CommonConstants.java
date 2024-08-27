@@ -469,5 +469,13 @@ public class CommonConstants {
      */
     public static final int NUM_TABLE_ATTR_ROWS = 14;
 
+    /**
+     * "sql"
+     */
     public static final String SQL = "sql";
+
+    /**
+     * default data file name
+     */
+    public static final String DEFAULT_EXPORT_DATA_FILE_NAME = "table";
 }

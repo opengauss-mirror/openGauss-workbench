@@ -97,6 +97,7 @@
   const UserStore = useUserStore();
   const nodeData = computed(() => props.nodeData);
   const activeName = ref('Base');
+  const platform = ref<Platform>();
   const editDefaultValue = {
     viewName: '',
     viewType: 'VIEW',
@@ -141,6 +142,7 @@
       form.schema = nodeData.value.schemaName;
       form.connectionName = nodeData.value.connectInfo.name;
       form.uuid = nodeData.value.uuid;
+      platform.value = nodeData.value.connectInfo.type as Platform;
       if (props.type === 'create') {
         schemaList.value = [form.schema];
       } else {

@@ -34,27 +34,40 @@ import com.nctigba.datastudio.service.impl.debug.AsyncHelper;
 import com.nctigba.datastudio.utils.DebugUtils;
 import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.opengauss.core.NativeQuery;
+import org.opengauss.core.Parser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.StringJoiner;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.nctigba.datastudio.constants.CommonConstants.FIVE_HUNDRED;
+import static com.nctigba.datastudio.constants.CommonConstants.RESULT;
+import static com.nctigba.datastudio.constants.SqlConstants.COUNT_FROM_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.SELECT_FROM_LIMIT;
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static com.nctigba.datastudio.enums.MessageEnum.BUTTON;
 import static com.nctigba.datastudio.enums.MessageEnum.DISCONNECTION;
 import static com.nctigba.datastudio.enums.MessageEnum.TABLE;
 import static com.nctigba.datastudio.enums.MessageEnum.TEXT;
 import static com.nctigba.datastudio.enums.MessageEnum.WINDOW;
+import static java.lang.Math.ceil;
 
 /**
  * StartSqlImpl
@@ -75,10 +88,23 @@ public class StartSqlImpl implements OperationInterface {
         if (!conMap.containsKey(paramReq.getUuid())) {
             webSocketServer.sendMessage(windowName, DISCONNECTION,
                     LocaleStringUtils.transLanguageWs("1004", webSocketServer), paramReq.getUuid());
+            return;
         }
         String sql = paramReq.getSql();
+        List<NativeQuery> nativeQueryList = Parser.parseJdbcSql(sql, false, false, true, false);
+        StringJoiner joiner = new StringJoiner(";");
+        for (NativeQuery query : nativeQueryList) {
+            String nativeSql = query.nativeSql.trim();
+            if (nativeSql.toLowerCase(Locale.ROOT).startsWith("select")) {
+                nativeSql = String.format(SELECT_FROM_LIMIT, nativeSql,
+                        paramReq.getPageSize(), (paramReq.getPageNum() - 1) * paramReq.getPageSize());
+            }
+            joiner.add(nativeSql);
+        }
+        String sqlToExecute = joiner.toString();
         Connection connection = webSocketServer.getConnection(windowName);
         Statement stat = connection.createStatement();
+        Statement countStat = connection.createStatement();
         webSocketServer.setStatement(windowName, stat);
         ThreadUtil.execAsync(() -> {
             List<SqlHistoryDO> list = new ArrayList<>();
@@ -94,16 +120,34 @@ public class StartSqlImpl implements OperationInterface {
                 webSocketServer.sendMessage(windowName, TEXT,
                         LocaleStringUtils.transLanguageWs("2001", webSocketServer), null);
                 startTime = new Date();
-                boolean result = stat.execute(sql);
+                boolean isExecutionSuccessful = stat.execute(sqlToExecute);
                 endTime = new Date();
                 webSocketServer.sendMessage(windowName, BUTTON,
                         LocaleStringUtils.transLanguageWs("2006", webSocketServer), null);
                 OperateStatusDO operateStatus = webSocketServer.getOperateStatus(windowName);
                 operateStatus.enableStopRun();
                 webSocketServer.setOperateStatus(windowName, operateStatus);
+                Iterator<String> singleSqlIterator = nativeQueryList.stream().map(o -> o.nativeSql.trim()).collect(
+                        Collectors.toList()).iterator();
                 while (true) {
-                    if (result) {
+                    if (isExecutionSuccessful) {
                         Map<String, Object> resultMap = DebugUtils.parseResultSetType(stat.getResultSet());
+                        String singleSql = singleSqlIterator.next().trim();
+                        resultMap.put("sql", singleSql);
+                        if (StringUtils.isNotEmpty(paramReq.getResultId())) {
+                            resultMap.put("resultId", paramReq.getResultId());
+                        } else {
+                            resultMap.put("resultId", UUID.randomUUID().toString());
+                        }
+                        if (singleSql.toLowerCase(Locale.ROOT).startsWith("select")) {
+                            long count = getCount(countStat, singleSql);
+                            resultMap.put("dataSize", count);
+                            resultMap.put("pageTotal", (int) ceil((double) count / paramReq.getPageSize()));
+                            resultMap.put("pageNum", paramReq.getPageNum());
+                            resultMap.put("pageSize", paramReq.getPageSize());
+                        } else {
+                            resultMap.put("dataSize", ((List<List<Object>>) resultMap.get(RESULT)).size());
+                        }
                         webSocketServer.sendMessage(windowName, TABLE,
                                 LocaleStringUtils.transLanguageWs("2002", webSocketServer), resultMap);
                         webSocketServer.sendMessage(windowName, TEXT,
@@ -117,7 +161,7 @@ public class StartSqlImpl implements OperationInterface {
                             break;
                         }
                     }
-                    result = stat.getMoreResults();
+                    isExecutionSuccessful = stat.getMoreResults();
                 }
                 if (isUpdate) {
                     webSocketServer.sendMessage(windowName, TEXT, LocaleStringUtils.transLanguageWs(
@@ -149,23 +193,33 @@ public class StartSqlImpl implements OperationInterface {
                 operateStatus.enableStopRun();
                 webSocketServer.setOperateStatus(windowName, operateStatus);
             } finally {
-                sqlHistoryDO.setStartTime(df.format(startTime));
-                sqlHistoryDO.setSuccess(isSuccess);
-                sqlHistoryDO.setSql(sql);
-                sqlHistoryDO.setExecuteTime((endTime.getTime() - startTime.getTime()) + "ms");
-                sqlHistoryDO.setWebUser(paramReq.getWebUser());
-                list.add(sqlHistoryDO);
-                asyncHelper.insertSqlHistory(list);
+                if (StringUtils.isEmpty(paramReq.getResultId())) {
+                    sqlHistoryDO.setStartTime(df.format(startTime));
+                    sqlHistoryDO.setSuccess(isSuccess);
+                    sqlHistoryDO.setSql(sql);
+                    sqlHistoryDO.setExecuteTime((endTime.getTime() - startTime.getTime()) + "ms");
+                    sqlHistoryDO.setWebUser(paramReq.getWebUser());
+                    list.add(sqlHistoryDO);
+                    asyncHelper.insertSqlHistory(list);
+                }
 
                 try {
                     stat.cancel();
                     stat.close();
+                    countStat.close();
                     webSocketServer.setStatement(windowName, null);
                 } catch (SQLException e) {
                     log.error("StartSqlImpl operate Exception: ", e);
                 }
             }
         });
+    }
+
+    private static long getCount(Statement countStat, String singleSql) throws SQLException {
+        try (ResultSet countRs = countStat.executeQuery(String.format(COUNT_FROM_SQL, singleSql))) {
+            countRs.next();
+            return countRs.getLong("count");
+        }
     }
 
     @Override

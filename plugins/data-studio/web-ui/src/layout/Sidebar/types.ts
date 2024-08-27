@@ -95,7 +95,6 @@ export interface RefreshOptions {
   databaseName: string;
   schemaId: string;
   schema: string;
-  schemaContentCollectId: string;
   nodeId: string;
 }
 

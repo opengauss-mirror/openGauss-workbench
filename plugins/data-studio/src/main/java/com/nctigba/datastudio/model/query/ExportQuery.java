@@ -82,4 +82,6 @@ public class ExportQuery {
     private String timeFormat;
 
     private MultipartFile file;
+
+    private String sql;
 }
