@@ -41,6 +41,7 @@ import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
+import org.opengauss.admin.common.enums.SysLanguage;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.*;
@@ -89,6 +90,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -1573,22 +1575,85 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return clusterSummaryVO;
     }
 
-    public void downloadImportFile(HttpServletResponse response) {
+    private List<List<String>> createEnglishHeaders() {
+        return new ArrayList<>(Arrays.asList(
+            Arrays.asList("clusterName"),
+            Arrays.asList("privateIp"),
+            Arrays.asList("publicIp"),
+            Arrays.asList("installUsername"),
+            Arrays.asList("databaseUsername"),
+            Arrays.asList("databasePassword"),
+            Arrays.asList("port"),
+            Arrays.asList("envPath"),
+            Arrays.asList("importStatus"),
+            Arrays.asList("errorInfo")
+        ));
+    }
+
+    private List<List<String>> createChineseHeaders() {
+        return new ArrayList<>(Arrays.asList(
+            Arrays.asList("集群名称"),
+            Arrays.asList("内网IP"),
+            Arrays.asList("外网IP"),
+            Arrays.asList("安装用户"),
+            Arrays.asList("数据库用户名"),
+            Arrays.asList("数据库密码"),
+            Arrays.asList("端口号"),
+            Arrays.asList("环境变量路径"),
+            Arrays.asList("执行状态"),
+            Arrays.asList("报错信息")
+        ));
+    }
+
+    private void writeZhOrEnInfo(HttpServletResponse response, String currentLocale,
+                                 List<OpsImportEntity> usersList) {
+        OutputStream out = null;
         try {
-            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            response.setCharacterEncoding("utf-8");
-            String fileName = URLEncoder.encode("模板", "UTF-8").replaceAll("\\+", "%20");
-            response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
-            List<OpsImportEntity> usersList = new ArrayList<>();
-            OpsImportEntity opsImportEntity = new OpsImportEntity("1", "ip1,ip2", "ip1,ip2", "omm","gaussdb", "12345", 5432, "/home/omm/cluster_2024.bashrc", null,null);
-            usersList.add(opsImportEntity);
-            OutputStream out = response.getOutputStream();
-            EasyExcel.write(out, OpsImportEntity.class).sheet("用户信息").doWrite(usersList);
-            out.flush();
-            out.close();
+            out = response.getOutputStream();
+            if (SysLanguage.ZH.getInfo().equals(currentLocale)) {
+                EasyExcel.write(out, OpsImportEntity.class)
+                    .head(createChineseHeaders())
+                    .sheet("用户信息")
+                    .doWrite(usersList);
+            } else {
+                EasyExcel.write(out, OpsImportEntity.class)
+                    .head(createEnglishHeaders())
+                    .sheet("userInfo")
+                    .doWrite(usersList);
+            }
         } catch (IOException e) {
             throw new OpsException("download fail!");
+        } finally {
+            try {
+                out.flush();
+            } catch (IOException e) {
+                log.error("flush fail");
+            }
+            try {
+                out.close();
+            } catch (IOException e) {
+                log.error("close fail");
+            }
         }
+    }
+
+    @Override
+    public void downloadImportFile(HttpServletResponse response, String currentLocale) {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setCharacterEncoding("utf-8");
+        String fileName = null;
+        try {
+            fileName = URLEncoder.encode("模板", "UTF-8").replaceAll("\\+", "%20");
+        } catch (UnsupportedEncodingException e) {
+            log.error("UnsupportedEncodingException");
+        }
+        response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+        List<OpsImportEntity> usersList = new ArrayList<>();
+        OpsImportEntity opsImportEntity = new OpsImportEntity("1", "ip1,ip2", "ip1,ip2",
+            "omm", "gaussdb", "12345", 5432,
+            "/home/omm/cluster_2024.bashrc", null, null);
+        usersList.add(opsImportEntity);
+        writeZhOrEnInfo(response, currentLocale, usersList);
     }
 
     @Override
@@ -1950,20 +2015,17 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     @Override
-    public void downloadErrorFile(HttpServletResponse response, List<OpsImportEntity> usersList) {
-        try {
+    public void downloadErrorFile(HttpServletResponse response, List<OpsImportEntity> usersList, String currentLocale) {
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             response.setCharacterEncoding("utf-8");
-            String fileName = URLEncoder.encode("错误报告", "UTF-8").replaceAll("\\+", "%20");
+            String fileName = null;
+            try {
+                fileName = URLEncoder.encode("模板", "UTF-8").replaceAll("\\+", "%20");
+            } catch (UnsupportedEncodingException e) {
+                log.error("UnsupportedEncodingException");
+            }
             response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
-            OutputStream out = response.getOutputStream();
-            EasyExcel.write(out, OpsImportEntity.class).sheet("用户信息").doWrite(usersList);
-            out.flush();
-            out.close();
-        } catch (IOException e) {
-            log.error("downloadErrorFile fail!");
-            throw new OpsException("downloadErrorFile fail!");
-        }
+            writeZhOrEnInfo(response, currentLocale, usersList);
     }
 
     @Override

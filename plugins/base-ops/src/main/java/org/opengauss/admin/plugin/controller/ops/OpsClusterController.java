@@ -62,9 +62,13 @@ public class OpsClusterController extends BaseController {
 
     @Autowired
     private IOpsClusterService opsClusterService;
+
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private OpsFacade opsFacade;
+
+    private List<OpsImportEntity> opsImportEntities = new ArrayList<>();
+
 
     @GetMapping("/hasName")
     public AjaxResult hasName(@RequestParam("name") String name) {
@@ -204,12 +208,16 @@ public class OpsClusterController extends BaseController {
         return AjaxResult.success();
     }
 
-    @GetMapping("/downloadImportFile")
-    public void downloadImportFile(HttpServletResponse response) {
-        opsClusterService.downloadImportFile(response);
+    /**
+     * download import cluster Template
+     *
+     * @param response downLoad Response
+     * @param currentLocale The current language version being used
+     */
+    @GetMapping("/downloadImportFile/{currentLocale}")
+    public void downloadImportFile(@PathVariable String currentLocale, HttpServletResponse response) {
+        opsClusterService.downloadImportFile(response, currentLocale);
     }
-
-    List<OpsImportEntity> opsImportEntities = new ArrayList<>();
 
     @PostMapping("/uploadImportFile")
     public AjaxResult uploadImportFile(MultipartFile file) {
@@ -229,9 +237,15 @@ public class OpsClusterController extends BaseController {
         return AjaxResult.success(importSuccessCount);
     }
 
-    @GetMapping("/downloadErrorFile")
-    public void downloadErrorFile(HttpServletResponse response) {
-        opsClusterService.downloadErrorFile(response, opsImportEntities);
+    /**
+     * download import cluster Error Report
+     *
+     * @param response downLoad Response
+     * @param currentLocale The current language version being used
+     */
+    @GetMapping("/downloadErrorFile/{currentLocale}")
+    public void downloadErrorFile(@PathVariable String currentLocale, HttpServletResponse response) {
+        opsClusterService.downloadErrorFile(response, opsImportEntities, currentLocale);
     }
 
     @GetMapping("/monitor")

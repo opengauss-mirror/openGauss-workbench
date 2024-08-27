@@ -132,6 +132,9 @@ import { KeyValue } from '@/types/global'
 import { nextTick, reactive, ref, toRaw, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import axios from 'axios'
+import useLocale from "@/hooks/locale";
+
+const { currentLocale } = useLocale()
 
 const { t } = useI18n()
 
@@ -420,7 +423,7 @@ const startProgressBar = () => {
 }
 
 const downLoadModule = () => {
-  let url='/opsCluster/downloadImportFile';
+  let url=`/opsCluster/downloadImportFile/${currentLocale.value}`;
   axios.get(url,{responseType: 'blob',headers: {'Content-Type':'application/json;application/octet-stream'}
   })
     .then((res)=>{
@@ -440,7 +443,7 @@ const downLoadModule = () => {
 }
 
 const downLoadErrRep = () => {
-  let url='/opsCluster/downloadErrorFile';
+  let url=`/opsCluster/downloadErrorFile/${currentLocale.value}`;
   axios.get(url,{responseType: 'blob',headers: {'Content-Type':'application/json;application/octet-stream'}
   })
     .then((res)=>{
