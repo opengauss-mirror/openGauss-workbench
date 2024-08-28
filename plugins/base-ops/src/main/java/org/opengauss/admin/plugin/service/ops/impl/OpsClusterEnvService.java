@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
 import org.opengauss.admin.plugin.domain.model.ops.env.EnvProperty;
 import org.opengauss.admin.plugin.domain.model.ops.env.HardwareEnv;
@@ -45,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Collections;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
@@ -236,16 +238,20 @@ public class OpsClusterEnvService {
      */
     public List<String> getMissingList(Session session, String cpuArch, String queryCommand,
                                         List<String> dependencies) {
-        String queryResult = opsHostRemoteService.executeCommand(queryCommand, session, "check dependencies");
-        List<String> dependencyPackages = dependencies.stream().map(
-                dependency -> dependency + "." + cpuArch).collect(Collectors.toList());
-        List<String> notInstalledPackages = new ArrayList<>();
-        for (String dependencyPackage : dependencyPackages) {
-            if (!queryResult.contains(dependencyPackage)) {
-                notInstalledPackages.add(dependencyPackage);
+        try {
+            String queryResult = opsHostRemoteService.executeCommand(queryCommand, session, "check dependencies");
+            List<String> dependencyPackages = dependencies.stream().map(
+                    dependency -> dependency + "." + cpuArch).collect(Collectors.toList());
+            List<String> notInstalledPackages = new ArrayList<>();
+            for (String dependencyPackage : dependencyPackages) {
+                if (!queryResult.contains(dependencyPackage)) {
+                    notInstalledPackages.add(dependencyPackage);
+                }
             }
+            return notInstalledPackages;
+        } catch (OpsException e) {
+            return Collections.singletonList(e.getMessage());
         }
-        return notInstalledPackages;
     }
 
     private HardwareEnv hardwareEnvDetect(Session session, OpenGaussSupportOSEnum expectedOs) {

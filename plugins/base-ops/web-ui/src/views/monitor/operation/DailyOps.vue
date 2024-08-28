@@ -7,7 +7,7 @@
         <a-link class="my-link">{{ $t('operation.DailyOps.5mplp1xbyqc0') }}</a-link>&nbsp;&nbsp;
 
         <a-button class="my-button" @click="editClusterTask">{{ $t('operation.DailyOps.sl3u5s5cf2y2') }}</a-button> &nbsp;
-        <a-button class="my-button blueColor" @click="clusterInstall">{{ $t('operation.DailyOps.sl3u5s5cf2y3') }}</a-button> &nbsp;
+        <a-button class="my-button blueColor" @click="goInstall">{{ $t('operation.DailyOps.sl3u5s5cf2y3') }}</a-button> &nbsp;
       </div>
     </div>
     <br><br>
@@ -505,11 +505,11 @@
                         <div class="flex-col-start mr">
                           <div class="flex-row host-mb-screen">
                             <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc2sw0') }}</div>
-                            <div class="value-color">{{ instance.hostname }}</div>
+                            <div class="value-color" style="line-height: 25px;">{{ instance.hostname }}</div>
                           </div>
                           <div class="flex-row host-mb-screen">
                             <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc2xs0') }}</div>
-                            <div class="value-color">{{ instance.kernel ? instance.kernel : '-' }}{{
+                            <div class="value-color" style="line-height: 25px;">{{ instance.kernel ? instance.kernel : '-' }}{{
                               $t('operation.DailyOps.else1')
                             }}{{ instance.memorySize ? instance.memorySize : '-' }}G</div>
                           </div>
@@ -517,11 +517,11 @@
                         <div class="flex-col-start mr">
                           <div class="flex-row host-mb-screen">
                             <div class="label-color mr-s">CPU</div>
-                            <div class="value-color">{{ instance.cpu ? instance.cpu : '--' }}%</div>
+                            <div class="value-color" style="line-height: 25px;">{{ instance.cpu ? instance.cpu : '--' }}%</div>
                           </div>
                           <div class="flex-row host-mb-screen">
                             <div class="label-color mr-s">{{ $t('operation.DailyOps.5mplp1xc32g0') }}</div>
-                            <div class="value-color">{{ instance.memory ? instance.memory : '--' }}%</div>
+                            <div class="value-color" style="line-height: 25px;">{{ instance.memory ? instance.memory : '--' }}%</div>
                           </div>
                         </div>
                       </div>
@@ -565,7 +565,7 @@
                         v-model="instance.state"
                         checked-value="true"
                         unchecked-value="false"
-                        @click="handleInstanceSwitchChange($event, index, nodeIndex)"
+                        @change="handleInstanceSwitchChange($event, index, nodeIndex)"
                       >
                         <template #checked>
                           ON
@@ -826,10 +826,6 @@ const envCheck = (clusterId: string, hostIp: string, hostUsername: string) => {
 //跳转新增集群页面
 const editClusterTask = (record) => {
   router.push({ name:'step', params: { record: JSON.stringify(toRaw(record)) } });
-}
-//跳转集群安装界面
-const clusterInstall = () => {
-  router.push({ name: 'OpsInstall', params: {} });
 }
 
 const state = reactive({
@@ -1506,6 +1502,11 @@ const getList = () => new Promise(resolve => {
         item.isShow = true
         item.state = -1
         item.loading = false
+        if (item.version === 'MINIMAL_LIST' && item.clusterNodes.length < 2) {
+          const slaveNode = JSON.parse(JSON.stringify(item.clusterNodes[0]))
+          slaveNode.clusterRole = ClusterRoleEnum.SLAVE
+          item.clusterNodes.push(slaveNode)
+        }
         openWebSocket(item, index)
         data.clusterList.push(item)
       })
@@ -2362,6 +2363,8 @@ const handleGucSettingComplete = (clusterData: KeyValue, clusterIndex: number) =
 
 .daily-ops-c {
   padding: 20px 20px 0px;
+  overflow-y: auto;
+  height: calc(100vh - 130px);
 
   .empty-icon-size {
     width: 100px;
