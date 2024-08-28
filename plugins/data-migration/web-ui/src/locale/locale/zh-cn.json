@@ -140,7 +140,7 @@
             "5q09xhsvcq42": "实时速率: {speed}MB/s",
             "5q09xhsvcq43": "总校验对象数量：{total}，未开始：{totalWaitCount}，校验中：{totalRunningCount}，成功：{totalFinishCount}，失败：{totalErrorCount}",
             "5q09xhsvcq44": "数据总行数：{totalRowCount}行，数据总表数：{totalTableCount}张，已完成表数：{totalTableFinishCount}张",
-            "5q09xhsvcq45": "平均校验速率: {avgSpeed}MB/s",
+            "5q09xhsvcq45": "平均校验速率: {avgSpeed}行/s",
             "5q0a1jl7o9s0": "总迁移对象数量：{total}， 未开始：{totalWaitCount}，迁移中：{totalRunningCount}，成功：{totalFinishCount}，失败：{totalErrorCount}",
             "5q0a1jl7o9s1": "总迁移对象数量：{total}， 未开始：{totalWaitCount}，迁移中：{totalRunningCount}，成功：{totalFinishCount}，失败：{totalErrorCount}",
             "5q0a5opxm3c0": "至",
