@@ -444,6 +444,11 @@ const getList = () => new Promise(resolve => {
       res.data.forEach((item: KeyValue) => {
         item.isShow = true
         item.isConnected = -1
+        if (item.version === 'MINIMAL_LIST' && item.clusterNodes.length < 2) {
+          const slaveNode = JSON.parse(JSON.stringify(item.clusterNodes[0]))
+          slaveNode.clusterRole = ClusterRoleEnum.SLAVE
+          item.clusterNodes.push(slaveNode)
+        }
         // Call the backend and open websocket. The background pushes data for the front end
         data.clusterList.push(item)
       })
