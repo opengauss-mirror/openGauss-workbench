@@ -234,6 +234,7 @@
             "5q0aajl77lg29": "Please enter the directory where the third-party tool is installed",
             "5q0aajl77lg30": "schema_registry port",
             "5q0aajl77lg31": "8081",
+          "5q0aajl77lg33": "Installation method",
             "5q0aajl77lg32": "Note: Third-party tools refer to the confluent tools (including the Kafka zookeeper schemaRegistry) in the portal, which can be bound to the confluent tools installed on other portals for data migration, and the current portal can be reinstalled to migrate data"
         },
         "ToolsParamsConfig": {

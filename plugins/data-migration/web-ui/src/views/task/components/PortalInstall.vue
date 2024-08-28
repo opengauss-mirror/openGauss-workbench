@@ -27,7 +27,7 @@
               v-for="item in hostUserData"
               :key="item.hostUserId"
               :value="item.hostUserId"
-              >{{ item.username }}</a-option
+            >{{ item.username }}</a-option
             >
           </a-select>
         </a-form-item>
@@ -41,96 +41,8 @@
           />
         </a-form-item>
         <a-form-item
-          field="kafkaInstallType"
-          :label="$t('components.PortalInstall.5q0aajl77lg20')"
-        >
-
-
-          <a-radio-group type="button" v-model="thirdPartyParam.kafkaInstallType">
-            <a-radio :value="KAFKA_CONFIG_TYPE.BIND">{{
-              $t('components.PortalInstall.5q0aajl77lg21')
-            }}</a-radio>
-            <a-radio :value="KAFKA_CONFIG_TYPE.INSTALL">{{
-              $t('components.PortalInstall.5q0aajl77lg22')
-            }}</a-radio>
-          </a-radio-group>
-          <a-popover>
-                <span class="tips"><icon-info-circle size="15" /></span>
-                <template #content>
-                  <p>
-                    {{ $t('components.PortalInstall.5q0aajl77lg32') }}:
-                  </p>
-                </template>
-         </a-popover>
-
-        </a-form-item>
-        <template v-if="thirdPartyParam.kafkaInstallType == KAFKA_CONFIG_TYPE.INSTALL">
-          <a-form-item
-          field="zookeeperPort"
-          :label="$t('components.PortalInstall.5q0aajl77lg16')"
-        >
-          <a-input
-            v-model="thirdPartyParam.zookeeperPort"
-            :placeholder="$t('components.PortalInstall.5q0aajl77lg18')"
-          />
-        </a-form-item>
-        <a-form-item
-          field="kafkaPort"
-          :label="$t('components.PortalInstall.5q0aajl77lg17')"
-        >
-          <a-input
-            v-model="thirdPartyParam.kafkaPort"
-            :placeholder="$t('components.PortalInstall.5q0aajl77lg19')"
-          />
-        </a-form-item>
-        <a-form-item
-          field="schemaRegistryPort"
-          :label="$t('components.PortalInstall.5q0aajl77lg30')"
-        >
-          <a-input
-            v-model="thirdPartyParam.schemaRegistryPort"
-            :placeholder="$t('components.PortalInstall.5q0aajl77lg31')"
-          />
-        </a-form-item>
-         <a-form-item
-          field="kafkaInstallDir"
-          :label="$t('components.PortalInstall.5q0aajl77lg27')"
-        >
-          <a-input
-            v-model="thirdPartyParam.kafkaInstallDir"
-            :placeholder="$t('components.PortalInstall.5q0aajl77lg29')"
-          />
-        </a-form-item>
-      </template>
-
-      <template v-if="thirdPartyParam.kafkaInstallType == KAFKA_CONFIG_TYPE.BIND">
-         <a-form-item
-          field="kafkaBindId"
-          :label="$t('components.PortalInstall.5q0aajl77lg23')"
-          :rules="[
-            {
-              required: true,
-              message: $t('components.PortalInstall.5q0aajl77lg24'),
-            },
-          ]"
-        >
-          <a-select
-            v-model="form.kafkaBindId"
-            :placeholder="$t('components.PortalInstall.5q0aajl77lg25')"
-          >
-            <a-option
-              v-for="item in kafkaInstanceData"
-              :key="item.id"
-              :value="item.id"
-              >{{ item.kafkaIp }}</a-option
-            >
-          </a-select>
-        </a-form-item>
-      </template>
-
-        <a-form-item
           field="installType"
-          :label="$t('components.PortalInstall.5q0aajl77lg0')"
+          :label="$t('components.PortalInstall.5q0aajl77lg33')"
         >
           <a-radio-group type="button" v-model="form.installType">
             <a-radio :value="INSTALL_TYPE.ONLINE">{{
@@ -228,6 +140,100 @@
             </a-upload>
           </a-form-item>
         </template>
+
+        <a-form-item
+          field="kafkaInstallType"
+          :label="$t('components.PortalInstall.5q0aajl77lg20')"
+          v-if="form.installType !== INSTALL_TYPE.IMPORTINSTALL"
+        >
+          <a-radio-group type="button" v-model="thirdPartyParam.kafkaInstallType">
+            <a-radio :value="KAFKA_CONFIG_TYPE.BIND">{{
+              $t('components.PortalInstall.5q0aajl77lg21')
+              }}
+            </a-radio>
+            <a-radio :value="KAFKA_CONFIG_TYPE.INSTALL">{{
+              $t('components.PortalInstall.5q0aajl77lg22')
+              }}
+            </a-radio>
+          </a-radio-group>
+          <a-popover>
+            <span class="tips"><icon-info-circle size="15"/></span>
+            <template #content>
+              <p>
+                {{ $t('components.PortalInstall.5q0aajl77lg32') }}:
+              </p>
+            </template>
+          </a-popover>
+
+        </a-form-item>
+        <template v-if="thirdPartyParam.kafkaInstallType == KAFKA_CONFIG_TYPE.INSTALL
+        && form.installType !== INSTALL_TYPE.IMPORTINSTALL">
+          <a-form-item
+            field="zookeeperPort"
+            :label="$t('components.PortalInstall.5q0aajl77lg16')"
+          >
+            <a-input
+              v-model="thirdPartyParam.zookeeperPort"
+              :placeholder="$t('components.PortalInstall.5q0aajl77lg18')"
+            />
+          </a-form-item>
+          <a-form-item
+            field="kafkaPort"
+            :label="$t('components.PortalInstall.5q0aajl77lg17')"
+          >
+            <a-input
+              v-model="thirdPartyParam.kafkaPort"
+              :placeholder="$t('components.PortalInstall.5q0aajl77lg19')"
+            />
+          </a-form-item>
+          <a-form-item
+            field="schemaRegistryPort"
+            :label="$t('components.PortalInstall.5q0aajl77lg30')"
+          >
+            <a-input
+              v-model="thirdPartyParam.schemaRegistryPort"
+              :placeholder="$t('components.PortalInstall.5q0aajl77lg31')"
+            />
+          </a-form-item>
+          <a-form-item
+            field="kafkaInstallDir"
+            :label="$t('components.PortalInstall.5q0aajl77lg27')"
+          >
+            <a-input
+              v-model="thirdPartyParam.kafkaInstallDir"
+              :placeholder="$t('components.PortalInstall.5q0aajl77lg29')"
+            />
+          </a-form-item>
+        </template>
+
+        <template v-if="thirdPartyParam.kafkaInstallType == KAFKA_CONFIG_TYPE.BIND
+      && form.installType !== INSTALL_TYPE.IMPORTINSTALL">
+          <a-form-item
+            field="kafkaBindId"
+            :label="$t('components.PortalInstall.5q0aajl77lg23')"
+            :rules="[
+            {
+              required: form.installType !== INSTALL_TYPE.IMPORTINSTALL,
+              message: $t('components.PortalInstall.5q0aajl77lg24'),
+            },
+          ]"
+          >
+            <a-select
+              v-model="form.kafkaBindId"
+              :placeholder="$t('components.PortalInstall.5q0aajl77lg25')"
+            >
+              <a-option
+                v-for="item in kafkaInstanceData"
+                :key="item.id"
+                :value="item.id"
+              >{{ item.kafkaIp }}
+              </a-option
+              >
+            </a-select>
+          </a-form-item>
+        </template>
+
+
       </a-form>
     </a-spin>
     <template #footer>
