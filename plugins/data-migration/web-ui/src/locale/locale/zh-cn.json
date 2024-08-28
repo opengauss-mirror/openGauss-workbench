@@ -234,6 +234,7 @@
             "5q0aajl77lg29": "请输入第三方工具安装目录",
             "5q0aajl77lg30": "schema_registry 端口",
             "5q0aajl77lg31": "8081",
+          "5q0aajl77lg33": "安装方式",
             "5q0aajl77lg32": "说明：第三方工具指的是portal中的confluent工具(包含kafka zookeeper schemaRegistry), 支持绑定其他portal已安装的confluent工具进行数据迁移，支持当前portal重新安装confluent工具进行数据迁移"
         },
         "ParamsConfig": {
