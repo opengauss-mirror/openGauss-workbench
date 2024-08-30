@@ -554,7 +554,22 @@
             "5qtkk97a2e42": "consistent;",
             "5qtkk97a2e43": "inconsistent,The parameters are:MySQL is ",
             "5qtkk97a2e44": "openGauss is ",
-	    "5qtkk97a2e45": ","
+            "5qtkk97a2e45": ",",
+            "5qtkk97a2e46": "MySQL encryption method: ",
+            "5qtkk97a2e47": "correct;",
+            "5qtkk97a2e48": "incorrect, the result is: ",
+            "5qtkk97a2e49": ", should be changed to default_authentication_plugin=",
+            "5qtkk97a2e50": "openGauss  B-compatible database: ",
+            "5qtkk97a2e51": "adequate;",
+            "5qtkk97a2e52": "not adequate, the type is: ",
+            "5qtkk97a2e53": ", should be changed to sql_compatibility=",
+            "5qtkk97a2e54": "The number of logical replication slots: ",
+            "5qtkk97a2e55": "available;",
+            "5qtkk97a2e56": ", reached the maximum value and is unavailable.",
+            "5qtkk97a2e57": ", should be replaced with: ",
+            "5qtkk97a2e58": "Primary/standby synchronization for logical replication slots: ",
+            "5qtkk97a2e59": "enabled;",
+            "5qtkk97a2e60": "not enabled, should be changed to: enable_slot_log="
         }
     },
     "third": {
