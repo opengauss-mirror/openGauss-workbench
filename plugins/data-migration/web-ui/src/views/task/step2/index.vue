@@ -49,7 +49,7 @@
         <template #columns>
           <a-table-column :title="$t('step2.index.5q092waawag0')" data-index="sourceNodeName"></a-table-column>
           <a-table-column :title="$t('step2.index.5q092waawdo0')" data-index="sourceDBName"></a-table-column>
-          <a-table-column :title="$t('step1.index.5q091ixigro1')" data-index="seletedTblNum" :width="150" ellipsis tooltip>
+          <a-table-column :title="$t('step1.index.5q091ixigro1')" data-index="seletedTblNum"  ellipsis tooltip>
             <template #cell="{ record }">
               <a-button v-if="record.sourceTables && record.sourceTables !== ''" @click="showTblList(record.sourceDBName, record.sourceTables)">
                 {{ record.seletedTblNum==='全部' ?
@@ -137,7 +137,7 @@ const syncTaskParams = params => {
     taskParamsObject: params
   }
   const originData = toRaw(props.subTaskConfig)
-  const idx = originData.findIndex(item => item.sourceDBName === subTaskInfo.value.sourceDBName && item.targetDBName === subTaskInfo.value.targetDBName)
+  const idx = originData.findIndex( item => item.id === subTaskInfo.value.id )
   originData.splice(idx, 1, toRaw(subTaskInfo.value))
   emits('syncConfig', toRaw(originData))
   getFilterData()

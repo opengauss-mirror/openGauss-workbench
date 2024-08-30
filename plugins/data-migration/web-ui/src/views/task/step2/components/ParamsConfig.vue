@@ -52,7 +52,7 @@
                     <a-form-item
                       hide-asterisk
                       :field="`basicData.${rowIndex}.paramValue`"
-                      :rules="getValidator(record)"
+                      :rules="getValidator(record,props.mode===1)"
                     >
                       <a-select
                         v-if="record.paramType === PORTAL_PARAM_TYPE.SELECT"
@@ -228,6 +228,7 @@ import { getValidator } from './validators'
 
 const { t } = useI18n()
 
+// mode===1 means global
 const props = defineProps({
   open: Boolean,
   mode: [String, Number],
@@ -330,6 +331,15 @@ watch(
       // basic data value will change from string to number, so we use != here
       if (fItem.paramValue != item.paramValue) {
         flag = true
+      }else{
+        const gItem = props.globalParams.basic.find(
+          (gItem) => gItem.paramKey === item.paramKey
+        )
+        // besides, in subTask mode, if globConfig has this config and the config is not same as edit data
+        // this config shuould also be confirmed
+        if(props.mode===2 && gItem && gItem.paramValue != item.paramValue){
+          flag=true
+        }
       }
       return flag
     })
@@ -348,6 +358,15 @@ watch(
       // more data value will change from string to number, so we use != here
       if (!fItem || fItem.paramValue != item.paramValue) {
         flag = true
+      }else{
+        const gItem = props.globalParams.more.find(
+          (gItem) => gItem.paramKey === item.paramKey
+        )
+        // besides, in subTask mode, if globConfig has this config and the config is not same as edit data
+        // this config shuould also be confirmed
+        if(props.mode===2 && gItem && gItem.paramValue != item.paramValue){
+          flag=true
+        }
       }
       return flag
     })
@@ -376,8 +395,16 @@ const moreValueChange = (row, rowIndex) => {
       const arr = []
       for (let i = 0; i < addNum; i++) {
         for (let j = 0; j < subData.length; j++) {
+          const dotPos=subData[j]['subKeyPrefix'].lastIndexOf(".")
+          let parentKey;
+          if(dotPos>-1){
+            parentKey =subData[j]['subKeyPrefix'].substring(0,dotPos)
+          }
+          if( subData[j]['subKeyPrefix'].indexOf('override') > -1)parentKey="type_override"
           arr.push({
             paramKey: subData[j]['subKeyPrefix'] + `${i + 1}`,
+            parentKey,
+            childIndex: i+1,
             paramValue: subData[j]['paramValue'],
             paramDesc: subData[j]['desc'],
             paramType: subData[j]['paramType'],
@@ -465,7 +492,20 @@ const getDefaultParams = () => {
         })
       }
       if (taskParams.more.length) {
-        moreEditData.value = taskParams.more
+        moreEditData.value = taskParams.more.filter(
+          v=>{
+            let flag=true
+            if(v.parentKey){
+              const value=taskParams.more.find(e=>e.paramKey===v.parentKey).paramValue
+              console.log(value)
+              flag = v.childIndex<=taskParams.more.find(e=>e.paramKey===v.parentKey).paramValue
+            }
+            console.log(flag)
+            return flag
+          }
+        )
+   
+
         const moreDataTmp = []
         form.moreData.forEach((item) => {
           moreDataTmp.push(item)
@@ -491,6 +531,15 @@ const getDefaultParams = () => {
           )
           return findItem ? { ...item, ...findItem } : item
         })
+        form.moreData = form.moreData.filter(
+          v=>{
+            let flag=true
+            if(v.parentKey){
+              flag = v.childIndex<=form.moreData.find(e=>e.paramKey===v.parentKey).paramValue
+            }
+            return flag
+          }
+        )
       }
     }
   })
@@ -576,6 +625,7 @@ const saveParams = () => {
         return
       }
       if (props.mode === 1) {
+        basicEditData.value=basicEditData.value.filter(item=>item.paramValue)
         emits('syncGlobalParams', {
           basic: basicEditData.value,
           more: moreEditData.value
