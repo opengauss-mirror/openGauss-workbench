@@ -74,6 +74,7 @@ import { FormInstance } from '@arco-design/web-vue/es/form'
 import { useOpsStore } from '@/store'
 import { useI18n } from 'vue-i18n'
 import dayjs from 'dayjs'
+import {checkDiskSpace} from "@/api/ops";
 const { t } = useI18n()
 const installStore = useOpsStore()
 
@@ -438,6 +439,11 @@ const beforeConfirm = async (): Promise<boolean> => {
     }
   }
   if (validRes) {
+    await checkFreeDisk();
+    validRes = flag.value
+    console.log("checkFreeDisk is more than 2GB:" + validRes)
+  }
+  if (validRes) {
     saveClusterData()
     saveNodesData()
     loadingFunc.cancelLoading()
@@ -471,6 +477,45 @@ const saveNodesData = () => {
   installStore.setEnterpriseConfig(param as EnterpriseInstallConfig)
   console.log('show store info2', installStore.getEnterpriseConfig);
 }
+
+const flag = ref(true);
+
+const checkFreeDisk = async () => {
+  flag.value = true;
+  const promises = [];
+  data.form.nodes.forEach(item => {
+    const itemPaths = [item.dataPath];
+    if (data.form.cluster.isInstallCM) {
+      itemPaths.push(item.cmDataPath)
+    }
+    const combinedPaths = [
+      data.form.cluster.installPath,
+      data.form.cluster.installPackagePath,
+      data.form.cluster.envPath,
+
+      data.form.cluster.logPath,
+      data.form.cluster.tmpPath,
+      data.form.cluster.omToolsPath,
+      data.form.cluster.corePath,
+      ...itemPaths,
+    ];
+    promises.push(
+      Promise.all(combinedPaths.map(path => {
+        return checkDiskSpace([path], item.hostId).then(res => {
+          if (res.code === 200) {
+            const space = Number(res.data[path].slice(0, res.data[path].length - 1));
+            console.log(space)
+            if (space < 2) {
+              Message.error(`${path} disk space is less than 2G`);
+              flag.value = false;
+            }
+          }
+        });
+      }))
+    );
+  });
+  await Promise.all(promises);
+};
 
 defineExpose({
   beforeConfirm,

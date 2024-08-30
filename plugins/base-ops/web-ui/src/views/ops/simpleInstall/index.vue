@@ -317,6 +317,7 @@ const terminalWs = ref<Socket<any, any> | undefined>()
 const termLog = ref<Terminal>()
 const termTerminal = ref<Terminal>()
 const logs = ref<string>('')
+const loadingFunc = inject<any>('loading')
 
 const formRules = computed(() => {
   return {
@@ -407,6 +408,9 @@ const handleInstall = async () => {
         rootPassword: data.form.rootPasswordEncrypt
       }
       const pathValid: KeyValue = await pathEmpty(data.form.hostId, pathParam)
+        .catch((error) => {
+          loadingFunc.cancelLoading();
+        })
       if (Number(pathValid.code) === 200) {
         if (!pathValid.data) {
           data.validVisible = true
