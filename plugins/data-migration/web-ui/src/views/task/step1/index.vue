@@ -116,7 +116,7 @@
           <a-table-column :title="$t('step1.index.5q091ixigro1')" data-index="seletedTblNum" :width="150" ellipsis tooltip>
             <template #cell="{ record }">
               <a-button v-if="record.sourceTables && record.sourceTables !== ''" @click="showTblList(record.sourceDBName, record.sourceTables)">
-              {{ record.seletedTblNum==='全部' ?
+                {{ record.seletedTblNum==='全部' ?
                 $t('step1.index.5q091ixigro3') :
                 $t('step1.index.5q091ixigro2',{num:record.seletedTblNum||record.sourceTables?.split(',')?.length}) }}
               </a-button>
@@ -265,11 +265,14 @@ const dataTblWin = async (nodeData) => {
   if (selectedData.value.length > 0 && selecTblbf && selecTblbf.value && selecTblbf.value === seleDBMsg.dbName) {
     if (selectedData.value[0] === '') {
       seleDBMsg.seletedTbl = '全部'
+      isSelectAll.value = true
     } else {
       seleDBMsg.seletedTbl = selectedData.value
+      tblListShowflag.value = selectedData.value.length
     }
   } else if (selectedData.value.length === 0 && selecTblbf && selecTblbf.value && selecTblbf.value === seleDBMsg.dbName) {
     seleDBMsg.seletedTbl = '全部'
+    isSelectAll.value = true
   } else {
     selecTblbf.value = ''
     seleDBMsg.seletedTbl = ''

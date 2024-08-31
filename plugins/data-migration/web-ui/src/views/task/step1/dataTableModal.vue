@@ -78,8 +78,6 @@
 import {computed, reactive, ref, watch} from 'vue'
 import { defineEmits } from 'vue'
 import { getdataTbl } from '@/api/detail'
-import {Form} from "@arco-design/web-vue";
-import {useRowSelection} from "@arco-design/web-vue/es/table/hooks/use-row-selection";
 
 const selectedTblCurrent = ref([])
 const searchTblCurrent = ref([])
@@ -111,14 +109,18 @@ const filteredItems = computed(() => {
   totalNum.value = searchTblNam.value.length > 0? filtered.length: data.totalNum
   const filteredCurrentPage = filtered.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value)
   isLoading.value = false
-  return filteredCurrentPage.map(item => ({ name: item }))
+  return filtered.map(item => ({ name: item }))
 })
 
+const searchBeforPage = ref(0)
 const pageSizeChange = (e) => {
   pageSize.value = e
   fetchTblList()
 }
 const handlePageChange = (pageNum) => {
+  if (searchTblNam.value.length > 0) {
+    searchBeforPage.value = currentPage.value
+  }
   currentPage.value = pageNum
   fetchTblList()
 }
@@ -126,12 +128,28 @@ const selectedTbllength = ref(0)
 const handleSelected = (keys) => {
   selectedTblCurrent.value = keys
   searchTblCurrent.value = [...selectedTblCurrent.value]
-  selectedTbllength.value =  Object.keys(searchTblCurrent.value).length
+  selectedTbllength.value =  Object.keys(selectedTblCurrent.value).length
 }
 const handleSearchSelected = (keys) => {
   if (searchTblNam.value.length > 0) {
-    searchTblCurrent.value = searchTblCurrent.value.concat(keys)
-    selectedTblCurrent.value = [...searchTblCurrent.value]
+    let tempSearchLength = 0
+    if (keys.length === 0) {
+      filteredItems.value.forEach(item => {
+        if (selectedTblCurrent.value.includes(item)) {
+          tempSearchLength = tempSearchLength - 1
+          selectedTblCurrent.value = [...selectedTblCurrent.value.filter(pics => pics !== item)]
+        }
+      })
+
+    } else {
+      keys.forEach(item => {
+        if (!selectedTblCurrent.value.includes(item)) {
+          tempSearchLength = tempSearchLength + 1
+        }
+      })
+      searchTblCurrent.value = keys
+      selectedTbllength.value =  Object.keys(selectedTblCurrent.value).length + tempSearchLength
+    }
   }
 }
 
@@ -145,10 +163,17 @@ const handleSelectAllChange = (checked) => {
 }
 const emits = defineEmits(['close', 'data-selected'])
 const handleSubmit = () => {
+  if (searchTblNam.value.length > 0 ) {
+    searchTblCurrent.value.forEach(item => {
+      if (!selectedTblCurrent.value.includes(item)) {
+        selectedTblCurrent.value = selectedTblCurrent.value.concat(item)
+      }
+    })
+  }
   let pagenum = data.totalNum / pageSize.value
   Object.entries(selectedTblCurrent.value).forEach(([key, array]) => {
     selectedTbl.value.push(array)
-  });
+  })
   let dataToSend = {
     selectedValue: selectedTbl.value,
     selecTbl: tempdbname.value
@@ -187,6 +212,13 @@ watch(
   (newValue) => {
     if (newValue === 0) {
       totalNum.value = data.totalNum
+      currentPage.value = searchBeforPage.value
+      searchBeforPage.value = 0
+      searchTblCurrent.value.forEach(item => {
+        if (!selectedTblCurrent.value.includes(item)) {
+          selectedTblCurrent.value = selectedTblCurrent.value.concat(item)
+        }
+      })
     }
   }
 )
@@ -217,7 +249,7 @@ const getTblSelec = async() => {
 
 async function fetchTblList () {
   isLoading.value = false
-  await getdataTbl(useInFo,tempdbname.value, pageSize.value, currentPage.value)
+  await getdataTbl(useInFo,tempdbname.value, pageSize.value, searchBeforPage.value!==0? searchBeforPage.value: currentPage.value)
     .then(response => {
       if (Number(response.code) === 200){
         data.value = response.rows
@@ -252,7 +284,6 @@ async function fetchTblList () {
       }
       searchTblCurrent.value = [...selectedTblCurrent.value]
       selectedTbllength.value =  Object.keys(searchTblCurrent.value).length
-      console.log(searchTblCurrent.value)
     })
     .catch(error => {
       console.error('Error fetching data:', error)
@@ -294,13 +325,13 @@ const init = () => {
   selectedTblCurrent.value = []
   selectedTbl.value.length = []
   selectedTbllength.value = 0
+  searchBeforPage.value = 0
   getTblSelec()
   fetchTblList()
   winCon.value = true
 }
 
 init()
-
 </script>
 
 <style scoped>
@@ -309,10 +340,12 @@ init()
   cursor: move;
   z-index: 100;
   width: 100%;
-  height: 800px;
+  height: 80%;
+  min-height: 500px;
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
 }
 
 .modal-content {
@@ -322,7 +355,7 @@ init()
   border-radius: 5px;
   width: 100%;
   height: 100%;
-  max-width: 800px;
+  max-width: 40%;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -343,11 +376,11 @@ init()
   font-size: x-large;
 }
 .content {
+  flex: 1;
   cursor: move;
   background-color: white;
   border-radius: 5px;
   width: 100%;
-  height: 100%;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -359,6 +392,7 @@ init()
   position: sticky;
   bottom: 0;
   z-index: 102;
+  overflow-x: auto;
 }
 
 .close {

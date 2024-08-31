@@ -1,20 +1,27 @@
 <template>
   <div class="modal-list" :style="{ top: posY + 'px', left: posX + 'px' }">
     <div class="modal-content-list" @mousedown="startDrag">
-      <span class="close" @click="closeModal">&times;</span>
       <div class="header-list">
+        <span class="close" @click="closeModal">&times;</span>
         <div style="display: grid; grid-template-columns: auto auto">
           <h2>{{$t('step1.index.5q091ixigjo1') + tempdbname + " "+ $t('step1.index.5q091ixigro4') }}</h2><br>
+          <p style="color: red; font-size: x-large;">{{$t('step1.index.5q091ixih2h0')}} {{selectedTblList.length}}</p>
         </div>
       </div>
       <div class="scrollable-list">
-        <div class="checkbox-list-list">
-          <ul>
-            <li v-for="(item, index) in selectedTblList" :key="index">
-              {{ item }}
-            </li>
-          </ul>
-        </div>
+        <a-list
+          :dataSource="selectedTblList"
+          bordered
+          itemLayout="horizontal"
+          :scrollbar="true"
+          :max-height="tempListHeight"
+        >
+          <a-list-item v-for="(item, index) in selectedTblList" :key="index">
+            <a-list-item-meta
+              :title="item"
+            />
+          </a-list-item>
+        </a-list>
       </div>
     </div>
   </div>
@@ -27,8 +34,9 @@ import { defineEmits, ref } from 'vue'
 
 const selectedTblList = []
 const winCon = ref(false)
-const posX = ref(600)
-const posY = ref(-600)
+const posX = ref(window.innerWidth / 3)
+const posY = ref(window.innerHeight / 15)
+const tempListHeight = ref((window.innerHeight) * 0.8 * 0.65)
 let dragging = false
 let mouseX = 0
 let mouseY = 0
@@ -66,8 +74,8 @@ const props = defineProps({
 })
 
 const tempdbname = ref('')
-async function fetchTblList () {
-  let { dbName, TblList } = props.seleDBMsgaft
+async function fetchTblList() {
+  let {dbName, TblList} = props.seleDBMsgaft
   tempdbname.value = dbName
   if (!dbName && !TblList) {
     alert('attention!!!')
@@ -75,7 +83,6 @@ async function fetchTblList () {
     if (dbName) {
       alert(dbName + '选择了全部表')
     }
-    // eslint-disable-next-line no-dupe-else-if
   } else if (TblList && dbName) {
     let TblLists = TblList.split(',')
     for (let Tbl of TblLists) {
@@ -98,59 +105,52 @@ fetchTblList()
 
 </script>
 
-<style>
+<style scoped>
 .modal-list {
   position: absolute;
   cursor: move;
   z-index: 100;
-  width: 100%;
-  height: 800px;
+  width: 40%;
+  height: 80%;
+  max-height: 80%;
+  min-height: 740px;
   display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-list {
+  flex-direction: column;
   background-color: white;
   padding: 20px;
   border-radius: 5px;
-  width: 100%;
-  height: 90%;
-  max-width: 800px;
-  max-height: 800px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  cursor: move;
+  overflow: hidden;
 }
 
 .header-list {
   padding: 10px;
-  position: relative;
-  width: 670px;
+  position: sticky;
+  top: 0;
   background-color: #eeeeee;
-  top: 10px;
   z-index: 102;
   cursor: move;
+  overflow-x: auto;
+  width: 100%;
+  box-sizing: border-box;
 }
+
 .header-list h2 {
   font-size: xx-large;
 }
+
 .scrollable-list {
   cursor: move;
-  height: 670px;
-  width: 105%;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
   overflow-y: auto;
-}
-
-.checkbox-list-list {
-  padding: 10px;
-}
-
-.checkbox-list-list li {
-  font-size: large;
+  margin-top: 10px;
+  padding: 0 10px;
+  width: 100%;
+  position: relative;
+  min-height: 30%;
 }
 
 .close {
@@ -165,5 +165,9 @@ fetchTblList()
 
 .close:hover {
   color: rgba(0, 0, 0, 0.8);
+}
+
+:deep(.arco-list-medium .arco-list-content-wrapper .arco-list-content  .arco-list-item ) {
+  padding: 0px 20px;
 }
 </style>
