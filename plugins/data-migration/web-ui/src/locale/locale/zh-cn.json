@@ -571,7 +571,7 @@
             "5qtkk97a2e57": "，应改为：",
             "5qtkk97a2e58": "逻辑复制主备同步参数：",
             "5qtkk97a2e59": "已开启；",
-            "5qtkk97a2e60": "未开启，应改为：enable_solt_log="
+            "5qtkk97a2e60": "未开启，应改为：enable_slot_log="
         }
     },
     "third": {
