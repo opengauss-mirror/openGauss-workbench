@@ -529,14 +529,14 @@ const validateSpecialFields = async () => {
     return result
   }
   //  cluster port is used
-  validMethodArr.push(validatePort(props.clusterData.port, encryptPwd, form.value.hostId))
-  validMethodArr.push(validatePath(form.value.dataPath, encryptPwd, form.value.hostId))
-  validMethodArr.push(validatePath(props.clusterData.installPackagePath, encryptPwd, form.value.hostId))
+  validMethodArr.push(await validatePort(props.clusterData.port, encryptPwd, form.value.hostId))
+  validMethodArr.push(await validatePath(form.value.dataPath, encryptPwd, form.value.hostId))
+  validMethodArr.push(await validatePath(props.clusterData.installPackagePath, encryptPwd, form.value.hostId))
   if (props.clusterData.isInstallCM) {
-    validMethodArr.push(validatePort(form.value.cmPort, encryptPwd, form.value.hostId))
+    validMethodArr.push(await validatePort(form.value.cmPort, encryptPwd, form.value.hostId))
   }
   if (props.clusterData.envPath && installType.value === 'import') {
-    validMethodArr.push(validateFile(props.clusterData.envPath, encryptPwd, form.value.hostId))
+    validMethodArr.push(await validateFile(props.clusterData.envPath, encryptPwd, form.value.hostId))
   }
   if (validMethodArr.length) {
     const validResult = await Promise.all(validMethodArr)

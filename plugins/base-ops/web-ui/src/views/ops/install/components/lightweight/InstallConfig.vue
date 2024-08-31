@@ -696,11 +696,11 @@ const validateSpecialFields = async () => {
         continue
       }
       //  cluster port is used
-      validMethodArr.push(validatePort(data.nodeData[i].port, encryptPwd, data.nodeData[i].hostId))
-      validMethodArr.push(validatePath(data.nodeData[i].dataPath, encryptPwd, data.nodeData[i].hostId))
-      validMethodArr.push(validatePath(data.nodeData[i].installPackagePath, encryptPwd, data.nodeData[i].hostId))
+      validMethodArr.push(await validatePort(data.nodeData[i].port, encryptPwd, data.nodeData[i].hostId))
+      validMethodArr.push(await validatePath(data.nodeData[i].dataPath, encryptPwd, data.nodeData[i].hostId))
+      validMethodArr.push(await validatePath(data.nodeData[i].installPackagePath, encryptPwd, data.nodeData[i].hostId))
       if (data.nodeData[i].isEnvSeparate && installType.value === 'import' && i === 0) {
-        validMethodArr.push(validateFile(data.nodeData[i].envPath, encryptPwd, data.nodeData[i].hostId))
+        validMethodArr.push(await validateFile(data.nodeData[i].envPath, encryptPwd, data.nodeData[i].hostId))
       }
       if (validMethodArr.length) {
         const validResult = await Promise.all(validMethodArr)
@@ -769,7 +769,6 @@ const checkFreeDisk = async () => {
         return checkDiskSpace([path], item.hostId).then(res => {
           if (res.code === 200) {
             const space = Number(res.data[path].slice(0, res.data[path].length - 1));
-            console.log(space)
             if (space < 2) {
               Message.error(`${path} disk space is less than 2G`);
               flag.value = false;

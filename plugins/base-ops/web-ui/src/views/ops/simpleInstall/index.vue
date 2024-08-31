@@ -252,7 +252,7 @@
 
 <script lang="ts" setup>
 import { KeyValue } from '@/types/global'
-import { onBeforeUnmount, onMounted, reactive, ref, computed, nextTick } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref, computed, nextTick, inject } from 'vue'
 import { hostListAll, hostUserListWithoutRoot, quickInstall, openSSH, packageListAll, portUsed, pathEmpty, hostPingById, getSysUploadPath } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import {
