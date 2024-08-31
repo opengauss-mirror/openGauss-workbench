@@ -174,6 +174,8 @@ const installType = computed(() => installStore.getInstallConfig.installType)
 
 const cmUtilFunc = inject<any>('cmUtil')
 
+const loadingFunc = inject<any>('loading')
+
 const props = defineProps({
   formData: {
     type: Object as PropType<KeyValue>,
@@ -463,6 +465,9 @@ const validatePath = async (path: string, password: string, hostId: string) => {
     rootPassword: password
   }
   const pathValid: KeyValue = await pathEmpty(hostId, pathParam)
+    .catch(() => {
+      loadingFunc.cancelLoading();
+    })
   if (Number(pathValid.code) === 200) {
     return pathValid.data
   }

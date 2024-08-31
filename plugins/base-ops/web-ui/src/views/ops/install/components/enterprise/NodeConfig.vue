@@ -585,6 +585,9 @@ const validatePath = async (path: string, password: string, hostId: string) => {
     rootPassword: password
   }
   const pathValid: KeyValue = await pathEmpty(hostId, pathParam)
+    .catch(() => {
+      loadingFunc.cancelLoading();
+    })
   if (Number(pathValid.code) === 200) {
     return pathValid.data
   }

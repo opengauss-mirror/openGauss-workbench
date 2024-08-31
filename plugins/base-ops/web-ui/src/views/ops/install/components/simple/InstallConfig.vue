@@ -165,7 +165,7 @@ import { KeyValue } from '@/types/global'
 
 import { useOpsStore } from '@/store'
 import { FormInstance } from '@arco-design/web-vue/es/form'
-import { hostListAll, hostUserListWithoutRoot, hasName, portUsed, pathEmpty, fileExist, hostPingById } from '@/api/ops'
+import { hostListAll, hostUserListWithoutRoot, hasName, portUsed, pathEmpty, fileExist, hostPingById, checkDiskSpace } from '@/api/ops'
 import { encryptPassword } from '@/utils/jsencrypt'
 import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
@@ -499,6 +499,11 @@ const beforeConfirm = async (): Promise<boolean> => {
     validRes = await validateSpecialFields()
   }
   if (validRes) {
+    await checkFreeDisk();
+    validRes = flag.value
+    console.log("checkFreeDisk is more than 2GB:" + validRes)
+  }
+  if (validRes) {
     saveStore()
     loadingFunc.cancelLoading()
     return true
@@ -525,6 +530,9 @@ const validatePath = async (path: string, password: string, hostId: string) => {
     rootPassword: password
   }
   const pathValid: KeyValue = await pathEmpty(hostId, pathParam)
+    .catch((error) => {
+      loadingFunc.cancelLoading();
+    })
   if (Number(pathValid.code) === 200) {
     return pathValid.data
   }
@@ -675,6 +683,32 @@ const showTerminal = () => {
 const handleShowTerminal = (data: KeyValue) => {
   hostTerminalRef.value?.open(data)
 }
+
+const flag = ref(true);
+
+const checkFreeDisk = async () => {
+  flag.value = true;
+  const promises = [];
+  const combinedPaths = [
+    data.form.installPath,
+    data.form.installPackagePath,
+  ];
+  promises.push(
+    Promise.all(combinedPaths.map(path => {
+      return checkDiskSpace([path], data.form.hostId).then(res => {
+        if (res.code === 200) {
+          const space = Number(res.data[path].slice(0, res.data[path].length - 1));
+          console.log(space)
+          if (space < 2) {
+            Message.error(`${path} disk space is less than 2G`);
+            flag.value = false;
+          }
+        }
+      });
+    }))
+  );
+  await Promise.all(promises);
+};
 
 const installType = computed(() => installStore.getInstallConfig.installType)
 defineExpose({
