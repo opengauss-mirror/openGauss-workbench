@@ -111,6 +111,19 @@ const saveConfig = () => {
         basic: mergeObjectArray(globalParamsObject.basic, item.taskParamsObject.basic, 'paramKey'),
         more: mergeObjectArray(globalParamsObject.more, item.taskParamsObject.more, 'paramKey')
       }
+      taskParamsObject.more = taskParamsObject.more.filter(
+          v=>{
+            let flag=true
+            if(v.parentKey){
+              flag = v.childIndex<=taskParamsObject.more.find(e=>e.paramKey===v.parentKey).paramValue
+            }
+            return flag
+          }
+        )
+      const enableItem=taskParamsObject.more.find(item=>item.paramKey==="rules.enable")
+      if(!enableItem){
+        taskParamsObject.more.push({paramKey: "rules.enable", paramValue: "true", paramDesc: "规则过滤，true代表开启，false代表关闭"})
+      }
       return {
         isAdjustKernelParam: item.isAdjustKernelParam,
         migrationModelId: item.mode,
@@ -148,11 +161,6 @@ const saveConfig = () => {
       })
     })
   } else {
-    params.tasks.forEach(item => {
-      if (item.taskParams && (item.taskParams.length === 0 || item.taskParams[0].paramKey !== "rules.enable")) {
-        item.taskParams.unshift({paramKey: "rules.enable", paramValue: "true", paramDesc: "规则过滤，true代表开启，false代表关闭"})
-      }
-    })
     migrationSave(params).then(() => {
       Message.success('Save success')
       window.$wujie?.bus.$emit('data-migration-update')

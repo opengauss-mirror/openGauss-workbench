@@ -575,6 +575,8 @@ const addSubTask = (targetDB) => {
     Message.error('The destination database is selected')
     return
   }
+  //targetDBs could have same name,but can not be same DB
+  const id=selectSourceDB.sourceNodeName+selectSourceDB.sourceDBName+targetDB.parentName+targetDB.title
   tableData.value.unshift({
     sourceNodeName: selectSourceDB.sourceNodeName,
     sourceNodeInfo: selectSourceDB.sourceInfo,
@@ -590,7 +592,8 @@ const addSubTask = (targetDB) => {
     taskParamsObject: {
       basic: [],
       more: []
-    }
+    },
+    id
   })
   selectSourceDB.sourceInfo = {}
   selectSourceDB.sourceNodeName = ''

@@ -1,7 +1,7 @@
 import i18n from '@/locale/index'
 import { PORTAL_PARAM_TYPE } from '@/utils/constants'
 
-export function getValidator(record) {
+export function getValidator(record,isGlobal) {
     let validator = []
     if (record.paramType === PORTAL_PARAM_TYPE.NUMBER)
         validator.push({
@@ -23,7 +23,7 @@ export function getValidator(record) {
             } else {
                 validator.push({
                     trigger: 'blur',
-                    validator: stringValidator(record.paramRules),
+                    validator: stringValidator(record.paramRules,isGlobal),
                 })
             }
         }
@@ -39,12 +39,13 @@ const regexValidator = (value, cb) => {
     }
 }
 
-const stringValidator = (paramRules) => {
+const stringValidator = (paramRules,isGlobal) => {
     const ruleArr = JSON.parse(paramRules)
     return (value, cb) => {
-        if (!value || value.length < ruleArr[0]) {
+        //global schema could be empty
+        if (!isGlobal&&(!value || value.length < ruleArr[0])) {
             cb(i18n.global.t('components.ParamsConfig.5q0aazspqfs3', { count: ruleArr[0] }))
-        } else if (value.length > ruleArr[1]) {
+        } else if (value&&value.length > ruleArr[1]) {
             cb(i18n.global.t('components.ParamsConfig.5q0aazspqfs4', { count: ruleArr[1] }))
         } else {
             cb()
