@@ -649,14 +649,14 @@ const validateSpecialFields = async () => {
         continue
       }
       //  cluster port is used
-      validMethodArr.push(validatePort(clusterData.value.port, encryptPwd, data.nodeList[i].hostId))
-      validMethodArr.push(validatePath(data.nodeList[i].dataPath, encryptPwd, data.nodeList[i].hostId))
-      validMethodArr.push(validatePath(clusterData.value.installPackagePath, encryptPwd, data.nodeList[i].hostId))
+      validMethodArr.push(await validatePort(clusterData.value.port, encryptPwd, data.nodeList[i].hostId))
+      validMethodArr.push(await validatePath(data.nodeList[i].dataPath, encryptPwd, data.nodeList[i].hostId))
+      validMethodArr.push(await validatePath(clusterData.value.installPackagePath, encryptPwd, data.nodeList[i].hostId))
       if (isInstallCM.value) {
-        validMethodArr.push(validatePort(data.nodeList[i].cmPort, encryptPwd, data.nodeList[i].hostId))
+        validMethodArr.push(await validatePort(data.nodeList[i].cmPort, encryptPwd, data.nodeList[i].hostId))
       }
       if (installStore.getInstallConfig.envPath && installType.value === 'import') {
-        validMethodArr.push(validateFile(installStore.getInstallConfig.envPath, encryptPwd, data.nodeList[i].hostId))
+        validMethodArr.push(await validateFile(installStore.getInstallConfig.envPath, encryptPwd, data.nodeList[i].hostId))
       }
       if (validMethodArr.length) {
         const validResult = await Promise.all(validMethodArr)

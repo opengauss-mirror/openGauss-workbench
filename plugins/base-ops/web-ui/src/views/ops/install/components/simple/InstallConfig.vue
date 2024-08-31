@@ -588,10 +588,10 @@ const validateSpecialFields = async () => {
     return result
   }
   //  cluster port is used
-  validMethodArr.push(validatePort(data.form.port, encryptPwd, data.form.hostId))
-  validMethodArr.push(validatePath(data.form.installPath + '/data', encryptPwd, data.form.hostId))
+  validMethodArr.push(await validatePort(data.form.port, encryptPwd, data.form.hostId))
+  validMethodArr.push(await validatePath(data.form.installPath + '/data', encryptPwd, data.form.hostId))
   if (installType.value !== 'import') {
-    validMethodArr.push(validatePath(data.form.installPackagePath, encryptPwd, data.form.hostId))
+    validMethodArr.push(await validatePath(data.form.installPackagePath, encryptPwd, data.form.hostId))
   }
   // if (data.form.isEnvSeparate) {
   //   validMethodArr.push(validateFile(data.form.envPath, encryptPwd, data.form.hostId))
@@ -698,7 +698,6 @@ const checkFreeDisk = async () => {
       return checkDiskSpace([path], data.form.hostId).then(res => {
         if (res.code === 200) {
           const space = Number(res.data[path].slice(0, res.data[path].length - 1));
-          console.log(space)
           if (space < 2) {
             Message.error(`${path} disk space is less than 2G`);
             flag.value = false;
