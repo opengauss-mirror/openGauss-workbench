@@ -28,13 +28,13 @@
         <a-radio-group v-model="tempOs.value" button-style="solid" :disabled="editDisabledFlag">
           <a-radio :value="OS.OPEN_EULER">openEuler</a-radio>
           <a-radio :value="OS.CENTOS">centOs</a-radio>
-          <a-radio :value="kyLin">麒麟系统</a-radio>
+          <!--          <a-radio :value="kyLin">麒麟系统</a-radio>-->
         </a-radio-group>
       </a-form-item>
       <a-form-item field="arch" :label="$t('系统架构')" validate-trigger="blur" @change="updateArchData" name="arch">
         <a-radio-group v-model="tempArch.value" :disabled="editDisabledFlag">
           <a-radio :value="CpuArch.X86_64">x86_64</a-radio>
-          <a-radio :value="CpuArch.AARCH64">aarch64</a-radio>
+          <a-radio :disabled="OS.CENTOS === tempOs.value" :value="CpuArch.AARCH64">aarch64</a-radio>
         </a-radio-group>
       </a-form-item>
       <a-form-item field="version" :label="$t('版本类型')" validate-trigger="blur" @change="updateVersionData" name="version">
@@ -51,7 +51,6 @@
             v-model:value="tempVersionNum"
             :ref="tempVersionNum.value"
             allow-create
-            allow-clear
             placeholder="请输入版本号"
             :options="packageVersionNum"
             :default-value="tempVersionNum"
@@ -96,7 +95,7 @@
         <a-upload
           v-model:file-list="fileListPPPP"
           :limit="1"
-          :show-file-list="true"
+
           :auto-upload="false"
           draggable
           @before-remove="handleBeforeRemove"
@@ -122,31 +121,16 @@
       </a-form-item>
     </a-form>
   </a-modal>
-  <div style="bottom: 20px; right: 20px;">
-    <a-modal
-      :mask-closable="false"
-      :esc-to-close="false"
-      v-model:visible="processVisible"
-      :ok-text="$t('下载完成')"
-      @ok="handleOk"
-      @close="close"
-    >
-      <template #title>
-        {{ $t('在线下载') }}
-      </template>
-      <a-progress size="large" :percent="currPercent" />
-    </a-modal>
-  </div>
 
 </template>
 
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'
-import {nextTick, reactive, ref, toRaw, computed, isReadonly, watch} from 'vue'
+import { nextTick, reactive, ref, toRaw, computed, isReadonly, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {CpuArch, OS} from "../../../../../../plugins/base-ops/web-ui/src/types/os"
-import {OpenGaussVersionEnum} from "@/types/ops/install"
+import { CpuArch, OS } from '../../../../../../plugins/base-ops/web-ui/src/types/os'
+import { OpenGaussVersionEnum } from '@/types/ops/install'
 import {
   batchPackageOnline,
   batchPackageUpload,
@@ -154,12 +138,15 @@ import {
   checkNetStatus,
   checkVersionNumber,
   packageUploadUpdate,
-  delPkgTar, getSysUploadPath,hasPkgName,download
-} from "@/api/ops"
-import dayjs from "dayjs"
-import {FileItem, Message, Modal} from "@arco-design/web-vue"
-import message from "@arco-design/web-vue/es/message"
-import Socket from "@/utils/websocket"
+  delPkgTar, getSysUploadPath, hasPkgName, download
+} from '@/api/ops'
+import dayjs from 'dayjs'
+import { FileItem, Message, Modal } from '@arco-design/web-vue'
+import message from '@arco-design/web-vue/es/message'
+import Socket from '@/utils/websocket'
+import axios from "axios";
+import {Path} from "@antv/x6";
+import isValid = Path.isValid;
 const { t } = useI18n()
 
 const data = reactive<KeyValue>({
@@ -193,32 +180,29 @@ interface UploadInfo {
   file: File
 }
 
-const tempVersionNum = reactive({value:''})
+const tempVersionNum = reactive({ value: '' })
 
 const contains = ref(true)
 const checkContains = (inputValue:any) => {
   tempVersionNum.value = inputValue
-  console.log('183' + inputValue)
-  if (inputValue && inputValue !== ''){
-    console.log('185' + inputValue)
+  if (inputValue && inputValue !== '') {
     data.formData.packageVersionNum = inputValue
     contains.value = packageVersionNum.value.some(item => item === data.formData.packageVersionNum)
-    console.log('189' + tempVersionNum.value)
     if (contains.value === false) {
       const params = {
-        os : data.formData.os,
+        os: data.formData.os,
         cpuArch: data.formData.cpuArch,
-        packageVersion : data.formData.packageVersion,
-        packageVersionNum : data.formData.packageVersionNum
+        packageVersion: data.formData.packageVersion,
+        packageVersionNum: data.formData.packageVersionNum
       }
       checkVersionNumber(params).then((res) => {
-        if (res.code !== 200){
+        if (res.code !== 200) {
           Message.error({
             content: data.formData.packageVersionNum + '不存在，请重新选择'
           })
           data.formData.packageVersionNum = ''
           tempVersionNum.value = null
-        } else{
+        } else {
           getPackageUrl()
         }
       }) .catch(error => {
@@ -237,21 +221,22 @@ const insertVersionNum = (value:any) => {
   tempVersionNum.value = value.target.value
 }
 const searchVersionNum = (value:any) => {
-  data.formData.packageVersionNum = (value != null && value !== '') ? value : undefined;
+  data.formData.packageVersionNum = (value != null && value !== '') ? value : undefined
 }
 
-const formRules = reactive<FormRules>({
+const formRules = reactive({
   packageVersionNum: [
-    { required: true, message: t('请选择版本号'), trigger: 'blur' },
+    { required: true, message: t('请选择版本号')}
   ],
   name: [
-    { required: true, message: t('请输入安装包名称'), trigger: 'blur' },
+    { required: true, message: t('请输入安装包名称') },
     {
       validator: (value: any, cb: any) => {
         return new Promise((resolve) => {
           hasPkgName(value).then((res: KeyValue) => {
             if (res.data) {
-              cb(t('packageManage.AddPackageDlg.5myq5c8zpu94'))
+              cb(t('请勿输入重复包名'))
+              isValid.value = false
               resolve(false)
             } else {
               resolve(true)
@@ -264,19 +249,18 @@ const formRules = reactive<FormRules>({
   packagePath: [{
     validator: (value: any, cb: any) => {
       return new Promise((resolve, reject) => {
-        if (data.fileList.length <= 0) {
+        if (data.fileList.length <= 0 && uploadStatusTag.value === true) {
           cb(t('请选择一个安装包进行上传'))
+          isValid.value = false
           resolve(false)
           return
         } else {
-          cb()
           resolve(true)
         }
       })
     }
-  }],
+  }]
 })
-
 
 const fileListPPPP = ref([])
 const uploadStatusTag = reactive({ value: false })
@@ -284,14 +268,12 @@ const uploadStatusChange = () => {
   uploadStatusTag.value = true
 }
 const uploadFileTag = reactive({ value: true })
-const handleFileUpload = (file:file) => {
-  data.fileList = file
-  console.log(data.fileList)
+const handleFileUpload = (file:any) => {
+  data.fileList = file[0]
 }
 
 const handleBeforeRemove = (file: FileItem) => {
   return new Promise((resolve, reject) => {
-    console.log(file)
     if (file.status === 'done') {
       Modal.confirm({
         title: t('packageManage.AddPackageDlg.5myq6nnecc45'),
@@ -321,73 +303,12 @@ const downloadWs = ref<Socket<any, any> | undefined>()
 const processVisible = ref(false)
 const percentLoading = ref(false)
 const currPercent = ref<number>(0)
-const wsBusinessId = ref('')
 
 watch(currPercent, (newValue) => {
   if (newValue === 100) {
     processVisible.value = false
   }
 })
-
-const webSocketOpen = () => {
-  currPercent.value = 0
-  const socketKey = new Date().getTime()
-  const wsPrefix = window.location.protocol.includes('https') ? 'wss' : 'ws'
-  const socketUrl = `${wsPrefix}://${window.location.host}/ws/base-ops/downloadPackage_${socketKey}`
-  const websocket = new WebSocket(socketUrl)
-  wsBusinessId.value = `downloadPackage_${socketKey}`
-  websocket.onopen = function(event) {
-    wsBusinessId.value = `downloadPackage_${socketKey}`
-  }
-  downloadWs.value = websocket
-  websocket.onmessage = function(event) {
-    const messageData = event.data
-    if (!isNaN(Number(messageData))) {
-      const percent = Number(messageData)
-      currPercent.value = percent
-      if (percent === 100) {
-        percentLoading.value = false
-        websocket.close()
-      }
-    }
-  }
-  websocket.onerror = function(error) {
-    console.error('WebSocket error:', error);
-  }
-}
-
-const downloadPackage = () => {
-  const fileName =
-    data.formData.name.split('-')[
-    data.formData.name.split('-').length - 1
-      ]
-  const param = {
-    resourceUrl: data.formData.packageUrl,
-    targetPath: data.targetPath + data.formData.name,
-    fileName: fileName,
-    connectType: 'DOWNLOAD_INSTALL_PACKAGE',
-    businessId: wsBusinessId.value
-  };
-  download(param).then(() => {
-    simulateDownload()
-    processVisible.value = true
-    percentLoading.value = true
-  })
-}
-const simulateDownload = async () => {
-  try {
-    while (currPercent.value < 100) {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-    }
-    downloadWs.value?.destroy()
-  } catch (error) {
-    console.error('Download failed:', error)
-  }
-}
-
-const handleOk = () => {
-  processVisible.value = false
-}
 
 const getUploadPath = () => {
   data.uploadPathLoading = true
@@ -412,45 +333,29 @@ const getSystemSetting = () => {
 const packageVersionNum = ref([])
 const fetchVersionNum = () => {
   getVersionNum().then((res: KeyValue) => {
+    packageVersionNum.value = []
     if (Number(res.code) === 200) {
-      res.data.forEach(item => {packageVersionNum.value.push(item)})
+      res.data.forEach(item => { packageVersionNum.value.push(item) })
     } else {
       Message.error({
         content: '获取版本号失败'
       })
     }
   }) .catch(error => {
+    console.error(error)
   })
-}
-
-const generateName = () => {
-  if (
-    data.type === 'create' &&
-    !data.isNameDirty &&
-    data.formData.packageVersionNum
-  ) {
-    let name = `${data.formData.type}-${data.formData.os}-${data.formData.cpuArch}`
-    if (data.formData.type === 'openGauss') {
-      name += `-${data.formData.packageVersion}`
-    }
-    name += `-${data.formData.packageVersionNum}-${dayjs().format(
-      'YYYYMMDDHHmmss'
-    )}`
-    data.formData.name = name
-  }
 }
 
 const tempPackageUrl = ref('')
 const getPackageUrl = () => {
-  generateName()
   const params = {
-    os : data.formData.os,
+    os: data.formData.os,
     cpuArch: data.formData.cpuArch,
-    packageVersion : data.formData.packageVersion,
-    packageVersionNum : data.formData.packageVersionNum
+    packageVersion: data.formData.packageVersion,
+    packageVersionNum: data.formData.packageVersionNum
   }
   checkVersionNumber(params).then((res) => {
-    if (res.code === 200){
+    if (res.code === 200) {
       if (res.data.length) {
         data.formData.packageUrl = res.data[0].packageUrl
       } else {
@@ -460,6 +365,8 @@ const getPackageUrl = () => {
     } else {
       console.log('error')
     }
+    let name = data.formData.packageUrl.split('/')
+    data.formData.name = name.pop()
   }) .catch(error => {
     console.error({
       content: error + data.formData.packageVersionNum
@@ -476,13 +383,14 @@ const getConnectStatus = () => {
   })
 }
 
+const wsBusinessId = ref('')
 const editDisabledFlag = ref(false)
 const open = (
   type: string,
   packageData?: KeyValue,
-  addOptionFlag?: number
+  addOptionFlag?: number,
+  wsBusiness?: string,
 ) => {
-  webSocketOpen()
   getUploadPath()
   fetchVersionNum()
   getSystemSetting()
@@ -492,12 +400,13 @@ const open = (
     uploadStatusTag.value = false
     editDisabledFlag.value = false
   } else {
-    data.title = t('修改安装包')
+    data.title = t('更新安装包')
     editDisabledFlag.value = true
   }
-  let versionnum = toRaw(packageVersionNum.value).length > 0?toRaw(packageVersionNum.value)[0]:'5.0.2'
+  wsBusinessId.value = wsBusiness
+  let versionnum = toRaw(packageVersionNum.value).length > 0 ? toRaw(packageVersionNum.value)[0] : '5.0.2'
   getConnectStatus()
-  if (!packageData){
+  if (!packageData) {
     Object.assign(data.formData, {
       packageId: '',
       os: OS.CENTOS,
@@ -507,6 +416,10 @@ const open = (
       packageUrl: '',
       type: 'openGauss'
     })
+    data.fileList = []
+    data.formData.packagePath = {}
+    fileListPPPP.value = []
+    tempVersionNum.value = data.formData.packageVersionNum
     getPackageUrl()
   } else {
     Object.assign(data.formData, {
@@ -534,36 +447,42 @@ const open = (
     getPackageUrl()
     uploadStatusTag.value = false
   } else if (addOptionFlag === 1) {
-    data.formData.name = packageData.name?packageData.name:''
+    data.formData.name = packageData.name ? packageData.name : ''
     uploadStatusTag.value = true
   }
   tempOs.value = data.formData.os
   tempArch.value = data.formData.cpuArch
   tempVersion.value = data.formData.packageVersion
   tempVersionNum.value = data.formData.packageVersionNum
+  tempPackageUrl.value = data.formData.packageUrl
   data.show = true
 }
 
 defineExpose({
   open
 })
-const tempOs = reactive({value: OS.CENTOS})
+const tempOs = reactive({ value: OS.CENTOS })
 const updateOsData = (value:string) => {
   tempOs.value = value.target.value
-  if (tempOs.value === "kyin") {
-    data.formData.os = OS.OPEN_EULER
+  if (tempOs.value === OS.CENTOS && data.formData.cpuArch ===  CpuArch.AARCH64) {
+    tempArch.value = CpuArch.X86_64
+    data.formData.cpuArch = CpuArch.X86_64
+  }
+  data.formData.os = OS.OPEN_EULER
+  getPackageUrl()
+}
+const tempArch = reactive({ value: CpuArch.X86_64 })
+const updateArchData = (value:string) => {
+  if (data.formData.os === OS.CENTOS && value.target.value ===  CpuArch.AARCH64) {
+    tempArch.value = CpuArch.X86_64
+    data.formData.cpuArch = CpuArch.X86_64
   } else {
-    data.formData.os = tempOs.value
+    tempArch.value = value.target.value
+    data.formData.cpuArch = tempArch.value
   }
   getPackageUrl()
 }
-const tempArch = reactive({value: CpuArch.X86_64})
-const updateArchData = (value:string) => {
-  tempArch.value = value.target.value
-  data.formData.cpuArch = tempArch.value
-  getPackageUrl()
-}
-const tempVersion = reactive({'value': OpenGaussVersionEnum.MINIMAL_LIST})
+const tempVersion = reactive({ 'value': OpenGaussVersionEnum.MINIMAL_LIST })
 const updateVersionData = (value:string) => {
   tempVersion.value = value.target.value
   data.formData.packageVersion = tempVersion.value
@@ -574,56 +493,84 @@ const formRef = ref<null | FormInstance>(null)
 const emits = defineEmits([`finish`])
 const submitLoading = ref(false)
 const submit = async () => {
-  if (uploadStatusTag.value) {
-    if (data.formData.packageId && data.formData.packageId != ''){
-      packageUploadUpdate(data.formData.packageId, data.fileList).then((res) => {
-        console.log('res594' + res)
-      }).catch((error) => {
-        console.log('562' + error)
-      })
-    } else {
-      const params = {
-        name: data.formData.name,
-        os: data.formData.os,
-        cpuArch: data.formData.cpuArch,
-        packageVersionNum: data.formData.packageVersionNum,
-        packageUrl: data.formData.packageUrl,
-        packageVersion: data.formData.packageVersion
-      }
-      batchPackageUpload(params.name,params.os, params.cpuArch,params.packageVersion, params.packageVersionNum, params.packageUrl,data.fileList[0]).then((res) => {
-        console.log('res560' + res)
-      }).catch((error) => {
-        console.log('562' + error)
-      })
-    }
+  let isisvalid = await formRef.value?.validate()
+  if (isisvalid && editDisabledFlag.value !== true) {
+    console.log('isValild false')
   } else {
-    if (!editDisabledFlag.value){
-      const params = {
-        name: data.formData.name,
-        os: data.formData.os,
-        cpuArch: data.formData.cpuArch,
-        openGaussVersion: data.formData.packageVersion,
-        openGaussVersionNum: data.formData.packageVersionNum,
-        downloadUrl: data.formData.packageUrl,
-        wsBusinessId: wsBusinessId.value
+    if (uploadStatusTag.value) {
+      if (data.formData.packageId && data.formData.packageId != '') {
+        const formData = new FormData
+        formData.append('packageId', data.formData.packageId)
+        formData.append('uploadFile', data.fileList.file)
+        axios({
+          url: `/plugins/base-ops/installPackageManager/v2/update/upload/`,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          data: formData
+        }).then((res) => {
+          console.log('res610' + res)
+        }).catch((error) => {
+          console.log('613' + error)
+        })
+        // packageUploadUpdate(data.formData.packageId, data.fileList).then((res) => {
+        //   console.log('res594' + res)
+        // }).catch((error) => {
+        //   console.log('562' + error)
+        // })
+      } else {
+        const formData = new FormData
+        formData.append('name', data.formData.name)
+        formData.append('os', data.formData.os)
+        formData.append('cpuArch', data.formData.cpuArch)
+        formData.append('packageVersionNum', data.formData.packageVersionNum)
+        formData.append('packageUrl', '')
+        formData.append('packageVersion', data.formData.packageVersion)
+        formData.append('uploadFile', data.fileList.file)
+        axios({
+          url: `/plugins/base-ops/installPackageManager/v2/save/upload/`,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          data: formData
+        }).then((res) => {
+          console.log('res610' + res)
+        }).catch((error) => {
+          console.log('613' + error)
+        })
       }
-      downloadPackage()
-      batchPackageOnline(params).then((res) => {
-        console.log('570 add success online', res)
-      }).catch((error) => {
-        console.log('572 online', error)
-      })
+    } else {
+      if (!editDisabledFlag.value) {
+        const params = {
+          name: data.formData.name,
+          os: data.formData.os,
+          cpuArch: data.formData.cpuArch,
+          openGaussVersion: data.formData.packageVersion,
+          openGaussVersionNum: data.formData.packageVersionNum,
+          downloadUrl: data.formData.packageUrl,
+          wsBusinessId: wsBusinessId.value
+        }
+        batchPackageOnline(params).then((res) => {
+          console.log('570 add success online', res)
+        }).catch((error) => {
+          console.log('572 online', error)
+        })
+      }
     }
+    data.show = false
   }
-  data.show = false
+
+
 }
 const close = () => {
   try {
-    if (downloadWs && downloadWs instanceof WebSocket && typeof downloadWs.close === 'function') {
-      downloadWs.close(1000, 'Normal closure');
+    if (downloadWs.value && downloadWs.value instanceof WebSocket && typeof downloadWs.value.close === 'function') {
+      downloadWs.value.close(1000, 'Normal closure')
     }
   } catch (error) {
-    console.error('Error closing WebSocket:', error);
+    console.error('Error closing WebSocket:', error)
   } finally {
     data.show = false
     data.oldPwd = ''
@@ -649,27 +596,34 @@ const close = () => {
       formRef.value?.resetFields()
       data.fileList = []
       data.formData.packagePath = {}
+      fileListPPPP.value = []
     })
   }
 
 }
 </script>
 
-<style>
-.ant-upload-hint {
+<style scoped>
+:deep(.ant-upload-hint) {
   color:lightgrey;
 }
 
-.arco-radio-checked.arco-radio-disabled .arco-radio-label {
+:deep(.arco-radio-checked.arco-radio-disabled .arco-radio-label) {
   color: var(--color-hw-text-2);
 }
 
-.arco-radio-disabled .arco-radio-label {
+:deep(.arco-radio-disabled .arco-radio-label) {
   color: var(--color-text-3);
 }
 
-.arco-input-wrapper .arco-input[disabled]{
+:deep(.arco-input-wrapper .arco-input[disabled]){
   -webkit-text-fill-color: var(--color-text-3);
 }
+:deep(.arco-progress-type-circle) {
+  display: table-column;
+}
 
+:deep(.arco-upload-list-item-name-link .arco-upload-list-item-file-icon .arco-upload-list-item-file-icon) {
+  color: black;
+}
 </style>

@@ -68,7 +68,7 @@
             <template #cell="{ record }">
               <div class="flex-row-start">
                 <a-link class="mr" @click="checkPack(record)">检查</a-link>
-                <a-link class="mr" @click="addPackInstall('update', record)">修改</a-link>
+                <a-link class="mr" @click="addPackInstall('update', record)">更新</a-link>
                 <a-popconfirm
                   :content="$t('是否确定删除？')"
                   type="warning"
@@ -95,23 +95,37 @@
       @finish="addPackClose()"
       @submit="addPackSubmit()"
     ></addPack>
+    <div style="bottom: 20px; right: 20px;">
+      <a-modal
+        :mask-closable="false"
+        :esc-to-close="false"
+        v-model:visible="processVisible"
+        :ok-text="$t('下载完成')"
+        @ok="handleOk"
+        @close="close"
+      >
+        <template #title>
+          {{ $t('在线下载') }}
+        </template>
+        <a-progress size="large" :percent="currPercent" />
+      </a-modal>
+    </div>
   </div>
 </template>
-
 
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
 import { Message } from '@arco-design/web-vue/es/index'
-import { onMounted, reactive, ref, onUnmounted } from 'vue'
+import { onMounted, reactive, ref, onUnmounted, watch, toRaw } from 'vue'
 import { cpuOption, memoryOption, diskOption } from './option'
-import {hostPage, checkPackage, delPackage, getVersionNum, getPackageList, getPackagePage} from '@/api/ops'
+import {hostPage, checkPackage, delPackage, getVersionNum, getPackageList, getPackagePage, download, packageOnlineUpdate} from '@/api/ops'
 import Socket from '@/utils/websocket'
 import WujieVue from 'wujie-vue3'
 import { useI18n } from 'vue-i18n'
 import useLocale from '@/hooks/locale'
-import AddPack from "./AddPack.vue"
-import {CpuArch, OS} from "../../../../../../plugins/base-ops/web-ui/src/types/os"
-import {OpenGaussVersionEnum} from "@/types/ops/install"
+import AddPack from './AddPack.vue'
+import { CpuArch, OS } from '../../../../../../plugins/base-ops/web-ui/src/types/os'
+import { OpenGaussVersionEnum } from '@/types/ops/install'
 
 const { t } = useI18n()
 const { bus } = WujieVue
@@ -140,54 +154,56 @@ const data = ref({
 
 const addPackRef = ref<null | InstanceType<typeof AddPack>>(null)
 const addPackInstall = (type: string, data?: KeyValue, addOptionFlag?:number) => {
-  console.log('enter addpackage:' + type)
-  console.log(data)
-  console.log(typeof(data))
-  addPackRef.value?.open(type, data, addOptionFlag)
+  webSocketOpen(type, data, addOptionFlag)
 }
 const showDownloadPopup = ref(false)
 const addPackClose = () => {
   init()
-  console.log('addPackClose')
 }
 
 const addPackSubmit = () => {
-  console.log('addPackSubmit')
+  processVisible.value = true
+  if (wsBusinessId && wsBusinessId.value && wsBusinessId.value != '') {
+    downloadPackage()
+  }
   showDownloadPopup.value = true
-  init()
+  setTimeout(() => {
+    console.log('12121')
+    getListData(filter.pageSize, filter.pageNum, searchFormData)
+  }, 5000)
 }
 
 const parentTags = ref([
   { name: 'os',
-    value:'操作系统',
+    value: '操作系统',
     children: [],
     disabled: false
   },
   { name: 'cpuArch',
-    value:'cpu架构',
+    value: 'cpu架构',
     children: [],
     disabled: false
   },
   { name: 'packageVersion',
-    value:'openGauss版本',
+    value: 'openGauss版本',
     children: [],
     disabled: false
   },
   { name: 'packageVersionNum',
-    value:'版本号',
+    value: '版本号',
     children: [],
     disabled: false
-  },
+  }
 ])
 
-const selectedOptionsValue = reactive({value:''})
+const selectedOptionsValue = reactive({ value: '' })
 const searchFormData = new FormData
 const searchTag = (inputValue: any) => {
   const entries = searchFormData.entries()
   for (const [key, value] of entries) {
     searchFormData.delete(key)
   }
-  const selectedTagGroups =  ref<string[]>([])
+  const selectedTagGroups = ref<string[]>([])
   const alertFlag = new Map()
   alertFlag.set('packageName', 3)
   alertFlag.set('os', 3)
@@ -197,33 +213,26 @@ const searchTag = (inputValue: any) => {
   const alertNum = new Map([...alertFlag])
   inputValue.forEach(item => {
     parentTags.value.forEach(tag => {
-      if (tag.children.some(piece => piece.name.includes(item))){
+      if (tag.children.some(piece => piece.name.includes(item))) {
         let tempname = alertFlag.get(tag.name) - 1
         alertFlag.set(tag.name, tempname)
-        console.log(tag.name, item)
         searchFormData.append(tag.name, item)
         tag.disabled = true
         selectedTagGroups.value.push(tag.name)
       }
     })
   })
-  console.log(alertFlag)
   parentTags.value.forEach(tag => {
-    if (alertFlag.get(tag.name)  == 0) {
-      console.log(alertFlag + ' ' + tag.name)
+    if (alertFlag.get(tag.name) == 0) {
       Message.error('同一个父级标签只能选择一个子级标签,' + tag.name + '标签下有多项，仅保留第一项')
-      console.log(selectedOptionsValue)
-      let tempnum = alertNum.get(tag.name) -1
-      selectedOptionsValue.value.splice( -tempnum)
-      console.log(selectedOptionsValue)
+      let tempnum = alertNum.get(tag.name) - 1
+      selectedOptionsValue.value.splice(-tempnum)
     }
     if (selectedTagGroups.value.includes(tag.name)) {
-      console.log(tag.name + '已被禁止')
       tag.disabled = true
-      tag.children.forEach(item =>{
-        if (item.name !== searchFormData.get(tag.name)){
+      tag.children.forEach(item => {
+        if (item.name !== searchFormData.get(tag.name)) {
           item.disabled = true
-          console.log(item.name)
         }
       })
     } else {
@@ -247,8 +256,8 @@ const handleSelected = (keys: (string | number)[]) => {
 }
 
 const { currentLocale } = useLocale()
-const translateVersion = (version:OpenGaussVersionEnum)=>{
-  if(currentLocale.value=== 'en-US'){
+const translateVersion = (version:OpenGaussVersionEnum) => {
+  if (currentLocale.value === 'en-US') {
     switch (version) {
     case OpenGaussVersionEnum.ENTERPRISE:
       return 'Enterprise'
@@ -284,14 +293,14 @@ const checkPack = (record: KeyValue) => {
   }) .catch(error => {
     console.error('260' + error)
   })
-  init()
+  getListData(filter.pageSize, filter.pageNum, searchFormData)
 }
 
 const checkSelectedPack = () => {
   let selectedRecord = []
-  list.selectedpackageIds.forEach((item) => {
+  for (let item in toRaw(data.value.selectedData)) {
     selectedRecord.push(item)
-  })
+  }
   if (selectedRecord.length > 0) {
     checkPackMul(selectedRecord)
   } else {
@@ -327,15 +336,17 @@ const deleteRows = (record: KeyValue) => {
   }) .catch(error => {
     console.error('310' + error)
   })
-  init()
+  getListData(filter.pageSize, filter.pageNum, searchFormData)
 }
 
 const deleteSelectedHosts = () => {
-  const selectedRecords = list.selectedpackageIds.map((packageId: string | number) => {
-    return data.value.selectedData[packageId]
-  })
-  if (selectedRecords.length > 0) {
-    deleteMultipleRows(selectedRecords);
+  let selectedRecord = []
+  for (let item in toRaw(data.value.selectedData)) {
+    selectedRecord.push(data.value.selectedData[item])
+  }
+  if (selectedRecord.length > 0) {
+    deleteMultipleRows(selectedRecord)
+    getListData(filter.pageSize, filter.pageNum, searchFormData)
   } else {
     Message.warning(t('请至少选择一个安装包'))
   }
@@ -357,7 +368,7 @@ const deleteMultipleRows = (records: KeyValue) => {
     }
     list.selectedpackageIds = []
     data.value.selectedData = []
-    init()
+    getListData(filter.pageSize, filter.pageNum, searchFormData)
   }).catch(() => {
     Message.error({
       content: '344 An error occurred while deleting packages'
@@ -366,7 +377,7 @@ const deleteMultipleRows = (records: KeyValue) => {
 }
 
 const tableEmptyFlag = ref(false)
-const searchInfoPackage = reactive( {
+const searchInfoPackage = reactive({
   packageId: '',
   name: '',
   os: '',
@@ -376,19 +387,19 @@ const searchInfoPackage = reactive( {
   packageUrl: '',
   packagePath: '',
   type: '',
-  remark: '',
+  remark: ''
 })
 const addSearchPackage = (total:number) => {
   tableEmptyFlag.value = total === 0
-  searchInfoPackage.os = searchFormData.get('os')?searchFormData.get('os'):OS.CENTOS
-  searchInfoPackage.cpuArch = searchFormData.get('cpuArch')?searchFormData.get('cpuArch'):CpuArch.X86_64
-  searchInfoPackage.packageVersion = searchFormData.get('packageVersion')?searchFormData.get('packageVersion'):OpenGaussVersionEnum.MINIMAL_LIST
-  searchInfoPackage.packageVersionNum = searchFormData.get('packageVersionNum')?searchFormData.get('packageVersionNum'):'5.0.0'
+  searchInfoPackage.os = searchFormData.get('os') ? searchFormData.get('os') : OS.CENTOS
+  searchInfoPackage.cpuArch = searchFormData.get('cpuArch') ? searchFormData.get('cpuArch') : CpuArch.X86_64
+  searchInfoPackage.packageVersion = searchFormData.get('packageVersion') ? searchFormData.get('packageVersion') : OpenGaussVersionEnum.MINIMAL_LIST
+  searchInfoPackage.packageVersionNum = searchFormData.get('packageVersionNum') ? searchFormData.get('packageVersionNum') : '5.0.0'
   searchInfoPackage.type = 'openGauss'
 }
 
 // init
-const initOs = [ OS.OPEN_EULER, OS.CENTOS, '麒麟系统']
+const initOs = [OS.OPEN_EULER, OS.CENTOS, '麒麟系统']
 const initArch = [CpuArch.X86_64, CpuArch.AARCH64]
 const initVersion = [OpenGaussVersionEnum.MINIMAL_LIST, OpenGaussVersionEnum.LITE, OpenGaussVersionEnum.ENTERPRISE]
 const init = () => {
@@ -503,7 +514,7 @@ onUnmounted(() => {
 
 const filter = {
   pageNum: 1,
-  pageSize:10
+  pageSize: 10
 }
 const currentPage = (e: number) => {
   filter.pageNum = e
@@ -516,23 +527,23 @@ const pageSizeChange = (e: number) => {
 }
 
 const getListData = (pageSize?:number, pageNum?:number, formData?: FormData) => new Promise(resolve => {
-  let checkFormValue  = formData?formData.get('name'):null
+  let checkFormValue = formData ? formData.get('name') : null
   const name = checkFormValue !== null ? checkFormValue.toString() : ''
-  checkFormValue =  formData?formData.get('os'):null
+  checkFormValue = formData ? formData.get('os') : null
   const os = checkFormValue !== null ? checkFormValue.toString() : ''
-  checkFormValue = formData?formData.get('cpuArch'):null
-  const cpuArch = checkFormValue!== null ?checkFormValue.toString():''
-  checkFormValue = formData?formData.get('packageVersion'):null
+  checkFormValue = formData ? formData.get('cpuArch') : null
+  const cpuArch = checkFormValue !== null ? checkFormValue.toString() : ''
+  checkFormValue = formData ? formData.get('packageVersion') : null
   const openGaussVersion = checkFormValue
-  checkFormValue = formData?formData.get('packageVersionNum'):null
-  const openGaussVersionNum = checkFormValue!== null ?checkFormValue.toString():''
+  checkFormValue = formData ? formData.get('packageVersionNum') : null
+  const openGaussVersionNum = checkFormValue !== null ? checkFormValue.toString() : ''
   list.loading = true
-  getPackagePage(pageSize?pageSize:10, pageNum?pageNum:1, {
-    name:name,
+  getPackagePage(pageSize ? pageSize : 10, pageNum ? pageNum : 1, {
+    name: name,
     os: os,
     cpuArch: cpuArch,
     openGaussVersion: openGaussVersion,
-    openGaussVersionNum: openGaussVersionNum,
+    openGaussVersionNum: openGaussVersionNum
   }).then((res) => {
     list.data = []
     const tempPackage = {
@@ -551,15 +562,15 @@ const getListData = (pageSize?:number, pageNum?:number, formData?: FormData) => 
     res.rows.forEach(item => {
       tempPackage.name = item.name
       tempPackage.type = item.type
-      tempPackage.packageId =  item.packageId
+      tempPackage.packageId = item.packageId
       tempPackage.os = item.os
       tempPackage.cpuArch = item.cpuArch
       tempPackage.packageVersion = item.packageVersion
       tempPackage.packageVersionNum = item.packageVersionNum
-      tempPackage.packageUrl = item.packageUrl
+      tempPackage.packageUrl = item.packageUrl === ''? item.packagePath.name:item.packageUrl
       tempPackage.packagePath = item.packagePath
-      tempPackage.hostLabel = item.filename?'离线上传':'在线下载'
-      list.data.push({...tempPackage})
+      tempPackage.hostLabel = item.packageUrl === ''? '离线上传' : '在线下载'
+      list.data.push({ ...tempPackage })
     })
     list.page.total = res.total
   }) .finally(() => {
@@ -569,6 +580,86 @@ const getListData = (pageSize?:number, pageNum?:number, formData?: FormData) => 
     console.error('522' + error)
   })
 })
+
+// web socket
+const downloadWs = ref<Socket<any, any> | undefined>()
+const processVisible = ref(false)
+const percentLoading = ref(false)
+const currPercent = ref<number>(0)
+const wsBusinessId = ref('')
+
+watch(currPercent, (newValue) => {
+  if (newValue === 100) {
+    processVisible.value = false
+  }
+})
+
+const webSocketOpen = (type: string, data?: KeyValue, addOptionFlag?:number) => {
+  currPercent.value = 0
+  const socketKey = new Date().getTime()
+  const wsPrefix = window.location.protocol.includes('https') ? 'wss' : 'ws'
+  const socketUrl = `${wsPrefix}://${window.location.host}/ws/base-ops/downloadPackage_${socketKey}`
+  const websocket = new WebSocket(socketUrl)
+  wsBusinessId.value = `downloadPackage_${socketKey}`
+  websocket.onopen = function (event) {
+    wsBusinessId.value = `downloadPackage_${socketKey}`
+  }
+  addPackRef.value?.open(type, data, addOptionFlag, wsBusinessId.value)
+  downloadWs.value = websocket
+  websocket.onmessage = function (event) {
+    processVisible.value = true
+    const messageData = event.data
+    if (!isNaN(Number(messageData))) {
+      const percent = Number(messageData)
+      currPercent.value = percent
+      if (percent === 100) {
+        percentLoading.value = false
+        websocket.close()
+      }
+    }
+  }
+  websocket.onerror = function (error) {
+    console.error('WebSocket error:', error)
+  }
+}
+const uploadPackageId = ref('')
+
+const downloadPackage = () => {
+  packageOnlineUpdate(uploadPackageId.value, wsBusinessId.value).then(() => {
+    websocket.onmessage = function(event) {
+      const messageData = event.data
+      if (!isNaN(Number(messageData))) {
+        const percent = Number(messageData)
+        currPercent.value = percent
+        if (percent === 100) {
+          percentLoading.value = false
+          downloadWs.value?.destroy()
+        }
+      }
+    }
+    simulateDownload()
+    processVisible.value = true
+    percentLoading.value = true
+  }) .catch((error) => {
+    console.error(error)
+  })
+}
+const simulateDownload = async () => {
+  try {
+    while (currPercent.value < 100) {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+    downloadWs.value?.destroy()
+  } catch (error) {
+    console.error('Download failed:', error)
+  }
+}
+
+const handleOk = () => {
+  processVisible.value = false
+  init()
+}
+
 
 init()
 </script>
