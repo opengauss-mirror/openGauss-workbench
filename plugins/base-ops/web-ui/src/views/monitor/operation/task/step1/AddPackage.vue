@@ -57,6 +57,7 @@
         <a-input
           v-model="data.formData.name"
           :placeholder="$t('安装包名称')"
+          :max-length="255"
           @input="data.isNameDirty = true"
           :rules="[{ required: true }]"
         />

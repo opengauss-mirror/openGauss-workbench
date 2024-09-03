@@ -138,16 +138,16 @@
             ref="clusterFormRef"
           >
             <a-form-item label="集群标识" field="clusterName" validate-trigger="blur">
-              <a-input v-model="data.clusterName" placeholder="请输入集群标识" @change="getClusterName" style="width: 30%; height: 32px" />
+              <a-input v-model="data.clusterName" placeholder="请输入集群标识" @change="getClusterName" :max-length="255" style="width: 30%; height: 32px" />
             </a-form-item>
             <a-form-item label="安装目录" field="installPath" validate-trigger="blur">
-              <a-input v-model="data.installPath" placeholder="请输入安装目录" @change="getInstallPath" style="width: 30%; height: 32px" />
+              <a-input v-model="data.installPath" placeholder="请输入安装目录" @change="getInstallPath" :max-length="255" style="width: 30%; height: 32px" />
               <template #extra>
                 <span class="form-helper-text">安装目录指的是安装openGauss的根目录，类似/opt/openGauss</span>
               </template>
             </a-form-item>
             <a-form-item label="软件包路径" field="installPackagePath">
-              <a-input v-model="data.installPackagePath" placeholder="请输入软件包路径" style="width: 30%; height: 32px" />
+              <a-input v-model="data.installPackagePath" placeholder="请输入软件包路径" :max-length="255" style="width: 30%; height: 32px" />
               <template #extra>
                 <span class="form-helper-text">软件包路径指的是存放openGauss官方安装包压缩文件的路径</span>
               </template>
@@ -156,7 +156,7 @@
               <a-input-number id="inputNumber" v-model="data.port" :min="1024" :max="65535" @change="getPort" style="width: 10%; height: 32px" :step="10" />
             </a-form-item>
             <a-form-item label="数据库密码" field="databasePassword" >
-              <a-input-password v-model="data.databasePassword" placeholder="请输入" style="width: 30%; height: 32px" />
+              <a-input-password v-model="data.databasePassword" placeholder="请输入" :max-length="255" style="width: 30%; height: 32px" />
               <template #extra>
                 <span class="form-helper-text">用于登录数据库时的凭证， 请输入高安全度密码</span>
               </template>
@@ -174,22 +174,22 @@
               <a-switch v-model:checked="flagEnvSeqar" @change="checkflagEnvSeqar"/>
             </a-form-item>
             <a-form-item v-if="flagEnvSeqar" label="环境分离路径" field="envPath" >
-              <a-input v-model="data.envPath" placeholder="请输入环境分离路径" style="width: 30%; height: 32px" />
+              <a-input v-model="data.envPath" placeholder="请输入环境分离路径" :max-length="255" style="width: 30%; height: 32px" />
             </a-form-item>
             <div class="item" v-if="data.packageVersion === OpenGaussVersionEnum.ENTERPRISE">
               <a-collapse :default-active-key="['0']">
                 <a-collapse-item :key='1' header="高级参数配置">
                   <a-form-item label="日志目录" field="logPath" >
-                    <a-input v-model="data.logPath" autofocus placeholder="请输入日志目录"  />
+                    <a-input v-model="data.logPath" :max-length="255" autofocus placeholder="请输入日志目录"  />
                   </a-form-item>
                   <a-form-item label="临时文件目录" field="tmpPath">
                     <a-input v-model="data.tmpPath" autofocus placeholder="请输入临时文件目录" style="width: 30%; height: 32px" />
                   </a-form-item>
                   <a-form-item label="数据库工具目录" field="omToolsPath">
-                    <a-input v-model="data.omToolsPath" autofocus placeholder="请输入数据库工具目录" style="width: 30%; height: 32px" />
+                    <a-input v-model="data.omToolsPath" :max-length="255" autofocus placeholder="请输入数据库工具目录" style="width: 30%; height: 32px" />
                   </a-form-item>
                   <a-form-item label="数据库core目录" field="corePath">
-                    <a-input v-model="data.corePath" autofocus placeholder="请输入数据库core目录" style="width: 30%; height: 32px" />
+                    <a-input v-model="data.corePath" autofocus :max-length="255" placeholder="请输入数据库core目录" style="width: 30%; height: 32px" />
                   </a-form-item>
                 </a-collapse-item>
               </a-collapse>
@@ -221,7 +221,7 @@
               <a-table-column title="数据路径" data-index="dataPath" v-if="data.packageVersion !== OpenGaussVersionEnum.MINIMAL_LIST">
                 <template #cell="{ record }">
                   <div class="flex-row-start" v-if="record.editing">
-                    <a-input :default-value="record.dataPath" @change="checkClusterPathDB"/>
+                    <a-input :default-value="record.dataPath" @change="checkClusterPathDB" :max-length="255"/>
                   </div>
                   <div v-else><p>{{record.dataPath}}</p></div>
                 </template>
@@ -263,7 +263,7 @@
               <a-table-column title="CM数据路径" data-index="cmDataPath"  v-if="data.packageVersion === OpenGaussVersionEnum.ENTERPRISE && data.enableCmTool">
                 <template #cell="{ record }">
                   <div class="flex-row-start" v-if="record.editing">
-                    <a-input @change="checkClusterPathCM" :default-value="record.cmDataPath"/>
+                    <a-input @change="checkClusterPathCM" :default-value="record.cmDataPath" :max-length="255"/>
                   </div>
                   <div v-else><p>{{record.cmDataPath}}</p></div>
                 </template>
@@ -802,10 +802,6 @@ const packManageSubmit = () => {
   })
 }
 
-const activeKey = ref('1')
-watch(activeKey, val => {
-  console.log(val)
-})
 
 const checkflagCM = (input) => {
   flagCM.value = input
@@ -916,7 +912,6 @@ const checkClusterPathDB = (inputValue:string) => {
     tempEditCluster.value.dataPath = inputValue
     editFlag.dataPath = true
   } else {
-    console.error("路径不符合规则，请修改")
     tempEditCluster.value.dataPath = inputValue
     editFlag.dataPath =  false
   }
@@ -1672,11 +1667,9 @@ const init = () => {
 const tempClusterId = ref('')
 
 watch(() => props.clusterId, (newVal) => {
-    console.log('Received new data:', newVal)
     init()
   }, { immediate: true })
 watch(() => props.createClusterId, (newVal) => {
-  console.log('Received create cluster ID:', newVal)
   data.clusterId = newVal
 }, { immediate: true })
 </script>
