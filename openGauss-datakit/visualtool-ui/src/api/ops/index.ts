@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { KeyValue } from '@/types/global'
-import {downloadPackage, SSHBody} from '@/types/ops/install'
+import { downloadPackage, SSHBody } from '@/types/ops/install'
 
 // get Key
 export const getEntryKey = () => {
@@ -268,7 +268,7 @@ export const delPackage = (packageId: string) => {
 }
 
 export const checkPackage = (data: KeyValue) => {
-  return axios.post(`/plugins/base-ops/installPackageManager/v2/check/package/`,data)
+  return axios.post(`/plugins/base-ops/installPackageManager/v2/check/package/`, data)
 }
 
 export const getVersionNum = () => {
@@ -276,7 +276,7 @@ export const getVersionNum = () => {
 }
 
 export const getPackageList = (data: FormData) => {
-  return axios.get(`/plugins/base-ops/installPackageManager/v2/list/package`, {data})
+  return axios.get(`/plugins/base-ops/installPackageManager/v2/list/package`, { data })
 }
 
 export const getPackagePage = (pageSize: number, pageNum:number, data: KeyValue) => {
@@ -287,16 +287,18 @@ export const batchPackageOnline = (data: FormData) => {
   return axios.post(`/plugins/base-ops/installPackageManager/v2/save/online`, data)
 }
 
-export const batchPackageUpload = (name:KeyValue, os: KeyValue, cpuArch: KeyValue, packageVersion: KeyValue, packageVersionNum: KeyValue, packageUrl: KeyValue, file:any) => {
-  return axios.post(`/plugins/base-ops/installPackageManager/v2/save/upload/?name=${name}&os=${os}&cpuArch=${cpuArch}&packageVersion=${packageVersion}&packageVersionNum=${packageVersionNum}&packageUrl=${packageUrl}`,file)
+// export const batchPackageUpload = (name:KeyValue, os: KeyValue, cpuArch: KeyValue, packageVersion: KeyValue, packageVersionNum: KeyValue, packageUrl: KeyValue, uploadFile:any) => {
+export const batchPackageUpload = ( uploadFileParam:any) => {
+  // return axios.post(`/plugins/base-ops/installPackageManager/v2/save/upload/?name=${name}&os=${os}&cpuArch=${cpuArch}&packageVersion=${packageVersion}&packageVersionNum=${packageVersionNum}&packageUrl=${packageUrl}`, uploadFile)
+  return axios.post(`/plugins/base-ops/installPackageManager/v2/save/upload/`, uploadFileParam)
 }
 
 export const packageOnlineUpdate = (params: KeyValue) => {
-  return axios.post(`/plugins/base-ops/installPackageManager/v2/save/upload`, {params:params})
+  return axios.post(`/plugins/base-ops/installPackageManager/v2/save/upload`, { params: params })
 }
 
 export const packageUploadUpdate = (params: KeyValue, data: KeyValue) => {
-  return axios.post(`/plugins/base-ops/installPackageManager/v2/update/upload${params}`,data)
+  return axios.post(`/plugins/base-ops/installPackageManager/v2/update/upload${params}`, data)
 }
 
 export const checkNetStatus = () => {
@@ -304,7 +306,7 @@ export const checkNetStatus = () => {
 }
 
 export const checkVersionNumber = (params: KeyValue) => {
-  return axios.get(`/plugins/base-ops/installPackageManager/v2/check/version/number`, {params:params})
+  return axios.get(`/plugins/base-ops/installPackageManager/v2/check/version/number`, { params: params })
 }
 
 export const getSysUploadPath = () => {
@@ -312,7 +314,7 @@ export const getSysUploadPath = () => {
 }
 
 export const hasPkgName = (name: string) => {
-  return axios.get('/plugins/base-ops/installPackageManager/hasName', { params: { name: name } })
+  return axios.get('/plugins/base-ops/installPackageManager/hasName', { params: { name: name }})
 }
 
 export const download = (data: downloadPackage) => {
@@ -320,5 +322,5 @@ export const download = (data: downloadPackage) => {
 }
 
 export const delPkgTar = (path: string, id?: string) => {
-  return axios.delete('/plugins/base-ops/installPackageManager/delPkgTar', { params: { path: path, id: id } })
+  return axios.delete('/plugins/base-ops/installPackageManager/delPkgTar', { params: { path: path, id: id }})
 }
