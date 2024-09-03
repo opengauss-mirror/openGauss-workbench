@@ -57,6 +57,11 @@ public class StateDTO {
     }
 
     public String getValue() {
-        return MessageSourceUtils.getMsg(value);
+        String ret = MessageSourceUtils.getMsg(value);
+        if (ret == null) {
+            String[] split = value.split("\\.");
+            ret = split[split.length - 1];
+        }
+        return ret;
     }
 }

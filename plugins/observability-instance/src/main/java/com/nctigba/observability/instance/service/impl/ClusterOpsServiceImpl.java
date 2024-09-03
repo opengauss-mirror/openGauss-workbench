@@ -412,6 +412,7 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
         } catch (InterruptedException e) {
             throw new InstanceException(e.getMessage(), e);
         }
+        log.info("CLUSTER_STATE_CACHE: {}", CLUSTER_STATE_CACHE);
     }
 
     private ClusterHealthStateDTO getClusterHealthState(String clusterId, OpsClusterVO cluster) {
@@ -697,9 +698,6 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
         List<OpsClusterNodeVO> clusterNodes = cluster.getClusterNodes();
         List<SyncSituationDTO> standbyList = new ArrayList<>();
         for (OpsClusterNodeVO clusterNode : clusterNodes) {
-            if (stateCache.getNodeRole() == null) {
-
-            }
             if ("Primary".equalsIgnoreCase(stateCache.getNodeRole().get(clusterNode.getNodeId()))) {
                 List<SyncSituationDelayDTO> syncSituations = clustersMapper.getSyncSituation(clusterNode.getNodeId());
                 syncSituations.forEach(s -> {
@@ -867,8 +865,6 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
         String[] dataNode = dataNodeStateStr.split(StrUtil.LF);
         for (String s : dataNode) {
             String[] s1 = s.replaceAll(" +", " ").split(" ");
-            String state = "";
-            String role = "";
             if (s1.length == 1) {
                 continue;
             }
@@ -879,7 +875,15 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
                             new InstanceException("clusterId:" + clusterVO.getClusterId() + " ip:" + s1[2] +
                                     " not found in database")).getNodeId();
             nodeState.put(nodeId, s1[s1.length - 1]);
-            nodeRole.put(nodeId, s1[6]);
+            int index = 0;
+            for (String str : s1) {
+                if (str.equals("P") || str.equals("S") || str.equals("C")) {
+                    break;
+                }
+                index++;
+            }
+            // Different versions of the database may have different formats for query results
+            nodeRole.put(nodeId, (index + 1) >= s1.length ? s1[7] : s1[index + 1]);
             nodeName.put(nodeId, s1[1]);
         }
     }
