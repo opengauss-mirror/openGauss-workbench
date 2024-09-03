@@ -28,7 +28,6 @@
         <a-radio-group v-model="tempOs.value" button-style="solid" :disabled="editDisabledFlag">
           <a-radio :value="OS.OPEN_EULER">openEuler</a-radio>
           <a-radio :value="OS.CENTOS">centOs</a-radio>
-          <a-radio :value="kyLin">麒麟系统</a-radio>
         </a-radio-group>
       </a-form-item>
       <a-form-item field="arch" :label="$t('系统架构')" validate-trigger="blur" @change="updateArchData" name="arch">
@@ -73,7 +72,7 @@
         </div>
       </a-form-item>
       <a-form-item
-        v-if="uploadStatusTag.value === true || !netStatus"
+        v-if="uploadStatusTag || !netStatus"
         field="packagePath"
         :label="$t('离线安装包')"
         name="packagePath"
@@ -262,7 +261,7 @@ const formRules = reactive<FormRules>({
 
 
 const fileListPPPP = ref([])
-const uploadStatusTag = reactive({ value: false })
+const uploadStatusTag = ref(false)
 const uploadStatusChange = () => {
   uploadStatusTag.value = true
 }

@@ -736,6 +736,7 @@ const handleOk = () => {
 const addPackRef = ref<null | InstanceType<typeof AddPack>>(null)
 const addPackInstall = (type: string, uploadFlag: number) => {
   let tempuploadFlag: string
+  wsBusinessId.value = "";
   if ( uploadFlag === 0) {
     webSocketOpen()
   }
