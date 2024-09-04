@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.opengauss.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -263,7 +264,11 @@ public class CoverageRateServiceImpl implements CoverageRateService {
             coverageRateDO.setAllLineNumber(canBreakLine.toString());
             coverageRateDO.setExecutionLineNumber(coverageLines.toString());
             coverageRateDO.setExecutionCoverage(divide + "%");
-            coverageRateDO.setInputParams("params");
+            try {
+                coverageRateDO.setInputParams(resultSet.getString("pro_args"));
+            } catch (PSQLException e) {
+                coverageRateDO.setInputParams("params");
+            }
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             coverageRateDO.setUpdateTime(df.format(new Date()));
             String proQuery = resultSet.getString("pro_querys");
