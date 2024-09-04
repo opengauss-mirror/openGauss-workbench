@@ -2,7 +2,7 @@
   <div class="container">
     <div class="main">
       <div class="left">
-        <div ref="module1" class="module">
+        <div ref="module1" class="module" id="server">
           <div class="item"><h2>服务器配置</h2></div>
           <a-form
             :model="data"
@@ -41,7 +41,7 @@
             </a-form-item>
           </a-form>
         </div>
-        <div ref="module2" class="module">
+        <div ref="module2" class="module" id="package">
           <div class="item"><h2>安装包配置</h2></div>
           <a-form
             :model="data"
@@ -125,11 +125,13 @@
               <div v-else>
                 <p>{{data.packageName}}</p>
                 <a-button class="primary" type="text" @click="openPackManage()">安装包管理</a-button>
+                <a-button class="primary" type="text" @click="addPackInstall('create',1)" >离线上传</a-button>
+                <a-button class="primary" type="text"  @click="addPackInstall('create',0)" >在线下载</a-button>
               </div>
             </a-form-item>
           </a-form>
         </div>
-        <div ref="module3" class="module">
+        <div ref="module3" class="module" id="cluster">
           <div class="item"><h2>集群配置</h2></div>
           <a-form
             :model="data"
@@ -196,7 +198,7 @@
             </div>
           </a-form>
         </div>
-        <div ref="module4" class="module">
+        <div ref="module4" class="module" id="clusternode">
           <div class="item"><h2>节点配置</h2></div>
           <a-button type="text" icon="plus" @click="addColumn" v-if="clusterNodesLimit > data.clusterNodes.length">添加节点</a-button>
           <a-table :data="data.clusterNodes" style="margin-top: 20px; width: 100%" :pagination="false" column-resizable :bordered="{cell:true}">
@@ -309,12 +311,14 @@
       </div>
       <div class="right">
         <div>
-          <a-steps progress-dot :current="1" direction="vertical" type="dot" >
-            <a-step title="服务器配置" />
-            <a-step title="安装包配置" />
-            <a-step title="集群配置" />
-            <a-step title="节点配置" />
-          </a-steps>
+          <a-affix :offsetTop="80">
+            <a-anchor :change-hash="false">
+              <a-anchor-link href="#server">服务器配置</a-anchor-link>
+              <a-anchor-link href="#package">安装包配置</a-anchor-link>
+              <a-anchor-link href="#cluster">集群配置</a-anchor-link>
+              <a-anchor-link href="#clusternode">节点配置</a-anchor-link>
+            </a-anchor>
+          </a-affix>
         </div>
       </div>
     </div>
@@ -1522,6 +1526,7 @@ const fetchHostIp = (os?:string, osVersion?:string, cpuArch?:string) => {
   }
   getHostIp(param).then((res) => {
     if (Number(res.code) === 200) {
+      hostIpList.value = []
       res.data.forEach((item:any) => {hostIpList.value.push(item.publicIp)})
       res.data.forEach((item:any) => {hostIpId.append(item.publicIp,item.hostId)})
     } else {
@@ -1777,10 +1782,10 @@ button {
   border: 1px dashed #404040;
 }
 
-.arco-btn-secondary.arco-btn-disabled, .arco-btn-secondary[type="button"].arco-btn-disabled, .arco-btn-secondary[type="submit"].arco-btn-disabled {
+:deep(.arco-btn-secondary.arco-btn-disabled, .arco-btn-secondary[type="button"].arco-btn-disabled, .arco-btn-secondary[type="submit"].arco-btn-disabled) {
   color: var(--color-text-2);
 }
-.arco-btn-primary, .arco-btn-primary[type="button"], .arco-btn-primary[type="submit"]:hover {
+:deep(.arco-btn-primary, .arco-btn-primary[type="button"], .arco-btn-primary[type="submit"]:hover) {
   background-color: rgb(var(--primary-5));
 }
 .center-item-active {
