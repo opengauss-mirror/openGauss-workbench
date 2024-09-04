@@ -311,3 +311,7 @@
     content: '\00a0';
     margin-right: 6px !important;
 }
+
+.el-input.is-disabled .el-input__wrapper {
+    background-color: var(--el-bg-color-disabled) !important;
+}

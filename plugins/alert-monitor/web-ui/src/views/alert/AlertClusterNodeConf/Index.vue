@@ -91,7 +91,6 @@ const pluginDatas = ref<any[]>([])
 const selectedDatas = ref<any[]>([])
 
 const addClusterNodeConf = () => {
-  setShowInstance()
   const rows = table.value.getSelectionRows()
   if (rows.length === 0) {
     ElMessage({

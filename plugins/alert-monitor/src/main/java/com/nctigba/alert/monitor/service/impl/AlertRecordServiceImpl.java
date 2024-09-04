@@ -79,6 +79,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -402,8 +403,9 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             }
             if (analysisServiceMap.get(ruleItemSrc.getAnalysisBeanName()) != null) {
                 AlertAnalysisService analysisService = analysisServiceMap.get(ruleItemSrc.getAnalysisBeanName());
+                BigDecimal limitValue = templateRuleItem.getLimitValue();
                 relationDtoList.addAll(analysisService.getRelationData(alertRecordDO.getClusterNodeId(),
-                    templateRuleItem.getLimitValue().toString()));
+                    limitValue != null ? limitValue.toString() : ""));
                 continue;
             }
             AlertRelationDTO relationDto = new AlertRelationDTO();

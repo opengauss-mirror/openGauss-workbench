@@ -68,7 +68,7 @@ public class AlertApiController {
      */
     @PostMapping("/alerts")
     public AjaxResult alerts(@RequestBody @Valid List<JSONObject> paramList) {
-        log.info("alert info params is:", paramList);
+        log.info("alert info params is: {}", paramList);
         List<AlertApiReq> alertApiReqList = new ArrayList<>();
         for (JSONObject jsonObject : paramList) {
             jsonObject.put("startsAt", jsonObject.getStr("startsAt").replace("T", " ").substring(0, 19));

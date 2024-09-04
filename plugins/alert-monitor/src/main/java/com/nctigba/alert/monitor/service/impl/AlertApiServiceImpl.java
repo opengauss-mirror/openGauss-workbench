@@ -29,7 +29,6 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.event.NotifyEvent;
-import com.nctigba.alert.monitor.mapper.AlertRecordMapper;
 import com.nctigba.alert.monitor.mapper.AlertShieldingMapper;
 import com.nctigba.alert.monitor.mapper.AlertTemplateMapper;
 import com.nctigba.alert.monitor.mapper.AlertTemplateRuleMapper;
@@ -83,8 +82,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AlertApiServiceImpl implements AlertApiService {
     @Autowired
-    private AlertRecordMapper alertRecordMapper;
-    @Autowired
     private AlertTemplateMapper templateMapper;
     @Autowired
     private AlertTemplateRuleMapper templateRuleMapper;
@@ -130,6 +127,14 @@ public class AlertApiServiceImpl implements AlertApiService {
                 if (StrUtil.isBlank(alertTemplateRuleDO.getNotifyWayIds())) {
                     continue;
                 }
+                String clusterNodeId = alertApiReq.getLabels().get("instance");
+                if (checkIsShielding(clusterNodeId)) {
+                    if (alertApiReq.getAlertStatus().equals(CommonConstants.RECOVER_STATUS)) {
+                        Long templateId = Long.valueOf(alertApiReq.getLabels().get("templateId"));
+                        alertToRecover(clusterNodeId, templateId, templateRuleId);
+                    }
+                    continue;
+                }
                 Optional<AlertRecordDO> optional = generateRecord(alertApiReq, alertTemplateRuleDO);
                 if (optional.isEmpty()) {
                     continue;
@@ -142,22 +147,37 @@ public class AlertApiServiceImpl implements AlertApiService {
                 });
                 recordDetailService.saveOrUpdateBatch(recordDetailList);
             } catch (NumberFormatException | NullPointerException | ServiceException e) {
-                log.error("alertApiReq is ", alertApiReq);
-                log.error("exception: ", e);
+                log.error("alertApiReq is {}", alertApiReq);
+                log.error("exception: {}", e);
             }
         }
         context.publishEvent(new NotifyEvent(this));
     }
 
-    private Optional<AlertRecordDO> generateRecord(AlertApiReq alertApiReq, AlertTemplateRuleDO alertTemplateRuleDO) {
-        String clusterNodeId = alertApiReq.getLabels().get("instance");
+    private boolean checkIsShielding(String clusterNodeId) {
         List<AlertShieldingDO> shieldingDOList = shieldingMapper.selectList(Wrappers.<AlertShieldingDO>lambdaQuery()
-                .eq(AlertShieldingDO::getIsDeleted, CommonConstants.IS_NOT_DELETE)
-                .eq(AlertShieldingDO::getIsEnable, CommonConstants.IS_ENABLE));
+            .eq(AlertShieldingDO::getIsDeleted, CommonConstants.IS_NOT_DELETE)
+            .eq(AlertShieldingDO::getIsEnable, CommonConstants.IS_ENABLE));
         boolean isExists = shieldingDOList.stream().anyMatch(f -> f.getClusterNodeIds().contains(clusterNodeId));
         if (isExists) {
-            return Optional.empty();
+            return true;
         }
+        return false;
+    }
+
+    private void alertToRecover(String clusterNodeId, Long templateId, Long templateRuleId) {
+        List<AlertRecordDO> alertRecords = recordService.getList(clusterNodeId, templateId, templateRuleId);
+        if (CollectionUtil.isEmpty(alertRecords)
+            || CommonConstants.RECOVER_STATUS.equals(alertRecords.get(0).getAlertStatus())) {
+            return;
+        }
+        AlertRecordDO alertRecord = alertRecords.get(0);
+        alertRecord.setAlertStatus(CommonConstants.RECOVER_STATUS).setUpdateTime(LocalDateTime.now());
+        recordService.updateById(alertRecord);
+    }
+
+    private Optional<AlertRecordDO> generateRecord(AlertApiReq alertApiReq, AlertTemplateRuleDO alertTemplateRuleDO) {
+        String clusterNodeId = alertApiReq.getLabels().get("instance");
         Long templateId = Long.valueOf(alertApiReq.getLabels().get("templateId"));
         List<AlertRecordDO> alertRecordDOS =
                 recordService.getList(clusterNodeId, templateId, alertTemplateRuleDO.getId());
