@@ -41,7 +41,7 @@
       <step2 v-if="currentStep === 2"
              :sub-task-config="subTaskEnv"
              :message="clusterTaskList.clusterNodes"
-             :clusterId="clusterId"
+             :clusterId="clusterId || tempClusterId"
              @subTaskEnv="syncSubTaskEnv"/>
       <step3 v-if="currentStep === 3"
              :sub-task-config="subTaskConfig"
@@ -106,7 +106,7 @@ const onNext = () => {
     if (saveFlag.value === false) {
       Message.error('没有保存草稿箱，无法进行下一步')
     } else {
-      checkCluster(clusterId.value) .then((res) => {
+      checkCluster(clusterId.value || tempClusterId.value) .then((res) => {
         if (Number(res.code) === 200 ) {
           currentStep.value = 2
         } else {
@@ -117,7 +117,7 @@ const onNext = () => {
       })
     }
   } else if (currentStep.value === 2) {
-    envCheckResult(clusterId.value) .then((res) =>{
+    envCheckResult(clusterId.value || tempClusterId.value) .then((res) =>{
       if (Number(res.code) === 200 ) {
         if (res.data.result === "SUCCESS" ){
           currentStep.value = 3
@@ -507,10 +507,12 @@ const tempClusterId = ref('')
 const createClusterId = ref('')
 const init = () => {
   currentStep.value = 1
-  if (route) {
-    const tempRecord = route.params.record?JSON.parse(route.params.record):''
+  const tempRecord = route.params.record?JSON.parse(route.params.record):{}
+  if (tempRecord.clusterId) {
     tempClusterId.value = tempRecord.clusterId
+    saveFlag.value=true
   } else {
+    saveFlag.value = false
     tempClusterId.value = ''
   }
   clusterId.value = ''

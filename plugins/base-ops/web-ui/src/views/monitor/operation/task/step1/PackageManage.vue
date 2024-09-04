@@ -141,7 +141,7 @@ const handleSelected = (keys: (string | number)[]) => {
 
 const checkPack = (record: KeyValue) => {
   let tempPackageId = []
-  tempPackageId.push(JSON.stringify(record.packageId))
+  tempPackageId.push(record.packageId)
   checkPackage(tempPackageId).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       Message.success({
@@ -156,45 +156,6 @@ const checkPack = (record: KeyValue) => {
     console.error('260' + error)
   })
   init()
-}
-
-const checkSelectedPack = () => {
-  const selectedRecords = list.selectedpackageIds.map((packageId: string | number) => {
-    return data.selectedData[packageId]
-  })
-  if (selectedRecords.length > 0) {
-    checkPackMul(selectedRecords)
-  } else {
-    Message.warning(t('请至少选择一个安装包'))
-  }
-}
-
-const checkPackMul = (records: KeyValue) => {
-  const checkPromises = records.map((record) => {
-    let tempPackageId = []
-    tempPackageId.push(JSON.stringify(record.packageId))
-    return checkPackage(tempPackageId)
-  })
-  Promise.all(checkPromises).then((responses) => {
-    let allSuccess = true
-    responses.forEach((res) => {
-      if (Number(res.code) !== 200) {
-        allSuccess = false
-      }
-    })
-    if (allSuccess) {
-      Message.success(t('检查全部通过'))
-    } else {
-      Message.error(t('检查未全部通过'))
-    }
-    list.selectedpackageIds = []
-    data.selectedData = {}
-  }).catch(() => {
-    console.error({
-      content: '293 An error occurred while checking packages'
-    })
-  })
-  getListData()
 }
 
 const deleteRows = (record: KeyValue) => {
