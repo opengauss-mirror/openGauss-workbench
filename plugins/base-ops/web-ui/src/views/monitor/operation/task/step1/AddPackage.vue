@@ -127,7 +127,7 @@
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'
-import {nextTick, reactive, ref, toRaw, computed, isReadonly, watch} from 'vue'
+import {nextTick, reactive, ref, toRaw, computed, isReadonly, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {CpuArch, OS} from '@/types/os'
 import {OpenGaussVersionEnum} from "@/types/ops/install"
@@ -144,6 +144,7 @@ import dayjs from "dayjs"
 import {FileItem, Message, Modal} from "@arco-design/web-vue"
 import message from "@arco-design/web-vue/es/message"
 import Socket from "@/utils/websocket"
+import axios from "axios";
 const { t } = useI18n()
 
 const data = reactive<KeyValue>({
@@ -179,48 +180,6 @@ interface UploadInfo {
 }
 
 const tempVersionNum = reactive({value:''})
-
-const contains = ref(true)
-const checkContains = (inputValue:any) => {
-  tempVersionNum.value = inputValue
-  if (inputValue && inputValue !== ''){
-    data.formData.packageVersionNum = inputValue
-    contains.value = packageVersionNum.value.some(item => item === data.formData.packageVersionNum)
-    if (contains.value === false) {
-      const params = {
-        os : data.formData.os,
-        cpuArch: data.formData.cpuArch,
-        packageVersion : data.formData.packageVersion,
-        packageVersionNum : data.formData.packageVersionNum
-      }
-      checkVersionNumber(params).then((res) => {
-        if (res.code !== 200){
-          Message.error({
-            content: data.formData.packageVersionNum + '不存在，请重新选择'
-          })
-          data.formData.packageVersionNum = ''
-          tempVersionNum.value = null
-        } else{
-          getPackageUrl()
-        }
-      }) .catch(error => {
-        message.error({
-          content: '版本号' + data.formData.packageVersionNum + '不存在，请重新选择'
-        })
-        data.formData.packageVersionNum = '5.0.0'
-        tempVersionNum.value = '5.0.0'
-      })
-    } else {
-      getPackageUrl()
-    }
-  }
-}
-const insertVersionNum = (value:any) => {
-  tempVersionNum.value = value.target.value
-}
-const searchVersionNum = (value:any) => {
-  data.formData.packageVersionNum = (value != null && value !== '') ? value : undefined;
-}
 
 const formRules = reactive<FormRules>({
   packageVersionNum: [
@@ -267,7 +226,7 @@ const uploadStatusChange = () => {
 }
 const uploadFileTag = reactive({ value: true })
 const handleFileUpload = (file:file) => {
-  data.fileList = file
+  data.fileList = file[0]
 }
 
 const handleBeforeRemove = (file: FileItem) => {
@@ -338,13 +297,14 @@ const generateName = () => {
     !data.isNameDirty &&
     data.formData.packageVersionNum
   ) {
-    let name = `${data.formData.type}-${data.formData.os}-${data.formData.cpuArch}`
-    if (data.formData.type === 'openGauss') {
-      name += `-${data.formData.packageVersion}`
+    let name = `${data.formData.type}-${data.formData.packageVersionNum}`
+    if (data.formData.packageVersion === OpenGaussVersionEnum.LITE) {
+      name += `Lite-${data.formData.packageVersion}-${data.formData.os}-${data.formData.cpuArch}`
+    } else if (data.formData.packageVersion === OpenGaussVersionEnum.ENTERPRISE) {
+      name +=  `${data.formData.packageVersion}-${data.formData.os}-${data.formData.cpuArch}-all`
+    } else {
+      name += `${data.formData.packageVersion}-${data.formData.os}-${data.formData.cpuArch}`
     }
-    name += `-${data.formData.packageVersionNum}-${dayjs().format(
-      'YYYYMMDDHHmmss'
-    )}`
     data.formData.name = name
   }
 }
@@ -421,6 +381,7 @@ const open = (
   uploadStatusTag.value = addOptionFlag === '1'
   wsBusinessId.value = addOptionFlag !== '1'?addOptionFlag:''
   getPackageUrl()
+  fileListPPPP.value = []
   tempOs.value = data.formData.os
   tempArch.value = data.formData.cpuArch
   tempVersion.value = data.formData.packageVersion
@@ -459,18 +420,25 @@ const emits = defineEmits([`finish`])
 const submitLoading = ref(false)
 const submit = () => {
   if (uploadStatusTag.value) {
-    const params = {
-      name: data.formData.name,
-      os: data.formData.os,
-      cpuArch: data.formData.cpuArch,
-      packageVersionNum: data.formData.packageVersionNum,
-      packageUrl: data.formData.packageUrl,
-      packageVersion: data.formData.packageVersion
-    }
-    batchPackageUpload(params.name,params.os, params.cpuArch,params.packageVersion, params.packageVersionNum, params.packageUrl).then((res) => {
-      console.log('res' + res)
+    const formData = new FormData
+    formData.append('name', data.formData.name)
+    formData.append('os', data.formData.os)
+    formData.append('cpuArch', data.formData.cpuArch)
+    formData.append('packageVersionNum', data.formData.packageVersionNum)
+    formData.append('packageUrl', '')
+    formData.append('packageVersion', data.formData.packageVersion)
+    formData.append('uploadFile', data.fileList.file)
+    axios({
+      url: `/installPackageManager/v2/save/upload/`,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      data: formData
+    }).then((res) => {
+      console.log('')
     }).catch((error) => {
-      console.log('' + error)
+      console.log('613' + error)
     })
   } else {
     const params = {
@@ -519,21 +487,29 @@ const close = () => {
 }
 </script>
 
-<style>
-.ant-upload-hint {
+<style scoped>
+:deep(.ant-upload-hint) {
   color:lightgrey;
 }
 
-.arco-radio-checked.arco-radio-disabled .arco-radio-label {
+:deep(.arco-radio-checked.arco-radio-disabled .arco-radio-label) {
   color: var(--color-hw-text-2);
 }
 
-.arco-radio-disabled .arco-radio-label {
+:deep(.arco-radio-disabled .arco-radio-label) {
   color: var(--color-text-3);
 }
 
-.arco-input-wrapper .arco-input[disabled]{
+:deep(.arco-input-wrapper .arco-input[disabled]) {
   -webkit-text-fill-color: var(--color-text-3);
+}
+
+:deep(.arco-progress-type-circle) {
+  display: table-column;
+}
+
+:deep(.arco-upload-list-item-name-link .arco-upload-list-item-file-icon .arco-upload-list-item-file-icon) {
+  color: black;
 }
 
 </style>
