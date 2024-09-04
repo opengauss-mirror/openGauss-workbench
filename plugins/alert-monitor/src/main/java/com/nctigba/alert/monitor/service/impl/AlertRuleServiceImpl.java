@@ -55,6 +55,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -167,6 +168,7 @@ public class AlertRuleServiceImpl extends ServiceImpl<AlertRuleMapper, AlertRule
         BeanUtil.copyProperties(alertRule, alertRuleDO);
         this.saveOrUpdate(alertRuleDO);
         if (CommonConstants.PLUGIN_RULE.equals(alertRule.getRuleType())) {
+            updateTemplateRule(alertRuleDO, new ArrayList<>(), alertRule.getTemplateRuleIds());
             return;
         }
         List<AlertRuleItemDO> ruleItemList = alertRuleDO.getAlertRuleItemList();
@@ -207,8 +209,9 @@ public class AlertRuleServiceImpl extends ServiceImpl<AlertRuleMapper, AlertRule
         }
         for (Long templateRuleId : templateRuleIds) {
             AlertTemplateRuleDO templateRule = templateRuleService.getById(templateRuleId);
+            Long id = templateRule.getId();
             BeanUtil.copyProperties(alertRuleDO, templateRule);
-            templateRule.setId(templateRuleId).setRuleId(alertRuleDO.getId());
+            templateRule.setId(id).setRuleId(alertRuleDO.getId());
             List<AlertTemplateRuleItemDO> templateRuleItemSources = templateRuleItemService.list(
                 Wrappers.<AlertTemplateRuleItemDO>lambdaQuery()
                     .eq(AlertTemplateRuleItemDO::getTemplateRuleId, templateRuleId)
@@ -219,10 +222,12 @@ public class AlertRuleServiceImpl extends ServiceImpl<AlertRuleMapper, AlertRule
                 AlertTemplateRuleItemDO templateRuleItemSource = templateRuleItemSources.stream()
                     .filter(item -> item.getRuleItemId().equals(ruleItem.getId())).findFirst().orElse(null);
                 if (templateRuleItemSource == null) {
-                    templateRuleItem.setId(null).setCreateTime(LocalDateTime.now()).setTemplateRuleId(templateRuleId);
+                    templateRuleItem.setId(null).setCreateTime(LocalDateTime.now()).setTemplateRuleId(templateRuleId)
+                        .setRuleItemId(ruleItem.getId());
                 } else {
                     templateRuleItem.setId(templateRuleItemSource.getId()).setTemplateRuleId(templateRuleId)
-                        .setUpdateTime(LocalDateTime.now()).setCreateTime(templateRuleItemSource.getCreateTime());
+                        .setUpdateTime(LocalDateTime.now()).setCreateTime(templateRuleItemSource.getCreateTime())
+                        .setRuleItemId(templateRuleItemSource.getRuleItemId());
                 }
                 return templateRuleItem;
             }).collect(Collectors.toList());

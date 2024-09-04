@@ -30,6 +30,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.annotation.Supplier;
 import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.event.NotifyEvent;
+import com.nctigba.alert.monitor.mapper.AlertTemplateRuleMapper;
 import com.nctigba.alert.monitor.mapper.NotifyWayMapper;
 import com.nctigba.alert.monitor.model.dto.AlertPluginInfoDTO;
 import com.nctigba.alert.monitor.model.dto.AlertRuleParamDTO;
@@ -82,6 +83,8 @@ public class AlertSupplier {
     private AlertRecordDetailService recordDetailService;
     @Autowired
     private ApplicationContext context;
+    @Autowired
+    private AlertTemplateRuleMapper alertTemplateRuleMapper;
 
     /**
      * saveAlertRule
@@ -134,12 +137,8 @@ public class AlertSupplier {
             if (StrUtil.isBlank(info.getPluginCode()) || StrUtil.isBlank(info.getRuleCode())) {
                 continue;
             }
-            List<AlertTemplateRuleDO> ruleList = templateRuleService.list(
-                Wrappers.<AlertTemplateRuleDO>lambdaQuery().eq(AlertTemplateRuleDO::getPluginCode,
-                        info.getPluginCode()).eq(AlertTemplateRuleDO::getRuleCode, info.getRuleCode())
-                    .eq(AlertTemplateRuleDO::getIsDeleted, CommonConstants.IS_NOT_DELETE)
-                    .eq(AlertTemplateRuleDO::getEnable, CommonConstants.ENABLE)
-                    .eq(AlertTemplateRuleDO::getIsIncluded, CommonConstants.IS_INCLUDED));
+            List<AlertTemplateRuleDO> ruleList =
+                alertTemplateRuleMapper.getAlertConfigTemplateRuleList(info.getPluginCode(), info.getRuleCode());
             if (CollectionUtil.isEmpty(ruleList)) {
                 continue;
             }

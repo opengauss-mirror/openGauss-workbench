@@ -203,6 +203,8 @@ export default {
     exportReport: 'Export report',
     logSearchTable: ['Time', 'Type', 'level', 'Log', 'Cluster ID', 'Instance ID'],
     justShowAlertLog: 'show only alert logs',
+    type: 'type',
+    selectType: 'Please select type',
   },
   AlertClusterNodeConf: {
     title: 'alert configuration',

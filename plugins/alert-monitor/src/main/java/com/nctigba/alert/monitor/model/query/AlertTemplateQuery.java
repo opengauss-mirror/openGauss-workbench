@@ -23,6 +23,8 @@
 
 package com.nctigba.alert.monitor.model.query;
 
+import com.nctigba.alert.monitor.constant.CommonConstants;
+import com.nctigba.alert.monitor.model.validator.annotation.EnumString;
 import lombok.Data;
 
 import javax.validation.Valid;
@@ -42,6 +44,7 @@ public class AlertTemplateQuery {
     @NotBlank
     private String templateName;
     @NotBlank
+    @EnumString(values = {CommonConstants.INSTANCE, CommonConstants.NONINSTANCE})
     private String type;
 
     @Valid

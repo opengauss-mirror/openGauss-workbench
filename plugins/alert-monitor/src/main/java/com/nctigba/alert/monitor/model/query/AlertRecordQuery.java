@@ -34,6 +34,7 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 public class AlertRecordQuery {
+    private String type;
     private String clusterNodeId;
 
     /**

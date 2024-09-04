@@ -51,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.common.exception.ServiceException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
@@ -60,11 +61,14 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -158,11 +162,79 @@ public class AlertApiServiceImpl implements AlertApiService {
         List<AlertShieldingDO> shieldingDOList = shieldingMapper.selectList(Wrappers.<AlertShieldingDO>lambdaQuery()
             .eq(AlertShieldingDO::getIsDeleted, CommonConstants.IS_NOT_DELETE)
             .eq(AlertShieldingDO::getIsEnable, CommonConstants.IS_ENABLE));
-        boolean isExists = shieldingDOList.stream().anyMatch(f -> f.getClusterNodeIds().contains(clusterNodeId));
-        if (isExists) {
-            return true;
+        shieldingDOList = shieldingDOList.stream().filter(
+            f -> f.getClusterNodeIds().contains(clusterNodeId)).collect(Collectors.toList());
+        if (CollectionUtil.isEmpty(shieldingDOList)) {
+            return false;
+        }
+        for (AlertShieldingDO shielding : shieldingDOList) {
+            String type = shielding.getType();
+            if (CommonConstants.SHIELDING_CONTINUOUSLY.equals(type)) {
+                return true;
+            }
+            Date startDate = shielding.getStartDate();
+            Date endDate = shielding.getEndDate();
+            Date endTime = shielding.getEndTime();
+            Date startTime = shielding.getStartTime();
+            boolean isOneEmptyTime = startDate == null || endDate == null || startTime == null || endTime == null;
+            Date now = new Date();
+            if (CommonConstants.SHIELDING_PERIOD.equals(type) && !isOneEmptyTime) {
+                Date start = transferToFullTime(startDate, startTime);
+                Date end = transferToFullTime(endDate, endTime);
+                if (now.getTime() >= start.getTime() && now.getTime() <= end.getTime()) {
+                    return true;
+                }
+            }
+            if (CommonConstants.SHIELDING_SCHEDULED.equals(type) && !isOneEmptyTime
+                && isDateInRange(now, startDate, endDate) && isTimeInRange(now, startTime, endTime)) {
+                return true;
+            }
         }
         return false;
+    }
+
+    private Date transferToFullTime(Date date, Date time) {
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            String dateStr = dateFormat.format(date);
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+            String timeStr = timeFormat.format(time);
+            SimpleDateFormat fullFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            return fullFormat.parse(dateStr + " " + timeStr);
+        } catch (ParseException e) {
+            log.error("transfer to fulltime fail: " + e.getMessage());
+            throw new CustomException("transfer to fulltime fail: " + e.getMessage());
+        }
+    }
+
+    private boolean isDateInRange(Date current, Date startDate, Date endDate) {
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            String startDateStr = dateFormat.format(startDate);
+            String endDateStr = dateFormat.format(endDate);
+            SimpleDateFormat fullFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date start = fullFormat.parse(startDateStr + " 00:00:00");
+            Date end = fullFormat.parse(endDateStr + " 23:59:59");
+            return current.getTime() >= start.getTime() && current.getTime() <= end.getTime();
+        } catch (ParseException e) {
+            log.error("isDateInRange fail: " + e.getMessage());
+            throw new CustomException("isTimeInRange fail: " + e.getMessage());
+        }
+    }
+
+    private static boolean isTimeInRange(Date current, Date startTime, Date endTime) {
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            String curStr = dateFormat.format(current);
+            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+            SimpleDateFormat fullFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date start = fullFormat.parse(curStr + " " + timeFormat.format(startTime));
+            Date end = fullFormat.parse(curStr + " " + timeFormat.format(endTime));
+            return current.getTime() >= start.getTime() && current.getTime() <= end.getTime();
+        } catch (ParseException e) {
+            log.error("isTimeInRange fail: " + e.getMessage());
+            throw new CustomException("isTimeInRange fail: " + e.getMessage());
+        }
     }
 
     private void alertToRecover(String clusterNodeId, Long templateId, Long templateRuleId) {

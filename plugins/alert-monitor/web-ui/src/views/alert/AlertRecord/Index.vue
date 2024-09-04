@@ -22,6 +22,12 @@
       </div>
       <div class="seperator"></div>
       <div class="filter" style="margin-right: 20px">
+        <span>{{ $t(`alertRecord.type`) }}：</span>
+        <el-select v-model="formData.type" :placeholder="$t('alertRecord.selectType')" clearable @change="changeType" style="width: 150px">
+          <el-option v-for="item in typeList" :key="item" :value="item" :label="$t(`app.${item}`)" />
+        </el-select>
+      </div>
+      <div class="filter" style="margin-right: 20px">
         <span>{{ $t(`alertRecord.cluster`) }}：</span>
         <el-cascader v-model="formData.clusterNodeId" :options="clusterList" @change="changeClusterNode" clearable />
       </div>
@@ -176,6 +182,7 @@ const { t } = useI18n();
 
 const recordTable = ref()
 const formData = ref<any>({
+  type: '',
   clusterNodeId: [],
   startTime: '',
   endTime: '',
@@ -195,6 +202,7 @@ const page = reactive({
   pageSize: 10,
   total: 0,
 })
+const typeList = ref<any[]>(['instance', 'noninstance'])
 const { data: statisticsRes, run: requestStatisticsData } = useRequest(
   () => {
     return request.get("/api/v1/alertRecord/statistics")
@@ -209,6 +217,7 @@ watch(statisticsRes, (statisticsRes: any) => {
 const { data: pieRes, run: requestPisData } = useRequest(
   () => {
     let param = {
+      type: formData.value.type,
       clusterNodeId: formData.value.clusterNodeId && formData.value.clusterNodeId.length > 1 ? formData.value.clusterNodeId[1] : '',
       startTime: formData.value.startTime,
       endTime: formData.value.endTime
@@ -270,6 +279,7 @@ watch(pieRes, (pieRes: any) => {
 const { data: res, run: requestData } = useRequest(
   () => {
     let params = {
+      type: formData.value.type,
       clusterNodeId: formData.value.clusterNodeId && formData.value.clusterNodeId.length > 1 ? formData.value.clusterNodeId[1] : '',
       startTime: formData.value.startTime,
       endTime: formData.value.endTime,
@@ -322,7 +332,10 @@ watch(opsClusterData, (res: any) => {
     clusterList.value = treeTransform(res.data);
   }
 });
-
+const changeType = () => {
+  requestPisData()
+  requestData()
+}
 const changeAlertTimeRange = () => {
   if (alertTimeRange.value && alertTimeRange.value.length === 2) {
     formData.value.startTime = alertTimeRange.value[0]
