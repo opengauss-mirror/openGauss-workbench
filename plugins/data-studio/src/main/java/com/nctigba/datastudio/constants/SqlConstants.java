@@ -775,32 +775,32 @@ public class SqlConstants {
     /**
      * unique sql
      */
-    public static final String UNIQUE_SQL = "CONSTRAINT \"%s\" UNIQUE (%s)";
+    public static final String UNIQUE_SQL = "CONSTRAINT %s UNIQUE (%s)";
 
     /**
      * unique immediate sql
      */
-    public static final String UNIQUE_IMMEDIATE_SQL = "CONSTRAINT \"%s\" UNIQUE (%s)  DEFERRABLE INITIALLY IMMEDIATE ";
+    public static final String UNIQUE_IMMEDIATE_SQL = "CONSTRAINT %s UNIQUE (%s)  DEFERRABLE INITIALLY IMMEDIATE ";
 
     /**
      * primary key sql
      */
-    public static final String PRIMARY_KEY_SQL = "CONSTRAINT \"%s\" PRIMARY KEY (%s)";
+    public static final String PRIMARY_KEY_SQL = "CONSTRAINT %s PRIMARY KEY (%s)";
 
     /**
      * check sql
      */
-    public static final String CHECK_SQL = "CONSTRAINT \"%s\" CHECK (%s)";
+    public static final String CHECK_SQL = "CONSTRAINT %s CHECK (%s)";
 
     /**
      * foreign key sql
      */
-    public static final String FOREIGN_KEY_SQL = "CONSTRAINT \"%s\" FOREIGN KEY (%s) REFERENCES %s.%s (%s)";
+    public static final String FOREIGN_KEY_SQL = "CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s.%s (%s)";
 
     /**
      * partial cluster key sql
      */
-    public static final String PARTIAL_CLUSTER_KEY_SQL = "CONSTRAINT \"%s\" PARTIAL CLUSTER KEY (%s)";
+    public static final String PARTIAL_CLUSTER_KEY_SQL = "CONSTRAINT %s PARTIAL CLUSTER KEY (%s)";
 
     /**
      * with double sql
@@ -1087,50 +1087,50 @@ public class SqlConstants {
     /**
      * constraint drop sql
      */
-    public static final String CONSTRAINT_DROP_SQL = " ALTER TABLE %s.%s DROP  CONSTRAINT \"%s\"";
+    public static final String CONSTRAINT_DROP_SQL = " ALTER TABLE %s.%s DROP  CONSTRAINT %s";
 
     /**
      * constraint unique sql
      */
-    public static final String CONSTRAINT_UNIQUE_SQL = " ALTER TABLE %s.%s ADD  CONSTRAINT \"%s\" UNIQUE (%s) ";
+    public static final String CONSTRAINT_UNIQUE_SQL = " ALTER TABLE %s.%s ADD  CONSTRAINT %s UNIQUE (%s) ";
 
     /**
      * constraint unique immediate sql
      */
     public static final String CONSTRAINT_UNIQUE_IMMEDIATE_SQL = " ALTER TABLE %s.%s ADD  "
-            + "CONSTRAINT \"%s\" UNIQUE (%s)  DEFERRABLE INITIALLY IMMEDIATE  ";
+            + "CONSTRAINT %s UNIQUE (%s)  DEFERRABLE INITIALLY IMMEDIATE  ";
 
     /**
      * constraint primary sql
      */
-    public static final String CONSTRAINT_PRIMARY_SQL = " ALTER TABLE %s.%s ADD CONSTRAINT \"%s\" PRIMARY KEY (%s) ";
+    public static final String CONSTRAINT_PRIMARY_SQL = " ALTER TABLE %s.%s ADD CONSTRAINT %s PRIMARY KEY (%s) ";
 
     /**
      * constraint primary immediate sql
      */
-    public static final String CONSTRAINT_PRIMARY_IMMEDIATE_SQL = " ALTER TABLE %s.%s ADD CONSTRAINT \"%s\" "
+    public static final String CONSTRAINT_PRIMARY_IMMEDIATE_SQL = " ALTER TABLE %s.%s ADD CONSTRAINT %s "
             + "PRIMARY KEY (%s)  DEFERRABLE INITIALLY IMMEDIATE  ";
 
     /**
      * constraint check sql
      */
-    public static final String CONSTRAINT_CHECK_SQL = "   ALTER TABLE %s.%s ADD CONSTRAINT \"%s\" CHECK (%s)  ";
+    public static final String CONSTRAINT_CHECK_SQL = "   ALTER TABLE %s.%s ADD CONSTRAINT %s CHECK (%s)  ";
 
     /**
      * constraint partial cluster key sql
      */
-    public static final String CONSTRAINT_PARTIAL_CLUSTER_KEY_SQL = "   ALTER TABLE %s.%s  ADD CONSTRAINT \"%s\"  "
+    public static final String CONSTRAINT_PARTIAL_CLUSTER_KEY_SQL = "   ALTER TABLE %s.%s  ADD CONSTRAINT %s  "
             + "PARTIAL  CLUSTER KEY (%s)  ";
 
     /**
      * constraint no check sql
      */
-    public static final String CONSTRAINT_NO_CHECK_SQL = "   ALTER TABLE %s.%s ADD CONSTRAINT \"%s\"  %s  ";
+    public static final String CONSTRAINT_NO_CHECK_SQL = "   ALTER TABLE %s.%s ADD CONSTRAINT %s  %s  ";
 
     /**
      * constraint foreign key sql
      */
-    public static final String CONSTRAINT_FOREIGN_KEY_SQL = " ALTER TABLE %s.%s ADD CONSTRAINT \"%s\" "
+    public static final String CONSTRAINT_FOREIGN_KEY_SQL = " ALTER TABLE %s.%s ADD CONSTRAINT %s "
             + "FOREIGN KEY (%s) REFERENCES %s.%s (%s) ";
 
     /**
@@ -1169,7 +1169,7 @@ public class SqlConstants {
     /**
      * constraint comment sql
      */
-    public static final String CONSTRAINT_COMMENT_SQL = " COMMENT ON CONSTRAINT \"%s\" ON %s.%s is '%s' ";
+    public static final String CONSTRAINT_COMMENT_SQL = " COMMENT ON CONSTRAINT %s ON %s.%s is '%s' ";
 
     /**
      * constraint table column sql
