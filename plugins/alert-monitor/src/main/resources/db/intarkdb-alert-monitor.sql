@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS "alert_rule" (
     "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "rule_name" varchar(50)  NOT NULL,
     "level" varchar(20)  NOT NULL,
-    rule_type varchar(20),
+    "rule_type" varchar(20),
     "rule_exp_comb" varchar(100),
     "rule_content" text,
     "notify_duration" int8,
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS "alert_rule" (
 COMMENT ON COLUMN "alert_rule"."id" IS '规则ID';
 COMMENT ON COLUMN "alert_rule"."rule_name" IS '规则名称';
 COMMENT ON COLUMN "alert_rule"."level" IS '告警等级，serous:严重，warn:警告，info:提示';
-COMMENT ON COLUMN "alert_rule".rule_type IS '规则类型，index为指标，log为日志';
+COMMENT ON COLUMN "alert_rule"."rule_type" IS '规则类型，index为指标，log为日志';
 COMMENT ON COLUMN "alert_rule"."rule_exp_comb" IS '组合表达式';
 COMMENT ON COLUMN "alert_rule"."rule_content" IS '规则内容';
 COMMENT ON COLUMN "alert_rule"."notify_duration" IS '统计周期，表示告警持续多久通知';
@@ -130,6 +130,7 @@ ALTER TABLE "alert_rule_item" ADD COLUMN "block_word" text;
 COMMENT ON COLUMN "alert_rule_item"."keyword" IS '关键字，多个用逗号分隔';
 COMMENT ON COLUMN "alert_rule_item"."block_word" IS '屏蔽词，多个用逗号分隔';
 ALTER TABLE alert_rule_item ALTER COLUMN rule_exp_param TYPE text;
+alter table alert_rule_item ALTER COLUMN rule_exp TYPE text;
 alter table alert_rule_item alter  COLUMN  limit_value type DECIMAL;
 
 
@@ -223,7 +224,7 @@ CREATE TABLE IF NOT EXISTS "alert_template_rule" (
     "rule_id" int8 NOT NULL,
     "rule_name" varchar(50)  NOT NULL,
     "level" varchar(20)  NOT NULL,
-    rule_type varchar(20),
+    "rule_type" varchar(20),
     "rule_exp_comb" varchar(100),
     "rule_content" text,
     "notify_duration" int8,
@@ -244,7 +245,7 @@ COMMENT ON COLUMN "alert_template_rule"."template_id" IS '模板ID';
 COMMENT ON COLUMN "alert_template_rule"."rule_id" IS '规则ID';
 COMMENT ON COLUMN "alert_template_rule"."rule_name" IS '规则名称';
 COMMENT ON COLUMN "alert_template_rule"."level" IS '告警等级，serous:严重，warn:警告，info:提示';
-COMMENT ON COLUMN "alert_template_rule".rule_type IS '规则类型，index为指标，log为日志';
+COMMENT ON COLUMN "alert_template_rule"."rule_type" IS '规则类型，index为指标，log为日志';
 COMMENT ON COLUMN "alert_template_rule"."rule_exp_comb" IS '组合表达式';
 COMMENT ON COLUMN "alert_template_rule"."rule_content" IS '规则内容';
 COMMENT ON COLUMN "alert_template_rule"."notify_duration" IS '通知评估时长，表示告警持续多久通知';
@@ -315,6 +316,7 @@ ALTER TABLE "alert_template_rule_item" ADD COLUMN "block_word" text;
 COMMENT ON COLUMN "alert_template_rule_item"."keyword" IS '关键字，多个用逗号分隔';
 COMMENT ON COLUMN "alert_template_rule_item"."block_word" IS '屏蔽词，多个用逗号分隔';
 ALTER TABLE alert_template_rule_item ALTER COLUMN rule_exp_param TYPE text;
+alter table alert_template_rule_item ALTER COLUMN rule_exp TYPE text;
 alter table alert_template_rule_item alter  COLUMN  limit_value type DECIMAL;
 
 CREATE TABLE alert_template_rule_item_param (

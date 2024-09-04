@@ -35,6 +35,6 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 2023/12/5
  */
 @Mapper
-@DS("embedded")
+@DS("paramInfo")
 public interface ParamInfoMapper extends BaseMapper<ParamInfoDO> {
 }

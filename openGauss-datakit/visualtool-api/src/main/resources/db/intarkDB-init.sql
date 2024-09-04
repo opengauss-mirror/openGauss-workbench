@@ -125,12 +125,7 @@ CREATE TABLE IF NOT EXISTS "ops_cluster_node" (
     "create_by" varchar(64),
     "create_time" timestamp,
     "update_by" varchar(64),
-    "update_time" timestamp,
-    "is_enable_dss" int8,
-    dss_data_lun_link_path VARCHAR(255),
-    xlog_lun_link_path VARCHAR(255),
-    cm_voting_lun_link_path VARCHAR(255),
-    cm_sharing_lun_link_path VARCHAR(255)
+    "update_time" timestamp
     )
 ;
 

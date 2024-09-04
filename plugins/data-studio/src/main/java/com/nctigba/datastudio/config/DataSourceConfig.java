@@ -55,7 +55,7 @@ public class DataSourceConfig {
         EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();
         // read config from dataKit platform
         String driverClassName = environmentProvider.getString("spring.datasource.driver-class-name");
-        if (GS_DRIVER.equals(driverClassName) && !SQLITE_DRIVER.equals(properties.getDriverClassName())) {
+        if (GS_DRIVER.equals(driverClassName)) {
             properties.setDriverClassName(SQLITE_DRIVER);
             properties.setUrl(SQLITE_URL);
             initDbFile();

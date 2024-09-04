@@ -24,6 +24,7 @@
 package com.nctigba.observability.sql.config;
 
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
+import com.baomidou.dynamic.datasource.creator.DruidDataSourceCreator;
 import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
 import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceProperties;
 import com.gitee.starblues.bootstrap.PluginContextHolder;
@@ -39,6 +40,7 @@ import org.springframework.context.annotation.Profile;
 import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * DataSourceConfig
@@ -51,12 +53,13 @@ import java.io.IOException;
 public class DataSourceConfig {
     static final String GS_DRIVER = "org.opengauss.Driver";
     static final String SQLITE_DRIVER = "org.sqlite.JDBC";
-    static final String DB_PATH = "data/observability-sql-diagnosis-data.db";
-    static final String SQLITE_URL = "jdbc:sqlite:" + DB_PATH;
-    static final String SQLITE_INSTANCE_URL = "jdbc:sqlite:data/observability-instance-data.db";
+    static final String SQLITE_URL = "jdbc:sqlite:data/";
+    static final String SQLITE_INSTANCE_URL = SQLITE_URL + "observability-instance-data.db";
 
     @Autowired
     DynamicDataSourceProperties properties;
+    @Autowired
+    DruidDataSourceCreator druidDataSourceCreator;
 
     /**
      * primary dataSource
@@ -70,32 +73,36 @@ public class DataSourceConfig {
     public DataSource dataSource() throws IOException {
         EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();
         // read config from dataKit platform
-        String url = environmentProvider.getString("spring.datasource.url");
-        String username = environmentProvider.getString("spring.datasource.username");
-        String password = environmentProvider.getString("spring.datasource.password");
+        DataSourceProperty primaryProperty = new DataSourceProperty();
+        primaryProperty.setUrl(environmentProvider.getString("spring.datasource.url"));
+        primaryProperty.setUsername(environmentProvider.getString("spring.datasource.username"));
+        primaryProperty.setPassword(environmentProvider.getString("spring.datasource.password"));
         String driverClassName = environmentProvider.getString("spring.datasource.driver-class-name");
-
-        DataSource primary = DataSourceBuilder.create().driverClassName(driverClassName).url(url).username(username)
-                .password(password).build();
+        primaryProperty.setDriverClassName(driverClassName);
+        DataSource primary = druidDataSourceCreator.doCreateDataSource(primaryProperty);
         var d = new DynamicRoutingDataSource();
         d.addDataSource("primary", primary);
         d.setPrimary("primary");
         if (GS_DRIVER.equals(driverClassName)) {
-            DataSourceProperty embedded = properties.getDatasource().get("embedded");
-            DataSourceProperty instanceAgent = properties.getDatasource().get("instanceAgent");
-            if (!SQLITE_DRIVER.equals(embedded.getDriverClassName())) {
-                embedded.setDriverClassName(SQLITE_DRIVER).setUrl(SQLITE_URL);
-                initDbFile();
-            }
-            if (!SQLITE_DRIVER.equals(instanceAgent.getDriverClassName())) {
-                instanceAgent.setDriverClassName(SQLITE_DRIVER).setUrl(SQLITE_INSTANCE_URL);
+            for (Map.Entry<String, DataSourceProperty> dataSourceProperty : properties.getDatasource().entrySet()) {
+                dataSourceProperty.getValue().setDriverClassName(SQLITE_DRIVER);
+                if ("instanceAgent".equals(dataSourceProperty.getKey())) {
+                    dataSourceProperty.getValue().setUrl(SQLITE_INSTANCE_URL);
+                    continue;
+                }
+                String url = SQLITE_URL + dataSourceProperty.getKey() + ".db";
+                dataSourceProperty.getValue().setUrl(url);
+                dataSourceProperty.getValue().getDruid().setMaxActive(1);
+                String[] split = url.split(":");
+                String dbFile = split[split.length - 1];
+                initDbFile(dbFile);
             }
         }
         return d;
     }
 
-    private void initDbFile() throws IOException {
-        File dbFile = new File(DB_PATH);
+    private void initDbFile(String file) throws IOException {
+        File dbFile = new File(file);
         File dbDir = dbFile.getParentFile();
         if (!dbDir.exists()) {
             dbDir.mkdirs();

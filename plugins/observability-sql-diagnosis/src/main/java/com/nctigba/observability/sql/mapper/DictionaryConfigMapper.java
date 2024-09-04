@@ -29,6 +29,6 @@ import com.nctigba.observability.sql.model.entity.DictionaryConfigDO;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
-@DS("embedded")
+@DS("diagnosisSources")
 public interface DictionaryConfigMapper extends BaseMapper<DictionaryConfigDO> {
 }

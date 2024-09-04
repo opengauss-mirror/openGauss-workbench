@@ -122,13 +122,6 @@
             <version>3.7.7</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>IntarkDB-jdbc</groupId>
-            <artifactId>IntarkDB-jdbc</artifactId>
-            <version>1.0.0.1</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/../../lib/intarkdb-jdbc-1.0.0.1.jar</systemPath>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -165,6 +158,11 @@
                         <provider>lita</provider>
                         <description>基础运维插件</description>
                     </pluginInfo>
+                    <loadMainResourcePattern>
+                        <includes>
+                            <include>org.intarkdb.**</include>
+                        </includes>
+                    </loadMainResourcePattern>
                 </configuration>
                 <executions>
                     <execution>

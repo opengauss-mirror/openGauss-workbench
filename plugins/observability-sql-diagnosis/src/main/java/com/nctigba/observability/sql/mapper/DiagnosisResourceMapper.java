@@ -29,6 +29,6 @@ import com.nctigba.observability.sql.model.entity.ResourceDO;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
-@DS("embedded")
+@DS("diagnosisSources")
 public interface DiagnosisResourceMapper extends BaseMapper<ResourceDO> {
 }

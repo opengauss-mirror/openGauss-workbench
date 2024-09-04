@@ -23,9 +23,13 @@
 
 package com.nctigba.observability.instance.config;
 
+import com.alibaba.druid.pool.DruidDataSource;
+import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
+import com.baomidou.dynamic.datasource.creator.DruidDataSourceCreator;
 import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
 import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceProperties;
+import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.druid.DruidConfig;
 import com.gitee.starblues.bootstrap.PluginContextHolder;
 import com.gitee.starblues.spring.environment.EnvironmentProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +58,8 @@ public class DataSourceConfig {
 
     @Autowired
     DynamicDataSourceProperties properties;
+    @Autowired
+    DruidDataSourceCreator druidDataSourceCreator;
 
     /**
      * primary dataSource
@@ -67,22 +73,20 @@ public class DataSourceConfig {
     public DataSource dataSource() throws IOException {
         EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();
         // read config from dataKit platform
-        String url = environmentProvider.getString("spring.datasource.url");
-        String username = environmentProvider.getString("spring.datasource.username");
-        String password = environmentProvider.getString("spring.datasource.password");
+        DataSourceProperty primaryProperty = new DataSourceProperty();
+        primaryProperty.setUrl(environmentProvider.getString("spring.datasource.url"));
+        primaryProperty.setUsername(environmentProvider.getString("spring.datasource.username"));
+        primaryProperty.setPassword(environmentProvider.getString("spring.datasource.password"));
         String driverClassName = environmentProvider.getString("spring.datasource.driver-class-name");
-
-        DataSource primary = DataSourceBuilder.create().driverClassName(driverClassName).url(url).username(username)
-                .password(password).build();
+        primaryProperty.setDriverClassName(driverClassName);
+        DataSource primary = druidDataSourceCreator.doCreateDataSource(primaryProperty);
         var d = new DynamicRoutingDataSource();
         d.addDataSource("primary", primary);
         d.setPrimary("primary");
         if (GS_DRIVER.equals(driverClassName)) {
             DataSourceProperty embedded = properties.getDatasource().get("embedded");
-            if (!SQLITE_DRIVER.equals(embedded.getDriverClassName())) {
-                embedded.setDriverClassName(SQLITE_DRIVER).setUrl(SQLITE_URL);
-                initDbFile();
-            }
+            embedded.setDriverClassName(SQLITE_DRIVER).setUrl(SQLITE_URL);
+            initDbFile();
         }
         return d;
     }

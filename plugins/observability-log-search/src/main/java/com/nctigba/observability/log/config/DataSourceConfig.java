@@ -24,8 +24,11 @@
 package com.nctigba.observability.log.config;
 
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
+import com.baomidou.dynamic.datasource.creator.DruidDataSourceCreator;
+import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
 import com.gitee.starblues.bootstrap.PluginContextHolder;
 import com.gitee.starblues.spring.environment.EnvironmentProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
@@ -39,18 +42,20 @@ import javax.sql.DataSource;
  */
 @Configuration
 public class DataSourceConfig {
+	@Autowired
+	DruidDataSourceCreator druidDataSourceCreator;
+
 	@Bean
 	@ConfigurationProperties(prefix = "spring.datasource")
 	public DataSource dataSource() {
 		EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();
 		// read config from dataKit platform
-		String url = environmentProvider.getString("spring.datasource.url");
-		String username = environmentProvider.getString("spring.datasource.username");
-		String password = environmentProvider.getString("spring.datasource.password");
-		String driverClassName = environmentProvider.getString("spring.datasource.driver-class-name");
-
-		DataSource primary = DataSourceBuilder.create().driverClassName(driverClassName).url(url).username(username)
-				.password(password).build();
+		DataSourceProperty primaryProperty = new DataSourceProperty();
+		primaryProperty.setUrl(environmentProvider.getString("spring.datasource.url"));
+		primaryProperty.setUsername(environmentProvider.getString("spring.datasource.username"));
+		primaryProperty.setPassword(environmentProvider.getString("spring.datasource.password"));
+		primaryProperty.setDriverClassName(environmentProvider.getString("spring.datasource.driver-class-name"));
+		DataSource primary = druidDataSourceCreator.doCreateDataSource(primaryProperty);
 		var d=new DynamicRoutingDataSource();
 		d.addDataSource("primary", primary);
 		d.setPrimary("primary");

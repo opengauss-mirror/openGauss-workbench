@@ -38,7 +38,7 @@ import java.util.List;
  * @since 2023/6/9
  */
 @Mapper
-@DS("embedded")
+@DS("diagnosisSources")
 public interface DiagnosisResultMapper extends BaseMapper<DiagnosisResultDO> {
     /**
      * Batch insert data
