@@ -186,8 +186,8 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
                 OutputStream os = response.getOutputStream()
         ) {
             String querySql = composeQuerySql(request, true);
-            if (connection instanceof BaseConnection) {
-                CopyManager copyManager = new CopyManager((BaseConnection) connection);
+            if (connection.isWrapperFor(BaseConnection.class)) {
+                CopyManager copyManager = new CopyManager(connection.unwrap(BaseConnection.class));
                 copyManager.copyOut(querySql, fileOutputStream);
             }
 
@@ -227,8 +227,8 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
                 FileInputStream fileInputStream = new FileInputStream((file))
         ) {
             String querySql = composeQuerySql(request, false);
-            if (connection instanceof BaseConnection) {
-                CopyManager copyManager = new CopyManager((BaseConnection) connection);
+            if (connection.isWrapperFor(BaseConnection.class)) {
+                CopyManager copyManager = new CopyManager(connection.unwrap(BaseConnection.class));
                 copyManager.copyIn(querySql, fileInputStream);
             }
         }
@@ -288,7 +288,7 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
             statement.execute(String.format(COURSE_SQL, "DS_" + timeStamp, sql));
             log.info("ExportService getXssfWorkBook timeStamp: " + "DS_" + timeStamp);
 
-            int page = count % 1000000 == 0 ? count / 1000000 : count / 1000000 + 1;
+            int page = count == 0 ? 1 : (int) Math.ceil((double) count / 1000000);
             log.info("ExportService getXssfWorkBook page: " + page);
             for (int p = 0; p < page; p++) {
                 List<String> columnList = request.getColumnList();
@@ -443,15 +443,19 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
             sb.append(" CSV ");
             String quote = request.getQuote();
             if (StringUtils.isNotEmpty(quote)) {
-                sb.append(" QUOTE ").append(QUOTES).append(quote).append(QUOTES);
-                if (quote.equals("'")) {
+                sb.append(" QUOTE ");
+                if (quote.equals(QUOTES)) {
+                    sb.append(QUOTES).append(QUOTES).append(QUOTES).append(QUOTES);
+                } else {
                     sb.append(QUOTES).append(quote).append(QUOTES);
                 }
             }
             String escape = request.getEscape();
             if (StringUtils.isNotEmpty(escape)) {
-                sb.append(" ESCAPE ").append(QUOTES).append(escape).append(QUOTES);
-                if (escape.equals("'")) {
+                sb.append(" ESCAPE ");
+                if (escape.equals(QUOTES)) {
+                    sb.append(QUOTES).append(QUOTES).append(QUOTES).append(QUOTES);
+                } else {
                     sb.append(QUOTES).append(escape).append(QUOTES);
                 }
             }

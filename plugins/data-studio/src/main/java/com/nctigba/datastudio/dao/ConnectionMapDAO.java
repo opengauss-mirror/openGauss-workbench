@@ -36,10 +36,10 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.SQLException;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
 
@@ -55,7 +55,8 @@ public class ConnectionMapDAO {
     /**
      * connection map
      */
-    public static Map<String, ConnectionDTO> conMap = new HashMap<>(1);
+    public static final Map<String, ConnectionDTO> conMap = new ConcurrentHashMap<>(1);
+
     @Autowired
     WebSocketServer webSocketServer;
 
