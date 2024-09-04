@@ -812,8 +812,10 @@ const envCheck = (clusterId: string, hostIp: string, hostUsername: string) => {
       .then((res) => {
         if (Number(res.code) === 200) {
           if (res.data.result === 'SUCCESS') {
-            Message.success(res.msg);
+            Message.success('clusterEnvCheck:' + res.data.result);
             getDraftListData();
+          } else {
+            Message.error('clusterEnvCheck:' + res.data.result);
           }
         }
       }).catch(error => {
@@ -1502,7 +1504,7 @@ const getList = () => new Promise(resolve => {
         item.isShow = true
         item.state = -1
         item.loading = false
-        if (item.version === 'MINIMAL_LIST' && item.clusterNodes.length < 2) {
+        if (item.version === 'MINIMAL_LIST' && item.deployType === 'CLUSTER' && item.clusterNodes.length < 2) {
           const slaveNode = JSON.parse(JSON.stringify(item.clusterNodes[0]))
           slaveNode.clusterRole = ClusterRoleEnum.SLAVE
           item.clusterNodes.push(slaveNode)
