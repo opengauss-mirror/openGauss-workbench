@@ -243,7 +243,8 @@ const pageChange = current => {
 
 const calcTime = row => {
   if (row.execStatus === 1 || row.execStatus === 2) {
-    const seconds = row.finishTime ? dayjs(row.finishTime).diff(dayjs(row.execTime), 'seconds') : dayjs().diff(dayjs(row.execTime), 'seconds')
+    const seconds = row.finishTime ? dayjs(row.finishTime).diff(dayjs(row.execTime), 'seconds')
+      : dayjs(row.currentTime).diff(dayjs(row.execTime), 'seconds')
     const hour = parseInt(seconds / 3600)
     const minute = parseInt((seconds - hour * 3600) / 60)
     return `${hour ? hour + t('list.index.5q08sf2dkc80') : ''} ${minute ? minute + t('list.index.5q08sf2dkek0') : ''}`
