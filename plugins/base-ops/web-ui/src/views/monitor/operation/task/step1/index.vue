@@ -296,7 +296,7 @@
                       :cancel-text="$t('取消')"
                       @ok="deleteRows(record)"
                     >
-                      <a-link status="danger" v-if="record.order !== 1">删除</a-link>
+                      <a-link status="danger" v-if="record.nodeType !== 'MASTER'">删除</a-link>
                     </a-popconfirm>
                   </div>
                   <div class="flex-row-start" v-else>
@@ -987,6 +987,8 @@ const deleteRows = (record:any) => {
     }) .catch((error) => {
       console.error(error)
     })
+  }else{
+      data.clusterNodes =  data.clusterNodes.filter(item => item.order !== record.order)
   }
 }
 
@@ -1189,6 +1191,7 @@ const cancelEdit = (record) => {
       item.editing = false
     }
   })
+  data.clusterNodes = data.clusterNodes.filter(item=>item.hostIp !== "")
   tempEditCluster.value = {}
 }
 
@@ -1588,7 +1591,11 @@ const init = () => {
             "cmPort": item.cmPort,
             "editing": (!item.hostId && res.data.version !== OpenGaussVersionEnum.MINIMAL_LIST)
           }
-          data.clusterNodes.push(newData)
+          if(newData.nodeType === "MASTER"){
+            data.clusterNodes.unshift(newData)
+          }else{
+            data.clusterNodes.push(newData)
+          }
         })
         currVersion.value = res.data.version
         data.clusterId = props.clusterId

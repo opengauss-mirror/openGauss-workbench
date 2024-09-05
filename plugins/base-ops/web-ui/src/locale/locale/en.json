@@ -427,7 +427,7 @@
             "sl3u5s5cf244": "Task ID",
             "sl3u5s5cf245": "Task Status",
             "sl3u5s5cf246": "Server IP",
-            "sl3u5s5cf247": "OpenGauss Version",
+            "sl3u5s5cf247": "openGauss Version",
             "sl3u5s5cf248": "Task Creation Time",
             "sl3u5s5cf249": "Task Update Time",
             "sl3u5s5cf250": "Only one child tag can be selected for the same parent tag.",
