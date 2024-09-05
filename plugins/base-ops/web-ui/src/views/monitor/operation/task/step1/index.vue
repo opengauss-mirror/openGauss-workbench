@@ -170,10 +170,10 @@
               </a-radio-group>
             </a-form-item>
             <a-form-item v-if="data.packageVersion === OpenGaussVersionEnum.ENTERPRISE" label="是否安装CM">
-              <a-switch v-model:checked="flagCM" @change="checkflagCM"/>
+              <a-switch v-model="flagCM" @change="checkflagCM"/>
             </a-form-item>
             <a-form-item label="是否环境分离">
-              <a-switch v-model:checked="flagEnvSeqar" @change="checkflagEnvSeqar"/>
+              <a-switch v-model="flagEnvSeqar" @change="checkflagEnvSeqar" />
             </a-form-item>
             <a-form-item v-if="flagEnvSeqar" label="环境分离路径" field="envPath" >
               <a-input v-model="data.envPath" placeholder="请输入环境分离路径" :max-length="255" style="width: 30%; height: 32px" />
@@ -631,10 +631,10 @@ const initMasterNode = () => {
         masterHostIp.value = data.hostIp
         clusterOrder.value = 1
       } else {
-        // data.clusterNodes[0].hostIp = data.hostIp
-        // data.clusterNodes[0].hostId = data.hostId
-        // data.clusterNodes[0].hostUser = data.hostUser
-        // data.clusterNodes[0].hostUserId = data.hostUserId
+        data.clusterNodes[0].hostIp = data.hostIp
+        data.clusterNodes[0].hostId = data.hostId
+        data.clusterNodes[0].hostUser = data.hostUser
+        data.clusterNodes[0].hostUserId = data.hostUserId
         masterHostIp.value = data.hostIp
       }
     }
@@ -815,6 +815,7 @@ const checkflagCM = (input) => {
 }
 const checkflagEnvSeqar = (input) => {
   flagEnvSeqar.value = input
+  data.enableGenerateEnvironmentVariableFile = input
   data.envPath = generateEnvironmentPath()
 }
 
@@ -1616,6 +1617,9 @@ const init = () => {
         data.hostUser = res.data.hostUsername
         data.hostUserId = res.data.hostUserId
         data.hostId = hostIpId.get(data.hostIp)
+        flagCM.value = data.enableCmTool
+        flagEnvSeqar.value  = data.enableGenerateEnvironmentVariableFile
+        packageSerchResult.value = true
         if (data.hostId && data.hostId !== null ) {
           getHostUser(data.hostId) .then((res) => {
             hostUserList.value = []

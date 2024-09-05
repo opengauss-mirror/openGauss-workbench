@@ -5,7 +5,7 @@
         <a-page-header
           class="demo-page-header"
           title="创建并行安装任务"
-          @back="() => $router.go(-1)"
+          @back="backToIndex"
         >
         </a-page-header>
       </header>
@@ -49,7 +49,7 @@
              :clusterTaskList="clusterTaskList"/>
     </div>
     <div class="submit-con">
-      <a-button v-if="currentStep === 1 " class="btn-item" @click="() => $router.go(-1)">{{$t('取消')}}</a-button>
+      <a-button v-if="currentStep === 1 " class="btn-item" @click="backToIndex">{{$t('取消')}}</a-button>
       <a-button v-if="currentStep === 2 || currentStep === 3" type="outline" class="btn-item" @click="onPrev" :loading="submitLoading">{{$t('上一步')}}</a-button>
       <a-button  class="btn-item" @click="saveConfig" :loading="submitLoading">{{$t('保存为草稿')}}</a-button>
       <a-button v-if="currentStep === 1 || currentStep === 2" type="primary" class="btn-item" @click="onNext">{{$t('下一步')}}</a-button>
@@ -73,6 +73,7 @@ import {
 } from "@/api/ops";
 import {useRoute, useRouter} from "vue-router";
 import {OpenGaussVersionEnum} from "@/types/ops/install";
+import router from "@/router";
 
 const currentStep = ref(1)
 const taskId = ref()
@@ -381,37 +382,37 @@ const saveUpdateCulster = async () => {
                   if (itemClusterNode
                     && (!itemClusterNode.hostId || itemClusterNode.hostId !== item.hostId)
                     && (!itemClusterNode.hostUserId || itemClusterNode.hostUserId !== item.hostUserId)) {
-                      updateClustertaskNode({
-                        "clusterNodeId": item.clusterNodeId,
-                        "clusterId": item.clusterId,
-                        "hostId": item.hostId,
-                        "hostUserId": item.hostUserId,
-                        "nodeType": item.nodeType,
-                        "dataPath": item.dataPath,
-                        "azOwner": item.azOwner,
-                        "azPriority": item.azPriority,
-                        "isCMMaster": item.isCMMaster,
-                        "cmDataPath": item.cmDataPath,
-                        "cmPort": item.cmPort
-                      }) .then((response) => {
-                        if(Number(response.code) !== 200) {
-                          console.error(response)
-                          Message.error('385   ' +response.data)
-                          clusterSaveFlag = false
-                        } else {
-                          clusterSaveFlag = true
-                          countUpdateFlag = countUpdateFlag + 1
-                        }
-                      }) .catch((error) => {
-                        console.error('updateClusterNode' + error)
+                    updateClustertaskNode({
+                      "clusterNodeId": item.clusterNodeId,
+                      "clusterId": item.clusterId,
+                      "hostId": item.hostId,
+                      "hostUserId": item.hostUserId,
+                      "nodeType": item.nodeType,
+                      "dataPath": item.dataPath,
+                      "azOwner": item.azOwner,
+                      "azPriority": item.azPriority,
+                      "isCMMaster": item.isCMMaster,
+                      "cmDataPath": item.cmDataPath,
+                      "cmPort": item.cmPort
+                    }) .then((response) => {
+                      if(Number(response.code) !== 200) {
+                        console.error(response)
+                        Message.error('385   ' +response.data)
                         clusterSaveFlag = false
-                      }) .finally(() => {
-                        if (clusterSaveFlag) {
-                          saveFlag.value = true
-                        } else {
-                          saveFlag.value = false
-                        }
-                      })
+                      } else {
+                        clusterSaveFlag = true
+                        countUpdateFlag = countUpdateFlag + 1
+                      }
+                    }) .catch((error) => {
+                      console.error('updateClusterNode' + error)
+                      clusterSaveFlag = false
+                    }) .finally(() => {
+                      if (clusterSaveFlag) {
+                        saveFlag.value = true
+                      } else {
+                        saveFlag.value = false
+                      }
+                    })
                   } else {
                     countUpdateFlag = countUpdateFlag + 1
                   }
@@ -478,14 +479,14 @@ const saveConfig = async () => {
   })
   if (currentStep.value === 1) {
     const formRuleCheck = stepOneComp.value
-      const isValid = formRuleCheck.validateAllFields()
-      if (isValid && editFlag.value) {
-        try {
-          await saveUpdateCulster()
-        } catch (error) {
-          console.error('Error executing parts:', error)
-        }
+    const isValid = formRuleCheck.validateAllFields()
+    if (isValid && editFlag.value) {
+      try {
+        await saveUpdateCulster()
+      } catch (error) {
+        console.error('Error executing parts:', error)
       }
+    }
   } else {
     Message.success('保存草稿箱成功')
     saveFlag.value = true
@@ -521,16 +522,19 @@ const init = () => {
 
 const route = useRoute()
 onMounted(() => {
- init()
+  init()
 })
 const previousPath = ref(route.fullPath)
 watch(() => route.fullPath, (newPath) => {
-    if (newPath !== previousPath.value) {
-      previousPath.value = newPath
-      init()
-    }
-  }, { immediate: true })
+  if (newPath !== previousPath.value) {
+    previousPath.value = newPath
+    init()
+  }
+}, { immediate: true })
 
+const backToIndex = () => {
+  router.push({ name:'DailyOps'})
+}
 </script>
 
 <style lang="less" scoped>
@@ -603,12 +607,12 @@ watch(() => route.fullPath, (newPath) => {
     font-size: medium;
   }
   .rectangle {
-     width: calc(33.33% - 20px);
-     height: 32px;
-     background-color: red;
-     margin: 0;
-     float: left;
-   }
+    width: calc(33.33% - 20px);
+    height: 32px;
+    background-color: red;
+    margin: 0;
+    float: left;
+  }
 }
 
 </style>
