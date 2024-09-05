@@ -46,10 +46,11 @@
                       </div>
                       <div style="min-width: 500px;" class="flex-row-start">
                         <div class="mr">
+                          <icon-close-circle-fill v-if="item.status === hostEnvStatusEnum.ERROR" style="color: red"
+                            :size="20"></icon-close-circle-fill>
                           <icon-check-circle-fill v-if="item.status === hostEnvStatusEnum.NORMAL" style="color: green"
                             :size="20"></icon-check-circle-fill>
-                          <icon-exclamation-circle-fill
-                            v-if="item.status === hostEnvStatusEnum.WARMING || item.status === hostEnvStatusEnum.ERROR"
+                          <icon-exclamation-circle-fill v-if="item.status === hostEnvStatusEnum.WARMING"
                             style="color: orange" :size="20" />
                           <icon-info-circle-fill v-if="item.status === hostEnvStatusEnum.INFO" style="color: gray"
                             :size="20" />
@@ -74,10 +75,11 @@
                       </div>
                       <div style="min-width: 500px;" class="flex-row-start">
                         <div class="mr">
+                          <icon-close-circle-fill v-if="item.status === hostEnvStatusEnum.ERROR" style="color: red"
+                            :size="20"></icon-close-circle-fill>
                           <icon-check-circle-fill v-if="item.status === hostEnvStatusEnum.NORMAL" style="color: green"
                             :size="20"></icon-check-circle-fill>
-                          <icon-exclamation-circle-fill
-                            v-if="item.status === hostEnvStatusEnum.WARMING || item.status === hostEnvStatusEnum.ERROR"
+                          <icon-exclamation-circle-fill v-if="item.status === hostEnvStatusEnum.WARMING"
                             style="color: orange" :size="20" />
                           <icon-info-circle-fill v-if="item.status === hostEnvStatusEnum.INFO" style="color: gray"
                             :size="20" />
@@ -253,10 +255,11 @@ const getHostEnvData = () => {
 const getErrorNum = (envData: KeyValue) => {
   envData.noPassNum = 0
   envData.noPassNumHard = 0
+  envData.noPassNumSoft = 0
   envData.hardwareEnv.envProperties.forEach((item: KeyValue) => {
     if (item.status === hostEnvStatusEnum.ERROR) {
       envData.noPassNum = envData.noPassNum + 1
-      envData.noPassNumHard = envData.noPassNumHard + 1
+      envData.noPassNumHard = envData.noPassNumHard + 1     
     }
   })
   envData.softwareEnv.envProperties.forEach((item: KeyValue) => {
@@ -295,10 +298,15 @@ const beforeConfirm = () => {
   const unPass = data.nodeData.filter((item: KeyValue) => {
     return item.result !== 200
   })
+  const totoalError = data.nodeData.reduce((acc,cur) => acc + cur.noPassNum,0)
   let result = true
   if (unPass.length > 0) {
     result = false
     Message.warning('If the host fails to be detected, configure the host and re-detect the host for installation')
+  }
+  if(totoalError>0){
+    result = false;
+    Message.error(t('enterprise.EnvMonitor.5mpm5p9xg701'))
   }
   return result
 }

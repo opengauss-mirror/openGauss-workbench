@@ -146,6 +146,7 @@ let envData = reactive<KeyValue>({
   noPassNum: 0,
   noPassNumHard: 0,
   noPassNumSoft: 0,
+  noPassNumError: 0,
   hostId: '',
   clusterRole: '',
   privateIp: '',
@@ -227,16 +228,24 @@ const getHostInfo = async () => {
 const getErrorNum = () => {
   envData.noPassNum = 0
   envData.noPassNumHard = 0
+  envData.noPassNumSoft = 0
+  envData.noPassNumError = 0
   envData.hardwareEnv.envProperties.forEach((item: KeyValue) => {
     if (item.status === hostEnvStatusEnum.ERROR || item.status === hostEnvStatusEnum.WARMING) {
       envData.noPassNum = envData.noPassNum + 1
       envData.noPassNumHard = envData.noPassNumHard + 1
+    }
+    if(item.status === hostEnvStatusEnum.ERROR){
+      envData.noPassNumError += 1
     }
   })
   envData.softwareEnv.envProperties.forEach((item: KeyValue) => {
     if (item.status === hostEnvStatusEnum.ERROR || item.status === hostEnvStatusEnum.WARMING) {
       envData.noPassNum = envData.noPassNum + 1
       envData.noPassNumSoft = envData.noPassNumSoft + 1
+    }
+    if(item.status === hostEnvStatusEnum.ERROR){
+      envData.noPassNumError += 1
     }
   })
 }
@@ -273,6 +282,10 @@ const beforeConfirm = () => {
   if (envData.result !== 200) {
     result = false
     Message.warning('If the host fails to be detected, configure the host and re-detect the host for installation')
+  }
+  if(envData.noPassNumError>0){
+    result = false;
+    Message.error(t('enterprise.EnvMonitor.5mpm5p9xg701'))
   }
   return result
 }

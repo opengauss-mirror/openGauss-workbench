@@ -250,6 +250,7 @@ const envRetest = (envData: KeyValue) => {
 const getErrorNum = (envData: KeyValue) => {
   envData.noPassNum = 0
   envData.noPassNumHard = 0
+  envData.noPassNumSoft = 0
   envData.hardwareEnv.envProperties.forEach((item: KeyValue) => {
     if (item.status === hostEnvStatusEnum.ERROR) {
       envData.noPassNum = envData.noPassNum + 1
@@ -292,10 +293,15 @@ const beforeConfirm = () => {
   const unPass = data.nodeData.filter((item: KeyValue) => {
     return item.result !== 200
   })
+  const totoalError = data.nodeData.reduce((acc,cur) => acc + cur.noPassNum,0)
   let result = true
   if (unPass.length > 0) {
     result = false
     Message.warning('If the host fails to be detected, configure the host and re-detect the host for installation')
+  }
+  if(totoalError>0){
+    result = false;
+    Message.error(t('enterprise.EnvMonitor.5mpm5p9xg701'))
   }
   return result
 }

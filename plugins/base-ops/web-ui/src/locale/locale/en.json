@@ -95,7 +95,7 @@
             "5mpmeddf3zl4": "File parsing, please wait",
             "5mpmeddf3zl5": "Do not refresh the page",
             "5mpmeddf3zl6": "Data may be lost, are you sure you want to refresh the page?",
-            "5mpmeddf3zl7": "File parsing failed",
+            "5mpmeddf3zl7": "File parsing failed",       
             "5mpmzg3zesl3": "Reupload",
             "5mpmzg3zesl4": "You can still replace file by dragging and dropping it into the area below",
             "5mpmzg3zesl5": "Delete",
@@ -427,7 +427,7 @@
             "sl3u5s5cf244": "Task ID",
             "sl3u5s5cf245": "Task Status",
             "sl3u5s5cf246": "Server IP",
-            "sl3u5s5cf247": "openGauss Version",
+            "sl3u5s5cf247": "OpenGauss Version",
             "sl3u5s5cf248": "Task Creation Time",
             "sl3u5s5cf249": "Task Update Time",
             "sl3u5s5cf250": "Only one child tag can be selected for the same parent tag.",
@@ -743,7 +743,8 @@
             "5mpm5p9xfv80": "Under test",
             "5mpm5p9xfzo0": "Master",
             "5mpm5p9xg3o0": "slave",
-            "5mpm5p9xg700": "Cascading"
+            "5mpm5p9xg700": "Cascading",
+            "5mpm5p9xg701": "Please fix the environment checkerrors before continuing with installation"
         },
         "ExeInstall": {
             "else1": "DataBaseUser",
