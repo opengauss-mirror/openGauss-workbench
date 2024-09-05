@@ -444,7 +444,7 @@ const getList = () => new Promise(resolve => {
       res.data.forEach((item: KeyValue) => {
         item.isShow = true
         item.isConnected = -1
-        if (item.version === 'MINIMAL_LIST' && item.clusterNodes.length < 2) {
+        if (item.version === 'MINIMAL_LIST' && item.deployType === 'CLUSTER' && item.clusterNodes.length < 2) {
           const slaveNode = JSON.parse(JSON.stringify(item.clusterNodes[0]))
           slaveNode.clusterRole = ClusterRoleEnum.SLAVE
           item.clusterNodes.push(slaveNode)
