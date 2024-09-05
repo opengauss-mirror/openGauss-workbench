@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,6 +54,10 @@ import static com.nctigba.datastudio.constants.SqlConstants.GET_URL_JDBC;
 @Service
 @Slf4j
 public class ClusterManager {
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private static EncryptionUtils encryptionUtils;
+
     @Autowired(required = false)
     @AutowiredType(Type.MAIN_PLUGIN)
     private OpsFacade opsFacade;
@@ -101,7 +106,7 @@ public class ClusterManager {
             return DriverManager.getConnection(
                     GET_URL_JDBC + getPrivateIp() + ":" + getDbPort() + "/" + getDbName() + CONFIGURE_TIME,
                     getDbUser(),
-                    getDbUserPassword());
+                    encryptionUtils.decrypt(getDbUserPassword()));
         }
     }
 }

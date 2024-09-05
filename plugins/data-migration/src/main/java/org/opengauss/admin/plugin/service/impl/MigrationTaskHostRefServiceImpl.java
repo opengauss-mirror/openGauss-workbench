@@ -283,11 +283,11 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 clusterNodeVO.setDbPort(on.getDbPort());
                 clusterNodeVO.setDbName(on.getDbName());
                 clusterNodeVO.setDbUser(on.getDbUser());
-                clusterNodeVO.setDbUserPassword(on.getDbUserPassword());
+                clusterNodeVO.setDbUserPassword(encryptionUtils.decrypt(on.getDbUserPassword()));
                 clusterNodeVO.setHostPort(on.getHostPort());
                 clusterNodeVO.setIsSystemAdmin(
-                        JdbcUtil.judgeSystemAdmin(on.getPublicIp(), String.valueOf(on.getDbPort()), on.getDbUser(),
-                                on.getDbUserPassword()));
+                    JdbcUtil.judgeSystemAdmin(on.getPublicIp(), String.valueOf(on.getDbPort()), on.getDbUser(),
+                    encryptionUtils.decrypt(on.getDbUserPassword())));
                 return clusterNodeVO;
             }).collect(Collectors.toList());
             clusterVO.setClusterNodes(nodes);

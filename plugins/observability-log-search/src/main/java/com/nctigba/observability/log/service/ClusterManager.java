@@ -32,6 +32,7 @@ import java.util.List;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -50,6 +51,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class ClusterManager {
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private static EncryptionUtils encryptionUtils;
+
 	@Autowired(required = false)
 	@AutowiredType(Type.MAIN_PLUGIN)
 	private OpsFacade opsFacade;
@@ -98,19 +103,18 @@ public class ClusterManager {
 			this.version = version;
 		}
 
-		public Connection connection() throws SQLException {
-			var conn = DriverManager.getConnection(
-					"jdbc:opengauss://" + getPublicIp() + ":" + getDbPort() + "/" + getDbName(), getDbUser(),
-					getDbUserPassword());
-			try (var preparedStatement = conn.prepareStatement("select 1");
-					var rs = preparedStatement.executeQuery();) {
-				return conn;
-			} catch (Exception e) {
-				log.error("test connection fail:{}", e.getMessage());
-				throw e;
-			}
-		}
-	}
+        public Connection connection() throws SQLException {
+            var conn = DriverManager.getConnection("jdbc:opengauss://" + getPublicIp() + ":" + getDbPort() + "/"
+                + getDbName(), getDbUser(), encryptionUtils.decrypt(getDbUserPassword()));
+            try (var preparedStatement = conn.prepareStatement("select 1");
+                var rs = preparedStatement.executeQuery();) {
+                return conn;
+            } catch (Exception e) {
+                log.error("test connection fail:{}", e.getMessage());
+                throw e;
+            }
+        }
+    }
 
 	/**
 	 * Directly obtain the connection of the specified node

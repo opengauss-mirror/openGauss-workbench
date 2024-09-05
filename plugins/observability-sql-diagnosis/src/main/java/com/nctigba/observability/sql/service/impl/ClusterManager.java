@@ -38,6 +38,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.DataSourceBuilder;
@@ -55,7 +56,12 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class ClusterManager {
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private static EncryptionUtils encryptionUtils;
+
     private final DataSource dataSource;
+
     private final DbMapper dbMapper;
 
     @Autowired(required = false)
@@ -118,7 +124,7 @@ public class ClusterManager {
         dataSourceBuilder.driverClassName("org.opengauss.Driver");
         dataSourceBuilder.url("jdbc:opengauss://" + node.getPublicIp() + ":" + node.getDbPort() + "/" + dbname);
         dataSourceBuilder.username(node.getDbUser());
-        dataSourceBuilder.password(node.getDbUserPassword());
+        dataSourceBuilder.password(encryptionUtils.decrypt(node.getDbUserPassword()));
         DataSource datasource = dataSourceBuilder.build();
         var hids = new HikariDataSource();
         hids.setDataSource(datasource);
@@ -181,7 +187,7 @@ public class ClusterManager {
         public Connection connection(String dbname) throws SQLException {
             var conn = DriverManager.getConnection(
                     "jdbc:opengauss://" + getPublicIp() + ":" + getDbPort() + "/" + dbname + "?TimeZone=UTC",
-                    getDbUser(), getDbUserPassword());
+                    getDbUser(), encryptionUtils.decrypt(getDbUserPassword()));
             try (var preparedStatement = conn.prepareStatement("select 1");
                  var ignored = preparedStatement.executeQuery()) {
                 return conn;
@@ -192,7 +198,7 @@ public class ClusterManager {
             var conn = DriverManager.getConnection(
                     "jdbc:opengauss://" + getPublicIp() + ":" + getDbPort() + "/" + dbname + "?currentSchema="
                             + schemaName + "&TimeZone=UTC",
-                    getDbUser(), getDbUserPassword());
+                    getDbUser(), encryptionUtils.decrypt(getDbUserPassword()));
             try (var preparedStatement = conn.prepareStatement("select 1");
                  var ignored = preparedStatement.executeQuery()) {
                 return conn;

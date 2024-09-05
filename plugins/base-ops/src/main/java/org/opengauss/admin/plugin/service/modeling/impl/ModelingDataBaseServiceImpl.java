@@ -34,6 +34,7 @@ import org.opengauss.admin.plugin.domain.model.modeling.OpenGaussConnectorBody;
 
 import org.opengauss.admin.plugin.service.modeling.IModelingDataBaseService;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -53,6 +54,10 @@ public class ModelingDataBaseServiceImpl
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private OpsFacade opsFacade;
+
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
 
     @Override
     public List<Map<String, Object>> executeWithClusterNode(OpsClusterNodeVO clusterNode, String sql, List<String> params) throws SQLException, ClassNotFoundException {
@@ -163,7 +168,8 @@ public class ModelingDataBaseServiceImpl
         Class.forName("org.opengauss.Driver");
         String resultMessage;
         String openGaussUrl = "jdbc:opengauss://"+openGaussConnectorBody.getIp()+":"+openGaussConnectorBody.getPort()+"/"+openGaussConnectorBody.getDatabase()+"?currentSchema="+openGaussConnectorBody.getSchema();
-        conn = DriverManager.getConnection(openGaussUrl, openGaussConnectorBody.getDbUser(), openGaussConnectorBody.getDbPassword());
+        conn = DriverManager.getConnection(openGaussUrl, openGaussConnectorBody.getDbUser(),
+            encryptionUtils.decrypt(openGaussConnectorBody.getDbPassword()));
         //start transaction
         conn.setAutoCommit(false);
         try {
@@ -188,7 +194,8 @@ public class ModelingDataBaseServiceImpl
 
         Class.forName("org.opengauss.Driver");
         String openGaussUrl = "jdbc:opengauss://"+openGaussConnectorBody.getIp()+":"+openGaussConnectorBody.getPort()+"/"+openGaussConnectorBody.getDatabase()+"?currentSchema="+openGaussConnectorBody.getSchema();
-        Connection conn = DriverManager.getConnection(openGaussUrl, openGaussConnectorBody.getDbUser(), openGaussConnectorBody.getDbPassword());
+        Connection conn = DriverManager.getConnection(openGaussUrl, openGaussConnectorBody.getDbUser(),
+            encryptionUtils.decrypt(openGaussConnectorBody.getDbPassword()));
 
         if (sql == null || conn == null) {
             throw new RuntimeException("sql is empty");
