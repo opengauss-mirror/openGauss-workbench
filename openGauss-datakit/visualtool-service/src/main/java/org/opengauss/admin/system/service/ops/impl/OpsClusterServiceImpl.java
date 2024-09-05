@@ -159,7 +159,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     opsClusterNodeVO.setDbPort(opsClusterEntity.getPort());
                     opsClusterNodeVO.setDbName("postgres");
                     opsClusterNodeVO.setDbUser(opsClusterEntity.getDatabaseUsername());
-                    opsClusterNodeVO.setDbUserPassword(opsClusterEntity.getDatabasePassword());
+                    opsClusterNodeVO.setDbUserPassword(encryptionUtils.decrypt(opsClusterEntity.getDatabasePassword()));
                     opsClusterNodeVO.setHostOs(hostEntity.getOs());
                     opsClusterNodeVO.setHostCpuArch(hostEntity.getCpuArch());
 

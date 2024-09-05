@@ -175,7 +175,7 @@ public class ClusterManager {
         ds.addDataSource(nodeId, dataSourceCreator.createDataSource(dataSourceProperty
             .setDriverClassName("org.opengauss.Driver")
                 .setUrl(CommonConstants.JDBC_OPENGAUSS + node.getPublicIp() + ":" + node.getDbPort() + "/" + dbname)
-                .setUsername(node.getDbUser()).setPassword(node.getDbUserPassword())));
+                .setUsername(node.getDbUser()).setPassword(encryptionUtils.decrypt(node.getDbUserPassword()))));
         DynamicDataSourceContextHolder.push(nodeId);
     }
 

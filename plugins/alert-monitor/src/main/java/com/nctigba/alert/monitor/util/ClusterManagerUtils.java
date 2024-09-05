@@ -40,6 +40,7 @@ import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.opengauss.admin.system.service.ops.IOpsClusterService;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -72,6 +73,10 @@ public class ClusterManagerUtils {
     @Autowired(required = false)
     @AutowiredType(AutowiredType.Type.MAIN_PLUGIN)
     private IOpsClusterService opsClusterService;
+
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
 
     /**
      * Set the current data source and manually clear it
@@ -109,7 +114,7 @@ public class ClusterManagerUtils {
         ds.addDataSource(nodeId, dataSourceCreator.createDataSource(new DataSourceProperty()
             .setDriverClassName("org.opengauss.Driver")
             .setUrl(CommonConstants.JDBC_OPENGAUSS + node.getPublicIp() + ":" + node.getDbPort() + "/" + dbname)
-            .setUsername(node.getDbUser()).setPassword(node.getDbUserPassword())));
+            .setUsername(node.getDbUser()).setPassword(encryptionUtils.decrypt(node.getDbUserPassword()))));
         DynamicDataSourceContextHolder.push(nodeId);
     }
 

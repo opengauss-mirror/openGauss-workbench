@@ -412,7 +412,7 @@ public class ExporterInstallService extends AbstractInstaller {
             paramItem.put("hostId", nodeTemp.getHostId());
             paramItem.put("dbport", nodeTemp.getDbPort());
             paramItem.put("dbUsername", nodeTemp.getDbUser());
-            paramItem.put("dbPassword", nodeTemp.getDbUserPassword());
+            paramItem.put("dbPassword", encryptionUtils.decrypt(nodeTemp.getDbUserPassword()));
             paramItem.put("pass", encryptionUtils.decrypt(targetUser.getPassword()));
             paramItem.put("user", nodeTemp.getInstallUserName());
             paramItem.put("machineIP", targetHostEntity.getPublicIp());
