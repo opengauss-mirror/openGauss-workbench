@@ -180,6 +180,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     @Override
     public Map<String, Object> getTaskDetailById(Integer taskId) {
         MigrationTask task = getById(taskId);
+        task.setCurrentTime(new Date());
         Map<String, Object> result = new HashMap<>();
         result.put("task", task);
         MigrationTaskExecResultDetail fullProcess = null;

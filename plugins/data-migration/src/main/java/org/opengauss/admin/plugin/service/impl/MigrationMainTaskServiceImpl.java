@@ -117,7 +117,10 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
      */
     @Override
     public IPage<MigrationMainTask> selectList(IPage<MigrationMainTask> page, MigrationMainTaskDto task) {
-        return migrationMainTaskMapper.selectTaskPage(page, task);
+        IPage<MigrationMainTask> taskPage = migrationMainTaskMapper.selectTaskPage(page, task);
+        List<MigrationMainTask> tasks = taskPage.getRecords();
+        tasks.forEach(mainTask -> mainTask.setCurrentTime(new Date()));
+        return taskPage;
     }
 
     /**

@@ -81,4 +81,11 @@ public class MigrationMainTask {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Date execTime;
+
+    /**
+     * current time
+     */
+    @TableField(exist = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date currentTime;
 }

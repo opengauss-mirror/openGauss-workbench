@@ -496,7 +496,7 @@ const handleDownloadLog = (url) => {
       a.download = `#${subTaskInfo.value.id}_${url.substring(
         url.lastIndexOf('/') + 1,
         url.lastIndexOf('.')
-      )}_${dayjs().format('YYYYMMDDHHmmss')}.log`
+      )}_${dayjs(subTaskInfo.value.currentTime).format('YYYYMMDDHHmmss')}.log`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
