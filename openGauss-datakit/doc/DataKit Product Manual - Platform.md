@@ -337,6 +337,26 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 
 ![](./_resources/equipment-manage-tag-manage.png)
 
+在需要大批量导入的场景中，用户可以点击【批量导入】按钮，在弹出的对话框中点击【导入模板下载】下载导入模板。
+
+![](./_resources/server-manage-template-download.png)
+
+打开下载好的模板文件，输入对应的序号、服务器名称、内网IP等信息。
+
+![](./_resources/server-manage-template.png)
+
+点击【选择文件】将需要导入的文件上传，然后点击【确定】开始解析。
+
+![](./_resources/server-manage-parsing-files.png)
+
+等待解析完成，完成后会出现解析结果，如果导入数据有误，点击【下载错误报告按钮】下载错误报告查看具体原因。
+
+![](./_resources/server-manage-import-completed.png)
+
+打开错误报告文件会显示导入失败的记录并显示其失败原因。
+
+![](./_resources/server-manage-error-reporting.png)
+
 ## 实例管理
 
 用户通过【资源中心】-【实例管理】进入本功能画面，在这个画面上，分为节点信息和集群信息两级展示，集群信息一层展示集群名称、数据库类型、运行状态等基本信息，节点一层展示节点所在主机的基本信息、角色、运行状态、实时监控数据等。
