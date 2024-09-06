@@ -428,7 +428,7 @@
             "sl3u5s5cf244": "任务ID",
             "sl3u5s5cf245": "任务状态",
             "sl3u5s5cf246": "服务器IP",
-            "sl3u5s5cf247": "OpenGauss版本号",
+            "sl3u5s5cf247": "openGauss版本号",
             "sl3u5s5cf248": "任务创建时间",
             "sl3u5s5cf249": "任务更新时间",
             "sl3u5s5cf250": "同一个父级标签只能选择一个子级标签,",
