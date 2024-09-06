@@ -207,7 +207,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
                 .stream()
                 .filter(opsClusterNodeEntity1 -> opsClusterNodeEntity1.getClusterRole() == ClusterRoleEnum.MASTER)
                 .findFirst().orElseThrow(() -> new OpsException("master node not found"));
-        if (!opsClusterNodeEntity.getIsEnableDss()) {
+        if (opsClusterNodeEntity.getIsEnableDss() == null || !opsClusterNodeEntity.getIsEnableDss()) {
             log.info("enableDss is false.");
             return;
         }
