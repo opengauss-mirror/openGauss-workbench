@@ -397,10 +397,8 @@ const saveUpdateCulster = async () => {
                     }) .then((response) => {
                       if(Number(response.code) !== 200) {
                         console.error(response)
-                        Message.error('385   ' +response.data)
                         clusterSaveFlag = false
                       } else {
-                        clusterSaveFlag = true
                         countUpdateFlag = countUpdateFlag + 1
                       }
                     }) .catch((error) => {
@@ -416,6 +414,35 @@ const saveUpdateCulster = async () => {
                   } else {
                     countUpdateFlag = countUpdateFlag + 1
                   }
+                } else{
+                  createClustertaskNode({
+                    "clusterNodeId": '',
+                    "clusterId": clusterId.value,
+                    "hostId":item.hostId,
+                    "hostUserId": item.hostUserId,
+                    "nodeType": item.nodeType,
+                    "dataPath": item.dataPath,
+                    "azOwner": item.azOwner,
+                    "azPriority": item.azPriority,
+                    "isCMMaster": item.isCMMaster,
+                    "cmDataPath": item.cmDataPath,
+                    "cmPort": item.cmPort
+                  }) .then((res) => {
+                    if(Number(res.code) !== 200) {
+                      console.error(response.data)
+                      clusterSaveFlag = false
+                    } else {
+                      countUpdateFlag = countUpdateFlag + 1
+                    }
+                  }) .catch((error) => {
+                    console.error(error)
+                  }) .finally(() => {
+                    if (clusterSaveFlag) {
+                      saveFlag.value = true
+                    } else {
+                      saveFlag.value = false
+                    }
+                  })
                 }
               })
               if (subTaskConfig.value.deployType === "SINGLE_NODE" && clusterTaskList.clusterNodes.length > 1){
