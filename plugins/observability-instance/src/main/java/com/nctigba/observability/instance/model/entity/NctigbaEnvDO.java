@@ -52,6 +52,7 @@ public class NctigbaEnvDO {
     OpsHostEntity host;
     String status;
     String param;
+    String errStatusMsg;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     Date updateTime;
 

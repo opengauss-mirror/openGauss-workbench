@@ -41,6 +41,7 @@ import java.util.Date;
 public class AgentStatusVO {
     String id;
     String status;
+    String errStatusMsg;
     Date updateTime;
 
     /**
@@ -70,6 +71,7 @@ public class AgentStatusVO {
             agentStatus.setStatus(AgentStatusEnum.UNKNOWN.getStatus());
         } else {
             agentStatus.setStatus(status0);
+            agentStatus.setErrStatusMsg(env.getErrStatusMsg());
         }
         return agentStatus;
     }

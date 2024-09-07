@@ -245,7 +245,7 @@ const changeModalInstallCollector = (val: boolean) => {
 const agentInstalled = () => {
   activeName.value = 'collector'
   refreshCollectors()
-  emit('afterInstallAgent')
+  emits('afterInstallAgent')
 }
 
 // edit collector
@@ -491,8 +491,8 @@ const updateAgentNodeStatusMap = () => {
           if (!agentNodeStatusMap.value[node.id]) {
             agentNodeStatusMap.value[node.id] = {
               status: node.status,
-              isErr: false,
-              err: '',
+              isErr: node.errStatusMsg ? true : false,
+              err: node.errStatusMsg,
               loading: false,
             }
           } else {
@@ -576,8 +576,8 @@ const updateProxyNodeStatusMap = () => {
           if (!proxyNodeStatusMap.value[node.id]) {
             proxyNodeStatusMap.value[node.id] = {
               status: node.status,
-              isErr: false,
-              err: '',
+              isErr: node.errStatusMsg ? true : false,
+              err: node.errStatusMsg,
               loading: false,
             }
           } else {

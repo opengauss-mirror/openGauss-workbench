@@ -242,6 +242,7 @@ export default {
       usedMemory: '已用内存',
       freeMemory: '空闲内存',
       cachedMemory: '缓存的内存',
+      availableMemory: '可用内存',
       dbMemory: '数据库占用内存',
       interactiveAreaUsage: '交互区使用情况',
       totalExchangeArea: '交换区总量',

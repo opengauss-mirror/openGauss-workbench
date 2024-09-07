@@ -189,55 +189,7 @@ public class ExporterInstallService extends AbstractInstaller {
                     if (expEnvs.size() > 0) {
                         throw new CustomException("exporter exists which has same host and port!");
                     }
-                    List<AgentNodeRelationDO> relList =
-                        agentNodeRelationService.list(Wrappers.<AgentNodeRelationDO>lambdaQuery()
-                            .in(AgentNodeRelationDO::getNodeId, exporterInstallDTO.getNodeIds()));
-                    List<OpsClusterNodeEntity> clusterNodes = null;
-                    List<NctigbaEnvDO> expEnvList = null;
-                    Map<String, List<String>> envNodeMap = new HashMap<>();
-                    if (CollectionUtil.isNotEmpty(relList)) {
-                        List<String> nodeIds = new ArrayList<>();
-                        List<String> expEnvIds = new ArrayList<>();
-                        relList.forEach(item -> {
-                            if (CollectionUtil.isEmpty(envNodeMap.get(item.getEnvId()))) {
-                                envNodeMap.put(item.getEnvId(), new ArrayList<>());
-                            }
-                            nodeIds.add(item.getNodeId());
-                            expEnvIds.add(item.getEnvId());
-                            envNodeMap.get(item.getEnvId()).add(item.getNodeId());
-                        });
-                        expEnvList = envMapper.selectBatchIds(expEnvIds);
-                        clusterNodes = opsClusterNodeService.listByIds(nodeIds);
-                    }
-                    if (CollectionUtil.isNotEmpty(expEnvList) && CollectionUtil.isNotEmpty(clusterNodes)) {
-                        sendMsg(Status.ERROR, "exporterinstall.repeat.tip1");
-                        StringBuilder errMsgBuilder = new StringBuilder();
-                        errMsgBuilder.append(MessageSourceUtils.get("exporterinstall.repeat.tip1")
-                            + System.lineSeparator());
-                        List<OpsClusterNodeEntity> clusterNodeTmps = clusterNodes;
-                        expEnvList.forEach(env -> {
-                            List<String> nodeIds = envNodeMap.get(env.getId());
-                            if (CollectionUtil.isEmpty(nodeIds)) {
-                                nodeIds = new ArrayList<>();
-                            }
-                            List<String> nodeIdTmps = nodeIds;
-                            OpsHostEntity envHost = hostFacade.getById(env.getHostid());
-                            String key = envHost.getPublicIp() + ":" + env.getPort();
-                            List<String> val =
-                                clusterNodeTmps.stream().filter(item -> nodeIdTmps.contains(item.getClusterNodeId()))
-                                    .map(item -> {
-                                        OpsHostEntity host = hostFacade.getById(item.getHostId());
-                                OpsClusterEntity cluster = clusterService.getById(item.getClusterId());
-                                return host.getPublicIp() +  ":" + cluster.getPort();
-                            }).collect(Collectors.toList());
-                            sendMsg(Status.ERROR, "exporterinstall.repeat.tip2", key, val);
-                            errMsgBuilder.append(MessageSourceUtils.get("exporterinstall.repeat.tip2", key, val)
-                                + System.lineSeparator());
-                        });
-                        sendMsg(Status.ERROR, "exporterinstall.repeat.tip3");
-                        errMsgBuilder.append(MessageSourceUtils.get("exporterinstall.repeat.tip3"));
-                        return AjaxResult.error(errMsgBuilder.toString());
-                    }
+
                     expEnv = new NctigbaEnvDO().setHostid(exporterInstallDTO.getHostId()).setPort(httpPort)
                         .setUsername(exporterInstallDTO.getUsername()).setType(envType.EXPORTER)
                         .setPath(path);
@@ -248,6 +200,56 @@ public class ExporterInstallService extends AbstractInstaller {
                     }
                 }
                 expEnv.setHost(hostEntity);
+
+                List<AgentNodeRelationDO> relList =
+                    agentNodeRelationService.list(Wrappers.<AgentNodeRelationDO>lambdaQuery()
+                        .in(AgentNodeRelationDO::getNodeId, exporterInstallDTO.getNodeIds()));
+                List<OpsClusterNodeEntity> clusterNodes = null;
+                List<NctigbaEnvDO> expEnvList = null;
+                Map<String, List<String>> envNodeMap = new HashMap<>();
+                if (CollectionUtil.isNotEmpty(relList)) {
+                    List<String> nodeIds = new ArrayList<>();
+                    List<String> expEnvIds = new ArrayList<>();
+                    relList.forEach(item -> {
+                        if (CollectionUtil.isEmpty(envNodeMap.get(item.getEnvId()))) {
+                            envNodeMap.put(item.getEnvId(), new ArrayList<>());
+                        }
+                        nodeIds.add(item.getNodeId());
+                        expEnvIds.add(item.getEnvId());
+                        envNodeMap.get(item.getEnvId()).add(item.getNodeId());
+                    });
+                    expEnvList = envMapper.selectBatchIds(expEnvIds);
+                    clusterNodes = opsClusterNodeService.listByIds(nodeIds);
+                }
+                if (CollectionUtil.isNotEmpty(expEnvList) && CollectionUtil.isNotEmpty(clusterNodes)) {
+                    sendMsg(Status.ERROR, "exporterinstall.repeat.tip1");
+                    StringBuilder errMsgBuilder = new StringBuilder();
+                    errMsgBuilder.append(MessageSourceUtils.get("exporterinstall.repeat.tip1")
+                        + System.lineSeparator());
+                    List<OpsClusterNodeEntity> clusterNodeTmps = clusterNodes;
+                    expEnvList.forEach(env -> {
+                        List<String> nodeIds = envNodeMap.get(env.getId());
+                        if (CollectionUtil.isEmpty(nodeIds)) {
+                            nodeIds = new ArrayList<>();
+                        }
+                        List<String> nodeIdTmps = nodeIds;
+                        OpsHostEntity envHost = hostFacade.getById(env.getHostid());
+                        String key = envHost.getPublicIp() + ":" + env.getPort();
+                        List<String> val =
+                            clusterNodeTmps.stream().filter(item -> nodeIdTmps.contains(item.getClusterNodeId()))
+                                .map(item -> {
+                                    OpsHostEntity host = hostFacade.getById(item.getHostId());
+                                    OpsClusterEntity cluster = clusterService.getById(item.getClusterId());
+                                    return host.getPublicIp() + ":" + cluster.getPort();
+                                }).collect(Collectors.toList());
+                        sendMsg(Status.ERROR, "exporterinstall.repeat.tip2", key, val);
+                        errMsgBuilder.append(MessageSourceUtils.get("exporterinstall.repeat.tip2", key, val)
+                            + System.lineSeparator());
+                    });
+                    sendMsg(Status.ERROR, "exporterinstall.repeat.tip3");
+                    errMsgBuilder.append(MessageSourceUtils.get("exporterinstall.repeat.tip3"));
+                    return AjaxResult.error(errMsgBuilder.toString());
+                }
 
                 // install exporter java programe
                 if (isNewInstall) {

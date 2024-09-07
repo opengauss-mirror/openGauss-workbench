@@ -34,6 +34,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.observability.instance.constants.CommonConstants;
+import com.nctigba.observability.instance.enums.AgentStatusEnum;
 import com.nctigba.observability.instance.mapper.PromAgentRelationMapper;
 import com.nctigba.observability.instance.model.dto.PrometheusConfigNodeDTO;
 import com.nctigba.observability.instance.model.dto.PrometheusConfigNodeDetailDTO;
@@ -49,7 +50,6 @@ import com.nctigba.observability.instance.mapper.CollectTemplateMapper;
 import com.nctigba.observability.instance.mapper.CollectTemplateMetricsMapper;
 import com.nctigba.observability.instance.mapper.CollectTemplateNodeMapper;
 import com.nctigba.observability.instance.mapper.NctigbaEnvMapper;
-import com.nctigba.observability.instance.model.entity.PromAgentRelationDO;
 import com.nctigba.observability.instance.service.AgentNodeRelationService;
 import com.nctigba.observability.instance.service.ClusterManager;
 import com.nctigba.observability.instance.service.CollectTemplateNodeService;
@@ -59,7 +59,6 @@ import com.nctigba.observability.instance.util.SshSessionUtils;
 import com.nctigba.observability.instance.util.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
-import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
@@ -69,6 +68,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -118,7 +119,6 @@ public class CollectTemplateNodeServiceImpl
     @Transactional
     @DS("embedded")
     public Integer setNodeTemplateDirect(SetNodeTemplateDirectDTO setNodeTemplateDirectDTO) {
-        long startTime = System.currentTimeMillis();
         Integer templateId = deleteNodeOldTemplateAndBuildNewOne(setNodeTemplateDirectDTO);
 
         // call setNodeTemplate
@@ -286,6 +286,9 @@ public class CollectTemplateNodeServiceImpl
             // download Prometheus config file
             var promYmlStr = promSession
                 .execute("cat " + promEnv.getPath() + CommonConstants.PROMETHEUS_YML);
+            if (StrUtil.isBlank(promYmlStr)) {
+                log.error("cat promethues.yml, result is empty");
+            }
             var conf = YamlUtils.loadAs(promYmlStr, PrometheusService.prometheusConfig.class);
 
             if (CollectionUtil.isNotEmpty(delNodeIds)) {
@@ -326,6 +329,9 @@ public class CollectTemplateNodeServiceImpl
                             .eq(AgentNodeRelationDO::getEnvId, agentNodeRelationDO.getEnvId()));
                         continue;
                     }
+                    if (!AgentStatusEnum.NORMAL.getStatus().equals(evnNode.getStatus())) {
+                        continue;
+                    }
                     // get host data
                     OpsHostEntity hostEntity = hostFacade.getById(evnNode.getHostid());
                     if (hostEntity == null) {
@@ -358,6 +364,9 @@ public class CollectTemplateNodeServiceImpl
                     conf.getScrape_configs().add(job);
                 });
             }
+            if (conf == null) {
+                log.error("The promethues config is empty");
+            }
             // write new prometheus.yml to temp file
             log.debug("conf:{}", conf);
             var prometheusConfigFile = File.createTempFile("prom", ".tmp");
@@ -368,7 +377,13 @@ public class CollectTemplateNodeServiceImpl
                 promEnv.getPath() + CommonConstants.PROMETHEUS_YML);
             Files.delete(prometheusConfigFile.toPath());
         } catch (IOException e) {
-            throw new TipsException(e);
+            try (StringWriter sw = new StringWriter();
+                 PrintWriter pw = new PrintWriter(sw)) {
+                e.printStackTrace(pw);
+                throw new TipsException("prometheus connect fail: " + e.getMessage() + "," + sw.toString());
+            } catch (IOException e0) {
+                throw new TipsException("prometheus connect fail: " + e.getMessage());
+            }
         }
 
         // refresh Prometheus config
@@ -383,22 +398,10 @@ public class CollectTemplateNodeServiceImpl
     }
 
     @Override
-    public void setNodePrometheusConfig(String nodeId, Integer templateId) {
+    public void setNodePrometheusConfig(String nodeId, Integer templateId, String promId) {
         // setPrometheusConfig
-        List<AgentNodeRelationDO> agentNodeRelList = agentNodeRelationService.list(
-            Wrappers.<AgentNodeRelationDO>lambdaQuery().eq(AgentNodeRelationDO::getNodeId, nodeId));
-        if (CollectionUtil.isEmpty(agentNodeRelList)) {
-            throw new CustomException("agent-node-relation not found!");
-        }
-        String envAgentId = agentNodeRelList.get(0).getEnvId();
-        List<PromAgentRelationDO> promAgentRelList = promAgentRelationMapper.selectList(
-            Wrappers.<PromAgentRelationDO>lambdaQuery().eq(PromAgentRelationDO::getEnvAgentId, envAgentId));
-        if (CollectionUtil.isEmpty(promAgentRelList)) {
-            throw new CustomException("prometheus-agent-relation not found!");
-        }
-        String envPromId = promAgentRelList.get(0).getEnvPromId();
         List<PrometheusConfigNodeDTO> configNodes = getNodePrometheusConfigParam(
             templateId, Arrays.asList(nodeId));
-        setPrometheusConfig(envPromId, configNodes, null);
+        setPrometheusConfig(promId, configNodes, null);
     }
 }

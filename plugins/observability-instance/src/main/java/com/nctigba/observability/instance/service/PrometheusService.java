@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.io.Serializable;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -55,9 +54,9 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.StopWatch;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nctigba.observability.instance.service.allocate.AllocatorService;
 import com.nctigba.observability.instance.model.dto.AllocateServerDTO;
 import com.nctigba.observability.instance.enums.AgentStatusEnum;
@@ -70,6 +69,7 @@ import com.nctigba.observability.instance.model.entity.PromAgentRelationDO;
 import com.nctigba.observability.instance.model.vo.AgentExceptionVO;
 import com.nctigba.observability.instance.model.vo.AgentStatusVO;
 import com.nctigba.observability.instance.util.CommonUtils;
+import com.nctigba.observability.instance.util.MessageSourceUtils;
 import com.nctigba.observability.instance.util.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.ArchiveEntry;
@@ -568,6 +568,16 @@ public class PrometheusService extends AbstractInstaller {
             removePromConfig(envPromList);
             return;
         }
+        List<String> agentEnvIds = envAgentList.stream().map(item -> item.getId()).collect(Collectors.toList());
+        List<String> existAgentEnvIds = agentNodeRelationService.list(Wrappers.<AgentNodeRelationDO>lambdaQuery()
+            .in(AgentNodeRelationDO::getEnvId, agentEnvIds)).stream().map(item -> item.getEnvId()).collect(
+            Collectors.toList());
+        envAgentList = envAgentList.stream().filter(item -> existAgentEnvIds.contains(item.getId()))
+            .collect(Collectors.toList());
+        if (CollectionUtil.isEmpty(envAgentList)) {
+            removePromConfig(envPromList);
+            return;
+        }
         List<AllocateServerDTO> promServerList = envPromList.stream().map(item -> {
             OpsHostEntity host = hostFacade.getById(item.getHostid());
             return new AllocateServerDTO().setId(item.getId()).setIp(host.getPublicIp()).setPort(item.getPort());
@@ -607,6 +617,9 @@ public class PrometheusService extends AbstractInstaller {
     private void clearNotExistPromConf(NctigbaEnvDO envProm, List<String> envExistAgentIds) throws IOException {
         try (SshSessionUtils session = connect(envProm.getHostid(), envProm.getUsername())){
             String promYmlStr = session.execute("cat " + envProm.getPath() + CommonConstants.PROMETHEUS_YML);
+            if (StrUtil.isBlank(promYmlStr)) {
+                log.error("cat promethues.yml, result is empty");
+            }
             prometheusConfig promCofig = YamlUtils.loadAs(promYmlStr, prometheusConfig.class);
             List<prometheusConfig.job> scrapeConfigs = promCofig.getScrape_configs();
             if (CollectionUtil.isEmpty(scrapeConfigs)) {
@@ -620,7 +633,7 @@ public class PrometheusService extends AbstractInstaller {
                 List<String> nodeIds = list.stream().map(item -> item.getNodeId()).collect(Collectors.toList());
                 List<prometheusConfig.job> newScrapeConf = scrapeConfigs.stream().filter(item -> {
                     for (String nodeId : nodeIds) {
-                        if (item.getJob_name().startsWith(nodeId)) {
+                        if (item.getJob_name().startsWith(nodeId + "_")) {
                             return true;
                         }
                     }
@@ -632,10 +645,12 @@ public class PrometheusService extends AbstractInstaller {
                 }
                 promCofig.setScrape_configs(newScrapeConf);
             }
+            if (promCofig == null) {
+                log.error("The promethues config is empty");
+            }
             File prom = File.createTempFile("prom", ".tmp");
             FileUtil.appendUtf8String(YamlUtils.dump(promCofig), prom);
             // upload
-            session.execute("rm " + envProm.getPath() + CommonConstants.PROMETHEUS_YML);
             session.upload(prom.getCanonicalPath(), envProm.getPath() + CommonConstants.PROMETHEUS_YML);
             Files.delete(prom.toPath());
             OpsHostEntity promeHost = hostFacade.getById(envProm.getHostid());
@@ -879,6 +894,11 @@ public class PrometheusService extends AbstractInstaller {
                     envMapper.updateById(env);
                 }
                 String status = env.getStatus();
+                if (AgentStatusEnum.NORMAL.getStatus().equals(status) && !isPromTimeSync(env)) {
+                    env.setStatus(AgentStatusEnum.ERROR_PROGRAM_UNHEALTHY.getStatus()).setUpdateTime(new Date())
+                        .setErrStatusMsg(MessageSourceUtils.get("promstatus.timesync"));
+                    envMapper.updateById(env);
+                }
                 if ((AgentStatusEnum.NORMAL.getStatus().equals(oldStatus) && !AgentStatusEnum.NORMAL.getStatus().equals(status)
                     || !AgentStatusEnum.NORMAL.getStatus().equals(oldStatus) && AgentStatusEnum.NORMAL.getStatus().equals(status))
                     && !isToRealloc
@@ -901,6 +921,43 @@ public class PrometheusService extends AbstractInstaller {
             log.error("Prometheus check status is over {}s, it takes {}s",
                 CommonConstants.MONITOR_CYCLE, stopWatch.getTotalTimeSeconds());
         }
+    }
+
+    private boolean isPromTimeSync(NctigbaEnvDO env) {
+        try {
+            String publicIp = "";
+            if (StrUtil.isBlank(env.getHostid())) {
+                publicIp = LOCAL_IP;
+            } else {
+                publicIp = env.getHost().getPublicIp();
+            }
+            String str = HttpUtil.get("http://" + publicIp + ":" + env.getPort()
+                + "/api/v1/query?query=time()", CommonConstants.HTTP_TIMEOUT);
+            if (StrUtil.isBlank(str)) {
+                return true;
+            }
+            JSONObject resJson = new JSONObject(str);
+            if (!resJson.getStr("status").equals("success")) {
+                return true;
+            }
+            JSONObject data = resJson.getJSONObject("data");
+            if (CollectionUtil.isEmpty(data)) {
+                return true;
+            }
+            JSONArray result = data.getJSONArray("result");
+            if (CollectionUtil.isEmpty(result)) {
+                return true;
+            }
+            Double promTime = result.getDouble(0);
+            Double curTime = ((double) new Date().getTime()) / 1000;
+            if (curTime - promTime >= 30.0) {
+                log.error("The current time differs from the node time by {} seconds.", curTime - promTime);
+                return false;
+            }
+        } catch (Exception e){
+            log.error("get prometheus health status fail: {}", e.getMessage());
+        }
+        return true;
     }
 
     private void oldVersionAdapter(NctigbaEnvDO env) {
@@ -949,11 +1006,15 @@ public class PrometheusService extends AbstractInstaller {
                 String result = CommonUtils.processCommand("/bin/sh", "-c",
                     String.format(CommonConstants.PORT_IS_EXIST, env.getPort()));
                 if (result.contains("true")) {
-                    throw new CustomException("port is exists!");
+                    log.error(String.format(CommonConstants.PORT_IS_EXIST, env.getPort()));
+                    log.error(result);
+                    throw new CustomException("port(" + env.getPort() + ") is exists!");
                 }
                 result = CommonUtils.processCommand("/bin/sh", "-c", String.format(CommonConstants.DIRECTORY_IS_EXIST
                     , env.getPath()));
                 if (result.contains("false")) {
+                    log.error(String.format(CommonConstants.DIRECTORY_IS_EXIST, env.getPath()));
+                    log.error(result);
                     throw new CustomException("package is not exists!");
                 }
                 env.setStatus(AgentStatusEnum.STARTING.getStatus()).setUpdateTime(new Date());
@@ -1134,7 +1195,13 @@ public class PrometheusService extends AbstractInstaller {
         envMapper.updateById(env);
     }
 
-    private boolean getHealthStatus(NctigbaEnvDO env) {
+    /**
+     * getHealthStatus
+     *
+     * @param env NctigbaEnvDO
+     * @return boolean
+     */
+    public boolean getHealthStatus(NctigbaEnvDO env) {
         try {
             String publicIp = "";
             if (StrUtil.isBlank(env.getHostid())) {

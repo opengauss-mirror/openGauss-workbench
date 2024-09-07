@@ -18,7 +18,6 @@
  *  IDENTIFICATION
  *  plugins/observability-instance/
  *  src/main/java/com/nctigba/observability/instance/model/dto/AllocateServerDTO.java
- *
  *  -------------------------------------------------------------------------
  */
 
