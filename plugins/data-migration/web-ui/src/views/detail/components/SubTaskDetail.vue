@@ -529,7 +529,7 @@ const getSubTaskDetail = () => {
             dayjs(subTaskInfo.value.execTime),
             'seconds'
           )
-        : dayjs().diff(dayjs(subTaskInfo.value.execTime), 'seconds')
+        : dayjs(subTaskInfo.value.currentTime).diff(dayjs(subTaskInfo.value.execTime), 'seconds')
       const hour = parseInt(seconds / 3600)
       const minute = parseInt((seconds - hour * 3600) / 60)
 
@@ -631,11 +631,11 @@ const getSubTaskDetail = () => {
                       total:
                         (res.data.totalWaitCount || 0) +
                         (res.data.totalRunningCount || 0) +
-                        (res.data.totalFinishCount || 0) +
+                        (res.data.totalSuccessCount || 0) +
                         (res.data.totalErrorCount || 0),
                       totalWaitCount: res.data.totalWaitCount || 0,
                       totalRunningCount: res.data.totalRunningCount || 0,
-                      totalFinishCount: res.data.totalFinishCount || 0,
+                      totalSuccessCount: res.data.totalSuccessCount || 0,
                       totalErrorCount: res.data.totalErrorCount || 0
                     })
                   ),
@@ -713,11 +713,11 @@ const getSubTaskDetail = () => {
                     total:
                       (res.data.totalWaitCount || 0) +
                       (res.data.totalRunningCount || 0) +
-                      (res.data.totalFinishCount || 0) +
+                      (res.data.totalSuccessCount || 0) +
                       (res.data.totalErrorCount || 0),
                     totalWaitCount: res.data.totalWaitCount || 0,
                     totalRunningCount: res.data.totalRunningCount || 0,
-                    totalFinishCount: res.data.totalFinishCount || 0,
+                    totalSuccessCount: res.data.totalSuccessCount || 0,
                     totalErrorCount: res.data.totalErrorCount || 0
                   })
                 ),
