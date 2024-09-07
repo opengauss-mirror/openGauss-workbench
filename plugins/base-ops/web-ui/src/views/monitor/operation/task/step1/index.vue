@@ -11,34 +11,79 @@
             labelAlign="left"
             ref="serverFormRef"
           >
-            <a-form-item label="主机IP" field="hostIp" validate-trigger="blur">
-              <a-select
-                field="hostIp"
-                v-model="data.hostIp"
-                allow-search
-                show-search
-                :options="hostIpList"
-                @change="fetchUserList"
-                placeholder="请输入或者选择主机IP"
-                style="width: 30%; height: 32px"
-              >
-              </a-select>
-            </a-form-item>
-            <a-form-item label="安装用户" field="hostUser" validate-trigger="blur">
-              <a-select
-                field="hostUserList"
-                v-model="data.hostUser"
-                :options="hostUserList"
-                optionFilterProp="label"
-                allow-search
-                show-search
-                allow-clear
-                @change="getHostId"
-                placeholder="请选择安装用户"
-                style="width: 30%; height: 32px"
-              >
-              </a-select>
-            </a-form-item>
+            {{changeHostipFlag.valueOf()}}
+            {{typeof(changeHostipFlag.valueOf())}}
+            <div v-if="changeHostipFlag">
+              <a-form-item label="主机IP" field="hostIp" validate-trigger="blur">
+                <a-popover position="right" trigger="click">
+                  <a-select
+                    field="hostIp"
+                    v-model="data.hostIp"
+                    allow-search
+                    show-search
+                    :options="hostIpList"
+                    @change="fetchUserList"
+                    placeholder="请输入或者选择主机IP"
+                    style="width: 30%; height: 32px"
+                  >
+                  </a-select>
+                  <template #content>
+                    <p>主备节点操作系统和架构应该一致，更改主机IP后可能会影响节点配置，是否确认更改</p>
+                  </template>
+                </a-popover>
+              </a-form-item>
+              <a-form-item label="安装用户" field="hostUser" validate-trigger="blur">
+                <a-popover position="right" trigger="click">
+                  <a-select
+                    field="hostUserList"
+                    v-model="data.hostUser"
+                    :options="hostUserList"
+                    optionFilterProp="label"
+                    allow-search
+                    show-search
+                    allow-clear
+                    @change="getHostId"
+                    placeholder="请选择安装用户"
+                    style="width: 30%; height: 32px"
+                  >
+                  </a-select>
+                  <template #content>
+                    <p>主备节点用户选择应该一致，更改用户后可能会影响节点配置，是否确认更改</p>
+                  </template>
+                </a-popover>
+              </a-form-item>
+            </div>
+            <div v-else>
+              <a-form-item label="主机IP" field="hostIp" validate-trigger="blur">
+                <a-select
+                  field="hostIp"
+                  v-model="data.hostIp"
+                  allow-search
+                  show-search
+                  :options="hostIpList"
+                  @change="fetchUserList"
+                  placeholder="请输入或者选择主机IP"
+                  style="width: 30%; height: 32px"
+                >
+                </a-select>
+              </a-form-item>
+              <a-form-item label="安装用户" field="hostUser" validate-trigger="blur">
+                <a-select
+                  field="hostUserList"
+                  v-model="data.hostUser"
+                  :options="hostUserList"
+                  optionFilterProp="label"
+                  allow-search
+                  show-search
+                  allow-clear
+                  @change="getHostId"
+                  placeholder="请选择安装用户"
+                  style="width: 30%; height: 32px"
+                >
+                </a-select>
+              </a-form-item>
+            </div>
+
           </a-form>
         </div>
         <div ref="module2" class="module" id="package">
@@ -353,7 +398,7 @@
 </template>
 
 <script setup lang="ts">
-import {defineProps, reactive, ref, toRaw, watch} from 'vue'
+import {computed, defineProps, reactive, ref, toRaw, watch} from 'vue'
 import {CpuArch, OS} from "@/types/os";
 import {OpenGaussVersionEnum} from "@/types/ops/install"
 import message from "@arco-design/web-vue/es/message"
@@ -451,7 +496,15 @@ const getHostId = (inputvalue: string) => {
   data.installPackagePath = '/opt/' + data.hostUser + '/software/openGauss'
   hostUserOrder.value = hostUserList.value.indexOf(inputvalue)
   data.port = 5432 + hostUserOrder.value * 10
-  initMasterNode()
+  if (changeHostipFlag) {
+    data.clusterNodes.forEach((item) => {
+      item.hostUserId = data.hostUserId
+      item.hostUser = data.hostUser
+      item.editing = true
+    })
+  } else {
+    initMasterNode()
+  }
 }
 
 const hostIpSame = ref([])
@@ -484,6 +537,19 @@ const fetchSameOs = () => {
     }
   }) .catch((error) => {
     console.error(error)
+  }) .finally(() => {
+    if (changeHostipFlag) {
+      data.clusterNodes.forEach((item) => {
+        if (item.nodeType === 'MASTER') {
+          item.hostIp = data.hostIp
+          item.hostId = data.hostId
+        } else if (hostIpSame.value === '' || !hostIpSame.value.includes(item.hostIp) || item.hostIp === data.hostIp ) {
+            item.hostIp = ''
+            item.hostId = ''
+        }
+        item.editing = true
+      })
+    }
   })
 }
 
@@ -1689,6 +1755,11 @@ watch(() => props.clusterId, (newVal) => {
 watch(() => props.createClusterId, (newVal) => {
   data.clusterId = newVal
 }, { immediate: true })
+
+const changeHostipFlag = computed(() => {
+  return data.hostUser !== '' && data.hostIp !== '' && data.clusterNodes.length > 1 && data.packageVersion === OpenGaussVersionEnum.ENTERPRISE
+})
+
 </script>
 
 <style scoped lang="scss">
