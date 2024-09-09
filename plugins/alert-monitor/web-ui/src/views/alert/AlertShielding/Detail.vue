@@ -70,8 +70,8 @@
                 v-model="formData.dateValue"
                 type="datetimerange"
                 range-separator="~"
-                format="YYYY-MM-DD"
-                value-format="YYYY-MM-DD"
+                format="YYYY-MM-DD HH:mm:ss"
+                value-format="YYYY-MM-DD HH:mm:ss"
                 :start-placeholder="t(`app.startDate`)"
                 :end-placeholder="t(`app.endDate`)"
                 style="width: 350px"
@@ -280,16 +280,25 @@ const cancel = () => {
 const save = () => {
   loading.value = true
   const { dateValue ,timeValue } = formData.value
+  let startDate = dateValue.length ? dateValue[0] : null
+  let endDate = dateValue.length ? dateValue[1] : null
+  let startTime = timeValue.length ? timeValue[0] : null
+  let endTime = timeValue.length ? timeValue[1] : null
+  let type = formData.value.type
+  if(type === 'b'){
+    startTime = startDate.split(' ')[1]
+    endTime = endDate.split(' ')[1]
+  }
   const resultData = {
       id: props.id,
       ruleName: formData.value.ruleName,
       ruleDetail: formData.value.ruleDetail,
-      type: formData.value.type,
+      type: type,
       clusterNodeIds: formData.value.clusterNodeIdList.length ? formData.value.clusterNodeIdList.join(',') : '',
-      startDate: dateValue.length ? dateValue[0] : null,
-      endDate: dateValue.length ? dateValue[1] : null,
-      startTime: timeValue.length ? timeValue[0] : null,
-      endTime: timeValue.length ? timeValue[1] : null,
+      startDate: startDate,
+      endDate: endDate,
+      startTime: startTime,
+      endTime: endTime,
       isEnable: formData.value.isEnable
   }
   request
