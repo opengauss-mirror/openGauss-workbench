@@ -24,23 +24,24 @@
 
 package org.opengauss.admin.system.plugin.facade;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.HostBody;
 import org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO;
 import org.opengauss.admin.common.core.dto.ops.ClusterNodeDto;
-import org.opengauss.admin.system.mapper.ops.OpsHostMapper;
 import org.opengauss.admin.system.service.ops.IHostService;
-import org.opengauss.admin.system.service.ops.IHostUserService;
 import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.List;
+
+import static cn.hutool.core.util.StrUtil.isNotEmpty;
 
 /**
  * @author lhf
@@ -49,13 +50,6 @@ import java.util.List;
 @Slf4j
 @Service
 public class HostFacade {
-
-    @Autowired
-    private IHostUserService hostUserService;
-    @Autowired
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
-    @Autowired
-    private OpsHostMapper hostMapper;
     @Autowired
     private IHostService hostService;
     @Autowired
@@ -99,6 +93,22 @@ public class HostFacade {
 
     public List<OpsHostEntity> listAll() {
         return hostService.listAll(null);
+    }
+
+    /**
+     * query host list by condition
+     *
+     * @param os        os
+     * @param osVersion osVersion
+     * @param cpuArch   cpuArch
+     * @return host list
+     */
+    public List<OpsHostEntity> getHostList(String os, String osVersion, String cpuArch) {
+        LambdaQueryWrapper<OpsHostEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostEntity.class);
+        queryWrapper.eq(isNotEmpty(os), OpsHostEntity::getOs, os);
+        queryWrapper.eq(isNotEmpty(osVersion), OpsHostEntity::getOsVersion, osVersion);
+        queryWrapper.eq(isNotEmpty(cpuArch), OpsHostEntity::getCpuArch, cpuArch);
+        return hostService.list(queryWrapper);
     }
 
     /**

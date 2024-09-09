@@ -238,4 +238,9 @@ public interface SshCommandConstants {
      */
     String NET = "cat /proc/net/dev";
     String DEL_FILE = "rm -rf {0}";
+
+    /**
+     * cpu arch
+     */
+    String CPU_ARCH = "lscpu | grep Architecture: | head -n 1 | awk -F ':' '{print $2}'";
 }

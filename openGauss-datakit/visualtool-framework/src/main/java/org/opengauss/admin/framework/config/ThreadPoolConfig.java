@@ -41,12 +41,10 @@ import java.util.concurrent.ThreadPoolExecutor;
  **/
 @Configuration
 public class ThreadPoolConfig {
-    private int corePoolSize = 10;
-
-    private int maxPoolSize = 20;
-
+    private int scheduledCorePoolSize = 10;
+    private int corePoolSize = 50;
+    private int maxPoolSize = 50;
     private int queueCapacity = 2000;
-
     private int keepAliveSeconds = 300;
 
     @Bean(name = "threadPoolTaskExecutor")
@@ -61,7 +59,7 @@ public class ThreadPoolConfig {
     }
     @Bean(name = "scheduledExecutorService")
     protected ScheduledExecutorService scheduledExecutorService() {
-        return new ScheduledThreadPoolExecutor(corePoolSize,
+        return new ScheduledThreadPoolExecutor(scheduledCorePoolSize,
                 new BasicThreadFactory.Builder().namingPattern("schedule-pool-%d").daemon(true).build()) {
             @Override
             protected void afterExecute(Runnable r, Throwable t) {

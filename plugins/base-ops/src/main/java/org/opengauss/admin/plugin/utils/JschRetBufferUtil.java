@@ -32,6 +32,7 @@ import org.opengauss.admin.plugin.domain.model.ops.JschResult;
 import org.opengauss.admin.plugin.domain.model.ops.RetBuffer;
 import org.opengauss.admin.plugin.domain.model.ops.WsSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -45,10 +46,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * JschRetBufferUtil
  *
  * @author wangchao
- * @since  2024/6/22 9:41
+ * @since 2024/6/22 9:41
  **/
 @Slf4j
 @Component
+@Scope("prototype")
 public class JschRetBufferUtil {
     private static final int SESSION_TIMEOUT = 10000;
     private static final int CHANNEL_TIMEOUT = 50000;

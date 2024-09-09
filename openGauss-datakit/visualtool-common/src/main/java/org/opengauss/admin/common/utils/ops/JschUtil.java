@@ -35,6 +35,7 @@ import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
 import org.opengauss.admin.common.enums.ops.HostFileTypeEnum;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -52,6 +53,7 @@ import java.util.*;
  **/
 @Slf4j
 @Component
+@Scope("prototype")
 public class JschUtil {
     private static final int SESSION_TIMEOUT = 10000;
     private static final int CHANNEL_TIMEOUT = 50000;

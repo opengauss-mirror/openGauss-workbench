@@ -21,10 +21,10 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.system.service.ops.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.exception.ExcelDataConvertException;
@@ -50,10 +50,12 @@ import org.opengauss.admin.common.core.domain.model.ops.host.tag.HostTagInputDto
 import org.opengauss.admin.common.core.handler.ops.cache.SSHChannelManager;
 import org.opengauss.admin.common.core.handler.ops.cache.TaskManager;
 import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
+import org.opengauss.admin.common.core.vo.HostBean;
 import org.opengauss.admin.common.core.vo.HostInfoVo;
 import org.opengauss.admin.common.enums.OsSupportMap;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.excel.ImportAsynInfoUtils;
+import org.opengauss.admin.common.utils.ops.JschExecUtil;
 import org.opengauss.admin.common.utils.ops.JschUtil;
 import org.opengauss.admin.common.utils.ops.WsUtil;
 import org.opengauss.admin.system.domain.HostRecordDataListener;
@@ -96,6 +98,8 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     @Autowired
     private JschUtil jschUtil;
     @Autowired
+    private JschExecUtil jschExecUtil;
+    @Autowired
     private EncryptionUtils encryptionUtils;
     @Autowired
     private IOpsClusterService clusterService;
@@ -109,9 +113,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     private IOpsHostTagService opsHostTagService;
 
     Cache<String, List<ErrorHostRecord>> errorExcel = CacheBuilder.newBuilder()
-            .maximumSize(1000)
-            .expireAfterWrite(1, TimeUnit.DAYS)
-            .build();
+            .maximumSize(1000).expireAfterWrite(1, TimeUnit.DAYS).build();
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -121,14 +123,9 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             throw new OpsException("host[" + hostEntity.getPublicIp() + "]already exists, please do not add it again");
         }
 
-        Session session = jschUtil.getSession(hostBody.getPublicIp(), hostBody.getPort(), "root", encryptionUtils.decrypt(hostBody.getPassword())).orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
-        try {
-            hostEntity = hostBody.toHostEntity(getHostInfoVo(session));
-        } finally {
-            if (Objects.nonNull(session) && session.isConnected()) {
-                session.disconnect();
-            }
-        }
+        HostBean hostBean = new HostBean(hostBody.getPublicIp(), hostBody.getPort(), "root",
+                encryptionUtils.decrypt(hostBody.getPassword()));
+        hostEntity = hostBody.toHostEntity(buildHostInfo(hostBean));
         save(hostEntity);
         opsHostTagRelService.cleanHostTag(hostEntity.getHostId());
         opsHostTagService.addTag(HostTagInputDto.of(hostBody.getTags(), hostEntity.getHostId()));
@@ -169,10 +166,8 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             if ("zh-CN".equals(currentLocale)) {
                 EasyExcel.write(out, HostRecord.class).sheet("模板").doWrite(new ArrayList<HostRecord>());
             } else {
-                EasyExcel.write(out, HostRecord.class)
-                        .head(head(0))
-                        .sheet("Template")
-                        .doWrite(new ArrayList<HostRecord>());
+                EasyExcel.write(out, HostRecord.class).head(head(0))
+                        .sheet("Template").doWrite(new ArrayList<HostRecord>());
             }
             out.flush();
             out.close();
@@ -188,16 +183,15 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         try {
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             response.setCharacterEncoding("utf-8");
-            String fileName = URLEncoder.encode("错误报告" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()), "UTF-8").replaceAll("\\+", "%20");
+            String fileName = URLEncoder.encode("错误报告" + new SimpleDateFormat("yyyyMMddHHmmss")
+                    .format(new Date()), "UTF-8").replaceAll("\\+", "%20");
             response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
             OutputStream out = response.getOutputStream();
             if ("zh-CN".equals(isSwitchingLanguage)) {
                 EasyExcel.write(out, ErrorHostRecord.class).sheet("错误报告").doWrite(errorhostRecords);
             } else {
-                EasyExcel.write(out, ErrorHostRecord.class)
-                        .head(head(1))
-                        .sheet("Error Report")
-                        .doWrite(errorhostRecords);
+                EasyExcel.write(out, ErrorHostRecord.class).head(head(1))
+                        .sheet("Error Report").doWrite(errorhostRecords);
             }
             out.flush();
             out.close();
@@ -220,10 +214,12 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             ImportAsynInfoUtils.getAsynInfo(uuid).setEnd(true);
         } catch (IllegalArgumentException e) {
             log.error("File format mismatch.", e);
-            throw new OpsException("The format of the file you are trying to import does not match the template. Please re-download the template and fill it out again.");
+            throw new OpsException("The format of the file you are trying to import does not match the template. "
+                    + "Please re-download the template and fill it out again.");
         } catch (ExcelDataConvertException e) {
             log.error("Data parsing format error.", e);
-            throw new OpsException(e.getRowIndex() + "row" + (e.getColumnIndex() + 1) + "column,parsing exception, please modify and re-upload.");
+            throw new OpsException(e.getRowIndex() + "row" + (e.getColumnIndex() + 1)
+                    + "column,parsing exception, please modify and re-upload.");
         }
     }
 
@@ -316,23 +312,15 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             hostUserBody.setUsername(hostRecord.getUserName());
             hostUserBody.setPassword(encryptionUtils.encrypt(hostRecord.getPassword()));
             hostUserService.add(hostUserBody);
-            opsHostTagService.addTag(HostTagInputDto.of(addAllTagsToNewCollection(hostRecord.getTags()), hostEntity.getHostId()));
+            List<String> tags = addAllTagsToNewCollection(hostRecord.getTags());
+            opsHostTagService.addTag(HostTagInputDto.of(tags, hostEntity.getHostId()));
         }
     }
 
     private List<List<String>> createBaseHeaders() {
-        return new ArrayList<>(Arrays.asList(
-                Arrays.asList("id"),
-                Arrays.asList("name"),
-                Arrays.asList("privateIP"),
-                Arrays.asList("publicIP"),
-                Arrays.asList("port"),
-                Arrays.asList("userName"),
-                Arrays.asList("password"),
-                Arrays.asList("isAdmin(yes|no)"),
-                Arrays.asList("tags"),
-                Arrays.asList("remark")
-        ));
+        return new ArrayList<>(Arrays.asList(Arrays.asList("id"), Arrays.asList("name"), Arrays.asList("privateIP"),
+                Arrays.asList("publicIP"), Arrays.asList("port"), Arrays.asList("userName"), Arrays.asList("password"),
+                Arrays.asList("isAdmin(yes|no)"), Arrays.asList("tags"), Arrays.asList("remark")));
     }
 
     private List<List<String>> head(int tempOrerro) {
@@ -343,7 +331,8 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         return headers;
     }
 
-    private synchronized void addHostRecordToErrorMap(String uuid, Cache<String, List<ErrorHostRecord>> errorExcel, HostRecord hostRecord) {
+    private synchronized void addHostRecordToErrorMap(String uuid, Cache<String, List<ErrorHostRecord>> errorExcel,
+                                                      HostRecord hostRecord) {
         List<ErrorHostRecord> list = errorExcel.getIfPresent(uuid);
         if (list == null) {
             list = new ArrayList<>();
@@ -353,17 +342,16 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     }
 
     private Boolean checkRecord(HostRecord hostRecord) {
-        if (hostRecord.getName() == null || hostRecord.getIsAdmin() == null || hostRecord.getPublicIp() == null || hostRecord.getPrivateIp() == null ||
-                hostRecord.getPort() == null || hostRecord.getUserName() == null || hostRecord.getPassword() == null) {
-            return false;
-        }
-        return true;
+        return Objects.nonNull(hostRecord.getName()) && Objects.nonNull(hostRecord.getIsAdmin())
+                && Objects.nonNull(hostRecord.getPublicIp()) && Objects.nonNull(hostRecord.getPrivateIp())
+                && Objects.nonNull(hostRecord.getPort()) && Objects.nonNull(hostRecord.getUserName())
+                && Objects.nonNull(hostRecord.getPassword());
     }
 
     private Session connectivityTest(HostRecord hostRecord) {
-        Session session = null;
-        session = jschUtil.getSession(hostRecord.getPublicIp(), hostRecord.getPort(), hostRecord.getUserName(), encryptionUtils.decrypt(hostRecord.getPassword())).orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
-        return session;
+        return jschUtil.getSession(hostRecord.getPublicIp(), hostRecord.getPort(), hostRecord.getUserName(),
+                        encryptionUtils.decrypt(hostRecord.getPassword()))
+                .orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
     }
 
     private boolean isAdminUser(HostRecord hostRecord) {
@@ -379,80 +367,40 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         return hostTags;
     }
 
-    private HostInfoVo getHostInfoVo(Session rootSession) {
+    private HostInfoVo buildHostInfo(HostBean hostBean) {
         HostInfoVo hostInfoVo = new HostInfoVo();
-        hostInfoVo.setHostname(getHostName(rootSession));
-        hostInfoVo.setCpuArch(getCpuArch(rootSession));
-        hostInfoVo.setOs(getOS(rootSession));
-        hostInfoVo.setOsVersion(getOsVersion(rootSession));
+        Session session = null;
+        try {
+            log.info("get host info {}", hostBean.toString());
+            session = jschExecUtil.createSession(hostBean);
+            hostInfoVo.setHostname(jschExecUtil.execCommand(session, SshCommandConstants.HOSTNAME));
+            hostInfoVo.setCpuArch(jschExecUtil.execCommand(session, SshCommandConstants.CPU_ARCH));
+            hostInfoVo.setOs(jschExecUtil.execCommand(session, SshCommandConstants.OS));
+            hostInfoVo.setOsVersion(jschExecUtil.execCommand(session, SshCommandConstants.OS_VERSION));
+        } catch (OpsException e) {
+            log.error("Failed to get host info", e);
+        } finally {
+            if (Objects.nonNull(session)) {
+                session.disconnect();
+            }
+        }
         return hostInfoVo;
     }
 
-    private String getCpuArch(Session rootSession) {
-        String command = "lscpu | grep Architecture: | head -n 1 | awk -F ':' '{print $2}'";
-        try {
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
-            if (jschResult.getExitCode() != 0) {
-                log.error("Failed to get cpu architecture information,exitCode:{},res:{}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Failed to get cpu architecture information");
-            }
-
-            return jschResult.getResult().trim();
-        } catch (Exception e) {
-            log.error("Failed to get cpu architecture information", e);
-            throw new OpsException("Failed to get cpu architecture information");
-        }
+    private HostInfoVo getHostInfoVo(Session rootSession) {
+        HostInfoVo hostInfoVo = new HostInfoVo();
+        hostInfoVo.setHostname(jschExecUtil.execCommand(rootSession, SshCommandConstants.HOSTNAME));
+        hostInfoVo.setCpuArch(jschExecUtil.execCommand(rootSession, SshCommandConstants.CPU_ARCH));
+        hostInfoVo.setOs(jschExecUtil.execCommand(rootSession, SshCommandConstants.OS));
+        hostInfoVo.setOsVersion(jschExecUtil.execCommand(rootSession, SshCommandConstants.OS_VERSION));
+        return hostInfoVo;
     }
 
-    private String getOS(Session rootSession) {
-        String command = "cat /etc/os-release | grep ID= | head -n 1 | awk -F '=' '{print $2}' | sed 's/\\\"//g'";
-        try {
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
-            if (jschResult.getExitCode() != 0) {
-                log.error("Failed to get system information,exitCode:{},res:{}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Failed to get system information");
-            }
-
-            return jschResult.getResult().trim();
-        } catch (Exception e) {
-            log.error("Failed to get system information", e);
-            throw new OpsException("Failed to get system information");
-        }
-    }
-
-    private String getOsVersion(Session session) {
-        try {
-            JschResult jschResult = jschUtil.executeCommand(SshCommandConstants.OS_VERSION, session);
-            if (jschResult.getExitCode() != 0) {
-                log.error("Failed to obtain system version information, exitCode: {}, res: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Failed to obtain system version information");
-            } else {
-                return jschResult.getResult().trim();
-            }
-        } catch (IOException | InterruptedException e) {
-            log.error("Failed to obtain system version information：{}", e);
-            throw new OpsException("Failed to obtain system version information");
-        }
-    }
-
-    private String getHostName(Session session) {
-        try {
-            JschResult jschResult = jschUtil.executeCommand(SshCommandConstants.HOSTNAME, session);
-            if (0 != jschResult.getExitCode()) {
-                log.error("Failed to obtain host name, exit code: {}", jschResult.getExitCode());
-                throw new OpsException("Failed to obtain the host name");
-            } else {
-                return jschResult.getResult();
-            }
-        } catch (Exception e) {
-            log.error("Failed to obtain the host name：{}", e);
-            throw new OpsException("Failed to obtain the host name");
-        }
-    }
 
     @Override
     public boolean ping(HostBody hostBody) {
-        Session session = jschUtil.getSession(hostBody.getPublicIp(), hostBody.getPort(), hostBody.getUsername(), encryptionUtils.decrypt(hostBody.getPassword())).orElse(null);
+        Session session = jschUtil.getSession(hostBody.getPublicIp(), hostBody.getPort(), hostBody.getUsername(),
+                encryptionUtils.decrypt(hostBody.getPassword())).orElse(null);
         if (session != null) {
             session.disconnect();
             return true;
@@ -483,7 +431,10 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             throw new OpsException("User information not found");
         }
 
-        OpsHostUserEntity root = opsHostUserEntities.stream().filter(opsHostUserEntity -> "root".equals(opsHostUserEntity.getUsername())).findFirst().orElseThrow(() -> new OpsException("root user information not found"));
+        OpsHostUserEntity root = opsHostUserEntities.stream()
+                .filter(opsHostUserEntity -> "root".equals(opsHostUserEntity.getUsername()))
+                .findFirst()
+                .orElseThrow(() -> new OpsException("root user information not found"));
         if (StrUtil.isEmpty(root.getPassword())) {
             if (StrUtil.isEmpty(rootPassword)) {
                 throw new OpsException("root password does not exist");
@@ -492,7 +443,8 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             }
         }
 
-        Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root", encryptionUtils.decrypt(root.getPassword())).orElse(null);
+        Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
+                encryptionUtils.decrypt(root.getPassword())).orElse(null);
         if (session != null) {
             session.disconnect();
             return true;
@@ -511,7 +463,8 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         List<OpsHostUserEntity> opsHostUserEntities = hostUserService.listHostUserByHostId(hostId);
         OpsHostUserEntity root = null;
         if (CollUtil.isNotEmpty(opsHostUserEntities)) {
-            root = opsHostUserEntities.stream().filter(hostUser -> "root".equals(hostUser.getUsername())).findFirst().orElse(null);
+            root = opsHostUserEntities.stream().filter(hostUser -> "root".equals(hostUser.getUsername()))
+                    .findFirst().orElse(null);
         }
 
         if (Objects.isNull(root)) {
@@ -527,7 +480,9 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             }
         }
 
-        Session session = jschUtil.getSession(hostBody.getPublicIp(), hostBody.getPort(), "root", encryptionUtils.decrypt(hostBody.getPassword())).orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
+        Session session = jschUtil.getSession(hostBody.getPublicIp(), hostBody.getPort(),
+                        "root", encryptionUtils.decrypt(hostBody.getPassword()))
+                .orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
         OpsHostEntity newHostEntity = hostBody.toHostEntity(getHostInfoVo(session));
         newHostEntity.setHostId(hostId);
         updateById(newHostEntity);
@@ -553,9 +508,11 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
 
     @Override
     public void ssh(SSHBody sshBody) {
-        WsSession wsSession = wsConnectorManager.getSession(sshBody.getBusinessId()).orElseThrow(() -> new OpsException("websocket session not exist"));
+        WsSession wsSession = wsConnectorManager.getSession(sshBody.getBusinessId())
+                .orElseThrow(() -> new OpsException("websocket session not exist"));
 
-        Session session = jschUtil.getSession(sshBody.getIp(), sshBody.getSshPort(), sshBody.getSshUsername(), encryptionUtils.decrypt(sshBody.getSshPassword()))
+        Session session = jschUtil.getSession(sshBody.getIp(), sshBody.getSshPort(), sshBody.getSshUsername(),
+                        encryptionUtils.decrypt(sshBody.getSshPassword()))
                 .orElseThrow(() -> new OpsException("Failed to establish session with host"));
 
         ChannelShell channelShell = jschUtil.openChannelShell(session);
@@ -591,9 +548,11 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         }
 
 
-        WsSession wsSession = wsConnectorManager.getSession(sshBody.getBusinessId()).orElseThrow(() -> new OpsException("websocket session not exist"));
+        WsSession wsSession = wsConnectorManager.getSession(sshBody.getBusinessId())
+                .orElseThrow(() -> new OpsException("websocket session not exist"));
 
-        Session session = jschUtil.getSession(sshBody.getIp(), sshBody.getSshPort(), sshBody.getSshUsername(), encryptionUtils.decrypt(password))
+        Session session = jschUtil.getSession(sshBody.getIp(), sshBody.getSshPort(), sshBody.getSshUsername(),
+                        encryptionUtils.decrypt(password))
                 .orElseThrow(() -> new OpsException("Failed to establish session with host"));
 
         ChannelShell channelShell = jschUtil.openChannelShell(session);
@@ -615,59 +574,48 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
                 .in(OpsHostEntity::getPublicIp, ipSet);
 
         List<OpsHostEntity> hostList = list(queryWrapper);
-        return hostList.stream().filter(host -> StrUtil.isNotEmpty(host.getOs())).collect(Collectors.toMap(OpsHostEntity::getPublicIp, OpsHostEntity::getOs));
+        return hostList.stream().filter(host -> StrUtil.isNotEmpty(host.getOs()))
+                .collect(Collectors.toMap(OpsHostEntity::getPublicIp, OpsHostEntity::getOs));
     }
 
     @Override
     public List<OpsHostEntity> listAll(String azId) {
-        LambdaQueryWrapper<OpsHostEntity> queryWrapper =
-                Wrappers.lambdaQuery(OpsHostEntity.class);
-
+        LambdaQueryWrapper<OpsHostEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostEntity.class);
         List<OpsHostEntity> list = list(queryWrapper);
         populateIsRemember(list);
         return list;
     }
 
+
     @Override
     public Map<String, Object> monitor(String hostId, String businessId, String rootPassword) {
         Map<String, Object> res = new HashMap<>();
         res.put("res", true);
-
-        OpsHostEntity hostEntity = getById(hostId);
-        if (Objects.isNull(hostEntity)) {
-            res.put("res", false);
-            res.put("msg", "host info not found");
-            return res;
-        }
-
-        OpsHostUserEntity rootUserEntity = hostUserService.getRootUserByHostId(hostId);
-        if (Objects.isNull(rootUserEntity)) {
-            res.put("res", false);
-            res.put("msg", "root user info not found");
-            return res;
-        }
-
-        if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
-            if (StrUtil.isNotEmpty(rootPassword)) {
-                rootUserEntity.setPassword(rootPassword);
-            } else {
-                res.put("res", false);
-                res.put("msg", "root user password not found");
-                return res;
-            }
-        }
-
         Session rootSession = null;
-        Optional<Session> session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), rootUserEntity.getUsername(), encryptionUtils.decrypt(rootUserEntity.getPassword()));
-        if (session.isPresent()) {
+        try {
+            OpsHostEntity hostEntity = getById(hostId);
+            Assert.notNull(hostEntity, "host info not found");
+
+            OpsHostUserEntity rootUserEntity = hostUserService.getRootUserByHostId(hostId);
+            Assert.notNull(rootUserEntity, "root user info not found");
+
+            if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
+                rootUserEntity.setPassword(rootPassword);
+            }
+            Assert.isTrue(StrUtil.isNotEmpty(rootUserEntity.getPassword()),
+                    "root user password not found");
+            Optional<Session> session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(),
+                    rootUserEntity.getUsername(), encryptionUtils.decrypt(rootUserEntity.getPassword()));
+            Assert.isTrue(session.isPresent(), "The root user failed to establish a connection");
             rootSession = session.get();
-        } else {
+        } catch (IllegalArgumentException e) {
             res.put("res", false);
-            res.put("msg", "The root user failed to establish a connection");
+            res.put("msg", e.getMessage());
             return res;
         }
 
-        WsSession wsSession = wsConnectorManager.getSession(businessId).orElseThrow(() -> new OpsException("response session does not exist"));
+        WsSession wsSession = wsConnectorManager.getSession(businessId)
+                .orElseThrow(() -> new OpsException("response session does not exist"));
 
         Session finalRootSession = rootSession;
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
@@ -678,10 +626,8 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
                     try {
                         finalRootSession.disconnect();
                     } catch (Exception ignore) {
-
                     }
                 }
-
                 wsUtil.close(wsSession);
             }
         });
@@ -698,69 +644,25 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         userEntityQueryWrapper.eq(OpsHostUserEntity::getHostId, hostId).eq(OpsHostUserEntity::getUsername, username);
         OpsHostUserEntity opsHostUserEntity = hostUserService.getOne(userEntityQueryWrapper);
 
-        Session session = jschUtil.getSession(opsHostEntity.getPublicIp(), opsHostEntity.getPort(), username, encryptionUtils.decrypt(opsHostUserEntity.getPassword())).orElseThrow(() -> new OpsException("Failed to establish a session with the hostId"));
-        String osVersion = "";
-        try {
-            osVersion = getOsVersion(session);
-        } catch (Exception e) {
-            log.error("Failed to establish a session with the hostId, hostId: {}", hostId);
-            throw new OpsException("Failed to establish a session with the hostId");
-        } finally {
-            if (Objects.nonNull(session) && session.isConnected()) {
-                session.disconnect();
-            }
-        }
-
-        opsHostEntity.setOsVersion(osVersion);
+        HostBean hostBean = new HostBean(opsHostEntity.getPublicIp(), opsHostEntity.getPort(), username,
+                encryptionUtils.decrypt(opsHostUserEntity.getPassword()));
+        opsHostEntity.setOsVersion(jschExecUtil.execCommand(hostBean, SshCommandConstants.OS_VERSION));
         updateById(opsHostEntity);
     }
 
     private void doMonitor(WsSession wsSession, Session rootSession) {
         while (wsSession.getSession().isOpen()) {
             HostMonitorVO hostMonitorVO = new HostMonitorVO();
-            CountDownLatch countDownLatch = new CountDownLatch(4);
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
-                    String[] net = netMonitor(rootSession);
-                    hostMonitorVO.setUpSpeed(net[0]);
-                    hostMonitorVO.setDownSpeed(net[1]);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
-                    hostMonitorVO.setCpu(cpuMonitor(rootSession));
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
-                    hostMonitorVO.setMemory(memoryMonitor(rootSession));
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
-                    hostMonitorVO.setDisk(diskMonitor(rootSession));
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
             try {
-                countDownLatch.await();
-            } catch (InterruptedException e) {
-                log.error("waiting for thread to be interrupted", e);
-                throw new OpsException("monitor error");
+                String[] net = netMonitor(rootSession);
+                hostMonitorVO.setUpSpeed(net[0]);
+                hostMonitorVO.setDownSpeed(net[1]);
+                hostMonitorVO.setCpu(cpuMonitor(rootSession));
+                hostMonitorVO.setMemory(memoryMonitor(rootSession));
+                hostMonitorVO.setDisk(diskMonitor(rootSession));
+            } catch (OpsException ex) {
+                log.error("doMonitor error", ex);
             }
-
             wsUtil.sendText(wsSession, JSON.toJSONString(hostMonitorVO));
             try {
                 TimeUnit.SECONDS.sleep(5L);
@@ -771,82 +673,42 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     }
 
     private String diskMonitor(Session rootSession) {
-        String command = "df -Th | egrep -v \"(tmpfs|sr0)\" | tail -n +2|tr -s \" \" | cut -d \" \" -f6|tr -d \"%\"|head -n 1";
-        try {
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
-            if (0 == jschResult.getExitCode()) {
-                return jschResult.getResult();
-            } else {
-                log.error("disk monitor error,exitCode:{},exitMsg:{}", jschResult.getExitCode(), jschResult.getResult());
-            }
-        } catch (Exception e) {
-            log.error("disk monitor error:", e);
-        }
-        throw new OpsException("disk monitor error");
+        String command = "df -Th | egrep -v \"(tmpfs|sr0)\" |"
+                + " tail -n +2|tr -s \" \" | cut -d \" \" -f6|tr -d \"%\"|head -n 1";
+        return jschExecUtil.execCommand(rootSession, command);
     }
 
     private String memoryMonitor(Session rootSession) {
         String command = "free -m | awk -F '[ :]+' 'NR==2{printf \"%d\", ($2-$7)/$2*100}'";
-        try {
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
-            if (0 == jschResult.getExitCode()) {
-                return jschResult.getResult();
-            } else {
-                log.error("memory monitor error,exitCode:{},exitMsg:{}", jschResult.getExitCode(), jschResult.getResult());
-            }
-        } catch (Exception e) {
-            log.error("memory monitor error:", e);
-        }
-        throw new OpsException("memory monitor error");
+        return jschExecUtil.execCommand(rootSession, command);
     }
 
     private String cpuMonitor(Session rootSession) {
-        String command = "top -b -n1 | fgrep \"Cpu(s)\" | tail -1 | awk -F'id,' '{split($1, vs, \",\"); v=vs[length(vs)]; sub(/\\s+/, \"\", v);sub(/\\s+/, \"\", v); printf \"%d\", 100-v;}'";
-        try {
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
-            if (0 == jschResult.getExitCode()) {
-                return jschResult.getResult();
-            } else {
-                log.error("cpu monitor error,exitCode:{},exitMsg:{}", jschResult.getExitCode(), jschResult.getResult());
-            }
-        } catch (Exception e) {
-            log.error("cpu monitor error:", e);
-        }
-        throw new OpsException("cpu monitor error");
+        String command = "top -b -n1 | fgrep \"Cpu(s)\" | tail -1 |"
+                + " awk -F'id,' '{split($1, vs, \",\"); v=vs[length(vs)];"
+                + " sub(/\\s+/, \"\", v);sub(/\\s+/, \"\", v); printf \"%d\", 100-v;}'";
+        return jschExecUtil.execCommand(rootSession, command);
     }
 
     private String[] netMonitor(Session rootSession) {
         String[] res = new String[2];
+        String netCardNameCommand = "cat /proc/net/dev | awk '{i++; if(i>2){print $1}}' |"
+                + " sed 's/^[\\t]*//g' | sed 's/[:]*$//g' | head -n 1";
+        String netCardName = jschExecUtil.execCommand(rootSession, netCardNameCommand);
 
-        String netCardName;
-        String netCardNameCommand = "cat /proc/net/dev | awk '{i++; if(i>2){print $1}}' | sed 's/^[\\t]*//g' | sed 's/[:]*$//g' | head -n 1";
-        try {
-            JschResult jschResult = jschUtil.executeCommand(netCardNameCommand, rootSession);
-            if (0 == jschResult.getExitCode()) {
-                netCardName = jschResult.getResult().trim();
-            } else {
-                log.error("Failed to get network card name,exitCode:{},exitMsg:{}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Failed to get network card name");
-            }
-        } catch (Exception e) {
-            throw new OpsException("cpu monitor error");
+        String command = "rx_net1=$(ifconfig "
+                + netCardName + " | awk '/RX packets/{print $5}') && tx_net1=$(ifconfig "
+                + netCardName + " | awk '/TX packets/{print $5}') && sleep 1 && rx_net2=$(ifconfig "
+                + netCardName + " | awk '/RX packets/{print $5}') && tx_net2=$(ifconfig "
+                + netCardName + " | awk '/TX packets/{print $5}') &&"
+                + " rx_net=$[($rx_net2-$rx_net1)] && tx_net=$[($tx_net2-$tx_net1)] && echo \"$rx_net|$tx_net\"";
+        String rxNet = jschExecUtil.execCommand(rootSession, command);
+        String[] split = rxNet.split("\\|");
+        if (split.length == 2) {
+            res[0] = split[0];
+            res[1] = split[1];
         }
-
-        String command = "rx_net1=$(ifconfig " + netCardName + " | awk '/RX packets/{print $5}') && tx_net1=$(ifconfig " + netCardName + " | awk '/TX packets/{print $5}') && sleep 1 && rx_net2=$(ifconfig " + netCardName + " | awk '/RX packets/{print $5}') && tx_net2=$(ifconfig " + netCardName + " | awk '/TX packets/{print $5}') && rx_net=$[($rx_net2-$rx_net1)] && tx_net=$[($tx_net2-$tx_net1)] && echo \"$rx_net|$tx_net\"";
-        try {
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
-            if (0 == jschResult.getExitCode()) {
-                String[] split = jschResult.getResult().split("\\|");
-                res[0] = split[0];
-                res[1] = split[1];
-                return res;
-            } else {
-                log.error("cpu monitor error,exitCode:{},exitMsg:{}", jschResult.getExitCode(), jschResult.getResult());
-            }
-        } catch (Exception e) {
-            log.error("cpu monitor error:", e);
-        }
-        throw new OpsException("cpu monitor error");
+        return res;
     }
 
     private void populateTags(List<OpsHostVO> list) {
@@ -907,19 +769,18 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     }
 
     /**
-     * return os entity mapped
+     * build os entity mapped
+     *
+     * @param hostId hostId
+     * @return os entity mapped
      */
-    public OpsHostEntity getMappedHostEntityById(String hostId){
+    public OpsHostEntity getMappedHostEntityById(String hostId) {
         OpsHostEntity opsHostEntity = getById(hostId);
-        OsSupportMap osMapEnum = OsSupportMap.of(
-                opsHostEntity.getOs(),
+        OsSupportMap osMapEnum = OsSupportMap.of(opsHostEntity.getOs(),
                 opsHostEntity.getOsVersion(),
-                opsHostEntity.getCpuArch()
-        );
-
+                opsHostEntity.getCpuArch());
         opsHostEntity.setOs(osMapEnum.getOs());
         opsHostEntity.setOsVersion(osMapEnum.getOsVersion());
-
         return opsHostEntity;
     }
 }
