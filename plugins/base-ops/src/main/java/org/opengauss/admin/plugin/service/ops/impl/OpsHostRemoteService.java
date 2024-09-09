@@ -34,13 +34,13 @@ import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.model.ops.JschResult;
 import org.opengauss.admin.plugin.domain.model.ops.RetBuffer;
 import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
-import org.opengauss.admin.plugin.service.ops.IHostService;
 import org.opengauss.admin.plugin.utils.JschRetBufferUtil;
 import org.opengauss.admin.plugin.utils.JschUtil;
 import org.opengauss.admin.system.plugin.facade.AzFacade;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -57,6 +57,7 @@ import java.util.concurrent.ConcurrentHashMap;
  **/
 @Slf4j
 @Service
+@Scope("prototype")
 public class OpsHostRemoteService {
     private static final Map<String, Session> SESSION_MAP = new ConcurrentHashMap<>();
     @Resource
@@ -68,8 +69,6 @@ public class OpsHostRemoteService {
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostUserFacade hostUserFacade;
-    @Resource
-    private IHostService hostService;
     @Resource
     private JschUtil jschUtil;
     @Resource
@@ -120,6 +119,18 @@ public class OpsHostRemoteService {
             throw new OpsException("host information does not exist");
         }
         return hostEntity;
+    }
+
+    /**
+     * query host list by condition
+     *
+     * @param os        os
+     * @param osVersion osVersion
+     * @param cpuArch   cpuArch
+     * @return host list
+     */
+    public List<OpsHostEntity> getHostList(String os, String osVersion, String cpuArch) {
+        return hostFacade.getHostList(os, osVersion, cpuArch);
     }
 
     /**
@@ -263,7 +274,51 @@ public class OpsHostRemoteService {
      * @return true if port used
      */
     public boolean portUsed(String hostId, Integer hostPort) {
-        return hostService.portUsed(hostId, hostPort, null);
+        return portUsed(hostId, hostPort, null);
+    }
+
+    /**
+     * check port used
+     *
+     * @param id           hostId
+     * @param port         hostPort
+     * @param rootPassword rootPassword
+     * @return true if port used
+     */
+    public boolean portUsed(String id, Integer port, String rootPassword) {
+        Session rootSession = createRootSession(id, rootPassword);
+        try {
+            return portUsed(rootSession, port);
+        } finally {
+            if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
+                rootSession.disconnect();
+            }
+        }
+    }
+
+    /**
+     * portUsed
+     *
+     * @param rootSession root user session
+     * @param port        port number
+     * @return boolean is port used
+     */
+    private boolean portUsed(Session rootSession, Integer port) {
+        ArrayList<String> dependencies = new ArrayList<>();
+        dependencies.add("lsof");
+
+        ArrayList<String> missingDependencies = jschUtil.checkDependencies(rootSession, dependencies);
+        jschUtil.installDependencies(rootSession, missingDependencies);
+
+        String command = "lsof -i:" + port;
+        try {
+            String checkPortUsed = executeCommandThenReturnEmpty(command, rootSession,
+                    null, "check port used");
+            return StrUtil.isNotEmpty(checkPortUsed);
+        } catch (OpsException e) {
+            log.error("Failed to probe port {}", e.getMessage());
+            return false;
+        }
     }
 
     /**
@@ -399,10 +454,10 @@ public class OpsHostRemoteService {
     /**
      * execute command
      *
-     * @param command command
-     * @param rootSession rootSession
-     * @param retBuffer retBuffer
-     * @param autoResponse autoResponse
+     * @param command                     command
+     * @param rootSession                 rootSession
+     * @param retBuffer                   retBuffer
+     * @param autoResponse                autoResponse
      * @param shouldHandleErrorBeforeExit shouldHandleErrorBeforeExit
      * @return JschResult
      */

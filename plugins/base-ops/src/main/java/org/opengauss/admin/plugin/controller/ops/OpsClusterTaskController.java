@@ -54,7 +54,7 @@ import java.util.Objects;
  * cluster task operations
  *
  * @author wangchao
- * @date 2024/6/22 9:41
+ * @since  2024/6/22 9:41
  **/
 @RestController
 @RequestMapping("/clusterTask")
@@ -108,9 +108,9 @@ public class OpsClusterTaskController extends BaseController {
      * @return host info
      */
     @GetMapping("/host/list")
-    public AjaxResult hostList(@RequestParam(name = "os") String os,
-                               @RequestParam("osVersion") String osVersion,
-                               @RequestParam("cpuArch") String cpuArch) {
+    public AjaxResult hostList(@RequestParam(name = "os", required = false) String os,
+                               @RequestParam(name = "osVersion", required = false) String osVersion,
+                               @RequestParam(name = "cpuArch", required = false) String cpuArch) {
         return AjaxResult.success(opsClusterTaskService.getHostList(os, osVersion, cpuArch));
     }
 

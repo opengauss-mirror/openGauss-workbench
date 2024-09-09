@@ -813,12 +813,7 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
 
     @Override
     public List<OpsHostEntity> getHostList(String os, String osVersion, String cpuArch) {
-        List<OpsHostEntity> list = opsHostRemoteService.listAll();
-        return list.stream()
-                .filter(host -> StrUtil.containsIgnoreCase(host.getOs(), os))
-                .filter(host -> StrUtil.containsIgnoreCase(host.getOsVersion(), osVersion))
-                .filter(host -> StrUtil.containsIgnoreCase(host.getCpuArch(), cpuArch))
-                .collect(Collectors.toList());
+        return opsHostRemoteService.getHostList(os, osVersion, cpuArch);
     }
 
     private boolean checkPasswordStrength(String password) {

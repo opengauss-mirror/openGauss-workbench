@@ -59,9 +59,9 @@ public class HostServiceImpl implements IHostService {
     public boolean pathEmpty(String id, String path, String rootPassword) {
         Session rootSession = opsHostRemoteService.createRootSession(id, rootPassword);
         try {
-            return pathEmpty(rootSession,path);
-        }finally {
-            if (Objects.nonNull(rootSession) && rootSession.isConnected()){
+            return pathEmpty(rootSession, path);
+        } finally {
+            if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
                 rootSession.disconnect();
             }
         }
@@ -81,26 +81,19 @@ public class HostServiceImpl implements IHostService {
 
     @Override
     public boolean portUsed(String id, Integer port, String rootPassword) {
-        Session rootSession = opsHostRemoteService.createRootSession(id, rootPassword);
-        try {
-            return portUsed(rootSession,port);
-        }finally {
-            if (Objects.nonNull(rootSession) && rootSession.isConnected()){
-                rootSession.disconnect();
-            }
-        }
+        return opsHostRemoteService.portUsed(id, port, rootPassword);
     }
 
     @Override
     public boolean fileExist(String id, String file, String rootPassword) {
         Session rootSession = opsHostRemoteService.createRootSession(id, rootPassword);
         try {
-            return fileExist(rootSession,file);
+            return fileExist(rootSession, file);
         } catch (OpsException e) {
-            log.error("Failed to find file",e);
+            log.error("Failed to find file", e);
             return false;
         } finally {
-            if (Objects.nonNull(rootSession) && rootSession.isConnected()){
+            if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
                 rootSession.disconnect();
             }
         }
@@ -166,7 +159,7 @@ public class HostServiceImpl implements IHostService {
         try {
             return scsiLunQuery(rootSession);
         } finally {
-            if (Objects.nonNull(rootSession) && rootSession.isConnected()){
+            if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
                 rootSession.disconnect();
             }
         }
@@ -178,7 +171,7 @@ public class HostServiceImpl implements IHostService {
         try {
             return nvmeLunQuery(rootSession);
         } finally {
-            if (Objects.nonNull(rootSession) && rootSession.isConnected()){
+            if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
                 rootSession.disconnect();
             }
         }
@@ -207,36 +200,13 @@ public class HostServiceImpl implements IHostService {
     }
 
     private boolean fileExist(Session rootSession, String file) {
-        String command = "[ -f '"+ file +"' ]";
+        String command = "[ -f '" + file + "' ]";
         try {
             jschUtil.executeCommand(command, rootSession);
             return true;
         } catch (Exception e) {
-            log.error("Failed to find file",e);
+            log.error("Failed to find file", e);
             throw new OpsException("Failed to find file");
-        }
-    }
-
-    /**
-     * @param rootSession root user session
-     * @param port port number
-     * @return boolean is port used
-     */
-    private boolean portUsed(Session rootSession, Integer port) {
-        ArrayList<String> dependencies = new ArrayList<>();
-        dependencies.add("lsof");
-
-        ArrayList<String> missingDependencies = jschUtil.checkDependencies(rootSession, dependencies);
-        jschUtil.installDependencies(rootSession, missingDependencies);
-
-        String command = "lsof -i:"+port;
-        try {
-            String checkPortUsed = opsHostRemoteService.executeCommandThenReturnEmpty(command, rootSession,
-                    null, "check port used");
-            return StrUtil.isNotEmpty(checkPortUsed);
-        } catch (Exception e) {
-            log.error("Failed to probe port", e.getMessage());
-            return false;
         }
     }
 }
