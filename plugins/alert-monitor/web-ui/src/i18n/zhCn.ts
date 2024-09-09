@@ -203,6 +203,8 @@ export default {
     exportReport: '导出报告',
     logSearchTable: ['时间', '类型', '级别', '日志', '集群ID', '实例ID'],
     justShowAlertLog: '只显示告警日志',
+    type: '类型',
+    selectType: '请选择类型',
   },
   AlertClusterNodeConf: {
     title: '告警配置',

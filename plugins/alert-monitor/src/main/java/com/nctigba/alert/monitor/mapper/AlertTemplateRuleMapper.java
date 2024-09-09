@@ -27,6 +27,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.nctigba.alert.monitor.model.dto.AlertTemplateRuleDTO;
 import org.apache.ibatis.annotations.Mapper;
 import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleDO;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -45,4 +46,17 @@ public interface AlertTemplateRuleMapper extends BaseMapper<AlertTemplateRuleDO>
         + "t1.is_deleted,t2.template_name from alert_template_rule t1, alert_template t2 where t1.is_deleted = 0 "
         + "and t2.is_deleted = 0 and t1.template_id = t2.id and t1.rule_id = #{ruleId}")
     List<AlertTemplateRuleDTO> getDtoListByRuleId(Long ruleId);
+
+    /**
+     * getAlertConfigTemplateRuleList
+     *
+     * @param pluginCode String
+     * @param ruleCode String
+     * @return List<AlertTemplateRuleDO>
+     */
+    @Select("select t1.* from alert_template_rule t1, alert_cluster_node_conf t2 where t1.is_deleted = 0"
+        + " and t2.is_deleted = 0 and t1.enable = 1 and t1.is_included = 1 and t1.plugin_code = #{pluginCode}"
+        + " and t1.rule_code = #{ruleCode} and t1.template_id = t2.template_id")
+    List<AlertTemplateRuleDO> getAlertConfigTemplateRuleList(@Param("pluginCode") String pluginCode,
+                                                            @Param("ruleCode") String ruleCode);
 }

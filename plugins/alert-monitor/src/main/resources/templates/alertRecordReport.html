@@ -78,7 +78,8 @@
         </thead>
         <tbody>
         <tr th:each="table : ${tableData}">
-            <td th:text="${table.clusterNodeName}"></td>
+            <td th:text="${table.type}"></td>
+            <td th:text="${table.nodeName}"></td>
             <td th:text="${table.templateName}"></td>
             <td th:text="${table.templateRuleName}"></td>
             <td th:text="${table.templateRuleTypeName}"></td>
@@ -348,7 +349,7 @@
                       name: [[${warn}]],
                       value: [[${chartData.warnNum}]],
                       itemStyle: {
-                        color: '#246CFF'
+                        color: '#FF7D00'
                       }
                     }, {
                       name: [[${info}]],

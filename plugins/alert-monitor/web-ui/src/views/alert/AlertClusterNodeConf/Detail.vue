@@ -531,7 +531,12 @@ const requestRuleItemSrcList = () => {
 
 onMounted(() => {
   if (props.clusterNodeList && props.clusterNodeList.length === 1) {
-    requestData(props.clusterNodeList[0].clusterNodeId, props.type)
+    if (props.type === 'noninstance') {
+      selectedData.value = props.clusterNodeList[0]
+      selectedData.value['id'] = selectedData.value.clusterNodeId
+    } else {
+      requestData(props.clusterNodeList[0].clusterNodeId, props.type)
+    }
   }
   if (props.type === 'instance') {
     requestRuleItemSrcList()

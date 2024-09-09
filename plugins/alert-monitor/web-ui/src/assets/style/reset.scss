@@ -163,8 +163,12 @@ body {
 
 .el-range-editor.is-disabled {
     border-color: $og-border-color !important;
+    background-color: var(--el-bg-color-disabled) !important;
 }
 
+.el-range-editor.is-disabled input {
+    background-color: var(--el-bg-color-disabled) !important;
+}
 
 .el-loading-spinner .el-loading-text {
     color: $og-sub-primary-color !important;
@@ -207,6 +211,11 @@ body {
 
 .el-cascader-panel .in-active-path .el-icon svg {
     color: var(--hw-primary-1);
+}
+
+// textarea
+.el-textarea.is-disabled .el-textarea__inner {
+    background-color: var(--el-bg-color-disabled) !important;
 }
 
 .el-textarea__inner:focus {

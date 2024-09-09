@@ -146,7 +146,9 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         LocalDateTime endTime = StrUtil.isNotBlank(alertRecordQuery.getEndTime()) ? LocalDateTime.parse(
             alertRecordQuery.getEndTime(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : null;
         String clusterNodeId = alertRecordQuery.getClusterNodeId();
+        String type = alertRecordQuery.getType();
         Page<AlertRecordDO> recordPage = this.baseMapper.selectPage(page, Wrappers.<AlertRecordDO>lambdaQuery()
+            .eq(StrUtil.isNotBlank(type), AlertRecordDO::getType, type)
             .eq(StrUtil.isNotBlank(clusterNodeId), AlertRecordDO::getClusterNodeId, clusterNodeId)
             .in(StrUtil.isNotBlank(alertRecordQuery.getAlertStatus()), AlertRecordDO::getAlertStatus,
                 StrUtil.isNotBlank(alertRecordQuery.getAlertStatus())
@@ -225,22 +227,24 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             Wrappers.<AlertRecordDO>lambdaQuery().eq(StrUtil.isNotBlank(alertStatisticsQuery.getClusterNodeId()),
                     AlertRecordDO::getClusterNodeId, alertStatisticsQuery.getClusterNodeId())
                 .ge(startTime != null, AlertRecordDO::getStartTime, startTime)
-                .le(endTime != null, AlertRecordDO::getEndTime, endTime));
+                .le(endTime != null, AlertRecordDO::getEndTime, endTime)
+                .eq(StrUtil.isNotBlank(alertStatisticsQuery.getType()), AlertRecordDO::getType,
+                    alertStatisticsQuery.getType()));
 
         AlertStatisticsDTO alertStatisticsDto = new AlertStatisticsDTO();
         alertStatisticsDto.setTotalNum(total.intValue());
-        AlertStatisticsDTO statusCountStatistics = setAndGetAlertStatusCount(alertStatisticsQuery.getClusterNodeId(),
-            startTime, endTime);
+        AlertStatisticsDTO statusCountStatistics = setAndGetAlertStatusCount(alertStatisticsQuery.getType(),
+            alertStatisticsQuery.getClusterNodeId(), startTime, endTime);
         alertStatisticsDto.setFiringNum(statusCountStatistics.getFiringNum()).setRecoverNum(
             statusCountStatistics.getRecoverNum());
 
-        AlertStatisticsDTO recordStatusCountStatistics =
-            setAndGetRecordStatusCount(alertStatisticsQuery.getClusterNodeId(), startTime, endTime);
+        AlertStatisticsDTO recordStatusCountStatistics = setAndGetRecordStatusCount(alertStatisticsQuery.getType(),
+            alertStatisticsQuery.getClusterNodeId(), startTime, endTime);
         alertStatisticsDto.setUnReadNum(recordStatusCountStatistics.getUnReadNum()).setReadNum(
             recordStatusCountStatistics.getReadNum());
 
-        AlertStatisticsDTO levelCountStatistics = setAndGetLevelCount(alertStatisticsQuery.getClusterNodeId(),
-            startTime, endTime);
+        AlertStatisticsDTO levelCountStatistics = setAndGetLevelCount(alertStatisticsQuery.getType(),
+            alertStatisticsQuery.getClusterNodeId(), startTime, endTime);
         alertStatisticsDto.setSeriousNum(levelCountStatistics.getSeriousNum()).setWarnNum(
             levelCountStatistics.getWarnNum()).setInfoNum(levelCountStatistics.getInfoNum());
 
@@ -248,11 +252,11 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
     }
 
     private AlertStatisticsDTO setAndGetAlertStatusCount(
-        String clusterNodeId, LocalDateTime startTime,
-        LocalDateTime endTime) {
+        String type, String clusterNodeId, LocalDateTime startTime, LocalDateTime endTime) {
         QueryWrapper<AlertRecordDO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("alert_status as alertStatus,count(1) count").eq(
-                StrUtil.isNotBlank(clusterNodeId), "cluster_node_id", clusterNodeId)
+        queryWrapper.select("alert_status as alertStatus,count(1) count")
+            .eq(StrUtil.isNotBlank(type), "type", type)
+            .eq(StrUtil.isNotBlank(clusterNodeId), "cluster_node_id", clusterNodeId)
             .ge(startTime != null, "start_time", startTime)
             .le(endTime != null, "end_time", endTime).groupBy("alert_status");
         List<Map<String, Object>> alertStatusMaps = this.listMaps(queryWrapper);
@@ -276,12 +280,11 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
     }
 
     private AlertStatisticsDTO setAndGetRecordStatusCount(
-        String clusterNodeId, LocalDateTime startTime,
-        LocalDateTime endTime) {
+        String type, String clusterNodeId, LocalDateTime startTime, LocalDateTime endTime) {
         QueryWrapper<AlertRecordDO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("record_status as recordStatus,count(1) count").eq(
-                StrUtil.isNotBlank(clusterNodeId), "cluster_node_id",
-                clusterNodeId)
+        queryWrapper.select("record_status as recordStatus,count(1) count")
+            .eq(StrUtil.isNotBlank(type), "type", type)
+            .eq(StrUtil.isNotBlank(clusterNodeId), "cluster_node_id", clusterNodeId)
             .ge(startTime != null, "start_time", startTime)
             .le(endTime != null, "end_time", endTime).groupBy("record_status");
         List<Map<String, Object>> recordStatusMaps = this.listMaps(queryWrapper);
@@ -305,11 +308,11 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
     }
 
     private AlertStatisticsDTO setAndGetLevelCount(
-        String clusterNodeId, LocalDateTime startTime,
-        LocalDateTime endTime) {
+        String type, String clusterNodeId, LocalDateTime startTime, LocalDateTime endTime) {
         QueryWrapper<AlertRecordDO> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("level ,count(1) count").eq(StrUtil.isNotBlank(clusterNodeId),
-                "cluster_node_id", clusterNodeId)
+        queryWrapper.select("level ,count(1) count")
+            .eq(StrUtil.isNotBlank(type), "type", type)
+            .eq(StrUtil.isNotBlank(clusterNodeId), "cluster_node_id", clusterNodeId)
             .ge(startTime != null, "start_time", startTime)
             .le(endTime != null, "end_time", endTime).groupBy("level");
         List<Map<String, Object>> levelMaps = this.listMaps(queryWrapper);
@@ -562,8 +565,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
      */
     @Override
     public Workbook exportWorkbook(AlertStatisticsQuery alertStatisticsQuery) {
-        String[] thList = {"nodeName", "alertTemplate", "alertRule", "ruleType", "level", "startTime", "endTime",
-            "duration", "alertStatus", "notifyWay", "recordStatus"};
+        String[] thList = {"type", "nodeName", "alertTemplate", "alertRule", "ruleType", "level", "startTime",
+            "endTime", "duration", "alertStatus", "notifyWay", "recordStatus"};
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet(MessageSourceUtils.get("alertRecord"));
         Row row = sheet.createRow(0);
@@ -574,6 +577,9 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         for (int i = 0; i < list.size(); i++) {
             Row row0 = sheet.createRow(i + 1);
             int j = 0;
+            String type = list.get(i).getType();
+            row0.createCell(j++).setCellValue(StrUtil.isNotBlank(type) ? MessageSourceUtils.get("alertRecord." + type)
+                : "");
             row0.createCell(j++).setCellValue(list.get(i).getNodeName());
             row0.createCell(j++).setCellValue(list.get(i).getTemplateName());
             row0.createCell(j++).setCellValue(list.get(i).getTemplateRuleName());
@@ -582,15 +588,19 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             row0.createCell(j++).setCellValue(MessageSourceUtils.get("alertRecord." + list.get(i).getLevel()));
             row0.createCell(j++).setCellValue(list.get(i).getStartTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"
                 + " HH:mm:ss")));
-            row0.createCell(j++).setCellValue(list.get(i).getEndTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"
-                + " HH:mm:ss")));
+            LocalDateTime endTime = list.get(i).getEndTime();
+            row0.createCell(j++).setCellValue(endTime != null ? endTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"
+                + " HH:mm:ss")) : "");
             Long duration = list.get(i).getDuration();
-            long hour = duration / (60 * 60);
-            long minute = duration / 60 - hour * 60;
-            long second = duration - 3600 * hour - 60 * minute;
-            String durationStr = (hour == 0 ? "00" : hour < 10 ? ("0" + hour) : hour + "") + ":"
-                + (minute == 0 ? "00" : minute < 10 ? ("0" + minute) : minute + "") + ":"
-                + (second == 0 ? "00" : second < 10 ? ("0" + second) : second + "");
+            String durationStr = "00:00:00";
+            if (duration != null) {
+                long hour = duration / (60 * 60);
+                long minute = duration / 60 - hour * 60;
+                long second = duration - 3600 * hour - 60 * minute;
+                durationStr = (hour == 0 ? "00" : hour < 10 ? ("0" + hour) : hour + "") + ":"
+                    + (minute == 0 ? "00" : minute < 10 ? ("0" + minute) : minute + "") + ":"
+                    + (second == 0 ? "00" : second < 10 ? ("0" + second) : second + "");
+            }
             row0.createCell(j++).setCellValue(durationStr);
             Integer alertStatus = list.get(i).getAlertStatus();
             row0.createCell(j++).setCellValue(alertStatus == 0 ? MessageSourceUtils.get("alerting")
@@ -627,7 +637,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         context.setVariable("read", MessageSourceUtils.get("read"));
         context.setVariable("unread", MessageSourceUtils.get("unread"));
         context.setVariable("alertRecord", MessageSourceUtils.get("alertRecord"));
-        String[] thArr = {"nodeName", "alertTemplate", "alertRule", "ruleType", "level", "startTime", "endTime",
+        String[] thArr = {"type", "nodeName", "alertTemplate", "alertRule", "ruleType", "level", "startTime", "endTime",
             "duration", "alertStatus", "notifyWay", "recordStatus"};
         List<String> thList = new ArrayList<>();
         for (String th : thArr) {
@@ -650,20 +660,26 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         JSONArray tableData = new JSONArray();
         for (AlertRecordDTO alertRecordDto : list) {
             JSONObject jsonObject = JSONUtil.parseObj(alertRecordDto);
+            String type = alertRecordDto.getType();
+            jsonObject.put("type", StrUtil.isNotBlank(type) ? MessageSourceUtils.get("alertRecord." + type) : "");
             jsonObject.put("templateRuleTypeName",
                 MessageSourceUtils.get("alertRecord." + alertRecordDto.getTemplateRuleType()));
             jsonObject.put("levelName", MessageSourceUtils.get("alertRecord." + alertRecordDto.getLevel()));
             jsonObject.put("startTimeStr", alertRecordDto.getStartTime().format(DateTimeFormatter.ofPattern("yyyy-MM"
                 + "-dd HH:mm:ss")));
-            jsonObject.put("endTimeStr", alertRecordDto.getEndTime().format(DateTimeFormatter.ofPattern("yyyy-MM"
-                + "-dd HH:mm:ss")));
+            LocalDateTime endTime = alertRecordDto.getEndTime();
+            jsonObject.put("endTimeStr", endTime != null ? endTime.format(DateTimeFormatter.ofPattern(
+                "yyyy-MM-dd HH:mm:ss")) : "");
             Long duration = alertRecordDto.getDuration();
-            long hour = duration / (60 * 60);
-            long minute = duration / 60 - hour * 60;
-            long second = duration - 3600 * hour - 60 * minute;
-            String durationStr = (hour == 0 ? "00" : hour < 10 ? ("0" + hour) : hour + "") + ":"
-                + (minute == 0 ? "00" : minute < 10 ? ("0" + minute) : minute + "") + ":"
-                + (second == 0 ? "00" : second < 10 ? ("0" + second) : second + "");
+            String durationStr = "00:00:00";
+            if (duration != null) {
+                long hour = duration / (60 * 60);
+                long minute = duration / 60 - hour * 60;
+                long second = duration - 3600 * hour - 60 * minute;
+                durationStr = (hour == 0 ? "00" : hour < 10 ? ("0" + hour) : hour + "") + ":"
+                    + (minute == 0 ? "00" : minute < 10 ? ("0" + minute) : minute + "") + ":"
+                    + (second == 0 ? "00" : second < 10 ? ("0" + second) : second + "");
+            }
             jsonObject.put("durationStr", durationStr);
             Integer alertStatus = alertRecordDto.getAlertStatus();
             jsonObject.put("alertStatusStr", alertStatus == 0 ? MessageSourceUtils.get("alerting")

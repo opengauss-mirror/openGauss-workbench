@@ -28,7 +28,7 @@
           maxlength="50" show-word-limit></el-input>
       </el-form-item>
       <el-form-item :label="$t('alertRule.ruleType')" prop="ruleType">
-        <el-radio-group v-model="formData.ruleType" :disabled="disabled || state === 'edit'">
+        <el-radio-group v-model="formData.ruleType" :disabled="disabled || state === 'edit'" @change="changeRuleType">
           <el-radio v-for="item in ruleTypeList" :key="item" :label="item">{{ $t(`alertRule.${item}`)
           }}</el-radio>
         </el-radio-group>
@@ -480,6 +480,14 @@ const changeAction = (val: any, index: number) => {
   ruleItem.limitValue = itemExpSrcList[0].limitValue
   ruleItem.ruleExp = itemExpSrcList[0].exp
   ruleItem.showLimitValue = itemExpSrcList[0].showLimitValue
+}
+
+const changeRuleType = (val: any) => {
+  if (val !== 'index') {
+    formData.value.isRepeat = 0
+    formData.value.nextRepeat = ''
+    formData.value.nextRepeatUnit = ''
+  } 
 }
 const preview = () => {
   if (alertContentParam.value && formData.value.ruleContent) {

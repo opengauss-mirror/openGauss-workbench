@@ -261,4 +261,20 @@ public class CommonConstants {
      * ENABLE_STATUS
      */
     public static final Integer IS_ENABLE = 1;
+
+    /**
+     * SHIELDING_CONTINUOUSLY
+     */
+    public static final String SHIELDING_CONTINUOUSLY = "a";
+
+    /**
+     * SHIELDING_PERIOD
+     */
+    public static final String SHIELDING_PERIOD = "b";
+
+    /**
+     * SHIELDING_SCHEDULED
+     */
+    public static final String SHIELDING_SCHEDULED = "c";
+
 }
