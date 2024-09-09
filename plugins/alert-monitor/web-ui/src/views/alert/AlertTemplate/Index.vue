@@ -43,7 +43,7 @@
             <el-table-column prop="type" :label="$t('alertTemplate.table[1]')">
               <template #default="scope">
                 <div v-if="scope.row.type === 'instance'">{{ $t('app.instance') }}</div>
-                <div v-if="scope.row.type === 'noninstance'">{{ $t('app.noninstance') }}</div>
+                <div v-if="scope.row.type === 'plugin'">{{ $t('app.plugin') }}</div>
               </template>
             </el-table-column>
             <el-table-column :label="$t('alertTemplate.table[2]')">

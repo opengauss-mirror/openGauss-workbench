@@ -157,7 +157,7 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
         // update
         List<AlertTemplateRuleQuery> templateRuleReqList = templateReq.getTemplateRuleReqList();
         updateByTemplateRuleReqList(templateRuleReqList, alertTemplateDO.getId(), templateReq.getType());
-        if (templateReq.getType().equalsIgnoreCase(CommonConstants.NONINSTANCE)) {
+        if (templateReq.getType().equalsIgnoreCase(CommonConstants.PLUGIN)) {
             return alertTemplateDO;
         }
         Long id = alertTemplateDO.getId();
@@ -270,13 +270,10 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
         if (CollectionUtil.isEmpty(templateRuleIds)) {
             return;
         }
-        for (Long templateRuleId : templateRuleIds) {
-            alertTemplateRuleItemMapper.update(null,
-                    new LambdaUpdateWrapper<AlertTemplateRuleItemDO>()
-                            .set(AlertTemplateRuleItemDO::getIsDeleted, CommonConstants.IS_DELETE)
-                            .set(AlertTemplateRuleItemDO::getUpdateTime, LocalDateTime.now())
-                            .eq(AlertTemplateRuleItemDO::getTemplateRuleId, templateRuleId)
-                            .eq(AlertTemplateRuleItemDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
-        }
+        alertTemplateRuleItemMapper.update(null,
+            new LambdaUpdateWrapper<AlertTemplateRuleItemDO>().set(AlertTemplateRuleItemDO::getIsDeleted,
+                CommonConstants.IS_DELETE).set(AlertTemplateRuleItemDO::getUpdateTime, LocalDateTime.now()).in(
+                AlertTemplateRuleItemDO::getTemplateRuleId, templateRuleIds).eq(
+                AlertTemplateRuleItemDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
     }
 }

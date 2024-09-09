@@ -258,7 +258,7 @@ public class NotifyListener implements ApplicationListener<NotifyEvent> {
         }
         String clusterNodeId = detail.getClusterNodeId();
         alertParams.put("clusterNodeId", clusterNodeId);
-        if (CommonConstants.NONINSTANCE.equals(detail.getType())) {
+        if (CommonConstants.PLUGIN.equals(detail.getType())) {
             alertParams.put("hostIp", detail.getIp());
             alertParams.put("port", detail.getPort());
             alertParams.put("nodeName", detail.getNodeName());

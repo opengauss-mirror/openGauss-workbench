@@ -44,7 +44,7 @@ public class AlertTemplateQuery {
     @NotBlank
     private String templateName;
     @NotBlank
-    @EnumString(values = {CommonConstants.INSTANCE, CommonConstants.NONINSTANCE})
+    @EnumString(values = {CommonConstants.INSTANCE, CommonConstants.PLUGIN})
     private String type;
 
     @Valid

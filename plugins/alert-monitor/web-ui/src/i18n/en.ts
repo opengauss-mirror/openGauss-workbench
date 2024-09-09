@@ -54,7 +54,7 @@ export default {
     uninstallTip: 'Before using the Alert Center module and the Notify Configuration module, you need to install Prometheus. Please go to "Intelligent OPS - Instance Monitoring " to install the server Prometheus. Otherwise, it will not be available.',
     disConfigTip: 'Before using the Alert Center module and the Notify Configuration module, set up the alert interface first.',
     instance: 'instance',
-    noninstance: 'non-instance',
+    plugin: 'plugin',
   },
   alertRule: {
     title: 'alert rule',

@@ -1052,15 +1052,26 @@ create_time) values(73,73,'normal','',null,
  > count(agent_cpu_seconds_total{mode="system",instance=~"$'||'{instances}"}) by (instance)',
   0,now()) ON DUPLICATE KEY UPDATE NOTHING;
 
+update public.alert_rule_item_src set name = 'activeSession', name_zh = '活动会话数', name_en = 'Active Session',
+analysis_bean_name = '' where id = 73;
+update public.alert_rule_item_exp_src set operate = '', limit_value = null,
+exp = 'sum(pg_state_activity_group_count{state="active",instance=~"$'||'{instances}"}) by (instance)', show_limit_value
+= 1 where id = 73;
+
 INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (26,'活动会话数过多告警','serious','index','A','故障描述：$'||'{nodeName}数据库的活动会话数过多，当前值为：$'||'{value}'||chr(10)
  ||'处理建议：请检查数据库会话',
  1,'m',0,0,null,null,'firing','1','活动会话数大于CPU核数',0,now(),null) ON DUPLICATE KEY UPDATE NOTHING;
+ update public.alert_rule set rule_content = '故障描述：$'||'{nodeName}数据库的活动会话数超过24，当前值为：$'||'{value}'||chr(10)
+ ||'处理建议：请检查数据库会话', alert_desc = '活动会话数过多' where id = 26;
+
 INSERT INTO public.alert_rule_item (id,rule_id,rule_mark,rule_exp_name,operate,limit_value,unit,rule_exp,rule_item_desc,is_deleted,create_time,update_time,action)
  VALUES (26,26,'A','activeSessionGtCpuCore','',null,'%','sum(pg_state_activity_group_count{state="active",
  instance=~"$'||'{instances}"}) by (instance) > count(agent_cpu_seconds_total{mode="system",instance=~"$'||'{instances}"}) by (instance)',
  '活动会话数大于CPU核数',0,now(),null,'normal') ON DUPLICATE KEY UPDATE NOTHING;
- update public.alert_rule_item set unit = '%' where id = 26;
+ update public.alert_rule_item set unit = '', rule_exp_name = 'activeSession', operate = '>', limit_value = 24,
+ rule_exp = 'sum(pg_state_activity_group_count{state="active",instance=~"$'||'{instances}"}) by (instance)',
+ rule_item_desc = '活动会话数大于24' where id = 26;
 
 --每秒死锁数
 insert into public.alert_rule_item_src(id,name,name_zh,name_en,unit,params,create_time,alert_params) values (74,
@@ -1683,8 +1694,9 @@ COMMENT ON COLUMN "public"."alert_rule"."plugin_code" IS '插件标识';
 COMMENT ON COLUMN "public"."alert_rule"."rule_code" IS '规则标识';
 
 ALTER TABLE "public"."alert_template" ADD COLUMN "type" varchar(100) default 'instance';
-COMMENT ON COLUMN "public"."alert_template_rule"."type" IS '模板类型，instance为实例，noninstance为非实例';
+COMMENT ON COLUMN "public"."alert_template_rule"."type" IS '模板类型，instance为实例，plugin为插件';
 update "public"."alert_template" set type = 'instance' where type is null or type = '';
+update "public"."alert_template" set type = 'plugin' where type = 'noninstance';
 
 ALTER TABLE "public"."alert_template_rule" ADD COLUMN "plugin_code" varchar(100);
 ALTER TABLE "public"."alert_template_rule" ADD COLUMN "rule_code" varchar(100);
@@ -1699,22 +1711,26 @@ CREATE TABLE IF NOT EXISTS public.alert_plugin_info (
 	create_time timestamp(6) NULL,
 	update_time timestamp(6) NULL
 );
-insert into public.alert_plugin_info(id, name, is_deleted, create_time) values (1, '非实例告警', 0, now());
+insert into public.alert_plugin_info(id, name, is_deleted, create_time) values (1, '插件告警', 0, now());
+update public.alert_plugin_info set name = '插件告警' where name = '非实例告警';
 
 ALTER TABLE public.alert_cluster_node_conf add COLUMN "type" varchar(100) default 'instance';
-COMMENT ON COLUMN "public"."alert_cluster_node_conf"."type" IS '类型，instance为实例，noninstance为非实例';
+COMMENT ON COLUMN "public"."alert_cluster_node_conf"."type" IS '类型，instance为实例，plugin为插件';
 update "public"."alert_cluster_node_conf" set type = 'instance' where type is null or type = '';
+update "public"."alert_cluster_node_conf" set type = 'plugin' where type = 'noninstance';
 
 ALTER TABLE "public"."alert_record" ADD COLUMN "type" varchar(100) default 'instance';
-COMMENT ON COLUMN "public"."alert_record"."type" IS '类型，instance为实例，noninstance为非实例';
+COMMENT ON COLUMN "public"."alert_record"."type" IS '类型，instance为实例，plugin为插件';
 update "public"."alert_record" set type = 'instance' where type is null or type = '';
+update "public"."alert_record" set type = 'plugin' where type = 'noninstance';
 ALTER TABLE "public"."alert_record" ADD COLUMN "ip" varchar(100);
 ALTER TABLE "public"."alert_record" ADD COLUMN "port" varchar(100);
 ALTER TABLE "public"."alert_record" ADD COLUMN "node_name" varchar(200);
 
 ALTER TABLE "public"."alert_record_detail" ADD COLUMN "type" varchar(100) default 'instance';
-COMMENT ON COLUMN "public"."alert_record_detail"."type" IS '类型，instance为实例，noninstance为非实例';
+COMMENT ON COLUMN "public"."alert_record_detail"."type" IS '类型，instance为实例，plugin为插件';
 update "public"."alert_record_detail" set type = 'instance' where type is null or type = '';
+update "public"."alert_record_detail" set type = 'plugin' where type = 'noninstance';
 ALTER TABLE "public"."alert_record_detail" ADD COLUMN "ip" varchar(100);
 ALTER TABLE "public"."alert_record_detail" ADD COLUMN "port" varchar(100);
 ALTER TABLE "public"."alert_record_detail" ADD COLUMN "node_name" varchar(200);
@@ -1733,3 +1749,9 @@ CREATE TABLE IF NOT EXISTS public.alert_shielding (
 	create_time timestamp(6) NULL,
 	update_time timestamp(6) NULL
 );
+
+update public.alert_template_rule set rule_content = '故障描述：$'||'{nodeName}数据库的活动会话数超过24，当前值为：$'||'{value}'||chr(10)
+ ||'处理建议：请检查数据库会话', alert_desc = '活动会话数过多' where rule_id = 26;
+ update public.alert_template_rule_item set unit = '', rule_exp_name = 'activeSession', operate = '>', limit_value = 24,
+ rule_exp = 'sum(pg_state_activity_group_count{state="active",instance=~"$'||'{instances}"}) by (instance)',
+ rule_item_desc = '活动会话数大于24' where rule_item_id = 26;

@@ -35,6 +35,7 @@ import com.nctigba.alert.monitor.mapper.AlertTemplateRuleMapper;
 import com.nctigba.alert.monitor.mapper.NotifyMessageMapper;
 import com.nctigba.alert.monitor.mapper.NotifyTemplateMapper;
 import com.nctigba.alert.monitor.mapper.NotifyWayMapper;
+import com.nctigba.alert.monitor.model.entity.AlertClusterNodeConfDO;
 import com.nctigba.alert.monitor.model.entity.AlertRecordDO;
 import com.nctigba.alert.monitor.model.entity.AlertRecordDetailDO;
 import com.nctigba.alert.monitor.model.entity.AlertShieldingDO;
@@ -43,6 +44,7 @@ import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleDO;
 import com.nctigba.alert.monitor.model.entity.NotifyWayDO;
 import com.nctigba.alert.monitor.model.query.api.AlertApiReq;
 import com.nctigba.alert.monitor.service.AlertApiService;
+import com.nctigba.alert.monitor.service.AlertClusterNodeConfService;
 import com.nctigba.alert.monitor.service.AlertRecordDetailService;
 import com.nctigba.alert.monitor.service.AlertRecordService;
 import com.nctigba.alert.monitor.util.MessageSourceUtils;
@@ -112,6 +114,8 @@ public class AlertApiServiceImpl implements AlertApiService {
     private HostFacade hostFacade;
     @Autowired
     private AlertShieldingMapper shieldingMapper;
+    @Autowired
+    private AlertClusterNodeConfService clusterNodeConfService;
 
 
     /**
@@ -123,6 +127,16 @@ public class AlertApiServiceImpl implements AlertApiService {
         for (AlertApiReq alertApiReq : alertApiReqList) {
             try {
                 Map<String, String> labels = alertApiReq.getLabels();
+                Long templateId = Long.valueOf(labels.get("templateId"));
+                String clusterNodeId = labels.get("instance");
+                long count = clusterNodeConfService.count(Wrappers.<AlertClusterNodeConfDO>lambdaQuery()
+                    .eq(AlertClusterNodeConfDO::getTemplateId, templateId)
+                    .eq(AlertClusterNodeConfDO::getClusterNodeId, clusterNodeId)
+                    .eq(AlertClusterNodeConfDO::getType, CommonConstants.INSTANCE)
+                    .eq(AlertClusterNodeConfDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+                if (count == 0) {
+                    continue;
+                }
                 Long templateRuleId = Long.valueOf(labels.get("templateRuleId"));
                 AlertTemplateRuleDO alertTemplateRuleDO = templateRuleMapper.selectById(templateRuleId);
                 if (alertTemplateRuleDO == null || alertTemplateRuleDO.getId() == null) {
@@ -131,10 +145,8 @@ public class AlertApiServiceImpl implements AlertApiService {
                 if (StrUtil.isBlank(alertTemplateRuleDO.getNotifyWayIds())) {
                     continue;
                 }
-                String clusterNodeId = alertApiReq.getLabels().get("instance");
                 if (checkIsShielding(clusterNodeId)) {
                     if (alertApiReq.getAlertStatus().equals(CommonConstants.RECOVER_STATUS)) {
-                        Long templateId = Long.valueOf(alertApiReq.getLabels().get("templateId"));
                         alertToRecover(clusterNodeId, templateId, templateRuleId);
                     }
                     continue;

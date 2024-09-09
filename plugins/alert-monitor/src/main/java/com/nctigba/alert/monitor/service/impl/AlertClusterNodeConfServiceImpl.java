@@ -129,7 +129,7 @@ public class AlertClusterNodeConfServiceImpl
                 .setCreateTime(LocalDateTime.now()).setIsDeleted(CommonConstants.IS_NOT_DELETE)).collect(
             Collectors.toList());
         this.saveBatch(alertClusterNodeConfDOList);
-        if (type.equalsIgnoreCase(CommonConstants.NONINSTANCE)) {
+        if (type.equalsIgnoreCase(CommonConstants.PLUGIN)) {
             delOldClusterNodeConfigs(templateId, clusterNodeIdList);
             return;
         }
@@ -247,7 +247,7 @@ public class AlertClusterNodeConfServiceImpl
     @Override
     public List<AlertClusterNodeConfDTO> getList(String type) {
         List<AlertClusterNodeConfDTO> dtoList = new ArrayList<>();
-        if (type.equalsIgnoreCase(CommonConstants.NONINSTANCE)) {
+        if (type.equalsIgnoreCase(CommonConstants.PLUGIN)) {
             List<AlertPluginInfoDO> pluginInfoList = alertPluginInfoMapper.selectList(new LambdaUpdateWrapper<>());
             if (CollectionUtil.isEmpty(pluginInfoList)) {
                 return dtoList;
@@ -318,7 +318,7 @@ public class AlertClusterNodeConfServiceImpl
         alertClusterNodeConfDOS.forEach(item -> item.setIsDeleted(CommonConstants.IS_DELETE)
             .setUpdateTime(LocalDateTime.now()));
         this.updateBatchById(alertClusterNodeConfDOS);
-        if (type.equalsIgnoreCase(CommonConstants.NONINSTANCE)) {
+        if (type.equalsIgnoreCase(CommonConstants.PLUGIN)) {
             return;
         }
 

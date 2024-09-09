@@ -42,9 +42,9 @@ import lombok.experimental.Accessors;
 import org.snmp4j.mp.SnmpConstants;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.time.LocalDateTime;
 
 /**
@@ -81,7 +81,8 @@ public class NotifyWayDO {
     private String sign;
     private String phone;
     @NotBlankConditional(conditionalField = "notifyType", conditionalValues = {CommonConstants.EMAIL})
-    @Email
+    @Pattern(regexp = "^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}|)"
+        + "(,\\s*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}|))*$")
     private String email;
     private String personId;
     private String deptId;
