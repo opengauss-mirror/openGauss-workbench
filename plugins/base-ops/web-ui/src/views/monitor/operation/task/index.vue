@@ -485,9 +485,10 @@ const saveConfig = async () => {
   clusterTaskList.clusterNodes = []
   editFlag.value = true
   subTaskConfig.value.clusterNodes.forEach((item) => {
-    if (item.editing === true) {
+    if (item.editing) {
       editFlag.value = false
       Message.error('仍有节点处于编辑状态，无法保存')
+      return
     }
     const newData = {
       "clusterNodeId": item.clusterNodeId,
