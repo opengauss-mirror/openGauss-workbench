@@ -125,7 +125,6 @@ public class SysRole extends BaseEntity {
     }
 
 
-    @NotBlank(message = "Display sort cannot be empty")
     public String getRoleSort() {
         return roleSort;
     }
