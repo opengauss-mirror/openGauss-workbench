@@ -107,6 +107,9 @@ public class IndexController extends ControllerConfig {
         Map<String, Object> result = new HashMap<>();
         // cluster info
         var node = clusterManager.getOpsNodeById(id);
+        if (node == null) {
+            return AjaxResult.error();
+        }
         result.put("version", configMapper.version());
         result.put("time", configMapper.starttime());
         var env = configMapper.env();

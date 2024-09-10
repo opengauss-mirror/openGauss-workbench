@@ -174,6 +174,9 @@ public class MetricsService {
     private Map<String, Object> executePrometheus(MetricQueryDTO dto) {
         var result = new HashMap<String, Object>();
         var node = clusterManager.getOpsNodeById(dto.getNodeId());
+        if (node == null) {
+            return result;
+        }
         List<Long> timeline = new ArrayList<>();
         for (long i = dto.getStart(); i < dto.getEnd(); i += dto.getStep()) {
             timeline.add(i);

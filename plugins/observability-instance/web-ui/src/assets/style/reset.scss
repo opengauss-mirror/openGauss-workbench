@@ -139,6 +139,13 @@ body {
 }
 .el-range-editor.is-disabled {
   border-color: $og-border-color !important;
+  background-color: var(--el-bg-color-disabled) !important;
+}
+.el-range-editor.is-disabled input {
+  background-color: var(--el-bg-color-disabled) !important;
+}
+.el-input.is-disabled .el-input__wrapper {
+  background-color: var(--el-bg-color-disabled) !important;
 }
 // 弹窗loading
 .el-loading-spinner .el-loading-text {
@@ -180,6 +187,9 @@ body {
 // textarea
 .el-textarea__inner {
   background-color: var(--color-fill-2) !important;
+}
+.el-textarea.is-disabled .el-textarea__inner {
+  background-color: var(--el-bg-color-disabled) !important;
 }
 .el-textarea__inner:focus {
   background-color: var(--main-background-color) !important;

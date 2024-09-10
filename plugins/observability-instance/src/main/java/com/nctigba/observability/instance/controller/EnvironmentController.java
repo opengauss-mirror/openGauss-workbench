@@ -187,9 +187,6 @@ public class EnvironmentController {
             installedAgentsVO.setClusters(relatedClusters);
         });
 
-        // clear no cluster result
-        result.removeIf(z -> z.getClusters().isEmpty());
-
         return result;
     }
 
