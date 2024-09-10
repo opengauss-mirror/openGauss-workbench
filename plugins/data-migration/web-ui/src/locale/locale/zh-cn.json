@@ -135,7 +135,7 @@
             "5q09urmruhc0": "剩余待写入数据：",
             "5q09vm8iktw0": "zookeeper+kafka日志",
             "5q09wjm47ow0": "schema-registry日志",
-            "5q09xhsvcq40": "总迁移对象数量：{total}，未开始：{totalWaitCount}，迁移中：{totalRunningCount}，成功：{totalFinishCount}，失败：{totalErrorCount}",
+            "5q09xhsvcq40": "总迁移对象数量：{total}，未开始：{totalWaitCount}，迁移中：{totalRunningCount}，成功：{totalSuccessCount}，失败：{totalErrorCount}",
             "5q09xhsvcq41": "数据总量：{totalDataSize}MB，耗时：{cost}s",
             "5q09xhsvcq42": "实时速率: {speed}MB/s",
             "5q09xhsvcq43": "总校验对象数量：{total}，未开始：{totalWaitCount}，校验中：{totalRunningCount}，成功：{totalFinishCount}，失败：{totalErrorCount}",
