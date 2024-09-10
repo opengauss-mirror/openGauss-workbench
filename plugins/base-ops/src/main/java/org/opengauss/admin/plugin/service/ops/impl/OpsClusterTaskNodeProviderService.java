@@ -27,9 +27,9 @@ import cn.hutool.core.util.StrUtil;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterTaskEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterTaskNodeEntity;
 import org.opengauss.admin.plugin.domain.model.ops.dto.OpsClusterTaskNodeDTO;
+import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterTaskNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterTaskService;
-import org.opengauss.admin.plugin.service.ops.impl.function.CheckDeployTypeService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -50,8 +50,6 @@ public class OpsClusterTaskNodeProviderService {
     private IOpsClusterTaskNodeService opsClusterTaskNodeService;
     @Resource
     private IOpsClusterTaskService opsClusterTaskService;
-    @Resource
-    private CheckDeployTypeService checkDeployTypeService;
 
 
     /**
@@ -66,10 +64,8 @@ public class OpsClusterTaskNodeProviderService {
         String clusterId = insertDto.getClusterId();
         OpsClusterTaskEntity taskEntity = opsClusterTaskService.getById(clusterId);
         Assert.isTrue(Objects.nonNull(taskEntity), "cluster task id can not exists " + clusterId);
-        int nodeCount = taskEntity.getClusterNodeNum() + 1;
         String clusterNodeId = opsClusterTaskNodeService.saveClusterTaskNode(insertDto);
-        opsClusterTaskService.modifyClusterNodeCount(clusterId, nodeCount);
-        opsClusterTaskService.resetTaskStatusDraft(clusterId);
+        updateClusterTask(clusterId);
         boolean canInstall = opsClusterTaskService.checkHostAndUserInstallCluster(clusterId, insertDto.getHostId(),
                 insertDto.getHostUserId());
         Assert.isTrue(canInstall, clusterId + " host has cluster installation task");
@@ -90,14 +86,25 @@ public class OpsClusterTaskNodeProviderService {
         OpsClusterTaskEntity taskEntity = opsClusterTaskService.getById(clusterId);
         Assert.isTrue(Objects.nonNull(taskEntity), "cluster task id is not exists " + clusterId);
         String clusterNodeId = updateDto.getClusterNodeId();
-        OpsClusterTaskNodeEntity node = opsClusterTaskNodeService.getById(clusterNodeId);
-        Assert.isTrue(Objects.nonNull(node), "cluster node is not exists " + clusterNodeId);
+        OpsClusterTaskNodeEntity updateNode = opsClusterTaskNodeService.getById(clusterNodeId);
+        Assert.isTrue(Objects.nonNull(updateNode), "cluster node is not exists " + clusterNodeId);
         String msg = opsClusterTaskNodeService.updateClusterTaskNode(updateDto);
-        opsClusterTaskService.resetTaskStatusDraft(clusterId);
+        updateClusterTask(clusterId);
         boolean canInstall = opsClusterTaskService.checkHostAndUserInstallCluster(clusterId, updateDto.getHostId(),
                 updateDto.getHostUserId());
         Assert.isTrue(canInstall, clusterId + " host has cluster installation task");
         return msg;
+    }
+
+    private void updateClusterTask(String clusterId) {
+        List<OpsClusterTaskNodeEntity> nodeList = opsClusterTaskNodeService.listByClusterTaskId(clusterId);
+        OpsClusterTaskNodeEntity master = nodeList.stream()
+                .filter(node -> node.getNodeType().equals(ClusterRoleEnum.MASTER))
+                .findFirst()
+                .get();
+        Assert.isTrue(Objects.nonNull(master), "cluster task must have master node");
+        opsClusterTaskService.modifyClusterTaskOfNodeChange(clusterId, master.getHostId(),
+                master.getHostUserId(), nodeList.size());
     }
 
     /**
@@ -113,11 +120,8 @@ public class OpsClusterTaskNodeProviderService {
         Assert.isTrue(StrUtil.isNotEmpty(nodeId), "cluster node id cannot be empty");
         OpsClusterTaskEntity taskEntity = opsClusterTaskService.getById(clusterId);
         Assert.isTrue(Objects.nonNull(taskEntity), "cluster task id can not exists " + clusterId);
-        int nodeCount = taskEntity.getClusterNodeNum() - 1;
-        checkDeployTypeService.check(taskEntity.getVersion(), taskEntity.getDeployType(), nodeCount);
         String msg = opsClusterTaskNodeService.deleteClusterTaskNode(clusterId, nodeId);
-        opsClusterTaskService.modifyClusterNodeCount(clusterId, nodeCount);
-        opsClusterTaskService.resetTaskStatusDraft(clusterId);
+        updateClusterTask(clusterId);
         return msg;
     }
 
