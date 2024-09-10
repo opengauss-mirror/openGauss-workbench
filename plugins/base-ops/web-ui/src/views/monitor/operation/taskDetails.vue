@@ -185,20 +185,20 @@ const singleRowDelete = () => {
     .catch(error => {
       console.log("DeleteTask error:" + error);
     }).finally(() => {
-      clusterManage();
-    })
+    clusterManage();
+  })
 }
 //重新执行
 const reExecute = () => {
   reExecuteTask(list.data.clusterId)
-  .then(res => {
-    if (Number(res.code) === 200) {
-      Message.success(res.msg)
-    }
-  })
-  .catch((error) => {
-    console.log("reExecute error:" + error);
-  })
+    .then(res => {
+      if (Number(res.code) === 200) {
+        Message.success(res.msg)
+      }
+    })
+    .catch((error) => {
+      console.log("reExecute error:" + error);
+    })
 }
 //控制显示信息
 const data = reactive({
@@ -214,23 +214,26 @@ const list = reactive({
 })
 
 const getListData = () => {
-  taskMenu
+  axios.get(`/clusterTask/detail/${route.query.clusterId}`).then((res) => {
+    if (Number(res.code) === 200) {
+      list.data = res.data;
+      console.log(list.data);
+    }
+  }).catch(error => {
+    console.error("taskMenu infoError:"+error);
+  });
 }
 
 onMounted(() => {
-
   getListData()
 })
 
-//调用集群任务详情接口
-const taskMenu = axios.get(`/clusterTask/detail/${route.query.clusterId}`).then((res) => {
-  if (Number(res.code) === 200) {
-    list.data = res.data;
-    console.log(list.data);
+watch(() => route.query.clusterId, (newClusterId) => {
+  if (route.query.clusterId) {
+    getListData()
   }
-}).catch(error => {
-  console.error("taskMenu infoError:"+error);
-});
+})
+
 //执行日志下载
 const logDownload = () => {
   console.log('logDownload');
