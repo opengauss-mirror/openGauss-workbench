@@ -48,15 +48,23 @@ import org.opengauss.admin.common.utils.DateUtils;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterTaskEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterTaskNodeEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
-import org.opengauss.admin.plugin.domain.model.ops.*;
+import org.opengauss.admin.plugin.domain.model.ops.OpsClusterTaskVO;
+import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
+import org.opengauss.admin.plugin.domain.model.ops.OpsClusterTaskNodeVO;
+import org.opengauss.admin.plugin.domain.model.ops.RetBuffer;
+import org.opengauss.admin.plugin.domain.model.ops.InstallContext;
 import org.opengauss.admin.plugin.domain.model.ops.cache.TaskManager;
-import org.opengauss.admin.plugin.domain.model.ops.dto.*;
+import org.opengauss.admin.plugin.domain.model.ops.dto.OpsClusterTaskDTO;
+import org.opengauss.admin.plugin.domain.model.ops.dto.OpsClusterTaskQueryParamDTO;
 import org.opengauss.admin.plugin.domain.model.ops.env.EnvProperty;
 import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;
-import org.opengauss.admin.plugin.enums.ops.*;
+import org.opengauss.admin.plugin.enums.ops.HostEnvStatusEnum;
 import org.opengauss.admin.plugin.factory.OperateLogFactory;
 import org.opengauss.admin.plugin.mapper.ops.OpsClusterTaskMapper;
-import org.opengauss.admin.plugin.service.ops.*;
+import org.opengauss.admin.plugin.service.ops.IOpsClusterTaskService;
+import org.opengauss.admin.plugin.service.ops.IOpsClusterTaskNodeService;
+import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerV2Service;
+import org.opengauss.admin.plugin.service.ops.IOpsClusterLogService;
 import org.opengauss.admin.plugin.service.ops.impl.function.CheckDeployTypeService;
 import org.opengauss.admin.plugin.service.ops.impl.function.ClusterTaskPathFactory;
 import org.opengauss.admin.plugin.service.ops.impl.provider.ProviderManager;
@@ -70,7 +78,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.Objects;
+import java.util.List;
+import java.util.Map;
+import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -382,6 +394,20 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
                 .eq(OpsClusterTaskNodeEntity::getHostUserId, hostUserId)) == 0;
     }
 
+    @Override
+    public void modifyClusterTaskOfNodeChange(String clusterId, String hostId, String hostUserId, int nodeCount) {
+        OpsClusterTaskEntity taskEntity = getById(clusterId);
+        Assert.isTrue(Objects.nonNull(taskEntity), "cluster task id not exist:" + clusterId);
+        update(Wrappers.lambdaUpdate(OpsClusterTaskEntity.class)
+                .set(OpsClusterTaskEntity::getHostId, hostId)
+                .set(OpsClusterTaskEntity::getHostUserId, hostUserId)
+                .set(OpsClusterTaskEntity::getClusterNodeNum, nodeCount)
+                .set(OpsClusterTaskEntity::getStatus, OpsClusterTaskStatusEnum.DRAFT)
+                .set(OpsClusterTaskEntity::getEnvCheckResult, null)
+                .set(OpsClusterTaskEntity::getRemark, "reset task draft")
+                .eq(OpsClusterTaskEntity::getClusterId, clusterId));
+    }
+
     private void checkPackageInfo(OpsClusterTaskEntity entity) {
         String packageId = entity.getPackageId();
         OpsPackageManagerEntity packageEntity = opsPackageManagerV2Service.getById(packageId);
@@ -590,22 +616,6 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
                 "database password is not strong enough");
         OperateLogFactory.operateUpdate(entity.getClusterId());
     }
-
-
-    @Override
-    public void resetTaskStatusDraft(String clusterId) {
-        OpsClusterTaskEntity taskEntity = getById(clusterId);
-        Assert.isTrue(Objects.nonNull(taskEntity), "cluster task id not exist:" + clusterId);
-        long nodeCount = opsClusterTaskNodeService.count(Wrappers.lambdaQuery(OpsClusterTaskNodeEntity.class)
-                .eq(OpsClusterTaskNodeEntity::getClusterId, clusterId));
-        update(Wrappers.lambdaUpdate(OpsClusterTaskEntity.class)
-                .set(OpsClusterTaskEntity::getStatus, OpsClusterTaskStatusEnum.DRAFT)
-                .set(OpsClusterTaskEntity::getClusterNodeNum, nodeCount)
-                .set(OpsClusterTaskEntity::getEnvCheckResult, null)
-                .set(OpsClusterTaskEntity::getRemark, "reset task draft")
-                .eq(OpsClusterTaskEntity::getClusterId, clusterId));
-    }
-
 
     @Override
     public void confirmClusterTask(String taskId) {
@@ -906,12 +916,5 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
                 topLevelPaths.put(topLevelPath, ex.getMessage());
             }
         });
-    }
-
-    @Override
-    public void modifyClusterNodeCount(String clusterId, int count) {
-        update(Wrappers.lambdaUpdate(OpsClusterTaskEntity.class)
-                .set(OpsClusterTaskEntity::getClusterNodeNum, count)
-                .eq(OpsClusterTaskEntity::getClusterId, clusterId));
     }
 }

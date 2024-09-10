@@ -34,6 +34,7 @@ import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.model.ops.JschResult;
 import org.opengauss.admin.plugin.domain.model.ops.RetBuffer;
 import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
+import org.opengauss.admin.plugin.utils.OpsJschExecPlugin;
 import org.opengauss.admin.plugin.utils.JschRetBufferUtil;
 import org.opengauss.admin.plugin.utils.JschUtil;
 import org.opengauss.admin.system.plugin.facade.AzFacade;
@@ -46,7 +47,10 @@ import org.springframework.util.Assert;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.util.*;
+import java.util.Objects;
+import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -71,6 +75,8 @@ public class OpsHostRemoteService {
     private HostUserFacade hostUserFacade;
     @Resource
     private JschUtil jschUtil;
+    @Resource
+    private OpsJschExecPlugin opsJschExecPlugin;
     @Resource
     private JschRetBufferUtil jschRetBufferUtil;
     @Resource
@@ -161,7 +167,7 @@ public class OpsHostRemoteService {
         Assert.isTrue(StrUtil.isNotEmpty(hostUser.getPassword()), "hostUser password does not exist");
         Session cacheSession = getCacheSession(host.getHostId(), hostUser.getHostUserId());
         if (Objects.isNull(cacheSession)) {
-            cacheSession = jschUtil.getSession(host.getPublicIp(), host.getPort(), hostUser.getUsername(),
+            cacheSession = jschRetBufferUtil.getSession(host.getPublicIp(), host.getPort(), hostUser.getUsername(),
                             encryptionUtils.decrypt(hostUser.getPassword()))
                     .orElseThrow(() -> new OpsException("Failed to establish connection with host"));
             cacheSession(host.getHostId(), hostUser.getHostUserId(), cacheSession);
@@ -178,7 +184,7 @@ public class OpsHostRemoteService {
      */
     public int checkHostDiskSpace(Session rootSession, String topLevelPath) {
         String command = SshCommandConstants.DIR_FREE_HARD_DISK.replace("{0}", topLevelPath);
-        String freeHardDisk = executeJschCommand(rootSession, command);
+        String freeHardDisk = opsJschExecPlugin.execCommand(rootSession, command);
         return translateDiskFreeSpaceUnitGb(freeHardDisk);
     }
 
@@ -192,28 +198,6 @@ public class OpsHostRemoteService {
             }
         }
         return res;
-    }
-
-    /**
-     * execute command
-     *
-     * @param rootSession rootSession
-     * @param command     command
-     * @return result
-     */
-    public String executeJschCommand(Session rootSession, String command) {
-        try {
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
-            if (jschResult.getExitCode() != 0) {
-                log.error("Failed to execute command : {} ,exitCode:{},res:{}", command,
-                        jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Failed to get system information");
-            }
-            return jschResult.getResult().trim();
-        } catch (Exception e) {
-            log.error("Failed to execute command : {} ", command, e);
-            throw new OpsException("Failed to get system information");
-        }
     }
 
     /**

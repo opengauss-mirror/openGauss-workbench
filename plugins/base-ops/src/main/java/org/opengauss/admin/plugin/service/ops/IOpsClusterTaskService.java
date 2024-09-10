@@ -209,13 +209,6 @@ public interface IOpsClusterTaskService extends IService<OpsClusterTaskEntity> {
     List<OpsHostEntity> getHostList(String os, String osVersion, String cpuArch);
 
     /**
-     * reset task status to draft
-     *
-     * @param clusterId clusterId
-     */
-    void resetTaskStatusDraft(String clusterId);
-
-    /**
      * full check cluster task : node nums, disk space, host port ,deploy type
      *
      * @param clusterId cluster id
@@ -242,14 +235,6 @@ public interface IOpsClusterTaskService extends IService<OpsClusterTaskEntity> {
     Map<String, String> checkHostDiskSpace(String hostId, List<String> paths);
 
     /**
-     * modify cluster node count
-     *
-     * @param clusterId cluster id
-     * @param count     current cluster node count
-     */
-    void modifyClusterNodeCount(String clusterId, int count);
-
-    /**
      * check host and user can install cluster
      *
      * @param clusterId  clusterId
@@ -258,4 +243,14 @@ public interface IOpsClusterTaskService extends IService<OpsClusterTaskEntity> {
      * @return check result
      */
     boolean checkHostAndUserInstallCluster(String clusterId, String hostId, String hostUserId);
+
+    /**
+     * modify cluster task of node change
+     *
+     * @param clusterId  clusterId
+     * @param hostId     hostId
+     * @param hostUserId hostUserId
+     * @param nodeCount  nodeCount
+     */
+    void modifyClusterTaskOfNodeChange(String clusterId, String hostId, String hostUserId, int nodeCount);
 }
