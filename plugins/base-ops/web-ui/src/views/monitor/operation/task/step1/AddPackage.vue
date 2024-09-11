@@ -118,7 +118,7 @@
       <template #title>
         {{ $t('在线下载') }}
       </template>
-      <a-progress size="large" :percent="currPercent" />
+      <!--      <a-progress size="large" :percent="currPercent" />-->
     </a-modal>
   </div>
 
@@ -291,27 +291,8 @@ const fetchVersionNum = () => {
   })
 }
 
-const generateName = () => {
-  if (
-    data.type === 'create' &&
-    !data.isNameDirty &&
-    data.formData.packageVersionNum
-  ) {
-    let name = `${data.formData.type}-${data.formData.packageVersionNum}`
-    if (data.formData.packageVersion === OpenGaussVersionEnum.LITE) {
-      name += `Lite-${data.formData.packageVersion}-${data.formData.os}-${data.formData.cpuArch}`
-    } else if (data.formData.packageVersion === OpenGaussVersionEnum.ENTERPRISE) {
-      name +=  `${data.formData.packageVersion}-${data.formData.os}-${data.formData.cpuArch}-all`
-    } else {
-      name += `${data.formData.packageVersion}-${data.formData.os}-${data.formData.cpuArch}`
-    }
-    data.formData.name = name
-  }
-}
-
 const tempPackageUrl = ref('')
 const getPackageUrl = () => {
-  generateName()
   const params = {
     os : data.formData.os,
     cpuArch: data.formData.cpuArch,
@@ -342,6 +323,8 @@ const getPackageUrl = () => {
     } else {
       console.log('error')
     }
+    let name = data.formData.packageUrl.split('/')
+    data.formData.name = name.pop()
   }) .catch(error => {
     console.error({
       content: error + data.formData.packageVersionNum
@@ -418,45 +401,62 @@ const updateVersionData = (value:string) => {
 const formRef = ref<null | FormInstance>(null)
 const emits = defineEmits([`finish`])
 const submitLoading = ref(false)
-const submit = () => {
-  if (uploadStatusTag.value) {
-    const formData = new FormData
-    formData.append('name', data.formData.name)
-    formData.append('os', data.formData.os)
-    formData.append('cpuArch', data.formData.cpuArch)
-    formData.append('packageVersionNum', data.formData.packageVersionNum)
-    formData.append('packageUrl', '')
-    formData.append('packageVersion', data.formData.packageVersion)
-    formData.append('uploadFile', data.fileList.file)
-    axios({
-      url: `/installPackageManager/v2/save/upload/`,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      },
-      data: formData
-    }).then((res) => {
-      console.log('')
-    }).catch((error) => {
-      console.log('613' + error)
-    })
-  } else {
-    const params = {
-      name: data.formData.name,
-      os: data.formData.os,
-      cpuArch: data.formData.cpuArch,
-      openGaussVersion: data.formData.packageVersion,
-      openGaussVersionNum: data.formData.packageVersionNum,
-      downloadUrl: data.formData.packageUrl,
-      wsBusinessId: wsBusinessId.value
+const progressPercent = ref(0)
+const submit = async () => {
+  let isvalid = await formRef.value?.validate()
+  if (!isvalid) {
+    if (uploadStatusTag.value) {
+      const formData = new FormData
+      formData.append('name', data.formData.name)
+      formData.append('os', data.formData.os)
+      formData.append('cpuArch', data.formData.cpuArch)
+      formData.append('packageVersionNum', data.formData.packageVersionNum)
+      formData.append('packageUrl', '')
+      formData.append('packageVersion', data.formData.packageVersion)
+      formData.append('uploadFile', data.fileList.file)
+      axios({
+        url: `/installPackageManager/v2/save/upload/`,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        data: formData,
+        onUploadProgress: (event) => {
+          let percent
+          if (event.lengthComputable) {
+            percent = Math.round((event.loaded * 100) / event.total);
+          }
+          progressPercent.value = percent?percent:0
+        },
+      }).then((res) => {
+        if (res.code === 200) {
+          Message.success(res.msg || '上传成功')
+          close()
+        } else {
+          Message.error(res.msg || '上传失败')
+        }
+      }).catch((error) => {
+        console.log(error)
+      })
+    } else {
+      const params = {
+        name: data.formData.name,
+        os: data.formData.os,
+        cpuArch: data.formData.cpuArch,
+        openGaussVersion: data.formData.packageVersion,
+        openGaussVersionNum: data.formData.packageVersionNum,
+        downloadUrl: data.formData.packageUrl,
+        wsBusinessId: wsBusinessId.value
+      }
+      batchPackageOnline(params).then((res) => {
+        console.log(' add success online', res)
+        close()
+      }).catch((error) => {
+        console.log(error)
+      })
     }
-    batchPackageOnline(params).then((res) => {
-      console.log(' add success online', res)
-    }).catch((error) => {
-      console.log(' online', error)
-    })
   }
-  data.show = false
+
 }
 const close = () => {
   data.show = false
@@ -485,6 +485,7 @@ const close = () => {
     data.formData.packagePath = {}
   })
 }
+
 </script>
 
 <style scoped>

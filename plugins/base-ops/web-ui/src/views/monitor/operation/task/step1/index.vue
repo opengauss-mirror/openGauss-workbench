@@ -504,6 +504,10 @@ const getHostId = (inputvalue: string) => {
   } else {
     initMasterNode()
   }
+  if (data.packageName !== '') {
+    data.packageName = ''
+    fetchPackageList()
+  }
 }
 
 const hostIpSame = ref([])
@@ -514,7 +518,11 @@ const fetchOsSystem = (isChange: boolean) => {
       data.cpuArch = res.data.cpuArch
       data.osVersion = res.data.osVersion
     }
-    fetchSameOs(isChange)
+    if (!res.data.os || !res.data.cpuArch) {
+      Message.error('当前服务器数据不全 请选择其他IP')
+    } else {
+      fetchSameOs(isChange)
+    }
   }) .catch((error) => {
     console.error(error)
   })
@@ -881,11 +889,9 @@ const packManageSubmit = () => {
   })
 }
 
-
 const checkflagCM = (input) => {
   flagCM.value = input
   data.enableCmTool = input
-  initMasterNode()
 }
 const checkflagEnvSeqar = (input) => {
   flagEnvSeqar.value = input
@@ -977,7 +983,7 @@ const checkSameUser = (inputValue: string,order: number) => {
   if (!inputValue || inputValue === '') {
     Message.error('ip不可为空')
   } else {
-    if (inputValue === masterHostIp.value) {
+    if (inputValue === masterHostIp.value && tempEditCluster.nodeType !== "MASTER") {
       Message.error("所选ip与主机ip相同，请重新选择")
     } else {
       getHostUser(tempHostId).then((res) => {
@@ -1098,7 +1104,7 @@ const saveCluster = async (record: any) => {
         if (!tempEditCluster.hostIp || tempEditCluster.hostIp === '') {
           Message.error('ip不可为空')
         } else {
-          if (tempEditCluster.hostIp === masterHostIp.value) {
+          if (tempEditCluster.hostIp === masterHostIp.value && tempEditCluster.nodeType !== "MASTER") {
             Message.error("所选ip与主机ip相同，请重新选择")
           } else {
             let tempHostId = hostIpId.get(tempEditCluster.hostIp)
@@ -1164,7 +1170,6 @@ const saveCluster = async (record: any) => {
     resolve(editFlag.CMMaster)
   })
   Promise.all([checkHostIpPromise, checkCmPortPromise, checkCmMasterPromise]) .then(() => {
-    console.error('editFlag', +editFlag.hostIp)
     if (data.enableCmTool) {
       if (editFlag.hostIp && editFlag.dataPath && editFlag.cmDataPath && editFlag.CMMaster && editFlag.CmPort) {
         data.clusterNodes.forEach((item) => {
@@ -1206,7 +1211,6 @@ const saveCluster = async (record: any) => {
           }
         }
       })
-      // tempEditCluster = {}
       delete tempEditArr.value[record.order]
       delete editFlagGroup.value[record.order]
 

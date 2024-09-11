@@ -293,6 +293,9 @@ const saveUpdateCulster = async () => {
               } else if (nodeSaveFlag === clusterTaskList.clusterNodes.length) {
                 saveFlag.value = true
               }
+              if (saveFlag.value) {
+                Message.success('保存草稿箱成功')
+              }
             })
           })
         } else {
@@ -307,13 +310,14 @@ const saveUpdateCulster = async () => {
           saveFlag.value = true
         }
       })
+      if (nodeSaveFlag === clusterTaskList.clusterNodes.length) {
+        saveFlag.value = true
+      }
+      if (saveFlag.value) {
+        Message.success('保存草稿箱成功')
+      }
     }
-    if (nodeSaveFlag === clusterTaskList.clusterNodes.length) {
-      saveFlag.value = true
-    }
-    if (saveFlag.value) {
-      Message.success('保存草稿箱成功')
-    }
+
   } else if (editFlag.value && currentStep.value === 1 && subTaskConfig.value.clusterId !== '') {
     if (subTaskConfig.value.deployType === "CLUSTER"
       && subTaskConfig.value.packageVersion !== OpenGaussVersionEnum.MINIMAL_LIST
@@ -375,6 +379,7 @@ const saveUpdateCulster = async () => {
           batchClusterNodes(clusterId.value).then((res) => {
             if (res.code === 200) {
               const clusterNodesMap = new Map(res.data.clusterNodes.map(item => [item.clusterNodeId, item]))
+              const nodesIpMap = new Map(res.data.clusterNodes.map(item => [item.hostId, item]))
               let countUpdateFlag = 0
               clusterTaskList.clusterNodes.forEach((item) => {
                 if (item.clusterNodeId) {
@@ -414,7 +419,7 @@ const saveUpdateCulster = async () => {
                   } else {
                     countUpdateFlag = countUpdateFlag + 1
                   }
-                } else{
+                } else if (!nodesIpMap.get(item.hostId)) {
                   createClustertaskNode({
                     "clusterNodeId": '',
                     "clusterId": clusterId.value,
