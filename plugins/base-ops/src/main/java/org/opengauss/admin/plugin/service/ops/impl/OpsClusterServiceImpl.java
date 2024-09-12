@@ -1843,14 +1843,13 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             ";gsql -V|awk '\\''{print $3}'\\''", "");
         String command = null;
         if (opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)) {
-            String enterGAUSSHOME = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP,
-                "GAUSSHOME=", opsParseExcelEntity.getOpsImportEntity().getEnvPath()),
-                "|grep app", RESULT_BY_SPLIT_EQUAL);
-            String enterPGDATA = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP,
-                "PGDATA=", opsParseExcelEntity.getOpsImportEntity().getEnvPath()), "|grep dn", RESULT_BY_SPLIT_EQUAL);
-            String enterJudgeMasterOrSlave = MessageFormat.format(THREE_IN_ONE, "source "
-                + opsParseExcelEntity.getOpsImportEntity().getEnvPath(), ";gs_om -t status --detail|grep "
-                + opsParseExcelEntity.getPublicIp() + "|awk '\\''{print $8}'\\''", "");
+            String enterGAUSSHOME = String.format("grep GAUSSHOME= %s%s",
+                opsParseExcelEntity.getOpsImportEntity().getEnvPath(), RESULT_BY_SPLIT_EQUAL);
+            String enterPGDATA = String.format("grep %s %s%s", "PGDATA=",
+                opsParseExcelEntity.getOpsImportEntity().getEnvPath(), RESULT_BY_SPLIT_EQUAL);
+            String enterJudgeMasterOrSlave = String.format("source %s;gs_om -t status --detail|grep %s|"
+                + "awk '\\''{print $8}'\\''", opsParseExcelEntity.getOpsImportEntity().getEnvPath(),
+                opsParseExcelEntity.getPublicIp());
             command = MessageFormat.format(CHANGE_SUB_USER, opsParseExcelEntity.getOpsImportEntity()
                 .getInstallUsername(), enterGAUSSHOME + ";" + enterPGDATA
                 + ";" + versionNum + ";" + enterJudgeMasterOrSlave);
