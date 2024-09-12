@@ -58,7 +58,7 @@ import java.util.List;
 public class ClusterManager {
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-    private static EncryptionUtils encryptionUtils;
+    private EncryptionUtils encryptionUtils;
 
     private final DataSource dataSource;
 
@@ -174,6 +174,10 @@ public class ClusterManager {
     @EqualsAndHashCode(callSuper = true)
     public static class OpsClusterNodeVOSub extends OpsClusterNodeVO {
         private String version;
+
+        @Autowired
+        @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+        private EncryptionUtils encryptionUtils;
 
         public OpsClusterNodeVOSub(OpsClusterNodeVO opsClusterNodeVO, String version) {
             BeanUtils.copyProperties(opsClusterNodeVO, this);
