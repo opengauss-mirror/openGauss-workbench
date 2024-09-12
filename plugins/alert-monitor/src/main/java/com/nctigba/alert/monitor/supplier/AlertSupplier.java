@@ -154,7 +154,7 @@ public class AlertSupplier {
                 Map<String, String> params = getParams(info, templateRule.getLevel());
                 AlertRecordDO alertRecord = new AlertRecordDO();
                 alertRecord.setClusterNodeId(info.getInstanceId()).setIp(info.getIp()).setPort(info.getPort())
-                    .setType(CommonConstants.NONINSTANCE).setStartTime(info.getAlertTime())
+                    .setType(CommonConstants.PLUGIN).setStartTime(info.getAlertTime())
                     .setNodeName(info.getInstance()).setClusterId(info.getInstanceId())
                     .setAlertContent(TextParserUtils.parse(templateRule.getRuleContent(), params))
                     .setNotifyWayIds(templateRule.getNotifyWayIds()).setNotifyWayNames(notifyWayNames)

@@ -40,7 +40,7 @@
                   <el-table-column prop="type" :label="$t('alertTemplate.table[1]')">
                     <template #default="scope">
                       <div v-if="scope.row.type === 'instance'">{{ $t('app.instance') }}</div>
-                      <div v-if="scope.row.type === 'noninstance'">{{ $t('app.noninstance') }}</div>
+                      <div v-if="scope.row.type === 'plugin'">{{ $t('app.plugin') }}</div>
                     </template>
                   </el-table-column>
                 </el-table>
@@ -361,7 +361,7 @@ const showAlertNotify = (val: string) => {
 const { data: ruleListRes, run: requestRuleList } = useRequest(
   (type: string) => {
     let ruleTypes = ''
-    if (type === 'noninstance') {
+    if (type === 'plugin') {
       ruleTypes = 'plugin'
     } else {
       ruleTypes = 'index,log'
@@ -531,7 +531,7 @@ const requestRuleItemSrcList = () => {
 
 onMounted(() => {
   if (props.clusterNodeList && props.clusterNodeList.length === 1) {
-    if (props.type === 'noninstance') {
+    if (props.type === 'plugin') {
       selectedData.value = props.clusterNodeList[0]
       selectedData.value['id'] = selectedData.value.clusterNodeId
     } else {

@@ -248,9 +248,9 @@ public class CommonConstants {
     public static final String INSTANCE = "instance";
 
     /**
-     * noninstance
+     * plugin
      */
-    public static final String NONINSTANCE = "noninstance";
+    public static final String PLUGIN = "plugin";
 
     /**
      * IS_ENABLE_STATUS
@@ -277,4 +277,8 @@ public class CommonConstants {
      */
     public static final String SHIELDING_SCHEDULED = "c";
 
+    /**
+     * HTTP_TIMEOUT
+     */
+    public static final int HTTP_TIMEOUT = 3000;
 }

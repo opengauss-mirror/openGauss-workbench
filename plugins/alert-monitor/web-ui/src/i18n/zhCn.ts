@@ -54,7 +54,7 @@ export default {
     uninstallTip: '在监控告警模块和通知配置模块使用前，需要先安装prometheus,请到“智能运维——实例监控”中安装服务端prometheus,否则将无法使用。',
     disConfigTip: '在监控告警模块和通知配置模块使用前，先设置告警接口',
     instance: '实例',
-    noninstance: '非实例',
+    plugin: '插件',
   },
   alertRule: {
     title: '告警规则',

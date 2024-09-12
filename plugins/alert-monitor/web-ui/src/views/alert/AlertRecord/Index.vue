@@ -21,22 +21,22 @@
         <span style="margin-left: 24px;">{{ $t(`alertRecord.read`) }}：<span style="font-weight: bold">{{ statisticsData.readNum }}</span></span>
       </div>
       <div class="seperator"></div>
-      <div class="filter" style="margin-right: 20px">
+      <div class="filter" style="margin-right: 10px">
         <span>{{ $t(`alertRecord.type`) }}：</span>
-        <el-select v-model="formData.type" :placeholder="$t('alertRecord.selectType')" clearable @change="changeType" style="width: 150px">
+        <el-select v-model="formData.type" :placeholder="$t('alertRecord.selectType')" clearable @change="changeType" style="width: 70px">
           <el-option v-for="item in typeList" :key="item" :value="item" :label="$t(`app.${item}`)" />
         </el-select>
       </div>
-      <div class="filter" style="margin-right: 20px">
+      <div class="filter" style="margin-right: 10px">
         <span>{{ $t(`alertRecord.cluster`) }}：</span>
-        <el-cascader v-model="formData.clusterNodeId" :options="clusterList" @change="changeClusterNode" clearable />
+        <el-cascader v-model="formData.clusterNodeId" :options="clusterList" @change="changeClusterNode" clearable style="width: 100px" />
       </div>
       <div class="filter">
         <span class="demonstration">{{ $t(`alertRecord.alertTimeRange`) }}：</span>
         <el-date-picker v-model="alertTimeRange" type="datetimerange" range-separator="~" format="YYYY-MM-DD HH:mm:ss"
           value-format="YYYY-MM-DD HH:mm:ss" :start-placeholder="t(`alertRecord.startTimePlaceholder`)"
           @visible-change="onDatePackerVisible" :end-placeholder="t(`alertRecord.endTimePlaceholder`)"
-          @change="changeAlertTimeRange" style="width: 240px"/>
+          @change="changeAlertTimeRange" style="width: 290px"/>
       </div>
       <div class="filter">
         <el-button type="primary" @click="exportInfo">{{ $t('app.export') }}</el-button>
@@ -95,7 +95,7 @@
         <el-table-column prop="type" min-width="80" :label="$t('alertRecord.table[14]')">
           <template #default="scope">
             <div v-if="scope.row.type === 'instance'">{{ $t('app.instance') }}</div>
-            <div v-if="scope.row.type === 'noninstance'">{{ $t('app.noninstance') }}</div>
+            <div v-if="scope.row.type === 'plugin'">{{ $t('app.plugin') }}</div>
           </template>
         </el-table-column>
         <el-table-column prop="nodeName" min-width="150" :label="$t('alertRecord.table[0]')" />
@@ -202,7 +202,7 @@ const page = reactive({
   pageSize: 10,
   total: 0,
 })
-const typeList = ref<any[]>(['instance', 'noninstance'])
+const typeList = ref<any[]>(['instance', 'plugin'])
 const { data: statisticsRes, run: requestStatisticsData } = useRequest(
   () => {
     return request.get("/api/v1/alertRecord/statistics")

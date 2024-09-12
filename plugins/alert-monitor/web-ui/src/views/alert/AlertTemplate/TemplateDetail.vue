@@ -24,7 +24,7 @@
       <el-form-item :label="$t('alertTemplate.table[1]')" prop="type">
         <el-radio-group v-model="formData.type" :disabled="disabled || state === 'edit'" @change="changeType">
           <el-radio label="instance">{{ $t('app.instance') }}</el-radio>
-          <el-radio label="noninstance">{{ $t('app.noninstance') }}</el-radio>
+          <el-radio label="plugin">{{ $t('app.plugin') }}</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item :label="$t('alertTemplate.selectRule')" :required="true">

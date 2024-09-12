@@ -44,7 +44,7 @@
           </el-table>
         </div>
       </el-tab-pane>
-      <el-tab-pane :label="$t('app.noninstance')" name="noninstance">
+      <el-tab-pane :label="$t('app.plugin')" name="plugin">
         <el-table size="small" :data="pluginDatas" ref="pluginTable" style="width: 100%; margin-top: 10px" header-cell-class-name="grid-header"
             border>
             <el-table-column type="selection" width="40" />

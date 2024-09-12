@@ -141,6 +141,20 @@ public class PrometheusServiceImpl implements PrometheusService {
         if (StrUtil.isBlank(env.getPath())) {
             throw new ServiceException("uninstall the prometheus");
         }
+        try {
+            String str = HttpUtil.get("http://" + CommonConstants.LOCAL_IP + ":" + env.getPort()
+                + "/api/v1/status/runtimeinfo", CommonConstants.HTTP_TIMEOUT);
+            if (StrUtil.isBlank(str)) {
+                throw new ServiceException("result is empty!");
+            }
+            JSONObject resJson = new JSONObject(str);
+            if (!"success".equals(resJson.getStr("status"))) {
+                throw new ServiceException("result status is not success!");
+            }
+        } catch (Exception e){
+            log.error("The main prometheus is not health: {}", e.getMessage());
+            throw new ServiceException("The main prometheus is not health: " + e.getMessage());
+        }
     }
 
     private PrometheusConfigDTO getPromConfig() {
@@ -487,12 +501,12 @@ public class PrometheusServiceImpl implements PrometheusService {
         if (StrUtil.isBlank(clusterNodeIds)) {
             return;
         }
+        init();
         updateRuleConfig(templateId, clusterNodeIds);
     }
 
     private synchronized void updateRuleConfig(Long templateId, String clusterNodeIds) {
         // update the rule configuration file of the prometheus
-        init();
         try {
             List<AlertTemplateRuleDO> alertTemplateRuleDOS = alertTemplateRuleMapper.selectList(
                 Wrappers.<AlertTemplateRuleDO>lambdaQuery().eq(AlertTemplateRuleDO::getTemplateId, templateId)

@@ -24,7 +24,7 @@
           </div>
           <div>
             <div style="margin-bottom: 4px !important;">
-              <span v-if="formData.type === 'noninstance'"><span>{{$t('alertRecord.instanceName')}}：</span><span>{{ formData.nodeName }}</span></span>
+              <span v-if="formData.type === 'plugin'"><span>{{$t('alertRecord.instanceName')}}：</span><span>{{ formData.nodeName }}</span></span>
               <span v-if="formData.type === 'instance'"><span>{{$t('alertRecord.clusterName')}}：</span><span>{{ formData.clusterId }}</span></span>
             </div>
             <div style="margin-bottom: 4px !important;">

@@ -194,7 +194,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         List<OpsHostEntity> opsHostEntities, List<OpsClusterEntity> opsClusterEntities) {
         AlertRecordDTO alertRecordDto = new AlertRecordDTO();
         BeanUtil.copyProperties(record, alertRecordDto);
-        if (CommonConstants.NONINSTANCE.equals(record.getType())) {
+        if (CommonConstants.PLUGIN.equals(record.getType())) {
             alertRecordDto.setHostIpAndPort(record.getIp() + ":" + record.getPort());
             return alertRecordDto;
         }
@@ -355,7 +355,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             return alertRecordDto;
         }
         BeanUtil.copyProperties(alertRecordDO, alertRecordDto);
-        if (CommonConstants.NONINSTANCE.equals(alertRecordDO.getType())) {
+        if (CommonConstants.PLUGIN.equals(alertRecordDO.getType())) {
             alertRecordDto.setHostIpAndPort(alertRecordDO.getIp() + ":" + alertRecordDO.getPort());
             return alertRecordDto;
         }
