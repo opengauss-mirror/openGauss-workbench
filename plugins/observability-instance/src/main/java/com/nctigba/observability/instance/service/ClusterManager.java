@@ -29,21 +29,29 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.baomidou.dynamic.datasource.ds.ItemDataSource;
 import com.nctigba.observability.instance.exception.InstanceException;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
+import org.opengauss.admin.common.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
+import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
+import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.system.service.ops.IOpsClusterService;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.BeanUtils;
@@ -81,9 +89,15 @@ public class ClusterManager {
     @Autowired(required = false)
     @AutowiredType(Type.MAIN_PLUGIN)
     private HostFacade hostFacade;
-    @Autowired(required = false)
+    @Autowired
     @AutowiredType(Type.MAIN_PLUGIN)
     private IOpsClusterService opsClusterService;
+    @Autowired
+    @AutowiredType(Type.MAIN_PLUGIN)
+    private IOpsClusterNodeService opsClusterNodeService;
+    @Autowired
+    @AutowiredType(Type.MAIN_PLUGIN)
+    private HostUserFacade hostUserFacade;
 
     /**
      * getClusterByNodeId
@@ -245,20 +259,12 @@ public class ClusterManager {
      * Get the specified node information
      */
     public OpsClusterNodeVOSub getOpsNodeById(String nodeId) {
-        List<OpsClusterVO> opsClusterVOList = getAllOpsCluster();
-        if (CollectionUtils.isEmpty(opsClusterVOList))
-            throw new CustomException(CommonConstants.NODE_NOT_FOUND);
-        for (OpsClusterVO cluster : opsClusterVOList) {
-            List<OpsClusterNodeVO> nodes = cluster.getClusterNodes();
-            if (CollectionUtils.isEmpty(nodes))
-                continue;
-            for (OpsClusterNodeVO clusterNode : nodes) {
-                if (nodeId.equals(clusterNode.getNodeId())) {
-                    return new OpsClusterNodeVOSub(clusterNode, cluster.getVersion());
-                }
-            }
+        OpsClusterNodeEntity clusterNode = opsClusterNodeService.getById(nodeId);
+        if (clusterNode == null || StrUtil.isBlank(clusterNode.getClusterNodeId())) {
+            return null;
         }
-        throw new CustomException(CommonConstants.NODE_NOT_FOUND);
+        OpsClusterEntity cluster = opsClusterService.getById(clusterNode.getClusterId());
+        return new OpsClusterNodeVOSub(toOpsClusterNodeVO(cluster, clusterNode), cluster.getVersion().name());
     }
 
     /**
@@ -268,11 +274,43 @@ public class ClusterManager {
      * @return OpsClusterVO
      */
     public OpsClusterVO getOpsClusterVOById(String clusterId) {
-        Optional<OpsClusterVO> clusterVOOptional = getAllOpsCluster().stream()
-                .filter(clusterVO -> clusterVO.getClusterId().equals(clusterId)).findFirst();
-        if (clusterVOOptional.isEmpty()) {
+        OpsClusterEntity cluster = opsClusterService.getById(clusterId);
+        if (cluster == null) {
             throw new InstanceException("The cluster does not exist");
         }
-        return clusterVOOptional.get();
+        OpsClusterVO clusterVo = OpsClusterVO.of(cluster);
+        List<OpsClusterNodeEntity> nodeList = opsClusterNodeService.listClusterNodeByClusterId(clusterId);
+        List<OpsClusterNodeVO> voList = nodeList.stream().map(
+            clusterNode -> toOpsClusterNodeVO(cluster, clusterNode)).collect(Collectors.toList());
+        clusterVo.setClusterNodes(voList);
+        return clusterVo;
+    }
+
+    private OpsClusterNodeVO toOpsClusterNodeVO(OpsClusterEntity cluster, OpsClusterNodeEntity clusterNode) {
+        OpsClusterNodeVO opsClusterNodeVo = OpsClusterNodeVO.of(clusterNode);
+        opsClusterNodeVo.setClusterRole(clusterNode.getClusterRole().name());
+        opsClusterNodeVo.setDataPath(clusterNode.getDataPath());
+        opsClusterNodeVo.setDbName("postgres");
+        opsClusterNodeVo.setDbPort(cluster.getPort());
+        opsClusterNodeVo.setDbUser(cluster.getDatabaseUsername());
+        opsClusterNodeVo.setDbUserPassword(cluster.getDatabasePassword());
+        OpsHostEntity host = hostFacade.getById(clusterNode.getHostId());
+        opsClusterNodeVo.setPublicIp(host.getPublicIp());
+        opsClusterNodeVo.setPrivateIp(host.getPrivateIp());
+        opsClusterNodeVo.setHostPort(host.getPort());
+        opsClusterNodeVo.setHostname(host.getHostname());
+        opsClusterNodeVo.setHostId(host.getHostId());
+        opsClusterNodeVo.setHostOs(host.getOs());
+        opsClusterNodeVo.setHostCpuArch(host.getCpuArch());
+        OpsHostUserEntity installUser = hostUserFacade.getById(clusterNode.getInstallUserId());
+
+        if (cluster.getVersion() != null
+            && OpenGaussVersionEnum.ENTERPRISE.name().equals(cluster.getVersion().name())) {
+            opsClusterNodeVo.setInstallPath(cluster.getInstallPath());
+        }
+        if (Objects.nonNull(installUser)) {
+            opsClusterNodeVo.setInstallUserName(installUser.getUsername());
+        }
+        return opsClusterNodeVo;
     }
 }

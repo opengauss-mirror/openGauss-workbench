@@ -307,16 +307,18 @@ public class CollectTemplateNodeServiceImpl
                 if (CollectionUtil.isEmpty(agentNodeRelList)) {
                     throw new TipsException("Agent node relation not found for node :" + nodeId);
                 }
-
-                // get node info
-                ClusterManager.OpsClusterNodeVOSub node = clusterManager.getOpsNodeById(nodeId);
-                if (node == null) {
-                    throw new TipsException("node not found");
-                }
                 // remove old configs
                 conf.getScrape_configs().removeIf(
                     oldConfigs -> oldConfigs.getJob_name().contains(nodeId)
                 );
+                // get node info
+                ClusterManager.OpsClusterNodeVOSub node = clusterManager.getOpsNodeById(nodeId);
+                if (node == null) {
+                    agentNodeRelationService.remove(new LambdaQueryWrapper<AgentNodeRelationDO>()
+                        .eq(AgentNodeRelationDO::getNodeId, nodeId));
+                    continue;
+                }
+
                 List<String> targets = new ArrayList<>();
                 for (AgentNodeRelationDO agentNodeRelationDO : agentNodeRelList) {
                     NctigbaEnvDO evnNode = envMapper.selectOne(

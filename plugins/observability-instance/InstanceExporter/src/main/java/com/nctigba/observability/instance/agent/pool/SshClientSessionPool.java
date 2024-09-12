@@ -28,6 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.sshd.client.session.ClientSession;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Optional;
 
 /**
@@ -68,7 +71,13 @@ public class SshClientSessionPool {
             return Optional.ofNullable(pool.borrowObject());
         } catch (Exception e) {
             log.error("{} Get ssh client session error!", Thread.currentThread().getName());
-            e.printStackTrace();
+            try (StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw)) {
+                e.printStackTrace(pw);
+                log.error(sw.toString());
+            } catch (IOException ioe) {
+                log.error("StringWriter error!");
+            }
         }
         return Optional.empty();
     }
