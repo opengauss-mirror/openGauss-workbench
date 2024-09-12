@@ -247,7 +247,8 @@ public class AlertRuleServiceImpl extends ServiceImpl<AlertRuleMapper, AlertRule
         List<AlertTemplateRuleDO> list = templateRuleService.list(
             Wrappers.<AlertTemplateRuleDO>lambdaQuery().eq(AlertTemplateRuleDO::getIsDeleted,
                     CommonConstants.IS_NOT_DELETE).isNotNull(AlertTemplateRuleDO::getTemplateId)
-                .eq(AlertTemplateRuleDO::getRuleId, id));
+                .eq(AlertTemplateRuleDO::getRuleId, id)
+                .eq(AlertTemplateRuleDO::getIsIncluded, CommonConstants.IS_INCLUDED));
         if (CollectionUtil.isNotEmpty(list)) {
             throw new ServiceException(MessageSourceUtils.get("ruleIsUsed"));
         }
@@ -260,5 +261,28 @@ public class AlertRuleServiceImpl extends ServiceImpl<AlertRuleMapper, AlertRule
                 .set(AlertRuleItemDO::getUpdateTime, LocalDateTime.now()).in(AlertRuleItemDO::getRuleId, id)
                 .eq(AlertRuleItemDO::getIsDeleted, CommonConstants.IS_NOT_DELETE);
         ruleItemService.update(ruleItemUpdateWrapper);
+
+        List<AlertTemplateRuleDO> tempRuleList = templateRuleService.list(Wrappers.<AlertTemplateRuleDO>lambdaQuery()
+            .eq(AlertTemplateRuleDO::getIsDeleted, CommonConstants.IS_NOT_DELETE)
+            .isNotNull(AlertTemplateRuleDO::getTemplateId)
+            .eq(AlertTemplateRuleDO::getRuleId, id)
+            .eq(AlertTemplateRuleDO::getIsIncluded, CommonConstants.IS_NOT_INCLUDED));
+        if (CollectionUtil.isEmpty(tempRuleList)) {
+            return;
+        }
+        List<Long> tempRuleIds = tempRuleList.stream().map(item -> item.getId()).collect(Collectors.toList());
+        LambdaUpdateWrapper<AlertTemplateRuleDO> tempRuleWrapper = new LambdaUpdateWrapper<AlertTemplateRuleDO>()
+            .set(AlertTemplateRuleDO::getIsDeleted, CommonConstants.IS_DELETE)
+            .set(AlertTemplateRuleDO::getUpdateTime, LocalDateTime.now())
+            .eq(AlertTemplateRuleDO::getIsDeleted, CommonConstants.IS_NOT_DELETE)
+            .in(AlertTemplateRuleDO::getId, tempRuleIds);
+        templateRuleService.update(tempRuleWrapper);
+        LambdaUpdateWrapper<AlertTemplateRuleItemDO> tempRuleItemUpdateWrapper =
+            new LambdaUpdateWrapper<AlertTemplateRuleItemDO>().set(AlertTemplateRuleItemDO::getIsDeleted,
+                    CommonConstants.IS_DELETE)
+                .set(AlertTemplateRuleItemDO::getUpdateTime, LocalDateTime.now())
+                .in(AlertTemplateRuleItemDO::getTemplateRuleId, id)
+                .eq(AlertTemplateRuleItemDO::getIsDeleted, CommonConstants.IS_NOT_DELETE);
+        templateRuleItemService.update(tempRuleItemUpdateWrapper);
     }
 }
