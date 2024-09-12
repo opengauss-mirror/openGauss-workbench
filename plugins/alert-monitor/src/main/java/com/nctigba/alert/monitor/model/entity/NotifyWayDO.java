@@ -23,6 +23,7 @@
 
 package com.nctigba.alert.monitor.model.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -88,6 +89,7 @@ public class NotifyWayDO {
     private String deptId;
     private String header;
     private String params;
+    @TableField("\"body\"")
     private String body;
     private String resultCode;
 
