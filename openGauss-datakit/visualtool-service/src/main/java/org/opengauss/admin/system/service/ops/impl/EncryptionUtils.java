@@ -87,9 +87,8 @@ public class EncryptionUtils {
             byte[] decrypt = rsa.decrypt(Base64.decodeBase64(cipherText), KeyType.PrivateKey);
             return StrUtil.str(decrypt, CharsetUtil.CHARSET_UTF_8);
         } catch (CryptoException e) {
-            log.error("decrypt failed, return cipherText.");
+            return cipherText;
         }
-        return cipherText;
     }
 
     public String decrypt(String cipherText, String keyStr) {

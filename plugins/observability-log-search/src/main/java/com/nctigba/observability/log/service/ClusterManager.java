@@ -51,10 +51,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class ClusterManager {
-    @Autowired
-    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-    private static EncryptionUtils encryptionUtils;
-
 	@Autowired(required = false)
 	@AutowiredType(Type.MAIN_PLUGIN)
 	private OpsFacade opsFacade;
@@ -90,6 +86,10 @@ public class ClusterManager {
 	@EqualsAndHashCode(callSuper = true)
 	public static class OpsClusterNodeVOSub extends OpsClusterNodeVO {
 		private String version;
+
+        @Autowired
+        @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+        private EncryptionUtils encryptionUtils;
 
 		@Override
 		public Integer getDbPort() {

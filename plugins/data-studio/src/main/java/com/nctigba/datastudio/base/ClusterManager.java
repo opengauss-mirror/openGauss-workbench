@@ -54,10 +54,6 @@ import static com.nctigba.datastudio.constants.SqlConstants.GET_URL_JDBC;
 @Service
 @Slf4j
 public class ClusterManager {
-    @Autowired
-    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-    private static EncryptionUtils encryptionUtils;
-
     @Autowired(required = false)
     @AutowiredType(Type.MAIN_PLUGIN)
     private OpsFacade opsFacade;
@@ -84,6 +80,10 @@ public class ClusterManager {
     @EqualsAndHashCode(callSuper = true)
     public static class OpsClusterNodeVOSub extends OpsClusterNodeVO {
         private String version;
+
+        @Autowired
+        @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+        private EncryptionUtils encryptionUtils;
 
         /**
          * copy cluster node vo
