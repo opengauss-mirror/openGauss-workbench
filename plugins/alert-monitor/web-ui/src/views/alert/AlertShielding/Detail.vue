@@ -245,14 +245,21 @@ const { data: shieldingDetail, run: requestData } = useRequest(
 watch(shieldingDetail, (shieldingDetail: any) => {
   if (shieldingDetail && shieldingDetail.code === 200) {
     formData.value = shieldingDetail.data
-    let dateTmp = []
-    dateTmp.push(shieldingDetail.data.startDate)
-    dateTmp.push(shieldingDetail.data.endDate)
-    formData.value.dateValue = dateTmp
-    let timeTmp = []
-    timeTmp.push(shieldingDetail.data.startTime)
-    timeTmp.push(shieldingDetail.data.endTime)
-    formData.value.timeValue = timeTmp
+    if(shieldingDetail.data.type === 'b'){
+      let dateTimeTmp = []
+      dateTimeTmp.push(shieldingDetail.data.startDate + " " + shieldingDetail.data.startTime)
+      dateTimeTmp.push(shieldingDetail.data.endDate + " " +  shieldingDetail.data.endTime)
+      formData.value.dateValue = dateTimeTmp
+    }else{
+      let dateTmp = []
+      dateTmp.push(shieldingDetail.data.startDate)
+      dateTmp.push(shieldingDetail.data.endDate)
+      let timeTmp = []
+      timeTmp.push(shieldingDetail.data.startTime)
+      timeTmp.push(shieldingDetail.data.endTime)
+      formData.value.dateValue = dateTmp
+      formData.value.timeValue = timeTmp
+    }
     formData.value.clusterNodeIdList = formData.value.clusterNodeIds.split(',')
   } else {
     const msg = t('app.queryFail')
@@ -280,14 +287,16 @@ const cancel = () => {
 const save = () => {
   loading.value = true
   const { dateValue ,timeValue } = formData.value
-  let startDate = dateValue.length ? dateValue[0] : null
-  let endDate = dateValue.length ? dateValue[1] : null
-  let startTime = timeValue.length ? timeValue[0] : null
-  let endTime = timeValue.length ? timeValue[1] : null
+  let startDate = dateValue?.length ? dateValue[0] : null
+  let endDate = dateValue?.length ? dateValue[1] : null
+  let startTime = timeValue?.length ? timeValue[0] : null
+  let endTime = timeValue?.length ? timeValue[1] : null
   let type = formData.value.type
   if(type === 'b'){
     startTime = startDate.split(' ')[1]
     endTime = endDate.split(' ')[1]
+    startDate = startDate.split(' ')[0]
+    endDate = endDate.split(' ')[0]
   }
   const resultData = {
       id: props.id,
