@@ -45,6 +45,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -73,7 +74,6 @@ public class MonitorServiceImpl implements MonitorService {
 
     @Override
     public void startMonitor(String tid, String taskId, String monitorType) {
-        log.info("Start monitor:");
         boolean isExist = false;
         for (OsTypeEnum type : OsTypeEnum.values()) {
             if (type.getType().equals(monitorType)) {
@@ -95,10 +95,37 @@ public class MonitorServiceImpl implements MonitorService {
         log.info("Stop monitor start:");
         String pidPath = System.getProperty("user.dir") + "/pid/" + taskId + FileTypeConstants.PID;
         File file = new File(pidPath);
-        if (!file.exists()) {
-            return true;
+        if (file.exists()) {
+            stopMonitorAndSendData(file);
+        } else {
+            pidPath = System.getProperty("user.dir") + "/pid/" + taskId + "_delete" + FileTypeConstants.PID;
+            file = new File(pidPath);
+            checkStop(file, taskId);
         }
-        return stopMonitorAndSendData(file);
+        return true;
+    }
+
+    private void checkStop(File file, String taskId) {
+        List<String> typeList = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] split = line.split(",");
+                if (split.length < 3) {
+                    continue;
+                }
+                String pid = split[0];
+                String checkPid = osUtils.exec(String.format(CommonConstants.CHECK_PID, pid)).toString();
+                if (checkPid != null && checkPid.contains("true")) {
+                    osUtils.execCmd(String.format(CommonConstants.KILL, pid));
+                    typeList.add(split[1]);
+                }
+            }
+        } catch (IOException e) {
+            log.error("error:" + e);
+        }
+        boolean isSend = sendFile(typeList, taskId);
+        log.info("send files:" + isSend);
     }
 
     @Override
@@ -180,11 +207,8 @@ public class MonitorServiceImpl implements MonitorService {
                 }
                 boolean isAllStop = stopMonitorAndSendData(file);
                 if (isAllStop) {
-                    try {
-                        osUtils.execCmd("rm -f " + file.getCanonicalPath());
-                    } catch (IOException e) {
-                        log.error("Delete file failed:" + e.getMessage());
-                    }
+                    boolean isDelete = file.delete();
+                    log.info("start delete file:" + isDelete);
                 }
             }
         }
@@ -208,8 +232,33 @@ public class MonitorServiceImpl implements MonitorService {
 
     @SneakyThrows
     private boolean stopMonitorAndSendData(File file) {
+        HashMap<String, Object> map = getPidInfo(file);
+        Object sqlTidObj = map.get("sqlTid");
+        String sqlTid = "";
+        if (sqlTidObj instanceof String) {
+            sqlTid = (String) sqlTidObj;
+        }
+        boolean isStop = monitor(sqlTid);
+        if (!isStop) {
+            return false;
+        }
+        String newFileName = file.getAbsolutePath().replace(".pid", "_delete.pid");
+        File newFile = new File(newFileName);
+        boolean isSuccess = file.renameTo(newFile);
+        log.info("modify file name:" + isSuccess);
+        List<String> pidList = objToList(map.get("pidList"));
+        boolean isKill = killPid(pidList);
+        log.info("kill pid:" + isKill);
         String fileName = file.getName();
         String taskId = fileName.substring(0, fileName.indexOf("."));
+        List<String> typeList = objToList(map.get("typeList"));
+        boolean isSend = sendFile(typeList, taskId);
+        log.info("send file:" + isSend);
+        checkOutput(taskId);
+        return true;
+    }
+
+    private HashMap<String, Object> getPidInfo(File file) {
         List<String> pidList = new ArrayList<>();
         List<String> typeList = new ArrayList<>();
         String sqlTid = "";
@@ -225,16 +274,28 @@ public class MonitorServiceImpl implements MonitorService {
                 sqlTid = split[2];
             }
         } catch (IOException e) {
-            return false;
+            log.error("error:" + e);
         }
-        boolean isStop = monitor(sqlTid);
-        if (!isStop) {
-            return false;
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("pidList", pidList);
+        map.put("typeList", typeList);
+        map.put("sqlTid", sqlTid);
+        return map;
+    }
+
+    private List<String> objToList(Object object) {
+        List<String> list = new ArrayList<>();
+        List<?> listObj = (List<?>) object;
+        for (Object obj : listObj) {
+            if (obj instanceof String) {
+                list.add((String) obj);
+            }
         }
-        String newFileName = file.getAbsolutePath().replace(".pid", "_delete.pid");
-        File newFile = new File(newFileName);
-        boolean isSuccess = file.renameTo(newFile);
-        log.info("modify file name:" + isSuccess);
+        return list;
+    }
+
+    @SneakyThrows
+    private boolean killPid(List<String> pidList) {
         for (String pid : pidList) {
             osUtils.execCmd(String.format(CommonConstants.KILL, pid));
         }
@@ -245,6 +306,11 @@ public class MonitorServiceImpl implements MonitorService {
                 osUtils.execCmd(String.format(CommonConstants.KILL_9, pid));
             }
         }
+        return true;
+    }
+
+    @SneakyThrows
+    private boolean sendFile(List<String> typeList, String taskId) {
         for (String monitorType : typeList) {
             if (EbpfTypeConstants.PROFILE.equals(monitorType) || EbpfTypeConstants.OFFCPUTIME.equals(monitorType)
                     || EbpfTypeConstants.MEMLEAK.equals(monitorType)) {
@@ -256,7 +322,6 @@ public class MonitorServiceImpl implements MonitorService {
             }
             sendFileHandler.sendFile(taskId, monitorType);
         }
-        checkOutput(taskId);
         return true;
     }
 

@@ -52,7 +52,7 @@
         <el-table-column :label="$t('datasource.trackTable[0]')" width="160" align="center">
           <template #default="scope">
             <span v-if="scope.row.taskName && scope.row.taskName.length > 18">
-              <el-popover width="300" trigger="hover" :content="scope.row.taskName" popper-class="sql-popover-tip">
+              <el-popover width="300" trigger="hover" :content="scope.row.taskName" placement="right" popper-class="sql-popover-tip">
                 <template #reference>
                   <a class="table-wrapper-table-id" @click="gotoTaskDetail(scope.row.id)">{{
                     scope.row.taskName.substr(0, 18) + '...'

@@ -72,8 +72,8 @@
                     prop="schemaName"
                     v-if="props.type === 1"
                     >
-                    <el-select v-model="diagnosisParam.schemaName" :placeholder="$t('datasource.selectSchema')">
-                    <el-option v-for="item in schemaList" :key="item" :value="item" :label="item" />
+                    <el-select v-model="diagnosisParam.schemaName" :placeholder="$t('datasource.selectSchema')" @visible-change="updateSchemaList">
+                      <el-option v-for="item in schemaList" :key="item" :value="item" :label="item" />
                     </el-select>
                 </el-form-item>
                 <el-form-item class="margin-bottom" :label="$t('datasource.taskName')" prop="taskName">
@@ -525,6 +525,13 @@ const clusterLoaded = (val: any) => {
       const schemaName=props.diagnosisParam?.schemaName
       diagnosisParam.value.schemaName = schemaName.split(',')[1]
     })
+  }
+}
+
+const updateSchemaList = (val: any) => {
+  let nodeId = diagnosisParam.value.nodeId
+  if (nodeId && val) {
+    schemaData(nodeId)
   }
 }
 </script>

@@ -97,8 +97,12 @@
       >
         <div class="dialog-content">
           <el-form ref="formRef" :model="formData">
+            <el-form-item :label="t('install.installUser')" prop="username">
+              <el-input readonly v-model="formData.username" style="width: 200px; margin: 0 4px" />
+            </el-form-item>
             <el-form-item
               :label="t('install.rootPWD')"
+              v-if="formData.username === ROOT_USER"
               prop="rootPassword"
               :rules="[{ required: true, message: t('install.collectorRules[1]'), trigger: 'blur' }]"
             >
@@ -132,6 +136,8 @@ import { encryptPassword } from '@/utils/jsencrypt'
 
 const { t } = useI18n()
 
+const ROOT_USER = 'root'
+
 const activeName = ref('collector')
 const errorInfo = ref<string | Error>()
 
@@ -140,12 +146,21 @@ const formRef = ref<FormInstance>()
 const curNode = ref<any>()
 const visible = ref<boolean>(false)
 const formData = ref<any>({
+  username: '',
   rootPassword: '',
 })
 const dialogTitle = ref<string>()
 const dialogType = ref<string>()
 const nodeStatusMap = ref<any>({})
 const timer = ref<any>()
+
+const getInstallUser = (nodeId: string) => {
+  ogRequest.get(`/observability/v1/agent/install/${nodeId}`).then(res => {
+    if (res) {
+      formData.value.username = res.data ;
+    }
+  })
+}
 
 onMounted(() => {
   refreshCollectors()
@@ -317,6 +332,7 @@ const updateNodeStatusMap = () => {
 
 // start stop restart
 const showDialog = (data: any, type: string) => {
+  getInstallUser(data.nodeId)
   visible.value = true
   curNode.value = data
   dialogTitle.value = t('install.' + type)

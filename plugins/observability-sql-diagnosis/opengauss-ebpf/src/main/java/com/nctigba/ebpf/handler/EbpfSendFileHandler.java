@@ -59,6 +59,7 @@ public class EbpfSendFileHandler {
         String httpUrl = urlConfig.getHttpUrl();
         String url = httpUrl.substring(0, httpUrl.lastIndexOf(CommonConstants.SLASH) + 1) + taskId + httpUrl.substring(
                 httpUrl.lastIndexOf(CommonConstants.SLASH));
+        boolean isSendSuccess = false;
         try {
             if (EbpfTypeConstants.PROFILE.equals(monitorType) || EbpfTypeConstants.OFFCPUTIME.equals(monitorType)
                     || EbpfTypeConstants.MEMLEAK.equals(monitorType)) {
@@ -66,11 +67,11 @@ public class EbpfSendFileHandler {
             } else {
                 file = new FileSystemResource(outputUrl + taskId + monitorType + FileTypeConstants.DEFAULT);
             }
-            httpUtils.httpUrlPost(url, file, monitorType);
+            isSendSuccess = httpUtils.httpUrlPost(url, file, monitorType);
         } catch (Exception e) {
             log.error("failed:" + e.getMessage());
         } finally {
-            if (file != null && file.exists()) {
+            if (isSendSuccess && file.exists()) {
                 boolean isSuccess = file.getFile().delete();
                 log.info(file.getFilename() + " is delete:" + isSuccess);
             }
