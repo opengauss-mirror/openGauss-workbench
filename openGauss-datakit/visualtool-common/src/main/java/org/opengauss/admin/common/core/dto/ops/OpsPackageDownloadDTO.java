@@ -28,6 +28,7 @@ import org.opengauss.admin.common.enums.ops.OpenGaussVersionEnum;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.Objects;
 
 /**
  * @author wangchao
@@ -70,4 +71,27 @@ public class OpsPackageDownloadDTO {
      */
     @NotBlank(message = "package download ws business id can not be empty")
     private String wsBusinessId;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof OpsPackageDownloadDTO)) {
+            return false;
+        }
+        OpsPackageDownloadDTO that = (OpsPackageDownloadDTO) o;
+        return Objects.equals(name, that.name)
+                && Objects.equals(os, that.os)
+                && Objects.equals(cpuArch, that.cpuArch)
+                && openGaussVersion == that.openGaussVersion
+                && Objects.equals(openGaussVersionNum, that.openGaussVersionNum)
+                && Objects.equals(downloadUrl, that.downloadUrl)
+                && Objects.equals(wsBusinessId, that.wsBusinessId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, os, cpuArch, openGaussVersion, openGaussVersionNum, downloadUrl, wsBusinessId);
+    }
 }

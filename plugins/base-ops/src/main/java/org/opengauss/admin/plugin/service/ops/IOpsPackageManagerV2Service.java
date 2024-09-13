@@ -77,6 +77,7 @@ public interface IOpsPackageManagerV2Service extends IService<OpsPackageManagerE
      * @param wsBusinessId  wsBusinessId
      */
     void updateOnlinePackage(OpsPackageManagerEntity packageEntity, Integer userId, String wsBusinessId);
+
     /**
      * checking package name is exist
      *
@@ -101,4 +102,11 @@ public interface IOpsPackageManagerV2Service extends IService<OpsPackageManagerE
      * @param userId userId
      */
     void updateUploadPackage(OpsPackageManagerEntity pkg, Integer userId);
+
+    /**
+     * del package list
+     *
+     * @param packageIds packageIds
+     */
+    void delPackage(List<String> packageIds);
 }

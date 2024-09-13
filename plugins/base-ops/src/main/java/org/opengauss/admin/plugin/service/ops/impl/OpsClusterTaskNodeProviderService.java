@@ -24,6 +24,8 @@
 package org.opengauss.admin.plugin.service.ops.impl;
 
 import cn.hutool.core.util.StrUtil;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterTaskEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterTaskNodeEntity;
 import org.opengauss.admin.plugin.domain.model.ops.dto.OpsClusterTaskNodeDTO;
@@ -37,6 +39,7 @@ import org.springframework.util.Assert;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * OpsClusterTaskNodeProviderService
@@ -50,7 +53,8 @@ public class OpsClusterTaskNodeProviderService {
     private IOpsClusterTaskNodeService opsClusterTaskNodeService;
     @Resource
     private IOpsClusterTaskService opsClusterTaskService;
-
+    @Resource
+    private OpsHostRemoteService opsHostRemoteService;
 
     /**
      * create cluster task node
@@ -65,11 +69,20 @@ public class OpsClusterTaskNodeProviderService {
         OpsClusterTaskEntity taskEntity = opsClusterTaskService.getById(clusterId);
         Assert.isTrue(Objects.nonNull(taskEntity), "cluster task id can not exists " + clusterId);
         String clusterNodeId = opsClusterTaskNodeService.saveClusterTaskNode(insertDto);
+        checkHostAndUserMatched(insertDto.getHostId(), insertDto.getHostUserId());
         updateClusterTask(clusterId);
         boolean canInstall = opsClusterTaskService.checkHostAndUserInstallCluster(clusterId, insertDto.getHostId(),
                 insertDto.getHostUserId());
         Assert.isTrue(canInstall, clusterId + " host has cluster installation task");
         return clusterNodeId;
+    }
+
+    private void checkHostAndUserMatched(String hostId, String hostUserId) {
+        List<OpsHostUserEntity> hostUserList = opsHostRemoteService.listHostUserByHostId(hostId);
+        Optional<OpsHostUserEntity> checkUser = hostUserList.stream()
+                .filter(hostUser -> hostUser.getHostUserId().equals(hostUserId))
+                .findFirst();
+        Assert.isTrue(checkUser.isPresent(), "host " + hostId + " user " + hostUserId + " not exists");
     }
 
     /**
@@ -89,6 +102,7 @@ public class OpsClusterTaskNodeProviderService {
         OpsClusterTaskNodeEntity updateNode = opsClusterTaskNodeService.getById(clusterNodeId);
         Assert.isTrue(Objects.nonNull(updateNode), "cluster node is not exists " + clusterNodeId);
         String msg = opsClusterTaskNodeService.updateClusterTaskNode(updateDto);
+        checkHostAndUserMatched(updateDto.getHostId(), updateDto.getHostUserId());
         updateClusterTask(clusterId);
         boolean canInstall = opsClusterTaskService.checkHostAndUserInstallCluster(clusterId, updateDto.getHostId(),
                 updateDto.getHostUserId());
@@ -101,8 +115,7 @@ public class OpsClusterTaskNodeProviderService {
         OpsClusterTaskNodeEntity master = nodeList.stream()
                 .filter(node -> node.getNodeType().equals(ClusterRoleEnum.MASTER))
                 .findFirst()
-                .get();
-        Assert.isTrue(Objects.nonNull(master), "cluster task must have master node");
+                .orElseThrow(() -> new OpsException("cluster task must have master node"));
         opsClusterTaskService.modifyClusterTaskOfNodeChange(clusterId, master.getHostId(),
                 master.getHostUserId(), nodeList.size());
     }

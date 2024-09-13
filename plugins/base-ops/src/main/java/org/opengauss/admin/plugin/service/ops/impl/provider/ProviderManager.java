@@ -66,7 +66,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * ProviderManager
  *
  * @author wangchao
- * @since  2024/6/22 9:41
+ * @since 2024/6/22 9:41
  **/
 @Slf4j
 @Service
@@ -254,6 +254,7 @@ public class ProviderManager {
             OperateLogFactory.operateInstall(clusterId, retBuffer.getRetBuffer());
             isInstallSucc = false;
             remark = e.getMessage();
+            log.error("doInstall error:", e);
             throw new OpsException(e.getMessage());
         } finally {
             if (!isInstallSucc) {
