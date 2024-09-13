@@ -36,6 +36,7 @@
              ref="stepOneComp"
              :clusterId="tempClusterId"
              :createClusterId="createClusterId"
+             :createClusterNodeList="createClusternodeList"
              :sub-task-config="subTaskConfig"
              @syncConfig="syncSubTask" />
       <step2 v-if="currentStep === 2"
@@ -205,6 +206,62 @@ const saveFlag = ref(false)
 const checkPathFlag = ref(false)
 const editFlag  = ref(true)
 
+const createClusterNode = async (clusterId:string, hostId:string, hostUserId:string, nodeType:string, dataPath:string,
+                                 azOwner:string, azPriority:string, isCMMaster:boolean, cmDataPath:string, cmPort:number) => {
+  return new Promise((resolve) => {
+    createClustertaskNode({
+      "clusterNodeId": '',
+      "clusterId": clusterId,
+      "hostId":hostId,
+      "hostUserId": hostUserId,
+      "nodeType": nodeType,
+      "dataPath": dataPath,
+      "azOwner": azOwner,
+      "azPriority": azPriority,
+      "isCMMaster": isCMMaster,
+      "cmDataPath": cmDataPath,
+      "cmPort": cmPort
+    }) .then((res) => {
+      if(Number(res.code) !== 200) {
+        resolve(false)
+      } else {
+        resolve(res.msg)
+      }
+    }) .catch((error) => {
+      console.error(error)
+      resolve(false)
+    })
+  })
+}
+
+const updateClusterNode = async (clusterNodeId:string, clusterId:string, hostId:string, hostUserId:string, nodeType:string,
+                                 dataPath:string, azOwner:string, azPriority:string, isCMMaster:boolean, cmDataPath:string, cmPort:number) => {
+  return new Promise((resolve) => {
+    createClustertaskNode({
+      "clusterNodeId": clusterNodeId,
+      "clusterId": clusterId,
+      "hostId":hostId,
+      "hostUserId": hostUserId,
+      "nodeType": nodeType,
+      "dataPath": dataPath,
+      "azOwner": azOwner,
+      "azPriority": azPriority,
+      "isCMMaster": isCMMaster,
+      "cmDataPath": cmDataPath,
+      "cmPort": cmPort
+    }) .then((res) => {
+      if(Number(res.code) !== 200) {
+        resolve(false)
+      } else {
+        resolve(true)
+      }
+    }) .catch((error) => {
+      console.error(error)
+      resolve(false)
+    })
+  })
+}
+
 const saveUpdateCulster = async () => {
   if (editFlag.value && (!subTaskConfig.value.clusterId || subTaskConfig.value.clusterId === '') && currentStep.value === 1) {
     let nodeSaveFlag = 0
@@ -260,71 +317,58 @@ const saveUpdateCulster = async () => {
         "enableGenerateEnvironmentVariableFile": clusterTaskList.enableGenerateEnvironmentVariableFile,
         "xmlConfigPath": clusterTaskList.xmlConfigPath,
         "deployType": clusterTaskList.deployType
-      }).then((res) => {
+      }).then(async (res) => {
         if (res.code === 200) {
           clusterId.value = res.msg
           createClusterId.value = clusterId.value
           saveFlag.value = true
-          clusterTaskList.clusterNodes.forEach((record) => {
-            createClustertaskNode({
-              "clusterNodeId": '',
-              "clusterId": clusterId.value,
-              "hostId": record.hostId,
-              "hostUserId": record.hostUserId,
-              "nodeType": record.nodeType,
-              "dataPath": record.dataPath,
-              "azOwner": record.azOwner,
-              "azPriority": record.azPriority,
-              "isCMMaster": record.isCMMaster,
-              "cmDataPath": record.cmDataPath,
-              "cmPort": record.cmPort
-            }) .then((res) => {
-              if(Number(res.code) !== 200) {
-                Message.error('保存草稿箱失败')
-                saveFlag.value = false
+          for (const item of clusterTaskList.clusterNodes) {
+            if (item.nodeType === 'MASTER') {
+              const result = await createClusterNode(clusterId.value, item.hostId, item.hostUserId, item.nodeType,
+                item.dataPath, item.azOwner, item.azPriority, item.isCMMaster, item.cmDataPath, item.cmPort)
+              if (result !== false) {
+                item.clusterNodeId = result
+                saveFlag.value = saveFlag.value && true
               } else {
-                nodeSaveFlag = nodeSaveFlag + 1
+                saveFlag.value = saveFlag.value && result
               }
-            }) .catch((error) => {
-              console.error(error)
-            }) .finally(() => {
-              if (subTaskConfig.value.deployType === "SINGLE_NODE" && clusterTaskList.clusterNodes.length > 1){
-                Message.error('当前选择单节点模式，请删除多余节点')
-              } else if (nodeSaveFlag === clusterTaskList.clusterNodes.length) {
-                saveFlag.value = true
+            }
+          }
+          for (const item of clusterTaskList.clusterNodes) {
+            if (item.nodeType !== 'MASTER') {
+              const result = await createClusterNode(clusterId.value, item.hostId, item.hostUserId, item.nodeType,
+                item.dataPath, item.azOwner, item.azPriority, item.isCMMaster, item.cmDataPath, item.cmPort)
+              if (result !== false) {
+                item.clusterNodeId = result
+                saveFlag.value = saveFlag.value && true
+              } else {
+                saveFlag.value = saveFlag.value && result
               }
-              if (saveFlag.value) {
-                Message.success('保存草稿箱成功')
-              }
-            })
-          })
+            }
+          }
         } else {
-          Message.error('294保存草稿箱失败')
+          Message.error('保存草稿箱失败')
         }
       }) .catch((error) => {
         Message.error('保存草稿箱失败' + error)
       }) .finally(() => {
+        createClusternodeList.value =  JSON.parse(JSON.stringify(clusterTaskList.clusterNodes))
+        tempClusterId.value = clusterId.value
         if (subTaskConfig.value.deployType === "SINGLE_NODE" && clusterTaskList.clusterNodes.length > 1){
           Message.error('当前选择单节点模式，请删除多余节点')
-        } else if (nodeSaveFlag === clusterTaskList.clusterNodes.length) {
-          saveFlag.value = true
+          saveFlag.value = false
+        }
+        if (saveFlag.value) {
+          Message.success('保存草稿箱成功')
         }
       })
-      if (nodeSaveFlag === clusterTaskList.clusterNodes.length) {
-        saveFlag.value = true
-      }
-      if (saveFlag.value) {
-        Message.success('保存草稿箱成功')
-      }
     }
-
   } else if (editFlag.value && currentStep.value === 1 && subTaskConfig.value.clusterId !== '') {
     if (subTaskConfig.value.deployType === "CLUSTER"
       && subTaskConfig.value.packageVersion !== OpenGaussVersionEnum.MINIMAL_LIST
       && clusterTaskList.clusterNodes.length < 2) {
       Message.error('当前选择多节点模式，请至少输入两个节点数据')
     } else {
-      let clusterSaveFlag = true
       clusterTaskList.hostId = subTaskConfig.value.hostId
       clusterTaskList.hostUserId = subTaskConfig.value.hostUserId
       clusterTaskList.os = subTaskConfig.value.os
@@ -376,104 +420,50 @@ const saveUpdateCulster = async () => {
         "deployType": clusterTaskList.deployType
       }).then((res) => {
         if (res.code === 200) {
-          batchClusterNodes(clusterId.value).then((res) => {
+          batchClusterNodes(clusterId.value).then(async (res) => {
             if (res.code === 200) {
               const clusterNodesMap = new Map(res.data.clusterNodes.map(item => [item.clusterNodeId, item]))
               const nodesIpMap = new Map(res.data.clusterNodes.map(item => [item.hostId, item]))
-              let countUpdateFlag = 0
-              clusterTaskList.clusterNodes.forEach((item) => {
+              for (const item of clusterTaskList.clusterNodes) {
                 if (item.clusterNodeId) {
                   const itemClusterNode = clusterNodesMap.get(item.clusterNodeId)
                   if (itemClusterNode
                     && (!itemClusterNode.hostId || itemClusterNode.hostId !== item.hostId)
                     && (!itemClusterNode.hostUserId || itemClusterNode.hostUserId !== item.hostUserId)) {
-                    updateClustertaskNode({
-                      "clusterNodeId": item.clusterNodeId,
-                      "clusterId": item.clusterId,
-                      "hostId": item.hostId,
-                      "hostUserId": item.hostUserId,
-                      "nodeType": item.nodeType,
-                      "dataPath": item.dataPath,
-                      "azOwner": item.azOwner,
-                      "azPriority": item.azPriority,
-                      "isCMMaster": item.isCMMaster,
-                      "cmDataPath": item.cmDataPath,
-                      "cmPort": item.cmPort
-                    }) .then((response) => {
-                      if(Number(response.code) !== 200) {
-                        console.error(response)
-                        clusterSaveFlag = false
-                      } else {
-                        countUpdateFlag = countUpdateFlag + 1
-                      }
-                    }) .catch((error) => {
-                      console.error('updateClusterNode' + error)
-                      clusterSaveFlag = false
-                    }) .finally(() => {
-                      if (clusterSaveFlag) {
-                        saveFlag.value = true
-                      } else {
-                        saveFlag.value = false
-                      }
-                    })
-                  } else {
-                    countUpdateFlag = countUpdateFlag + 1
+                    const result = await updateClusterNode(item.clusterNodeId, clusterId.value, item.hostId, item.hostUserId,
+                      item.nodeType, item.dataPath, item.azOwner, item.azPriority, item.isCMMaster, item.cmDataPath, item.cmPort)
+                    saveFlag.value = saveFlag.value && result
                   }
                 } else if (!nodesIpMap.get(item.hostId)) {
-                  createClustertaskNode({
-                    "clusterNodeId": '',
-                    "clusterId": clusterId.value,
-                    "hostId":item.hostId,
-                    "hostUserId": item.hostUserId,
-                    "nodeType": item.nodeType,
-                    "dataPath": item.dataPath,
-                    "azOwner": item.azOwner,
-                    "azPriority": item.azPriority,
-                    "isCMMaster": item.isCMMaster,
-                    "cmDataPath": item.cmDataPath,
-                    "cmPort": item.cmPort
-                  }) .then((res) => {
-                    if(Number(res.code) !== 200) {
-                      console.error(response.data)
-                      clusterSaveFlag = false
-                    } else {
-                      countUpdateFlag = countUpdateFlag + 1
-                    }
-                  }) .catch((error) => {
-                    console.error(error)
-                  }) .finally(() => {
-                    if (clusterSaveFlag) {
-                      saveFlag.value = true
-                    } else {
-                      saveFlag.value = false
-                    }
-                  })
+                  const result = await createClusterNode(clusterId.value, item.hostId, item.hostUserId, item.nodeType,
+                    item.dataPath, item.azOwner, item.azPriority, item.isCMMaster, item.cmDataPath, item.cmPort)
+                  if (result !== false) {
+                    item.clusterNodeId = result
+                    saveFlag.value = saveFlag.value && true
+                  } else {
+                    saveFlag.value = saveFlag.value && result
+                  }
                 }
-              })
-              if (subTaskConfig.value.deployType === "SINGLE_NODE" && clusterTaskList.clusterNodes.length > 1){
-                Message.error('当前选择单节点模式，请删除多余节点')
               }
             }
           }) .catch((error) => {
             console.error((error))
-            clusterSaveFlag = false
-            saveFlag.value = false
-          }) .finally(() => {
-            if (clusterSaveFlag) {
-              saveFlag.value = true
-            } else {
-              saveFlag.value = false
-            }
           })
         } else {
           Message.error('保存草稿箱失败')
         }
       }).catch((error) => {
         Message.error('保存草稿箱失败' + error)
+      })  .finally(() => {
+        createClusternodeList.value =  JSON.parse(JSON.stringify(clusterTaskList.clusterNodes))
+        if (subTaskConfig.value.deployType === "SINGLE_NODE" && clusterTaskList.clusterNodes.length > 1){
+          Message.error('当前选择单节点模式，请删除多余节点')
+          saveFlag.value = false
+        }
+        if (saveFlag.value) {
+          Message.success('保存草稿箱成功')
+        }
       })
-    }
-    if (saveFlag.value) {
-      Message.success('保存草稿箱成功')
     }
   }
 }
@@ -539,6 +529,7 @@ const submitClusterInfo = () => {
 
 const tempClusterId = ref('')
 const createClusterId = ref('')
+const createClusternodeList = ref([])
 const init = () => {
   currentStep.value = 1
   const tempRecord = route.params.record?JSON.parse(route.params.record):{}
@@ -551,6 +542,7 @@ const init = () => {
   }
   clusterId.value = ''
   createClusterId.value = ''
+  createClusternodeList.value = []
 }
 
 const route = useRoute()
