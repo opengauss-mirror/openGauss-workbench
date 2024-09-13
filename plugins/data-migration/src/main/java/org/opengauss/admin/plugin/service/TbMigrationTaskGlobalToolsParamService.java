@@ -38,4 +38,14 @@ public interface TbMigrationTaskGlobalToolsParamService extends IService<TbMigra
      * @version: 1.1
      */
     boolean removeByHostId(String hostId);
+
+    /**
+     * check paramKey existence
+     *
+     * @param paramKey param key
+     * @param configId config id
+     * @param portalHostID portal host id
+     * @return boolean
+     */
+    boolean checkParamKeyExistence(String paramKey, Integer configId, String portalHostID);
 }
