@@ -95,17 +95,17 @@ public class TaskMinimaListProvider extends AbstractTaskProvider {
                     .stream()
                     .filter(hostInfoHolder -> hostId.equals(hostInfoHolder.getHostEntity().getHostId()))
                     .findFirst()
-                    .orElseThrow(() -> new OpsException("host information does not exist"))
+                    .orElseThrow(() -> new OpsException("host information does not exist : " + hostId))
                     .getHostUserEntities()
                     .stream()
                     .filter(userInfo -> uid.equals(userInfo.getHostUserId()))
                     .findFirst()
-                    .orElseThrow(() -> new OpsException("Installation user information does not exist"));
+                    .orElseThrow(() -> new OpsException("Installation user information does not exist :" + uid));
             installUserName = installUser.getUsername();
         }
 
         if (StrUtil.isEmpty(installUserId)) {
-            throw new OpsException("Installation user ID does not exist");
+            throw new OpsException("Installation user ID does not exist :" + installUserId);
         }
 
         nodeConfig.setInstallUserId(installUserId);
@@ -136,6 +136,8 @@ public class TaskMinimaListProvider extends AbstractTaskProvider {
             log.info("The installation is complete");
         } catch (OpsException ex) {
             isInstallSucc = false;
+            sendOperateLog(installContext, ex.getMessage());
+            log.info("The installation is error ", ex);
             throw new OpsException("Installation failed " + ex.getMessage());
         } finally {
             if (Objects.nonNull(installUserSession) && installUserSession.isConnected()) {

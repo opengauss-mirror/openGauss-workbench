@@ -36,6 +36,7 @@ import org.opengauss.admin.common.core.dto.ops.PackageDto;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.base.BaseController;
+import org.opengauss.admin.plugin.constant.OpsConstants;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
 import org.opengauss.admin.plugin.domain.model.ops.OpsPackagePathDictVO;
 import org.opengauss.admin.plugin.domain.model.ops.OpsPackageVO;
@@ -55,6 +56,7 @@ import java.util.Objects;
 
 /**
  * ClusterPackageManagerController
+ *
  * @author wangchao
  * @date 2024/06/15 09:26
  */
@@ -131,6 +133,18 @@ public class ClusterPackageManagerController extends BaseController {
         }
     }
 
+    /**
+     * Delete package
+     *
+     * @param packageIds packageIds
+     * @return AjaxResult
+     */
+    @PostMapping("/delete/package")
+    public AjaxResult del(@RequestBody List<String> packageIds) {
+        opsPackageManagerV2Service.delPackage(packageIds);
+        return AjaxResult.success();
+    }
+
     @PostMapping("/check/package")
     public AjaxResult checkPackage(@RequestBody List<String> packageIds) {
         try {
@@ -156,6 +170,7 @@ public class ClusterPackageManagerController extends BaseController {
         entity.setPackageUrl(dto.getDownloadUrl());
         entity.setName(dto.getName());
         entity.setType("openGauss");
+        entity.setRemark(OpsConstants.PACKAGE_REMARK);
         opsPackageManagerV2Service.saveOnlinePackage(entity, getUserId(), dto.getWsBusinessId());
         return AjaxResult.success();
     }
@@ -195,6 +210,7 @@ public class ClusterPackageManagerController extends BaseController {
         pkg.setType("openGauss");
         pkg.setPackageVersion(dto.getPackageVersion().name());
         pkg.setFile(dto.getUploadFile());
+        pkg.setRemark(OpsConstants.PACKAGE_REMARK);
         opsPackageManagerV2Service.saveUploadPackage(pkg, getUserId());
         return AjaxResult.success();
     }

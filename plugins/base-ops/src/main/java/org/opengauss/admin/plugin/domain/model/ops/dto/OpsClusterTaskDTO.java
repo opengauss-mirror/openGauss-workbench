@@ -75,7 +75,6 @@ public class OpsClusterTaskDTO {
     private Boolean enableCmTool;
     private Boolean enableGenerateEnvironmentVariableFile;
     private String xmlConfigPath;
-
     @NotNull(message = "deployType can not be empty")
     private DeployTypeEnum deployType;
 

@@ -38,6 +38,7 @@ import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.DateUtils;
+import org.opengauss.admin.plugin.constant.OpsConstants;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
 import org.opengauss.admin.plugin.domain.model.ops.OpsPackageVO;
 import org.opengauss.admin.plugin.domain.model.ops.WsSession;
@@ -64,6 +65,7 @@ import java.util.stream.Collectors;
 
 /**
  * OpsPackageManagerV2Service
+ *
  * @author wangchao
  * @date 2024/06/15 09:26
  */
@@ -82,6 +84,7 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
     private SysSettingFacade sysSettingFacade;
     @Resource
     private PathUtils pathUtils;
+
     @Override
     public List<OpsPackageVO> queryOpsPackageList(String os, String cpuArch, OpenGaussVersionEnum packageVersion, String packageVersionNum) {
         LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = Wrappers.lambdaQuery(OpsPackageManagerEntity.class)
@@ -106,8 +109,32 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
 
     @Override
     public void checkingPackageList(List<String> packageIds) {
+        List<OpsPackageManagerEntity> packageEntityList = getAndValidPackageByIds(packageIds);
+        for (OpsPackageManagerEntity entry : packageEntityList) {
+            UploadInfo packagePath = entry.getPackagePath();
+            File file = new File(packagePath.getRealPath() + File.separatorChar + packagePath.getName());
+            if (file.exists()) {
+                log.info("checking package list, packageId: {}, realPath success :{} ",
+                        entry.getPackageId(), entry.getRealPath());
+                continue;
+            }
+            if (Objects.equals(entry.getRemark(), OpsConstants.PACKAGE_REMARK)) {
+                removeById(entry.getPackageId());
+                log.info("checking package list, packageId: {}, realPath file not exit,delete package :{} ",
+                        entry.getPackageId(), entry.getRealPath());
+            } else {
+                UpdateWrapper<OpsPackageManagerEntity> wrapper = new UpdateWrapper<>();
+                wrapper.set("package_path", "").eq("package_id", entry.getPackageId());
+                update(wrapper);
+                log.info("checking package list, packageId: {}, realPath file not exit,clear package_path :{} ",
+                        entry.getPackageId(), entry.getRealPath());
+            }
+        }
+    }
+
+    private List<OpsPackageManagerEntity> getAndValidPackageByIds(List<String> packageIds) {
         if (CollectionUtils.isEmpty(packageIds)) {
-            return;
+            throw new OpsException("packageId is not empty");
         }
         List<OpsPackageManagerEntity> packageEntityList = list(new LambdaQueryWrapper<OpsPackageManagerEntity>()
                 .in(OpsPackageManagerEntity::getPackageId, packageIds));
@@ -123,14 +150,19 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
             log.error("packageId {} is not exist", notExistIds);
             throw new OpsException("packageId " + notExistIds + " is not exist");
         }
-        packageEntityList.stream().forEach(entry -> {
-            File file = new File(entry.getRealPath());
-            if (!file.exists()) {
-                UpdateWrapper<OpsPackageManagerEntity> wrapper = new UpdateWrapper<>();
-                wrapper.set("package_path", "").eq("package_id", entry.getPackageId());
-                update(wrapper);
+        return packageEntityList;
+    }
+
+    @Override
+    public void delPackage(List<String> packageIds) {
+        List<OpsPackageManagerEntity> packageEntityList = getAndValidPackageByIds(packageIds);
+        packageEntityList.forEach(entry -> {
+            UploadInfo packagePath = entry.getPackagePath();
+            File file = new File(packagePath.getRealPath() + File.separatorChar + packagePath.getName());
+            if (!file.delete()) {
+                log.info("delete package list, packageId: {}, realPath: {}", entry.getPackageId(), entry.getRealPath());
             }
-            log.info("checking package list, packageId: {}, realPath: {}", entry.getPackageId(), entry.getRealPath());
+            removeById(entry.getPackageId());
         });
     }
 

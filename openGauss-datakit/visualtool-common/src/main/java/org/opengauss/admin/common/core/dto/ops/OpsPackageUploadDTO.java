@@ -29,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.Objects;
 
 /**
  * @author wangchao
@@ -68,4 +69,26 @@ public class OpsPackageUploadDTO {
     private String packageUrl;
     @NotNull(message = "package upload file can not be empty")
     private MultipartFile uploadFile;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof OpsPackageUploadDTO)) {
+            return false;
+        }
+        OpsPackageUploadDTO that = (OpsPackageUploadDTO) o;
+        return Objects.equals(name, that.name)
+                && Objects.equals(os, that.os)
+                && Objects.equals(cpuArch, that.cpuArch)
+                && packageVersion == that.packageVersion
+                && Objects.equals(packageVersionNum, that.packageVersionNum)
+                && Objects.equals(packageUrl, that.packageUrl);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, os, cpuArch, packageVersion, packageVersionNum, packageUrl);
+    }
 }
