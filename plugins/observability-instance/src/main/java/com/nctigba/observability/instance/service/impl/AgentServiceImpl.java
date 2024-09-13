@@ -96,9 +96,11 @@ public class AgentServiceImpl implements AgentService {
             break;
         }
         if (agent == null || AgentStatusEnum.ERROR_THREAD_NOT_EXISTS.getStatus().equalsIgnoreCase(agent.getStatus())
-            || AgentStatusEnum.ERROR_PROGRAM_UNHEALTHY.getStatus().equalsIgnoreCase(agent.getStatus())
-            || AgentStatusEnum.MANUAL_STOP.getStatus().equalsIgnoreCase(agent.getStatus())) {
+            || AgentStatusEnum.ERROR_PROGRAM_UNHEALTHY.getStatus().equalsIgnoreCase(agent.getStatus())) {
             return 2;
+        }
+        if (AgentStatusEnum.MANUAL_STOP.getStatus().equalsIgnoreCase(agent.getStatus())) {
+            return 3;
         }
         return 0;
     }

@@ -173,7 +173,7 @@ const {
   loading: generating,
 } = useRequest(
   () => {
-    return restRequest.post('/wdr/generate', formData).then(function (res) {
+    return restRequest.post('/wdr/generate', formData,  {timeout: 300000}).then(function (res) {
       return res
     })
   },
