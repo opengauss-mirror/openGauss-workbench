@@ -217,13 +217,17 @@ public class MetricsService {
             for (long i = dto.getStart(); i < dto.getEnd(); i += dto.getStep()) {
                 timeline.add(i);
             }
-            return Map.of(metricLine.name(), parseLine(promQl, metrics, timeline, metricLine.getTemplate()));
+            HashMap<String, Object> map = new HashMap<>();
+            map.put(metricLine.name(), parseLine(promQl, metrics, timeline, metricLine.getTemplate()));
+            return map;
         }
         if (dto.getMetric() instanceof MetricsValue) {
             MetricsValue metricValue = (MetricsValue) dto.getMetric();
             String promQl = metricValue.promQl(dto.getNode());
             var metrics = value(promQl, System.currentTimeMillis() / 1000);
-            return Map.of(metricValue.name(), parseValue(promQl, metrics, metricValue.getTemplate()));
+            HashMap<String, Object> map = new HashMap<>();
+            map.put(metricValue.name(), parseValue(promQl, metrics, metricValue.getTemplate()));
+            return map;
         }
         return Collections.emptyMap();
     }
