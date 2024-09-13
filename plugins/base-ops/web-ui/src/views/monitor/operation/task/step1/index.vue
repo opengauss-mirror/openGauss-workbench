@@ -382,7 +382,7 @@
     </div>
     <addPack
       ref="addPackRef"
-      @finish="addPackClose()"
+      @close="addPackClose()"
       @submit="addPackSubmit()"
     ></addPack>
     <packManage
@@ -396,7 +396,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, defineProps, reactive, ref, toRaw, watch} from 'vue'
+import {computed, defineProps, PropType, reactive, ref, toRaw, watch} from 'vue'
 import {CpuArch, OS} from "@/types/os";
 import {OpenGaussVersionEnum} from "@/types/ops/install"
 import message from "@arco-design/web-vue/es/message"
@@ -497,7 +497,7 @@ const getHostId = (inputvalue: string) => {
   data.port = 5432 + hostUserOrder.value * 10
   if (changeHostipFlag) {
     data.clusterNodes.forEach((item) => {
-      item.hostUserId = data.hostUserId
+      item.hostUserId = ''
       item.hostUser = data.hostUser
       item.editing = true
     })
@@ -842,6 +842,7 @@ const addPackClose = () => {
   if (wsBusinessId && wsBusinessId.value && wsBusinessId.value != '') {
     downloadWs.value?.destroy()
   }
+  fetchPackageList()
 }
 
 const addPackSubmit = () => {
@@ -992,6 +993,7 @@ const checkSameUser = (inputValue: string,order: number) => {
             tempFlag = true
             tempEditCluster.hostId = item.hostId
             editFlag.hostIp = true
+            tempEditCluster.hostUserId = item.hostUserId
           }
         })
         if (!tempFlag) {
@@ -1115,6 +1117,7 @@ const saveCluster = async (record: any) => {
                   tempFlag = true
                   tempEditCluster.hostIp = getIpById(item.hostId)
                   tempEditCluster.hostId = item.hostId
+                  tempEditCluster.hostUserId = item.hostUserId
                   editFlag.hostIp = true
                 }
               })
@@ -1199,6 +1202,7 @@ const saveCluster = async (record: any) => {
           item.dataPath = tempEditCluster.dataPath
           item.hostIp = tempEditCluster.hostIp
           item.hostId = tempEditCluster.hostId
+          item.hostUserId = tempEditCluster.hostUserId
           item.isCMMaster = tempEditCluster.isCMMaster
 
           if (item.order === 1) {
@@ -1220,7 +1224,7 @@ const saveCluster = async (record: any) => {
             "clusterNodeId": record.clusterNodeId,
             "clusterId": data.clusterId,
             "hostId": (!record.hostId && record.order == 1)? data.hostId: record.hostId,
-            "hostUserId": data.hostUserId,
+            "hostUserId": record.hostUserId,
             "nodeType": record.nodeType,
             "dataPath": !record.dataPath ? "/opt/" + data.hostUser + "/openGauss/data/dn": record.dataPath,
             "azOwner": record.azOwner,
@@ -1311,16 +1315,11 @@ const getInstallPath = (inputValue: any) => {
   data.installPath = inputValue
   let tempInstallPath = inputValue.split('/').filter(part => part !== '')
   let joinedString: string
-  if  (tempInstallPath[-1] === 'app'){
-    joinedString = tempInstallPath.slice(0, -1).join('/')
-  } else {
-    joinedString = tempInstallPath.join('/')
-  }
-  joinedString = '/' + joinedString
+  joinedString = '/' + tempInstallPath[0] + '/'
   if (data.packageVersion === OpenGaussVersionEnum.ENTERPRISE) {
-    data.logPath = joinedString + '/log'
-    data.tmpPath = joinedString + '/tmp'
-    data.omToolsPath = joinedString + '/om'
+    data.logPath = joinedString + data.hostUser + '/openGauss/log/omm'
+    data.tmpPath = joinedString + data.hostUser + '/openGauss/tmp'
+    data.omToolsPath = joinedString + data.hostUser + '/openGauss/install/om'
   }
 }
 
@@ -1652,7 +1651,11 @@ const fetchVersionNum = () => {
 const optionsCMMaster = ref([])
 const props = defineProps({
   clusterId : Object,
-  createClusterId : Object
+  createClusterId : Object,
+  createClusternodeList: {
+    type: Array as PropType<string[]>,
+    default: () => []
+  }
 })
 
 const init = () => {
@@ -1783,6 +1786,15 @@ watch(() => props.clusterId, (newVal) => {
   }, { immediate: true })
 watch(() => props.createClusterId, (newVal) => {
   data.clusterId = newVal
+}, { immediate: true })
+watch(() => props.createClusternodeList, (newVal) => {
+  data.clusterNodes.forEach(itemA => {
+    const match = props.createClusternodeList.find(itemB => itemB.hostId === itemA.hostId)
+    if (match) {
+      itemA.clusterNodeId = match.clusterNodeId
+    }
+    itemA.clusterId = data.clusterId
+  })
 }, { immediate: true })
 
 const changeHostipFlag = computed(() => {

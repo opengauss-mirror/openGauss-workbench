@@ -7,6 +7,7 @@
     :ok-loading="data.loading"
     :modal-style="{ width: '650px' }"
     @submit="submit"
+    @close="close"
     @cancel="close"
   >
     <template #footer>
@@ -103,6 +104,11 @@
             </div>
           </template>
         </a-upload>
+      </a-form-item>
+      <a-form-item
+        v-if="(uploadStatusTag || !netStatus) && progressPercent.valueOf() > 0"
+      >
+        <a-progress :percent="progressPercent">{{progressPercent.valueOf()}}</a-progress>
       </a-form-item>
     </a-form>
   </a-modal>
@@ -404,7 +410,7 @@ const submitLoading = ref(false)
 const progressPercent = ref(0)
 const submit = async () => {
   let isvalid = await formRef.value?.validate()
-  if (!isvalid) {
+  if (!isvalid && progressPercent.value === 0) {
     if (uploadStatusTag.value) {
       const formData = new FormData
       formData.append('name', data.formData.name)
@@ -426,7 +432,7 @@ const submit = async () => {
           if (event.lengthComputable) {
             percent = Math.round((event.loaded * 100) / event.total);
           }
-          progressPercent.value = percent?percent:0
+          progressPercent.value = percent?percent * 0.01 :0
         },
       }).then((res) => {
         if (res.code === 200) {
