@@ -215,10 +215,10 @@
             <a-form-item v-if="data.packageVersion === OpenGaussVersionEnum.ENTERPRISE" label="是否安装CM">
               <a-switch v-model="flagCM" @change="checkflagCM"/>
             </a-form-item>
-            <a-form-item label="是否环境分离">
+            <a-form-item label="是否环境分离" v-if = "data.packageVersion !== OpenGaussVersionEnum.MINIMAL_LIST">
               <a-switch v-model="flagEnvSeqar" @change="checkflagEnvSeqar" />
             </a-form-item>
-            <a-form-item v-if="flagEnvSeqar" label="环境分离路径" field="envPath" >
+            <a-form-item v-if="flagEnvSeqar && data.packageVersion !== OpenGaussVersionEnum.MINIMAL_LIST" label="环境分离路径" field="envPath" >
               <a-input v-model="data.envPath" placeholder="请输入环境分离路径" :max-length="255" style="width: 30%; height: 32px" />
             </a-form-item>
             <div class="item" v-if="data.packageVersion === OpenGaussVersionEnum.ENTERPRISE">
@@ -582,6 +582,10 @@ const chooseVer = (versionType:any) =>{
     data.tmpPath = '/opt/openGauss/tmp'
     data.omToolsPath = '/opt/openGauss/install/om'
     data.corePath = '/opt/openGauss/corefile'
+  } else if (versionType === OpenGaussVersionEnum.MINIMAL_LIST){
+    data.envPath = '';
+    flagEnvSeqar.value = false
+    data.enableGenerateEnvironmentVariableFile = false
   }
 
   if (data.packageVersionNum && data.packageVersionNum !== '') {
