@@ -196,7 +196,13 @@ const checkEnv = async () => {
     .then((res) => {
       if (Number(res.code) === 200) {
         list.result = res.data.result
-        list.envCheckDetails = res.data.envCheckDetails;
+        props.message.forEach(info => {
+          res.data.envCheckDetails.forEach(item => {
+            if (item.clusterNodeId === info.clusterNodeId) {
+              list.envCheckDetails.push(item);
+            }
+          })
+        })
         list.envCheckDetails.forEach((item, index) => {
           if (list.color.length < list.envCheckDetails.length) {
             list.color.push([]);
