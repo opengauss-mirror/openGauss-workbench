@@ -17,8 +17,8 @@
           <Bell />
         </el-icon>
         <span>{{ $t(`alertRecord.alertTotal`) }}：<span style="font-weight: bold">{{ statisticsData.totalNum }}</span></span>
-        <span style="margin-left: 24px;">{{ $t(`alertRecord.unread`) }}：<span style="font-weight: bold">{{ statisticsData.unReadNum }}</span></span>
-        <span style="margin-left: 24px;">{{ $t(`alertRecord.read`) }}：<span style="font-weight: bold">{{ statisticsData.readNum }}</span></span>
+        <span style="margin-left: 18px;">{{ $t(`alertRecord.unread`) }}：<span style="font-weight: bold">{{ statisticsData.unReadNum }}</span></span>
+        <span style="margin-left: 18px;">{{ $t(`alertRecord.read`) }}：<span style="font-weight: bold">{{ statisticsData.readNum }}</span></span>
       </div>
       <div class="seperator"></div>
       <div class="filter" style="margin-right: 10px">
@@ -67,25 +67,25 @@
         <div class="filter">
           <span>{{ $t('alertRecord.recordStatus') }}：</span>
           <el-checkbox-group v-model="formData.recordStatus" @change="changeRecordStatus" size="large">
-            <el-checkbox label="0">{{ $t(`alertRecord.unread`) }}</el-checkbox>
-            <el-checkbox label="1">{{ $t(`alertRecord.read`) }}</el-checkbox>
+            <el-checkbox label="0" class="mr-12">{{ $t(`alertRecord.unread`) }}</el-checkbox>
+            <el-checkbox label="1" class="mr-12">{{ $t(`alertRecord.read`) }}</el-checkbox>
           </el-checkbox-group>
-          <el-divider direction="vertical" />
+          <el-divider direction="vertical" class="mr-4 ml-4"/>
         </div>
         <div class="filter">
           <span>{{ $t('alertRecord.alertStatus') }}：</span>
           <el-checkbox-group v-model="formData.alertStatus" @change="changeAlertStatus" size="large">
-            <el-checkbox label="0">{{ $t(`alertRecord.alerting`) }}</el-checkbox>
-            <el-checkbox label="1">{{ $t(`alertRecord.alerted`) }}</el-checkbox>
+            <el-checkbox label="0" class="mr-12">{{ $t(`alertRecord.alerting`) }}</el-checkbox>
+            <el-checkbox label="1" class="mr-12">{{ $t(`alertRecord.alerted`) }}</el-checkbox>
           </el-checkbox-group>
-          <el-divider direction="vertical" />
+          <el-divider direction="vertical" class="mr-4 ml-4"/>
         </div>
         <div class="filter">
           <span>{{ $t('alertRecord.level') }}：</span>
           <el-checkbox-group v-model="formData.alertLevel" @change="changeLevel" size="large">
-            <el-checkbox label="serious">{{ $t(`alertRule.serious`) }}</el-checkbox>
-            <el-checkbox label="warn">{{ $t(`alertRule.warn`) }}</el-checkbox>
-            <el-checkbox label="info">{{ $t(`alertRule.info`) }}</el-checkbox>
+            <el-checkbox label="serious" class="mr-12">{{ $t(`alertRule.serious`) }}</el-checkbox>
+            <el-checkbox label="warn" class="mr-12">{{ $t(`alertRule.warn`) }}</el-checkbox>
+            <el-checkbox label="info" class="mr-12">{{ $t(`alertRule.info`) }}</el-checkbox>
           </el-checkbox-group>
         </div>
       </div>
@@ -535,5 +535,17 @@ onMounted(() => {
 <style scoped lang='scss'>
 .el-table {
   height: calc(100vh - 110px - 62px - 250px - 34px);
+}
+.ml-12 {
+  margin-left: 12px;
+}
+.mr-12 {
+  margin-right: 12px;
+}
+.ml-4 {
+  margin-left: 4px;
+}
+.mr-4 {
+  margin-right: 4px;
 }
 </style>
