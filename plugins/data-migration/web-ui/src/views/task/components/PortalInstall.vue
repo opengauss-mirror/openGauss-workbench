@@ -141,33 +141,7 @@
           </a-form-item>
         </template>
 
-        <a-form-item
-          field="kafkaInstallType"
-          :label="$t('components.PortalInstall.5q0aajl77lg20')"
-          v-if="form.installType !== INSTALL_TYPE.IMPORTINSTALL"
-        >
-          <a-radio-group type="button" v-model="thirdPartyParam.kafkaInstallType">
-            <a-radio :value="KAFKA_CONFIG_TYPE.BIND">{{
-              $t('components.PortalInstall.5q0aajl77lg21')
-              }}
-            </a-radio>
-            <a-radio :value="KAFKA_CONFIG_TYPE.INSTALL">{{
-              $t('components.PortalInstall.5q0aajl77lg22')
-              }}
-            </a-radio>
-          </a-radio-group>
-          <a-popover>
-            <span class="tips"><icon-info-circle size="15"/></span>
-            <template #content>
-              <p>
-                {{ $t('components.PortalInstall.5q0aajl77lg32') }}:
-              </p>
-            </template>
-          </a-popover>
-
-        </a-form-item>
-        <template v-if="thirdPartyParam.kafkaInstallType == KAFKA_CONFIG_TYPE.INSTALL
-        && form.installType !== INSTALL_TYPE.IMPORTINSTALL">
+        <template v-if="form.installType !== INSTALL_TYPE.IMPORTINSTALL">
           <a-form-item
             field="zookeeperPort"
             :label="$t('components.PortalInstall.5q0aajl77lg16')"
@@ -205,35 +179,6 @@
             />
           </a-form-item>
         </template>
-
-        <template v-if="thirdPartyParam.kafkaInstallType == KAFKA_CONFIG_TYPE.BIND
-      && form.installType !== INSTALL_TYPE.IMPORTINSTALL">
-          <a-form-item
-            field="kafkaBindId"
-            :label="$t('components.PortalInstall.5q0aajl77lg23')"
-            :rules="[
-            {
-              required: form.installType !== INSTALL_TYPE.IMPORTINSTALL,
-              message: $t('components.PortalInstall.5q0aajl77lg24'),
-            },
-          ]"
-          >
-            <a-select
-              v-model="form.kafkaBindId"
-              :placeholder="$t('components.PortalInstall.5q0aajl77lg25')"
-            >
-              <a-option
-                v-for="item in kafkaInstanceData"
-                :key="item.id"
-                :value="item.id"
-              >{{ item.kafkaIp }}
-              </a-option
-              >
-            </a-select>
-          </a-form-item>
-        </template>
-
-
       </a-form>
     </a-spin>
     <template #footer>
@@ -257,7 +202,7 @@
 <script setup>
 import { reactive, ref, watch, onMounted } from 'vue'
 // import { Message } from '@arco-design/web-vue'
-import { hostUsers, installPortal, reInstallPortal, listKafkaInstance } from '@/api/task'
+import { hostUsers, installPortal, reInstallPortal} from '@/api/task'
 import { getPortalDownloadInfoList } from '@/api/common'
 import { INSTALL_TYPE, KAFKA_CONFIG_TYPE } from '@/utils/constants'
 import { deletePortal } from '@/api/task'
@@ -283,7 +228,6 @@ const form = reactive({
   pkgDownloadUrl: '',
   pkgName: '',
   jarName: 'portalControl-1.0-SNAPSHOT-exec.jar',
-  kafkaBindId: '',
   pkgUploadPath: {}
 })
 
@@ -295,8 +239,6 @@ const thirdPartyParam = reactive({
   zookeeperPort: '2181',
   kafkaPort: '9092',
   schemaRegistryPort: '8081',
-  kafkaInstallType: KAFKA_CONFIG_TYPE.BIND,
-
   kafkaInstallDir: form.installPath+KAFKA_CONFIG_TYPE.INSTALL_DIR_DEFAULT
 })
 
@@ -324,7 +266,6 @@ watch(
       getPortalDownloadInfoList(props.hostId).then((res) => {
         packageInfos.value = res.data
         getHostUsers()
-        getKafkaInstance()
       })
     } else {
       form.hostUserId = ''
@@ -352,13 +293,6 @@ watch(
   }
 )
 
-const getKafkaInstance = () =>{
-
-  listKafkaInstance().then((res)=>{
-    kafkaInstanceData.value = res.rows.length > 0 ? res.rows :[]
-  })
-
-}
 const getHostUsers = () => {
   hostUsers(props.hostId).then((res) => {
     hostUserData.value = res.data.length > 0 ? res.data : []
@@ -417,8 +351,7 @@ const buildInstallReq = () => {
   params.append('pkgDownloadUrl', form.pkgDownloadUrl)
   params.append('jarName', form.jarName)
 
-  params.append('kafkaBindId', form.kafkaBindId)
-  params.append('thirdPartySoftwareConfig.thirdPartySoftwareConfigType', thirdPartyParam.kafkaInstallType)
+  params.append('thirdPartySoftwareConfig.thirdPartySoftwareConfigType', KAFKA_CONFIG_TYPE.INSTALL)
   params.append('thirdPartySoftwareConfig.zookeeperPort', thirdPartyParam.zookeeperPort)
   params.append('thirdPartySoftwareConfig.kafkaPort', thirdPartyParam.kafkaPort)
   params.append('thirdPartySoftwareConfig.installDir', thirdPartyParam.kafkaInstallDir)
