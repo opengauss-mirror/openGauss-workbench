@@ -5,7 +5,6 @@ export const INSTALL_TYPE = {
 }
 
 export const KAFKA_CONFIG_TYPE = {
-  BIND: 1,
   INSTALL: 2,
   INSTALL_DIR_DEFAULT: '/portal/tools/debezium/'
 }
