@@ -1154,7 +1154,7 @@ const saveCluster = async (record: any) => {
       }) .finally(() => {
         resolve(editFlag.CmPort)
       })
-      checkCmPort(tempEditCluster.cmPort)
+      checkCmPort(tempEditCluster.cmPort, record.order)
     } else {
       editFlag.CmPort = true
       resolve(editFlag.CmPort)
@@ -1180,7 +1180,8 @@ const saveCluster = async (record: any) => {
     if (data.enableCmTool) {
       if (editFlag.hostIp && editFlag.dataPath && editFlag.cmDataPath && editFlag.CMMaster && editFlag.CmPort) {
         data.clusterNodes.forEach((item) => {
-          if (item.order !== record.order) {
+          //a record without hostId should not be checked
+          if (item.order !== record.order && item.hostId) {
             let tempPort = tempEditCluster.cmPort
             checkPortExist(item.hostId, tempPort, data.clusterId).then((res) => {
               if (res.data !== "NO_USED") {
