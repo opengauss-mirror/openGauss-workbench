@@ -265,7 +265,15 @@
             "5q0toolspa22": "Boolean (true false)",
             "5q0toolspa25": "please select",
             "5q0toolspa26": "Has Been Modified ",
-            "5q0toolspa27": " line"
+            "5q0toolspa27": " line",
+            "5q0toolspa29": "please enter the parameter name",
+            "5q0toolspa30": "the parameter name already exists",
+            "5q0toolspa31": "please enter the parameter value",
+            "5q0toolspa32": "please enter a valid number",
+            "5q0toolspa33": "please enter true or false",
+            "5q0toolspa34": "please enter a string separated by comma",
+            "5q0toolspa35": "please select parameter type first",
+            "5q0toolspa36": "please select parameter type"
         },
         "ParamsConfig": {
             "5q0aazspots0": "Default parameter configuration",

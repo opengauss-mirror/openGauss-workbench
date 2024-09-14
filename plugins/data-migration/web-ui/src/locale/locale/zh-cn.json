@@ -290,7 +290,15 @@
             "5q0toolspa25": "请选择",
             "5q0toolspa26": "已修改参数配置 ",
             "5q0toolspa27": " 条",
-            "5q0toolspa28": " 确认删除此参数？"
+            "5q0toolspa28": " 确认删除此参数？",
+            "5q0toolspa29": " 请输入参数名称",
+            "5q0toolspa30": " 该参数名称已经存在",
+            "5q0toolspa31": "请输入参数值",
+            "5q0toolspa32": "请输入合法的数字",
+            "5q0toolspa33": "请输入true或false",
+            "5q0toolspa34": "请输入用逗号分隔的字符串",
+            "5q0toolspa35": "请先选择参数类型",
+            "5q0toolspa36": "请选择参数类型"
         }
     },
     "task": {
