@@ -91,3 +91,7 @@ export function removeToolsParams (toolsParmaId) {
 export function saveToolsParams (globalToolsParam) {
   return axios.post('/plugins/data-migration/toolsParam/save', globalToolsParam)
 }
+
+export function hasParamKey (paramKey,configId,portalHostID) {
+  return axios.get(`/plugins/data-migration/toolsParam/hasParamKey/?paramKey=${paramKey}&configId=${configId}&portalHostID=${portalHostID}`)
+}
