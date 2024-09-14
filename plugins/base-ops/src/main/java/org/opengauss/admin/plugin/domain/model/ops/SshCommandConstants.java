@@ -82,6 +82,10 @@ public interface SshCommandConstants {
      */
     String BASE_DEPENDENCY = "yum list installed | egrep 'coreutils|procps-ng|openssh-clients|unzip|lsof|grep|tar'";
     /**
+     * base dependencies
+     */
+    String OPENEULER_BASE_DEPENDENCY = "yum list installed | egrep 'coreutils|procps-ng|openssh|unzip|lsof|grep|tar'";
+    /**
      * monitor dependencies
      */
     String MONITOR_DEPENDENCY = "yum list installed | egrep 'coreutils|procps-ng|grep'";

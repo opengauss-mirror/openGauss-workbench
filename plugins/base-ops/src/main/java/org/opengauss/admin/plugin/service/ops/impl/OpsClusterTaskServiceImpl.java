@@ -215,11 +215,6 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
                         result.put(taskId, "cluster install task is running, cannot be deleted");
                         return;
                     }
-                    if (Objects.equals(task.getStatus(), OpsClusterTaskStatusEnum.SUCCESS)) {
-                        log.warn("cluster install task has been completed, cannot be deleted:{}", taskId);
-                        result.put(taskId, "cluster install task has been completed, cannot be deleted");
-                        return;
-                    }
                     opsClusterLogService.deleteOperateLogByClusterId(taskId);
                     opsClusterTaskNodeService.removeByClusterId(taskId);
                     removeById(taskId);

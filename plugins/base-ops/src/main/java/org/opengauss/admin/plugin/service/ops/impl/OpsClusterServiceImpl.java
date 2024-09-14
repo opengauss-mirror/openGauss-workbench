@@ -48,7 +48,6 @@ import org.opengauss.admin.plugin.domain.model.ops.*;
 import org.opengauss.admin.plugin.domain.model.ops.cache.SSHChannelManager;
 import org.opengauss.admin.plugin.domain.model.ops.cache.TaskManager;
 import org.opengauss.admin.plugin.domain.model.ops.cache.WsConnectorManager;
-import org.opengauss.admin.plugin.domain.model.ops.env.EnvProperty;
 import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;
 import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
 import org.opengauss.admin.plugin.domain.model.ops.node.LiteInstallNodeConfig;
@@ -62,7 +61,6 @@ import org.opengauss.admin.plugin.service.ops.IOpsCheckService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
 import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerService;
-import org.opengauss.admin.plugin.service.ops.impl.provider.EnterpriseOpsProvider;
 import org.opengauss.admin.plugin.utils.DBUtil;
 import org.opengauss.admin.plugin.utils.DownloadUtil;
 import org.opengauss.admin.plugin.utils.JschUtil;
@@ -101,7 +99,6 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -126,7 +123,8 @@ import static org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum.*;
  * @date 2022/8/6 17:38
  **/
 @Service
-public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClusterEntity> implements IOpsClusterService {
+public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClusterEntity>
+        implements IOpsClusterService {
     private static final List<String> MONITOR_DEPENDENCY_LIST = List.of("procps-ng", "grep", "coreutils");
     private static final Logger log = LoggerFactory.getLogger(OpsClusterServiceImpl.class);
 
@@ -182,8 +180,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     private WsConnectorManager wsConnectorManager;
     @Autowired
     private ClusterOpsProviderManager clusterOpsProviderManager;
-    @Autowired
-    private EnterpriseOpsProvider enterpriseOpsProvider;
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private SysSettingFacade sysSettingFacade;
@@ -258,7 +254,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             throw new OpsException("User root was not found");
         }
 
-        if (StrUtil.isEmpty(rootUserEntity.getPassword()) && StrUtil.isEmpty(rootPassword)){
+        if (StrUtil.isEmpty(rootUserEntity.getPassword()) && StrUtil.isEmpty(rootPassword)) {
             throw new OpsException("root password cannot be empty");
         }
 
@@ -267,7 +263,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         }
 
         Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root", encryptionUtils.decrypt(rootPassword)).orElseThrow(() -> new OpsException("with the host[" + hostEntity.getPublicIp() + "]Failed to establish session"));
-        String checkOsRes = upgradeCheckOs(rootSession,hostUserEntity.getUsername());
+        String checkOsRes = upgradeCheckOs(rootSession, hostUserEntity.getUsername());
         String diskInfo = getDiskInfo(rootSession);
 
         UpgradeOsCheckVO upgradeOsCheckVO = new UpgradeOsCheckVO();
@@ -293,7 +289,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     private String upgradeCheckOs(Session session, String installUsername) {
-        String command = "cd /root/gauss_om/"+installUsername+"/script/ && ./gs_checkos -i A";
+        String command = "cd /root/gauss_om/" + installUsername + "/script/ && ./gs_checkos -i A";
         try {
             JschResult jschResult = jschUtil.executeCommand(command, session);
             if (0 != jschResult.getExitCode()) {
@@ -473,7 +469,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             throw new OpsException("User root was not found");
         }
 
-        if (StrUtil.isEmpty(rootUserEntity.getPassword()) && StrUtil.isEmpty(upgradeBody.getHostRootPassword())){
+        if (StrUtil.isEmpty(rootUserEntity.getPassword()) && StrUtil.isEmpty(upgradeBody.getHostRootPassword())) {
             throw new OpsException("root password cannot be empty");
         }
 
@@ -539,7 +535,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             throw new OpsException("User root was not found");
         }
 
-        if (StrUtil.isEmpty(rootUserEntity.getPassword()) && StrUtil.isEmpty(upgradeBody.getHostRootPassword())){
+        if (StrUtil.isEmpty(rootUserEntity.getPassword()) && StrUtil.isEmpty(upgradeBody.getHostRootPassword())) {
             throw new OpsException("root password cannot be empty");
         }
 
@@ -547,12 +543,15 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             upgradeBody.setHostRootPassword(rootUserEntity.getPassword());
         }
 
-        Session ommSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), installUserEntity.getUsername(), encryptionUtils.decrypt(installUserEntity.getPassword())).orElseThrow(() -> new OpsException("Install user connection failed"));
+        Session ommSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(),
+                        installUserEntity.getUsername(), encryptionUtils.decrypt(installUserEntity.getPassword()))
+                .orElseThrow(() -> new OpsException("Install user connection failed"));
 
         RequestAttributes context = RequestContextHolder.currentRequestAttributes();
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             RequestContextHolder.setRequestAttributes(context);
-            doUpgradeCommit(ommSession, wsSession, clusterEntity.getEnvPath(), clusterEntity.getXmlConfigPath(),clusterEntity.getClusterId(),upgradeBody.getVersionNum());
+            doUpgradeCommit(ommSession, wsSession, clusterEntity.getEnvPath(), clusterEntity.getXmlConfigPath(),
+                    clusterEntity.getClusterId(), upgradeBody.getVersionNum());
 
             if (Objects.nonNull(ommSession) && ommSession.isConnected()) {
                 ommSession.disconnect();
@@ -614,7 +613,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             throw new OpsException("User root was not found");
         }
 
-        if (StrUtil.isEmpty(rootUserEntity.getPassword()) && StrUtil.isEmpty(upgradeBody.getHostRootPassword())){
+        if (StrUtil.isEmpty(rootUserEntity.getPassword()) && StrUtil.isEmpty(upgradeBody.getHostRootPassword())) {
             throw new OpsException("root password cannot be empty");
         }
 
@@ -627,7 +626,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         RequestAttributes context = RequestContextHolder.currentRequestAttributes();
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             RequestContextHolder.setRequestAttributes(context);
-            doUpgradeRollback(ommSession, wsSession,clusterEntity.getEnvPath(), clusterEntity.getXmlConfigPath());
+            doUpgradeRollback(ommSession, wsSession, clusterEntity.getEnvPath(), clusterEntity.getXmlConfigPath());
 
             if (Objects.nonNull(ommSession) && ommSession.isConnected()) {
                 ommSession.disconnect();
@@ -1124,7 +1123,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private List<SlowSqlVO> querySlowSql(Connection connection, String start, String end) {
         List<SlowSqlVO> res = new ArrayList<>();
-        String sql = "select * from DBE_PERF.get_global_full_sql_by_timestamp('"+start+"', '"+end+"')";
+        String sql = "select * from DBE_PERF.get_global_full_sql_by_timestamp('" + start + "', '" + end + "')";
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -1216,30 +1215,32 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     private void constructUninstallContext(List<OpsClusterNodeEntity> opsClusterNodeEntityList,
-        OpsClusterEntity clusterEntity, UnInstallBody unInstallBody, UnInstallContext unInstallContext) {
+                                           OpsClusterEntity clusterEntity, UnInstallBody unInstallBody,
+                                           UnInstallContext unInstallContext) {
         try {
             List<String> hostIdList = opsClusterNodeEntityList.stream()
-                .map(OpsClusterNodeEntity::getHostId).collect(Collectors.toList());
+                    .map(OpsClusterNodeEntity::getHostId).collect(Collectors.toList());
             if (CollUtil.isEmpty(hostIdList)) {
                 throw new OpsException("Node host configuration information cannot be empty");
             }
             List<OpsHostEntity> opsHostEntities = hostFacade.listByIds(hostIdList);
             List<OpsHostUserEntity> hostUserEntities = hostUserFacade.listHostUserByHostIdList(hostIdList);
             List<HostInfoHolder> hostInfoHolderList = opsHostEntities.stream()
-                .map(host -> new HostInfoHolder(host, hostUserEntities.stream()
-                    .filter(hostUser -> hostUser.getHostId().equals(host.getHostId()))
-                    .collect(Collectors.toList()))).collect(Collectors.toList());
+                    .map(host -> new HostInfoHolder(host, hostUserEntities.stream()
+                            .filter(hostUser -> hostUser.getHostId().equals(host.getHostId()))
+                            .collect(Collectors.toList()))).collect(Collectors.toList());
             for (HostInfoHolder hostInfoHolder : hostInfoHolderList) {
                 List<OpsHostUserEntity> userEntities = hostInfoHolder.getHostUserEntities();
                 OpsHostUserEntity rootUserEntity = userEntities.stream()
-                    .filter(userEntity -> "root".equals(userEntity.getUsername())).findFirst()
-                    .orElseThrow(() -> new OpsException(
-                        "[" + hostInfoHolder.getHostEntity().getPublicIp() + "]root user information not found"));
+                        .filter(userEntity -> "root".equals(userEntity.getUsername())).findFirst()
+                        .orElseThrow(() -> new OpsException(
+                                "[" + hostInfoHolder.getHostEntity().getPublicIp()
+                                        + "]root user information not found"));
                 if (clusterEntity.getVersion() == OpenGaussVersionEnum.ENTERPRISE) {
                     if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
                         if (StrUtil.isNotEmpty(unInstallBody.getRootPasswords().get(rootUserEntity.getHostId()))) {
                             rootUserEntity.setPassword(
-                                unInstallBody.getRootPasswords().get(rootUserEntity.getHostId()));
+                                    unInstallBody.getRootPasswords().get(rootUserEntity.getHostId()));
                         } else {
                             throw new OpsException("root password not found");
                         }
@@ -1522,7 +1523,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             }
         });
         List<Future<?>> taskResult = new ArrayList<>();
-        for (OpsClusterVO cluster: enterpriseClusterList) {
+        for (OpsClusterVO cluster : enterpriseClusterList) {
             OpsClusterEntity clusterEntity = getById(cluster.getClusterId());
             if (Objects.isNull(clusterEntity)) {
                 throw new OpsException("Cluster information does not exist");
@@ -1554,7 +1555,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             });
             taskResult.add(future);
         }
-        for (Future<?> future: taskResult) {
+        for (Future<?> future : taskResult) {
             try {
                 future.get();
             } catch (InterruptedException | ExecutionException e) {
@@ -1577,31 +1578,31 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private List<List<String>> createEnglishHeaders() {
         return new ArrayList<>(Arrays.asList(
-            Arrays.asList("clusterName"),
-            Arrays.asList("privateIp"),
-            Arrays.asList("publicIp"),
-            Arrays.asList("installUsername"),
-            Arrays.asList("databaseUsername"),
-            Arrays.asList("databasePassword"),
-            Arrays.asList("port"),
-            Arrays.asList("envPath"),
-            Arrays.asList("importStatus"),
-            Arrays.asList("errorInfo")
+                Arrays.asList("clusterName"),
+                Arrays.asList("privateIp"),
+                Arrays.asList("publicIp"),
+                Arrays.asList("installUsername"),
+                Arrays.asList("databaseUsername"),
+                Arrays.asList("databasePassword"),
+                Arrays.asList("port"),
+                Arrays.asList("envPath"),
+                Arrays.asList("importStatus"),
+                Arrays.asList("errorInfo")
         ));
     }
 
     private List<List<String>> createChineseHeaders() {
         return new ArrayList<>(Arrays.asList(
-            Arrays.asList("集群名称"),
-            Arrays.asList("内网IP"),
-            Arrays.asList("外网IP"),
-            Arrays.asList("安装用户"),
-            Arrays.asList("数据库用户名"),
-            Arrays.asList("数据库密码"),
-            Arrays.asList("端口号"),
-            Arrays.asList("环境变量路径"),
-            Arrays.asList("执行状态"),
-            Arrays.asList("报错信息")
+                Arrays.asList("集群名称"),
+                Arrays.asList("内网IP"),
+                Arrays.asList("外网IP"),
+                Arrays.asList("安装用户"),
+                Arrays.asList("数据库用户名"),
+                Arrays.asList("数据库密码"),
+                Arrays.asList("端口号"),
+                Arrays.asList("环境变量路径"),
+                Arrays.asList("执行状态"),
+                Arrays.asList("报错信息")
         ));
     }
 
@@ -1612,14 +1613,14 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             out = response.getOutputStream();
             if (SysLanguage.ZH.getInfo().equals(currentLocale)) {
                 EasyExcel.write(out, OpsImportEntity.class)
-                    .head(createChineseHeaders())
-                    .sheet("用户信息")
-                    .doWrite(usersList);
+                        .head(createChineseHeaders())
+                        .sheet("用户信息")
+                        .doWrite(usersList);
             } else {
                 EasyExcel.write(out, OpsImportEntity.class)
-                    .head(createEnglishHeaders())
-                    .sheet("userInfo")
-                    .doWrite(usersList);
+                        .head(createEnglishHeaders())
+                        .sheet("userInfo")
+                        .doWrite(usersList);
             }
         } catch (IOException e) {
             throw new OpsException("download fail!");
@@ -1650,8 +1651,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
         List<OpsImportEntity> usersList = new ArrayList<>();
         OpsImportEntity opsImportEntity = new OpsImportEntity("1", "ip1,ip2", "ip1,ip2",
-            "omm", "gaussdb", "12345", 5432,
-            "/home/omm/cluster_2024.bashrc", null, null);
+                "omm", "gaussdb", "12345", 5432,
+                "/home/omm/cluster_2024.bashrc", null, null);
         usersList.add(opsImportEntity);
         writeZhOrEnInfo(response, currentLocale, usersList);
     }
@@ -1675,7 +1676,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     private String getOpenGaussVersion(Session session,
-    List<String> rootCommandList, OpsImportEntity opsImportEntity) {
+                                       List<String> rootCommandList, OpsImportEntity opsImportEntity) {
         try {
             try {
                 jschUtil.executeCommand(rootCommandList.get(0), session);
@@ -1779,9 +1780,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 String selectLocal = MessageFormat.format(CHANGE_SUB_USER,
                         opsParseExcelEntity.getOpsImportEntity().getInstallUsername(),
                         MessageFormat.format(THREE_IN_ONE, "source "
-                        + opsParseExcelEntity.getOpsImportEntity().getEnvPath(),
-                        ";gs_ctl query -D " + resultList.get(2)
-                        + "|grep local_role|awk '\\''{print $3}'\\''|head -n 1", ""));
+                                        + opsParseExcelEntity.getOpsImportEntity().getEnvPath(),
+                                ";gs_ctl query -D " + resultList.get(2)
+                                        + "|grep local_role|awk '\\''{print $3}'\\''|head -n 1", ""));
                 localRole = jschUtil.executeCommand(selectLocal, opsParseExcelEntity.getSession()).getResult();
             } catch (OpsException | IOException | InterruptedException e) {
                 markErrorInfo(opsParseExcelEntity.getOpsImportEntity());
@@ -1797,16 +1798,16 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     private void packingClusterInfo(List<String> resultList, OpsParseExcelEntity opsParseExcelEntity) {
         opsClusterEntity.setClusterId(opsParseExcelEntity.getOpsImportEntity().getClusterName());
         opsClusterEntity.setVersion(opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)
-            ? ENTERPRISE : opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT) ? LITE : MINIMAL_LIST);
+                ? ENTERPRISE : opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT) ? LITE : MINIMAL_LIST);
         opsClusterEntity.setVersionNum(opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)
-            | opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT) ? resultList.get(2) : resultList.get(1));
+                | opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT) ? resultList.get(2) : resultList.get(1));
         opsClusterEntity.setDatabasePassword(encryptionUtils
-            .encrypt(opsParseExcelEntity.getOpsImportEntity().getDatabasePassword()));
+                .encrypt(opsParseExcelEntity.getOpsImportEntity().getDatabasePassword()));
         opsClusterEntity.setDatabaseUsername(opsParseExcelEntity.getOpsImportEntity().getDatabaseUsername());
         opsClusterEntity.setPort(opsParseExcelEntity.getOpsImportEntity().getPort());
         opsClusterEntity.setEnvPath(opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)
-            | opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT)
-            ? opsParseExcelEntity.getOpsImportEntity().getEnvPath() : "~/.bashrc");
+                | opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT)
+                ? opsParseExcelEntity.getOpsImportEntity().getEnvPath() : "~/.bashrc");
         opsClusterEntity.setInstallPath(resultList.get(0));
         OpsClusterNodeEntity opsClusterNodeEntity = new OpsClusterNodeEntity();
         opsClusterNodeEntity.setClusterNodeId(StrUtil.uuid());
@@ -1822,8 +1823,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         opsClusterNodeEntity.setInstallUserId(opsParseExcelEntity.getHostAndUserId().getHostUserId() + "");
         opsClusterNodeEntity.setInstallPath(resultList.get(0));
         opsClusterNodeEntity.setDataPath(opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)
-            | opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT)
-            ? resultList.get(1) : resultList.get(0) + "/data");
+                | opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT)
+                ? resultList.get(1) : resultList.get(0) + "/data");
         opsClusterNodeEntity.setClusterId(opsParseExcelEntity.getOpsImportEntity().getClusterName());
         opsClusterNodeEntityList.add(opsClusterNodeEntity);
     }
@@ -1837,28 +1838,28 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private void selectClusterInfo(OpsParseExcelEntity opsParseExcelEntity) {
         String liteAndMiniGAUSSHOME = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP,
-            "GAUSSHOME=", opsParseExcelEntity.getOpsImportEntity().getEnvPath()), "", RESULT_BY_SPLIT_EQUAL);
+                "GAUSSHOME=", opsParseExcelEntity.getOpsImportEntity().getEnvPath()), "", RESULT_BY_SPLIT_EQUAL);
         String versionNum = MessageFormat.format(THREE_IN_ONE, "source "
-            + opsParseExcelEntity.getOpsImportEntity().getEnvPath(),
-            ";gsql -V|awk '\\''{print $3}'\\''", "");
+                        + opsParseExcelEntity.getOpsImportEntity().getEnvPath(),
+                ";gsql -V|awk '\\''{print $3}'\\''", "");
         String command = null;
         if (opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)) {
             String enterGAUSSHOME = String.format("grep GAUSSHOME= %s%s",
-                opsParseExcelEntity.getOpsImportEntity().getEnvPath(), RESULT_BY_SPLIT_EQUAL);
+                    opsParseExcelEntity.getOpsImportEntity().getEnvPath(), RESULT_BY_SPLIT_EQUAL);
             String enterPGDATA = String.format("grep %s %s%s", "PGDATA=",
-                opsParseExcelEntity.getOpsImportEntity().getEnvPath(), RESULT_BY_SPLIT_EQUAL);
+                    opsParseExcelEntity.getOpsImportEntity().getEnvPath(), RESULT_BY_SPLIT_EQUAL);
             String enterJudgeMasterOrSlave = String.format("source %s;gs_om -t status --detail|grep %s|"
-                + "awk '\\''{print $8}'\\''", opsParseExcelEntity.getOpsImportEntity().getEnvPath(),
-                opsParseExcelEntity.getPublicIp());
+                            + "awk '\\''{print $8}'\\''", opsParseExcelEntity.getOpsImportEntity().getEnvPath(),
+                    opsParseExcelEntity.getPublicIp());
             command = MessageFormat.format(CHANGE_SUB_USER, opsParseExcelEntity.getOpsImportEntity()
-                .getInstallUsername(), enterGAUSSHOME + ";" + enterPGDATA
-                + ";" + versionNum + ";" + enterJudgeMasterOrSlave);
+                    .getInstallUsername(), enterGAUSSHOME + ";" + enterPGDATA
+                    + ";" + versionNum + ";" + enterJudgeMasterOrSlave);
         } else if (opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT)) {
             String liteGAUSSDATA = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP,
-                "GAUSSDATA=", opsParseExcelEntity.getOpsImportEntity().getEnvPath()), "", RESULT_BY_SPLIT_EQUAL);
+                    "GAUSSDATA=", opsParseExcelEntity.getOpsImportEntity().getEnvPath()), "", RESULT_BY_SPLIT_EQUAL);
             command = MessageFormat.format(CHANGE_SUB_USER,
-                opsParseExcelEntity.getOpsImportEntity().getInstallUsername(),
-                liteAndMiniGAUSSHOME + ";" + liteGAUSSDATA + ";" + versionNum);
+                    opsParseExcelEntity.getOpsImportEntity().getInstallUsername(),
+                    liteAndMiniGAUSSHOME + ";" + liteGAUSSDATA + ";" + versionNum);
         } else if (opsParseExcelEntity.getVersionType().equals(MINI_CONSTANT)) {
             command = getMiniCommand(opsParseExcelEntity.getOpsImportEntity().getInstallUsername());
         } else {
@@ -1888,7 +1889,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             try {
                 String host = hosts[j];
                 List<String> clusterId = opsImportSshMapper.checkPublicIpAndPort(host,
-                    opsImportEntity.getPort() + "");
+                        opsImportEntity.getPort() + "");
                 if (clusterId.get(0) != null) {
                     flag = true;
                     opsImportEntity.setImportStatus("fail");
@@ -1912,12 +1913,12 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     private Session createSession(String hostIp, List<OpsImportSshEntity> rootPortAndPasswordlist,
-    OpsImportEntity opsImportEntity) {
+                                  OpsImportEntity opsImportEntity) {
         Session session = null;
         try {
             session = jschUtil.getSession(hostIp, rootPortAndPasswordlist.get(0).getPort(),
-                "root", encryptionUtils.decrypt(rootPortAndPasswordlist.get(0).getPassword()))
-                .orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
+                            "root", encryptionUtils.decrypt(rootPortAndPasswordlist.get(0).getPassword()))
+                    .orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
         } catch (OpsException opsException) {
             log.error(opsException + hostIp);
             markErrorInfo(opsImportEntity);
@@ -1928,13 +1929,13 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private String judgeVersionType(Session session, OpsImportEntity opsImportEntity) {
         String omCommand = MessageFormat.format(CHANGE_SUB_USER, opsImportEntity.getInstallUsername(),
-            String.format("source %s;gs_om -t view&&[ -f %s ]",
-            opsImportEntity.getEnvPath(), opsImportEntity.getEnvPath()));
+                String.format("source %s;gs_om -t view&&[ -f %s ]",
+                        opsImportEntity.getEnvPath(), opsImportEntity.getEnvPath()));
         String liteCommand = MessageFormat.format(CHANGE_SUB_USER, opsImportEntity.getInstallUsername(),
-            String.format("source %s;gsql -V|grep -i \"openGauss-lite\"&&[ -f %s ]",
-            opsImportEntity.getEnvPath(), opsImportEntity.getEnvPath()));
+                String.format("source %s;gsql -V|grep -i \"openGauss-lite\"&&[ -f %s ]",
+                        opsImportEntity.getEnvPath(), opsImportEntity.getEnvPath()));
         String miniCommand = MessageFormat.format(CHANGE_SUB_USER, opsImportEntity.getInstallUsername(),
-            String.format("gsql -V&&[ -f %s ]", opsImportEntity.getEnvPath()));
+                String.format("gsql -V&&[ -f %s ]", opsImportEntity.getEnvPath()));
         List<String> rootCommandList = new ArrayList<>();
         rootCommandList.add(omCommand);
         rootCommandList.add(liteCommand);
@@ -2015,16 +2016,16 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     @Override
     public void downloadErrorFile(HttpServletResponse response, List<OpsImportEntity> usersList, String currentLocale) {
-            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            response.setCharacterEncoding("utf-8");
-            String fileName = null;
-            try {
-                fileName = URLEncoder.encode("模板", "UTF-8").replaceAll("\\+", "%20");
-            } catch (UnsupportedEncodingException e) {
-                log.error("UnsupportedEncodingException");
-            }
-            response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
-            writeZhOrEnInfo(response, currentLocale, usersList);
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setCharacterEncoding("utf-8");
+        String fileName = null;
+        try {
+            fileName = URLEncoder.encode("模板", "UTF-8").replaceAll("\\+", "%20");
+        } catch (UnsupportedEncodingException e) {
+            log.error("UnsupportedEncodingException");
+        }
+        response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+        writeZhOrEnInfo(response, currentLocale, usersList);
     }
 
     @Override
@@ -2275,7 +2276,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         WsSession wsSession = wsConnectorManager.getSession(businessId).orElseThrow(() ->
                 new OpsException("response session does not exist"));
         Session ommSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(),
-                hostUserEntity.getUsername(), encryptionUtils.decrypt(hostUserEntity.getPassword()))
+                        hostUserEntity.getUsername(), encryptionUtils.decrypt(hostUserEntity.getPassword()))
                 .orElseThrow(() -> new OpsException("Install user connection failed"));
         String dataPath = getDataPath(role, nodeEntity, clusterEntity);
         Future<?> future = getMonitorFuture(hostEntity, clusterEntity, wsSession, ommSession, dataPath);
@@ -2284,13 +2285,13 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     private Future<?> getMonitorFuture(OpsHostEntity hostEntity, OpsClusterEntity clusterEntity, WsSession wsSession,
-                                    Session ommSession, String dataPath) {
+                                       Session ommSession, String dataPath) {
         return threadPoolTaskExecutor.submit(() -> {
             Connection connection = null;
             try {
                 connection = DBUtil.getSession(hostEntity.getPublicIp(), clusterEntity.getPort(),
-                        clusterEntity.getDatabaseUsername(),
-                        encryptionUtils.decrypt(clusterEntity.getDatabasePassword()))
+                                clusterEntity.getDatabaseUsername(),
+                                encryptionUtils.decrypt(clusterEntity.getDatabasePassword()))
                         .orElseThrow(() -> new OpsException("Unable to connect to the database"));
                 doMonitor(wsSession, ommSession, clusterEntity.getVersion(), connection, dataPath,
                         clusterEntity.getEnvPath());
@@ -2593,6 +2594,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     @Resource
     OpsClusterEnvService opsClusterEnvService;
+
     @Override
     public HostEnv env(String hostId, OpenGaussSupportOSEnum expectedOs, String rootPassword) {
         return opsClusterEnvService.env(hostId, expectedOs, rootPassword);
@@ -2621,8 +2623,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService.listClusterNodeByClusterId(clusterId);
         if (CollUtil.isNotEmpty(opsClusterNodeEntities)) {
             opsClusterNodeService.removeBatchByIds(opsClusterNodeEntities.stream()
-                .map(OpsClusterNodeEntity::getClusterNodeId)
-                .collect(Collectors.toSet()));
+                    .map(OpsClusterNodeEntity::getClusterNodeId)
+                    .collect(Collectors.toSet()));
         }
 
         removeById(clusterId);
@@ -2834,123 +2836,22 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         AtomicBoolean hasError = new AtomicBoolean(false);
         while (wsSession.getSession().isOpen() && !hasError.get()) {
             NodeMonitorVO nodeMonitorVO = new NodeMonitorVO();
-            CountDownLatch countDownLatch = new CountDownLatch(11);
+            CountDownLatch countDownLatch = new CountDownLatch(1);
             threadPoolTaskExecutor.submit(() -> {
                 try {
                     nodeMonitorVO.setTime(System.currentTimeMillis());
-                } catch (Exception e) {
-                    log.error("time error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
                     nodeMonitorVO.setCpu(cpu(ommSession));
-                } catch (Exception e) {
-                    log.error("cpu monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
                     nodeMonitorVO.setMemory(memory(ommSession));
-                } catch (Exception e) {
-                    log.error("memory monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
                     nodeMonitorVO.setNet(net(ommSession));
-                } catch (Exception e) {
-                    log.error("net monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
                     nodeMonitorVO.setState(state(ommSession, version, dataPath, envPath));
-                } catch (Exception e) {
-                    log.error("state monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
                     nodeMonitorVO.setLock(lock(connection));
-                } catch (Exception e) {
-                    log.error("lock monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
                     nodeMonitorVO.setSession(session(connection));
-                } catch (Exception e) {
-                    log.error("session monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
                     nodeMonitorVO.setConnectNum(connectNum(connection));
-                } catch (Exception e) {
-                    log.error("connectNum monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
                     nodeMonitorVO.setSessionMemoryTop10(sessionMemoryTop10(connection));
-                } catch (Exception e) {
-                    log.error("sessionMemoryTop10 monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
                     nodeMonitorVO.setKernel(kernel(ommSession));
-                } catch (Exception e) {
-                    log.error("kernel monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
                     nodeMonitorVO.setMemorySize(memorySize(ommSession));
                 } catch (Exception e) {
-                    log.error("memorySize monitor error : {}", e.getMessage());
+                    log.error("cpu monitor error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
@@ -2961,14 +2862,13 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 countDownLatch.await();
             } catch (InterruptedException e) {
                 log.error("waiting for thread to be interrupted {}", e.getMessage());
-                throw new OpsException("monitor error");
             }
 
             wsUtil.sendText(wsSession, JSON.toJSONString(nodeMonitorVO));
             try {
                 TimeUnit.SECONDS.sleep(1L);
             } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
+                log.error("waiting for monitor thread to be interrupted {}", e.getMessage());
             }
         }
 
@@ -3339,7 +3239,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(), encryptionUtils.decrypt(userEntity.getPassword())).orElseThrow(() -> new OpsException("Failed to establish session with host"));
 
         boolean needRestart = false;
-        for (GucSettingVO settingVO: gucSettingDto.getSettings()) {
+        for (GucSettingVO settingVO : gucSettingDto.getSettings()) {
             if (!settingVO.getHasChanged()) {
                 continue;
             }

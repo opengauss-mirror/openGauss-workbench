@@ -23,10 +23,12 @@
 
 package org.opengauss.admin.plugin.domain.entity.ops;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.opengauss.admin.plugin.mapper.handler.LocalDateTimeTypeHandler;
 import org.opengauss.admin.plugin.domain.BaseEntity;
 import org.opengauss.admin.plugin.enums.ops.ClusterOperateTypeEnum;
 
@@ -57,6 +59,7 @@ public class OpsClusterOperateLog extends BaseEntity {
      */
     private String operateLog;
 
+    @TableField(typeHandler = LocalDateTimeTypeHandler.class)
     private LocalDateTime operateTime;
 
 }
