@@ -52,6 +52,7 @@ public class PluginExtensionInfoConfig implements PluginExtensionInfo {
         map.put("theme", "white");
         map.put("pluginType", 1);
         map.put("isNeedConfigured", 0);
+        map.put("descriptionEn", "Data Studio Plugin");
         return map;
     }
 }

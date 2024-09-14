@@ -226,7 +226,7 @@
 						<bootstrapClass>com.nctigba.observability.sql.ObservabilityPluginApplication</bootstrapClass>
 						<version>${project.version}</version>
 						<provider>ncti-gba</provider>
-						<description>Intelligent OPS</description>
+						<description>智能诊断插件</description>
 					</pluginInfo>
 					<loadMainResourcePattern>
 						<includes>

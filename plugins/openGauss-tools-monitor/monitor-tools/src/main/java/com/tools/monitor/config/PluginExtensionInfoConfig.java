@@ -47,6 +47,11 @@ public class PluginExtensionInfoConfig implements PluginExtensionInfo {
                         + "DEtMS4yODEsMFYxMC40QS42MTQuNjE0LDAsMCwxLDcuODkyLDkuODJaTTkuMDg2LDguMTcxYS41ODYuNTg2LDAsMSwx"
                         + "LDAsMS4xNjdINy40MjVhLjU4Ni41ODYsMCwxLDEsMC0xLjE2N1oiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEzNy40MTg"
                         + "gODQpIiBmaWxsPSIjMTkxOTE5IiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz4NCiAgPC9nPg0KPC9zdmc+DQo=");
+        map.put("descriptionEn", "Database monitoring plugin generation tool: "
+                + "Provides a one-click conversion of the openGauss customized monitoring SQL "
+                + "into plugins for the Prometheus, Zabbix, and Nagios monitoring platforms, "
+                + "covering common indicators such as connection number, dynamic memory, shared memory, "
+                + "TPS, QPS, and long connection, enabling quick deployment of openGauss monitoring.");
         return map;
     }
 }

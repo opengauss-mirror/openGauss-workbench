@@ -244,7 +244,7 @@
                         <bootstrapClass>com.nctigba.alert.monitor.ObservabilityPluginApplication</bootstrapClass>
                         <version>${project.version}</version>
                         <provider>ncti-gba</provider>
-                        <description>Intelligent OPS</description>
+                        <description>告警监控插件</description>
                     </pluginInfo>
                     <loadMainResourcePattern>
                         <includes>

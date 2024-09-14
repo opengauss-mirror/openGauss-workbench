@@ -325,7 +325,7 @@
                         </bootstrapClass>
                         <version>${project.version}</version>
                         <provider>ncti-gba</provider>
-                        <description>Intelligent OPS</description>
+                        <description>实例监控插件</description>
                     </pluginInfo>
                     <loadMainResourcePattern>
                         <includes>

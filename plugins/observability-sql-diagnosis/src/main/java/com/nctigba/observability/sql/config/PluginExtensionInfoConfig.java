@@ -79,6 +79,7 @@ public class PluginExtensionInfoConfig implements PluginExtensionInfo {
         map.put("isNeedConfigured", 0);
         map.put("configAttrs",
             "[{\"attrCode\":\"esHost\",\"attrLabel\":\"ES服务器\"},{\"attrCode\":\"esPort\",\"attrLabel\":\"端口\"}]");
+        map.put("descriptionEn", "Intelligent Diagnosis Plugin");
         return map;
     }
 }

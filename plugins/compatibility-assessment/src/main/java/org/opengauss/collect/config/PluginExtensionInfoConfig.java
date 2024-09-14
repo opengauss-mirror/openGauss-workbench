@@ -75,6 +75,8 @@ public class PluginExtensionInfoConfig implements PluginExtensionInfo {
                 + "DF6Ii8+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo"
                 + "8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+Cjwvc3Z"
                 + "nPg==");
+        map.put("descriptionEn", "The openGauss compatibility evaluation tool can obtain SQL statements "
+                + "for compatibility evaluation in various scenarios and output evaluation reports.");
         return map;
     }
 }
