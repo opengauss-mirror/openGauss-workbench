@@ -64,6 +64,8 @@ public class OpsClusterEnvService {
             "ncurses-devel", "glibc-devel", "patch", "readline-devel");
     private static final List<String> BASE_DEPENDENCY_LIST = List.of("coreutils", "procps-ng", "openssh-clients",
             "unzip", "lsof", "tar");
+    private static final List<String> OPENEULER_BASE_DEPENDENCY_LIST = List.of("coreutils", "procps-ng", "openssh",
+            "unzip", "lsof", "tar");
 
     @Resource
     private OpsHostRemoteService opsHostRemoteService;
@@ -128,50 +130,26 @@ public class OpsClusterEnvService {
 
     private SoftwareEnv softwareEnvDetect(Session session, OpenGaussSupportOSEnum expectedOs) {
         SoftwareEnv softwareEnv = new SoftwareEnv();
-
         List<EnvProperty> envProperties = new CopyOnWriteArrayList<>();
         softwareEnv.setEnvProperties(envProperties);
-
-        CountDownLatch countDownLatch = new CountDownLatch(4);
-
-        threadPoolTaskExecutor.submit(() -> {
-            // software
-            envProperties.add(dependencyPropertyDetect(session, expectedOs.getCpuArch()));
-            countDownLatch.countDown();
-        });
-
-        threadPoolTaskExecutor.submit(() -> {
-            // firewalld
-            envProperties.add(firewallPropertyDetect(session));
-            countDownLatch.countDown();
-        });
-
-        threadPoolTaskExecutor.submit(() -> {
-            // user
-            envProperties.add(installUserPropertyDetect(session));
-            countDownLatch.countDown();
-        });
-
-        threadPoolTaskExecutor.submit(() -> {
-            // other
-            envProperties.add(otherPropertyDetect(session, expectedOs.getCpuArch()));
-            countDownLatch.countDown();
-        });
-
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            log.error("waiting for thread to be interrupted", e);
-        }
-
+        envProperties.add(dependencyPropertyDetect(session, expectedOs.getCpuArch()));
+        envProperties.add(firewallPropertyDetect(session));
+        envProperties.add(installUserPropertyDetect(session));
+        envProperties.add(otherPropertyDetect(session, expectedOs));
         envProperties.sort(Comparator.comparingInt(EnvProperty::getSortNum));
-
         return softwareEnv;
     }
 
-    private EnvProperty otherPropertyDetect(Session session, String cpuArch) {
-        EnvProperty otherProperty = getEnvProperty(session, cpuArch, SshCommandConstants.BASE_DEPENDENCY,
-                BASE_DEPENDENCY_LIST);
+    private EnvProperty otherPropertyDetect(Session session, OpenGaussSupportOSEnum expectedOs) {
+        EnvProperty otherProperty;
+        String cpuArch = expectedOs.getCpuArch();
+        if (StrUtil.equals(expectedOs.getOsId(), OpenGaussSupportOSEnum.CENTOS_X86_64.getOsId())) {
+            otherProperty = getEnvProperty(session, cpuArch, SshCommandConstants.BASE_DEPENDENCY,
+                    BASE_DEPENDENCY_LIST);
+        } else {
+            otherProperty = getEnvProperty(session, cpuArch, SshCommandConstants.OPENEULER_BASE_DEPENDENCY,
+                    OPENEULER_BASE_DEPENDENCY_LIST);
+        }
         otherProperty.setName("other");
         otherProperty.setSortNum(4);
         return otherProperty;
@@ -214,7 +192,7 @@ public class OpsClusterEnvService {
     }
 
     private EnvProperty getEnvProperty(Session session, String cpuArch, String queryCommand,
-                                    List<String> dependencies) {
+                                       List<String> dependencies) {
         EnvProperty envProperty = new EnvProperty();
         List<String> notInstalledPackages = getMissingList(session, cpuArch, queryCommand, dependencies);
         if (CollectionUtils.isEmpty(notInstalledPackages)) {
@@ -230,14 +208,14 @@ public class OpsClusterEnvService {
     /**
      * get uninstalled dependencies
      *
-     * @param session session
-     * @param cpuArch session
+     * @param session      session
+     * @param cpuArch      session
      * @param queryCommand queryCommand
      * @param dependencies dependencies
      * @return uninstalled dependencies
      */
     public List<String> getMissingList(Session session, String cpuArch, String queryCommand,
-                                        List<String> dependencies) {
+                                       List<String> dependencies) {
         try {
             String queryResult = opsHostRemoteService.executeCommand(queryCommand, session, "check dependencies");
             List<String> dependencyPackages = dependencies.stream().map(
@@ -258,54 +236,13 @@ public class OpsClusterEnvService {
         HardwareEnv hardwareEnv = new HardwareEnv();
         List<EnvProperty> envProperties = new CopyOnWriteArrayList<>();
         hardwareEnv.setEnvProperties(envProperties);
-
-        CountDownLatch countDownLatch = new CountDownLatch(6);
-
-        threadPoolTaskExecutor.submit(() -> {
-            // os
-            envProperties.add(osPropertyDetect(session, expectedOs));
-            countDownLatch.countDown();
-        });
-
-
-        threadPoolTaskExecutor.submit(() -> {
-            // os version
-            envProperties.add(osVersionPropertyDetect(session));
-            countDownLatch.countDown();
-        });
-
-        threadPoolTaskExecutor.submit(() -> {
-            // memory
-            envProperties.add(freeMemoryPropertyDetect(session));
-            countDownLatch.countDown();
-        });
-
-        threadPoolTaskExecutor.submit(() -> {
-            // CPU Core Num
-            envProperties.add(cpuCoreNumPropertyDetect(session));
-            countDownLatch.countDown();
-        });
-
-        threadPoolTaskExecutor.submit(() -> {
-            // CPU
-            envProperties.add(cpuFrequencyPropertyDetect(session));
-            countDownLatch.countDown();
-        });
-
-        threadPoolTaskExecutor.submit(() -> {
-            // Disk
-            envProperties.add(freeHardDiskPropertyDetect(session));
-            countDownLatch.countDown();
-        });
-
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            log.error("waiting for thread to be interrupted", e);
-        }
-
+        envProperties.add(osPropertyDetect(session, expectedOs));
+        envProperties.add(osVersionPropertyDetect(session));
+        envProperties.add(freeMemoryPropertyDetect(session));
+        envProperties.add(cpuCoreNumPropertyDetect(session));
+        envProperties.add(cpuFrequencyPropertyDetect(session));
+        envProperties.add(freeHardDiskPropertyDetect(session));
         envProperties.sort(Comparator.comparingInt(EnvProperty::getSortNum));
-
         return hardwareEnv;
     }
 

@@ -24,10 +24,13 @@
 package org.opengauss.admin.plugin.config;
 
 import com.baomidou.mybatisplus.annotation.DbType;
+import com.baomidou.mybatisplus.autoconfigure.ConfigurationCustomizer;
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.BlockAttackInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import org.opengauss.admin.plugin.mapper.handler.LocalDateTimeTypeHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -50,6 +53,26 @@ public class MybatisPlusConfig {
         interceptor.addInnerInterceptor(optimisticLockerInnerInterceptor());
         interceptor.addInnerInterceptor(blockAttackInnerInterceptor());
         return interceptor;
+    }
+
+    /**
+     * 创建并返回一个 ConfigurationCustomizer 用于注册自定义类型处理器
+     *
+     * @return 配置定制器
+     */
+    @Bean
+    public ConfigurationCustomizer configurationCustomizer() {
+        return new ConfigurationCustomizer() {
+            /**
+             * 定制 MyBatis 的配置
+             *
+             * @param configuration MyBatis 的配置对象
+             */
+            @Override
+            public void customize(MybatisConfiguration configuration) {
+                configuration.getTypeHandlerRegistry().register(new LocalDateTimeTypeHandler());
+            }
+        };
     }
 
     /**

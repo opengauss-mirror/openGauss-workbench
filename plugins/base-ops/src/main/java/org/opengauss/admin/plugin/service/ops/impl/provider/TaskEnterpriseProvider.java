@@ -182,6 +182,8 @@ public class TaskEnterpriseProvider extends AbstractTaskProvider {
         ensureDirExist(rootSession, pkgPath, retBuffer);
         // ensure dir permission
         ensureLevel2DirPermission(rootSession, installUsername, pkgPath, retBuffer);
+        // ensure log dir permission
+        chmod(rootSession, preparePath(installContext.getEnterpriseInstallConfig().getLogPath()), retBuffer);
         ensureEnvPathPermission(rootSession, installContext.getEnvPath(), retBuffer);
 
         // scp
