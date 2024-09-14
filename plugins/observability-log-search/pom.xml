@@ -349,7 +349,7 @@
 						<bootstrapClass>com.nctigba.observability.log.ObservabilityPluginApplication</bootstrapClass>
 						<version>${project.version}</version>
 						<provider>ncti-gba</provider>
-						<description>Intelligent OPS</description>
+						<description>日志检索插件</description>
 					</pluginInfo>
 					<loadMainResourcePattern>
 						<includes>

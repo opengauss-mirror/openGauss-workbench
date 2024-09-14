@@ -75,6 +75,14 @@ public class PluginExtensionInfoConfig implements PluginExtensionInfo {
                 + "DF6Ii8+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo"
                 + "8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+CjxnPgo8L2c+Cjwvc3Z"
                 + "nPg==");
+        map.put("descriptionEn",
+                "The database intelligent parameter tuning tool mainly includes the following functions: "
+                        + "(1) load characteristics analysis, "
+                        + "(2) database schema extraction, "
+                        + "(3) load generation, "
+                        + "(4) offline tuning, "
+                        + "(5) online tuning, and "
+                        + "(6) online fine-tuning.");
         return map;
     }
 }
