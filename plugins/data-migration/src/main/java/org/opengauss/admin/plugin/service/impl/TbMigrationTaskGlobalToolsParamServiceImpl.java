@@ -21,6 +21,9 @@ import org.opengauss.admin.plugin.mapper.TbMigrationTaskGlobalToolsParamMapper;
 import org.opengauss.admin.plugin.service.TbMigrationTaskGlobalToolsParamService;
 import org.springframework.stereotype.Service;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
 /**
  * TbMigrationTaskGlobalToolsParamServiceImpl
  *
@@ -49,5 +52,18 @@ public class TbMigrationTaskGlobalToolsParamServiceImpl extends ServiceImpl<TbMi
         LambdaQueryWrapper<TbMigrationTaskGlobalToolsParam> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(TbMigrationTaskGlobalToolsParam::getPortalHostID, hostId);
         return remove(wrapper);
+    }
+
+    @Override
+    public boolean checkParamKeyExistence(
+            @NotBlank String paramKey, @NotNull Integer configId, @NotBlank String portalHostID) {
+        LambdaQueryWrapper<TbMigrationTaskGlobalToolsParam> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(TbMigrationTaskGlobalToolsParam::getParamKey, paramKey)
+                .eq(TbMigrationTaskGlobalToolsParam::getConfigId, configId)
+                .eq(TbMigrationTaskGlobalToolsParam::getPortalHostID, portalHostID)
+                .eq(TbMigrationTaskGlobalToolsParam::getDeleteFlag,
+                        TbMigrationTaskGlobalToolsParam.DeleteFlagEnum.USED.getDeleteFlag());
+
+        return getOne(wrapper) != null;
     }
 }

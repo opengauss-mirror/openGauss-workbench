@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -108,6 +109,20 @@ public class TaskToolsParamController {
     }
 
     /**
+     * has param key
+     *
+     * @param paramKey param key
+     * @param configId config id
+     * @param portalHostID portal host id
+     * @return AjaxResult
+     */
+    @GetMapping("/hasParamKey")
+    public AjaxResult hasParamKey(
+            @RequestParam String paramKey, @RequestParam Integer configId, @RequestParam String portalHostID) {
+        return AjaxResult.success(globalToolsParamService.checkParamKeyExistence(paramKey, configId, portalHostID));
+    }
+
+    /**
      * 保存参数 根据configID 和 paramkey 判断是否同一个参数 是则修改状态 修改值
      *
      * @param globalToolsParam globalToolsParam
@@ -123,6 +138,11 @@ public class TaskToolsParamController {
         if (Objects.isNull(globalToolsParam)) {
             return AjaxResult.success();
         }
+        if (globalToolsParamService.checkParamKeyExistence(
+                globalToolsParam.getParamKey(), globalToolsParam.getConfigId(), globalToolsParam.getPortalHostID())) {
+            return AjaxResult.error("A parameter with the same name exists.");
+        }
+
         LambdaQueryWrapper<TbMigrationTaskGlobalToolsParam> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(TbMigrationTaskGlobalToolsParam::getParamKey, globalToolsParam.getParamKey())
                 .eq(TbMigrationTaskGlobalToolsParam::getConfigId, globalToolsParam.getConfigId())
@@ -137,7 +157,7 @@ public class TaskToolsParamController {
         } else {
             toolsParam.setDeleteFlag(TbMigrationTaskGlobalToolsParam.DeleteFlagEnum.USED.getDeleteFlag());
             toolsParam.setParamValue(globalToolsParam.getParamValue());
-            toolsParam.setParamChangeValue(globalToolsParam.getParamChangeValue());
+            toolsParam.setParamChangeValue(globalToolsParam.getParamValue());
             toolsParam.setParamValueType(globalToolsParam.getParamValueType());
             toolsParam.setParamDesc(globalToolsParam.getParamDesc());
             return AjaxResult.success(globalToolsParamService.saveOrUpdate(toolsParam));
