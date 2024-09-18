@@ -164,7 +164,7 @@
     <a-tooltip
     :content-style="{ color: '#1d212a' }"
     background-color="#fff7e8"
-    :content="$t('install.Online.8mpn82ejri23')"
+    :content="$t('install.Online.8mpn82ejri15')"
     position="right"
   >
     <icon-question-circle-fill
