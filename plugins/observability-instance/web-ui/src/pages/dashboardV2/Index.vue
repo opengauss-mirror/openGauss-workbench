@@ -430,6 +430,16 @@ const checkAgentInstanceRel = () => {
       timer.value = setTimeout(() => {
         isShowMsg.value = false
       }, 5000)
+    } else if (res === 3) {
+      selectInstanceTip.value = t('instanceMonitor.selectInstanceInStopAgent')
+      isShowMsg.value = true
+      isShowWarn.value = false
+      isShowErr.value = true
+      isShowMsgClose.value = false
+      isShowMsgBtn.value = false
+      timer.value = setTimeout(() => {
+        isShowMsg.value = false
+      }, 5000)
     }
   })
 }

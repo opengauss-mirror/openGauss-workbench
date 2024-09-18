@@ -69,6 +69,7 @@ export default {
     selectInstanceWithoutAgent: 'If the collection agent is not installed, some instance monitoring data will be empty!',
     toInstall: 'Go to install',
     selectInstanceInErrAgent: 'The collection agent is experiencing an abnormal status; as a result, monitoring data for some instances will be missing.',
+    selectInstanceInStopAgent: 'The collection agent is stopped,You need to start the agent',
     asp: {
       sampleActiveSessionCount: 'Sample Active Session Count',
       aspAnalysis: 'ASP Analysis',

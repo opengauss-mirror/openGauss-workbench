@@ -157,6 +157,7 @@ export default {
     selectInstanceWithoutAgent: '未安装采集代理对实例进行指标采集，部分实例监控数据将为空！',
     toInstall: '去安装',
     selectInstanceInErrAgent: '采集代理状态异常，部分实例监控数据将为空',
+    selectInstanceInStopAgent: '实例对应的代理端处于停止状态，需要启动该代理端',
     asp: {
       sampleActiveSessionCount: '采样活跃会话数量',
       aspAnalysis: 'ASP分析',
