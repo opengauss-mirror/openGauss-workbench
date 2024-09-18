@@ -39,9 +39,9 @@ import com.nctigba.alert.monitor.model.entity.AlertShieldingDO;
 import com.nctigba.alert.monitor.model.query.AlertShieldingQuery;
 import com.nctigba.alert.monitor.service.AlertShieldingService;
 import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.system.service.ops.IOpsClusterService;
@@ -90,11 +90,12 @@ public class AlertShieldingServiceImpl extends ServiceImpl<AlertShieldingMapper,
             dtoPage.setRecords(new ArrayList<>());
             return dtoPage;
         }
+        List<ClusterNodeDTO> clusterNodes = getAllClusterNodes();
         List<AlertShieldingDTO> dtoRecords = new ArrayList<>();
         for (AlertShieldingDO record : records) {
             AlertShieldingDTO dto = new AlertShieldingDTO();
             BeanUtil.copyProperties(record, dto);
-            List<ClusterNodeDTO> nodeInfoList = getClusterNodesByIds(record.getClusterNodeIds());
+            List<ClusterNodeDTO> nodeInfoList = getClusterNodesByIds(record.getClusterNodeIds(), clusterNodes);
             dto.setClusterNodeList(nodeInfoList);
             dtoRecords.add(dto);
         }
@@ -102,32 +103,40 @@ public class AlertShieldingServiceImpl extends ServiceImpl<AlertShieldingMapper,
         return dtoPage;
     }
 
-    private List<ClusterNodeDTO> getClusterNodesByIds(String clusterNodeIds) {
+    private List<ClusterNodeDTO> getAllClusterNodes() {
+        List<OpsClusterVO> listCluster = clusterService.listCluster();
+        List<ClusterNodeDTO> list = new ArrayList<>();
+        for (OpsClusterVO clusterVo : listCluster) {
+            List<OpsClusterNodeEntity> nodes = clusterNodeService.listClusterNodeByClusterId(clusterVo.getClusterId());
+            for (OpsClusterNodeEntity node : nodes) {
+                OpsHostEntity host = hostFacade.getById(node.getHostId());
+                ClusterNodeDTO clusterNode = new ClusterNodeDTO();
+                clusterNode.setClusterNodeId(node.getClusterNodeId());
+                String clusterName = StrUtil.isNotBlank(
+                        clusterVo.getClusterName()) ? clusterVo.getClusterName() : clusterVo.getClusterId();
+                String nodeName = clusterName + "/" + host.getPublicIp() + ":"
+                        + host.getPort() + "(" + node.getClusterRole() + ")";
+                clusterNode.setNodeName(nodeName).setClusterId(node.getClusterId());
+                list.add(clusterNode);
+            }
+        }
+        return list;
+    }
+
+    private List<ClusterNodeDTO> getClusterNodesByIds(String clusterNodeIds, List<ClusterNodeDTO> clusterNodes) {
         if (StrUtil.isBlank(clusterNodeIds)) {
             return new ArrayList<>();
         }
         List<ClusterNodeDTO> list = new ArrayList<>();
         for (String nodeId : clusterNodeIds.split(CommonConstants.DELIMITER)) {
-            OpsClusterNodeEntity node = clusterNodeService.getById(nodeId);
-            if (node == null) {
-                continue;
-            }
             ClusterNodeDTO clusterNode = new ClusterNodeDTO();
             clusterNode.setClusterNodeId(nodeId);
-            OpsHostEntity host = hostFacade.getById(node.getHostId());
-            if (host == null) {
-                continue;
-            }
-            OpsClusterEntity cluster = clusterService.getById(node.getClusterId());
-            if (cluster == null) {
-                continue;
-            }
-            String clusterName = StrUtil.isNotBlank(
-                    cluster.getClusterName()) ? cluster.getClusterName() : cluster.getClusterId();
-            String nodeName = clusterName + "/" + host.getPublicIp() + ":"
-                    + host.getPort() + "(" + node.getClusterRole() + ")";
-            clusterNode.setNodeName(nodeName).setClusterId(node.getClusterId());
-            list.add(clusterNode);
+            clusterNodes.forEach(f -> {
+                if (f.getClusterNodeId().equals(nodeId)) {
+                    clusterNode.setNodeName(f.getNodeName()).setClusterId(f.getClusterId());
+                    list.add(clusterNode);
+                }
+            });
         }
         return list;
     }
