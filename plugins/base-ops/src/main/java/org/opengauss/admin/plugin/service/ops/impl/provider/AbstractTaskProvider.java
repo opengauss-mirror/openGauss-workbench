@@ -101,7 +101,8 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
 
             ensureStrictPermission(rootSession, installUserName, pkgPath, retBuffer);
             ensureStrictPermission(rootSession, installUserName, installPath, retBuffer);
-            ensureLevel2DirPermission(rootSession, installUserName, dataPath, retBuffer);
+            ensureLevel2DirPermission(rootSession, installUserName, installPath, retBuffer);
+            chmodFullPathAndParentPath(rootSession, installPath, retBuffer);
             ensureDataPathPermission(rootSession, installUserName, dataPath, retBuffer);
             ensureEnvPathPermission(rootSession, installContext.getEnvPath(), retBuffer);
             log.info("Login and install user");

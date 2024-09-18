@@ -145,12 +145,34 @@ public class ClusterPackageManagerController extends BaseController {
         return AjaxResult.success();
     }
 
+    /**
+     * Check package list
+     *
+     * @param packageIds packageIds
+     * @return result
+     */
     @PostMapping("/check/package")
-    public AjaxResult checkPackage(@RequestBody List<String> packageIds) {
+    public AjaxResult checkingPackageList(@RequestBody List<String> packageIds) {
         try {
             Assert.isTrue(CollectionUtils.isNotEmpty(packageIds), "packageIds 不能为空");
             opsPackageManagerV2Service.checkingPackageList(packageIds);
             return AjaxResult.success();
+        } catch (IllegalArgumentException | OpsException e) {
+            return AjaxResult.error(e.getMessage());
+        }
+    }
+
+    /**
+     * check package
+     *
+     * @param packageId packageId
+     * @return boolean
+     */
+    @PostMapping("/check/pkg")
+    public AjaxResult checkPackage(@RequestParam(name = "packageId") String packageId) {
+        try {
+            Assert.isTrue(StrUtil.isNotEmpty(packageId), "packageId 不能为空");
+            return AjaxResult.success(opsPackageManagerV2Service.checkingPackage(packageId));
         } catch (IllegalArgumentException | OpsException e) {
             return AjaxResult.error(e.getMessage());
         }

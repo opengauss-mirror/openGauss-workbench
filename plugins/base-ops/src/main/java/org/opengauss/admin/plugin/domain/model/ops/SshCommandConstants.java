@@ -145,7 +145,7 @@ public interface SshCommandConstants {
     /**
      * Minimalist single node installation
      */
-    String MINIMAL_LIST_SINGLE_INSTALL = "sh {0}/install.sh  -w {1} -p {2} &&source ~/.bashrc";
+    String MINIMAL_LIST_SINGLE_INSTALL = "sh {0}install.sh  -w {1} -p {2} &&source ~/.bashrc";
     /**
      * Minimalist cluster installation
      */
