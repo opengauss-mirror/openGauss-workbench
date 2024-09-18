@@ -46,6 +46,8 @@ import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -153,45 +155,53 @@ public class CmdUtils {
         }
 
         ClientSession session = opSession.get();
-        log.debug("exec:" + cmd);
+        try {
+            var channel = session.createExecChannel(cmd);
+            channel.setPtyType("ansi");
+            channel.setPtyColumns(300);
+            channel.setPtyWidth(300);
+            channel.open();
 
-        var channel = session.createExecChannel(cmd);
-        channel.setPtyType("ansi");
-        channel.setPtyColumns(300);
-        channel.setPtyWidth(300);
-        channel.open();
-
-        channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), CHANNEL_TIMEOUT);
-        for (int i = 0; i < 100 && channel.getExitStatus() == null; i++) {
-            ThreadUtil.sleep(100L);
-        }
-        if (channel.getExitStatus() != null && channel.getExitStatus() != 0) {
-            log.error("{}: exitStatus is {}", cmd, channel.getExitStatus());
-            channel.close();
-            pool.releaseSession(session);
-            stopWatch.stop();
-            log.error("exec {} costs {}ms", cmd, stopWatch.getTotalTimeMillis());
-            throw new CMDException(cmd + StrUtil.SPACE + StrUtil.LF + StrUtil.SPACE + channel.getInvertedErr());
-        }
-
-        try (var reader = new BufferedReader(
-                new InputStreamReader(channel.getInvertedOut(), Charset.defaultCharset()));) {
-            int i = -1;
-            while (reader.ready()) {
-                i++;
-                String line = reader.readLine();
-                if (StrUtil.isBlank(line)) {
-                    continue;
-                }
-                if (consumer != null) {
-                    consumer.accept(i, line);
-                }
+            channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), CHANNEL_TIMEOUT);
+            for (int i = 0; i < 100 && channel.getExitStatus() == null; i++) {
+                ThreadUtil.sleep(100L);
             }
-        } catch (IOException e) {
-            log.error("cmd '{}' format error", cmd, e);
-            throw e;
+            if (channel.getExitStatus() != null && channel.getExitStatus() != 0) {
+                log.error("{}: exitStatus is {}", cmd, channel.getExitStatus());
+                channel.close();
+                pool.releaseSession(session);
+                stopWatch.stop();
+                log.error("exec {} costs {}ms", cmd, stopWatch.getTotalTimeMillis());
+                throw new CMDException(cmd + StrUtil.SPACE + StrUtil.LF + StrUtil.SPACE + channel.getInvertedErr());
+            }
+
+            try (var reader = new BufferedReader(
+                new InputStreamReader(channel.getInvertedOut(), Charset.defaultCharset()));) {
+                int i = -1;
+                while (reader.ready()) {
+                    i++;
+                    String line = reader.readLine();
+                    if (StrUtil.isBlank(line)) {
+                        continue;
+                    }
+                    if (consumer != null) {
+                        consumer.accept(i, line);
+                    }
+                }
+            } finally {
+                channel.close();
+            }
+        } catch (Exception exp) {
+            log.error("exec command fail!");
+            try (StringWriter sw = new StringWriter();
+                 PrintWriter pw = new PrintWriter(sw)) {
+                exp.printStackTrace(pw);
+                log.error(sw.toString());
+            } catch (IOException ioe) {
+                log.error("StringWriter error!");
+            }
+            throw exp;
         } finally {
-            channel.close();
             pool.releaseSession(session);
             stopWatch.stop();
             log.info("exec {} costs {}ms", cmd, stopWatch.getTotalTimeMillis());

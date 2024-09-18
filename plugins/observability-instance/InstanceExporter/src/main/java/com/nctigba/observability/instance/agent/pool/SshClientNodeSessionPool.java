@@ -60,6 +60,9 @@ public class SshClientNodeSessionPool {
                     objectPoolConfig.setMaxIdle(MAX_IDLE_FOR_ONE_NODE);
                     objectPoolConfig.setMinIdle(MIN_IDLE_FOR_ONE_NODE);
                     objectPoolConfig.setMaxWait(Duration.ofSeconds(MAX_GET_CONNECTION_WAIT_SECONDS));
+                    objectPoolConfig.setTestOnReturn(true);
+                    objectPoolConfig.setTestOnBorrow(true);
+                    objectPoolConfig.setTestOnCreate(true);
                     sshClientConfig.setObjectPoolConfig(objectPoolConfig);
 
                     sshClientConfig.setMachineIP(targetConfig.getMachineIP());
