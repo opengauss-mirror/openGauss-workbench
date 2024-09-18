@@ -573,6 +573,9 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
             }
             olumnComment.append(commentAddSQL(col, schema, tableName));
         }
+        if (!request.getConstraints().isEmpty()) {
+            cteate.append(COMMA);
+        }
         StringBuilder constraintsComment = new StringBuilder();
         for (int i = 0; i < request.getConstraints().size(); i++) {
             ConstraintDTO constraintDTO = request.getConstraints().get(i);
@@ -647,7 +650,6 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
 
     private String getConstraintSQL(ConstraintDTO request) {
         StringBuilder partition = new StringBuilder();
-        partition.append(",");
         String conName = DebugUtils.needQuoteName(request.getConName());
         String attName = request.getAttName();
         if (StringUtils.isNotEmpty(request.getConType())) {
