@@ -84,7 +84,7 @@
                 </p>
                 <p>
                   {{ $t('components.BigDataList.5q09o79wvtw0')
-                  }}{{ props.recordCounts[item.key].finishCount }}
+                  }}{{ props.recordCounts[item.key].successCount }}
                 </p>
                 <p>
                   {{ $t('components.BigDataList.5q09o79ww2g0')
@@ -205,19 +205,19 @@ const props = defineProps({
   recordCounts: {
     type: Object,
     default: () => ({
-      table: { waitCount: 0, runningCount: 0, finishCount: 0, errorCount: 0 },
-      view: { waitCount: 0, runningCount: 0, finishCount: 0, errorCount: 0 },
+      table: { waitCount: 0, runningCount: 0, successCount: 0, errorCount: 0 },
+      view: { waitCount: 0, runningCount: 0, successCount: 0, errorCount: 0 },
       function: {
         waitCount: 0,
         runningCount: 0,
-        finishCount: 0,
+        successCount: 0,
         errorCount: 0
       },
-      trigger: { waitCount: 0, runningCount: 0, finishCount: 0, errorCount: 0 },
+      trigger: { waitCount: 0, runningCount: 0, successCount: 0, errorCount: 0 },
       procedure: {
         waitCount: 0,
         runningCount: 0,
-        finishCount: 0,
+        successCount: 0,
         errorCount: 0
       }
     })
