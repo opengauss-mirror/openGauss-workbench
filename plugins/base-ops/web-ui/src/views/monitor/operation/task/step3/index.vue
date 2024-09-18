@@ -5,29 +5,29 @@
       <table>
         <tr>
           <td class="key">安装包名称</td>
-          <td class="value">{{ props.clusterTaskList.packageName }}</td>
+          <td class="value">{{ list.packageName }}</td>
           <td class="key">操作系统</td>
-          <td class="value">{{ props.clusterTaskList.cpuArch }}</td>
+          <td class="value">{{ list.cpuArch }}</td>
           <td class="key">系统架构</td>
-          <td class="value">{{ props.clusterTaskList.os }}</td>
+          <td class="value">{{ list.os }}</td>
         </tr>
         <tr>
           <td class="key">openGauss版本</td>
           <td class="value">
-            <div v-if="props.clusterTaskList.version === OpenGaussVersionEnum.ENTERPRISE">
+            <div v-if="list.packageVersion === OpenGaussVersionEnum.ENTERPRISE">
               企业版
             </div>
-            <div v-if="props.clusterTaskList.version === OpenGaussVersionEnum.LITE">
+            <div v-if="list.packageVersion === OpenGaussVersionEnum.LITE">
               轻量版
             </div>
-            <div v-if="props.clusterTaskList.version === OpenGaussVersionEnum.MINIMAL_LIST">
+            <div v-if="list.packageVersion === OpenGaussVersionEnum.MINIMAL_LIST">
               极简版
             </div>
           </td>
           <td class="key">openGauss版本号</td>
-          <td class="value">{{ props.clusterTaskList.versionNum }}</td>
+          <td class="value">{{ list.packageVersionNum }}</td>
           <td class="key">所选安装包</td>
-          <td class="value">{{ tempPackageData.fileName }}</td>
+          <td class="value">{{ list.packageName }}</td>
         </tr>
       </table>
     </div>
@@ -37,44 +37,44 @@
       <table>
         <tr>
           <td class="key">集群标识</td>
-          <td class="value">{{ props.clusterTaskList.clusterName }}</td>
+          <td class="value">{{ list.clusterName }}</td>
           <td class="key">内核架构</td>
-          <td class="value" v-if="props.clusterTaskList.deployType === 'CLUSTER'">单主架构</td>
+          <td class="value" v-if="list.deployType === 'CLUSTER'">单主架构</td>
           <td class="value" v-else>主备架构</td>
           <td class="key">安装目录</td>
-          <td class="value">{{ props.clusterTaskList.installPath }}</td>
+          <td class="value">{{ list.installPath }}</td>
         </tr>
         <tr>
           <td class="key">软件包路径</td>
-          <td class="value">{{ props.clusterTaskList.installPackagePath }}</td>
+          <td class="value">{{ list.installPackagePath }}</td>
           <td class="key">端口号</td>
-          <td class="value">{{ props.clusterTaskList.port }}</td>
+          <td class="value">{{ list.port }}</td>
           <td class="key">数据库密码</td>
           <td class="value">
             <span v-if="data.visible">******</span>
-            <span v-if="!data.visible">{{ props.clusterTaskList.databasePassword }}</span>
+            <span v-if="!data.visible">{{ list.databasePassword }}</span>
             <button @click="changeVisible">{{data.visible?'显示':'隐藏'}} </button>
           </td>
         </tr>
         <tr>
           <td class="key">是否安装CM</td>
-          <td class="value">{{ props.clusterTaskList.enableCmTool }}</td>
+          <td class="value">{{list.enableCmTool }}</td>
           <td class="key">是否环境分离</td>
-          <td class="value">{{ props.clusterTaskList.enableGenerateEnvironmentVariableFile }}</td>
+          <td class="value">{{ list.enableGenerateEnvironmentVariableFile }}</td>
           <td class="key">环境分离路径</td>
-          <td class="value">{{ props.clusterTaskList.envPath }}</td>
+          <td class="value">{{ list.envPath }}</td>
         </tr>
-        <tr v-if="props.clusterTaskList.version === OpenGaussVersionEnum.ENTERPRISE">
+        <tr v-if="list.packageVersion === OpenGaussVersionEnum.ENTERPRISE">
           <td class="key">日志目录</td>
-          <td class="value">{{ props.clusterTaskList.logPath }}</td>
+          <td class="value">{{ list.logPath }}</td>
           <td class="key">临时文件目录</td>
-          <td class="value">{{ props.clusterTaskList.tmpPath }}</td>
+          <td class="value">{{ list.tmpPath }}</td>
           <td class="key">数据库工具目录</td>
-          <td class="value">{{ props.clusterTaskList.omToolsPath }}</td>
+          <td class="value">{{ list.omToolsPath }}</td>
         </tr>
         <tr v-if="props.clusterTaskList.version === OpenGaussVersionEnum.ENTERPRISE">
           <td class="key">数据库core目录</td>
-          <td class="value">{{ props.clusterTaskList.corePath }}</td>
+          <td class="value">{{ list.corePath }}</td>
           <td class="key"></td>
           <td class="value"></td>
           <td class="key"></td>
@@ -127,12 +127,13 @@ import {KeyValue} from "@/types/global";
 import axios from "axios"
 import { defineProps } from 'vue'
 import {OpenGaussVersionEnum} from "@/types/ops/install";
-import {getHostIp, getPackageList} from "@/api/ops";
+import {batchClusterNodes, getHostIp, getPackageList} from "@/api/ops";
 import {Message} from "@arco-design/web-vue";
 
 const props = defineProps({
   message: Array,
-  clusterTaskList : Object
+  clusterTaskList : Object,
+  createClusterId : Object
 })
 
 const route = useRoute();
@@ -147,75 +148,98 @@ const changeVisible = () => {
 }
 
 const list = reactive({
+  hostIp: '',
+  hostId: "",
+  hostUser: "",
+  hostUserId: '',
+  os: '',
+  osVersion: '',
+  cpuArch: '',
+  basePath: '',
+  packageVersion: '',
+  packageVersionNum: '',
+  packageId:'',
+  packageName:'',
+  clusterId:'',
+  clusterName:'',
+  databasePassword: "",
+  port: 5432,
+  deployType: "",
+  installPath: "",
+  installPackagePath: "",
+  logPath: "",
+  tmpPath: "",
+  omToolsPath: "",
+  corePath: "",
+  envPath: "",
+  enableCmTool: false,
+  enableGenerateEnvironmentVariableFile: false,
+  xmlConfigPath: "",
   nodes: []
 })
 const tempPackageData = reactive({
   name:'',
   fileName: ''
 })
-const getListData = () => {
-  getPackageList({
-    name: '',
-    os: props.clusterTaskList.os,
-    cpuArch: props.clusterTaskList.cpuArch,
-    openGaussVersion: props.clusterTaskList.version,
-    openGaussVersionNum: props.clusterTaskList.versionNum,
-  }).then((res) => {
-    res.forEach((item) => {
-      if (item.packageId === props.clusterTaskList.packageId) {
-        tempPackageData.name = res.data.name
-        tempPackageData.fileName = res.fileName
-      }
-    })
-  }).catch(error => {
-    console.error("taskMenu infoError:"+error);
-  })
-}
+
 const hostIdIp = new FormData
 const hostPuPr = new FormData
-const getClusterData = () => {
-  const param = {
-    os: '',
-    osVersion: '',
-    cpuArch: ''
-  }
-  getHostIp(param).then((res) => {
+
+const init = () => {
+  batchClusterNodes(props.createClusterId) .then((res) => {
     if (res.code === 200) {
-      res.data.forEach(item => {hostIdIp.append(item.hostId, item.publicIp)})
-      res.data.forEach(item => {hostPuPr.append(item.publicIp,item.privateIp)})
-    } else {
-      Message.error({
-        content: '获取ip失败'
+      res.data.clusterNodes.forEach((item) => {
+        const newData = {
+          "clusterId": item.clusterId,
+          "clusterNodeId": item.clusterNodeId,
+          "hostId": item.hostId,
+          "hostIp": item.hostIp,
+          "hostUserId": item.hostUserId,
+          "hostUser": item.hostUsername,
+          "nodeType": item.nodeType,
+          "dataPath": item.dataPath,
+          "azOwner": item.azOwner,
+          "azPriority": item.azPriority,
+          "isCMMaster": item.isCmMaster,
+          "cmDataPath": item.cmDataPath,
+          "cmPort": item.cmPort,
+          "editing": (!item.hostId && res.data.version !== OpenGaussVersionEnum.MINIMAL_LIST)
+        }
+        list.nodes.push(newData)
       })
+      list.clusterId = props.clusterId
+      list.os = res.data.os
+      list.cpuArch = res.data.cpuArch
+      list.packageVersion = res.data.version
+      list.packageVersionNum = res.data.versionNum
+      list.packageName = res.data.packageName
+      list.packageId = res.data.packageId
+      list.clusterName = res.data.clusterName
+      list.databasePassword = res.data.databasePassword
+      list.port = Number(res.data.databasePort)
+      list.installPackagePath = res.data.installPackagePath
+      list.installPath = res.data.installPath
+      list.logPath = res.data.logPath
+      list.tmpPath = res.data.tmpPath
+      list.omToolsPath = res.data.omToolsPath
+      list.corePath = res.data.corePath
+      list.envPath = res.data.envPath
+      list.enableCmTool = res.data.enableCmTool
+      list.enableGenerateEnvironmentVariableFile = res.data.enableGenerateEnvironmentVariableFile
+      list.xmlConfigPath = res.data.xmlConfigPath
+      list.deployType = res.data.deployType
+      list.hostIp = res.data.hostIp
+      list.hostUser = res.data.hostUsername
+      list.hostUserId = res.data.hostUserId
+      list.hostId = res.data.hostId
+      console.log(list)
     }
   }) .catch((error) => {
     console.error(error)
-  }) .finally(() => {
-    list.nodes = []
-    props.message.forEach((item, index) => {
-      let tempPublicIp = hostIdIp.get(item.hostId)
-      const newData = {
-        "order" : index,
-        "hostId": item.hostId,
-        "hostIp": tempPublicIp,
-        "hostUser": item.hostUser,
-        "hostUserId": item.hostUserId,
-        "nodeType": item.nodeType,
-        "dataPath": item.dataPath,
-        "azOwner": item.azOwner,
-        "azPriority": item.azPriority,
-        "isCMMaster": item.isCMMaster,
-        "cmDataPath": item.cmDataPath,
-        "cmPort": item.cmPort
-      }
-      list.nodes.push(newData)
-    })
   })
 }
-
-  onMounted(() => {
-  getListData()
-  getClusterData()
+onMounted(() => {
+  init()
 })
 
 </script>

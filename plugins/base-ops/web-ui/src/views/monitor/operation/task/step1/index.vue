@@ -208,11 +208,11 @@
             </a-form-item>
             <a-form-item label="部署类型">
               <a-radio-group v-model="data.deployType" @change="clusterModeChange" type="button">
-                <a-radio value="SINGLE_NODE">单节点安装</a-radio>
+                <a-radio value="SINGLE_NODE" :disabled="flagCM.valueOf()">单节点安装</a-radio>
                 <a-radio value="CLUSTER">多节点安装</a-radio>
               </a-radio-group>
             </a-form-item>
-            <a-form-item v-if="data.packageVersion === OpenGaussVersionEnum.ENTERPRISE" label="是否安装CM">
+            <a-form-item v-if="data.packageVersion === OpenGaussVersionEnum.ENTERPRISE && data.deployType === 'CLUSTER'" label="是否安装CM">
               <a-switch v-model="flagCM" @change="checkflagCM"/>
             </a-form-item>
             <a-form-item label="是否环境分离" v-if = "data.packageVersion !== OpenGaussVersionEnum.MINIMAL_LIST">
@@ -300,7 +300,7 @@
                     </a-popconfirm>
                   </div>
                   <div v-else>
-                    <p v-if="record.isCMMaster === true">是</p>
+                    <p v-if="record.isCMMaster">是</p>
                     <p v-else>否</p>
                   </div>
                 </template>
@@ -376,7 +376,7 @@
         <template #title>
           {{ $t('在线下载') }}
         </template>
-        <p>{{data.packageName}}</p>
+        <!--        <p>{{data.packageName}}</p>-->
         <a-progress size="large" :percent="currPercent" />
       </a-modal>
     </div>
@@ -551,19 +551,19 @@ const fetchSameOs = (isChange:boolean) => {
           item.hostIp = data.hostIp
           item.hostId = data.hostId
         } else if (hostIpSame.value === '' || !hostIpSame.value.includes(item.hostIp) || item.hostIp === data.hostIp ) {
-            item.hostIp = ''
-            item.hostId = ''
+          item.hostIp = ''
+          item.hostId = ''
         }
         item.editing = true
         tempEditArr.value[item.order] = item
         editFlagGroup.value[item.order] = {
-        hostIp: false,
-        cmDataPath: true,
-        dataPath: true,
-        CMMaster: false,
-        CmPort: false,
-        order: item.order
-      }
+          hostIp: false,
+          cmDataPath: true,
+          dataPath: true,
+          CMMaster: false,
+          CmPort: false,
+          order: item.order
+        }
       })
     }
   })
@@ -949,13 +949,13 @@ const addColumn = () => {
   if (newData.editing) {
     tempEditArr.value[clusterOrder.value] = JSON.parse(JSON.stringify(newData))
     editFlagGroup.value[clusterOrder.value] = {
-        hostIp: false,
-        cmDataPath: true,
-        dataPath: true,
-        CMMaster: false,
-        CmPort: false,
-        order: clusterOrder.value
-      }
+      hostIp: false,
+      cmDataPath: true,
+      dataPath: true,
+      CMMaster: false,
+      CmPort: false,
+      order: clusterOrder.value
+    }
   }
   data.clusterNodes.push(newData)
 }
@@ -1013,9 +1013,9 @@ const checkSameUser = (inputValue: string,order: number) => {
 }
 
 const checkClusterPathDB = (inputValue: string, order: number) => {
-    let editFlag = editFlagGroup.value[order]
-    tempEditArr.value[order].dataPath = inputValue
-    editFlag.dataPath = checkDataPath(inputValue)
+  let editFlag = editFlagGroup.value[order]
+  tempEditArr.value[order].dataPath = inputValue
+  editFlag.dataPath = checkDataPath(inputValue)
 }
 
 const checkCMMaster =(inputValue: string, order: number) => {
@@ -1086,7 +1086,7 @@ const deleteRows = (record:any) => {
       console.error(error)
     })
   }else{
-      data.clusterNodes =  data.clusterNodes.filter(item => item.order !== record.order)
+    data.clusterNodes =  data.clusterNodes.filter(item => item.order !== record.order)
   }
 }
 
@@ -1105,40 +1105,40 @@ const saveCluster = async (record: any) => {
   if (record.order === 1) {
     editFlag.hostIp = true
   }
-    let checkHostIpPromise = new Promise ((resolve) => {
-      if (record.order !== 1) {
-        if (!tempEditCluster.hostIp || tempEditCluster.hostIp === '') {
-          Message.error('ip不可为空')
-        } else {
-          if (tempEditCluster.hostIp === masterHostIp.value && tempEditCluster.nodeType !== "MASTER") {
-            Message.error("所选ip与主机ip相同，请重新选择")
-          } else {
-            let tempHostId = hostIpId.get(tempEditCluster.hostIp)
-            let tempFlag = false
-            getHostUser(tempHostId).then((res) => {
-              res.data.forEach(item => {
-                if (item.username === data.hostUser) {
-                  tempFlag = true
-                  tempEditCluster.hostIp = getIpById(item.hostId)
-                  tempEditCluster.hostId = item.hostId
-                  tempEditCluster.hostUserId = item.hostUserId
-                  editFlag.hostIp = true
-                }
-              })
-              if (!tempFlag) {
-                Message.error("所选ip不存在该用户，请重新选择ip或在该ip新增用户")
-              }
-            }) .catch((error) => {
-              console.error(error)
-            }) .finally(() => {
-              resolve(editFlag.hostIp)
-            })
-          }
-        }
+  let checkHostIpPromise = new Promise ((resolve) => {
+    if (record.order !== 1) {
+      if (!tempEditCluster.hostIp || tempEditCluster.hostIp === '') {
+        Message.error('ip不可为空')
       } else {
-        resolve(editFlag.hostIp)
+        if (tempEditCluster.hostIp === masterHostIp.value && tempEditCluster.nodeType !== "MASTER") {
+          Message.error("所选ip与主机ip相同，请重新选择")
+        } else {
+          let tempHostId = hostIpId.get(tempEditCluster.hostIp)
+          let tempFlag = false
+          getHostUser(tempHostId).then((res) => {
+            res.data.forEach(item => {
+              if (item.username === data.hostUser) {
+                tempFlag = true
+                tempEditCluster.hostIp = getIpById(item.hostId)
+                tempEditCluster.hostId = item.hostId
+                tempEditCluster.hostUserId = item.hostUserId
+                editFlag.hostIp = true
+              }
+            })
+            if (!tempFlag) {
+              Message.error("所选ip不存在该用户，请重新选择ip或在该ip新增用户")
+            }
+          }) .catch((error) => {
+            console.error(error)
+          }) .finally(() => {
+            resolve(editFlag.hostIp)
+          })
+        }
       }
-    })
+    } else {
+      resolve(editFlag.hostIp)
+    }
+  })
   let checkCmPortPromise = new Promise ((resolve) => {
     if (!editFlag.CmPort && tempEditCluster.cmPort && tempEditCluster.hostIp && data.enableCmTool) {
       checkPortExist(hostIpId.get(tempEditCluster.hostIp), tempEditCluster.cmPort, data.clusterId) .then((res) => {
@@ -1689,7 +1689,7 @@ const init = () => {
             "dataPath": item.dataPath,
             "azOwner": item.azOwner,
             "azPriority": item.azPriority,
-            "isCMMaster": item.isCMMaster,
+            "isCMMaster": item.isCmMaster,
             "cmDataPath": item.cmDataPath,
             "cmPort": item.cmPort,
             "editing": (!item.hostId && res.data.version !== OpenGaussVersionEnum.MINIMAL_LIST)
@@ -1787,8 +1787,8 @@ const init = () => {
 const tempClusterId = ref('')
 
 watch(() => props.clusterId, (newVal) => {
-    init()
-  }, { immediate: true })
+  init()
+}, { immediate: true })
 watch(() => props.createClusterId, (newVal) => {
   data.clusterId = newVal
 }, { immediate: true })
@@ -1801,7 +1801,6 @@ watch(() => props.createClusternodeList, (newVal) => {
     itemA.clusterId = data.clusterId
   })
 }, { immediate: true })
-
 const changeHostipFlag = computed(() => {
   return data.hostUser !== '' && data.hostIp !== '' && data.clusterNodes.length > 1 && data.packageVersion === OpenGaussVersionEnum.ENTERPRISE
 })
@@ -1922,6 +1921,10 @@ button {
   flex: none;
   width: 12%;
 }
+:deep(.arco-radio-button.arco-radio-disabled) {
+  color: var(--color-text-1);
+}
+
 .form-helper-text {
   color: #888; /* 灰色 */
   font-size: 12px;

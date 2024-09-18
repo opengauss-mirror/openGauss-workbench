@@ -47,7 +47,8 @@
       <step3 v-if="currentStep === 3"
              :sub-task-config="subTaskConfig"
              :message="clusterTaskList.clusterNodes"
-             :clusterTaskList="clusterTaskList"/>
+             :clusterTaskList="clusterTaskList"
+             :createClusterId="createClusterId"/>
     </div>
     <div class="submit-con">
       <a-button v-if="currentStep === 1 " class="btn-item" @click="backToIndex">{{$t('取消')}}</a-button>
@@ -68,7 +69,7 @@ import Step3 from './step3'
 import {
   batchClusterNodes,
   checkCluster,
-  createClusterTask, createClustertaskNode, envCheckResult,
+  createClusterTask, createClustertaskNode, envCheckResult, pathEmpty,
   submitCluster,
   updateClusterTask, updateClustertaskNode
 } from "@/api/ops";
@@ -122,6 +123,7 @@ const onNext = () => {
     envCheckResult(clusterId.value || tempClusterId.value) .then((res) =>{
       if (Number(res.code) === 200 ) {
         if (res.data.result === "SUCCESS" ){
+          createClusterId.value = clusterId.value
           currentStep.value = 3
         } else {
           Message.error('环境监测未通过，请重新进行环境监测')
@@ -353,12 +355,12 @@ const saveUpdateCulster = async () => {
         Message.error('保存草稿箱失败' + error)
       }) .finally(() => {
         createClusternodeList.value =  JSON.parse(JSON.stringify(clusterTaskList.clusterNodes))
-        tempClusterId.value = clusterId.value
         if (subTaskConfig.value.deployType === "SINGLE_NODE" && clusterTaskList.clusterNodes.length > 1){
           Message.error('当前选择单节点模式，请删除多余节点')
           saveFlag.value = false
         }
         if (saveFlag.value) {
+          tempClusterId.value = clusterId.value
           Message.success('保存草稿箱成功')
         }
       })
@@ -461,6 +463,7 @@ const saveUpdateCulster = async () => {
           saveFlag.value = false
         }
         if (saveFlag.value) {
+          tempClusterId.value = clusterId.value
           Message.success('保存草稿箱成功')
         }
       })
