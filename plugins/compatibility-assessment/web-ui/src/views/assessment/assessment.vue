@@ -920,7 +920,7 @@ const formRules = computed(() => {
         validator: (value, cb) => {
           return new Promise((resolve) => {
             const reg =
-              /^([0-9]|[1-9]\d{1,3}|[1-5]\d{4}|6[0-4]\d{4}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/;
+              /^(1(02[4-9]|0[3-9][0-9]|[1-9][0-9]{2})|[2-9][0-9]{3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$/;
             const re = new RegExp(reg);
             if (re.test(value)) {
               resolve(true);
