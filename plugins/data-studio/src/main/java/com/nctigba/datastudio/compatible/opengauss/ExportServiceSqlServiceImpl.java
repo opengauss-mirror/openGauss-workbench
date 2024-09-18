@@ -320,8 +320,6 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
 
     private void importExcel(ExportQuery request, File file, String path) throws SQLException, IOException {
         String columnString = request.getColumnString();
-        log.info("ExportService importExcel columnString: " + columnString);
-
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement();
@@ -340,9 +338,6 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
                 typeList.add(metaData.getColumnType(i + 1));
                 typeNameList.add(metaData.getColumnTypeName(i + 1));
             }
-            log.info("ExportService importExcel typeList: " + typeList);
-            log.info("ExportService importExcel typeNameList: " + typeNameList);
-
             StringBuilder sb = new StringBuilder();
             sb.append("INSERT INTO ").append(schema).append(POINT).append(tableName).append(LEFT_BRACKET)
                     .append(columnString).append(RIGHT_BRACKET).append(" VALUES ");
@@ -355,7 +350,6 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
                         continue;
                     }
                     sb.append(LEFT_BRACKET);
-                    log.info("ExportService importExcel row: " + row.getLastCellNum());
                     for (int k = 0; k < size; k++) {
                         XSSFCell cell = row.getCell(k);
                         String s = DebugUtils.typeChange(getCellValue(cell, request.getTimeFormat()),
@@ -374,7 +368,6 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
             }
 
             sb.deleteCharAt(sb.length() - 1).append(SEMICOLON);
-            log.info("ExportService importExcel sb: " + sb);
             statement.execute(sb.toString());
         }
 
@@ -383,7 +376,6 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
     }
 
     private String getCellValue(XSSFCell cellObj, String timeFormat) {
-        log.info("ExportService getCellValue cellObj: " + cellObj);
         String cellValue = null;
         if (cellObj == null) {
             cellValue = "";
@@ -401,7 +393,6 @@ public class ExportServiceSqlServiceImpl implements ExportServiceSqlService {
         } else {
             cellValue = cellObj.getStringCellValue();
         }
-        log.info("ExportService getCellValue cellValue: " + cellValue);
         return cellValue;
     }
 

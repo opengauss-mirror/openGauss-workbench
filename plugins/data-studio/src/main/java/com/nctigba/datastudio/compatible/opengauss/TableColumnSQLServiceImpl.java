@@ -404,9 +404,9 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
             if (data.getIsOnly()) {
                 String uniqueKey = tableName;
                 if (tableName.startsWith("\"") && tableName.endsWith("\"")) {
-                    uniqueKey = tableName.substring(1, tableName.length() - 1) + "_" + column + "_key";
-                    uniqueKey = DebugUtils.needQuoteName(uniqueKey);
+                    uniqueKey = tableName.substring(1, tableName.length() - 1);
                 }
+                uniqueKey = DebugUtils.needQuoteName(uniqueKey + "_" + column + "_key");
                 String unique = String.format(CONSTRAINT_UNIQUE_SQL, schema, tableName, uniqueKey, column);
                 list.add(unique);
             } else {

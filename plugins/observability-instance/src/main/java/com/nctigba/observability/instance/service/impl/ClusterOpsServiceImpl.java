@@ -647,7 +647,6 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
                     time.add(aLong);
                 }
             }
-            log.info("...........{}", today.entrySet());
             for (Map.Entry<String, Object> nodeMetrics : today.entrySet()) {
                 if (!metricsNodes.containsKey(nodeMetrics.getKey())) {
                     metricsNodes.put(nodeMetrics.getKey(), MapUtil.of(futurePair.getKey(), nodeMetrics.getValue()));
@@ -655,6 +654,9 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
                 }
                 Map<String, Object> metricsNodesValue = (Map<String, Object>) metricsNodes.get(nodeMetrics.getKey());
                 List<Object> valueList = (List<Object>) metricsNodesValue.get(futurePair.getKey());
+                if (valueList == null || nodeMetrics.getValue() == null) {
+                    continue;
+                }
                 valueList.addAll((Collection<?>) nodeMetrics.getValue());
             }
         }
@@ -694,6 +696,9 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
     }
 
     private void getClusterStandbyNodes(List<SyncSituationDTO> retList, OpsClusterVO cluster) {
+        if (cluster.getClusterNodes().size() == 1) {
+            return;
+        }
         ClusterHealthStateDTO stateCache = CLUSTER_STATE_CACHE.get(cluster.getClusterId(), false);
         List<OpsClusterNodeVO> clusterNodes = cluster.getClusterNodes();
         List<SyncSituationDTO> standbyList = new ArrayList<>();
