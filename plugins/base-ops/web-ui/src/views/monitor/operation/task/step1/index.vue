@@ -404,6 +404,7 @@ import {Message} from "@arco-design/web-vue"
 import {KeyValue} from "@antv/x6/lib/types"
 import {
   checkVersionNumber,
+  checkPkg,
   getHostInfo,
   getHostIp,
   getHostUser,
@@ -743,6 +744,7 @@ const fetchPackageList = () => {
         packageSerchResult.value = true
         data.packageId= res[0].packageId
         data.packageName = res[0].name
+        checkPackageExist()
       }
     }) .catch((error) => {
       console.error(error)
@@ -877,6 +879,7 @@ const syncSubTask = configData => {
 
 const packManageSubmit = () => {
   data.packageId = toRaw(packageIDSelected.value)[0]
+  checkPackageExist()
   getPackageList({
     name:'',
     os: data.os,
@@ -892,6 +895,16 @@ const packManageSubmit = () => {
   }) .catch((error) => {
     console.error(error)
   })
+}
+const checkPackageExist = async ()=>{
+  try {
+    const res = await checkPkg(data.packageId)
+  if(!res.data) {
+    Message.error("安装包检查未通过，可能会影响流程")
+  }
+  } catch (error) {
+    Message.error("安装包检查未通过，可能会影响流程")
+  }
 }
 
 const checkflagCM = (input) => {
