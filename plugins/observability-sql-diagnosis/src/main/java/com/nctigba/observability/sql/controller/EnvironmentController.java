@@ -44,6 +44,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -65,7 +67,10 @@ public class EnvironmentController {
     @GetMapping("/basePath")
     public String basePath() {
         var full = EnvironmentController.class.getResource(EnvironmentController.class.getSimpleName() + ".class");
-        var path = full.getPath();
+        if (full == null) {
+            throw new IllegalStateException("Resource not found.");
+        }
+        String path = URLDecoder.decode(full.getPath(), StandardCharsets.UTF_8);
         int jarIndex = path.indexOf(".jar");
         int lastSlashIndex = path.lastIndexOf(File.separator, jarIndex);
         int preSlashIndex = path.lastIndexOf(File.separator, lastSlashIndex - 1);
