@@ -61,6 +61,8 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -217,8 +219,9 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
                 if (pkg == null) {
                     isDownload = true;
                 } else {
-                    String fileIsExists = session.execute(String.format(FILE_IS_EXIST, pkg.getPath()));
-                    if (fileIsExists.contains("false")) {
+                    Path pkgPath = Paths.get(pkg.getPath());
+                    boolean isFileExists = Files.exists(pkgPath);
+                    if (!isFileExists) {
                         isDownload = true;
                     }
                 }
