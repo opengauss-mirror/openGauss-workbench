@@ -131,6 +131,14 @@
             <td class="key">{{$t('operation.DailyOps.sl3u5s5cf240')}}</td>
             <td class="value">{{item.azPriority}}</td>
           </tr>
+          <tr v-if="list.data.enableCmTool">
+            <td class="key">{{$t('enterprise.NodeConfig.5mpme7w6be40')}}</td>
+            <td class="value">{{item.isCmMaster ? $t('enterprise.InstallPrompt.5mpmb9e6r4g0') : $t('enterprise.InstallPrompt.5mpmb9e6r800')}}</td>
+            <td class="key">{{$t('enterprise.NodeConfig.else4')}}</td>
+            <td class="value">{{item.cmDataPath}}</td>
+            <td class="key">{{$t('enterprise.NodeConfig.else5')}}</td>
+            <td class="value">{{item.cmPort}}</td>
+          </tr>
         </table>
         <div class="dashed-line"></div>
       </div>
@@ -141,9 +149,7 @@
 <script setup>
 import {reactive, onMounted, toRaw, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router';
-import {KeyValue} from "@/types/global";
-import axios from "axios";
-import {batchDeleteTask, clusterLogDownload, copyTask, reExecuteTask} from "@/api/ops";
+import {batchClusterNodes, batchDeleteTask, clusterLogDownload, copyTask, reExecuteTask} from "@/api/ops";
 import {Message} from "@arco-design/web-vue";
 import { useI18n } from 'vue-i18n'
 
@@ -214,7 +220,7 @@ const list = reactive({
 })
 
 const getListData = () => {
-  axios.get(`/clusterTask/detail/${route.query.clusterId}`).then((res) => {
+  batchClusterNodes(route.query.clusterId).then((res) => {
     if (Number(res.code) === 200) {
       list.data = res.data;
       console.log(list.data);
