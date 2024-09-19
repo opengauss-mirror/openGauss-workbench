@@ -231,6 +231,19 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         return result;
     }
 
+    @Override
+    public String deleteClusterTaskForce(String taskId) {
+        OpsClusterTaskEntity entity = getById(taskId);
+        Assert.isTrue(Objects.nonNull(entity), "cluster install task not found");
+        opsClusterLogService.deleteOperateLogByClusterId(taskId);
+        opsClusterTaskNodeService.removeByClusterId(taskId);
+        removeById(taskId);
+        TaskManager.remove(providerManager.getBusinessId(taskId));
+        providerManager.remove(taskId);
+        log.warn("delete cluster install task force :{}", taskId);
+        return taskId;
+    }
+
     private static Map<String, OpsClusterTaskEntity> convertClusterTaskToMap(List<OpsClusterTaskEntity> list) {
         return list.stream().collect(Collectors.toMap(OpsClusterTaskEntity::getClusterId, entity -> entity));
     }

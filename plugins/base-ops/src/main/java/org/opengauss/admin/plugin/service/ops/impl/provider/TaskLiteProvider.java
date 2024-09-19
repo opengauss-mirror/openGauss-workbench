@@ -59,6 +59,15 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class TaskLiteProvider extends AbstractTaskProvider {
+    private static final String LITE_SINGLE_INSTALL = "echo {0} | sh {1}install.sh --mode single -D {2} -R {3}"
+            + "  --start -C port={4}";
+    private static final String LITE_MASTER_INSTALL = "echo {0} | sh {1}install.sh --mode primary -D {2} -R {3} "
+            + "-C \"replconninfo1=''localhost={4} localport={5} remotehost={6} remoteport={7}''\" "
+            + "-C port={8}  --start";
+    private static final String LITE_SLAVE_INSTALL = "echo {0} | sh {1}install.sh --mode standby -D {2} -R {3} "
+            + "-C \"replconninfo1=''localhost={4} localport={5} remotehost={6} remoteport={7}''\" "
+            + "-C port={8}  --start";
+
     @Resource
     private IOpsClusterService opsClusterService;
     @Resource
@@ -181,7 +190,7 @@ public class TaskLiteProvider extends AbstractTaskProvider {
             String databasePassword = installContext.getLiteInstallConfig().getDatabasePassword();
             Integer port = installContext.getLiteInstallConfig().getPort();
             String installPath = preparePath(installNodeConfig.getInstallPath());
-            String command = MessageFormat.format(SshCommandConstants.LITE_SINGLE_INSTALL, databasePassword, pkgPath,
+            String command = MessageFormat.format(LITE_SINGLE_INSTALL, databasePassword, pkgPath,
                     dataPath, installPath, String.valueOf(port));
             command = wrapperLiteEnvSep(command, installContext.getEnvPath());
             opsHostRemoteService.executeCommand(command, installUserSession, installContext.getRetBuffer(),
@@ -263,7 +272,7 @@ public class TaskLiteProvider extends AbstractTaskProvider {
     }
 
     private void installCluster(InstallContext installContext) {
-        boolean isInstallSucc = false;
+        boolean isInstallSucc = true;
         try {
             sendOperateLog(installContext, "START_CLUSTER");
             log.info("Start installing the Lite cluster");
@@ -348,7 +357,7 @@ public class TaskLiteProvider extends AbstractTaskProvider {
         try {
             log.info("perform installation");
             // install
-            String command = MessageFormat.format(SshCommandConstants.LITE_SLAVE_INSTALL, databasePassword,
+            String command = MessageFormat.format(LITE_SLAVE_INSTALL, databasePassword,
                     pkgPath, dataPath, installPath, slaveHostInfo.getHostEntity().getPrivateIp(),
                     String.valueOf(installContext.getLiteInstallConfig().getPort() + 1),
                     masterHostInfo.getHostEntity().getPrivateIp(),
@@ -422,7 +431,7 @@ public class TaskLiteProvider extends AbstractTaskProvider {
         try {
             log.info("perform installation");
             // install
-            String command = MessageFormat.format(SshCommandConstants.LITE_MASTER_INSTALL, databasePassword,
+            String command = MessageFormat.format(LITE_MASTER_INSTALL, databasePassword,
                     pkgPath, dataPath, installPath, masterHostInfo.getHostEntity().getPrivateIp(),
                     String.valueOf(installContext.getLiteInstallConfig().getPort() + 1),
                     slaveHostInfo.getHostEntity().getPrivateIp(),
@@ -567,6 +576,37 @@ public class TaskLiteProvider extends AbstractTaskProvider {
 
     @Override
     protected String prepareCleanClusterDir(InstallContext installContext) {
-        return null;
+        String delCmd = "";
+        try {
+            LiteInstallNodeConfig nodeConfig = getSingleInstallNodeConfig(installContext);
+            String installPath = preparePath(nodeConfig.getInstallPath());
+            String pkgPath = preparePath(installContext.getLiteInstallConfig().getInstallPackagePath());
+            // remove intall path software
+            log.info("install package path : {}", pkgPath);
+
+            String delInstallPath = MessageFormat.format(SshCommandConstants.DEL_FILE, pkgPath + "*");
+            log.info("delete install package path : {}", delInstallPath);
+
+            delCmd = delInstallPath + " || echo \"delInstallPath failed\"; ";
+
+            String delDataPath = MessageFormat.format(SshCommandConstants.DEL_FILE, installPath);
+
+            delCmd += delDataPath + " || echo \"delDataPath failed\"; ";
+
+            return delCmd;
+        } catch (OpsException e) {
+            log.error("delete cmd : {}", delCmd);
+            return delCmd;
+        }
+    }
+
+    private LiteInstallNodeConfig getSingleInstallNodeConfig(InstallContext installContext) {
+        return installContext
+                .getLiteInstallConfig()
+                .getNodeConfigList()
+                .stream()
+                .filter(config -> Objects.equals(ClusterRoleEnum.MASTER, config.getClusterRole()))
+                .findFirst()
+                .orElseThrow(() -> new OpsException("Master node configuration not found"));
     }
 }

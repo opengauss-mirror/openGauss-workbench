@@ -266,4 +266,13 @@ public class ProviderManager {
             }
         }
     }
+
+    /**
+     * force remove install task
+     *
+     * @param taskId taskId
+     */
+    public void remove(String taskId) {
+        taskQueue.remove(taskId);
+    }
 }

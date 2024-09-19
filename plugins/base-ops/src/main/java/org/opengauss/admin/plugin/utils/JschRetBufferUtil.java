@@ -374,6 +374,7 @@ public class JschRetBufferUtil {
                     try {
                         out.write((v.trim() + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
                         out.flush();
+                        log.info("autoResponse {}{} ", k, v);
                         resultStrBuilder.append(v.trim() + System.lineSeparator());
                     } catch (IOException e) {
                         log.error("Automatic response exception", e);
