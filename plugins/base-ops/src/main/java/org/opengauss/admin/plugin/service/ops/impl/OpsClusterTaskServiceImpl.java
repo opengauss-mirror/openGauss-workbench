@@ -348,7 +348,7 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
                 // 集群节点CM端口检查
                 boolean isNodeCmUsed = opsClusterTaskNodeService.checkHostPortUsedByCm(clusterId, hostId,
                         node.getCmPort());
-                Assert.isTrue(isNodeCmUsed, "host cm port is used: " + nodePublicIp + "_(" + cmPort + ")");
+                Assert.isTrue(!isNodeCmUsed, "host cm port is used: " + nodePublicIp + "_(" + cmPort + ")");
 
                 boolean isHostCmUsed = opsHostRemoteService.portUsed(hostId, Integer.valueOf(cmPort));
                 Assert.isTrue(!isHostCmUsed, "host port is used: " + nodePublicIp + "_(" + cmPort + ")");

@@ -61,6 +61,14 @@ public interface IOpsPackageManagerV2Service extends IService<OpsPackageManagerE
     void checkingPackageList(List<String> packageIds);
 
     /**
+     * checking package
+     *
+     * @param packageId packageId
+     * @return boolean
+     */
+    boolean checkingPackage(String packageId);
+
+    /**
      * download package and save package info
      *
      * @param entity       entity

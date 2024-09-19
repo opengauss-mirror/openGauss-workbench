@@ -57,6 +57,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -110,26 +111,43 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
     @Override
     public void checkingPackageList(List<String> packageIds) {
         List<OpsPackageManagerEntity> packageEntityList = getAndValidPackageByIds(packageIds);
-        for (OpsPackageManagerEntity entry : packageEntityList) {
-            UploadInfo packagePath = entry.getPackagePath();
+        for (OpsPackageManagerEntity entity : packageEntityList) {
+            checkingPackageByEntity(entity);
+        }
+    }
+
+    @Override
+    public boolean checkingPackage(String packageId) {
+        OpsPackageManagerEntity entity = getById(packageId);
+        Assert.isTrue(Objects.nonNull(entity), "packageId is not exits");
+        return checkingPackageByEntity(entity);
+    }
+
+    private boolean checkingPackageByEntity(OpsPackageManagerEntity entity) {
+        UploadInfo packagePath = entity.getPackagePath();
+        boolean isValid = false;
+        if (Objects.nonNull(packagePath)) {
             File file = new File(packagePath.getRealPath() + File.separatorChar + packagePath.getName());
-            if (file.exists()) {
+            isValid = Files.exists(file.toPath());
+            if (isValid) {
                 log.info("checking package list, packageId: {}, realPath success :{} ",
-                        entry.getPackageId(), entry.getRealPath());
-                continue;
-            }
-            if (Objects.equals(entry.getRemark(), OpsConstants.PACKAGE_REMARK)) {
-                removeById(entry.getPackageId());
-                log.info("checking package list, packageId: {}, realPath file not exit,delete package :{} ",
-                        entry.getPackageId(), entry.getRealPath());
-            } else {
-                UpdateWrapper<OpsPackageManagerEntity> wrapper = new UpdateWrapper<>();
-                wrapper.set("package_path", "").eq("package_id", entry.getPackageId());
-                update(wrapper);
-                log.info("checking package list, packageId: {}, realPath file not exit,clear package_path :{} ",
-                        entry.getPackageId(), entry.getRealPath());
+                        entity.getPackageId(), entity.getRealPath());
+                return isValid;
             }
         }
+
+        if (Objects.equals(entity.getRemark(), OpsConstants.PACKAGE_REMARK)) {
+            removeById(entity.getPackageId());
+            log.info("checking package list, packageId: {}, realPath file not exit,delete package :{} ",
+                    entity.getPackageId(), entity.getRealPath());
+        } else {
+            UpdateWrapper<OpsPackageManagerEntity> wrapper = new UpdateWrapper<>();
+            wrapper.set("package_path", "").eq("package_id", entity.getPackageId());
+            update(wrapper);
+            log.info("checking package list, packageId: {}, realPath file not exit,clear package_path :{} ",
+                    entity.getPackageId(), entity.getRealPath());
+        }
+        return isValid;
     }
 
     private List<OpsPackageManagerEntity> getAndValidPackageByIds(List<String> packageIds) {
@@ -158,9 +176,15 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
         List<OpsPackageManagerEntity> packageEntityList = getAndValidPackageByIds(packageIds);
         packageEntityList.forEach(entry -> {
             UploadInfo packagePath = entry.getPackagePath();
-            File file = new File(packagePath.getRealPath() + File.separatorChar + packagePath.getName());
-            if (!file.delete()) {
-                log.info("delete package list, packageId: {}, realPath: {}", entry.getPackageId(), entry.getRealPath());
+            if (Objects.nonNull(packagePath)) {
+                try {
+                    File file = new File(packagePath.getRealPath() + File.separatorChar + packagePath.getName());
+                    if (!file.delete()) {
+                        log.info("delete packageId: {}, realPath: {}", entry.getPackageId(), entry.getRealPath());
+                    }
+                } catch (OpsException e) {
+                    log.error("delete error, packageId: {}, realPath: {}", entry.getPackageId(), entry.getRealPath());
+                }
             }
             removeById(entry.getPackageId());
         });
@@ -253,7 +277,7 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
             // dest is the absolute path to the file you want to save the uploaded file to
             file.transferTo(new File(fileRealPath));
             packagePath.setName(file.getOriginalFilename());
-            packagePath.setRealPath(fileRealPath);
+            packagePath.setRealPath(uploadFolder);
             pkg.setPackagePath(packagePath);
         } catch (Exception ex) {
             String errMsg = String.format("Upload tar file to %s failed: %s", fileRealPath, ex.getMessage());

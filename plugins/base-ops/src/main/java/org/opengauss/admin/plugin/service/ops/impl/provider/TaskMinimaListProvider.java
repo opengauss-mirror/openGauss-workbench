@@ -437,16 +437,15 @@ public class TaskMinimaListProvider extends AbstractTaskProvider {
         opsClusterNodeService.saveBatch(opsClusterNodeEntities);
     }
 
-    private void doInstall(Session installUserSession, RetBuffer retBuffer, String pkgPath, InstallContext installContext, MinimalistInstallNodeConfig nodeConfig) {
-        String installCommandTemplate = getInstallCommandTemplate(installContext.getDeployType());
-
+    private void doInstall(Session installUserSession, RetBuffer retBuffer, String pkgPath,
+                           InstallContext installContext, MinimalistInstallNodeConfig nodeConfig) {
         Integer port = installContext.getMinimalistInstallConfig().getPort();
         String databasePassword = installContext.getMinimalistInstallConfig().getDatabasePassword();
-
-        String command = MessageFormat.format(installCommandTemplate, pkgPath + "simpleInstall", databasePassword, String.valueOf(port));
-
+        String command = getMinimaLitInstallCommandTemplate(installContext.getDeployType(),
+                pkgPath, databasePassword, port);
         HashMap<String, String> autoResponse = new HashMap<>();
-        autoResponse.put("Would you like to create a demo database (yes/no)? ", (nodeConfig.getIsInstallDemoDatabase() ? "yes" : "no"));
+        autoResponse.put("Would you like to create a demo database (yes/no)? ",
+                (nodeConfig.getIsInstallDemoDatabase() ? "yes" : "no"));
 
         sendOperateLog(installContext, "START_EXE_INSTALL_COMMAND");
         try {
@@ -456,6 +455,20 @@ public class TaskMinimaListProvider extends AbstractTaskProvider {
             throw new OpsException("installation error " + e.getMessage());
         }
         sendOperateLog(installContext, "END_EXE_INSTALL_COMMAND");
+    }
+
+    private String getMinimaLitInstallCommandTemplate(DeployTypeEnum deployType, String pkgPath,
+                                                      String dbPwd, Integer port) {
+        String installCommandTemplate = "";
+        if (Objects.equals(DeployTypeEnum.SINGLE_NODE, deployType)) {
+            installCommandTemplate = SshCommandConstants.MINIMAL_LIST_SINGLE_INSTALL;
+        } else if (Objects.equals(DeployTypeEnum.CLUSTER, deployType)) {
+            installCommandTemplate = SshCommandConstants.MINIMAL_LIST_CLUSTER_INSTALL;
+        } else {
+            throw new OpsException("Unsupported deployment method：" + deployType);
+        }
+        return MessageFormat.format(installCommandTemplate,
+                pkgPath + "simpleInstall/", dbPwd, String.valueOf(port));
     }
 
     private MinimalistInstallNodeConfig getSingleInstallNodeConfig(InstallContext installContext) {
@@ -468,16 +481,6 @@ public class TaskMinimaListProvider extends AbstractTaskProvider {
                 .orElseThrow(() -> new OpsException("Master node configuration not found"));
     }
 
-    private String getInstallCommandTemplate(DeployTypeEnum deployType) {
-        if (DeployTypeEnum.SINGLE_NODE == deployType) {
-            return SshCommandConstants.MINIMAL_LIST_SINGLE_INSTALL;
-        }
-        if (DeployTypeEnum.CLUSTER == deployType) {
-            return SshCommandConstants.MINIMAL_LIST_CLUSTER_INSTALL;
-        }
-        throw new OpsException("Unsupported deployment method：" + deployType);
-    }
-
     @Override
     protected String prepareCleanClusterDir(InstallContext installContext) {
         String delCmd = "";
@@ -488,7 +491,7 @@ public class TaskMinimaListProvider extends AbstractTaskProvider {
             // remove intall path software
             log.info("install package path : {}", pkgPath);
 
-            String delInstallPath = MessageFormat.format(SshCommandConstants.DEL_FILE, pkgPath + "/*");
+            String delInstallPath = MessageFormat.format(SshCommandConstants.DEL_FILE, pkgPath + "*");
             log.info("delete install package path : {}", delInstallPath);
 
             delCmd = delInstallPath + " || echo \"delInstallPath failed\"; ";
