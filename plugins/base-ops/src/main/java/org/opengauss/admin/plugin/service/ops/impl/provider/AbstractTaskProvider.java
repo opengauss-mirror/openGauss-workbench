@@ -39,6 +39,8 @@ import org.opengauss.admin.plugin.service.ops.impl.OpsHostRemoteService;
 import org.springframework.beans.factory.InitializingBean;
 
 import javax.annotation.Resource;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -258,6 +260,9 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
                                                    RetBuffer retSession) {
         String installPackageFileName = sourcePath.substring(sourcePath.lastIndexOf("/") + 1);
         String installPackageFullPath = targetPath + installPackageFileName;
+        if (!Files.exists(Paths.get(sourcePath))) {
+            throw new OpsException("Install package not exist " + sourcePath);
+        }
         opsHostRemoteService.executeUpload(rootSession, retSession, sourcePath, installPackageFullPath);
         return installPackageFullPath;
     }

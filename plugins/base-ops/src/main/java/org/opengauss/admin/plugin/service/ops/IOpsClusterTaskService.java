@@ -253,4 +253,12 @@ public interface IOpsClusterTaskService extends IService<OpsClusterTaskEntity> {
      * @param nodeCount  nodeCount
      */
     void modifyClusterTaskOfNodeChange(String clusterId, String hostId, String hostUserId, int nodeCount);
+
+    /**
+     * delete cluster task force
+     *
+     * @param taskId task id
+     * @return result
+     */
+    String deleteClusterTaskForce(String taskId);
 }

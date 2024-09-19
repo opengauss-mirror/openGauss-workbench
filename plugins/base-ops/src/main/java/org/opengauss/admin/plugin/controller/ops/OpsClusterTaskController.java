@@ -295,6 +295,23 @@ public class OpsClusterTaskController extends BaseController {
     }
 
     /**
+     * force delete task by task id
+     *
+     * @param taskId task id
+     * @return result
+     */
+    @Log(title = "cluster_task", businessType = BusinessType.DELETE)
+    @PostMapping("/force/delete")
+    public AjaxResult deleteClusterTask(@RequestParam(name = "taskId") String taskId) {
+        try {
+            Assert.isTrue(StrUtil.isNotEmpty(taskId), "cluster task id cannot be empty");
+            return AjaxResult.success(opsClusterTaskService.deleteClusterTaskForce(taskId));
+        } catch (OpsException ex) {
+            return AjaxResult.error(ex.getMessage());
+        }
+    }
+
+    /**
      * confirm cluster task by task id
      *
      * @param taskId task id
