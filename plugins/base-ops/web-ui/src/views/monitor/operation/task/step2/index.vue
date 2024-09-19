@@ -159,42 +159,58 @@
 
 <script setup>
 import {onMounted, reactive, ref, watch} from 'vue';
-import {clusterEnvCheck, getHostIp} from "@/api/ops";
+import {batchClusterNodes, clusterEnvCheck, getHostIp} from "@/api/ops";
 import {Message} from "@arco-design/web-vue";
-import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 import { defineProps } from 'vue';
 
 const props = defineProps({
-  message: Array,
   clusterId : Object
 })
-
 
 const loading = ref(true);
 
 const list = reactive({
+  message: [],
   envCheckDetails: [],
   clusterId: [],
   color: [],
   result : ''
 })
 
-const route = useRoute();
+const getHostId = () => {
+  return batchClusterNodes(props.clusterId).then(res => {
+    if (Number(res.code) === 200) {
+      list.message = res.data.clusterNodes;
+      return res.data.clusterNodes;
+    }
+    throw new Error('Cluster nodes fetch failed');
+  }).catch(error => {
+    console.error("getHostId Error:" + error);
+    throw error; // 重新抛出错误，以便在外部.catch()中捕获
+  });
+}
 
 onMounted(() => {
-  checkEnv();
-})
+  getHostId().then(() => {
+    fetchHostIp().then(() => { // 等待fetchHostIp完成
+      checkEnv();
+    }).catch(error => {
+      console.error('Error in fetchHostIp:', error);
+    });
+  }).catch(error => {
+    console.error('Error in onMounted:', error);
+  });
+});
 
-const checkEnv = async () => {
-  await init()
-   clusterEnvCheck(props.clusterId)
+const checkEnv = () => {
+  clusterEnvCheck(props.clusterId)
     .then((res) => {
       if (Number(res.code) === 200) {
         list.result = res.data.result
         list.envCheckDetails = [];
-        props.message.forEach(info => {
+        list.message.forEach(info => {
           res.data.envCheckDetails.forEach(item => {
             if (item.clusterNodeId === info.clusterNodeId) {
               list.envCheckDetails.push(item);
@@ -253,32 +269,30 @@ const fetchHostIp = () => {
     osVersion: '',
     cpuArch: ''
   }
-  getHostIp(param).then((res) => {
+  return getHostIp(param).then((res) => {
     if (res.code === 200) {
       res.data.forEach(item => {hostIdIp.append(item.hostId, item.publicIp)})
       res.data.forEach(item => {hostPuPr.append(item.publicIp,item.privateIp)})
+      list.clusterId = []
+      list.clusterId.push(props.clusterId)
+      list.message.forEach((item, index) => {
+        let tempPublicIp = hostIdIp.get(item.hostId)
+        let tempPrivateIp = hostPuPr.get(tempPublicIp)
+        let tempIp = tempPublicIp + '(' + tempPrivateIp + ')'
+        listNodes.push(tempIp)
+        activeCluster.value.push(index)
+      })
     } else {
       Message.error({
         content: t('operation.task.step2s5cf234')
       })
+      throw new Error('Failed to fetch host IP');
     }
   }) .catch((error) => {
     console.error(error)
-  }) .finally(() => {
-    list.clusterId = []
-    list.clusterId.push(props.clusterId)
-    props.message.forEach((item, index) => {
-      let tempPublicIp = hostIdIp.get(item.hostId)
-      let tempPrivateIp = hostPuPr.get(tempPublicIp)
-      let tempIp = tempPublicIp + '(' + tempPrivateIp + ')'
-      listNodes.push(tempIp)
-      activeCluster.value.push(index)
-    })
+    throw error;
   })
 }
- const init = () => {
-   fetchHostIp()
- }
 
 </script>
 
