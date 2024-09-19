@@ -85,7 +85,7 @@
 
 import { Message } from '@arco-design/web-vue/es/index'
 import { reactive, ref, onUnmounted, defineEmits, toRaw} from 'vue'
-import { checkPackage, delPackage, getPackageList } from '@/api/ops'
+import {checkPackage, delPackage, delPackageV2, getPackageList} from '@/api/ops'
 import { useI18n } from 'vue-i18n'
 import {CpuArch, OS} from "@/types/os"
 import {OpenGaussVersionEnum} from "@/types/ops/install"
@@ -132,7 +132,7 @@ const handleSelected = (keys: (string | number)[]) => {
   selectedRowKeys.value = keys
   list.selectedpackageIds = keys
   const findOne = list.data.find((item: KeyValue) => {
-      return item.packageId === keys
+    return item.packageId === keys
   })
   if (findOne) {
     data.selectedData[keys] = findOne
@@ -159,7 +159,9 @@ const checkPack = (record: KeyValue) => {
 }
 
 const deleteRows = (record: KeyValue) => {
-  delPackage(record.packageId).then((res: KeyValue) => {
+  let templist = []
+  templist.push(record.packageId)
+  delPackageV2(templist).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       Message.success({
         content: '删除成功'

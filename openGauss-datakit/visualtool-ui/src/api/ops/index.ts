@@ -267,6 +267,10 @@ export const delPackage = (packageId: string) => {
   return axios.delete(`/plugins/base-ops/installPackageManager/${packageId}`)
 }
 
+export const delPackageV2 = (data: KeyValue) => {
+  return axios.post(`/plugins/base-ops/installPackageManager/v2/delete/package/`, data)
+}
+
 export const checkPackage = (data: KeyValue) => {
   return axios.post(`/plugins/base-ops/installPackageManager/v2/check/package/`, data)
 }

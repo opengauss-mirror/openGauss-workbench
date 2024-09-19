@@ -8,6 +8,7 @@
     :modal-style="{ width: '650px' }"
     @submit="submit"
     @cancel="close"
+    @finish="close"
   >
     <template #footer>
       <div class="flex-between">
@@ -118,6 +119,11 @@
             </div>
           </template>
         </a-upload>
+      </a-form-item>
+      <a-form-item
+        v-if="(uploadStatusTag || !netStatus) && progressPercent.valueOf() > 0"
+      >
+        <a-progress :percent="progressPercent">{{progressPercent.valueOf()}}</a-progress>
       </a-form-item>
     </a-form>
   </a-modal>
@@ -314,7 +320,6 @@ const getUploadPath = () => {
   data.uploadPathLoading = true
   getSysUploadPath()
     .then((res: KeyValue) => {
-      console.log('show system upload path', res)
       if (Number(res.code) === 200) {
         data.systemUploadPath = res.data
       }
@@ -404,7 +409,7 @@ const open = (
     editDisabledFlag.value = true
   }
   wsBusinessId.value = wsBusiness
-  let versionnum = toRaw(packageVersionNum.value).length > 0 ? toRaw(packageVersionNum.value)[0] : '5.0.2'
+  let versionnum = '5.0.2'
   getConnectStatus()
   if (!packageData) {
     Object.assign(data.formData, {
@@ -456,6 +461,7 @@ const open = (
   tempVersionNum.value = data.formData.packageVersionNum
   tempPackageUrl.value = data.formData.packageUrl
   data.show = true
+  progressPercent.value = 0
 }
 
 defineExpose({
@@ -492,6 +498,7 @@ const updateVersionData = (value:string) => {
 const formRef = ref<null | FormInstance>(null)
 const emits = defineEmits([`finish`])
 const submitLoading = ref(false)
+const progressPercent = ref(0)
 const submit = async () => {
   let isisvalid = await formRef.value?.validate()
   if (isisvalid && editDisabledFlag.value !== true) {
@@ -499,26 +506,32 @@ const submit = async () => {
   } else {
     if (uploadStatusTag.value) {
       if (data.formData.packageId && data.formData.packageId != '') {
-        const formData = new FormData
-        formData.append('packageId', data.formData.packageId)
-        formData.append('uploadFile', data.fileList.file)
-        axios({
-          url: `/plugins/base-ops/installPackageManager/v2/update/upload/`,
-          method: 'POST',
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          },
-          data: formData
-        }).then((res) => {
-          console.log('res610' + res)
-        }).catch((error) => {
-          console.log('613' + error)
-        })
-        // packageUploadUpdate(data.formData.packageId, data.fileList).then((res) => {
-        //   console.log('res594' + res)
-        // }).catch((error) => {
-        //   console.log('562' + error)
-        // })
+        if (progressPercent.value === 0) {
+          const formData = new FormData
+          formData.append('packageId', data.formData.packageId)
+          formData.append('uploadFile', data.fileList.file)
+          axios({
+            url: `/plugins/base-ops/installPackageManager/v2/update/upload/`,
+            method: 'POST',
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            },
+            onUploadProgress: (event) => {
+              let percent
+              if (event.lengthComputable) {
+                percent = Math.round((event.loaded * 100) / event.total);
+              }
+              progressPercent.value = percent?Number((percent * 0.01).toFixed(2)) :0
+            },
+            data: formData
+          }).then((res) => {
+            if(res.code === 200) {
+              close()
+            }
+          }).catch((error) => {
+            console.log(error)
+          })
+        }
       } else {
         const formData = new FormData
         formData.append('name', data.formData.name)
@@ -528,18 +541,29 @@ const submit = async () => {
         formData.append('packageUrl', '')
         formData.append('packageVersion', data.formData.packageVersion)
         formData.append('uploadFile', data.fileList.file)
+        if (progressPercent.value === 0) {
         axios({
           url: `/plugins/base-ops/installPackageManager/v2/save/upload/`,
           method: 'POST',
           headers: {
             'Content-Type': 'multipart/form-data'
           },
+          onUploadProgress: (event) => {
+            let percent
+            if (event.lengthComputable) {
+              percent = Math.round((event.loaded * 100) / event.total);
+            }
+            progressPercent.value = percent?Number((percent * 0.01).toFixed(2)):0
+          },
           data: formData
         }).then((res) => {
-          console.log('res610' + res)
+          if(res.code === 200) {
+            close()
+          }
         }).catch((error) => {
-          console.log('613' + error)
+          console.log(error)
         })
+      }
       }
     } else {
       if (!editDisabledFlag.value) {
@@ -553,16 +577,15 @@ const submit = async () => {
           wsBusinessId: wsBusinessId.value
         }
         batchPackageOnline(params).then((res) => {
-          console.log('570 add success online', res)
+          if (res.code === 200) {
+            data.show = false
+          }
         }).catch((error) => {
-          console.log('572 online', error)
+          console.log(error)
         })
       }
     }
-    data.show = false
   }
-
-
 }
 const close = () => {
   try {

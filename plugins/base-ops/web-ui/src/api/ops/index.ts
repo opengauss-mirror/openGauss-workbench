@@ -439,6 +439,10 @@ export const delPackage = (packageId: string) => {
   return axios.delete(`/installPackageManager/${packageId}`)
 }
 
+export const delPackageV2 = (data: KeyValue) => {
+  return axios.post(`/installPackageManager/v2/delete/package/`, data)
+}
+
 export const checkPackage = (data: KeyValue) => {
   return axios.post(`/installPackageManager/v2/check/package/`, data)
 }
