@@ -589,7 +589,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
             if (StringUtils.isNotEmpty(constraintDTO.getDescription())) {
                 constraintsComment.append(
                         String.format(CONSTRAINT_COMMENT_SQL, DebugUtils.needQuoteName(constraintDTO.getConName()),
-                                schema, tableName, constraintDTO.getDescription())).append(LF);
+                                schema, tableName, constraintDTO.getDescription())).append(SEMICOLON).append(LF);
             }
         }
         cteate.append(RIGHT_BRACKET);
@@ -605,7 +605,7 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
         }
         cteate.append(String.format(TABLESPACE_SQL,
                 DebugUtils.needQuoteName(tableUnderlyingInfoQuery.getTableSpace()))).append(
-                getPartitionSQL(request.getPartitionInfo())).append(LF).append(SEMICOLON);
+                getPartitionSQL(request.getPartitionInfo())).append(SEMICOLON).append(LF);
         StringBuilder indexComment = new StringBuilder();
         for (var index : request.getIndexs()) {
             String indexSql = addIndexSQL(schema, tableName, index);
