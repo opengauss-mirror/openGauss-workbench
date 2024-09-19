@@ -1,8 +1,8 @@
 <template>
-  <a-spin class="body" :loading="loading" tip="环境监测中...">
+  <a-spin class="body" :loading="loading" :tip="$t('operation.task.step2s5cf2y0')">
     <a-collapse
       style="background: #f4f6fa"
-      :default-active-key="list.nodeIndex"
+      :default-active-key="activeCluster"
       class="node1"
     >
       <a-collapse-item
@@ -11,7 +11,7 @@
         :key="index"
       >
         <div class="hardware">
-          <div class="rowHeader">硬件环境监测测结果</div>
+          <div class="rowHeader">{{ $t('operation.task.step2s5cf2y1') }}</div>
           <div class="rowCheck">
             <span class="hardEnv">
               <div class="hardEnvFirst">
@@ -19,12 +19,12 @@
                   <svg-icon icon-class="ops-pass" class="icon-s mr-s" v-if="item.envCheckDetails.hardwareEnv.envProperties[0].status === 'NORMAL'"></svg-icon>
                   <svg-icon icon-class="ops-warning" class="icon-s mr-s" v-else-if="item.envCheckDetails.hardwareEnv.envProperties[0].status === 'WARMING'"></svg-icon>
                   <svg-icon icon-class="ops-error" class="icon-s mr-s" v-else></svg-icon>
-                  操作系统
+                  {{ $t('operation.task.step2s5cf2y2') }}
                 </span>
                 <span style="padding-right:24px">{{item.envCheckDetails.hardwareEnv.envProperties[0].value}}</span>
               </div>
-              <span :style="{ color: list.color[index][0] }" class="hardEnvSecond" v-if="item.envCheckDetails.hardwareEnv.envProperties[0].status !== 'NORMAL'">请检查操作系统是否为{{item.envCheckDetails.hardwareEnv.envProperties[0].value}}</span>
-              <span :style="{ color: list.color[index][0] }" class="hardEnvSecond" v-else>{{ $t('操作系统符合要求') }}</span>
+              <span :style="{ color: list.color[index][0] }" class="hardEnvSecond" v-if="item.envCheckDetails.hardwareEnv.envProperties[0].status !== 'NORMAL'" :title="item.envCheckDetails.softwareEnv.envProperties[0].statusMessage">{{ $t('operation.task.step2s5cf2y3') }}{{item.envCheckDetails.hardwareEnv.envProperties[0].value}}</span>
+              <span :style="{ color: list.color[index][0] }" class="hardEnvSecond" v-else :title="$t('operation.task.step2s5cf2y4')">{{ $t('operation.task.step2s5cf2y4') }}</span>
             </span>
             <span class="hardEnv">
               <div class="hardEnvFirst">
@@ -32,12 +32,12 @@
                   <svg-icon icon-class="ops-pass" class="icon-s mr-s" v-if="item.envCheckDetails.hardwareEnv.envProperties[1].status === 'NORMAL'"></svg-icon>
                   <svg-icon icon-class="ops-warning" class="icon-s mr-s" v-else-if="item.envCheckDetails.hardwareEnv.envProperties[1].status === 'WARMING'"></svg-icon>
                   <svg-icon icon-class="ops-error" class="icon-s mr-s" v-else></svg-icon>
-                  操作系统版本
+                  {{ $t('operation.task.step2s5cf2y5') }}
                 </span>
                 <span style="padding-right:24px">{{item.envCheckDetails.hardwareEnv.envProperties[1].value}}</span>
               </div>
-              <span :style="{ color: list.color[index][1] }" class="hardEnvSecond" v-if="item.envCheckDetails.hardwareEnv.envProperties[1].status !== 'NORMAL'">请检查操作系统版本是否符合要求</span>
-              <span :style="{ color: list.color[index][1] }" class="hardEnvSecond" v-else>操作系统版本符合要求</span>
+              <span :style="{ color: list.color[index][1] }" class="hardEnvSecond" v-if="item.envCheckDetails.hardwareEnv.envProperties[1].status !== 'NORMAL'" :title="$t('operation.task.step2s5cf2y6')">{{ $t('operation.task.step2s5cf2y6') }}</span>
+              <span :style="{ color: list.color[index][1] }" class="hardEnvSecond" v-else :title="$t('operation.task.step2s5cf2y7')">{{ $t('operation.task.step2s5cf2y7') }}</span>
             </span>
             <span class="hardEnv">
               <div class="hardEnvFirst">
@@ -45,12 +45,12 @@
                   <svg-icon icon-class="ops-pass" class="icon-s mr-s" v-if="item.envCheckDetails.hardwareEnv.envProperties[2].status === 'NORMAL'"></svg-icon>
                   <svg-icon icon-class="ops-warning" class="icon-s mr-s" v-else-if="item.envCheckDetails.hardwareEnv.envProperties[2].status === 'WARMING'"></svg-icon>
                   <svg-icon icon-class="ops-error" class="icon-s mr-s" v-else></svg-icon>
-                  可用内存
+                  {{ $t('operation.task.step2s5cf2y8') }}
                 </span>
                 <span style="padding-right:24px">{{item.envCheckDetails.hardwareEnv.envProperties[2].value}}</span>
               </div>
-              <span :style="{ color: list.color[index][2] }" class="hardEnvSecond" v-if="item.envCheckDetails.hardwareEnv.envProperties[2].status !== 'NORMAL'">建议内存32GB或者更大</span>
-              <span :style="{ color: list.color[index][2] }" class="hardEnvSecond" v-else>可用内存符合要求</span>
+              <span :style="{ color: list.color[index][2] }" class="hardEnvSecond" v-if="item.envCheckDetails.hardwareEnv.envProperties[2].status !== 'NORMAL'" :title="$t('operation.task.step2s5cf2y9')">{{ $t('operation.task.step2s5cf2y9') }}</span>
+              <span :style="{ color: list.color[index][2] }" class="hardEnvSecond" v-else :title="$t('operation.task.step2s5cf210')">{{ $t('operation.task.step2s5cf210') }}</span>
             </span>
             <span class="hardEnv">
               <div class="hardEnvFirst">
@@ -58,12 +58,12 @@
                   <svg-icon icon-class="ops-pass" class="icon-s mr-s" v-if="item.envCheckDetails.hardwareEnv.envProperties[3].status === 'NORMAL'"></svg-icon>
                   <svg-icon icon-class="ops-warning" class="icon-s mr-s" v-else-if="item.envCheckDetails.hardwareEnv.envProperties[3].status === 'WARMING'"></svg-icon>
                   <svg-icon icon-class="ops-error" class="icon-s mr-s" v-else></svg-icon>
-                  CPU核数
+                  {{ $t('operation.task.step2s5cf211') }}
                 </span>
                 <span style="padding-right:24px">{{item.envCheckDetails.hardwareEnv.envProperties[3].value}}</span>
               </div>
-              <span :style="{ color: list.color[index][3] }" class="hardEnvSecond" v-if="item.envCheckDetails.hardwareEnv.envProperties[3].status !== 'NORMAL'">CPU核数不符合系统要求</span>
-              <span :style="{ color: list.color[index][3] }" class="hardEnvSecond" v-else>CPU核数符合系统要求</span>
+              <span :style="{ color: list.color[index][3] }" class="hardEnvSecond" v-if="item.envCheckDetails.hardwareEnv.envProperties[3].status !== 'NORMAL'" :title="$t('operation.task.step2s5cf212')">{{ $t('operation.task.step2s5cf212') }}</span>
+              <span :style="{ color: list.color[index][3] }" class="hardEnvSecond" v-else :title="$t('operation.task.step2s5cf213')">{{ $t('operation.task.step2s5cf213') }}</span>
             </span>
             <span class="hardEnv">
               <div class="hardEnvFirst">
@@ -71,12 +71,12 @@
                   <svg-icon icon-class="ops-pass" class="icon-s mr-s" v-if="item.envCheckDetails.hardwareEnv.envProperties[4].status === 'NORMAL'"></svg-icon>
                   <svg-icon icon-class="ops-warning" class="icon-s mr-s" v-else-if="item.envCheckDetails.hardwareEnv.envProperties[4].status === 'WARMING'"></svg-icon>
                   <svg-icon icon-class="ops-error" class="icon-s mr-s" v-else></svg-icon>
-                  CPU频率
+                  {{ $t('operation.task.step2s5cf214') }}
                 </span>
                 <span style="padding-right:24px">{{item.envCheckDetails.hardwareEnv.envProperties[4].value}}</span>
               </div>
-              <span :style="{ color: list.color[index][4] }" class="hardEnvSecond" v-if="item.envCheckDetails.hardwareEnv.envProperties[4].status !== 'NORMAL'">CPU频率最小为2.0GHz</span>
-              <span :style="{ color: list.color[index][4] }" class="hardEnvSecond" v-else>CPU频率符合要求</span>
+              <span :style="{ color: list.color[index][4] }" class="hardEnvSecond" v-if="item.envCheckDetails.hardwareEnv.envProperties[4].status !== 'NORMAL'" :title="$t('operation.task.step2s5cf215')">{{ $t('operation.task.step2s5cf215') }}</span>
+              <span :style="{ color: list.color[index][4] }" class="hardEnvSecond" v-else :title="$t('operation.task.step2s5cf216')">{{ $t('operation.task.step2s5cf216') }}</span>
             </span>
             <span class="hardEnv">
               <div class="hardEnvFirst">
@@ -84,19 +84,19 @@
                   <svg-icon icon-class="ops-pass" class="icon-s mr-s" v-if="item.envCheckDetails.hardwareEnv.envProperties[5].status === 'NORMAL'"></svg-icon>
                   <svg-icon icon-class="ops-warning" class="icon-s mr-s" v-else-if="item.envCheckDetails.hardwareEnv.envProperties[5].status === 'WARMING'"></svg-icon>
                   <svg-icon icon-class="ops-error" class="icon-s mr-s" v-else></svg-icon>
-                  可用硬盘空间
+                  {{ $t('operation.task.step2s5cf217') }}
                 </span>
                 <span style="padding-right:24px">{{item.envCheckDetails.hardwareEnv.envProperties[5].value}}</span>
               </div>
-              <span :style="{ color: list.color[index][5] }" class="hardEnvSecond" v-if="item.envCheckDetails.hardwareEnv.envProperties[5].status !== 'NORMAL'">可用硬盘空间不符合系统要求</span>
-              <span :style="{ color: list.color[index][5] }" class="hardEnvSecond" v-else>可用硬盘空间符合系统要求</span>
+              <span :style="{ color: list.color[index][5] }" class="hardEnvSecond" v-if="item.envCheckDetails.hardwareEnv.envProperties[5].status !== 'NORMAL'" :title="$t('operation.task.step2s5cf218')">{{ $t('operation.task.step2s5cf218') }}</span>
+              <span :style="{ color: list.color[index][5] }" class="hardEnvSecond" v-else :title="$t('operation.task.step2s5cf219')">{{ $t('operation.task.step2s5cf219') }}</span>
             </span>
           </div>
           <br>
         </div>
         <br>
         <div class="software">
-          <div class="rowHeader">软件环境检测结果</div>
+          <div class="rowHeader">{{ $t('operation.task.step2s5cf220') }}</div>
           <div class="rowCheck">
             <span class="softEnv">
               <div class="softEnvFirst">
@@ -104,11 +104,11 @@
                   <svg-icon icon-class="ops-pass" class="icon-s mr-s" v-if="item.envCheckDetails.softwareEnv.envProperties[0].status === 'NORMAL'"></svg-icon>
                   <svg-icon icon-class="ops-warning" class="icon-s mr-s" v-else-if="item.envCheckDetails.softwareEnv.envProperties[0].status === 'WARMING'"></svg-icon>
                   <svg-icon icon-class="ops-error" class="icon-s mr-s" v-else></svg-icon>
-                  软件依赖性
+                  {{ $t('operation.task.step2s5cf221') }}
                 </span>
               </div>
-              <span :style="{ color: list.color[index][6] }" class="softEnvSecond" v-if="item.envCheckDetails.softwareEnv.envProperties[0].status !== 'NORMAL'">未安装依赖：{{item.envCheckDetails.softwareEnv.envProperties[0].statusMessage}}</span>
-              <span :style="{ color: list.color[index][6] }" class="softEnvSecond" v-else>符合要求</span>
+              <span :style="{ color: list.color[index][6] }" class="softEnvSecond" v-if="item.envCheckDetails.softwareEnv.envProperties[0].status !== 'NORMAL'" :title="item.envCheckDetails.softwareEnv.envProperties[0].statusMessage">{{ $t('operation.task.step2s5cf222') }}{{item.envCheckDetails.softwareEnv.envProperties[0].statusMessage}}</span>
+              <span :style="{ color: list.color[index][6] }" class="softEnvSecond" v-else :title="$t('operation.task.step2s5cf223')">{{ $t('operation.task.step2s5cf223') }}</span>
             </span>
             <span class="softEnv">
               <div class="softEnvFirst">
@@ -116,11 +116,11 @@
                   <svg-icon icon-class="ops-pass" class="icon-s mr-s" v-if="item.envCheckDetails.softwareEnv.envProperties[1].status === 'NORMAL'"></svg-icon>
                   <svg-icon icon-class="ops-warning" class="icon-s mr-s" v-else-if="item.envCheckDetails.softwareEnv.envProperties[1].status === 'WARMING'"></svg-icon>
                   <svg-icon icon-class="ops-error" class="icon-s mr-s" v-else></svg-icon>
-                  防火墙
+                  {{ $t('operation.task.step2s5cf224') }}
                 </span>
               </div>
-              <span :style="{ color: list.color[index][7] }" class="softEnvSecond" v-if="item.envCheckDetails.softwareEnv.envProperties[1].status !== 'NORMAL'">未开启防火墙</span>
-              <span :style="{ color: list.color[index][7] }" class="softEnvSecond" v-else>已开启防火墙</span>
+              <span :style="{ color: list.color[index][7] }" class="softEnvSecond" v-if="item.envCheckDetails.softwareEnv.envProperties[1].status !== 'NORMAL'" :title="$t('operation.task.step2s5cf225')">{{ $t('operation.task.step2s5cf225') }}</span>
+              <span :style="{ color: list.color[index][7] }" class="softEnvSecond" v-else :title="$t('operation.task.step2s5cf226')">{{ $t('operation.task.step2s5cf226') }}</span>
             </span>
             <span class="softEnv">
               <div class="softEnvFirst">
@@ -128,11 +128,11 @@
                   <svg-icon icon-class="ops-pass" class="icon-s mr-s" v-if="item.envCheckDetails.softwareEnv.envProperties[2].status === 'NORMAL'"></svg-icon>
                   <svg-icon icon-class="ops-warning" class="icon-s mr-s" v-else-if="item.envCheckDetails.softwareEnv.envProperties[2].status === 'WARMING'"></svg-icon>
                   <svg-icon icon-class="ops-error" class="icon-s mr-s" v-else></svg-icon>
-                  安装用户
+                  {{ $t('operation.task.step2s5cf227') }}
                 </span>
               </div>
-              <span :style="{ color: list.color[index][8] }" class="softEnvSecond" v-if="item.envCheckDetails.softwareEnv.envProperties[2].status !== 'NORMAL'">不允许用户安装</span>
-              <span :style="{ color: list.color[index][8] }" class="softEnvSecond" v-else>允许用户安装</span>
+              <span :style="{ color: list.color[index][8] }" class="softEnvSecond" v-if="item.envCheckDetails.softwareEnv.envProperties[2].status !== 'NORMAL'" :title="$t('operation.task.step2s5cf228')">{{ $t('operation.task.step2s5cf228') }}</span>
+              <span :style="{ color: list.color[index][8] }" class="softEnvSecond" v-else :title="$t('operation.task.step2s5cf229')">{{ $t('operation.task.step2s5cf229') }}</span>
             </span>
             <span class="softEnv">
               <div class="softEnvFirst">
@@ -140,17 +140,17 @@
                   <svg-icon icon-class="ops-pass" class="icon-s mr-s" v-if="item.envCheckDetails.softwareEnv.envProperties[3].status === 'NORMAL'"></svg-icon>
                   <svg-icon icon-class="ops-warning" class="icon-s mr-s" v-else-if="item.envCheckDetails.softwareEnv.envProperties[3].status === 'WARMING'"></svg-icon>
                   <svg-icon icon-class="ops-error" class="icon-s mr-s" v-else></svg-icon>
-                  其他
+                  {{ $t('operation.task.step2s5cf230') }}
                 </span>
               </div>
-              <span :style="{ color: list.color[index][9] }" class="softEnvSecond" v-if="item.envCheckDetails.softwareEnv.envProperties[3].status !== 'NORMAL'">不符合要求：{{item.envCheckDetails.softwareEnv.envProperties[3].statusMessage}}</span>
-              <span :style="{ color: list.color[index][9] }" class="softEnvSecond" v-else>其他条件均符合要求</span>
+              <span :style="{ color: list.color[index][9] }" class="softEnvSecond" v-if="item.envCheckDetails.softwareEnv.envProperties[3].status !== 'NORMAL'" :title="item.envCheckDetails.softwareEnv.envProperties[3].statusMessage">{{ $t('operation.task.step2s5cf231') }}{{item.envCheckDetails.softwareEnv.envProperties[3].statusMessage}}</span>
+              <span :style="{ color: list.color[index][9] }" class="softEnvSecond" v-else :title="$t('operation.task.step2s5cf232')">{{ $t('operation.task.step2s5cf232') }}</span>
             </span>
           </div>
           <br>
         </div>
         <template #extra>
-          <a-link @click.stop="checkAgain" style="color: #3291fe;">重新监测</a-link>
+          <a-link @click.stop="checkAgain" style="color: #3291fe;">{{ $t('operation.task.step2s5cf233') }}</a-link>
         </template>
       </a-collapse-item>
     </a-collapse>
@@ -162,7 +162,8 @@ import {onMounted, reactive, ref, watch} from 'vue';
 import {clusterEnvCheck, getHostIp} from "@/api/ops";
 import {Message} from "@arco-design/web-vue";
 import { useRoute } from 'vue-router';
-
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 import { defineProps } from 'vue';
 
 const props = defineProps({
@@ -175,10 +176,6 @@ const loading = ref(true);
 
 const list = reactive({
   envCheckDetails: [],
-  nodes: [
-  ],
-  nodeName: [],
-  nodeIndex: [],
   clusterId: [],
   color: [],
   result : ''
@@ -196,6 +193,7 @@ const checkEnv = async () => {
     .then((res) => {
       if (Number(res.code) === 200) {
         list.result = res.data.result
+        list.envCheckDetails = [];
         props.message.forEach(info => {
           res.data.envCheckDetails.forEach(item => {
             if (item.clusterNodeId === info.clusterNodeId) {
@@ -261,7 +259,7 @@ const fetchHostIp = () => {
       res.data.forEach(item => {hostPuPr.append(item.publicIp,item.privateIp)})
     } else {
       Message.error({
-        content: '获取ip失败'
+        content: t('operation.task.step2s5cf234')
       })
     }
   }) .catch((error) => {
@@ -269,7 +267,6 @@ const fetchHostIp = () => {
   }) .finally(() => {
     list.clusterId = []
     list.clusterId.push(props.clusterId)
-    list.nodes = []
     props.message.forEach((item, index) => {
       let tempPublicIp = hostIdIp.get(item.hostId)
       let tempPrivateIp = hostPuPr.get(tempPublicIp)
@@ -321,14 +318,12 @@ const fetchHostIp = () => {
 .hardEnv {
   display: inline-block;
   width: 15%;
-  height: 82px;
   background-color: rgb(247,248,250);
   margin-left: 1%;
 }
 .softEnv {
   display: inline-block;
   width: 23%;
-  height: 82px;
   background-color: rgb(247,248,250);
   margin-left: 1%;
 }
@@ -343,7 +338,13 @@ const fetchHostIp = () => {
   line-height:47px;
 }
 .hardEnvSecond, .softEnvSecond{
-  padding-left:40px;
+  display: inline-block;
+  white-space: nowrap;
+  padding-left: 40px;
+  height: 20px;
+  width: 88%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 </style>
