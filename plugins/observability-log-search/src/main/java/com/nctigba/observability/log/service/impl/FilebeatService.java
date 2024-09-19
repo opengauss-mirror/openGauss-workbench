@@ -63,6 +63,8 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -72,7 +74,6 @@ import static com.nctigba.observability.log.constants.CommonConstants.CP_FILE;
 import static com.nctigba.observability.log.constants.CommonConstants.DIRECTORY_IS_EMPTY;
 import static com.nctigba.observability.log.constants.CommonConstants.DIRECTORY_IS_EXIST;
 import static com.nctigba.observability.log.constants.CommonConstants.FILEBEAT_HEALTH_STATUS;
-import static com.nctigba.observability.log.constants.CommonConstants.FILE_IS_EXIST;
 import static com.nctigba.observability.log.constants.CommonConstants.MILLISECOND;
 import static com.nctigba.observability.log.constants.CommonConstants.MKDIR_FILE;
 import static com.nctigba.observability.log.constants.CommonConstants.MONITOR_CYCLE;
@@ -213,8 +214,9 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                 if (pkg == null) {
                     isDownload = true;
                 } else {
-                    String fileIsExists = session.execute(String.format(FILE_IS_EXIST, pkg.getPath()));
-                    if (fileIsExists.contains("false")) {
+                    Path pkgPath = Paths.get(pkg.getPath());
+                    boolean isFileExists = Files.exists(pkgPath);
+                    if (!isFileExists) {
                         isDownload = true;
                     }
                 }
