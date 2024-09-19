@@ -245,6 +245,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void start(int taskId) {
         DiagnosisTaskDO task = taskMapper.selectById(taskId);
+        task.setState(TaskStateEnum.SQL_RUNNING);
         task.setTaskStartTime(new Date());
         task.addRemarks("start running diagnosis");
         taskMapper.updateById(task);

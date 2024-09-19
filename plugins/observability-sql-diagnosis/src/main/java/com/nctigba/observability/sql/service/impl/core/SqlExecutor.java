@@ -73,7 +73,6 @@ public class SqlExecutor {
     public void executeSql(DiagnosisTaskDO task) {
         try {
             task.addRemarks("***start execute sql***");
-            task.setState(TaskStateEnum.SQL_RUNNING);
             mapper.updateById(task);
             var rsList = new ArrayList<String>();
             try (var conn = clusterManager.getConnectionByNodeId(task.getNodeId(), task.getDbName(),
