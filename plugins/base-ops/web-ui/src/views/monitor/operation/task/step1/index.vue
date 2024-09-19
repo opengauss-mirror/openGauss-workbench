@@ -1361,17 +1361,21 @@ const validateHostUserCheck = (inputvalue:string, callback:any) => {
 
 const validatePortCheck = (inputvalue:string, callback:any) => {
   return new Promise((resolve, reject) => {
-    checkPortExist(data.hostId, inputvalue, data.clusterId).then((res) => {
-      if (res.data === "NO_USED") {
-        data.port = inputvalue
-        resolve(true)
-      } else if (data.clusterId === ''){
-        resolve(new Error('Port already in use'))
-        callback(data.hostIp + 'IP 下' + inputvalue + '端口被占用，无法保存')
-      }
-    }).catch((error) => {
-      console.error(error)
-    })
+    if (data.hostId === '' || inputvalue === '') {
+      resolve(new Error('NO HostIp'))
+    } else {
+      checkPortExist(data.hostId, inputvalue, data.clusterId).then((res) => {
+        if (res.data === "NO_USED") {
+          data.port = inputvalue
+          resolve(true)
+        } else if (data.clusterId === ''){
+          resolve(new Error('Port already in use'))
+          callback(data.hostIp + 'IP 下' + inputvalue + '端口被占用，无法保存')
+        }
+      }).catch((error) => {
+        console.error(error)
+      })
+    }
   })
 }
 

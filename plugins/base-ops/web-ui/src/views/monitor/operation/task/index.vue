@@ -239,7 +239,7 @@ const createClusterNode = async (clusterId:string, hostId:string, hostUserId:str
 const updateClusterNode = async (clusterNodeId:string, clusterId:string, hostId:string, hostUserId:string, nodeType:string,
                                  dataPath:string, azOwner:string, azPriority:string, isCMMaster:boolean, cmDataPath:string, cmPort:number) => {
   return new Promise((resolve) => {
-    createClustertaskNode({
+    updateClustertaskNode({
       "clusterNodeId": clusterNodeId,
       "clusterId": clusterId,
       "hostId":hostId,
@@ -506,12 +506,14 @@ const saveConfig = async () => {
   if (currentStep.value === 1) {
     const formRuleCheck = stepOneComp.value
     const isValid = formRuleCheck.validateAllFields()
-    if (isValid && editFlag.value) {
+    if (isValid && isValid.PromiseResult === true &&editFlag.value) {
       try {
         await saveUpdateCulster()
       } catch (error) {
         console.error('Error executing parts:', error)
       }
+    } else {
+      Message.error('页面信息未填写完全')
     }
   } else {
     Message.success('保存草稿箱成功')
