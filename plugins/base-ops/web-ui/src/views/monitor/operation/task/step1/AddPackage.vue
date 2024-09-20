@@ -376,6 +376,7 @@ const open = (
   tempVersion.value = data.formData.packageVersion
   tempVersionNum.value = data.formData.packageVersionNum
   data.show = true
+  progressPercent.value = 0
 }
 
 defineExpose({
@@ -411,7 +412,7 @@ const progressPercent = ref(0)
 const submit = async () => {
   let isvalid = await formRef.value?.validate()
   if (!isvalid && progressPercent.value === 0) {
-    if (uploadStatusTag.value) {
+    if (uploadStatusTag.value ) {
       const formData = new FormData
       formData.append('name', data.formData.name)
       formData.append('os', data.formData.os)

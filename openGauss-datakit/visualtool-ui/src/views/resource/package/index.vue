@@ -93,6 +93,7 @@
     <addPack
       ref="addPackRef"
       @finish="addPackClose()"
+      @close="addPackClose"
       @submit="addPackSubmit()"
     ></addPack>
     <div style="bottom: 20px; right: 20px;">
@@ -118,7 +119,17 @@ import { KeyValue } from '@/types/global'
 import { Message } from '@arco-design/web-vue/es/index'
 import { onMounted, reactive, ref, onUnmounted, watch, toRaw } from 'vue'
 import { cpuOption, memoryOption, diskOption } from './option'
-import {hostPage, checkPackage, delPackage, getVersionNum, getPackageList, getPackagePage, download, packageOnlineUpdate} from '@/api/ops'
+import {
+  hostPage,
+  checkPackage,
+  delPackage,
+  getVersionNum,
+  getPackageList,
+  getPackagePage,
+  download,
+  packageOnlineUpdate,
+  delPackageV2
+} from '@/api/ops'
 import Socket from '@/utils/websocket'
 import WujieVue from 'wujie-vue3'
 import { useI18n } from 'vue-i18n'
@@ -166,11 +177,7 @@ const addPackSubmit = () => {
   if (wsBusinessId && wsBusinessId.value && wsBusinessId.value != '') {
     downloadPackage()
   }
-  showDownloadPopup.value = true
-  setTimeout(() => {
-    console.log('12121')
-    getListData(filter.pageSize, filter.pageNum, searchFormData)
-  }, 5000)
+  getListData(filter.pageSize, filter.pageNum, searchFormData)
 }
 
 const parentTags = ref([
@@ -245,6 +252,7 @@ const searchTag = (inputValue: any) => {
 
 const handleSelected = (keys: (string | number)[]) => {
   list.selectedpackageIds = keys
+  data.value.selectedData = {}
   list.selectedpackageIds.forEach((packageId: string | number) => {
     const findOne = list.data.find((item: KeyValue) => {
       return item.packageId === packageId
@@ -259,13 +267,13 @@ const { currentLocale } = useLocale()
 const translateVersion = (version:OpenGaussVersionEnum) => {
   if (currentLocale.value === 'en-US') {
     switch (version) {
-    case OpenGaussVersionEnum.ENTERPRISE:
-      return 'Enterprise'
-    case OpenGaussVersionEnum.MINIMAL_LIST:
-      return 'Simplified'
-    case OpenGaussVersionEnum.LITE:
-      return 'Lite'
-  }
+      case OpenGaussVersionEnum.ENTERPRISE:
+        return 'Enterprise'
+      case OpenGaussVersionEnum.MINIMAL_LIST:
+        return 'Simplified'
+      case OpenGaussVersionEnum.LITE:
+        return 'Lite'
+    }
   }
   switch (version) {
     case OpenGaussVersionEnum.ENTERPRISE:
@@ -283,17 +291,18 @@ const checkPack = (record: KeyValue) => {
   checkPackage(templist).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       Message.success({
-        content: '检查通过'
+        content: '检查完成'
       })
     } else {
       Message.error({
-        content: '检查未通过'
-    })
-      }
+        content: '检查未完成'
+      })
+    }
   }) .catch(error => {
     console.error('260' + error)
+  }) .finally(() => {
+    getListData(filter.pageSize, filter.pageNum, searchFormData)
   })
-  getListData(filter.pageSize, filter.pageNum, searchFormData)
 }
 
 const checkSelectedPack = () => {
@@ -312,67 +321,65 @@ const checkPackMul = (records: any) => {
   checkPackage(records).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       Message.success({
-        content: '检查全部通过'
+        content: '检查完成'
       })
     } else {
       Message.error({
-        content: '检查未全部通过'
+        content: '检查失败'
       })
     }
   }) .catch(error => {
     console.error('260' + error)
+  }) .finally(() => {
+    getListData(filter.pageSize, filter.pageNum, searchFormData)
   })
-  getListData(filter.pageSize, filter.pageNum, searchFormData)
 }
 
 const deleteRows = (record: KeyValue) => {
-  delPackage(record.packageId).then((res: KeyValue) => {
+  let templist = []
+  templist.push(record.packageId)
+  delPackageV2(templist).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       Message.success({
         content: '删除成功'
       })
-      getListData(filter.pageSize, filter.pageNum, searchFormData)
     }
   }) .catch(error => {
-    console.error('310' + error)
+    console.error(error)
+  }) .finally(() => {
+    getListData(filter.pageSize, filter.pageNum, searchFormData)
   })
-  getListData(filter.pageSize, filter.pageNum, searchFormData)
 }
 
 const deleteSelectedHosts = () => {
   let selectedRecord = []
   for (let item in toRaw(data.value.selectedData)) {
-    selectedRecord.push(data.value.selectedData[item])
+    selectedRecord.push(item)
   }
   if (selectedRecord.length > 0) {
     deleteMultipleRows(selectedRecord)
-    getListData(filter.pageSize, filter.pageNum, searchFormData)
   } else {
     Message.warning(t('请至少选择一个安装包'))
   }
 }
 
 const deleteMultipleRows = (records: KeyValue) => {
-  const deletePromises = records.map((record: { packageId: string, path: string }) => delPackage(record.packageId))
-  Promise.all(deletePromises).then((responses) => {
-    let allSuccess = true
-    responses.forEach((res) => {
-      if (Number(res.code) !== 200) {
-        allSuccess = false
-      }
-    })
-    if (allSuccess) {
-      Message.success(t('已删除全部选择安装包'))
+  delPackageV2(records).then((res: KeyValue) => {
+    if (Number(res.code) === 200) {
+      Message.success({
+        content: '已删除全部选择安装包'
+      })
     } else {
-      Message.error(t('删除失败'))
+      Message.error({
+        content: '删除失败'
+      })
     }
     list.selectedpackageIds = []
-    data.value.selectedData = []
+    data.value.selectedData = {}
+  }) .catch(error => {
+    console.error('260' + error)
+  }) .finally(() => {
     getListData(filter.pageSize, filter.pageNum, searchFormData)
-  }).catch(() => {
-    Message.error({
-      content: '344 An error occurred while deleting packages'
-    })
   })
 }
 
@@ -567,15 +574,22 @@ const getListData = (pageSize?:number, pageNum?:number, formData?: FormData) => 
       tempPackage.cpuArch = item.cpuArch
       tempPackage.packageVersion = item.packageVersion
       tempPackage.packageVersionNum = item.packageVersionNum
-      tempPackage.packageUrl = item.packageUrl === ''? item.packagePath.name:item.packageUrl
+      if (item.packageUrl) {
+        tempPackage.packageUrl = item.packageUrl
+      } else if (item.packagePath && item.packagePath.realPath) {
+        tempPackage.packageUrl = item.packagePath.realPath
+      } else {
+        tempPackage.packageUrl = ''
+      }
       tempPackage.packagePath = item.packagePath
-      tempPackage.hostLabel = item.packageUrl === ''? '离线上传' : '在线下载'
+      tempPackage.hostLabel = item.packageUrl? '在线下载' : '离线上传'
       list.data.push({ ...tempPackage })
     })
     list.page.total = res.total
   }) .finally(() => {
     list.loading = false
     addSearchPackage(list.page.total)
+    handleSelected(selectedRowKeys.value)
   }) .catch(error => {
     console.error('522' + error)
   })
@@ -658,6 +672,9 @@ const simulateDownload = async () => {
 const handleOk = () => {
   processVisible.value = false
   init()
+}
+const close = () => {
+  processVisible.value = false
 }
 
 
