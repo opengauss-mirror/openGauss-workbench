@@ -71,7 +71,9 @@ import {
   checkCluster,
   createClusterTask, createClustertaskNode, envCheckResult, pathEmpty,
   submitCluster,
-  updateClusterTask, updateClustertaskNode
+  updateClusterTask, 
+  updateClustertaskNode,
+  checkPkg
 } from "@/api/ops";
 import {useRoute, useRouter} from "vue-router";
 import {OpenGaussVersionEnum} from "@/types/ops/install";
@@ -103,6 +105,7 @@ const onPrev = () => {
 // next step
 const onNext = () => {
   if (currentStep.value === 1) {
+
     if (saveFlag.value === false) {
       saveConfig()
     }
@@ -111,7 +114,15 @@ const onNext = () => {
     } else {
       checkCluster(clusterId.value || tempClusterId.value) .then((res) => {
         if (Number(res.code) === 200 ) {
-          currentStep.value = 2
+          checkPkg(subTaskConfig.value.packageId).then(res=>{
+            if(!res.data){
+              Message.error("安装包检查未通过，可能会影响后续流程")
+            }else{
+            currentStep.value = 2
+            }
+          }).catch(err=>{
+            Message.error("安装包检查未通过，可能会影响后续流程")
+          })
         } else {
           Message.error('检测未通过')
         }
@@ -506,6 +517,16 @@ const saveConfig = async () => {
   if (currentStep.value === 1) {
     const formRuleCheck = stepOneComp.value
     const isValid = formRuleCheck.validateAllFields()
+    try{
+    const res = await checkPkg(subTaskConfig.value.packageId)
+    if(!res.data) {
+      Message.error("安装包检查未通过，可能会影响流程")
+      return
+      }
+    } catch (error) {
+      Message.error("安装包检查未通过，可能会影响流程")
+      return
+    }
     if (isValid &&editFlag.value) {
       try {
         await saveUpdateCulster()

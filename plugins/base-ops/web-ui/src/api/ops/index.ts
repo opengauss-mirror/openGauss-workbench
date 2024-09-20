@@ -447,6 +447,10 @@ export const checkPackage = (data: KeyValue) => {
   return axios.post(`/installPackageManager/v2/check/package/`, data)
 }
 
+export const checkPkg = (packageId: String) => {
+  return axios.post(`/installPackageManager/v2/check/pkg?packageId=${packageId}`)
+}
+
 export const getVersionNum = () => {
   return axios.get(`/installPackageManager/v2/list/version/number`)
 }

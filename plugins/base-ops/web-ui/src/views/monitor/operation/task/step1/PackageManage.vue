@@ -85,7 +85,7 @@
 
 import { Message } from '@arco-design/web-vue/es/index'
 import { reactive, ref, onUnmounted, defineEmits, toRaw} from 'vue'
-import {checkPackage, delPackage, delPackageV2, getPackageList} from '@/api/ops'
+import {checkPkg, delPackage, delPackageV2, getPackageList} from '@/api/ops'
 import { useI18n } from 'vue-i18n'
 import {CpuArch, OS} from "@/types/os"
 import {OpenGaussVersionEnum} from "@/types/ops/install"
@@ -140,10 +140,8 @@ const handleSelected = (keys: (string | number)[]) => {
 }
 
 const checkPack = (record: KeyValue) => {
-  let tempPackageId = []
-  tempPackageId.push(record.packageId)
-  checkPackage(tempPackageId).then((res: KeyValue) => {
-    if (Number(res.code) === 200) {
+  checkPkg(record.packageId).then((res: KeyValue) => {
+    if (res.data) {
       Message.success({
         content: '检查通过'
       })
