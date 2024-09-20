@@ -28,13 +28,21 @@ import cn.hutool.core.codec.Base64;
 import cn.hutool.core.map.MapUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.gitee.starblues.core.DefaultPluginManager;
 import com.gitee.starblues.core.PluginInfo;
 import com.gitee.starblues.core.PluginState;
+import com.gitee.starblues.core.RealizeProvider;
+import com.gitee.starblues.core.exception.PluginException;
+import com.gitee.starblues.integration.IntegrationConfiguration;
 import com.gitee.starblues.integration.operator.PluginOperator;
 import com.gitee.starblues.integration.operator.upload.UploadParam;
 import com.gitee.starblues.spring.extract.ExtractCoordinate;
 import com.gitee.starblues.spring.extract.ExtractFactory;
 import com.google.common.collect.Maps;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -91,6 +99,10 @@ public class SystemPluginController extends BaseController {
     private ISysPluginLogoService iSysPluginLogoService;
     @Autowired
     private ExtractFactory extractFactory;
+    @Autowired
+    private RealizeProvider realizeProvider;
+    @Autowired
+    private IntegrationConfiguration configuration;
 
 
     /**
@@ -230,6 +242,7 @@ public class SystemPluginController extends BaseController {
     @ApiOperation("instal plugin")
     public AjaxResult install(@RequestParam("file") MultipartFile jarFile) {
         try {
+            preInstall(jarFile);
             UploadParam uploadParam = UploadParam.byMultipartFile(jarFile)
                 .setBackOldPlugin(true)
                 .setStartPlugin(true)
@@ -245,7 +258,7 @@ public class SystemPluginController extends BaseController {
             StringWriter errorsWriter = new StringWriter();
             e.printStackTrace(new PrintWriter(errorsWriter));
             log.error(errorsWriter.toString());
-            return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_INSTALL_ERROR.code());
+            return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_INSTALL_ERROR.msg() + ":" + e.getMessage());
         }
     }
     
@@ -374,5 +387,53 @@ public class SystemPluginController extends BaseController {
     public AjaxResult savePluginConfigData(@RequestBody PluginConfigDataDto configDataDto) {
         sysPluginConfigDataService.savePluginConfigData(configDataDto.getPluginId(), configDataDto.getConfigData());
         return AjaxResult.success();
+    }
+
+    private void preInstall(MultipartFile jarFile) {
+        Path duplicateFilePath = getPluginPathWithDuplicateFileName(getPluginPaths(), jarFile);
+        if (duplicateFilePath == null) {
+            return;
+        }
+        if (isPluginLoaded(duplicateFilePath)) {
+            return;
+        }
+        if (!removePluginInstallationPackage(duplicateFilePath)) {
+            throw new PluginException(
+                    "A file with the same name exists in the system plugin directory and failed to be deleted.");
+        }
+    }
+
+    private List<Path> getPluginPaths() {
+        return realizeProvider.getPluginScanner().scan(
+                new DefaultPluginManager(realizeProvider, configuration).getPluginsRoots());
+    }
+
+    private Path getPluginPathWithDuplicateFileName(List<Path> pluginPaths, MultipartFile jarFile) {
+        String jarFileName = jarFile.getOriginalFilename();
+        Path result = null;
+
+        for (Path path : pluginPaths) {
+            String fileName = path.getFileName().toString();
+            if (fileName.equals(jarFileName)) {
+                result = path;
+            }
+        }
+
+        return result;
+    }
+
+    private boolean isPluginLoaded(Path pluginPath) {
+        return pluginOperator.getPluginInfo(pluginOperator.parse(pluginPath).getPluginId()) != null;
+    }
+
+    private boolean removePluginInstallationPackage(Path pluginPath) {
+        try {
+            Files.delete(pluginPath);
+            log.info("Plugin installation package deleted successfully: {}", pluginPath);
+        } catch (IOException e) {
+            log.error("Failed to delete plugin installation package: {}", pluginPath, e);
+            return false;
+        }
+        return true;
     }
 }
