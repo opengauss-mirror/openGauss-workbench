@@ -460,9 +460,8 @@ const handleClusterValue = (val: any) => {
   diagnosisParam.value.clusterId = val[0]
   diagnosisParam.value.dbName = null
   diagnosisParam.value.schemaName = null
-
   dbData(nodeId)
-  schemaData(nodeId)
+  schemaData(nodeId, '')
 }
 // get database
 const { data: ret, run: dbData } = useRequest(
@@ -481,8 +480,8 @@ watch(ret, (ret: any[]) => {
 })
 // get schema
 const { data: schema, run: schemaData } = useRequest(
-  (nodeId: string) => {
-    return ogRequest.get('/sqlDiagnosis/api/v1/clusters/' + nodeId + '/schema', '')
+  (nodeId: string, dbName: string) => {
+    return ogRequest.get('/sqlDiagnosis/api/v1/clusters/' + nodeId + '/schema', {dbName:dbName})
   },
   { manual: true }
 )
@@ -530,8 +529,9 @@ const clusterLoaded = (val: any) => {
 
 const updateSchemaList = (val: any) => {
   let nodeId = diagnosisParam.value.nodeId
+  let dbName = diagnosisParam.value.dbName
   if (nodeId && val) {
-    schemaData(nodeId)
+    schemaData(nodeId,dbName==='null'?'':dbName)
   }
 }
 </script>

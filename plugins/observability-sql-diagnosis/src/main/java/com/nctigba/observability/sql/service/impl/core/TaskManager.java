@@ -94,14 +94,14 @@ public class TaskManager {
         sql.orderByAsc(DiagnosisTaskDO::getId);
         List<DiagnosisTaskDO> createTask = taskMapper.selectList(sql);
         for (DiagnosisTaskDO diagnosisTask : createTask) {
-            nodeList.add(diagnosisTask.getNodeId());
-            diagnosisTask.setState(TaskStateEnum.WAITING);
             if (nodeList.contains(diagnosisTask.getNodeId())) {
                 continue;
             }
             if (nodeList.size() > CommonConstants.MAX_RUN_NODE_NUM) {
                 break;
             }
+            nodeList.add(diagnosisTask.getNodeId());
+            diagnosisTask.setState(TaskStateEnum.WAITING);
             taskMapper.updateById(diagnosisTask);
             executorService.execute(() -> taskService.start(diagnosisTask.getId()));
         }
