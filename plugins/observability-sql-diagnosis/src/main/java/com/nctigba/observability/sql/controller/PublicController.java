@@ -78,11 +78,12 @@ public class PublicController {
      * Retrieves the list of database schemas for the specified cluster.
      *
      * @param nodeId Unique identifier of the cluster to query.
+     * @param dbName Name of the database for which to retrieve schema information.
      * @return A list of string values representing the names of the database schemas within the specified cluster.
      */
     @GetMapping("/clusters/{nodeId}/schema")
-    public AjaxResult schemaList(@PathVariable String nodeId) {
-        return AjaxResult.success(clusterManager.schemaList(nodeId));
+    public AjaxResult schemaList(@PathVariable String nodeId, String dbName) {
+        return AjaxResult.success(clusterManager.schemaList(nodeId, dbName));
     }
 
     /**

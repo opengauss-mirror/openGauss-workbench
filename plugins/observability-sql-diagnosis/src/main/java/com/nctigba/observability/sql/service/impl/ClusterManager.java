@@ -27,6 +27,7 @@ import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
 import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
+import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.DbMapper;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.Data;
@@ -52,6 +53,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.nctigba.observability.sql.constant.SqlConstants.GET_SCHEMA_NAME_SQL;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -59,7 +62,6 @@ public class ClusterManager {
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private EncryptionUtils encryptionUtils;
-
     private final DataSource dataSource;
 
     private final DbMapper dbMapper;
@@ -89,13 +91,18 @@ public class ClusterManager {
      * @param nodeId String
      * @return List
      */
-    public List<String> schemaList(String nodeId) {
-        try {
-            setCurrentDatasource(nodeId, null);
-            return dbMapper.schemaList();
-        } finally {
-            pool();
+    public List<String> schemaList(String nodeId, String dbName) {
+        List<String> list = new ArrayList<>();
+        try (var conn = StringUtils.isEmpty(dbName) ? getConnectionByNodeId(nodeId) : getConnectionByNodeId(
+                nodeId, dbName); var st = conn.createStatement()) {
+            var rs = st.executeQuery(GET_SCHEMA_NAME_SQL);
+            while (rs.next()) {
+                list.add(rs.getString(1));
+            }
+        } catch (SQLException e) {
+            throw new HisDiagnosisException("query schema fail:" + e);
         }
+        return list;
     }
 
     /**
