@@ -105,7 +105,6 @@ const onPrev = () => {
 // next step
 const onNext = () => {
   if (currentStep.value === 1) {
-
     if (saveFlag.value === false) {
       saveConfig()
     }
@@ -337,7 +336,9 @@ const saveUpdateCulster = async () => {
           saveFlag.value = true
           for (const item of clusterTaskList.clusterNodes) {
             if (item.nodeType === 'MASTER') {
-              const result = await createClusterNode(clusterId.value, item.hostId, item.hostUserId, item.nodeType,
+              const masterUserId=item.hostUserId || subTaskConfig.value.hostUserId;
+              const masterHostId=item.hostId || subTaskConfig.value.hostId;
+              const result = await createClusterNode(clusterId.value, masterHostId, masterUserId, item.nodeType,
                 item.dataPath, item.azOwner, item.azPriority, item.isCMMaster, item.cmDataPath, item.cmPort)
               if (result !== false) {
                 item.clusterNodeId = result
@@ -435,6 +436,7 @@ const saveUpdateCulster = async () => {
         if (res.code === 200) {
           batchClusterNodes(clusterId.value).then(async (res) => {
             if (res.code === 200) {
+              saveFlag.value= true
               const clusterNodesMap = new Map(res.data.clusterNodes.map(item => [item.clusterNodeId, item]))
               const nodesIpMap = new Map(res.data.clusterNodes.map(item => [item.hostId, item]))
               for (const item of clusterTaskList.clusterNodes) {
@@ -443,7 +445,9 @@ const saveUpdateCulster = async () => {
                   if (itemClusterNode
                     && (!itemClusterNode.hostId || itemClusterNode.hostId !== item.hostId)
                     && (!itemClusterNode.hostUserId || itemClusterNode.hostUserId !== item.hostUserId)) {
-                    const result = await updateClusterNode(item.clusterNodeId, clusterId.value, item.hostId, item.hostUserId,
+                    const hostUserId = item.nodeType === 'MASTER' && !item.hostUserId?subTaskConfig.value.hostUserId:item.hostUserId;
+                    const hostId = item.nodeType === 'MASTER' && !item.hostId?subTaskConfig.value.hostId:item.hostId;
+                    const result = await updateClusterNode(item.clusterNodeId, clusterId.value, hostId, hostUserId,
                       item.nodeType, item.dataPath, item.azOwner, item.azPriority, item.isCMMaster, item.cmDataPath, item.cmPort)
                     saveFlag.value = saveFlag.value && result
                   }
@@ -458,6 +462,9 @@ const saveUpdateCulster = async () => {
                   }
                 }
               }
+            if (saveFlag.value) {
+              Message.success('保存草稿箱成功')
+            }
             }
           }) .catch((error) => {
             console.error((error))
@@ -527,7 +534,7 @@ const saveConfig = async () => {
       Message.error("安装包检查未通过，可能会影响流程")
       return
     }
-    if (isValid &&editFlag.value) {
+    if (isValid && editFlag.value) {
       try {
         await saveUpdateCulster()
       } catch (error) {
@@ -559,11 +566,10 @@ const init = () => {
   const tempRecord = route.params.record?JSON.parse(route.params.record):{}
   if (tempRecord.clusterId) {
     tempClusterId.value = tempRecord.clusterId
-    saveFlag.value=true
   } else {
-    saveFlag.value = false
     tempClusterId.value = ''
   }
+  saveFlag.value = false
   clusterId.value = ''
   createClusterId.value = ''
   createClusternodeList.value = []

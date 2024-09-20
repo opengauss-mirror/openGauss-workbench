@@ -552,19 +552,19 @@ const fetchSameOs = (isChange:boolean) => {
           item.hostIp = data.hostIp
           item.hostId = data.hostId
         } else if (hostIpSame.value === '' || !hostIpSame.value.includes(item.hostIp) || item.hostIp === data.hostIp ) {
-          item.hostIp = ''
-          item.hostId = ''
+            item.hostIp = ''
+            item.hostId = ''
         }
         item.editing = true
         tempEditArr.value[item.order] = item
         editFlagGroup.value[item.order] = {
-          hostIp: false,
-          cmDataPath: true,
-          dataPath: true,
-          CMMaster: false,
-          CmPort: false,
-          order: item.order
-        }
+        hostIp: false,
+        cmDataPath: true,
+        dataPath: true,
+        CMMaster: false,
+        CmPort: false,
+        order: item.order
+      }
       })
     }
   })
@@ -962,13 +962,13 @@ const addColumn = () => {
   if (newData.editing) {
     tempEditArr.value[clusterOrder.value] = JSON.parse(JSON.stringify(newData))
     editFlagGroup.value[clusterOrder.value] = {
-      hostIp: false,
-      cmDataPath: true,
-      dataPath: true,
-      CMMaster: false,
-      CmPort: false,
-      order: clusterOrder.value
-    }
+        hostIp: false,
+        cmDataPath: true,
+        dataPath: true,
+        CMMaster: false,
+        CmPort: false,
+        order: clusterOrder.value
+      }
   }
   data.clusterNodes.push(newData)
 }
@@ -1026,9 +1026,9 @@ const checkSameUser = (inputValue: string,order: number) => {
 }
 
 const checkClusterPathDB = (inputValue: string, order: number) => {
-  let editFlag = editFlagGroup.value[order]
-  tempEditArr.value[order].dataPath = inputValue
-  editFlag.dataPath = checkDataPath(inputValue)
+    let editFlag = editFlagGroup.value[order]
+    tempEditArr.value[order].dataPath = inputValue
+    editFlag.dataPath = checkDataPath(inputValue)
 }
 
 const checkCMMaster =(inputValue: string, order: number) => {
@@ -1099,7 +1099,7 @@ const deleteRows = (record:any) => {
       console.error(error)
     })
   }else{
-    data.clusterNodes =  data.clusterNodes.filter(item => item.order !== record.order)
+      data.clusterNodes =  data.clusterNodes.filter(item => item.order !== record.order)
   }
 }
 
@@ -1118,40 +1118,40 @@ const saveCluster = async (record: any) => {
   if (record.order === 1) {
     editFlag.hostIp = true
   }
-  let checkHostIpPromise = new Promise ((resolve) => {
-    if (record.order !== 1) {
-      if (!tempEditCluster.hostIp || tempEditCluster.hostIp === '') {
-        Message.error('ip不可为空')
-      } else {
-        if (tempEditCluster.hostIp === masterHostIp.value && tempEditCluster.nodeType !== "MASTER") {
-          Message.error("所选ip与主机ip相同，请重新选择")
+    let checkHostIpPromise = new Promise ((resolve) => {
+      if (record.order !== 1) {
+        if (!tempEditCluster.hostIp || tempEditCluster.hostIp === '') {
+          Message.error('ip不可为空')
         } else {
-          let tempHostId = hostIpId.get(tempEditCluster.hostIp)
-          let tempFlag = false
-          getHostUser(tempHostId).then((res) => {
-            res.data.forEach(item => {
-              if (item.username === data.hostUser) {
-                tempFlag = true
-                tempEditCluster.hostIp = getIpById(item.hostId)
-                tempEditCluster.hostId = item.hostId
-                tempEditCluster.hostUserId = item.hostUserId
-                editFlag.hostIp = true
+          if (tempEditCluster.hostIp === masterHostIp.value && tempEditCluster.nodeType !== "MASTER") {
+            Message.error("所选ip与主机ip相同，请重新选择")
+          } else {
+            let tempHostId = hostIpId.get(tempEditCluster.hostIp)
+            let tempFlag = false
+            getHostUser(tempHostId).then((res) => {
+              res.data.forEach(item => {
+                if (item.username === data.hostUser) {
+                  tempFlag = true
+                  tempEditCluster.hostIp = getIpById(item.hostId)
+                  tempEditCluster.hostId = item.hostId
+                  tempEditCluster.hostUserId = item.hostUserId
+                  editFlag.hostIp = true
+                }
+              })
+              if (!tempFlag) {
+                Message.error("所选ip不存在该用户，请重新选择ip或在该ip新增用户")
               }
+            }) .catch((error) => {
+              console.error(error)
+            }) .finally(() => {
+              resolve(editFlag.hostIp)
             })
-            if (!tempFlag) {
-              Message.error("所选ip不存在该用户，请重新选择ip或在该ip新增用户")
-            }
-          }) .catch((error) => {
-            console.error(error)
-          }) .finally(() => {
-            resolve(editFlag.hostIp)
-          })
+          }
         }
+      } else {
+        resolve(editFlag.hostIp)
       }
-    } else {
-      resolve(editFlag.hostIp)
-    }
-  })
+    })
   let checkCmPortPromise = new Promise ((resolve) => {
     if (!editFlag.CmPort && tempEditCluster.cmPort && tempEditCluster.hostIp && data.enableCmTool) {
       checkPortExist(hostIpId.get(tempEditCluster.hostIp), tempEditCluster.cmPort, data.clusterId) .then((res) => {
@@ -1241,8 +1241,8 @@ const saveCluster = async (record: any) => {
           updateClustertaskNode({
             "clusterNodeId": record.clusterNodeId,
             "clusterId": data.clusterId,
-            "hostId": (!record.hostId && record.order == 1)? data.hostId: record.hostId,
-            "hostUserId": record.hostUserId,
+            "hostId": (!record.hostId && record.nodeType==='MASTER')? data.hostId: record.hostId,
+            "hostUserId": (!record.hostUserId && record.nodeType==='MASTER')? data.hostUserId: record.hostUserId,
             "nodeType": record.nodeType,
             "dataPath": !record.dataPath ? "/opt/" + data.hostUser + "/openGauss/data/dn": record.dataPath,
             "azOwner": record.azOwner,
@@ -1273,8 +1273,8 @@ const saveCluster = async (record: any) => {
           createClustertaskNode({
             "clusterNodeId": '',
             "clusterId": data.clusterId,
-            "hostId": record.hostId,
-            "hostUserId": record.hostUserId,
+            "hostId": (!record.hostId && record.nodeType==='MASTER')? data.hostId: record.hostId,
+            "hostUserId": (!record.hostUserId && record.nodeType==='MASTER')? data.hostUserId: record.hostUserId,
             "nodeType": record.nodeType,
             "dataPath": record.dataPath,
             "azOwner": record.azOwner,
@@ -1374,21 +1374,21 @@ const validateHostUserCheck = (inputvalue:string, callback:any) => {
 
 const validatePortCheck = (inputvalue:string, callback:any) => {
   return new Promise((resolve, reject) => {
-    if (data.hostId === '' || inputvalue === '') {
+if (data.hostId === '' || inputvalue === '') {
       resolve(new Error('NO HostIp'))
     } else {
-      checkPortExist(data.hostId, inputvalue, data.clusterId).then((res) => {
-        if (res.data === "NO_USED") {
-          data.port = inputvalue
-          resolve(true)
-        } else if (data.clusterId === ''){
-          resolve(new Error('Port already in use'))
-          callback(data.hostIp + 'IP 下' + inputvalue + '端口被占用，无法保存')
-        }
-      }).catch((error) => {
-        console.error(error)
-      })
-    }
+    checkPortExist(data.hostId, inputvalue, data.clusterId).then((res) => {
+      if (res.data === "NO_USED") {
+        data.port = inputvalue
+        resolve(true)
+      } else if (data.clusterId === ''){
+        resolve(new Error('Port already in use'))
+        callback(data.hostIp + 'IP 下' + inputvalue + '端口被占用，无法保存')
+      }
+    }).catch((error) => {
+      console.error(error)
+    })
+}
   })
 }
 
@@ -1804,8 +1804,8 @@ const init = () => {
 const tempClusterId = ref('')
 
 watch(() => props.clusterId, (newVal) => {
-  init()
-}, { immediate: true })
+    init()
+  }, { immediate: true })
 watch(() => props.createClusterId, (newVal) => {
   data.clusterId = newVal
 }, { immediate: true })
