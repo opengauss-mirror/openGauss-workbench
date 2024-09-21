@@ -71,7 +71,7 @@ import {
   checkCluster,
   createClusterTask, createClustertaskNode, envCheckResult, pathEmpty,
   submitCluster,
-  updateClusterTask, 
+  updateClusterTask,
   updateClustertaskNode,
   checkPkg
 } from "@/api/ops";
@@ -534,7 +534,8 @@ const saveConfig = async () => {
       Message.error("安装包检查未通过，可能会影响流程")
       return
     }
-    if (isValid && editFlag.value) {
+    await checkPathsEmpty()
+    if (isValid && editFlag.value && pathIsEmpty.value) {
       try {
         await saveUpdateCulster()
       } catch (error) {
@@ -556,6 +557,56 @@ const submitClusterInfo = () => {
   }) .catch((error) => {
     console.error(error)
   })
+}
+//检查所有目录是否为空目录
+const pathIsEmpty = ref(true);
+const list = reactive({
+  pathList: [],
+  notEmptyPath: []
+})
+const checkPathsEmpty = async () => {
+  pathIsEmpty.value = true;
+  list.pathList = [];
+  list.notEmptyPath = [];
+  list.pathList.push(subTaskConfig.value.installPath)
+  list.pathList.push(subTaskConfig.value.installPackagePath)
+  list.pathList.push(subTaskConfig.value.logPath)
+  list.pathList.push(subTaskConfig.value.tmpPath)
+  list.pathList.push(subTaskConfig.value.omToolsPath)
+  list.pathList.push(subTaskConfig.value.corePath)
+  list.pathList.push(subTaskConfig.value.envPath)
+  subTaskConfig.value.clusterNodes.forEach(item => {
+    list.pathList.push(item.dataPath)
+    list.pathList.push(item.cmDataPath)
+  })
+  console.log(list.pathList)
+  const promises = list.pathList.map(item => {
+    const data = {
+      path: item
+    }
+    return pathEmpty(subTaskConfig.value.hostId, data).then(res => {
+      if (Number(res.code) === 200) {
+        if (!res.data) {
+          list.notEmptyPath.push(item);
+          pathIsEmpty.value = false;
+        }
+      }
+    }).catch(error => {
+      console.log(error);
+      throw error;
+    });
+  });
+
+  try {
+    await Promise.all(promises);
+    // 所有异步操作完成
+    console.log("所有路径检查完成");
+    if (!pathIsEmpty.value) {
+      Message.error("路径：" + list.notEmptyPath + " 不为空, 保存草稿失败")
+    }
+  } catch (error) {
+    console.log("路径检查过程中发生错误：", error);
+  }
 }
 
 const tempClusterId = ref('')
