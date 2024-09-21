@@ -36,6 +36,7 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
+import org.opengauss.admin.common.core.dto.ops.PackageDto;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.DateUtils;
 import org.opengauss.admin.plugin.constant.OpsConstants;
@@ -44,7 +45,6 @@ import org.opengauss.admin.plugin.domain.model.ops.OpsPackageVO;
 import org.opengauss.admin.plugin.domain.model.ops.WsSession;
 import org.opengauss.admin.plugin.domain.model.ops.cache.TaskManager;
 import org.opengauss.admin.plugin.domain.model.ops.cache.WsConnectorManager;
-import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.mapper.ops.OpsPackageManagerMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerV2Service;
 import org.opengauss.admin.plugin.utils.DownloadUtil;
@@ -87,12 +87,13 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
     private PathUtils pathUtils;
 
     @Override
-    public List<OpsPackageVO> queryOpsPackageList(String os, String cpuArch, OpenGaussVersionEnum packageVersion, String packageVersionNum) {
+    public List<OpsPackageVO> queryOpsPackageList(PackageDto packageDict) {
         LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = Wrappers.lambdaQuery(OpsPackageManagerEntity.class)
-                .eq(OpsPackageManagerEntity::getOs, os)
-                .eq(OpsPackageManagerEntity::getCpuArch, cpuArch)
-                .eq(OpsPackageManagerEntity::getPackageVersion, packageVersion)
-                .eq(OpsPackageManagerEntity::getPackageVersionNum, packageVersionNum)
+                .eq(OpsPackageManagerEntity::getOs, packageDict.getOs())
+                .eq(OpsPackageManagerEntity::getOsVersion, packageDict.getOsVersion())
+                .eq(OpsPackageManagerEntity::getCpuArch, packageDict.getCpuArch())
+                .eq(OpsPackageManagerEntity::getPackageVersion, packageDict.getOpenGaussVersion())
+                .eq(OpsPackageManagerEntity::getPackageVersionNum, packageDict.getOpenGaussVersionNum())
                 .orderByAsc(OpsPackageManagerEntity::getPackageVersionNum);
         return list(queryWrapper).stream().map(OpsPackageManagerEntity::toVO)
                 .distinct().collect(Collectors.toList());

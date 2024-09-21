@@ -48,6 +48,7 @@ public class OpsPackageVO {
     private String packageId;
     private String name;
     private String os;
+    private String osVersion;
     private String cpuArch;
     private String packageVersion;
     private String packageVersionNum;
@@ -66,6 +67,7 @@ public class OpsPackageVO {
         entity.setPackageId(packageId);
         entity.setName(name);
         entity.setOs(os);
+        entity.setOsVersion(osVersion);
         entity.setCpuArch(cpuArch);
         entity.setPackageVersion(packageVersion);
         entity.setPackageVersionNum(packageVersionNum);

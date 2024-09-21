@@ -23,19 +23,21 @@
 
 package org.opengauss.admin.plugin.service.ops.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.core.dto.ops.PackageDto;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.http.HttpUtils;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsPackagePathDictEntity;
 import org.opengauss.admin.plugin.domain.model.ops.OpsPackagePathDictVO;
 import org.opengauss.admin.plugin.domain.model.ops.OpsPackageVO;
-import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.mapper.ops.OpsPackagePathDictMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsPackagePathDictService;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -63,48 +65,65 @@ public class OpsPackagePathDictService extends ServiceImpl<OpsPackagePathDictMap
     }
 
     @Override
-    public OpsPackagePathDictVO queryPackagePathDict(String os, String cpuArch, OpenGaussVersionEnum packageVersion) {
-        Optional<OpsPackagePathDictEntity> dictEntity = list().stream().filter(item -> item.getOs().equalsIgnoreCase(os)
-                && item.getCpuArch().equalsIgnoreCase(cpuArch)
-                && item.getVersion().equals(packageVersion.name())).findFirst();
+    public OpsPackagePathDictVO queryPackagePathDict(PackageDto packageDto) {
+        Optional<OpsPackagePathDictEntity> dictEntity = list().stream()
+                .filter(item -> StrUtil.equalsIgnoreCase(item.getOs(), packageDto.getOs()))
+                .filter(item -> StrUtil.equalsIgnoreCase(item.getOsVersion(), packageDto.getOsVersion()))
+                .filter(item -> StrUtil.equalsIgnoreCase(item.getCpuArch(), packageDto.getCpuArch()))
+                .filter(item -> StrUtil.equalsIgnoreCase(item.getVersion(), packageDto.getOpenGaussVersion().name()))
+                .filter(item -> canUsedPkgTmpOfVersionNum(item.getPkgTmpUseVersion(),
+                        packageDto.getOpenGaussVersionNum()))
+                .findFirst();
+        return dictEntity.map(OpsPackagePathDictEntity::toVO).orElse(null);
+    }
 
-        if (!dictEntity.isPresent()) {
-            return null;
-        }
-        return dictEntity.get().toVO();
+    private boolean canUsedPkgTmpOfVersionNum(String pkgTmpUseVersion, String versionNum) {
+        return Arrays.stream(pkgTmpUseVersion.split(";"))
+                .anyMatch(v -> StrUtil.equalsIgnoreCase(v, versionNum));
     }
 
     @Override
-    public OpsPackageVO buildAndCheckPackageUrlIsValid(String installPackageUrlPrefix, String packageVersionNum,
-                                                       OpsPackagePathDictVO packageDict) {
-        boolean isOnLine = checkCurrentEnvironmentIsOnline();
-        String downloadUrl = "";
+    public OpsPackageVO buildOpsPackage(String pkgUrlPrefix, String packageVersionNum,
+                                        OpsPackagePathDictVO packageDict) {
         // 当前环境在线模式
-        if (isOnLine) {
-            // 构建 当前版本号 packageVersionNum last 下载链接
-            downloadUrl = packageDict.buildFullPackageUrl(installPackageUrlPrefix, packageVersionNum, true);
-            // 检查当前版本号 packageVersionNum 是否是 last 版本
-            AjaxResult downloadUrlResult = HttpUtils.checkUrl(downloadUrl);
-            if (downloadUrlResult.isOk()) {
-                return createOpsPackageVo(packageVersionNum, packageDict, downloadUrl);
-            }
-            // 当前版本号不是last版本
-            downloadUrl = packageDict.buildFullPackageUrl(installPackageUrlPrefix, packageVersionNum, false);
-            downloadUrlResult = HttpUtils.checkUrl(downloadUrl);
-            if (downloadUrlResult.isOk()) {
-                return createOpsPackageVo(packageVersionNum, packageDict, downloadUrl);
-            } else {
-                throw new OpsException("package download url is not ok");
-            }
+        if (checkCurrentEnvironmentIsOnline()) {
+            return buildOpsPackageOnline(pkgUrlPrefix, packageVersionNum, packageDict);
         } else {
-            // 当前环境离线模式： 构建已发布版本下载链接
-            downloadUrl = packageDict.buildFullPackageUrl(installPackageUrlPrefix, packageVersionNum, false);
-            return createOpsPackageVo(packageVersionNum, packageDict, downloadUrl);
+            return buildOpsPackageOffline(pkgUrlPrefix, packageVersionNum, packageDict);
         }
     }
 
-    private static OpsPackageVO createOpsPackageVo(String packageVersionNum, OpsPackagePathDictVO packageDict, String downloadUrl) {
-        return OpsPackageVO.builder().os(packageDict.getOs()).cpuArch(packageDict.getCpuArch())
+    private OpsPackageVO buildOpsPackageOffline(String pkgUrlPrefix, String packageVersionNum,
+                                                OpsPackagePathDictVO packageDict) {
+        // 当前环境离线模式： 构建已发布版本下载链接
+        String downloadUrl = packageDict.buildFullPackageUrl(pkgUrlPrefix, packageVersionNum, false);
+        return createOpsPackageVo(packageVersionNum, packageDict, downloadUrl);
+    }
+
+    private OpsPackageVO buildOpsPackageOnline(String pkgUrlPrefix, String pkgVersionNum,
+                                               OpsPackagePathDictVO packageDict) {
+        // 构建 当前版本号 packageVersionNum last 下载链接
+        String downloadUrl = packageDict.buildFullPackageUrl(pkgUrlPrefix, pkgVersionNum, true);
+        // 检查当前版本号 packageVersionNum 是否是 last 版本
+        AjaxResult downloadUrlResult = HttpUtils.checkUrl(downloadUrl);
+        if (downloadUrlResult.isOk()) {
+            return createOpsPackageVo(pkgVersionNum, packageDict, downloadUrl);
+        }
+        // 当前版本号不是last版本
+        downloadUrl = packageDict.buildFullPackageUrl(pkgUrlPrefix, pkgVersionNum, false);
+        downloadUrlResult = HttpUtils.checkUrl(downloadUrl);
+        if (downloadUrlResult.isOk()) {
+            return createOpsPackageVo(pkgVersionNum, packageDict, downloadUrl);
+        } else {
+            throw new OpsException("package download url is not ok");
+        }
+    }
+
+    private static OpsPackageVO createOpsPackageVo(String packageVersionNum, OpsPackagePathDictVO packageDict,
+                                                   String downloadUrl) {
+        return OpsPackageVO.builder().os(packageDict.getOs())
+                .osVersion(packageDict.getOsVersion())
+                .cpuArch(packageDict.getCpuArch())
                 .packageVersion(packageDict.getVersion())
                 .packageVersionNum(packageVersionNum).packageUrl(downloadUrl).build();
     }

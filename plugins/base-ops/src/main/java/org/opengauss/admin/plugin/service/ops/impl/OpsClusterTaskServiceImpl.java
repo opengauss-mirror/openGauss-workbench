@@ -422,32 +422,24 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         OpsHostEntity host = opsHostRemoteService.getHost(entity.getHostId());
         Assert.isTrue(Objects.nonNull(host), "host " + entity.getHostId() + " not exist");
         Assert.isTrue(Objects.nonNull(packageEntity), "Package " + packageId + " not exist");
-        String packageVersion = packageEntity.getPackageVersion();
-        String cpuArch = packageEntity.getCpuArch();
-        String os = packageEntity.getOs();
-        String packageUrl = packageEntity.getPackageUrl();
 
+        String packageVersion = packageEntity.getPackageVersion();
         Assert.isTrue(StrUtil.equalsIgnoreCase(packageVersion, entity.getVersion().name()),
-                "package version is not match task version pkg: " + packageVersion
+                "task and package version is not match pkg: " + packageVersion
                         + " , task: " + entity.getVersion().name());
+
+        String cpuArch = packageEntity.getCpuArch();
         Assert.isTrue(StrUtil.equalsIgnoreCase(cpuArch, host.getCpuArch()),
-                "host cpu arch and package arch is not match pkg: " + cpuArch + " , host: " + host.getCpuArch());
+                "host and package cpuArch is not match pkg: " + cpuArch + " , host: " + host.getCpuArch());
+
+        String os = packageEntity.getOs();
         Assert.isTrue(StrUtil.equalsIgnoreCase(os, host.getOs()),
                 "host os and package os is not match pkg: " + os + " , host: " + host.getOs());
 
-        // 判断openEuler 版本安装包的操作系统版本和主机操作系统版本是否匹配
-        String osVersion = host.getOsVersion();
-        if (StrUtil.equalsIgnoreCase(os, "openEuler")) {
-            if ("20.03".equals(osVersion)) {
-                Assert.isTrue(StrUtil.containsIgnoreCase(packageUrl, "/arm/")
-                                || StrUtil.containsIgnoreCase(packageUrl, "/x86_openEuler/"),
-                        "host os version and package is not match pkg: 20.03 , host: " + osVersion);
-            } else if ("22.03".equals(osVersion)) {
-                Assert.isTrue(StrUtil.containsIgnoreCase(packageUrl, "/arm_2203/")
-                                || StrUtil.containsIgnoreCase(packageUrl, "/x86_openEuler_2203/"),
-                        "host os version and package is not match pkg: 22.03 , host:" + osVersion);
-            }
-        }
+        String osVersion = packageEntity.getOsVersion();
+        Assert.isTrue(StrUtil.equalsIgnoreCase(osVersion, host.getOsVersion()),
+                "host and package os version is not match pkg: " + os + " " + osVersion
+                        + " , host: " + host.getOsVersion());
     }
 
     private void checkEnvironmentVariablePath(OpsClusterTaskEntity entity) {

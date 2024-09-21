@@ -577,12 +577,14 @@ COMMENT ON COLUMN "public"."ops_host_tag_rel"."update_time" IS '更新时间';
 -- Table structure for ops_package_path_dict
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS "public"."ops_package_path_dict" (
-                                                                "id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
     "os" varchar(255) COLLATE "pg_catalog"."default",
+    "os_version" varchar(255) COLLATE "pg_catalog"."default",
     "cpu_arch" varchar(255) COLLATE "pg_catalog"."default",
     "version" varchar(255) COLLATE "pg_catalog"."default",
     "url_path" varchar(255) COLLATE "pg_catalog"."default",
     "package_name_tmp" varchar(255) COLLATE "pg_catalog"."default",
+    "pkg_tmp_use_version" varchar(255) COLLATE "pg_catalog"."default",
     "remark" varchar(255) COLLATE "pg_catalog"."default",
     "create_by" varchar(64) COLLATE "pg_catalog"."default",
     "create_time" timestamp(6),
@@ -591,15 +593,43 @@ CREATE TABLE IF NOT EXISTS "public"."ops_package_path_dict" (
     )
 ;
 COMMENT ON COLUMN "public"."ops_package_path_dict"."os" IS '操作系统名称';
+COMMENT ON COLUMN "public"."ops_package_path_dict"."os_version" IS '操作系统版本';
 COMMENT ON COLUMN "public"."ops_package_path_dict"."cpu_arch" IS 'CPU架构';
 COMMENT ON COLUMN "public"."ops_package_path_dict"."version" IS 'openGauss版本';
 COMMENT ON COLUMN "public"."ops_package_path_dict"."url_path" IS 'openGauss包URI路径';
 COMMENT ON COLUMN "public"."ops_package_path_dict"."package_name_tmp" IS 'openGauss包名称模版';
+COMMENT ON COLUMN "public"."ops_package_path_dict"."pkg_tmp_use_version" IS 'openGauss模版使用版本号';
 COMMENT ON COLUMN "public"."ops_package_path_dict"."create_by" IS '创建者';
 COMMENT ON COLUMN "public"."ops_package_path_dict"."create_time" IS '创建时间';
 COMMENT ON COLUMN "public"."ops_package_path_dict"."update_by" IS '更新者';
 COMMENT ON COLUMN "public"."ops_package_path_dict"."update_time" IS '更新时间';
 COMMENT ON TABLE "public"."ops_package_path_dict" IS 'openGauss包名称字典表';
+
+CREATE OR REPLACE FUNCTION update_ops_package_structure() RETURNS integer AS 'DECLARE
+    column_exists INT;
+BEGIN
+
+    SELECT COUNT(*) INTO column_exists   FROM information_schema.columns  WHERE table_schema = ''public'' AND table_name = ''ops_package_manager'' AND column_name = ''os_version'';
+
+    IF column_exists = 0 THEN
+        ALTER TABLE ops_package_manager ADD os_version VARCHAR(20) AFTER os;
+		UPDATE ops_package_manager SET os_version = ''7'' WHERE (os_version IS NULL OR os_version = '''') AND os=''centos'' and package_url LIKE ''%CentOS%'';
+		UPDATE ops_package_manager SET os_version = ''22.03'' WHERE (os_version IS NULL OR os_version = '''') AND os = ''openEuler'' AND package_url LIKE ''%2203%'';
+        UPDATE ops_package_manager SET os_version = ''20.03'' WHERE (os_version IS NULL OR os_version = '''') AND os = ''openEuler'' AND package_url not LIKE ''%2203%'';
+    ELSE
+
+        UPDATE ops_package_manager SET os_version = ''7'' WHERE (os_version IS NULL OR os_version = '''') AND os=''centos'' and package_url LIKE ''%CentOS%'';
+		UPDATE ops_package_manager SET os_version = ''22.03'' WHERE (os_version IS NULL OR os_version = '''') AND os = ''openEuler'' AND package_url LIKE ''%2203%'';
+        UPDATE ops_package_manager SET os_version = ''20.03'' WHERE (os_version IS NULL OR os_version = '''') AND os = ''openEuler'' AND package_url not LIKE ''%2203%'';
+    END IF;
+return 0;
+END;'
+LANGUAGE plpgsql;
+
+select update_ops_package_structure();
+
+DROP FUNCTION update_ops_package_structure;
+
 
 CREATE OR REPLACE FUNCTION add_host_user_field_func() RETURNS integer AS 'BEGIN
 IF
@@ -1741,22 +1771,37 @@ VALUES ('1706224187103813723', 'openEuler', 'aarch64', 'MINIMAL_LIST', '5.0.3',
 UPDATE NOTHING;
 
 
-INSERT INTO "public"."ops_package_path_dict" VALUES ('01', 'CentOS', 'x86_64', 'LITE', 'x86', 'openGauss-Lite-%s-CentOS-x86_64.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
-INSERT INTO "public"."ops_package_path_dict" VALUES ('02', 'CentOS', 'x86_64', 'MINIMAL_LIST', 'x86', 'openGauss-%s-CentOS-64bit.tar.bz2', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
-INSERT INTO "public"."ops_package_path_dict" VALUES ('03', 'CentOS', 'x86_64', 'ENTERPRISE', 'x86', 'openGauss-%s-CentOS-64bit-all.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
-INSERT INTO "public"."ops_package_path_dict" VALUES ('04', 'openEuler', 'aarch64', 'LITE', 'arm', 'openGauss-Lite-%s-openEuler-aarch64.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
-INSERT INTO "public"."ops_package_path_dict" VALUES ('05', 'openEuler', 'aarch64', 'MINIMAL_LIST', 'arm', 'openGauss-%s-openEuler-64bit.tar.bz2', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
-INSERT INTO "public"."ops_package_path_dict" VALUES ('06', 'openEuler', 'aarch64', 'ENTERPRISE', 'arm', 'openGauss-%s-openEuler-64bit-all.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
-INSERT INTO "public"."ops_package_path_dict" VALUES ('07', 'openEuler', 'x86_64', 'LITE', 'x86_openEuler', 'openGauss-Lite-%s-openEuler-aarch64.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
-INSERT INTO "public"."ops_package_path_dict" VALUES ('08', 'openEuler', 'x86_64', 'MINIMAL_LIST', 'x86_openEuler', 'openGauss-%s-openEuler-64bit.tar.bz2', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
-INSERT INTO "public"."ops_package_path_dict" VALUES ('09', 'openEuler', 'x86_64', 'ENTERPRISE', 'x86_openEuler', 'openGauss-%s-openEuler-64bit-all.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
-INSERT INTO "public"."ops_package_path_dict" VALUES ('10', 'openEuler_2203', 'aarch64', 'LITE', 'arm_2203', 'openGauss-Lite-%s-openEuler-aarch64.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
-INSERT INTO "public"."ops_package_path_dict" VALUES ('11', 'openEuler_2203', 'aarch64', 'MINIMAL_LIST', 'arm_2203', 'openGauss-%s-openEuler-64bit.tar.bz2', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
-INSERT INTO "public"."ops_package_path_dict" VALUES ('12', 'openEuler_2203', 'aarch64', 'ENTERPRISE', 'arm_2203', 'openGauss-%s-openEuler-64bit-all.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
-INSERT INTO "public"."ops_package_path_dict" VALUES ('13', 'openEuler_2203', 'x86_64', 'LITE', 'x86_openEuler_2203', 'openGauss-Lite-%s-openEuler-aarch64.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
-INSERT INTO "public"."ops_package_path_dict" VALUES ('14', 'openEuler_2203', 'x86_64', 'MINIMAL_LIST', 'x86_openEuler_2203', 'openGauss-%s-openEuler-64bit.tar.bz2', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
-INSERT INTO "public"."ops_package_path_dict" VALUES ('15', 'openEuler_2203', 'x86_64', 'ENTERPRISE', 'x86_openEuler_2203', 'openGauss-%s-openEuler-64bit-all.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
-INSERT INTO "public"."ops_package_path_dict" VALUES ('16', 'KYLIN', 'x86_64', 'ENTERPRISE', 'x86', 'openGauss-%s-openEuler-64bit-all.tar.gz', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('01', 'CentOS','7', 'x86_64', 'LITE', 'x86', 'openGauss-Lite-%s-CentOS-x86_64.tar.gz', '3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1',NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('02', 'CentOS','7', 'x86_64', 'MINIMAL_LIST', 'x86', 'openGauss-%s-CentOS-64bit.tar.bz2', '3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1',NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('03', 'CentOS', '7','x86_64', 'ENTERPRISE', 'x86', 'openGauss-%s-CentOS-64bit-all.tar.gz', '3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1',NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('04', 'openEuler','20.03', 'aarch64', 'LITE', 'arm', 'openGauss-Lite-%s-openEuler-aarch64.tar.gz', '3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1',NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('05', 'openEuler', '20.03','aarch64', 'MINIMAL_LIST', 'arm', 'openGauss-%s-openEuler-64bit.tar.bz2','3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('06', 'openEuler','20.03', 'aarch64', 'ENTERPRISE', 'arm', 'openGauss-%s-openEuler-64bit-all.tar.gz', '3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1',NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('07', 'openEuler','20.03', 'x86_64', 'LITE', 'x86_openEuler', 'openGauss-Lite-%s-openEuler-aarch64.tar.gz', '3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1',NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('08', 'openEuler','20.03', 'x86_64', 'MINIMAL_LIST', 'x86_openEuler', 'openGauss-%s-openEuler-64bit.tar.bz2', '3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1',NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('09', 'openEuler', '20.03','x86_64', 'ENTERPRISE', 'x86_openEuler', 'openGauss-%s-openEuler-64bit-all.tar.gz','3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('10', 'openEuler','22.03', 'aarch64', 'LITE', 'arm_2203', 'openGauss-Lite-%s-openEuler-aarch64.tar.gz', '3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1',NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('11', 'openEuler', '22.03','aarch64', 'MINIMAL_LIST', 'arm_2203', 'openGauss-%s-openEuler-64bit.tar.bz2','3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('12', 'openEuler','22.03', 'aarch64', 'ENTERPRISE', 'arm_2203', 'openGauss-%s-openEuler-64bit-all.tar.gz', '3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1',NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('13', 'openEuler','22.03', 'x86_64', 'LITE', 'x86_openEuler_2203', 'openGauss-Lite-%s-openEuler-aarch64.tar.gz', '3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1',NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('14', 'openEuler','22.03', 'x86_64', 'MINIMAL_LIST', 'x86_openEuler_2203', 'openGauss-%s-openEuler-64bit.tar.bz2','3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('15', 'openEuler','22.03', 'x86_64', 'ENTERPRISE', 'x86_openEuler_2203', 'openGauss-%s-openEuler-64bit-all.tar.gz','3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('16', 'KYLIN', '','x86_64', 'ENTERPRISE', 'x86', 'openGauss-%s-openEuler-64bit-all.tar.gz','3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1' ,NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('17', 'CentOS', '7','x86_64', 'LITE', 'CentOS7/x86', 'openGauss-Lite-%s-CentOS7-x86_64.tar.gz','6.0.0', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('18', 'CentOS', '7', 'x86_64', 'MINIMAL_LIST', 'CentOS7/x86', 'openGauss-Server-%s-CentOS7-x86_64.tar.gz','6.0.0',  NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('19', 'CentOS', '7', 'x86_64', 'ENTERPRISE', 'CentOS7/x86', 'openGauss-All-%s-CentOS7-x86_64.tar.gz', '6.0.0', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('20', 'openEuler', '20.03','x86_64', 'LITE', 'openEuler20.03/x86', 'openGauss-Lite-%s-openEuler20.03-x86_64.tar.gz','6.0.0', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('21', 'openEuler', '20.03', 'x86_64', 'MINIMAL_LIST', 'openEuler20.03/x86', 'openGauss-Server-%s-openEuler20.03-x86_64.tar.gz','6.0.0',  NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('22', 'openEuler', '20.03', 'x86_64', 'ENTERPRISE', 'openEuler20.03/x86', 'openGauss-All-%s-openEuler20.03-x86_64.tar.gz', '6.0.0', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('23', 'openEuler', '22.03','x86_64', 'LITE', 'openEuler22.03/x86', 'openGauss-Lite-%s-openEuler22.03-x86_64.tar.gz','6.0.0', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('24', 'openEuler', '22.03', 'x86_64', 'MINIMAL_LIST', 'openEuler22.03/x86', 'openGauss-Server-%s-openEuler22.03-x86_64.tar.gz','6.0.0',  NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('25', 'openEuler', '22.03', 'x86_64', 'ENTERPRISE', 'openEuler22.03/x86', 'openGauss-All-%s-openEuler22.03-x86_64.tar.gz', '6.0.0', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('26', 'openEuler', '20.03','aarch64', 'LITE', 'openEuler20.03/arm', 'openGauss-Lite-%s-openEuler20.03-aarch64.tar.gz','6.0.0', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('27', 'openEuler', '20.03', 'aarch64', 'MINIMAL_LIST', 'openEuler20.03/arm', 'openGauss-Server-%s-openEuler20.03-aarch64.tar.gz','6.0.0',  NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('28', 'openEuler', '20.03', 'aarch64', 'ENTERPRISE', 'openEuler20.03/arm', 'openGauss-All-%s-openEuler20.03-aarch64.tar.gz', '6.0.0', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('29', 'openEuler', '22.03','aarch64', 'LITE', 'openEuler22.03/arm', 'openGauss-Lite-%s-openEuler22.03-aarch64.tar.gz','6.0.0', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('30', 'openEuler', '22.03', 'aarch64', 'MINIMAL_LIST', 'openEuler22.03/arm', 'openGauss-Server-%s-openEuler22.03-aarch64.tar.gz','6.0.0',  NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."ops_package_path_dict" VALUES ('31', 'openEuler', '22.03', 'aarch64', 'ENTERPRISE', 'openEuler22.03/arm', 'openGauss-All-%s-openEuler22.03-aarch64.tar.gz', '6.0.0', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
 
 CREATE
 OR REPLACE FUNCTION init_data_fuc() RETURNS integer AS 'BEGIN
