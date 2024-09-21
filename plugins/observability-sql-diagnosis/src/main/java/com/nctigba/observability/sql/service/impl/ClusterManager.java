@@ -180,11 +180,9 @@ public class ClusterManager {
     @NoArgsConstructor
     @EqualsAndHashCode(callSuper = true)
     public static class OpsClusterNodeVOSub extends OpsClusterNodeVO {
-        private String version;
+        EncryptionUtils encryptionUtils = new EncryptionUtils();
 
-        @Autowired
-        @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-        private EncryptionUtils encryptionUtils;
+        private String version;
 
         public OpsClusterNodeVOSub(OpsClusterNodeVO opsClusterNodeVO, String version) {
             BeanUtils.copyProperties(opsClusterNodeVO, this);

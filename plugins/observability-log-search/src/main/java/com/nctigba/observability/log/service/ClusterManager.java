@@ -87,10 +87,6 @@ public class ClusterManager {
 	public static class OpsClusterNodeVOSub extends OpsClusterNodeVO {
 		private String version;
 
-        @Autowired
-        @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-        private EncryptionUtils encryptionUtils;
-
 		@Override
 		public Integer getDbPort() {
 			if ("1584444406327418882".equals(getNodeId()))
@@ -104,6 +100,7 @@ public class ClusterManager {
 		}
 
         public Connection connection() throws SQLException {
+            EncryptionUtils encryptionUtils = new EncryptionUtils();
             var conn = DriverManager.getConnection("jdbc:opengauss://" + getPublicIp() + ":" + getDbPort() + "/"
                 + getDbName(), getDbUser(), encryptionUtils.decrypt(getDbUserPassword()));
             try (var preparedStatement = conn.prepareStatement("select 1");
