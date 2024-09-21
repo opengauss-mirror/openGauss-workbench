@@ -139,6 +139,8 @@
                 <a-link class="more" v-if="record.status === 'PENDING'">
                   {{ $t('operation.DailyOps.sl3u5s5cf220') }}
                 </a-link>
+                <a-link class="more" v-else-if="record.status === 'SUCCESS'">
+                </a-link>
                 <a-link class="more" v-else>
                   {{ $t('operation.DailyOps.sl3u5s5cf221') }}
                 </a-link>
