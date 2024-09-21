@@ -81,10 +81,6 @@ public class ClusterManager {
     public static class OpsClusterNodeVOSub extends OpsClusterNodeVO {
         private String version;
 
-        @Autowired
-        @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-        private EncryptionUtils encryptionUtils;
-
         /**
          * copy cluster node vo
          *
@@ -103,6 +99,7 @@ public class ClusterManager {
          * @throws SQLException SQLException
          */
         public Connection connection() throws SQLException {
+            EncryptionUtils encryptionUtils = new EncryptionUtils();
             return DriverManager.getConnection(
                     GET_URL_JDBC + getPrivateIp() + ":" + getDbPort() + "/" + getDbName() + CONFIGURE_TIME,
                     getDbUser(),
