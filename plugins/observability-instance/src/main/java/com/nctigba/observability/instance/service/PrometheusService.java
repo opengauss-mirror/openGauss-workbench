@@ -862,15 +862,16 @@ public class PrometheusService extends AbstractInstaller {
         List<NctigbaEnvDO> envList = envMapper
             .selectList(Wrappers.<NctigbaEnvDO>lambdaQuery().in(NctigbaEnvDO::getType, envType.PROMETHEUS.name(),
                 envType.PROMETHEUS_MAIN.name()).orderByDesc(NctigbaEnvDO::getStatus));
-        envList.forEach(e -> {
-            if (e.getType().equals(envType.PROMETHEUS_MAIN.name())) {
-                return;
-            }
-            e.setHost(hostFacade.getById(e.getHostid()));
-        });
         boolean isToRealloc = false;
         for (NctigbaEnvDO env : envList) {
             try {
+                env = envMapper.selectById(env.getId());
+                if (env == null) {
+                    continue;
+                }
+                if (env.getType().equals(envType.PROMETHEUS.name())) {
+                    env.setHost(hostFacade.getById(env.getHostid()));
+                }
                 String oldStatus = env.getStatus();
                 if (StrUtil.isBlank(oldStatus) && envType.PROMETHEUS.name().equals(env.getType())) {
                     oldVersionAdapter(env);
