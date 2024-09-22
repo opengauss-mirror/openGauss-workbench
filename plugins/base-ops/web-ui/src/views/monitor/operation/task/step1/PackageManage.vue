@@ -118,6 +118,7 @@ const data = reactive({
   formData: {
     packageId:'',
     os:'',
+    osVersion:'',
     cpuArch: '',
     packageVersion: '',
     packageVersionNum: ''
@@ -194,6 +195,7 @@ const open = (
 ) => {
   data.formData.packageId = ''
   data.formData.os = packageData.os
+  data.formData.osVersion = packageData.osVersion
   data.formData.cpuArch = packageData.cpuArch
   data.formData.packageVersion = packageData.packageVersion
   data.formData.packageVersionNum = packageData.packageVersionNum
@@ -245,6 +247,7 @@ const getListData = () => new Promise(resolve => {
   getPackageList({
     name:name,
     os: os,
+    osVersion: data.formData.osVersion,
     cpuArch: cpuArch,
     openGaussVersion: openGaussVersion,
     openGaussVersionNum: openGaussVersionNum,

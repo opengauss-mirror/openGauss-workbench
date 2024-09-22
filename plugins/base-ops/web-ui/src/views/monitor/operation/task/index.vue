@@ -568,33 +568,53 @@ const checkPathsEmpty = async () => {
   pathIsEmpty.value = true;
   list.pathList = [];
   list.notEmptyPath = [];
-  list.pathList.push(subTaskConfig.value.installPath)
-  list.pathList.push(subTaskConfig.value.installPackagePath)
-  list.pathList.push(subTaskConfig.value.logPath)
-  list.pathList.push(subTaskConfig.value.tmpPath)
-  list.pathList.push(subTaskConfig.value.omToolsPath)
-  list.pathList.push(subTaskConfig.value.corePath)
-  list.pathList.push(subTaskConfig.value.envPath)
+  if (subTaskConfig.value.installPath !== '') {
+    list.pathList.push(subTaskConfig.value.installPath)
+  }
+  if (subTaskConfig.value.installPackagePath !== '') {
+    list.pathList.push(subTaskConfig.value.installPackagePath)
+  }
+  if (subTaskConfig.value.logPath !== '') {
+    list.pathList.push(subTaskConfig.value.logPath)
+  }
+  if (subTaskConfig.value.tmpPath !== '') {
+    list.pathList.push(subTaskConfig.value.tmpPath)
+  }
+  if (subTaskConfig.value.omToolsPath !== '') {
+    list.pathList.push(subTaskConfig.value.omToolsPath)
+  }
+  if (subTaskConfig.value.corePath !== '') {
+    list.pathList.push(subTaskConfig.value.corePath)
+  }
+  if (subTaskConfig.value.envPath !== '' && subTaskConfig.value.enableGenerateEnvironmentVariableFile) {
+    list.pathList.push(subTaskConfig.value.envPath)
+  }
   subTaskConfig.value.clusterNodes.forEach(item => {
-    list.pathList.push(item.dataPath)
-    list.pathList.push(item.cmDataPath)
+    if (item.dataPath !== '') {
+      list.pathList.push(item.dataPath)
+    }
+    if (item.cmDataPath !== '' && subTaskConfig.value.enableCmTool) {
+      list.pathList.push(item.cmDataPath)
+    }
   })
   console.log(list.pathList)
   const promises = list.pathList.map(item => {
     const data = {
       path: item
     }
-    return pathEmpty(subTaskConfig.value.hostId, data).then(res => {
-      if (Number(res.code) === 200) {
-        if (!res.data) {
-          list.notEmptyPath.push(item);
-          pathIsEmpty.value = false;
+    if (data.path !== '') {
+      return pathEmpty(subTaskConfig.value.hostId, data).then(res => {
+        if (Number(res.code) === 200) {
+          if (!res.data ) {
+            list.notEmptyPath.push(item);
+            pathIsEmpty.value = false;
+          }
         }
-      }
-    }).catch(error => {
-      console.log(error);
-      throw error;
-    });
+      }).catch(error => {
+        console.log(error);
+        throw error;
+      });
+    }
   });
 
   try {

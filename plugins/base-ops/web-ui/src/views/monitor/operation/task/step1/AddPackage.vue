@@ -27,8 +27,9 @@
     >
       <a-form-item field="sysTem" :label="$t('操作系统')" validate-trigger="blur" @change="updateOsData" name="sysTem">
         <a-radio-group v-model="tempOs.value" button-style="solid" :disabled="editDisabledFlag">
-          <a-radio :value="OS.OPEN_EULER">openEuler</a-radio>
+          <a-radio :value="OS.OPEN_EULER">openEuler20.03</a-radio>
           <a-radio :value="OS.CENTOS">centOs</a-radio>
+          <a-radio :value="OS.All">openEuler22.03</a-radio>
         </a-radio-group>
       </a-form-item>
       <a-form-item field="arch" :label="$t('系统架构')" validate-trigger="blur" @change="updateArchData" name="arch">
@@ -275,53 +276,21 @@ const getUploadPath = () => {
 }
 
 // init
-const getSystemSetting = () => {
-  getSysUploadPath().then((res) => {
-    data.systemUploadPath = res.data
-  }) .catch(error => {
-    console.error('Error fetching 285:', error)
-  })
-}
-
 const packageVersionNum = ref([])
-const fetchVersionNum = () => {
-  getVersionNum().then((res: KeyValue) => {
-    if (Number(res.code) === 200) {
-      res.data.forEach(item => {packageVersionNum.value.push(item)})
-    } else {
-      Message.error({
-        content: '获取版本号失败'
-      })
-    }
-  }) .catch(error => {
-  })
-}
 
 const tempPackageUrl = ref('')
 const getPackageUrl = () => {
   const params = {
     os : data.formData.os,
+    osVersion: data.formData.osVersion,
     cpuArch: data.formData.cpuArch,
-    packageVersion : data.formData.packageVersion,
-    packageVersionNum : data.formData.packageVersionNum
+    openGaussVersion : data.formData.packageVersion,
+    openGaussVersionNum : data.formData.packageVersionNum
   }
   checkVersionNumber(params).then((res) => {
     if (res.code === 200){
       if (res.data.length) {
-        let tempURL2203 = []
-        let tempURL2003 = []
-        res.data.forEach(url => {
-          if (url.packageUrl.includes("2203")) {
-            tempURL2203.push(url.packageUrl)
-          } else {
-            tempURL2003.push(url.packageUrl)
-          }
-        })
-        if (data.formData.osVersion === "22.03") {
-          data.formData.packageUrl = tempURL2203[0]
-        } else {
-          data.formData.packageUrl = tempURL2003[0]
-        }
+        data.formData.packageUrl = res.data[0].packageUrl
       } else {
         data.formData.packageUrl = res.data.packageUrl
       }
@@ -329,8 +298,11 @@ const getPackageUrl = () => {
     } else {
       console.log('error')
     }
-    let name = data.formData.packageUrl.split('/')
-    data.formData.name = name.pop()
+    let name = data.formData.packageUrl.split('/').pop()
+    name = name.split('.')
+    name.pop()
+    name.pop()
+    data.formData.name = name.join('.')
   }) .catch(error => {
     console.error({
       content: error + data.formData.packageVersionNum
@@ -354,8 +326,6 @@ const open = (
   addOptionFlag: string
 ) => {
   getUploadPath()
-  fetchVersionNum()
-  getSystemSetting()
   data.type = type
   data.title = t('添加安装包')
   uploadStatusTag.value = false
@@ -371,7 +341,13 @@ const open = (
   wsBusinessId.value = addOptionFlag !== '1'?addOptionFlag:''
   getPackageUrl()
   fileListPPPP.value = []
-  tempOs.value = data.formData.os
+  if (data.formData.osVersion === '20.03' && data.formData.os === OS.OPEN_EULER) {
+    tempOs.value = OS.OPEN_EULER
+  } else if (data.formData.osVersion === '22.03' && data.formData.os === OS.OPEN_EULER) {
+    tempOs.value = OS.All
+  } else {
+    tempOs.value = OS.CENTOS
+  }
   tempArch.value = data.formData.cpuArch
   tempVersion.value = data.formData.packageVersion
   tempVersionNum.value = data.formData.packageVersionNum
@@ -416,6 +392,7 @@ const submit = async () => {
       const formData = new FormData
       formData.append('name', data.formData.name)
       formData.append('os', data.formData.os)
+      formData.append('osVersion', data.formData.osVersion)
       formData.append('cpuArch', data.formData.cpuArch)
       formData.append('packageVersionNum', data.formData.packageVersionNum)
       formData.append('packageUrl', '')
@@ -449,6 +426,7 @@ const submit = async () => {
       const params = {
         name: data.formData.name,
         os: data.formData.os,
+        osVersion:data.formData.osVersion,
         cpuArch: data.formData.cpuArch,
         openGaussVersion: data.formData.packageVersion,
         openGaussVersionNum: data.formData.packageVersionNum,
