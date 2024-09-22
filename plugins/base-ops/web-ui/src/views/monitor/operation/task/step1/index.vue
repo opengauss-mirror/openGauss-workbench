@@ -620,9 +620,10 @@ const checkContains = (inputValue:any) => {
     if (contains.value === false) {
       const params = {
         os : data.os,
+        osVersion: data.osVersion,
         cpuArch: data.cpuArch,
-        packageVersion : data.packageVersion,
-        packageVersionNum : data.packageVersionNum
+        openGaussVersion : data.packageVersion,
+        openGaussVersionNum : data.packageVersionNum
       }
       checkVersionNumber(params).then((res: any) => {
         if (res.code !== 200){
@@ -734,6 +735,7 @@ const fetchPackageList = () => {
     getPackageList( {
       name:'',
       os: data.os,
+      osVersion: data.osVersion,
       cpuArch: data.cpuArch,
       openGaussVersion: data.packageVersion,
       openGaussVersionNum: data.packageVersionNum,
@@ -838,7 +840,7 @@ const addPackInstall = (type: string, uploadFlag: number) => {
     cpuArch: data.cpuArch,
     packageVersion: data.packageVersion,
     packageVersionNum: data.packageVersionNum,
-    osversion: data.osVersion
+    osVersion: data.osVersion
   }
   tempuploadFlag = wsBusinessId.value? wsBusinessId.value :'1'
   addPackRef.value?.open(type, searchPackageOption, tempuploadFlag)
@@ -863,6 +865,7 @@ const packManageRef = ref<null | InstanceType<typeof PackManage>>(null)
 const openPackManage = () => {
   const searchPackageOption = {
     os: data.os,
+    osVersion: data.osVersion,
     cpuArch: data.cpuArch,
     packageVersion: data.packageVersion,
     packageVersionNum: data.packageVersionNum,
@@ -883,6 +886,7 @@ const packManageSubmit = () => {
   getPackageList({
     name:'',
     os: data.os,
+    osVersion: data.osVersion,
     cpuArch: data.cpuArch,
     openGaussVersion: data.packageVersion,
     openGaussVersionNum: data.packageVersionNum,

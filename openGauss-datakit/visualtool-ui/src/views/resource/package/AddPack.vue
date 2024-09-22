@@ -27,8 +27,9 @@
     >
       <a-form-item field="sysTem" :label="$t('操作系统')" validate-trigger="blur" @change="updateOsData" name="sysTem">
         <a-radio-group v-model="tempOs.value" button-style="solid" :disabled="editDisabledFlag">
-          <a-radio :value="OS.OPEN_EULER">openEuler</a-radio>
+          <a-radio :value="OS.OPEN_EULER">openEuler20.03</a-radio>
           <a-radio :value="OS.CENTOS">centOs</a-radio>
+          <a-radio :value="OS.All">openEuler22.03</a-radio>
           <!--          <a-radio :value="kyLin">麒麟系统</a-radio>-->
         </a-radio-group>
       </a-form-item>
@@ -164,6 +165,7 @@ const data = reactive<KeyValue>({
     type: 'openGauss',
     packageId: '',
     os: OS.CENTOS,
+    osVersion: 7,
     cpuArch: CpuArch.AARCH64,
     packageVersion: OpenGaussVersionEnum.MINIMAL_LIST,
     packageVersionNum: '',
@@ -355,9 +357,10 @@ const tempPackageUrl = ref('')
 const getPackageUrl = () => {
   const params = {
     os: data.formData.os,
+    osVersion: data.formData.osVersion,
     cpuArch: data.formData.cpuArch,
-    packageVersion: data.formData.packageVersion,
-    packageVersionNum: data.formData.packageVersionNum
+    openGaussVersion: data.formData.packageVersion,
+    openGaussVersionNum: data.formData.packageVersionNum,
   }
   checkVersionNumber(params).then((res) => {
     if (res.code === 200) {
@@ -371,6 +374,7 @@ const getPackageUrl = () => {
       console.log('error')
     }
     let name = data.formData.packageUrl.split('/')
+    //需要去除后缀
     data.formData.name = name.pop()
   }) .catch(error => {
     console.error({
@@ -398,7 +402,7 @@ const open = (
 ) => {
   getUploadPath()
   fetchVersionNum()
-  getSystemSetting()
+  // getSystemSetting()
   data.type = type
   if (type === 'create') {
     data.title = t('添加安装包')
@@ -415,6 +419,7 @@ const open = (
     Object.assign(data.formData, {
       packageId: '',
       os: OS.CENTOS,
+      osVersion: '7',
       cpuArch: CpuArch.X86_64,
       packageVersion: OpenGaussVersionEnum.MINIMAL_LIST,
       packageVersionNum: versionnum,
@@ -431,6 +436,7 @@ const open = (
       packageId: packageData.packageId,
       name: packageData.name,
       os: packageData.os,
+      osVersion: packageData.osVersion,
       cpuArch: packageData.cpuArch,
       packageVersion: packageData.packageVersion,
       packageVersionNum: packageData.packageVersionNum,
@@ -473,8 +479,15 @@ const updateOsData = (value:string) => {
   if (tempOs.value === OS.CENTOS && data.formData.cpuArch ===  CpuArch.AARCH64) {
     tempArch.value = CpuArch.X86_64
     data.formData.cpuArch = CpuArch.X86_64
+    data.formData.osVersion = '7'
+  } else if (tempOs.value === OS.All) {
+    data.formData.os = OS.OPEN_EULER
+    data.formData.osVersion = '22.03'
+  } else if (tempOs.value === OS.OPEN_EULER) {
+    data.formData.os = OS.OPEN_EULER
+    data.formData.osVersion = '20.03'
   }
-  data.formData.os = OS.OPEN_EULER
+  // data.formData.os = OS.OPEN_EULER
   getPackageUrl()
 }
 const tempArch = reactive({ value: CpuArch.X86_64 })
@@ -541,6 +554,7 @@ const submit = async () => {
         formData.append('packageUrl', '')
         formData.append('packageVersion', data.formData.packageVersion)
         formData.append('uploadFile', data.fileList.file)
+        formData.append('osVersion', data.fileList.osVersion)
         if (progressPercent.value === 0) {
         axios({
           url: `/plugins/base-ops/installPackageManager/v2/save/upload/`,
@@ -570,6 +584,7 @@ const submit = async () => {
         const params = {
           name: data.formData.name,
           os: data.formData.os,
+          osVersion: data.formData.osVersion,
           cpuArch: data.formData.cpuArch,
           openGaussVersion: data.formData.packageVersion,
           openGaussVersionNum: data.formData.packageVersionNum,
