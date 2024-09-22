@@ -40,6 +40,7 @@ public class PackageDto {
      * package support os
      */
     private String os;
+    private String osVersion;
     /**
      * package support cpu arch
      */
@@ -52,4 +53,13 @@ public class PackageDto {
      * package support openGauss version num
      */
     private String openGaussVersionNum;
+
+    /**
+     * get simple info
+     *
+     * @return simple package info
+     */
+    public String simple() {
+        return os + osVersion + " " + cpuArch + " " + openGaussVersion + openGaussVersionNum;
+    }
 }

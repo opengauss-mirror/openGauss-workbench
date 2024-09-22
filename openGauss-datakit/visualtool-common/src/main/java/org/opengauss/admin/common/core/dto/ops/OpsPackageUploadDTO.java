@@ -47,6 +47,8 @@ public class OpsPackageUploadDTO {
      */
     @NotBlank(message = "package support os can not be empty")
     private String os;
+    @NotBlank(message = "package support osVersion can not be empty")
+    private String osVersion;
     /**
      * package support cpu arch
      */

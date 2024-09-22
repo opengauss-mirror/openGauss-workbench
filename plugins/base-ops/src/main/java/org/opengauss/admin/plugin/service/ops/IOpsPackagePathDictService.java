@@ -24,10 +24,10 @@
 package org.opengauss.admin.plugin.service.ops;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.opengauss.admin.common.core.dto.ops.PackageDto;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsPackagePathDictEntity;
 import org.opengauss.admin.plugin.domain.model.ops.OpsPackagePathDictVO;
 import org.opengauss.admin.plugin.domain.model.ops.OpsPackageVO;
-import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 
 import java.util.List;
 
@@ -58,12 +58,10 @@ public interface IOpsPackagePathDictService extends IService<OpsPackagePathDictE
     /**
      * query package path dict
      *
-     * @param os             os
-     * @param cpuArch        cpuArch
-     * @param packageVersion packageVersion
+     * @param packageDto         packageDto
      * @return OpsPackagePathDictVO
      */
-    OpsPackagePathDictVO queryPackagePathDict(String os, String cpuArch, OpenGaussVersionEnum packageVersion);
+    OpsPackagePathDictVO queryPackagePathDict(PackageDto packageDto);
 
     /**
      * Build and check package url is valid
@@ -73,8 +71,8 @@ public interface IOpsPackagePathDictService extends IService<OpsPackagePathDictE
      * @param packageDict             packageDict
      * @return OpsPackageVO
      */
-    OpsPackageVO buildAndCheckPackageUrlIsValid(String installPackageUrlPrefix, String packageVersionNum,
-                                                OpsPackagePathDictVO packageDict);
+    OpsPackageVO buildOpsPackage(String installPackageUrlPrefix, String packageVersionNum,
+                                 OpsPackagePathDictVO packageDict);
 
     /**
      * check current environment is online

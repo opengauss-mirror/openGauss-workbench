@@ -41,9 +41,11 @@ public class OpsPackagePathDictEntity extends BaseEntity {
     @TableId
     private String id;
     private String os;
+    private String osVersion;
     private String cpuArch;
     private String version;
     private String urlPath;
+    private String pkgTmpUseVersion;
     private String packageNameTmp;
 
     public OpsPackagePathDictVO toVO() {
@@ -52,6 +54,8 @@ public class OpsPackagePathDictEntity extends BaseEntity {
         vo.setVersion(version);
         vo.setPackageNameTmp(packageNameTmp);
         vo.setOs(os);
+        vo.setOsVersion(osVersion);
+        vo.setPkgTmpUseVersion(pkgTmpUseVersion);
         vo.setCpuArch(cpuArch);
         vo.setUrlPath(urlPath);
         vo.setRemark(getRemark());

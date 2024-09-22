@@ -56,6 +56,7 @@ public class OpsPackageManagerEntity extends BaseEntity {
     @TableField(exist = false)
     private String urlPrefix;
     private String os;
+    private String osVersion;
     private String cpuArch;
     private String packageVersion;
     private String packageVersionNum;
@@ -89,6 +90,7 @@ public class OpsPackageManagerEntity extends BaseEntity {
         vo.setPackageVersion(packageVersion);
         vo.setPackageVersionNum(packageVersionNum);
         vo.setOs(os);
+        vo.setOsVersion(osVersion);
         vo.setCpuArch(cpuArch);
         vo.setRemark(getRemark());
         vo.setType(type);

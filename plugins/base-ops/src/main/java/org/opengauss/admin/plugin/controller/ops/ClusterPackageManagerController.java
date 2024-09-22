@@ -40,7 +40,6 @@ import org.opengauss.admin.plugin.constant.OpsConstants;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
 import org.opengauss.admin.plugin.domain.model.ops.OpsPackagePathDictVO;
 import org.opengauss.admin.plugin.domain.model.ops.OpsPackageVO;
-import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerV2Service;
 import org.opengauss.admin.plugin.service.ops.IOpsPackagePathDictService;
 import org.springframework.beans.BeanUtils;
@@ -70,7 +69,7 @@ public class ClusterPackageManagerController extends BaseController {
     private IOpsPackagePathDictService opsPackagePathDictService;
 
     @Value("${installPackage.urlPrefix}")
-    private String installPackageUrlPrefix;
+    private String pkgUrlPrefix;
 
     @GetMapping("/check/online")
     public AjaxResult checkOnline() {
@@ -79,7 +78,8 @@ public class ClusterPackageManagerController extends BaseController {
 
     @PostMapping("/page/package")
     public TableDataInfo pagePackage(@RequestBody PackageDto dto) {
-        IPage<OpsPackageManagerEntity> page = opsPackageManagerV2Service.page(startPage(), getOpsPackageQueryWrapper(dto));
+        LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = getOpsPackageQueryWrapper(dto);
+        IPage<OpsPackageManagerEntity> page = opsPackageManagerV2Service.page(startPage(), queryWrapper);
         return getDataTable(page);
     }
 
@@ -89,12 +89,16 @@ public class ClusterPackageManagerController extends BaseController {
     }
 
     private LambdaQueryWrapper<OpsPackageManagerEntity> getOpsPackageQueryWrapper(PackageDto dto) {
-        LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = Wrappers.lambdaQuery(OpsPackageManagerEntity.class)
+        LambdaQueryWrapper<OpsPackageManagerEntity> lambdaQuery = Wrappers.lambdaQuery(OpsPackageManagerEntity.class);
+        LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = lambdaQuery
                 .like(StrUtil.isNotEmpty(dto.getName()), OpsPackageManagerEntity::getName, dto.getName())
                 .eq(StrUtil.isNotEmpty(dto.getOs()), OpsPackageManagerEntity::getOs, dto.getOs())
+                .eq(StrUtil.isNotEmpty(dto.getOsVersion()), OpsPackageManagerEntity::getOsVersion, dto.getOsVersion())
                 .eq(StrUtil.isNotEmpty(dto.getCpuArch()), OpsPackageManagerEntity::getCpuArch, dto.getCpuArch())
-                .eq(StrUtil.isNotEmpty(dto.getOpenGaussVersionNum()), OpsPackageManagerEntity::getPackageVersionNum, dto.getOpenGaussVersionNum())
-                .eq(Objects.nonNull(dto.getOpenGaussVersion()), OpsPackageManagerEntity::getPackageVersion, dto.getOpenGaussVersion())
+                .eq(StrUtil.isNotEmpty(dto.getOpenGaussVersionNum()), OpsPackageManagerEntity::getPackageVersionNum,
+                        dto.getOpenGaussVersionNum())
+                .eq(Objects.nonNull(dto.getOpenGaussVersion()), OpsPackageManagerEntity::getPackageVersion,
+                        dto.getOpenGaussVersion())
                 .isNotNull(OpsPackageManagerEntity::getPackagePath)
                 .orderByDesc(OpsPackageManagerEntity::getUpdateTime);
         return queryWrapper;
@@ -105,28 +109,36 @@ public class ClusterPackageManagerController extends BaseController {
         return AjaxResult.success(opsPackageManagerV2Service.listVersionNumber());
     }
 
+    /**
+     * check and return package version info
+     *
+     * @param packageDto packageDto
+     * @return AjaxResult
+     */
     @GetMapping("/check/version/number")
-    public AjaxResult checkVersionNumber(@RequestParam(value = "os") String os,
-                                         @RequestParam(value = "cpuArch") String cpuArch,
-                                         @RequestParam(value = "packageVersion") OpenGaussVersionEnum packageVersion,
-                                         @RequestParam(value = "packageVersionNum") String packageVersionNum) {
+    public AjaxResult checkVersionNumber(@ModelAttribute PackageDto packageDto) {
         try {
-            Assert.isTrue(StrUtil.isNotEmpty(os), "os 不能为空");
-            Assert.isTrue(StrUtil.isNotEmpty(cpuArch), "cpuArch 不能为空");
-            Assert.isTrue(StrUtil.isNotEmpty(packageVersionNum), "packageVersionNum 不能为空");
-            Assert.isTrue(Objects.nonNull(packageVersion), "packageVersion 不能为空");
-            Assert.isTrue(opsPackagePathDictService.checkOsExists(os), "not support os param value " + os);
-            Assert.isTrue(opsPackagePathDictService.checkCpuArchExists(cpuArch), "not support cpuArch param value " + cpuArch);
+            Assert.isTrue(StrUtil.isNotEmpty(packageDto.getOs()), "os 不能为空");
+            Assert.isTrue(StrUtil.isNotEmpty(packageDto.getCpuArch()), "cpuArch 不能为空");
+            Assert.isTrue(StrUtil.isNotEmpty(packageDto.getOpenGaussVersionNum()), "packageVersionNum 不能为空");
+            Assert.isTrue(Objects.nonNull(packageDto.getOpenGaussVersion()), "packageVersion 不能为空");
+            Assert.isTrue(opsPackagePathDictService.checkOsExists(packageDto.getOs()),
+                    "not support os param value " + packageDto.simple());
+            Assert.isTrue(opsPackagePathDictService.checkCpuArchExists(packageDto.getCpuArch()),
+                    "not support cpuArch param value " + packageDto.simple());
 
-            List<OpsPackageVO> list = opsPackageManagerV2Service.queryOpsPackageList(os, cpuArch, packageVersion, packageVersionNum);
+            List<OpsPackageVO> list = opsPackageManagerV2Service.queryOpsPackageList(packageDto);
             if (CollectionUtils.isNotEmpty(list)) {
                 return AjaxResult.success(list);
             } else {
-                OpsPackagePathDictVO packageDict = opsPackagePathDictService.queryPackagePathDict(os, cpuArch, packageVersion);
-                Assert.isTrue(Objects.nonNull(packageDict), "安装包字典不存当前版本 :" + os + " " + cpuArch + " " + packageVersion);
-
-                OpsPackageVO opsPackageVO = opsPackagePathDictService.buildAndCheckPackageUrlIsValid(installPackageUrlPrefix, packageVersionNum, packageDict);
-                return AjaxResult.success(opsPackageVO);
+                OpsPackagePathDictVO packageTmp = opsPackagePathDictService.queryPackagePathDict(packageDto);
+                if (Objects.nonNull(packageTmp)) {
+                    OpsPackageVO opsPackageVO = opsPackagePathDictService.buildOpsPackage(pkgUrlPrefix,
+                            packageDto.getOpenGaussVersionNum(), packageTmp);
+                    return AjaxResult.success(opsPackageVO);
+                } else {
+                    return AjaxResult.error("安装包字典不存当前版本 :" + packageDto.simple());
+                }
             }
         } catch (IllegalArgumentException | OpsException e) {
             return AjaxResult.error(e.getMessage());
@@ -180,12 +192,17 @@ public class ClusterPackageManagerController extends BaseController {
 
     @PostMapping("/save/online")
     public AjaxResult online(@Valid @RequestBody OpsPackageDownloadDTO dto) {
-        Assert.isTrue(opsPackagePathDictService.checkCurrentEnvironmentIsOnline(), "current environment is not online");
-        Assert.isTrue(opsPackagePathDictService.checkOsExists(dto.getOs()), "not support os param value " + dto.getOs());
-        Assert.isTrue(opsPackagePathDictService.checkCpuArchExists(dto.getCpuArch()), "not support cpuArch param value " + dto.getCpuArch());
-        Assert.isTrue(!opsPackageManagerV2Service.hasName("", dto.getName()), "package name [" + dto.getName() + "] already exists");
+        Assert.isTrue(opsPackagePathDictService.checkCurrentEnvironmentIsOnline(),
+                "current environment is not online");
+        Assert.isTrue(opsPackagePathDictService.checkOsExists(dto.getOs()),
+                "not support os param value " + dto.getOs());
+        Assert.isTrue(opsPackagePathDictService.checkCpuArchExists(dto.getCpuArch()),
+                "not support cpuArch param value " + dto.getCpuArch());
+        Assert.isTrue(!opsPackageManagerV2Service.hasName("", dto.getName()),
+                "package name [" + dto.getName() + "] already exists");
         OpsPackageManagerEntity entity = new OpsPackageManagerEntity();
         entity.setOs(dto.getOs());
+        entity.setOsVersion(dto.getOsVersion());
         entity.setCpuArch(dto.getCpuArch());
         entity.setPackageVersion(dto.getOpenGaussVersion().name());
         entity.setPackageVersionNum(dto.getOpenGaussVersionNum());
@@ -221,12 +238,15 @@ public class ClusterPackageManagerController extends BaseController {
     @PostMapping("/save/upload")
     public AjaxResult upload(@ModelAttribute OpsPackageUploadDTO dto) {
         Assert.isTrue(StrUtil.isNotEmpty(dto.getOs()), "os param can not be empty");
+        Assert.isTrue(StrUtil.isNotEmpty(dto.getOsVersion()), "osVersion param can not be empty");
         Assert.isTrue(StrUtil.isNotEmpty(dto.getCpuArch()), "cpuArch param can not be empty");
         Assert.isTrue(StrUtil.isNotEmpty(dto.getName()), "package name param can not be empty");
         Assert.isTrue(Objects.nonNull(dto.getPackageVersion()), "package version param can not be empty");
         Assert.isTrue(StrUtil.isNotEmpty(dto.getPackageVersionNum()), "package version num param can not be empty");
-        Assert.isTrue(opsPackagePathDictService.checkOsExists(dto.getOs()), "not support os param value " + dto.getOs());
-        Assert.isTrue(opsPackagePathDictService.checkCpuArchExists(dto.getCpuArch()), "not support cpuArch param value " + dto.getCpuArch());
+        Assert.isTrue(opsPackagePathDictService.checkOsExists(dto.getOs()),
+                "not support os param value " + dto.getOs());
+        Assert.isTrue(opsPackagePathDictService.checkCpuArchExists(dto.getCpuArch()),
+                "not support cpuArch param value " + dto.getCpuArch());
         OpsPackageManagerEntity pkg = new OpsPackageManagerEntity();
         BeanUtils.copyProperties(dto, pkg);
         pkg.setType("openGauss");

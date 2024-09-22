@@ -34,9 +34,11 @@ import org.opengauss.admin.plugin.domain.entity.ops.OpsPackagePathDictEntity;
 public class OpsPackagePathDictVO {
     private String id;
     private String os;
+    private String osVersion;
     private String cpuArch;
     private String version;
     private String urlPath;
+    private String pkgTmpUseVersion;
     private String packageNameTmp;
     private String remark;
 
@@ -44,20 +46,30 @@ public class OpsPackagePathDictVO {
         OpsPackagePathDictEntity entity = new OpsPackagePathDictEntity();
         entity.setId(id);
         entity.setOs(os);
+        entity.setOsVersion(osVersion);
         entity.setCpuArch(cpuArch);
         entity.setVersion(version);
         entity.setUrlPath(urlPath);
+        entity.setPkgTmpUseVersion(pkgTmpUseVersion);
         entity.setPackageNameTmp(packageNameTmp);
         entity.setRemark(remark);
         return entity;
     }
 
-    public String buildFullPackageUrl(String installPackageUrlPrefix, String packageVersionNum, boolean isLatest) {
+    /**
+     * Build full package url.
+     *
+     * @param pkgUrlPrefix      pkgUrlPrefix
+     * @param packageVersionNum packageVersionNum
+     * @param isLatest          isLatest
+     * @return String
+     */
+    public String buildFullPackageUrl(String pkgUrlPrefix, String packageVersionNum, boolean isLatest) {
         if (isLatest) {
-            return installPackageUrlPrefix + "/latest/" + urlPath
+            return pkgUrlPrefix + "/latest/" + urlPath
                     + "/" + String.format(packageNameTmp, packageVersionNum);
         } else {
-            return installPackageUrlPrefix + "/" + packageVersionNum + "/" + urlPath
+            return pkgUrlPrefix + "/" + packageVersionNum + "/" + urlPath
                     + "/" + String.format(packageNameTmp, packageVersionNum);
         }
 
