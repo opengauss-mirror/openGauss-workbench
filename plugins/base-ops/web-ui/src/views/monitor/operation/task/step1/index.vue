@@ -473,7 +473,7 @@ const fetchUserList = (value:any) => {
     res.data.forEach(item => {
       if (item.sudo === false) {
         hostUserList.value.push(item.username)
-        hostUserId.append(item.username,item.hostUserId)
+        hostUserId.set(item.username,item.hostUserId)
       }
     })
   }) .catch((error) => {
@@ -1757,7 +1757,7 @@ const init = () => {
             res.data.forEach(item => {
               if (item.sudo === false) {
                 hostUserList.value.push(item.username)
-                hostUserId.append(item.username,item.hostUserId)
+                hostUserId.set(item.username,item.hostUserId)
               }
             })
           }) .catch((error) => {
