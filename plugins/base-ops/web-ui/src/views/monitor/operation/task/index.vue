@@ -561,69 +561,68 @@ const submitClusterInfo = () => {
 //检查所有目录是否为空目录
 const pathIsEmpty = ref(true);
 const list = reactive({
-  pathList: [],
-  notEmptyPath: []
+  pathList: []
 })
 const checkPathsEmpty = async () => {
   pathIsEmpty.value = true;
   list.pathList = [];
-  list.notEmptyPath = [];
   if (subTaskConfig.value.installPath !== '') {
     list.pathList.push(subTaskConfig.value.installPath)
   }
   if (subTaskConfig.value.installPackagePath !== '') {
     list.pathList.push(subTaskConfig.value.installPackagePath)
   }
-  if (subTaskConfig.value.logPath !== '') {
-    list.pathList.push(subTaskConfig.value.logPath)
-  }
-  if (subTaskConfig.value.tmpPath !== '') {
-    list.pathList.push(subTaskConfig.value.tmpPath)
-  }
-  if (subTaskConfig.value.omToolsPath !== '') {
-    list.pathList.push(subTaskConfig.value.omToolsPath)
-  }
-  if (subTaskConfig.value.corePath !== '') {
-    list.pathList.push(subTaskConfig.value.corePath)
+  if (subTaskConfig.value.packageVersion === OpenGaussVersionEnum.ENTERPRISE) {
+    if (subTaskConfig.value.logPath !== '') {
+      list.pathList.push(subTaskConfig.value.logPath)
+    }
+    if (subTaskConfig.value.tmpPath !== '') {
+      list.pathList.push(subTaskConfig.value.tmpPath)
+    }
+    if (subTaskConfig.value.omToolsPath !== '') {
+      list.pathList.push(subTaskConfig.value.omToolsPath)
+    }
   }
   if (subTaskConfig.value.envPath !== '' && subTaskConfig.value.enableGenerateEnvironmentVariableFile) {
     list.pathList.push(subTaskConfig.value.envPath)
   }
-  subTaskConfig.value.clusterNodes.forEach(item => {
-    if (item.dataPath !== '') {
-      list.pathList.push(item.dataPath)
+  const promises = subTaskConfig.value.clusterNodes.map(node => {
+    let promisesArray = [];
+    if (node.dataPath !== '' && subTaskConfig.value.packageVersion !== OpenGaussVersionEnum.MINIMAL_LIST) {
+      list.pathList.push(node.dataPath)
     }
-    if (item.cmDataPath !== '' && subTaskConfig.value.enableCmTool) {
-      list.pathList.push(item.cmDataPath)
+    if (node.cmDataPath !== '' && subTaskConfig.value.packageVersion === OpenGaussVersionEnum.ENTERPRISE && subTaskConfig.value.enableCmTool) {
+      list.pathList.push(node.cmDataPath)
     }
-  })
-  console.log(list.pathList)
-  const promises = list.pathList.map(item => {
-    const data = {
-      path: item
-    }
-    if (data.path !== '') {
-      return pathEmpty(subTaskConfig.value.hostId, data).then(res => {
+    list.pathList.map(item => {
+      const data = {
+        path: item
+      }
+      promisesArray.push(pathEmpty(node.hostId, data).then(res => {
         if (Number(res.code) === 200) {
-          if (!res.data ) {
-            list.notEmptyPath.push(item);
+          if (!res.data) {
             pathIsEmpty.value = false;
+            Message.error(node.hostIp + "的路径：" + item + " 不为空, 保存草稿失败")
           }
         }
       }).catch(error => {
         console.log(error);
         throw error;
-      });
+      }));
+    });
+    if (node.dataPath !== '' && subTaskConfig.value.packageVersion !== OpenGaussVersionEnum.MINIMAL_LIST) {
+      list.pathList.pop();
     }
+    if (node.cmDataPath !== '' && subTaskConfig.value.packageVersion === OpenGaussVersionEnum.ENTERPRISE && subTaskConfig.value.enableCmTool) {
+      list.pathList.pop();
+    }
+    return Promise.all(promisesArray);
   });
 
   try {
     await Promise.all(promises);
     // 所有异步操作完成
     console.log("所有路径检查完成");
-    if (!pathIsEmpty.value) {
-      Message.error("路径：" + list.notEmptyPath + " 不为空, 保存草稿失败")
-    }
   } catch (error) {
     console.log("路径检查过程中发生错误：", error);
   }
