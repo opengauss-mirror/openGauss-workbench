@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.nctigba.observability.instance.model.entity.AgentNodeRelationDO;
 import com.nctigba.observability.instance.model.vo.InstalledAgentVO;
 import com.nctigba.observability.instance.service.AgentNodeRelationService;
@@ -165,8 +166,8 @@ public class EnvironmentController {
         List<OpsClusterVO> clusters = clusterManager.getAllOpsCluster();
         result.forEach(installedAgentsVO -> {
             Optional<OpsHostEntity> host =
-                    hosts.stream().filter(hostTemp -> hostTemp.getHostId().equals(installedAgentsVO.getHostId()))
-                            .findFirst();
+                hosts.stream().filter(hostTemp -> hostTemp.getHostId().equals(installedAgentsVO.getHostId()))
+                    .findFirst();
             if (host.isPresent()) {
                 installedAgentsVO.setHostName(host.get().getName());
                 installedAgentsVO.setHostPublicIp(host.get().getPublicIp());
@@ -178,11 +179,13 @@ public class EnvironmentController {
                 .filter(z -> z.getClusterNodes()
                     .stream().anyMatch(node -> agentRelatedNodeIds.contains(node.getNodeId())))
                 .map(z -> {
+                    OpsClusterVO clusterVo = new OpsClusterVO();
+                    BeanUtil.copyProperties(z, clusterVo);
                     List<OpsClusterNodeVO> nodeList = z.getClusterNodes().stream().filter(
                         node -> agentRelatedNodeIds.contains(node.getNodeId())).collect(
                         Collectors.toList());
-                    z.setClusterNodes(nodeList);
-                    return z;
+                    clusterVo.setClusterNodes(nodeList);
+                    return clusterVo;
                 }).collect(Collectors.toList());
             installedAgentsVO.setClusters(relatedClusters);
         });

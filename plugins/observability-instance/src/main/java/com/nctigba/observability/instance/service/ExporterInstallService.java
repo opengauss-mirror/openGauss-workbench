@@ -26,13 +26,11 @@ package com.nctigba.observability.instance.service;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.StopWatch;
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.observability.instance.caller.AlertCaller;
@@ -432,7 +430,8 @@ public class ExporterInstallService extends AbstractInstaller {
                 log.info("agent set config URl:{}", url);
                 HttpUtil.post(url, JSONUtil.toJsonStr(param));
                 break;
-            } catch (IORuntimeException e) {
+            } catch (Exception e) {
+                // there may be throw IORuntimeException HttpException  or other Exception. So catch all Exception
                 if (i == 10) {
                     throw new CustomException(e.getMessage());
                 }
@@ -636,12 +635,14 @@ public class ExporterInstallService extends AbstractInstaller {
         List<NctigbaEnvDO> envList = envMapper
             .selectList(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType,
                 NctigbaEnvDO.envType.EXPORTER.name()).orderByDesc(NctigbaEnvDO::getStatus));
-        envList.forEach(e -> {
-            e.setHost(hostFacade.getById(e.getHostid()));
-        });
         List<NctigbaEnvDO> alertList = new ArrayList<>();
         for (NctigbaEnvDO env : envList) {
             try {
+                env = envMapper.selectById(env.getId());
+                if (env == null) {
+                    continue;
+                }
+                env.setHost(hostFacade.getById(env.getHostid()));
                 String oldStatus = env.getStatus();
                 if (StrUtil.isBlank(oldStatus)) {
                     oldVersionAdapter(env);
