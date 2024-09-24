@@ -64,6 +64,7 @@ public class OpsClusterTaskNodeDTO {
     public OpsClusterTaskNodeEntity toEntity() {
         OpsClusterTaskNodeEntity opsClusterTaskNodeEntity = new OpsClusterTaskNodeEntity();
         BeanUtils.copyProperties(this, opsClusterTaskNodeEntity);
+        opsClusterTaskNodeEntity.setIsCmMaster(isCMMaster);
         return opsClusterTaskNodeEntity;
     }
 }

@@ -45,7 +45,6 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Collections;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -93,24 +92,27 @@ public class OpsClusterEnvService {
      */
     public HostEnv env(String hostId) {
         OpsHostEntity hostEntity = opsHostRemoteService.getHost(hostId);
-        OpenGaussSupportOSEnum expectedOs = OpenGaussSupportOSEnum.of(hostEntity.getOs(), hostEntity.getOsVersion(), hostEntity.getCpuArch());
+        OpenGaussSupportOSEnum expectedOs = OpenGaussSupportOSEnum.of(hostEntity.getOs(), hostEntity.getOsVersion(),
+                hostEntity.getCpuArch());
         return env(hostEntity, expectedOs);
     }
 
     private HostEnv env(OpsHostEntity hostEntity, OpenGaussSupportOSEnum expectedOs) {
         // use root check env
         OpsHostUserEntity userEntity = opsHostRemoteService.getHostRootUser(hostEntity.getHostId());
-        Session session = opsHostRemoteService.getHostUserSession(hostEntity, userEntity);
         HostEnv hostEnv = new HostEnv();
-        try {
             CountDownLatch countDownLatch = new CountDownLatch(2);
             threadPoolTaskExecutor.submit(() -> {
+                Session session = opsHostRemoteService.createHostUserSession(hostEntity, userEntity);
                 hostEnv.setHardwareEnv(hardwareEnvDetect(session, expectedOs));
+                opsHostRemoteService.closeSession(session);
                 countDownLatch.countDown();
             });
 
             threadPoolTaskExecutor.submit(() -> {
+                Session session = opsHostRemoteService.createHostUserSession(hostEntity, userEntity);
                 hostEnv.setSoftwareEnv(softwareEnvDetect(session, expectedOs));
+                opsHostRemoteService.closeSession(session);
                 countDownLatch.countDown();
             });
 
@@ -119,11 +121,6 @@ public class OpsClusterEnvService {
             } catch (InterruptedException e) {
                 log.error("waiting for thread to be interrupted", e);
             }
-        } finally {
-            if (Objects.nonNull(session) && session.isConnected()) {
-                session.disconnect();
-            }
-        }
         return hostEnv;
     }
 

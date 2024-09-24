@@ -217,7 +217,7 @@ public class TaskLiteProvider extends AbstractTaskProvider {
             return hostUserEntity;
         }
         OpsHostUserEntity hostRootUser = opsHostRemoteService.getHostRootUser(hostId);
-        Session rootSession = opsHostRemoteService.getHostUserSession(hostEntity, hostRootUser);
+        Session rootSession = opsHostRemoteService.createHostUserSession(hostEntity, hostRootUser);
         try {
             String result = opsHostRemoteService.executeCommand(SshCommandConstants.OMM_USER, rootSession,
                     installContext.getRetBuffer(), "query omm user");

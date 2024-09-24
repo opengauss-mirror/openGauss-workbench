@@ -256,6 +256,7 @@ public class HttpUtils {
                 return AjaxResult.error("The URL is not connected.");
             }
         } catch (IOException e) {
+            log.error("connected {} error ", urlAddr, e);
             return AjaxResult.error("The URL is not connected : " + e.getMessage());
         }
     }

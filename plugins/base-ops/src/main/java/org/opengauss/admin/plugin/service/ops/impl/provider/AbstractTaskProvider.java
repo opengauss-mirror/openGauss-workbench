@@ -106,6 +106,7 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
             ensureLevel2DirPermission(rootSession, installUserName, installPath, retBuffer);
             chmodFullPathAndParentPath(rootSession, installPath, retBuffer);
             ensureDataPathPermission(rootSession, installUserName, dataPath, retBuffer);
+            chmodFullPathAndParentPath(rootSession, dataPath, retBuffer);
             ensureEnvPathPermission(rootSession, installContext.getEnvPath(), retBuffer);
             log.info("Login and install user");
         } finally {
@@ -118,20 +119,35 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
 
     /**
      * ensure dir two lever permission
+     * chown user group permission  &&  chmod path permission
      *
      * @param rootSession     session
      * @param installUserName user name
      * @param targetPath      path
      * @param retBuffer       buffer
      */
-    protected void ensureLevel2DirPermission(Session rootSession, String installUserName, String targetPath, RetBuffer retBuffer) {
+    protected void ensureLevel2DirPermission(Session rootSession, String installUserName, String targetPath,
+                                             RetBuffer retBuffer) {
+        String targetParent2LevelPath = getLevel2DirPath(targetPath);
+        String chown = MessageFormat.format(SshCommandConstants.CHOWN_USER_GROUP, installUserName,
+                installUserName, targetParent2LevelPath);
+        opsHostRemoteService.executeCommand(chown, rootSession, retBuffer, "chown user group permission");
+        String chmod = MessageFormat.format(SshCommandConstants.CHMOD, targetParent2LevelPath);
+        opsHostRemoteService.executeCommand(chmod, rootSession, retBuffer, "chmod path permission");
+    }
+
+    /**
+     * get path top two path
+     *
+     * @param targetPath targetPath
+     * @return path
+     */
+    protected String getLevel2DirPath(String targetPath) {
         String[] split = targetPath.split("/");
         if (split.length >= 3) {
-            String targetParent2LevelPath = "/" + split[1] + "/" + split[2];
-            String chown = MessageFormat.format(SshCommandConstants.CHOWN_USER_GROUP, installUserName,
-                    installUserName, targetParent2LevelPath);
-            opsHostRemoteService.executeCommand(chown, rootSession, retBuffer);
+            return "/" + split[1] + "/" + split[2];
         }
+        return targetPath;
     }
 
     /**
@@ -326,7 +342,7 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
         }
         OpsHostEntity hostEntity = hostInfoHolder.getHostEntity();
         OpsHostUserEntity hostUser = getHostUserInfo(hostInfoHolder, userId);
-        return opsHostRemoteService.getHostUserSession(hostEntity, hostUser);
+        return opsHostRemoteService.createHostUserSession(hostEntity, hostUser);
     }
 
     /**
@@ -355,7 +371,7 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
         if (Objects.isNull(hostUser) || StrUtil.isEmpty(hostUser.getPassword())) {
             throw new OpsException("root password not found");
         }
-        return opsHostRemoteService.getHostUserSession(hostInfoHolder.getHostEntity(), hostUser);
+        return opsHostRemoteService.createHostUserSession(hostInfoHolder.getHostEntity(), hostUser);
     }
 
     /**
@@ -482,21 +498,6 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
         return "";
     }
 
-    /**
-     * chmod
-     *
-     * @param rootSession rootSession
-     * @param path        path
-     * @param retBuffer   retBuffer
-     */
-    protected void chmod(Session rootSession, String path, RetBuffer retBuffer) {
-        if (StrUtil.isNotEmpty(path) && path.indexOf("/", 1) > 0) {
-            path = path.substring(0, path.indexOf("/", 1));
-        }
-        String chmod = MessageFormat.format(SshCommandConstants.CHMOD, path);
-        opsHostRemoteService.executeCommand(chmod, rootSession, retBuffer, "grant permission");
-    }
-
     private void chmodDataPath(Session rootSession, String path, RetBuffer wsSession) {
         String chmod = MessageFormat.format(SshCommandConstants.CHMOD_DATA_PATH, path);
         opsHostRemoteService.executeCommand(chmod, rootSession, wsSession, "grant permission");
@@ -612,8 +613,6 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
             String hostId = enterpriseInstallNodeConfig.getHostId();
             String installUserId = enterpriseInstallNodeConfig.getInstallUserId();
             String dataPath = enterpriseInstallNodeConfig.getDataPath();
-
-
             Session session = createSessionWithUserId(installContext, false, hostId, installUserId);
             String listenerAddress = MessageFormat.format(SshCommandConstants.LISTENER, dataPath);
             listenerAddress = addCommandOfLoadEnvironmentVariable(listenerAddress, installContext.getEnvPath());

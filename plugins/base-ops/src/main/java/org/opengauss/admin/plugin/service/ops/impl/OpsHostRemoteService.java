@@ -155,24 +155,19 @@ public class OpsHostRemoteService {
 
 
     /**
-     * get host root session from the session cache, but not cached session,create a session and cache it
+     * create a session
      *
      * @param host     host
      * @param hostUser host user
      * @return session
      */
-    public Session getHostUserSession(OpsHostEntity host, OpsHostUserEntity hostUser) {
+    public Session createHostUserSession(OpsHostEntity host, OpsHostUserEntity hostUser) {
         Assert.isTrue(Objects.nonNull(host), "host information does not exist");
         Assert.isTrue(Objects.nonNull(hostUser), "hostUser information does not exist");
         Assert.isTrue(StrUtil.isNotEmpty(hostUser.getPassword()), "hostUser password does not exist");
-        Session cacheSession = getCacheSession(host.getHostId(), hostUser.getHostUserId());
-        if (Objects.isNull(cacheSession)) {
-            cacheSession = jschRetBufferUtil.getSession(host.getPublicIp(), host.getPort(), hostUser.getUsername(),
-                            encryptionUtils.decrypt(hostUser.getPassword()))
-                    .orElseThrow(() -> new OpsException("Failed to establish connection with host"));
-            cacheSession(host.getHostId(), hostUser.getHostUserId(), cacheSession);
-        }
-        return cacheSession;
+        return jschRetBufferUtil.getSession(host.getPublicIp(), host.getPort(), hostUser.getUsername(),
+                        encryptionUtils.decrypt(hostUser.getPassword()))
+                .orElseThrow(() -> new OpsException("Failed to establish connection with host"));
     }
 
     /**
@@ -475,6 +470,17 @@ public class OpsHostRemoteService {
         if (StrUtil.isEmpty(rootPassword)) {
             throw new OpsException("root password does not exist");
         }
-        return getHostUserSession(hostEntity, rootUserEntity);
+        return createHostUserSession(hostEntity, rootUserEntity);
+    }
+
+    /**
+     * close session
+     *
+     * @param session session
+     */
+    public void closeSession(Session session) {
+        if (Objects.nonNull(session) && session.isConnected()) {
+            session.disconnect();
+        }
     }
 }

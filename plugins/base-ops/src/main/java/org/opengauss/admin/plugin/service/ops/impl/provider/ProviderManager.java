@@ -57,8 +57,10 @@ import org.springframework.util.Assert;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -219,7 +221,10 @@ public class ProviderManager {
     private void populateInstallContextHostHolder(InstallContext installContext,
                                                   List<OpsClusterTaskNodeEntity> entityNodeList) {
         List<HostInfoHolder> hostInfoHolders = new ArrayList<>();
+        Set<String> hostIdSet = new HashSet<>();
         entityNodeList.forEach(node -> {
+            Assert.isTrue(!hostIdSet.contains(node.getHostId()), "HostId is repeated");
+            hostIdSet.add(node.getHostId());
             OpsHostEntity host = hostFacade.getById(node.getHostId());
             List<OpsHostUserEntity> hostUserList = hostUserFacade.listHostUserByHostId(node.getHostId());
             HostInfoHolder hostInfoHolder = new HostInfoHolder();
@@ -259,7 +264,6 @@ public class ProviderManager {
         } finally {
             if (!isInstallSucc) {
                 opsClusterTaskService.updateClusterTaskStatus(clusterId, OpsClusterTaskStatusEnum.FAILED, remark);
-
             } else {
                 opsClusterTaskService.updateClusterTaskStatus(clusterId, OpsClusterTaskStatusEnum.SUCCESS,
                         "Install completed");
