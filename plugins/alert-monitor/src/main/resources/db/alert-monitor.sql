@@ -1751,7 +1751,8 @@ CREATE TABLE IF NOT EXISTS public.alert_shielding (
 );
 
 update public.alert_template_rule set rule_content = '故障描述：$'||'{nodeName}数据库的活动会话数超过24，当前值为：$'||'{value}'||chr(10)
- ||'处理建议：请检查数据库会话', alert_desc = '活动会话数过多' where rule_id = 26;
- update public.alert_template_rule_item set unit = '', rule_exp_name = 'activeSession', operate = '>', limit_value = 24,
- rule_exp = 'sum(pg_state_activity_group_count{state="active",instance=~"$'||'{instances}"}) by (instance)',
- rule_item_desc = '活动会话数大于24' where rule_item_id = 26;
+ ||'处理建议：请检查数据库会话', alert_desc = '活动会话数过多' where rule_content = '故障描述：$'||'{nodeName}数据库的活动会话数过多，当前值为：$'||'{value}'||chr(10)
+||'处理建议：请检查数据库会话' and alert_desc = '活动会话数大于CPU核数' and rule_id = 26;
+update public.alert_template_rule_item set unit = '', rule_exp_name = 'activeSession', operate = '>', limit_value = 24,
+rule_exp = 'sum(pg_state_activity_group_count{state="active",instance=~"$'||'{instances}"}) by (instance)',
+rule_item_desc = '活动会话数大于24' where rule_item_id = 26 and (operate is null or operate = '');
