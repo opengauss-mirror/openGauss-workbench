@@ -30,7 +30,6 @@ import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
-import org.opengauss.admin.common.enums.ops.OpsClusterTaskStatusEnum;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
@@ -39,14 +38,12 @@ import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeCon
 import org.opengauss.admin.plugin.enums.ops.*;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
-import org.opengauss.admin.plugin.service.ops.IOpsClusterTaskService;
 import org.opengauss.admin.plugin.service.ops.impl.function.GenerateClusterConfigXmlInstance;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
-import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -60,8 +57,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class TaskEnterpriseProvider extends AbstractTaskProvider {
-    @Resource
-    private IOpsClusterTaskService opsClusterTaskService;
     @Resource
     private IOpsClusterService opsClusterService;
     @Resource
@@ -140,10 +135,7 @@ public class TaskEnterpriseProvider extends AbstractTaskProvider {
                 delCmd += delDssHome + " || echo \"delDssHome failed\"; ";
             }
 
-            EnterpriseInstallNodeConfig masterNodeConfig = installContext.getEnterpriseInstallConfig().
-                    getNodeConfigList()
-                    .stream().filter(nodeConfig -> nodeConfig.getClusterRole() == ClusterRoleEnum.MASTER)
-                    .findFirst().orElseThrow(() -> new OpsException("Master node information not found"));
+            EnterpriseInstallNodeConfig masterNodeConfig = getMasterInstallNodeConfig(installContext);
             String delDataPath = MessageFormat.format(SshCommandConstants.DEL_FILE, masterNodeConfig.getDataPath());
             delCmd += delDataPath + " || echo \"delDataPath failed\"; ";
             if (installContext.getEnterpriseInstallConfig().getIsInstallCM()) {
@@ -160,35 +152,31 @@ public class TaskEnterpriseProvider extends AbstractTaskProvider {
 
 
     private void doInstall(InstallContext installContext) {
-        RetBuffer retBuffer = installContext.getRetBuffer();
-
         // Master node configuration information
-        EnterpriseInstallNodeConfig masterNodeConfig = installContext.getEnterpriseInstallConfig().getNodeConfigList().stream().filter(nodeConfig -> nodeConfig.getClusterRole() == ClusterRoleEnum.MASTER).findFirst().orElseThrow(() -> new OpsException("Master node information not found"));
-        String masterHostId = masterNodeConfig.getHostId();
+        Set<String> top2DirSet = new HashSet<String>();
+        getClusterCommonTopTwoPath(installContext, top2DirSet);
+        EnterpriseInstallNodeConfig masterNodeConfig = getMasterInstallNodeConfig(installContext);
         String installUsername = masterNodeConfig.getInstallUsername();
+        RetBuffer retBuffer = installContext.getRetBuffer();
         for (HostInfoHolder hostInfoHolder : installContext.getHostInfoHolders()) {
             Session currentRoot = createSessionWithRootUser(hostInfoHolder);
             installDependency(currentRoot, retBuffer, installContext.getOs());
-            currentRoot.disconnect();
+            top2DirSet.forEach(top2Path -> {
+                ensureDirExist(currentRoot, top2Path, retBuffer);
+                ensureLevel2DirPermission(currentRoot, installUsername, top2Path, retBuffer);
+            });
+            closeSession(currentRoot);
         }
-
-        // root
+        String masterHostId = masterNodeConfig.getHostId();
         HostInfoHolder masterHostInfoHolder = getHostInfoHolder(installContext, masterHostId);
         Session rootSession = createSessionWithRootUser(masterHostInfoHolder);
-
-        // prepare path
         String pkgPath = preparePath(installContext.getEnterpriseInstallConfig().getInstallPackagePath());
-        // ensure dir
         ensureDirExist(rootSession, pkgPath, retBuffer);
-        // ensure dir permission
-        ensureLevel2DirPermission(rootSession, installUsername, pkgPath, retBuffer);
-        // ensure log dir permission
-        chmod(rootSession, preparePath(installContext.getEnterpriseInstallConfig().getLogPath()), retBuffer);
-        ensureEnvPathPermission(rootSession, installContext.getEnvPath(), retBuffer);
 
         // scp
         sendOperateLog(installContext, "START_SCP_INSTALL_PACKAGE");
-        String installPackageFullPath = scpInstallPackageToMasterNode(rootSession, installContext.getInstallPackageLocalPath(), pkgPath, retBuffer);
+        String localPath = installContext.getInstallPackageLocalPath();
+        String installPackageFullPath = scpInstallPackageToMasterNode(rootSession, localPath, pkgPath, retBuffer);
         sendOperateLog(installContext, "END_SCP_INSTALL_PACKAGE");
 
         // unzip install pack
@@ -206,15 +194,18 @@ public class TaskEnterpriseProvider extends AbstractTaskProvider {
         String xmlConfigFullPath = ensureXmlConfigFullPath(rootSession, pkgPath, xml, retBuffer);
         sendOperateLog(installContext, "END_GEN_XML_CONFIG");
 
-        String group = checkInstallUserGroup(installUsername, rootSession, retBuffer);
+        // 设置解压后安装包目录用户，用户组以及操作权限 仅需设置主节点权限，备机由预安装脚本设置
+        ensureLevel2DirPermission(rootSession, installUsername, pkgPath, retBuffer);
 
         HostInfoHolder masterHostHolder = getHostInfoHolder(installContext, masterHostId);
         OpsHostUserEntity masterRootUserInfo = getHostUserInfoByUsername(masterHostHolder, "root");
         OpsHostUserEntity installUserInfo = getHostUserInfo(masterHostHolder, masterNodeConfig.getInstallUserId());
 
-        // ensure dir permission
         sendOperateLog(installContext, "START_EXE_PREINSTALL_COMMAND");
-        preInstall(group, pkgPath, masterNodeConfig, xmlConfigFullPath, rootSession, retBuffer, encryptionUtils.decrypt(masterRootUserInfo.getPassword()), encryptionUtils.decrypt(installUserInfo.getPassword()), installContext.getEnvPath());
+        String group = checkInstallUserGroup(installUsername, rootSession, retBuffer);
+        preInstall(group, pkgPath, masterNodeConfig, xmlConfigFullPath, rootSession, retBuffer,
+                encryptionUtils.decrypt(masterRootUserInfo.getPassword()),
+                encryptionUtils.decrypt(installUserInfo.getPassword()), installContext.getEnvPath());
         sendOperateLog(installContext, "END_EXE_PREINSTALL_COMMAND");
 
         Session ommSession = createSessionWithUserId(masterHostHolder, false, masterNodeConfig.getInstallUserId());
@@ -222,20 +213,51 @@ public class TaskEnterpriseProvider extends AbstractTaskProvider {
         sendOperateLog(installContext, "START_EXE_INSTALL_COMMAND");
         ensureInstallCommand(installContext, xmlConfigFullPath, ommSession, retBuffer);
         sendOperateLog(installContext, "END_EXE_INSTALL_COMMAND");
+        closeSession(ommSession);
+        closeSession(rootSession);
     }
 
-    private void ensureInstallCommand(InstallContext installContext, String xmlConfigFullPath, Session ommSession, RetBuffer retBuffer) {
+    private EnterpriseInstallNodeConfig getMasterInstallNodeConfig(InstallContext installContext) {
+        return installContext
+                .getEnterpriseInstallConfig()
+                .getNodeConfigList()
+                .stream()
+                .filter(nodeConfig -> nodeConfig.getClusterRole() == ClusterRoleEnum.MASTER)
+                .findFirst()
+                .orElseThrow(() -> new OpsException("Master node information not found"));
+    }
+
+    private void getClusterCommonTopTwoPath(InstallContext installContext, Set<String> top2DirSet) {
+        String pkgPath = preparePath(installContext.getEnterpriseInstallConfig().getInstallPackagePath());
+        String logPath = preparePath(installContext.getEnterpriseInstallConfig().getLogPath());
+        String omPath = preparePath(installContext.getEnterpriseInstallConfig().getOmToolsPath());
+        String installPath = preparePath(installContext.getEnterpriseInstallConfig().getInstallPath());
+        String corePath = preparePath(installContext.getEnterpriseInstallConfig().getCorePath());
+        String tmpPath = preparePath(installContext.getEnterpriseInstallConfig().getTmpPath());
+        top2DirSet.add(getLevel2DirPath(pkgPath));
+        top2DirSet.add(getLevel2DirPath(logPath));
+        top2DirSet.add(getLevel2DirPath(omPath));
+        top2DirSet.add(getLevel2DirPath(installPath));
+        top2DirSet.add(getLevel2DirPath(corePath));
+        top2DirSet.add(getLevel2DirPath(tmpPath));
+    }
+
+    private void closeSession(Session session) {
+        opsHostRemoteService.closeSession(session);
+    }
+
+    private void ensureInstallCommand(InstallContext installContext, String xmlConfigFullPath,
+                                      Session ommSession, RetBuffer retBuffer) {
         String installCommand = MessageFormat.format(SshCommandConstants.ENTERPRISE_INSTALL, xmlConfigFullPath);
         try {
             Map<String, String> autoResponse = new HashMap<>();
             autoResponse.put("(yes/no)?", "yes");
-            autoResponse.put("Please enter password for database:", installContext
-                    .getEnterpriseInstallConfig()
-                    .getDatabasePassword());
-            autoResponse.put("Please repeat for database:", installContext.getEnterpriseInstallConfig().getDatabasePassword());
+            String databasePassword = installContext.getEnterpriseInstallConfig().getDatabasePassword();
+            autoResponse.put("Please enter password for database:", databasePassword);
+            autoResponse.put("Please repeat for database:", databasePassword);
 
             installCommand = addCommandOfLoadEnvironmentVariable(installCommand, installContext.getEnvPath());
-            opsHostRemoteService.executeCommand(installCommand, ommSession, installContext.getRetBuffer(), autoResponse);
+            opsHostRemoteService.executeCommand(installCommand, ommSession, retBuffer, autoResponse);
         } catch (Exception e) {
             log.error("install failed：", e);
             throw new OpsException("install failed");

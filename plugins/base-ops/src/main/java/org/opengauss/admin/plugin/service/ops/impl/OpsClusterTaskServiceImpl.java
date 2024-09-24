@@ -78,11 +78,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.List;
 import java.util.Map;
 import java.util.LinkedList;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -327,18 +330,32 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         // 节点信息校验
         List<OpsClusterTaskNodeEntity> nodeEntityList = opsClusterTaskNodeService.listByClusterTaskId(clusterId);
         Assert.isTrue(CollectionUtils.isNotEmpty(nodeEntityList), "cluster task node is empty");
+        Map<String, OpsHostEntity> hostMap = new HashMap<>();
+        localCheckClusterTaskHost(clusterId, nodeEntityList, hostMap, taskEntity);
+
+        // 节点远端服务器信息合法性检查
+        remoteCheckHostEnvInfo(nodeEntityList, taskEntity, hostMap);
+        return true;
+    }
+
+    private void localCheckClusterTaskHost(String clusterId, List<OpsClusterTaskNodeEntity> nodeEntityList,
+        Map<String, OpsHostEntity> hostMap, OpsClusterTaskEntity taskEntity) {
+        Set<String> hostInfoSet = new HashSet<>();
+        // 节点本地信息合法性检查
         nodeEntityList.forEach(node -> {
             // 节点安装信息检查
             String hostId = node.getHostId();
+            Assert.isTrue(!hostInfoSet.contains(hostId), "HostId is repeated");
+            Assert.isTrue(!hostInfoSet.contains(node.getHostUserId()), "Host user Id is repeated");
+            hostInfoSet.add(hostId);
+            hostInfoSet.add(node.getHostUserId());
             OpsHostEntity host = opsHostRemoteService.getHost(hostId);
+            hostMap.put(hostId, host);
             String nodePublicIp = host.getPublicIp();
             OpsHostUserEntity hostUser = opsHostRemoteService.getOpsHostUser(node.getHostUserId());
             boolean canInstall = checkHostAndUserInstallCluster(clusterId, hostId, node.getHostUserId());
             Assert.isTrue(canInstall, clusterId + " host has cluster installation task: "
                     + nodePublicIp + "_(" + hostUser.getUsername() + ")");
-
-            // 节点磁盘空间检查
-            checkTaskDirDiskSpace(taskEntity, node);
 
             // 集群任务端口重复检查
             String databasePort = String.valueOf(taskEntity.getDatabasePort());
@@ -350,10 +367,6 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
             Assert.isTrue(sameDatabasePortCount == 0, "task database port is used: "
                     + nodePublicIp + "_(" + databasePort + ")");
 
-            // 集群节点数据库端口检查
-            boolean hostUsed = opsHostRemoteService.portUsed(hostId, Integer.valueOf(databasePort));
-            Assert.isTrue(!hostUsed, "host port is used: " + nodePublicIp + "_(" + databasePort + ")");
-
             if (taskEntity.getEnableCmTool()) {
                 // 数据库端口与CM端口检测
                 String cmPort = String.valueOf(node.getCmPort());
@@ -362,12 +375,31 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
                 boolean isNodeCmUsed = opsClusterTaskNodeService.checkHostPortUsedByCm(clusterId, hostId,
                         node.getCmPort());
                 Assert.isTrue(!isNodeCmUsed, "host cm port is used: " + nodePublicIp + "_(" + cmPort + ")");
-
-                boolean isHostCmUsed = opsHostRemoteService.portUsed(hostId, Integer.valueOf(cmPort));
-                Assert.isTrue(!isHostCmUsed, "host port is used: " + nodePublicIp + "_(" + cmPort + ")");
             }
         });
-        return true;
+    }
+
+    private void remoteCheckHostEnvInfo(List<OpsClusterTaskNodeEntity> nodeEntityList, OpsClusterTaskEntity taskEntity,
+                                        Map<String, OpsHostEntity> hostMap) {
+        nodeEntityList.forEach(node -> {
+            // 节点磁盘空间检查
+            checkTaskDirDiskSpace(taskEntity, node);
+            // 集群任务端口重复检查
+            String databasePort = String.valueOf(taskEntity.getDatabasePort());
+            // 集群节点数据库端口检查
+            String hostId = node.getHostId();
+            boolean isHostUsed = opsHostRemoteService.portUsed(hostId, Integer.valueOf(databasePort));
+            OpsHostEntity host = hostMap.get(hostId);
+            Assert.isTrue(!isHostUsed, "host port is used: " + host.getPublicIp() + "_(" + databasePort + ")");
+
+            if (taskEntity.getEnableCmTool()) {
+                // 数据库端口与CM端口检测
+                String cmPort = String.valueOf(node.getCmPort());
+                // 集群节点CM端口检查
+                boolean isHostCmUsed = opsHostRemoteService.portUsed(hostId, Integer.valueOf(cmPort));
+                Assert.isTrue(!isHostCmUsed, "host port is used: " + host.getPublicIp() + "_(" + cmPort + ")");
+            }
+        });
     }
 
     /**
@@ -412,6 +444,7 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
                 .set(OpsClusterTaskEntity::getClusterNodeNum, nodeCount)
                 .set(OpsClusterTaskEntity::getStatus, OpsClusterTaskStatusEnum.DRAFT)
                 .set(OpsClusterTaskEntity::getEnvCheckResult, null)
+                .set(OpsClusterTaskEntity::getUpdateTime, LocalDateTime.now())
                 .set(OpsClusterTaskEntity::getRemark, "reset task draft")
                 .eq(OpsClusterTaskEntity::getClusterId, clusterId));
     }
@@ -583,6 +616,8 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
                     continue;
                 }
                 log.info("install:{}", JSON.toJSONString(taskEntity));
+                boolean isInstallSuccess = true;
+                String installMessage = "";
                 try {
                     InstallContext installContext = providerManager.populateInstallContext(taskEntity);
                     installContext.setRetBuffer(new RetBuffer(clusterId));
@@ -593,9 +628,14 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
                     });
                     TaskManager.registry(providerManager.getBusinessId(clusterId), future);
                 } catch (OpsException ex) {
-                    updateClusterTaskStatus(taskEntity, OpsClusterTaskStatusEnum.FAILED, ex.getMessage());
-                    OperateLogFactory.operateInstall(taskEntity.getClusterId(), ex.toString());
                     log.error("install:{} {} ", clusterId, ex.getMessage(), ex);
+                    isInstallSuccess = false;
+                    installMessage = ex.getMessage();
+                    OperateLogFactory.operateInstall(taskEntity.getClusterId(), ex.toString());
+                } finally {
+                    if (!isInstallSuccess) {
+                        updateClusterTaskStatus(taskEntity, OpsClusterTaskStatusEnum.FAILED, installMessage);
+                    }
                 }
             }
         }
@@ -641,7 +681,9 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         update(Wrappers.lambdaUpdate(OpsClusterTaskEntity.class)
                 .set(OpsClusterTaskEntity::getStatus, status)
                 .set(OpsClusterTaskEntity::getRemark, remark)
+                .set(OpsClusterTaskEntity::getUpdateTime, LocalDateTime.now())
                 .eq(OpsClusterTaskEntity::getClusterId, clusterId));
+        log.info("update cluster task status {} clusterId:{}", status, clusterId);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -907,7 +949,7 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
                 "Paths must contain at least one top level directory");
         OpsHostEntity host = opsHostRemoteService.getHost(hostId);
         OpsHostUserEntity hostRootUser = opsHostRemoteService.getHostRootUser(hostId);
-        Session rootSession = opsHostRemoteService.getHostUserSession(host, hostRootUser);
+        Session rootSession = opsHostRemoteService.createHostUserSession(host, hostRootUser);
         topLevelPaths.keySet().forEach(topLevelPath -> {
             try {
                 String topPathSpace = opsHostRemoteService.checkHostDiskSpace(rootSession, topLevelPath) + "G";

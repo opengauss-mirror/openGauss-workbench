@@ -131,7 +131,9 @@ public class InstallContextConfigFunctionInstance {
             EnterpriseInstallNodeConfig nodeConfig = new EnterpriseInstallNodeConfig();
             BeanUtils.copyProperties(node, nodeConfig);
             // cm tool will be install at tools path
-            nodeConfig.setCmDataPath(config.getOmToolsPath());
+            nodeConfig.setCmPort(node.getCmPort());
+            nodeConfig.setIsCMMaster(node.getIsCmMaster());
+            nodeConfig.setCmDataPath(node.getCmDataPath());
             HostInfoHolder hostInfoHolder = hostInfoHolderMap.get(node.getHostId());
             OpsHostEntity host = hostInfoHolder.getHostEntity();
             nodeConfig.setPublicIp(host.getPublicIp());

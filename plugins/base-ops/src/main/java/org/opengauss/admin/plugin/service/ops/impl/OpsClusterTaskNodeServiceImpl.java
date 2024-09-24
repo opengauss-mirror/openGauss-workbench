@@ -36,6 +36,7 @@ import org.opengauss.admin.plugin.mapper.ops.OpsClusterTaskNodeMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterTaskNodeService;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -47,7 +48,8 @@ import java.util.List;
  **/
 @Slf4j
 @Service
-public class OpsClusterTaskNodeServiceImpl extends ServiceImpl<OpsClusterTaskNodeMapper, OpsClusterTaskNodeEntity> implements IOpsClusterTaskNodeService {
+public class OpsClusterTaskNodeServiceImpl extends ServiceImpl<OpsClusterTaskNodeMapper, OpsClusterTaskNodeEntity>
+        implements IOpsClusterTaskNodeService {
     @Override
     public List<OpsClusterTaskNodeEntity> listByClusterTaskId(String taskId) {
         return list(Wrappers.lambdaQuery(OpsClusterTaskNodeEntity.class)
@@ -100,6 +102,7 @@ public class OpsClusterTaskNodeServiceImpl extends ServiceImpl<OpsClusterTaskNod
                 .set(OpsClusterTaskNodeEntity::getIsCmMaster, updateDto.getIsCMMaster())
                 .set(OpsClusterTaskNodeEntity::getEnvCheckDetail, null)
                 .set(OpsClusterTaskNodeEntity::getEnvCheckResult, null)
+                .set(OpsClusterTaskNodeEntity::getUpdateTime, LocalDateTime.now())
                 .eq(OpsClusterTaskNodeEntity::getClusterNodeId, updateDto.getClusterNodeId());
         update(updateWrapper);
         String updateNodeMessage = " cluster %s update node %s success";
