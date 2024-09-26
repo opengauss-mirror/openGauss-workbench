@@ -94,6 +94,7 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.5</version>
         </dependency>
+
         <!--lombok 依赖-->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -102,12 +103,6 @@
             <optional>true</optional>
         </dependency>
 
-        <!--log4j日志包 -->
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.16</version>
-        </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
