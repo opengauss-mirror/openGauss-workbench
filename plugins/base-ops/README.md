@@ -37,6 +37,11 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
         <th>备注</th>
     </tr>
     <tr>
+        <td>并行安装任务</td>
+        <td>支持openGauss企业版、极简版、轻量版安装</td>
+        <td>支持3.0.0+</td>  
+    </tr>
+    <tr>
         <td>集群安装</td>
         <td>支持openGauss企业版、极简版、轻量版安装</td>
         <td>支持3.0.0+</td>  
@@ -135,6 +140,7 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
   cd base-ops
   #编译打包
   mvn clean package -Dmaven.test.skip
+  ```
   
 - 打包完成后在bsae-ops/target目录中找到base-ops-6.0.0-repackage.jar即为插件安装包。
 
