@@ -374,6 +374,59 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 在需要大批量导入的场景中，用户可以先点击【下载模板】下载导入模板
 然后点击【点击上传】进行导入，导入中出现的问题将提示用户进行修改。
 
+## 安装包管理
+
+【安装包管理】支持【新增安装包】、【批量检查】、【批量删除】。
+
+![](./_resources/package-management.png)
+
+【新增安装包】支持openEluer20.03、openEluer22.03、centOs7三个操作系统，其余选项根据机器类型进行选择，下载链接自动关联，点击确定即可下载成功。
+
+![](./_resources/package-management-add.png)
+
+下载成功后，点击【批量检查】或者【检查】可检查安装包是否下载成功、点击【更新】可替换安装包。
+
+![](./_resources/package-management-other.png)
+
+【更新安装包】界面（点击【离线上传】进行替换安装包）
+
+![](./_resources/package-management-update.png)
+
+## 集群管理
+
+### 集群列表
+
+【集群列表】展示已安装或者已导入datakit中的集群，有启停、卸载、备份数据、删除等功能。
+
+![](./_resources/cluster-manage-list.png)
+
+### 并行安装任务
+
+#### 草稿箱
+
+【草稿箱】中的集群任务通过【创建并行安装任务】创建、创建成功后如果【环境监测】成功，则可以进行【发布】，【发布】后进入【任务列表】界面进行安装。
+
+![](./_resources/cluster-manage-task-draft.png)
+
+![](./_resources/cluster-manage-task-draft-publish.png)
+
+点击【复制】可以快速复制操作系统、架构、安装包相同的安装任务、删除支持【批量删除】和单个【删除】、【编辑】可以修改任务的配置、【执行日志下载】可以下载日志查看“创建”-“执行成功”的流程
+
+![](./_resources/cluster-manage-task-draft-other.png)
+
+点击【任务ID】可以查看【任务详情】，点击【编辑】进行修改。
+
+![](./_resources/cluster-manage-task-look.png)
+
+![](./_resources/cluster-manage-task-detail.png)
+
+#### 任务列表
+
+任务列表界面展示通过环境检查的安装任务、可以点击【一键执行】或者【批量执行】进行安装。
+
+![](./_resources/cluster-manage-tasks-list-execute.png)
+
+
 ## **系统设置**
 
 ### **概述**
