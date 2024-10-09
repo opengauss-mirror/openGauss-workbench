@@ -118,12 +118,26 @@ public class MigrationTaskResourceController extends BaseController {
         return AjaxResult.success(result);
     }
 
-    @GetMapping("/getTargetClusterDbs")
-    public AjaxResult getTargetClusterDbs(OpsClusterNodeVO clusterNode) {
+    /**
+     * get target cluster databases
+     *
+     * @param clusterNode clusterNode
+     * @return AjaxResult
+     */
+    @PostMapping("/getTargetClusterDbs")
+    public AjaxResult getTargetClusterDbs(@RequestBody OpsClusterNodeVO clusterNode) {
         return AjaxResult.success(migrationTaskHostRefService.getOpsClusterDbNames(clusterNode));
     }
 
-    @GetMapping("/getSourceClusterDbs")
+    /**
+     * get source cluster databases
+     *
+     * @param url jdbc url
+     * @param username username
+     * @param password password
+     * @return AjaxResult
+     */
+    @PostMapping("/getSourceClusterDbs")
     public AjaxResult getSourceClusterDbs(String url, String username, String password) {
         return AjaxResult.success(migrationTaskHostRefService.getMysqlClusterDbNames(url, username, password));
     }
