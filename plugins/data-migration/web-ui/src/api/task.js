@@ -12,12 +12,12 @@ export function hostsData () {
   return axios.get('/plugins/data-migration/resource/getHosts')
 }
 
-export function sourceClusterDbsData (query) {
-  return axios.get('/plugins/data-migration/resource/getSourceClusterDbs', { params: query })
+export function sourceClusterDbsData (formData) {
+  return axios.post('/plugins/data-migration/resource/getSourceClusterDbs', formData)
 }
 
-export function targetClusterDbsData (query) {
-  return axios.get('/plugins/data-migration/resource/getTargetClusterDbs', { params: query })
+export function targetClusterDbsData (data) {
+  return axios.post('/plugins/data-migration/resource/getTargetClusterDbs', data)
 }
 
 export function migrationSave (payload) {

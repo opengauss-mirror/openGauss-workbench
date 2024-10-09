@@ -463,11 +463,13 @@ const deepTargetTreeData = (data) => {
 // get source db data
 const getSourceClusterDbsData = (nodeData) => {
   getTblOpt(nodeData)
-  return sourceClusterDbsData({
-    url: nodeData.url,
-    username: nodeData.username,
-    password: nodeData.password
-  }).then(res => {
+
+  const requestData = new FormData
+  requestData.append('url', nodeData.url)
+  requestData.append('username', nodeData.username)
+  requestData.append('password', nodeData.password)
+
+  return sourceClusterDbsData(requestData).then(res => {
     const data = res.data || []
     nodeData.children = data.map(item => {
       return {
@@ -490,7 +492,7 @@ const getSourceClusterDbsData = (nodeData) => {
 
 // get target db data
 const getTargetClusterDbsData = (nodeData) => {
-  return targetClusterDbsData({
+  const requestData = {
     azAddress: nodeData.azAddress,
     azName: nodeData.azName,
     clusterRole: nodeData.clusterRole,
@@ -506,7 +508,9 @@ const getTargetClusterDbsData = (nodeData) => {
     privateIp: nodeData.privateIp,
     publicIp: nodeData.publicIp,
     rootPassword: nodeData.rootPassword
-  }).then(res => {
+  }
+
+  return targetClusterDbsData(requestData).then(res => {
     const data = res.data.filter(item => item.dbName !== 'template0' && item.dbName !== 'template1')
     nodeData.children = data.map(item => {
       return {
