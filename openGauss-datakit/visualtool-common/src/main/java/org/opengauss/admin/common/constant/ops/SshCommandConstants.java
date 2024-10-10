@@ -79,7 +79,10 @@ public interface SshCommandConstants {
      */
     String OMM_USER = "cat /etc/passwd | awk -F \":\" \"{print $1}\"|grep omm | wc -l";
 
-    String CHANGE_OMM_PASSWORD_TEMPLATE = "passwd {0}";
+    /**
+     * Modify user password
+     */
+    String CHANGE_OMM_PASSWORD_TEMPLATE = "LC_ALL=C passwd {0}";
     /**
      * Modify OMM password
      */
@@ -242,5 +245,5 @@ public interface SshCommandConstants {
     /**
      * cpu arch
      */
-    String CPU_ARCH = "lscpu | grep Architecture: | head -n 1 | awk -F ':' '{print $2}'";
+    String CPU_ARCH = "LC_ALL=C lscpu | grep Architecture: | head -n 1 | awk -F ':' '{print $2}'";
 }

@@ -65,6 +65,10 @@ public interface SshCommandConstants {
      */
     String CPU_USING = "top -b -n2 -p 1 | fgrep \"Cpu(s)\" | tail -1 | awk -F'id,' -v prefix=\"$prefix\" '{ split($1, vs, \",\"); v=vs[length(vs)]; sub(\"%\",\"\", v); printf \"%s%.1f\\n\", prefix, 100 - v }'";
     /**
+     * cpu arch
+     */
+    String CPU_ARCH = "LC_ALL=C lscpu | grep Architecture: | head -n 1 | awk -F ':' '{print $2}'";
+    /**
      * free hard disk space
      */
     String FREE_HARD_DISK = "df -BG | awk -F ' ' '{print $4}' | sort";

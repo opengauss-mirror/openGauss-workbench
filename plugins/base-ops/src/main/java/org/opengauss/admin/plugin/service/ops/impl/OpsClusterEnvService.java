@@ -385,8 +385,8 @@ public class OpsClusterEnvService {
     }
 
     private String getCpuArch(Session rootSession) {
-        String command = "lscpu | grep Architecture: | head -n 1 | awk -F ':' '{print $2}'";
-        return opsHostRemoteService.executeCommand(command, rootSession, "get cpu architecture information").trim();
+        return opsHostRemoteService.executeCommand(SshCommandConstants.CPU_ARCH, rootSession,
+                "get cpu architecture information").trim();
     }
 
     private String getOSVersion(Session rootSession) {
