@@ -196,6 +196,14 @@ public class AlertRuleServiceImpl extends ServiceImpl<AlertRuleMapper, AlertRule
             } else {
                 item.setUpdateTime(LocalDateTime.now());
             }
+            if (alertRule.getRuleType().equals(CommonConstants.LOG_RULE)) {
+                if (item.getRuleExpName() == null || item.getRuleExpName().length() == 0) {
+                    item.setRuleExpName(CommonConstants.ALERT_LOG_EXP_NAME);
+                }
+                if (item.getRuleExp() == null || item.getRuleExp().length() == 0) {
+                    item.setRuleExp(CommonConstants.ALERT_LOG_EXP);
+                }
+            }
         });
         ruleItemService.saveOrUpdateBatch(ruleItemList);
 
