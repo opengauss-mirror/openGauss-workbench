@@ -1711,9 +1711,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     private void checkEnterNodesNum(OpsParseExcelEntity opsParseExcelEntity) {
-        String enterNodes = MessageFormat.format(THREE_IN_ONE, "source "
-                + opsParseExcelEntity.getOpsImportEntity().getEnvPath(), ";gs_om -t status --detail|grep "
-                + opsParseExcelEntity.getOpsImportEntity().getPort() + "|awk '\\''{print $3}'\\''", "");
+        String enterNodes = String.format("source %s;gs_om -t query|grep %s|awk '\\''{print $3}'\\''",
+            opsParseExcelEntity.getOpsImportEntity().getEnvPath(),
+            opsParseExcelEntity.getOpsImportEntity().getPort());
         String command = MessageFormat.format(CHANGE_SUB_USER,
                 opsParseExcelEntity.getOpsImportEntity().getInstallUsername(), enterNodes);
         List<String> nodesList = new ArrayList<>();
@@ -1845,12 +1845,14 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         String command = null;
         if (opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)) {
             String enterGAUSSHOME = String.format("grep GAUSSHOME= %s%s",
-                    opsParseExcelEntity.getOpsImportEntity().getEnvPath(), RESULT_BY_SPLIT_EQUAL);
-            String enterPGDATA = String.format("grep %s %s%s", "PGDATA=",
-                    opsParseExcelEntity.getOpsImportEntity().getEnvPath(), RESULT_BY_SPLIT_EQUAL);
-            String enterJudgeMasterOrSlave = String.format("source %s;gs_om -t status --detail|grep %s|"
-                            + "awk '\\''{print $8}'\\''", opsParseExcelEntity.getOpsImportEntity().getEnvPath(),
-                    opsParseExcelEntity.getPublicIp());
+                opsParseExcelEntity.getOpsImportEntity().getEnvPath(), RESULT_BY_SPLIT_EQUAL);
+            String enterPGDATA = String.format("source %s;gs_om -t view|awk '\\''/^sshChannel 1:%s/,"
+                + "/^============================================================/'\\''"
+                + "|grep datanodeLocalDataPath|awk -F '\\'':'\\'' '\\''{print $2}'\\''",
+                opsParseExcelEntity.getOpsImportEntity().getEnvPath(), opsParseExcelEntity.getPublicIp());
+            String enterJudgeMasterOrSlave = String.format("source %s;gs_om -t query|grep %s|"
+                + "awk '\\''{print $7}'\\''", opsParseExcelEntity.getOpsImportEntity().getEnvPath(),
+                opsParseExcelEntity.getPublicIp());
             command = MessageFormat.format(CHANGE_SUB_USER, opsParseExcelEntity.getOpsImportEntity()
                     .getInstallUsername(), enterGAUSSHOME + ";" + enterPGDATA
                     + ";" + versionNum + ";" + enterJudgeMasterOrSlave);
