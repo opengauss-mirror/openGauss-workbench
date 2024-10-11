@@ -36,6 +36,7 @@ public class OpsClusterTaskNodeVO {
     private String clusterId;
     private String hostId;
     private String hostIp;
+    private String displayHostIp;
     private String hostUserId;
     private String hostUsername;
     private ClusterRoleEnum nodeType;

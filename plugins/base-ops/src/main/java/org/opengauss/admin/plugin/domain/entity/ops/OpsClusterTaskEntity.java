@@ -62,6 +62,8 @@ public class OpsClusterTaskEntity extends BaseEntity {
 
     @TableField(exist = false)
     private String hostIp;
+    @TableField(exist = false)
+    private String displayHostIp;
     /**
      * cluster task install servers user id
      */

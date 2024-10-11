@@ -28,7 +28,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
+import cn.hutool.core.collection.CollectionUtil;
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.HostBody;
 import org.opengauss.admin.common.core.domain.model.ops.host.OpsHostVO;
@@ -98,9 +101,9 @@ public class HostFacade {
     /**
      * query host list by condition
      *
-     * @param os        os
+     * @param os os
      * @param osVersion osVersion
-     * @param cpuArch   cpuArch
+     * @param cpuArch cpuArch
      * @return host list
      */
     public List<OpsHostEntity> getHostList(String os, String osVersion, String cpuArch) {
@@ -108,7 +111,13 @@ public class HostFacade {
         queryWrapper.eq(isNotEmpty(os), OpsHostEntity::getOs, os);
         queryWrapper.eq(isNotEmpty(osVersion), OpsHostEntity::getOsVersion, osVersion);
         queryWrapper.eq(isNotEmpty(cpuArch), OpsHostEntity::getCpuArch, cpuArch);
-        return hostService.list(queryWrapper);
+        List<OpsHostEntity> list = hostService.list(queryWrapper);
+        if (CollectionUtil.isNotEmpty(list)) {
+            list.forEach(item -> {
+                item.setDisplayIp(item.getDisplayIp());
+            });
+        }
+        return list;
     }
 
     /**
