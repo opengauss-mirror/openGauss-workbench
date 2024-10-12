@@ -193,7 +193,7 @@ const init = () => {
           "clusterId": item.clusterId,
           "clusterNodeId": item.clusterNodeId,
           "hostId": item.hostId,
-          "hostIp": item.hostIp,
+          "hostIp": item.displayHostIp,
           "hostUserId": item.hostUserId,
           "hostUser": item.hostUsername,
           "nodeType": item.nodeType,
@@ -228,7 +228,7 @@ const init = () => {
       list.enableGenerateEnvironmentVariableFile = res.data.enableGenerateEnvironmentVariableFile
       list.xmlConfigPath = res.data.xmlConfigPath
       list.deployType = res.data.deployType
-      list.hostIp = res.data.hostIp
+      list.hostIp = res.data.displayHostIp
       list.hostUser = res.data.hostUsername
       list.hostUserId = res.data.hostUserId
       list.hostId = res.data.hostId

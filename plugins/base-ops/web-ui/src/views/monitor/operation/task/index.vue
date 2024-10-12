@@ -36,7 +36,7 @@
              ref="stepOneComp"
              :clusterId="tempClusterId"
              :createClusterId="createClusterId"
-             :createClusterNodeList="createClusternodeList"
+             :clusterNodeList="createClusternodeList"
              :sub-task-config="subTaskConfig"
              @syncConfig="syncSubTask" />
       <step2 v-if="currentStep === 2"
@@ -78,6 +78,7 @@ import {
 import {useRoute, useRouter} from "vue-router";
 import {OpenGaussVersionEnum} from "@/types/ops/install";
 import router from "@/router";
+import {map} from "lodash";
 
 const currentStep = ref(1)
 const taskId = ref()
@@ -117,7 +118,8 @@ const onNext = () => {
             if(!res.data){
               Message.error("安装包检查未通过，可能会影响后续流程")
             }else{
-            currentStep.value = 2
+              currentStep.value = 2
+              saveFlag.value = false
             }
           }).catch(err=>{
             Message.error("安装包检查未通过，可能会影响后续流程")
@@ -366,13 +368,14 @@ const saveUpdateCulster = async () => {
       }) .catch((error) => {
         Message.error('保存草稿箱失败' + error)
       }) .finally(() => {
-        createClusternodeList.value =  JSON.parse(JSON.stringify(clusterTaskList.clusterNodes))
         if (subTaskConfig.value.deployType === "SINGLE_NODE" && clusterTaskList.clusterNodes.length > 1){
           Message.error('当前选择单节点模式，请删除多余节点')
           saveFlag.value = false
         }
         if (saveFlag.value) {
-          tempClusterId.value = clusterId.value
+          const tempClusternodeList = new Map()
+          clusterTaskList.clusterNodes.forEach((item:any) => {tempClusternodeList.set(item.hostId, item.clusterNodeId)})
+          createClusternodeList.value = tempClusternodeList
           Message.success('保存草稿箱成功')
         }
       })
@@ -475,13 +478,14 @@ const saveUpdateCulster = async () => {
       }).catch((error) => {
         Message.error('保存草稿箱失败' + error)
       })  .finally(() => {
-        createClusternodeList.value =  JSON.parse(JSON.stringify(clusterTaskList.clusterNodes))
         if (subTaskConfig.value.deployType === "SINGLE_NODE" && clusterTaskList.clusterNodes.length > 1){
           Message.error('当前选择单节点模式，请删除多余节点')
           saveFlag.value = false
         }
         if (saveFlag.value) {
-          tempClusterId.value = clusterId.value
+          const tempClusternodeList = new Map()
+          clusterTaskList.clusterNodes.forEach((item:any) => {tempClusternodeList.set(item.hostId, item.clusterNodeId)})
+          createClusternodeList.value = tempClusternodeList
           Message.success('保存草稿箱成功')
         }
       })
@@ -490,14 +494,6 @@ const saveUpdateCulster = async () => {
 }
 
 const saveConfig = async () => {
-  let tempFlag = false
-  tempFlag = clusterTaskList.installPath === subTaskConfig.value.installPath ? true : false
-  tempFlag = clusterTaskList.installPackagePath === subTaskConfig.value.installPackagePath ? tempFlag && true : false
-  tempFlag = clusterTaskList.logPath === subTaskConfig.value.logPath ? tempFlag && true : false
-  tempFlag = clusterTaskList.tmpPath === subTaskConfig.value.tmpPath ? tempFlag && true : false
-  tempFlag = clusterTaskList.omToolsPath === subTaskConfig.value.omToolsPath ? tempFlag && true : false
-  tempFlag = clusterTaskList.corePath === subTaskConfig.value.corePath ? tempFlag && true : false
-  tempFlag = clusterTaskList.envPath === subTaskConfig.value.envPath ? tempFlag && true : false
   clusterTaskList.clusterNodes = []
   editFlag.value = true
   subTaskConfig.value.clusterNodes.forEach((item) => {
@@ -630,7 +626,7 @@ const checkPathsEmpty = async () => {
 
 const tempClusterId = ref('')
 const createClusterId = ref('')
-const createClusternodeList = ref([])
+const createClusternodeList = ref(new Map())
 const init = () => {
   currentStep.value = 1
   const tempRecord = route.params.record?JSON.parse(route.params.record):{}
@@ -642,7 +638,7 @@ const init = () => {
   saveFlag.value = false
   clusterId.value = ''
   createClusterId.value = ''
-  createClusternodeList.value = []
+  createClusternodeList.value = new Map()
 }
 
 const route = useRoute()
