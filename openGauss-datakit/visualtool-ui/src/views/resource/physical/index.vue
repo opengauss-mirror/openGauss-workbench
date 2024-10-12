@@ -694,15 +694,15 @@ const deleHostbulkRef = ref<null | InstanceType<typeof BatchLabelDlg>>(null)
 
 const deleteSelectedHosts = () => {
   const selectedRecords = list.selectedHostIds.map((hostId: string | number) => {
-    return data.selectedData[hostId];
-  });
+    return data.selectedData[hostId]
+  })
   if (selectedRecords.length > 0) {
     const tempselectedRecords = selectedRecords.filter(hostId => hostId !== null && hostId !== undefined)
     deleteMultipleRows(tempselectedRecords)
   } else {
     Message.warning(t('physical.index.else1'))
   }
-};
+}
 
 const deleteMultipleRows = (records: KeyValue) => {
   const deletePromises = records.map((record) => delHost(record.hostId))
@@ -725,7 +725,7 @@ const deleteMultipleRows = (records: KeyValue) => {
       Message.error({
         content: 'An error occurred while deleting hosts'
       })
-    });
+    })
   getListData()
   getAllTag()
 

@@ -292,7 +292,7 @@ export const batchPackageOnline = (data: FormData) => {
 }
 
 // export const batchPackageUpload = (name:KeyValue, os: KeyValue, cpuArch: KeyValue, packageVersion: KeyValue, packageVersionNum: KeyValue, packageUrl: KeyValue, uploadFile:any) => {
-export const batchPackageUpload = ( uploadFileParam:any) => {
+export const batchPackageUpload = (uploadFileParam:any) => {
   // return axios.post(`/plugins/base-ops/installPackageManager/v2/save/upload/?name=${name}&os=${os}&cpuArch=${cpuArch}&packageVersion=${packageVersion}&packageVersionNum=${packageVersionNum}&packageUrl=${packageUrl}`, uploadFile)
   return axios.post(`/plugins/base-ops/installPackageManager/v2/save/upload/`, uploadFileParam)
 }

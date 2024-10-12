@@ -4,9 +4,15 @@
       <div class="physical-list">
         <div class="flex-between mb-s">
           <div style="display:flex; flex-wrap: nowrap;">
-            <a-button type="primary" class="mr" @click="addPackInstall('create')">新增安装包</a-button>
-            <a-button type="primary" class="mr" @click="checkSelectedPack">批量检查</a-button>
-            <a-button type="primary" class="mr" @click="deleteSelectedHosts">批量删除</a-button>
+            <a-button type="primary" class="mr" @click="addPackInstall('create')">{{
+            $t('components.Package.5mtcyb0rty02')
+          }}</a-button>
+            <a-button type="primary" class="mr" @click="checkSelectedPack">{{
+            $t('components.Package.5mtcyb0rty03')
+          }}</a-button>
+            <a-button type="primary" class="mr" @click="deleteSelectedHosts">{{
+            $t('components.Package.5mtcyb0rty04')
+          }}</a-button>
           </div>
         </div>
       </div>
@@ -15,7 +21,7 @@
       <a-cascader
         v-model="selectedOptionsValue.value"
         labelInValue
-        placeholder="请输入或者选择表"
+        :placeholder="$t('components.Package.5mtcyb0rty05')"
         :options="parentTags"
         :field-names="{label:'value', value:'name', children:'children' }"
         multiple
@@ -42,41 +48,42 @@
         @selection-change="handleSelected"
       >
         <template #columns>
-          <a-table-column title="安装包名称" data-index="name" :width="200">
+          <a-table-column :title="$t('components.Package.5mtcyb0rty06')" data-index="name" :width="200">
             <template #cell="{record}">{{record.name}}</template>
           </a-table-column>
           <!--              physical.index.hostLabel为标签-->
-          <a-table-column title="操作系统" data-index="os" :width="100">
+          <a-table-column :title="$t('components.Package.5mtcyb0rty07')" data-index="os" :width="100">
             <template #cell="{ record }">{{record.os}}</template>
           </a-table-column>
-          <a-table-column title="CPU架构" data-index="cpuArch" :width="100">
+          <a-table-column :title="$t('components.Package.5mtcyb0rty08')" data-index="cpuArch" :width="100">
             <template #cell="{ record }">{{record.cpuArch}}</template>
           </a-table-column>
-          <a-table-column title="openGauss版本" data-index="packageVersion" :width="150">
-            <template #cell="{ record }">{{translateVersion(record.packageVersion)}}</template>
+          <a-table-column :title="$t('components.Package.5mtcyb0rty09')" data-index="packageVersion" :width="150">
+            <template #cell="{ record }">{{ $t(`components.Package.${record.packageVersion}`) }}</template>
+
           </a-table-column>
-          <a-table-column title="版本号" data-index="packageVersionNum" :width="100">
+          <a-table-column :title="$t('components.Package.5mtcyb0rty10')" data-index="packageVersionNum" :width="100">
             <template #cell="{ record }">{{record.packageVersionNum}}</template>
           </a-table-column>
-          <a-table-column title="安装来源" data-index="hostLabel" :width="100">
-            <template #cell="{ record }">{{record.hostLabel}}</template>
+          <a-table-column :title="$t('components.Package.5mtcyb0rty11')" data-index="hostLabel" :width="100">
+            <template #cell="{ record }">{{ record.hostLabel? $t('components.Package.5mtcyb0rty23'): $t('components.Package.5mtcyb0rty22') }}</template>
           </a-table-column>
-          <a-table-column title="下载地址/离线安装包" data-index="packageUrl" :width="200">
+          <a-table-column :title="$t('components.Package.5mtcyb0rty12')" data-index="packageUrl" :width="200">
             <template #cell="{ record }">{{record.packageUrl}}</template>
           </a-table-column>
-          <a-table-column title="操作" data-index="operation" :width="280">
+          <a-table-column :title="$t('components.Package.5mtcyb0rty13')" data-index="operation" :width="280">
             <template #cell="{ record }">
               <div class="flex-row-start">
-                <a-link class="mr" @click="checkPack(record)">检查</a-link>
-                <a-link class="mr" @click="addPackInstall('update', record)">更新</a-link>
+                <a-link class="mr" @click="checkPack(record)">{{$t('components.Package.5mtcyb0rty14')}}</a-link>
+                <a-link class="mr" @click="addPackInstall('update', record)">{{$t('components.Package.5mtcyb0rty15')}}</a-link>
                 <a-popconfirm
-                  :content="$t('是否确定删除？')"
+                  :content="$t('components.Package.5mtcyb0rty16')"
                   type="warning"
-                  :ok-text="$t('确定')"
-                  :cancel-text="$t('取消')"
+                  :ok-text="$t('components.Package.5mtcyb0rty17')"
+                  :cancel-text="$t('components.Package.5mtcyb0rty18')"
                   @ok="deleteRows(record)"
                 >
-                  <a-link status="danger">删除</a-link>
+                  <a-link status="danger">{{$t('components.Package.5mtcyb0rty19')}}</a-link>
                 </a-popconfirm>
               </div>
             </template>
@@ -84,10 +91,10 @@
         </template>
       </a-table>
       <div v-if="tableEmptyFlag"  style="text-align: center;">
-        <p style="font-weight: bold;">未查询到该条件下的安装包</p><br>
-        <p>您可以离线上传或者在线下载相应的安装包</p>
-        <a-button class="-primary" type="text" @click="addPackInstall('create',searchInfoPackage,1)">离线上传</a-button>
-        <a-button class="-primary" type="text" @click="addPackInstall('create',searchInfoPackage,0)">在线下载</a-button>
+        <p style="font-weight: bold;">{{$t('components.Package.5mtcyb0rty20')}}</p><br>
+        <p>{{$t('components.Package.5mtcyb0rty21')}}</p>
+        <a-button class="-primary" type="text" @click="addPackInstall('create',searchInfoPackage,1)">{{$t('components.Package.5mtcyb0rty22')}}</a-button>
+        <a-button class="-primary" type="text" @click="addPackInstall('create',searchInfoPackage,0)">{{$t('components.Package.5mtcyb0rty23')}}</a-button>
       </div>
     </div>
     <addPack
@@ -101,12 +108,12 @@
         :mask-closable="false"
         :esc-to-close="false"
         v-model:visible="processVisible"
-        :ok-text="$t('下载完成')"
+        :ok-text="$t('components.Package.5mtcyb0rty24')"
         @ok="handleOk"
         @close="close"
       >
         <template #title>
-          {{ $t('在线下载') }}
+          {{ $t('components.Package.5mtcyb0rty23') }}
         </template>
         <a-progress size="large" :percent="currPercent" />
       </a-modal>
@@ -117,7 +124,7 @@
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
 import { Message } from '@arco-design/web-vue/es/index'
-import { onMounted, reactive, ref, onUnmounted, watch, toRaw } from 'vue'
+import { onMounted, reactive, ref, onUnmounted, watch, toRaw, computed } from 'vue'
 import { cpuOption, memoryOption, diskOption } from './option'
 import {
   hostPage,
@@ -133,7 +140,6 @@ import {
 import Socket from '@/utils/websocket'
 import WujieVue from 'wujie-vue3'
 import { useI18n } from 'vue-i18n'
-import useLocale from '@/hooks/locale'
 import AddPack from './AddPack.vue'
 import { CpuArch, OS } from '../../../../../../plugins/base-ops/web-ui/src/types/os'
 import { OpenGaussVersionEnum } from '@/types/ops/install'
@@ -174,34 +180,38 @@ const addPackClose = () => {
 
 const addPackSubmit = () => {
   processVisible.value = true
-  if (wsBusinessId && wsBusinessId.value && wsBusinessId.value != '') {
+  if (wsBusinessId.value && wsBusinessId.value != '') {
     downloadPackage()
   }
   getListData(filter.pageSize, filter.pageNum, searchFormData)
 }
-
+const osValue = computed(() => t('components.Package.5mtcyb0rty07'))
+const cpuValue = computed(() => t('components.Package.5mtcyb0rty08'))
+const versionValue = computed(() => t('components.Package.5mtcyb0rty09'))
+const versionNumValue = computed(() => t('components.Package.5mtcyb0rty10'))
 const parentTags = ref([
   { name: 'os',
-    value: '操作系统',
+    value: osValue,
     children: [],
     disabled: false
   },
   { name: 'cpuArch',
-    value: 'cpu架构',
+    value: cpuValue,
     children: [],
     disabled: false
   },
   { name: 'packageVersion',
-    value: 'openGauss版本',
+    value: versionValue,
     children: [],
     disabled: false
   },
   { name: 'packageVersionNum',
-    value: '版本号',
+    value: versionNumValue,
     children: [],
     disabled: false
   }
 ])
+
 
 const selectedOptionsValue = reactive({ value: '' })
 const searchFormData = new FormData
@@ -213,7 +223,7 @@ const searchTag = (inputValue: any) => {
   const selectedTagGroups = ref<string[]>([])
   const alertFlag = new Map()
   alertFlag.set('packageName', 3)
-  alertFlag.set('os', 3)
+  alertFlag.set('os', 2)
   alertFlag.set('cpuArch', 2)
   alertFlag.set('packageVersion', 3)
   alertFlag.set('packageVersionNum', countVersionNum)
@@ -231,7 +241,7 @@ const searchTag = (inputValue: any) => {
   })
   parentTags.value.forEach(tag => {
     if (alertFlag.get(tag.name) == 0) {
-      Message.error('同一个父级标签只能选择一个子级标签,' + tag.name + '标签下有多项，仅保留第一项')
+      Message.error(t('components.Package.5mtcyb0rty25', { tagName: tag.name }))
       let tempnum = alertNum.get(tag.name) - 1
       selectedOptionsValue.value.splice(-tempnum)
     }
@@ -263,39 +273,17 @@ const handleSelected = (keys: (string | number)[]) => {
   })
 }
 
-const { currentLocale } = useLocale()
-const translateVersion = (version:OpenGaussVersionEnum) => {
-  if (currentLocale.value === 'en-US') {
-    switch (version) {
-      case OpenGaussVersionEnum.ENTERPRISE:
-        return 'Enterprise'
-      case OpenGaussVersionEnum.MINIMAL_LIST:
-        return 'Simplified'
-      case OpenGaussVersionEnum.LITE:
-        return 'Lite'
-    }
-  }
-  switch (version) {
-    case OpenGaussVersionEnum.ENTERPRISE:
-      return '企业版'
-    case OpenGaussVersionEnum.MINIMAL_LIST:
-      return '极简版'
-    case OpenGaussVersionEnum.LITE:
-      return '轻量版'
-  }
-}
-
 const checkPack = (record: KeyValue) => {
   let templist = []
   templist.push(record.packageId)
   checkPackage(templist).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       Message.success({
-        content: '检查完成'
+        content: t('components.Package.5mtcyb0rty26')
       })
     } else {
       Message.error({
-        content: '检查未完成'
+        content: t('components.Package.5mtcyb0rty27')
       })
     }
   }) .catch(error => {
@@ -313,7 +301,7 @@ const checkSelectedPack = () => {
   if (selectedRecord.length > 0) {
     checkPackMul(selectedRecord)
   } else {
-    Message.warning(t('请至少选择一个安装包'))
+    Message.warning(t('components.Package.5mtcyb0rty28'))
   }
 }
 
@@ -321,11 +309,11 @@ const checkPackMul = (records: any) => {
   checkPackage(records).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       Message.success({
-        content: '检查完成'
+        content: t('components.Package.5mtcyb0rty26')
       })
     } else {
       Message.error({
-        content: '检查失败'
+        content: t('components.Package.5mtcyb0rty27')
       })
     }
   }) .catch(error => {
@@ -341,7 +329,7 @@ const deleteRows = (record: KeyValue) => {
   delPackageV2(templist).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       Message.success({
-        content: '删除成功'
+        content: t('components.Package.5mtcyb0rty29')
       })
     }
   }) .catch(error => {
@@ -359,7 +347,7 @@ const deleteSelectedHosts = () => {
   if (selectedRecord.length > 0) {
     deleteMultipleRows(selectedRecord)
   } else {
-    Message.warning(t('请至少选择一个安装包'))
+    Message.warning(t('components.Package.5mtcyb0rty28'))
   }
 }
 
@@ -367,11 +355,11 @@ const deleteMultipleRows = (records: KeyValue) => {
   delPackageV2(records).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       Message.success({
-        content: '已删除全部选择安装包'
+        content: t('components.Package.5mtcyb0rty30')
       })
     } else {
       Message.error({
-        content: '删除失败'
+        content: t('components.Package.5mtcyb0rty31')
       })
     }
     list.selectedpackageIds = []
@@ -406,10 +394,11 @@ const addSearchPackage = (total:number) => {
 }
 
 // init
-const initOs = [OS.OPEN_EULER, OS.CENTOS, '麒麟系统']
+const initOs = [OS.OPEN_EULER, OS.CENTOS]
 const initArch = [CpuArch.X86_64, CpuArch.AARCH64]
 const initVersion = [OpenGaussVersionEnum.MINIMAL_LIST, OpenGaussVersionEnum.LITE, OpenGaussVersionEnum.ENTERPRISE]
 const init = () => {
+  parentTags.value.forEach(e => e.children = [])
   fetchOs()
   fetchArch()
   fetchVersion()
@@ -582,7 +571,7 @@ const getListData = (pageSize?:number, pageNum?:number, formData?: FormData) => 
         tempPackage.packageUrl = ''
       }
       tempPackage.packagePath = item.packagePath
-      tempPackage.hostLabel = item.packageUrl? '在线下载' : '离线上传'
+      tempPackage.hostLabel = item.packageUrl ? true : false
       list.data.push({ ...tempPackage })
     })
     list.page.total = res.total
@@ -640,7 +629,7 @@ const uploadPackageId = ref('')
 
 const downloadPackage = () => {
   packageOnlineUpdate(uploadPackageId.value, wsBusinessId.value).then(() => {
-    websocket.onmessage = function(event) {
+    websocket.onmessage = function (event) {
       const messageData = event.data
       if (!isNaN(Number(messageData))) {
         const percent = Number(messageData)
@@ -676,7 +665,6 @@ const handleOk = () => {
 const close = () => {
   processVisible.value = false
 }
-
 
 init()
 </script>
