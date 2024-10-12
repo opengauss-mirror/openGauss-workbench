@@ -31,10 +31,15 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Data;
+
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * Host portal install model
@@ -76,7 +81,6 @@ public class MigrationHostPortalInstall {
     @TableField(exist = false)
     private Integer kafkaBindId;
 
-
     @TableField(typeHandler = FastjsonTypeHandler.class)
     private UploadInfo pkgUploadPath;
     @TableField(exist = false)
@@ -99,5 +103,24 @@ public class MigrationHostPortalInstall {
      */
     public ShellInfoVo getShellInfoVo() {
         return new ShellInfoVo(this.getHost(), this.getPort(), this.getRunUser(), this.getRunPassword());
+    }
+
+    /**
+     * Judge whether the version is ok
+     *
+     * @param version the version
+     * @return Boolean
+     */
+    public Boolean isVersionGreaterThan(Integer version) {
+        Optional<String[]> partsOptional = Optional.ofNullable(this.jarName).map(name -> name.split("-"));
+        return partsOptional.map(parts -> {
+            if (parts.length > 1) {
+                String portalVersion = parts[1];
+                String[] versionParts = portalVersion.split("\\.");
+                return Arrays.stream(versionParts).mapToInt(Integer::parseInt).findFirst().orElse(-1);
+            } else {
+                return -1;
+            }
+        }).map(mainVersion -> mainVersion > version).orElse(false);
     }
 }

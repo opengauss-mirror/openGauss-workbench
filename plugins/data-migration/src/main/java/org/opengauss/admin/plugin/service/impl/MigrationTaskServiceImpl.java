@@ -14,12 +14,15 @@
 package org.opengauss.admin.plugin.service.impl;
 
 import cn.hutool.core.map.MapUtil;
+
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
@@ -65,6 +68,11 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     private static final char[] SPECIAL_CHARS = {'\\', '+', '-', '!', '(', ')', ':', '^', '[', ']', '\"', '{', '}',
             '~', '*', '?', '>', '<', '|', '&', ';', '/', '.', '$'};
     private static final float SUB_PROCESS = 0.05f;
+
+    /**
+     * The constants AES secretKey
+     */
+    private static final String AES_SECRETKEY = "yykczOWf3hoHsOn6ADZcQKpAlck0ZRK12T9N3sf0WB4=";
 
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
@@ -124,7 +132,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         IPage<MigrationTask> taskPage = migrationTaskMapper.selectTaskPage(page, mainTaskId);
         List<MigrationTask> tasks = taskPage.getRecords();
         tasks.forEach(task -> task.setCheckDataLevelingAndIncrementFinish(
-            migrationMainTaskService.checkDataLevelingAndIncrementFinish(task.getId())));
+                migrationMainTaskService.checkDataLevelingAndIncrementFinish(task.getId())));
         return taskPage;
     }
 
@@ -404,24 +412,24 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         installHost.setRunPassword(encryptionUtils.decrypt(installHost.getRunPassword()));
         t.setRunHostId(h.getRunHostId());
         MigrationTask update = MigrationTask.builder()
-            .id(t.getId())
-            .runHostId(h.getRunHostId())
-            .runHost(h.getHost())
-            .runHostname(h.getHostName())
-            .runPort(h.getPort())
-            .runUser(h.getUser())
-            .runPass(h.getPassword())
-            .build();
+                .id(t.getId())
+                .runHostId(h.getRunHostId())
+                .runHost(h.getHost())
+                .runHostname(h.getHostName())
+                .runPort(h.getPort())
+                .runUser(h.getUser())
+                .runPass(h.getPassword())
+                .build();
         updateById(update);
         if (!execMigrationCheck(installHost, t, globalParams, "verify_pre_migration")) {
             return;
         }
-        PortalHandle.startPortal(installHost, t, installHost.getJarName(), getTaskParam(globalParams, t));
+        PortalHandle.startPortal(installHost, t, installHost.getJarName(), getTaskParam(installHost, globalParams, t));
         update = MigrationTask.builder()
-            .id(t.getId())
-            .execStatus(TaskStatus.FULL_START.getCode())
-            .execTime(new Date())
-            .build();
+                .id(t.getId())
+                .execStatus(TaskStatus.FULL_START.getCode())
+                .execTime(new Date())
+                .build();
         migrationTaskOperateRecordService.saveRecord(t.getId(), TaskOperate.RUN, SecurityUtils.getUsername());
         updateById(update);
     }
@@ -436,9 +444,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
      * @return check result
      */
     public boolean execMigrationCheck(MigrationHostPortalInstall installHost, MigrationTask t,
-                                      List<MigrationTaskGlobalParam> globalParams, String command) {
+        List<MigrationTaskGlobalParam> globalParams, String command) {
         JschResult checkResult = PortalHandle.checkBeforeMigration(installHost, t, installHost.getJarName(),
-                getTaskParam(globalParams, t), command);
+            getTaskParam(installHost, globalParams, t), command);
         MigrationTask update = MigrationTask.builder().id(t.getId()).build();
         if (checkResult.getResult().contains("verify migration success.")) {
             return true;
@@ -500,10 +508,11 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
      * get migration task params
      *
      * @param globalParams globalParams
-     * @param task         migration task
+     * @param task migration task
      * @return param map
      */
-    private Map<String, String> getTaskParam(List<MigrationTaskGlobalParam> globalParams, MigrationTask task) {
+    private Map<String, String> getTaskParam(MigrationHostPortalInstall installHost,
+        List<MigrationTaskGlobalParam> globalParams, MigrationTask task) {
         if (globalParams == null) {
             globalParams = migrationTaskGlobalParamService.selectByMainTaskId(task.getMainTaskId());
         }
@@ -514,18 +523,19 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         if (migrationTaskParams.size() > 0) {
             Map<String, String> taskParamMap = migrationTaskParams.stream()
                     .collect(Collectors.toMap(p -> p.getParamKey(), p -> p.getParamKey()
-                    .startsWith("override_tables") ? p.getParamValue() : escapeChars(p.getParamValue())));
+                            .startsWith("override_tables") ? p.getParamValue() : escapeChars(p.getParamValue())));
             globalParamMap.putAll(taskParamMap);
         }
         Map<String, String> resultMap = new HashMap<>();
         resultMap.put("mysql.user.name", task.getSourceDbUser());
-        resultMap.put("mysql.user.password", escapeChars(task.getSourceDbPass()));
+        resultMap.put("mysql.user.password", encryptPassword(installHost, task.getSourceDbPass()));
         resultMap.put("mysql.database.host", task.getSourceDbHost());
         resultMap.put("mysql.database.port", task.getSourceDbPort());
         resultMap.put("mysql.database.name", task.getSourceDb());
         resultMap.put("mysql.database.table", task.getSourceTables());
         resultMap.put("opengauss.user.name", task.getTargetDbUser());
-        resultMap.put("opengauss.user.password", escapeChars(encryptionUtils.decrypt(task.getTargetDbPass())));
+        resultMap.put("opengauss.user.password",
+            encryptPassword(installHost, encryptionUtils.decrypt(task.getTargetDbPass())));
         resultMap.put("opengauss.database.host", task.getTargetDbHost());
         resultMap.put("opengauss.database.port", task.getTargetDbPort());
         resultMap.put("opengauss.database.name", task.getTargetDb());
@@ -540,6 +550,19 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
 
         setOpengaussClusterParams(resultMap, task.getTargetNodeId());
         return resultMap;
+    }
+
+    /**
+     * Encrypt password (AES) if version is match
+     *
+     * @param password password
+     * @return String
+     */
+    public String encryptPassword(MigrationHostPortalInstall installHost, String password) {
+        if (!installHost.isVersionGreaterThan(6)) {
+            return escapeChars(password);
+        }
+        return encryptionUtils.encrypt(password, AES_SECRETKEY);
     }
 
     /**
