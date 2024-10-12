@@ -26,6 +26,7 @@ package org.opengauss.admin.plugin.service.ops.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -36,8 +37,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jcraft.jsch.Session;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.enums.ops.ClusterEnvCheckResultEnum;
@@ -78,6 +82,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import javax.annotation.Resource;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Objects;
@@ -99,7 +104,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper, OpsClusterTaskEntity>
-        implements IOpsClusterTaskService {
+    implements IOpsClusterTaskService {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*]).{8,}$";
 
@@ -122,23 +127,21 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
     @Resource
     private ClusterTaskPathFactory clusterTaskPathFactory;
 
-
     @Override
     public IPage<OpsClusterTaskEntity> pageByCondition(Page page, OpsClusterTaskQueryParamDTO dto) {
         // 查询集群任务列表 - 条件组装
         LambdaQueryWrapper<OpsClusterTaskEntity> pageWrapper = Wrappers.lambdaQuery(OpsClusterTaskEntity.class);
         pageWrapper.eq(StrUtil.isNotEmpty(dto.getTaskId()), OpsClusterTaskEntity::getClusterId, dto.getTaskId())
-                .eq(StrUtil.isNotEmpty(dto.getClusterName()),
-                        OpsClusterTaskEntity::getClusterName, dto.getClusterName())
-                .eq(StrUtil.isNotEmpty(dto.getOs()), OpsClusterTaskEntity::getOs, dto.getOs())
-                .eq(StrUtil.isNotEmpty(dto.getCpuArch()), OpsClusterTaskEntity::getCpuArch, dto.getCpuArch())
-                .eq(StrUtil.isNotEmpty(dto.getOpenGaussVersionNum()),
-                        OpsClusterTaskEntity::getVersionNum, dto.getOpenGaussVersionNum())
-                .eq(StrUtil.isNotEmpty(dto.getHostId()), OpsClusterTaskEntity::getHostId, dto.getHostId())
-                .eq(StrUtil.isNotEmpty(dto.getHostUserId()), OpsClusterTaskEntity::getHostUserId, dto.getHostUserId())
-                .eq(dto.getNodeNum() > 0, OpsClusterTaskEntity::getClusterNodeNum, dto.getNodeNum())
-                .eq(Objects.nonNull(dto.getOpenGaussVersion()),
-                        OpsClusterTaskEntity::getVersion, dto.getOpenGaussVersion());
+            .eq(StrUtil.isNotEmpty(dto.getClusterName()), OpsClusterTaskEntity::getClusterName, dto.getClusterName())
+            .eq(StrUtil.isNotEmpty(dto.getOs()), OpsClusterTaskEntity::getOs, dto.getOs())
+            .eq(StrUtil.isNotEmpty(dto.getCpuArch()), OpsClusterTaskEntity::getCpuArch, dto.getCpuArch())
+            .eq(StrUtil.isNotEmpty(dto.getOpenGaussVersionNum()), OpsClusterTaskEntity::getVersionNum,
+                dto.getOpenGaussVersionNum())
+            .eq(StrUtil.isNotEmpty(dto.getHostId()), OpsClusterTaskEntity::getHostId, dto.getHostId())
+            .eq(StrUtil.isNotEmpty(dto.getHostUserId()), OpsClusterTaskEntity::getHostUserId, dto.getHostUserId())
+            .eq(dto.getNodeNum() > 0, OpsClusterTaskEntity::getClusterNodeNum, dto.getNodeNum())
+            .eq(Objects.nonNull(dto.getOpenGaussVersion()), OpsClusterTaskEntity::getVersion,
+                dto.getOpenGaussVersion());
         OpsClusterTaskStatusEnum status = dto.getStatus();
         if (Objects.isNull(status)) {
             pageWrapper.notIn(OpsClusterTaskEntity::getStatus, OpsClusterTaskStatusEnum.DRAFT);
@@ -158,12 +161,71 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         List<String> hostIds = new LinkedList<>();
         List<String> hostUserIds = new LinkedList<>();
         collectClusterTaskHostInfos(records, hostIds, hostUserIds);
-        Map<String, String> hostMap = queryHostIpByHostIds(hostIds);
+        Map<String, OpsHostEntity> hostMap = queryHostByHostIds(hostIds);
         Map<String, String> hostUserMap = queryHostUsernameByHostUserIds(hostUserIds);
         records.forEach(nodeVo -> {
-            nodeVo.setHostIp(hostMap.get(nodeVo.getHostId()));
-            nodeVo.setHostUsername(hostUserMap.get(nodeVo.getHostUserId()));
+            populateTaskHostAndUserInfo(nodeVo, hostMap, hostUserMap);
         });
+    }
+
+    private void populateTaskHostAndUserInfo(Object obj, Map<String, OpsHostEntity> hostMap,
+        Map<String, String> hostUserMap) {
+        OpsHostEntity host = hostMap.get(getHostId(obj));
+        if (Objects.nonNull(host)) {
+            setTaskHostAndUserInfo(obj, host, hostUserMap);
+        } else {
+            setTaskHostAndUserInfoNull(obj);
+        }
+    }
+
+    private void setTaskHostAndUserInfo(Object obj, OpsHostEntity host, Map<String, String> hostUserMap) {
+        if (obj instanceof OpsClusterTaskEntity) {
+            ((OpsClusterTaskEntity) obj).setHostIp(host.getPublicIp());
+            ((OpsClusterTaskEntity) obj).setDisplayHostIp(host.getDisplayIp());
+            ((OpsClusterTaskEntity) obj).setHostUsername(hostUserMap.get(getHostUserId(obj)));
+        } else if (obj instanceof OpsClusterTaskNodeVO) {
+            ((OpsClusterTaskNodeVO) obj).setHostIp(host.getPublicIp());
+            ((OpsClusterTaskNodeVO) obj).setDisplayHostIp(host.getDisplayIp());
+            ((OpsClusterTaskNodeVO) obj).setHostUsername(hostUserMap.get(getHostUserId(obj)));
+        } else {
+            throw new OpsException("setTaskHostAndUserInfo param type error ");
+        }
+    }
+
+    private void setTaskHostAndUserInfoNull(Object obj) {
+        if (obj instanceof OpsClusterTaskEntity) {
+            ((OpsClusterTaskEntity) obj).setHostIp(null);
+            ((OpsClusterTaskEntity) obj).setDisplayHostIp(null);
+            ((OpsClusterTaskEntity) obj).setHostUserId(null);
+            ((OpsClusterTaskEntity) obj).setHostUsername(null);
+        } else if (obj instanceof OpsClusterTaskNodeVO) {
+            ((OpsClusterTaskNodeVO) obj).setHostIp(null);
+            ((OpsClusterTaskNodeVO) obj).setDisplayHostIp(null);
+            ((OpsClusterTaskNodeVO) obj).setHostUserId(null);
+            ((OpsClusterTaskNodeVO) obj).setHostUsername(null);
+        } else {
+            throw new OpsException("setTaskHostAndUserInfoNull param type error ");
+        }
+    }
+
+    private String getHostId(Object obj) {
+        if (obj instanceof OpsClusterTaskEntity) {
+            return ((OpsClusterTaskEntity) obj).getHostId();
+        } else if (obj instanceof OpsClusterTaskNodeVO) {
+            return ((OpsClusterTaskNodeVO) obj).getHostId();
+        } else {
+            return StringUtils.EMPTY;
+        }
+    }
+
+    private String getHostUserId(Object obj) {
+        if (obj instanceof OpsClusterTaskEntity) {
+            return ((OpsClusterTaskEntity) obj).getHostUserId();
+        } else if (obj instanceof OpsClusterTaskNodeVO) {
+            return ((OpsClusterTaskNodeVO) obj).getHostUserId();
+        } else {
+            return StringUtils.EMPTY;
+        }
     }
 
     private Map<String, String> queryHostUsernameByHostUserIds(List<String> hostUserIds) {
@@ -171,34 +233,27 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
             return CollectionUtils.newHashMap();
         }
         List<OpsHostUserEntity> hostUserList = opsHostRemoteService.getOpsHostUserList(hostUserIds);
-        return hostUserList
-                .stream()
-                .collect(Collectors.toMap(OpsHostUserEntity::getHostUserId, OpsHostUserEntity::getUsername));
+        return hostUserList.stream()
+            .collect(Collectors.toMap(OpsHostUserEntity::getHostUserId, OpsHostUserEntity::getUsername));
     }
 
-    private Map<String, String> queryHostIpByHostIds(List<String> hostIds) {
+    private Map<String, OpsHostEntity> queryHostByHostIds(List<String> hostIds) {
         if (CollectionUtils.isEmpty(hostIds)) {
             return CollectionUtils.newHashMap();
         }
         List<OpsHostEntity> hostList = opsHostRemoteService.getOpsHostList(hostIds);
-        return hostList.stream().collect(Collectors.toMap(OpsHostEntity::getHostId, OpsHostEntity::getPublicIp));
+        return hostList.stream().collect(Collectors.toMap(OpsHostEntity::getHostId, Function.identity()));
     }
 
     private void collectClusterTaskHostInfos(List<OpsClusterTaskEntity> records, List<String> hostIds,
-                                             List<String> hostUserIds) {
+        List<String> hostUserIds) {
         if (hostIds != null) {
-            hostIds.addAll(records
-                    .stream()
-                    .map(OpsClusterTaskEntity::getHostId)
-                    .distinct()
-                    .collect(Collectors.toList()));
+            hostIds.addAll(
+                records.stream().map(OpsClusterTaskEntity::getHostId).distinct().collect(Collectors.toList()));
         }
         if (hostUserIds != null) {
-            hostUserIds.addAll(records
-                    .stream()
-                    .map(OpsClusterTaskEntity::getHostUserId)
-                    .distinct()
-                    .collect(Collectors.toList()));
+            hostUserIds.addAll(
+                records.stream().map(OpsClusterTaskEntity::getHostUserId).distinct().collect(Collectors.toList()));
         }
     }
 
@@ -209,7 +264,6 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
             List<OpsClusterTaskEntity> list = listByIds(taskIds);
             Assert.isTrue(CollectionUtils.isNotEmpty(list), "cluster install task not found:" + list);
             Map<String, OpsClusterTaskEntity> taskMap = convertClusterTaskToMap(list);
-
             taskIds.forEach(taskId -> {
                 if (taskMap.containsKey(taskId)) {
                     OpsClusterTaskEntity task = taskMap.get(taskId);
@@ -260,15 +314,15 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
             List<String> hostIds = new LinkedList<>();
             List<String> hostUserIds = new LinkedList<>();
             collectClusterTaskNodeHostInfos(nodeList, hostIds, hostUserIds);
-            Map<String, String> hostMap = queryHostIpByHostIds(hostIds);
+            Map<String, OpsHostEntity> hostMap = queryHostByHostIds(hostIds);
             Map<String, String> hostUserMap = queryHostUsernameByHostUserIds(hostUserIds);
-            task.setHostIp(hostMap.get(task.getHostId()));
-            task.setHostUsername(hostUserMap.get(task.getHostUserId()));
-            List<OpsClusterTaskNodeVO> nodeVoList = nodeList.stream().map(OpsClusterTaskNodeEntity::toVo)
-                    .peek(nodeVo -> {
-                        nodeVo.setHostIp(hostMap.get(nodeVo.getHostId()));
-                        nodeVo.setHostUsername(hostUserMap.get(nodeVo.getHostUserId()));
-                    }).collect(Collectors.toList());
+            populateTaskHostAndUserInfo(task, hostMap, hostUserMap);
+            List<OpsClusterTaskNodeVO> nodeVoList = nodeList.stream()
+                .map(OpsClusterTaskNodeEntity::toVo)
+                .peek(nodeVo -> {
+                    populateTaskHostAndUserInfo(nodeVo, hostMap, hostUserMap);
+                })
+                .collect(Collectors.toList());
             OpsClusterTaskVO taskVo = task.toVo();
             taskVo.setClusterNodes(nodeVoList);
             return taskVo;
@@ -278,20 +332,14 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
     }
 
     private void collectClusterTaskNodeHostInfos(List<OpsClusterTaskNodeEntity> nodeList, List<String> hostIds,
-                                                 List<String> hostUserIds) {
+        List<String> hostUserIds) {
         if (hostIds != null) {
-            hostIds.addAll(nodeList
-                    .stream()
-                    .map(OpsClusterTaskNodeEntity::getHostId)
-                    .distinct()
-                    .collect(Collectors.toList()));
+            hostIds.addAll(
+                nodeList.stream().map(OpsClusterTaskNodeEntity::getHostId).distinct().collect(Collectors.toList()));
         }
         if (hostUserIds != null) {
-            hostUserIds.addAll(nodeList
-                    .stream()
-                    .map(OpsClusterTaskNodeEntity::getHostUserId)
-                    .distinct()
-                    .collect(Collectors.toList()));
+            hostUserIds.addAll(
+                nodeList.stream().map(OpsClusterTaskNodeEntity::getHostUserId).distinct().collect(Collectors.toList()));
         }
     }
 
@@ -301,11 +349,11 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         OpsClusterTaskEntity entity = dto.toEntity();
         try {
             Assert.isTrue(checkPasswordStrength(entity.getDatabasePassword()),
-                    "database password is not strong enough");
+                "database password is not strong enough");
             checkEnvironmentVariablePath(entity);
             checkPackageInfo(entity);
             Assert.isTrue(!checkClusterNameExist(null, entity.getClusterName()),
-                    "cluster name " + entity.getClusterName() + " is exist");
+                "cluster name " + entity.getClusterName() + " is exist");
             entity.setStatus(OpsClusterTaskStatusEnum.DRAFT);
             save(entity);
             OperateLogFactory.operateCreate(entity.getClusterId());
@@ -322,17 +370,14 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         // 任务ID校验
         OpsClusterTaskEntity taskEntity = getById(clusterId);
         Assert.isTrue(Objects.nonNull(taskEntity), "cluster task id can not exists " + clusterId);
-
         // 部署类型与节点信息校验
         checkDeployTypeService.check(taskEntity.getVersion(), taskEntity.getDeployType(),
-                taskEntity.getClusterNodeNum());
-
+            taskEntity.getClusterNodeNum());
         // 节点信息校验
         List<OpsClusterTaskNodeEntity> nodeEntityList = opsClusterTaskNodeService.listByClusterTaskId(clusterId);
         Assert.isTrue(CollectionUtils.isNotEmpty(nodeEntityList), "cluster task node is empty");
         Map<String, OpsHostEntity> hostMap = new HashMap<>();
         localCheckClusterTaskHost(clusterId, nodeEntityList, hostMap, taskEntity);
-
         // 节点远端服务器信息合法性检查
         remoteCheckHostEnvInfo(nodeEntityList, taskEntity, hostMap);
         return true;
@@ -354,33 +399,32 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
             String nodePublicIp = host.getPublicIp();
             OpsHostUserEntity hostUser = opsHostRemoteService.getOpsHostUser(node.getHostUserId());
             boolean canInstall = checkHostAndUserInstallCluster(clusterId, hostId, node.getHostUserId());
-            Assert.isTrue(canInstall, clusterId + " host has cluster installation task: "
-                    + nodePublicIp + "_(" + hostUser.getUsername() + ")");
-
+            Assert.isTrue(canInstall,
+                clusterId + " host has cluster installation task: " + nodePublicIp + "_(" + hostUser.getUsername()
+                    + ")");
             // 集群任务端口重复检查
             String databasePort = String.valueOf(taskEntity.getDatabasePort());
             long sameDatabasePortCount = count(Wrappers.lambdaQuery(OpsClusterTaskEntity.class)
-                    .select(OpsClusterTaskEntity::getDatabasePort)
-                    .notIn(OpsClusterTaskEntity::getClusterId, clusterId)
-                    .eq(OpsClusterTaskEntity::getHostId, hostId)
-                    .eq(OpsClusterTaskEntity::getDatabasePort, databasePort));
-            Assert.isTrue(sameDatabasePortCount == 0, "task database port is used: "
-                    + nodePublicIp + "_(" + databasePort + ")");
-
+                .select(OpsClusterTaskEntity::getDatabasePort)
+                .notIn(OpsClusterTaskEntity::getClusterId, clusterId)
+                .eq(OpsClusterTaskEntity::getHostId, hostId)
+                .eq(OpsClusterTaskEntity::getDatabasePort, databasePort));
+            Assert.isTrue(sameDatabasePortCount == 0,
+                "task database port is used: " + nodePublicIp + "_(" + databasePort + ")");
             if (taskEntity.getEnableCmTool()) {
                 // 数据库端口与CM端口检测
                 String cmPort = String.valueOf(node.getCmPort());
                 Assert.isTrue(!StrUtil.equals(databasePort, cmPort), "database port and cm port must not equal");
                 // 集群节点CM端口检查
                 boolean isNodeCmUsed = opsClusterTaskNodeService.checkHostPortUsedByCm(clusterId, hostId,
-                        node.getCmPort());
+                    node.getCmPort());
                 Assert.isTrue(!isNodeCmUsed, "host cm port is used: " + nodePublicIp + "_(" + cmPort + ")");
             }
         });
     }
 
     private void remoteCheckHostEnvInfo(List<OpsClusterTaskNodeEntity> nodeEntityList, OpsClusterTaskEntity taskEntity,
-                                        Map<String, OpsHostEntity> hostMap) {
+        Map<String, OpsHostEntity> hostMap) {
         nodeEntityList.forEach(node -> {
             // 节点磁盘空间检查
             checkTaskDirDiskSpace(taskEntity, node);
@@ -391,7 +435,6 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
             boolean isHostUsed = opsHostRemoteService.portUsed(hostId, Integer.valueOf(databasePort));
             OpsHostEntity host = hostMap.get(hostId);
             Assert.isTrue(!isHostUsed, "host port is used: " + host.getPublicIp() + "_(" + databasePort + ")");
-
             if (taskEntity.getEnableCmTool()) {
                 // 数据库端口与CM端口检测
                 String cmPort = String.valueOf(node.getCmPort());
@@ -405,7 +448,7 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
     /**
      * check host instance can install cluster node
      *
-     * @param hostIp       host ip
+     * @param hostIp host ip
      * @param hostUsername host username
      * @return boolean
      */
@@ -421,17 +464,17 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
      * Check if the host instance can be assigned a cluster installation task
      * if return true ,current host instance can be assigned a cluster installation task
      *
-     * @param clusterId  clusterId
-     * @param hostId     hostId
+     * @param clusterId clusterId
+     * @param hostId hostId
      * @param hostUserId hostUserId
      * @return boolean
      */
     public boolean checkHostAndUserInstallCluster(String clusterId, String hostId, String hostUserId) {
         return opsClusterTaskNodeService.count(Wrappers.lambdaQuery(OpsClusterTaskNodeEntity.class)
-                .select(OpsClusterTaskNodeEntity::getClusterNodeId)
-                .notIn(StrUtil.isNotEmpty(clusterId), OpsClusterTaskNodeEntity::getClusterId, clusterId)
-                .eq(OpsClusterTaskNodeEntity::getHostId, hostId)
-                .eq(OpsClusterTaskNodeEntity::getHostUserId, hostUserId)) == 0;
+            .select(OpsClusterTaskNodeEntity::getClusterNodeId)
+            .notIn(StrUtil.isNotEmpty(clusterId), OpsClusterTaskNodeEntity::getClusterId, clusterId)
+            .eq(OpsClusterTaskNodeEntity::getHostId, hostId)
+            .eq(OpsClusterTaskNodeEntity::getHostUserId, hostUserId)) == 0;
     }
 
     @Override
@@ -439,14 +482,14 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         OpsClusterTaskEntity taskEntity = getById(clusterId);
         Assert.isTrue(Objects.nonNull(taskEntity), "cluster task id not exist:" + clusterId);
         update(Wrappers.lambdaUpdate(OpsClusterTaskEntity.class)
-                .set(OpsClusterTaskEntity::getHostId, hostId)
-                .set(OpsClusterTaskEntity::getHostUserId, hostUserId)
-                .set(OpsClusterTaskEntity::getClusterNodeNum, nodeCount)
-                .set(OpsClusterTaskEntity::getStatus, OpsClusterTaskStatusEnum.DRAFT)
-                .set(OpsClusterTaskEntity::getEnvCheckResult, null)
-                .set(OpsClusterTaskEntity::getUpdateTime, LocalDateTime.now())
-                .set(OpsClusterTaskEntity::getRemark, "reset task draft")
-                .eq(OpsClusterTaskEntity::getClusterId, clusterId));
+            .set(OpsClusterTaskEntity::getHostId, hostId)
+            .set(OpsClusterTaskEntity::getHostUserId, hostUserId)
+            .set(OpsClusterTaskEntity::getClusterNodeNum, nodeCount)
+            .set(OpsClusterTaskEntity::getStatus, OpsClusterTaskStatusEnum.DRAFT)
+            .set(OpsClusterTaskEntity::getEnvCheckResult, null)
+            .set(OpsClusterTaskEntity::getUpdateTime, LocalDateTime.now())
+            .set(OpsClusterTaskEntity::getRemark, "reset task draft")
+            .eq(OpsClusterTaskEntity::getClusterId, clusterId));
     }
 
     private void checkPackageInfo(OpsClusterTaskEntity entity) {
@@ -455,24 +498,19 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         OpsHostEntity host = opsHostRemoteService.getHost(entity.getHostId());
         Assert.isTrue(Objects.nonNull(host), "host " + entity.getHostId() + " not exist");
         Assert.isTrue(Objects.nonNull(packageEntity), "Package " + packageId + " not exist");
-
         String packageVersion = packageEntity.getPackageVersion();
         Assert.isTrue(StrUtil.equalsIgnoreCase(packageVersion, entity.getVersion().name()),
-                "task and package version is not match pkg: " + packageVersion
-                        + " , task: " + entity.getVersion().name());
-
+            "task and package version is not match pkg: " + packageVersion + " , task: " + entity.getVersion().name());
         String cpuArch = packageEntity.getCpuArch();
         Assert.isTrue(StrUtil.equalsIgnoreCase(cpuArch, host.getCpuArch()),
-                "host and package cpuArch is not match pkg: " + cpuArch + " , host: " + host.getCpuArch());
-
+            "host and package cpuArch is not match pkg: " + cpuArch + " , host: " + host.getCpuArch());
         String os = packageEntity.getOs();
         Assert.isTrue(StrUtil.equalsIgnoreCase(os, host.getOs()),
-                "host os and package os is not match pkg: " + os + " , host: " + host.getOs());
-
+            "host os and package os is not match pkg: " + os + " , host: " + host.getOs());
         String osVersion = packageEntity.getOsVersion();
         Assert.isTrue(StrUtil.equalsIgnoreCase(osVersion, host.getOsVersion()),
-                "host and package os version is not match pkg: " + os + " " + osVersion
-                        + " , host: " + host.getOsVersion());
+            "host and package os version is not match pkg: " + os + " " + osVersion + " , host: "
+                + host.getOsVersion());
     }
 
     private void checkEnvironmentVariablePath(OpsClusterTaskEntity entity) {
@@ -482,9 +520,9 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         } else {
             if (!envPath.endsWith(".bashrc")) {
                 log.warn("The host {} environment variable path {} is not a bashrc file, the default path will be used",
-                        entity.getClusterName(), envPath);
-                entity.setEnvPath("/home/" + entity.getHostUsername()
-                        + "/cluster_env_" + entity.getClusterName() + ".bashrc");
+                    entity.getClusterName(), envPath);
+                entity.setEnvPath(
+                    "/home/" + entity.getHostUsername() + "/cluster_env_" + entity.getClusterName() + ".bashrc");
             }
         }
     }
@@ -502,10 +540,10 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
     @Override
     public OpsHostPortUsedStatusEnum checkHostPort(String taskId, String hostId, Integer hostPort) {
         List<OpsClusterTaskEntity> hostDbPortList = list(Wrappers.lambdaQuery(OpsClusterTaskEntity.class)
-                .select(OpsClusterTaskEntity::getDatabasePort)
-                .notIn(StrUtil.isNotEmpty(taskId), OpsClusterTaskEntity::getClusterId, taskId)
-                .eq(OpsClusterTaskEntity::getHostId, hostId)
-                .eq(OpsClusterTaskEntity::getDatabasePort, hostPort));
+            .select(OpsClusterTaskEntity::getDatabasePort)
+            .notIn(StrUtil.isNotEmpty(taskId), OpsClusterTaskEntity::getClusterId, taskId)
+            .eq(OpsClusterTaskEntity::getHostId, hostId)
+            .eq(OpsClusterTaskEntity::getDatabasePort, hostPort));
         if (CollUtil.isNotEmpty(hostDbPortList)) {
             return OpsHostPortUsedStatusEnum.DATABASE_USED;
         }
@@ -520,14 +558,12 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
     public Map<String, ClusterPortVo> checkTaskHostPort(String clusterId) {
         LambdaQueryWrapper<OpsClusterTaskEntity> queryWrapper = Wrappers.lambdaQuery(OpsClusterTaskEntity.class);
         queryWrapper.select(OpsClusterTaskEntity::getHostId, OpsClusterTaskEntity::getDatabasePort)
-                .eq(OpsClusterTaskEntity::getClusterId, clusterId);
+            .eq(OpsClusterTaskEntity::getClusterId, clusterId);
         OpsClusterTaskEntity taskEntity = getOne(queryWrapper);
         Assert.isTrue(Objects.nonNull(taskEntity), "cluster id is not exist");
-
         // 查询集群节点列表
         List<OpsClusterTaskNodeEntity> hostPortList = opsClusterTaskNodeService.queryClusterNodeAndPortList(clusterId);
         Assert.isTrue(CollUtil.isNotEmpty(hostPortList), "cluster node is not invalid");
-
         // 校验节点主机端口是否被使用
         Map<String, ClusterPortVo> checkResult = new HashMap<>();
         hostPortList.forEach(hostNode -> {
@@ -536,30 +572,28 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
             String databasePort = String.valueOf(taskEntity.getDatabasePort());
             String cmPort = String.valueOf(hostNode.getCmPort());
             ClusterPortVo nodePort = new ClusterPortVo(clusterNodeId, databasePort, cmPort);
-
             // 集群节点数据库端口检查
             List<OpsClusterTaskEntity> hostDbPortList = list(Wrappers.lambdaQuery(OpsClusterTaskEntity.class)
-                    .select(OpsClusterTaskEntity::getDatabasePort)
-                    .notIn(OpsClusterTaskEntity::getClusterId, clusterId)
-                    .eq(OpsClusterTaskEntity::getHostId, hostId)
-                    .eq(OpsClusterTaskEntity::getDatabasePort, databasePort));
+                .select(OpsClusterTaskEntity::getDatabasePort)
+                .notIn(OpsClusterTaskEntity::getClusterId, clusterId)
+                .eq(OpsClusterTaskEntity::getHostId, hostId)
+                .eq(OpsClusterTaskEntity::getDatabasePort, databasePort));
             if (CollUtil.isNotEmpty(hostDbPortList)) {
                 nodePort.setDatabasePortStatus(OpsHostPortUsedStatusEnum.DATABASE_USED);
             } else {
                 boolean isHostUsed = opsHostRemoteService.portUsed(hostId, Integer.valueOf(databasePort));
-                nodePort.setDatabasePortStatus(isHostUsed ? OpsHostPortUsedStatusEnum.HOST_USED :
-                        OpsHostPortUsedStatusEnum.NO_USED);
+                nodePort.setDatabasePortStatus(
+                    isHostUsed ? OpsHostPortUsedStatusEnum.HOST_USED : OpsHostPortUsedStatusEnum.NO_USED);
             }
-
             // 集群节点CM端口检查
-            boolean isNodeCmUsed = opsClusterTaskNodeService
-                    .checkHostPortUsedByCm(clusterId, hostNode.getHostId(), hostNode.getCmPort());
+            boolean isNodeCmUsed = opsClusterTaskNodeService.checkHostPortUsedByCm(clusterId, hostNode.getHostId(),
+                hostNode.getCmPort());
             if (isNodeCmUsed) {
                 nodePort.setCmPortStatus(OpsHostPortUsedStatusEnum.DATABASE_CM_USED);
             } else {
                 boolean isHostUsed = opsHostRemoteService.portUsed(hostId, Integer.valueOf(cmPort));
-                nodePort.setDatabasePortStatus(isHostUsed ? OpsHostPortUsedStatusEnum.HOST_USED :
-                        OpsHostPortUsedStatusEnum.NO_USED);
+                nodePort.setDatabasePortStatus(
+                    isHostUsed ? OpsHostPortUsedStatusEnum.HOST_USED : OpsHostPortUsedStatusEnum.NO_USED);
             }
             checkResult.put(nodePort.getClusterNodeId(), nodePort);
         });
@@ -580,8 +614,9 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
                     providerManager.addClusterTask(taskId);
                     updateClusterTaskStatus(task, OpsClusterTaskStatusEnum.WAITING, "");
                 } else {
-                    result.put(taskId, task != null ? "cluster task is not pending : "
-                            + task.getStatus() : "cluster task is not exist");
+                    result.put(taskId, task != null
+                        ? "cluster task is not pending : " + task.getStatus()
+                        : "cluster task is not exist");
                 }
             });
             threadPoolTaskExecutor.submit(this::asyncStartInstallProvider);
@@ -647,13 +682,12 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         OpsClusterTaskEntity entity = dto.toEntity();
         checkPackageInfo(entity);
         Assert.isTrue(!checkClusterNameExist(entity.getClusterId(), entity.getClusterName()),
-                "cluster name " + entity.getClusterName() + " is exist");
+            "cluster name " + entity.getClusterName() + " is exist");
         entity.setStatus(OpsClusterTaskStatusEnum.DRAFT);
         // update task
         Assert.isTrue(updateById(entity),
-                "cluster task update failed, cluster task id not exist:" + dto.getClusterId());
-        Assert.isTrue(checkPasswordStrength(entity.getDatabasePassword()),
-                "database password is not strong enough");
+            "cluster task update failed, cluster task id not exist:" + dto.getClusterId());
+        Assert.isTrue(checkPasswordStrength(entity.getDatabasePassword()), "database password is not strong enough");
         OperateLogFactory.operateUpdate(entity.getClusterId());
     }
 
@@ -662,9 +696,9 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         OpsClusterTaskEntity task = getById(taskId);
         Assert.isTrue(Objects.nonNull(task), "cluster task not exist :" + taskId);
         Assert.isTrue(Objects.equals(task.getStatus(), OpsClusterTaskStatusEnum.DRAFT),
-                "cluster task status not correct, can't confirm");
+            "cluster task status not correct, can't confirm");
         Assert.isTrue(Objects.equals(task.getEnvCheckResult(), ClusterEnvCheckResultEnum.SUCCESS),
-                "cluster task env check not pass, can't confirm");
+            "cluster task env check not pass, can't confirm");
         updateClusterTaskStatus(task, OpsClusterTaskStatusEnum.PENDING, "");
         OperateLogFactory.operateConfirm(taskId);
         log.info("cluster task confirm success, taskId:{}", taskId);
@@ -679,10 +713,10 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
     @Override
     public void updateClusterTaskStatus(String clusterId, OpsClusterTaskStatusEnum status, String remark) {
         update(Wrappers.lambdaUpdate(OpsClusterTaskEntity.class)
-                .set(OpsClusterTaskEntity::getStatus, status)
-                .set(OpsClusterTaskEntity::getRemark, remark)
-                .set(OpsClusterTaskEntity::getUpdateTime, LocalDateTime.now())
-                .eq(OpsClusterTaskEntity::getClusterId, clusterId));
+            .set(OpsClusterTaskEntity::getStatus, status)
+            .set(OpsClusterTaskEntity::getRemark, remark)
+            .set(OpsClusterTaskEntity::getUpdateTime, LocalDateTime.now())
+            .eq(OpsClusterTaskEntity::getClusterId, clusterId));
         log.info("update cluster task status {} clusterId:{}", status, clusterId);
     }
 
@@ -691,11 +725,9 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
     public ClusterEnvCheck checkClusterInstallEnvironment(String taskId) {
         OpsClusterTaskEntity task = getById(taskId);
         Assert.isTrue(Objects.nonNull(task), "cluster task not exist :" + taskId);
-
         // 执行环境检查
         List<OpsClusterTaskNodeEntity> nodes = opsClusterTaskNodeService.listByClusterTaskId(taskId);
         Assert.isTrue(CollUtil.isNotEmpty(nodes), "cluster task node not exist :" + taskId);
-
         Map<String, ClusterNodeEnvCheck> envCheckMap = new HashMap<>();
         nodes.forEach(node -> {
             String hostId = node.getHostId();
@@ -709,12 +741,10 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
             node.setEnvCheckDetail(parseEnvCheckDetails(envCheck.getEnvCheckDetails()));
         });
         // 更新集群安装任务的最终环境检查结果
-        boolean isAllMatch = envCheckMap
-                .values()
-                .stream()
-                .allMatch(envCheck -> Objects.equals(envCheck.getResult(), ClusterEnvCheckResultEnum.SUCCESS));
+        boolean isAllMatch = envCheckMap.values()
+            .stream()
+            .allMatch(envCheck -> Objects.equals(envCheck.getResult(), ClusterEnvCheckResultEnum.SUCCESS));
         task.setEnvCheckResult(isAllMatch ? ClusterEnvCheckResultEnum.SUCCESS : ClusterEnvCheckResultEnum.FAILED);
-
         updateById(task);
         opsClusterTaskNodeService.updateBatchById(nodes);
         // 环境检查日志在执行完成后记录。
@@ -772,10 +802,8 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         if (checkHostEnvIsEmpty(hostEnv)) {
             return ClusterEnvCheckResultEnum.FAILED;
         }
-
         Boolean hardStatusHasError = checkNodeEnvCheckResultHasError(hostEnv.getHardwareEnv().getEnvProperties());
         Boolean softStatusHasError = checkNodeEnvCheckResultHasError(hostEnv.getSoftwareEnv().getEnvProperties());
-
         if (hardStatusHasError || softStatusHasError) {
             return ClusterEnvCheckResultEnum.FAILED;
         } else {
@@ -790,13 +818,12 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         if (Objects.isNull(hostEnv.getHardwareEnv()) || Objects.isNull(hostEnv.getSoftwareEnv())) {
             return true;
         }
-        return CollUtil.isEmpty(hostEnv.getHardwareEnv().getEnvProperties())
-                || CollUtil.isEmpty(hostEnv.getSoftwareEnv().getEnvProperties());
+        return CollUtil.isEmpty(hostEnv.getHardwareEnv().getEnvProperties()) || CollUtil.isEmpty(
+            hostEnv.getSoftwareEnv().getEnvProperties());
     }
 
     private boolean checkNodeEnvCheckResultHasError(List<EnvProperty> envProperties) {
-        return envProperties.stream()
-                .map(EnvProperty::getStatus).anyMatch(status -> status == HostEnvStatusEnum.ERROR);
+        return envProperties.stream().map(EnvProperty::getStatus).anyMatch(status -> status == HostEnvStatusEnum.ERROR);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -840,8 +867,8 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
     @Override
     public boolean checkClusterNameExist(String clusterId, String clusterName) {
         LambdaQueryWrapper<OpsClusterTaskEntity> queryWrapper = Wrappers.lambdaQuery(OpsClusterTaskEntity.class)
-                .select(OpsClusterTaskEntity::getClusterId)
-                .eq(OpsClusterTaskEntity::getClusterName, clusterName);
+            .select(OpsClusterTaskEntity::getClusterId)
+            .eq(OpsClusterTaskEntity::getClusterName, clusterName);
         if (StrUtil.isNotEmpty(clusterId)) {
             queryWrapper.notIn(OpsClusterTaskEntity::getClusterId, List.of(clusterId));
         }
@@ -851,13 +878,13 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
     @Override
     public Map<String, TaskStatusVo> getBatchInstallTaskStatus(List<String> taskIds) {
         LambdaQueryWrapper<OpsClusterTaskEntity> wrapper = Wrappers.lambdaQuery(OpsClusterTaskEntity.class)
-                .select(OpsClusterTaskEntity::getClusterId, OpsClusterTaskEntity::getStatus,
-                        OpsClusterTaskEntity::getRemark)
-                .in(OpsClusterTaskEntity::getClusterId, taskIds);
+            .select(OpsClusterTaskEntity::getClusterId, OpsClusterTaskEntity::getStatus,
+                OpsClusterTaskEntity::getRemark)
+            .in(OpsClusterTaskEntity::getClusterId, taskIds);
         List<OpsClusterTaskEntity> list = list(wrapper);
         Map<String, TaskStatusVo> taskStatusMap = list.stream()
-                .map(task -> new TaskStatusVo(task.getClusterId(), task.getStatus(), task.getRemark()))
-                .collect(Collectors.toMap(TaskStatusVo::getClusterId, Function.identity()));
+            .map(task -> new TaskStatusVo(task.getClusterId(), task.getStatus(), task.getRemark()))
+            .collect(Collectors.toMap(TaskStatusVo::getClusterId, Function.identity()));
         Map<String, TaskStatusVo> taskStatusResult = new HashMap<>(taskIds.size());
         taskIds.forEach(taskId -> taskStatusResult.put(taskId, taskStatusMap.get(taskId)));
         return taskStatusResult;
@@ -871,7 +898,6 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
     private boolean checkPasswordStrength(String password) {
         return password.matches(PASSWORD_REGEX);
     }
-
 
     private void checkTaskDirDiskSpace(OpsClusterTaskEntity task, OpsClusterTaskNodeEntity node) {
         List<String> nodePathList = new LinkedList<>();
@@ -919,12 +945,11 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         });
     }
 
-
     /**
      * check host disk space
      *
      * @param hostId host Id
-     * @param paths  directory path list
+     * @param paths directory path list
      * @return check result
      */
     public Map<String, String> checkHostDiskSpace(String hostId, List<String> paths) {
@@ -945,8 +970,7 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         if (MapUtils.isEmpty(topLevelPaths)) {
             return;
         }
-        Assert.isTrue(CollectionUtils.isNotEmpty(topLevelPaths),
-                "Paths must contain at least one top level directory");
+        Assert.isTrue(CollectionUtils.isNotEmpty(topLevelPaths), "Paths must contain at least one top level directory");
         OpsHostEntity host = opsHostRemoteService.getHost(hostId);
         OpsHostUserEntity hostRootUser = opsHostRemoteService.getHostRootUser(hostId);
         Session rootSession = opsHostRemoteService.createHostUserSession(host, hostRootUser);

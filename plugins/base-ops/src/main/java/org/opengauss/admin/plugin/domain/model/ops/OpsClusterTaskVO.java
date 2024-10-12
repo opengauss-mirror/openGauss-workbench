@@ -41,6 +41,7 @@ public class OpsClusterTaskVO {
     private String clusterId;
     private String hostIp;
     private String hostId;
+    private String displayHostIp;
     private String hostUserId;
     private String hostUsername;
     private String os;

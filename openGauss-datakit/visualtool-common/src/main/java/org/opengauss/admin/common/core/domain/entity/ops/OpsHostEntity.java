@@ -16,7 +16,8 @@
  * OpsHostEntity.java
  *
  * IDENTIFICATION
- * openGauss-visualtool/visualtool-common/src/main/java/org/opengauss/admin/common/core/domain/entity/ops/OpsHostEntity.java
+ * openGauss-visualtool/visualtool-common/src/main/java/org/opengauss/admin/common/core/domain/entity/ops
+ * /OpsHostEntity.java
  *
  * -------------------------------------------------------------------------
  */
@@ -27,7 +28,9 @@ package org.opengauss.admin.common.core.domain.entity.ops;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
 import org.opengauss.admin.common.core.domain.BaseEntity;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -51,4 +54,15 @@ public class OpsHostEntity extends BaseEntity {
     @TableField(exist = false)
     private Boolean isRemember;
     private String name;
+    @TableField(exist = false)
+    private String displayIp;
+
+    /**
+     * Get the display IP address.
+     *
+     * @return display info
+     */
+    public String getDisplayIp() {
+        return publicIp != null && !publicIp.isEmpty() ? publicIp + "(" + privateIp + ")" : publicIp;
+    }
 }
