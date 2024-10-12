@@ -21,7 +21,7 @@
       <table>
         <tr>
           <td class="key">{{$t('operation.DailyOps.sl3u5s5cf229')}}</td>
-          <td class="value">{{ list.data.hostIp }}</td>
+          <td class="value">{{ list.data.displayHostIp }}</td>
           <td class="key">{{$t('operation.DailyOps.else16')}}</td>
           <td class="value">{{ list.data.hostUsername }}</td>
           <td class="key">{{$t('operation.DailyOps.sl3u5s5cf230')}}</td>
@@ -119,7 +119,7 @@
             <td class="key">{{$t('operation.DailyOps.sl3u5s5cf239')}}</td>
             <td class="value">{{item.nodeType}}</td>
             <td class="key">{{$t('operation.HostPwdDlg.IpAddress')}}</td>
-            <td class="value">{{item.hostIp}}</td>
+            <td class="value">{{item.displayHostIp}}</td>
             <td class="key">{{$t('enterprise.NodeConfig.5mpme7w6bak0')}}</td>
             <td class="value">{{item.hostUsername}}</td>
           </tr>
