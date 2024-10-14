@@ -343,9 +343,6 @@ public interface SshCommandConstants {
     /**
      * Import cluster command
      */
-    String ENV_PARAMETER_GREP = "grep {0} {1}";
-    String RESULT_BY_SPLIT_EQUAL = "|awk -F '=' '\\''{print $2}'\\''";
-    String THREE_IN_ONE = "{0}{1}{2}";
     String CHANGE_SUB_USER = "su - {0} -c ''{1}''";
     String CHECK_PERMISSION = "ls -l --time-style=long-iso -d {0}";
     /**

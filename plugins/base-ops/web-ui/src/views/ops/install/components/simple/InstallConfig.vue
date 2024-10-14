@@ -498,8 +498,10 @@ const beforeConfirm = async (): Promise<boolean> => {
     loadingFunc.toLoading()
     validRes = await validateSpecialFields()
   }
-  if (validRes) {
-    await checkFreeDisk();
+  if (validRes && installType.value !== 'import') {
+    await checkFreeDisk().catch(() => {
+      loadingFunc.cancelLoading()
+    })
     validRes = flag.value
     console.log("checkFreeDisk is more than 2GB:" + validRes)
   }

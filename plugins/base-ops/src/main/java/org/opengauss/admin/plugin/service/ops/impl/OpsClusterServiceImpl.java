@@ -136,6 +136,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private static final String OTHER_CONSTANT = "OTHER";
 
+    private static final String NODE_PRIMARY = "Primary";
+
+    private static final String NODE_STANDBY = "Standby";
+
     private int importSuccessCount;
 
     private boolean infoAndConn;
@@ -1744,7 +1748,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             if (localRole == null || localRole.equals("")) {
                 opsImportEntity.setImportStatus("fail");
             } else {
-                if (localRole.equals("Primary")) {
+                if (localRole.equals(NODE_PRIMARY)) {
                     opsImportEntity.setImportStatus("fail");
                     infoAndConn = false;
                 }
@@ -1757,40 +1761,43 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private String judgeLocalRole(List<String> resultList, OpsParseExcelEntity opsParseExcelEntity) {
         String localRole = null;
+
         if (opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)) {
             int selectCommandLength = 4;
-            try {
-                if (resultList.get(selectCommandLength - 1).equals("Primary")) {
-                    localRole = resultList.get(selectCommandLength - 1);
-                    masterIsNormal = true;
-                } else if (resultList.get(selectCommandLength - 1).equals("Standby")) {
-                    localRole = resultList.get(selectCommandLength - 1);
-                } else {
-                    localRole = resultList.get(selectCommandLength - 1);
-                    opsParseExcelEntity.getOpsImportEntity().setErrorInfo("check node status error!");
-                }
-            } catch (IndexOutOfBoundsException e) {
+            if (resultList.size() != selectCommandLength) {
                 markErrorInfo(opsParseExcelEntity.getOpsImportEntity());
                 opsParseExcelEntity.getOpsImportEntity()
-                        .setErrorInfo("please check if envFile has GAUSSHOME and PGDATA!");
+                    .setErrorInfo("There is a command that failed to execute. Please check the logs.");
+                for (int i = 0; i < resultList.size(); i++) {
+                    log.error("result " + i + ":" + resultList.get(i));
+                }
+                return NODE_PRIMARY;
+            }
+            if (resultList.get(selectCommandLength - 1).equals(NODE_PRIMARY)) {
+                localRole = resultList.get(selectCommandLength - 1);
+                masterIsNormal = true;
+            } else if (resultList.get(selectCommandLength - 1).equals(NODE_STANDBY)) {
+                localRole = resultList.get(selectCommandLength - 1);
+            } else {
+                localRole = resultList.get(selectCommandLength - 1);
+                opsParseExcelEntity.getOpsImportEntity().setErrorInfo("check node status error: " + localRole);
             }
         } else if (opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT)) {
             try {
                 masterIsNormal = true;
                 String selectLocal = MessageFormat.format(CHANGE_SUB_USER,
-                        opsParseExcelEntity.getOpsImportEntity().getInstallUsername(),
-                        MessageFormat.format(THREE_IN_ONE, "source "
-                                        + opsParseExcelEntity.getOpsImportEntity().getEnvPath(),
-                                ";gs_ctl query -D " + resultList.get(2)
-                                        + "|grep local_role|awk '\\''{print $3}'\\''|head -n 1", ""));
+                    opsParseExcelEntity.getOpsImportEntity().getInstallUsername(),
+                    String.format("source %s;gs_ctl query -D %s|grep local_role|awk '\\''{print $3}'\\''|head -n 1",
+                    opsParseExcelEntity.getOpsImportEntity().getEnvPath(), resultList.get(2)));
                 localRole = jschUtil.executeCommand(selectLocal, opsParseExcelEntity.getSession()).getResult();
+                localRole = opsParseExcelEntity.getIpNum() == 1 ? NODE_PRIMARY : localRole;
             } catch (OpsException | IOException | InterruptedException e) {
                 markErrorInfo(opsParseExcelEntity.getOpsImportEntity());
-                opsParseExcelEntity.getOpsImportEntity().setErrorInfo("check publicIp, installUsername and envPath");
+                opsParseExcelEntity.getOpsImportEntity().setErrorInfo("lite localRole Exception:" + e);
             }
         } else {
             masterIsNormal = true;
-            localRole = opsParseExcelEntity.getIpSequence() == 0 ? "Primary" : "Standby";
+            localRole = opsParseExcelEntity.getIpSequence() == 0 ? NODE_PRIMARY : NODE_STANDBY;
         }
         return localRole;
     }
@@ -1813,8 +1820,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         opsClusterNodeEntity.setClusterNodeId(StrUtil.uuid());
         String localRole = judgeLocalRole(resultList, opsParseExcelEntity);
         try {
-            ClusterRoleEnum ClusterRole = localRole.equals("Primary") ? MASTER : SLAVE;
-            opsClusterNodeEntity.setClusterRole(ClusterRole);
+            ClusterRoleEnum clusterRole = localRole.equals(NODE_PRIMARY) ? MASTER : SLAVE;
+            opsClusterNodeEntity.setClusterRole(clusterRole);
         } catch (NullPointerException e) {
             log.error("lack of clusterInfo!");
         }
@@ -1830,38 +1837,31 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     private String getMiniCommand(String installUsername) {
-        String versionNum = MessageFormat.format(THREE_IN_ONE, "", "gsql -V|awk '\\''{print $3}'\\''", "");
-        String miniGAUSSHOME = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP,
-                "GAUSSHOME=", "~/.bashrc"), "", RESULT_BY_SPLIT_EQUAL);
-        return MessageFormat.format(CHANGE_SUB_USER, installUsername, miniGAUSSHOME + ";" + versionNum);
+        String versionNum = "gsql -V|awk '\\''{print $3}'\\''";
+        String miniGaussHome = "source ~/.bashrc;echo $GAUSSHOME";
+        return MessageFormat.format(CHANGE_SUB_USER, installUsername, miniGaussHome + ";" + versionNum);
     }
 
     private void selectClusterInfo(OpsParseExcelEntity opsParseExcelEntity) {
-        String liteAndMiniGAUSSHOME = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP,
-                "GAUSSHOME=", opsParseExcelEntity.getOpsImportEntity().getEnvPath()), "", RESULT_BY_SPLIT_EQUAL);
-        String versionNum = MessageFormat.format(THREE_IN_ONE, "source "
-                        + opsParseExcelEntity.getOpsImportEntity().getEnvPath(),
-                ";gsql -V|awk '\\''{print $3}'\\''", "");
+        String envpath = opsParseExcelEntity.getOpsImportEntity().getEnvPath();
+        String enterAndLiteGaussHome = String.format("source %s;echo $GAUSSHOME", envpath);
+        String versionNum = String.format("source %s;gsql -V|awk '\\''{print $3}'\\''", envpath);
         String command = null;
         if (opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)) {
-            String enterGAUSSHOME = String.format("grep GAUSSHOME= %s%s",
-                opsParseExcelEntity.getOpsImportEntity().getEnvPath(), RESULT_BY_SPLIT_EQUAL);
             String enterPGDATA = String.format("source %s;gs_om -t view|awk '\\''/^sshChannel 1:%s/,"
                 + "/^============================================================/'\\''"
-                + "|grep datanodeLocalDataPath|awk -F '\\'':'\\'' '\\''{print $2}'\\''",
-                opsParseExcelEntity.getOpsImportEntity().getEnvPath(), opsParseExcelEntity.getPublicIp());
-            String enterJudgeMasterOrSlave = String.format("source %s;gs_om -t query|grep %s|"
-                + "awk '\\''{print $7}'\\''", opsParseExcelEntity.getOpsImportEntity().getEnvPath(),
+                + "|grep datanodeLocalDataPath|awk -F '\\'':'\\'' '\\''{print $2}'\\''", envpath,
                 opsParseExcelEntity.getPublicIp());
+            String enterJudgeMasterOrSlave = String.format("source %s;gs_om -t query|grep %s|"
+                + "awk '\\''{print $7}'\\''", envpath, opsParseExcelEntity.getPublicIp());
             command = MessageFormat.format(CHANGE_SUB_USER, opsParseExcelEntity.getOpsImportEntity()
-                    .getInstallUsername(), enterGAUSSHOME + ";" + enterPGDATA
-                    + ";" + versionNum + ";" + enterJudgeMasterOrSlave);
+                .getInstallUsername(), enterAndLiteGaussHome + ";" + enterPGDATA
+                + ";" + versionNum + ";" + enterJudgeMasterOrSlave);
         } else if (opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT)) {
-            String liteGAUSSDATA = MessageFormat.format(THREE_IN_ONE, MessageFormat.format(ENV_PARAMETER_GREP,
-                    "GAUSSDATA=", opsParseExcelEntity.getOpsImportEntity().getEnvPath()), "", RESULT_BY_SPLIT_EQUAL);
+            String liteGaussData = String.format("source %s;echo $GAUSSDATA", envpath);
             command = MessageFormat.format(CHANGE_SUB_USER,
-                    opsParseExcelEntity.getOpsImportEntity().getInstallUsername(),
-                    liteAndMiniGAUSSHOME + ";" + liteGAUSSDATA + ";" + versionNum);
+                opsParseExcelEntity.getOpsImportEntity().getInstallUsername(),
+                enterAndLiteGaussHome + ";" + liteGaussData + ";" + versionNum);
         } else if (opsParseExcelEntity.getVersionType().equals(MINI_CONSTANT)) {
             command = getMiniCommand(opsParseExcelEntity.getOpsImportEntity().getInstallUsername());
         } else {
@@ -1992,7 +1992,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     selectClusterInfo(opsParseExcelEntity);
                 } catch (OpsException opsException) {
                     markErrorInfo(list.get(i));
-                    list.get(i).setErrorInfo("check publicIp, installUsername and envPath");
+                    list.get(i).setErrorInfo("selectClusterInfo opsException:" + opsException);
                 }
             }
             boolean isSameCluster = checkPortAndIp(hostIps, list.get(i));

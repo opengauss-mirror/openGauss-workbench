@@ -581,8 +581,10 @@ const beforeConfirm = async (): Promise<boolean> => {
     loadingFunc.toLoading()
     validRes = await validateSpecialFields()
   }
-  if (validRes) {
-    await checkFreeDisk();
+  if (validRes && installType.value !== 'import') {
+    await checkFreeDisk().catch(() => {
+      loadingFunc.cancelLoading()
+    })
     validRes = flag.value
     console.log("checkFreeDisk is more than 2GB:" + validRes)
   }
@@ -762,8 +764,10 @@ const checkFreeDisk = async () => {
       item.installPath,
       item.installPackagePath,
       item.dataPath,
-      data.nodeData[0].envPath,
     ];
+    if (data.nodeData[0].isEnvSeparate) {
+      combinedPaths.push(data.nodeData[0].envPath)
+    }
     promises.push(
       Promise.all(combinedPaths.map(path => {
         return checkDiskSpace([path], item.hostId).then(res => {

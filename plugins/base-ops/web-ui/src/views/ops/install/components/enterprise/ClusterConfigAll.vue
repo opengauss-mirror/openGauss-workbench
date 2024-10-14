@@ -438,8 +438,10 @@ const beforeConfirm = async (): Promise<boolean> => {
       validRes = false
     }
   }
-  if (validRes) {
-    await checkFreeDisk();
+  if (validRes && installType.value !== 'import') {
+    await checkFreeDisk().catch(() => {
+      loadingFunc.cancelLoading()
+    })
     validRes = flag.value
     console.log("checkFreeDisk is more than 2GB:" + validRes)
   }
@@ -488,10 +490,12 @@ const checkFreeDisk = async () => {
     if (data.form.cluster.isInstallCM) {
       itemPaths.push(item.cmDataPath)
     }
+    if (data.form.cluster.isEnvSeparate) {
+      itemPaths.push(data.form.cluster.envPath)
+    }
     const combinedPaths = [
       data.form.cluster.installPath,
       data.form.cluster.installPackagePath,
-      data.form.cluster.envPath,
 
       data.form.cluster.logPath,
       data.form.cluster.tmpPath,
