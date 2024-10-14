@@ -151,6 +151,7 @@
                     <p v-if="judgeKeyExist(record.statusDesc,'sql_compatibility') === true">{{ parseOpenGaussBDB(record.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(record.statusDesc,'replication_slots') === true">{{ parseReplicationNumber(record.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(record.statusDesc,'enable_slot_log') === true">{{ parseEnableSlotLog(record.statusDesc) }}</p>
+                    <p v-if="judgeKeyExist(record.statusDesc,'hba_conf') === true">{{ parseHbaConf(record.statusDesc) }}</p>
                   </div>
                 </template>
               </a-popover>
@@ -711,6 +712,34 @@ const parseEnableSlotLog = (content) => {
   }
   return result
 }
+
+const parseHbaConf = (content) => {
+  const obj = JSON.parse(content)
+  let result = t('detail.index.5qtkk97a2e61')
+
+  switch (obj.hba_conf.result) {
+    case 0:
+      return result + t('detail.index.5qtkk97a2e51')
+    case 1:
+      result = result + t('detail.index.5qtkk97a2e62')
+
+      switch (obj.hba_conf.detail_code) {
+        case 2:
+          return result + t('detail.index.5qtkk97a2e64')
+        case 3:
+          return result + t('detail.index.5qtkk97a2e65') + obj.hba_conf.kafka_ip + t('detail.index.5qtkk97a2e35')
+        case 4:
+          return result + t('detail.index.5qtkk97a2e66')
+        default:
+          return result + t('detail.index.5qtkk97a2e63')
+      }
+    case 2:
+      return result + t('detail.index.5qtkk97a2e67') + obj.hba_conf.error_message + t('detail.index.5qtkk97a2e35')
+    default:
+      return result + t('detail.index.5qtkk97a2e40') + t('detail.index.5qtkk97a2e35')
+  }
+}
+
 
 const handleLog = (row) => {
   subTaskDetailVisible.value = true

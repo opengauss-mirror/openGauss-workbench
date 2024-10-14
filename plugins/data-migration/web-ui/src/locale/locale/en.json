@@ -571,13 +571,20 @@
             "5qtkk97a2e51": "adequate;",
             "5qtkk97a2e52": "not adequate, the type is: ",
             "5qtkk97a2e53": ", should be changed to sql_compatibility=",
-            "5qtkk97a2e54": "The number of logical replication slots: ",
+            "5qtkk97a2e54": "openGauss number of logical replication slots: ",
             "5qtkk97a2e55": "available;",
             "5qtkk97a2e56": ", reached the maximum value and is unavailable.",
             "5qtkk97a2e57": ", should be replaced with: ",
-            "5qtkk97a2e58": "Primary/standby synchronization for logical replication slots: ",
+            "5qtkk97a2e58": "openGauss primary/standby synchronization for logical replication slots: ",
             "5qtkk97a2e59": "enabled;",
-            "5qtkk97a2e60": "not enabled, should be changed to: enable_slot_log="
+            "5qtkk97a2e60": "not enabled, should be changed to: enable_slot_log=",
+            "5qtkk97a2e61": "openGauss replication connection privileges: ",
+            "5qtkk97a2e62": "not support, ",
+            "5qtkk97a2e63": "The user does not have replication connection privileges;",
+            "5qtkk97a2e64": "The connection type is not supported. Supported type: host or hostnossl;",
+            "5qtkk97a2e65": "The user does not have the replication connection privileges for this portal ip address. Ip: ",
+            "5qtkk97a2e66": "The authentication method is not supported. Supported method: sha256 or md5;",
+            "5qtkk97a2e67": "Sql exception: "
         }
     },
     "third": {
