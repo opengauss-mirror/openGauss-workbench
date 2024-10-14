@@ -123,7 +123,7 @@ public class EnterpriseInstallConfig implements ClusterInstallConfig {
         }
 
         for (EnterpriseInstallNodeConfig enterpriseInstallNodeConfig : nodeConfigList) {
-            enterpriseInstallNodeConfig.checkConfig();
+            enterpriseInstallNodeConfig.checkConfig(isInstallCM);
         }
     }
 

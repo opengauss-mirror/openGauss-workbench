@@ -36,7 +36,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jcraft.jsch.Session;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,6 +43,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.core.vo.HostBean;
 import org.opengauss.admin.common.enums.ops.ClusterEnvCheckResultEnum;
 import org.opengauss.admin.common.enums.ops.OpsClusterTaskStatusEnum;
 import org.opengauss.admin.common.enums.ops.OpsHostPortUsedStatusEnum;
@@ -925,7 +925,8 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         if (StrUtil.isNotEmpty(node.getCmDataPath())) {
             nodePathList.add(node.getCmDataPath());
         }
-        Map<String, String> nodeDiskSpaceResult = checkHostDiskSpace(task.getHostId(), nodePathList);
+        Map<String, String> nodeDiskSpaceResult = checkHostDiskSpace(node.getHostId(), nodePathList);
+        log.info("check host {} disk space result: {}", node.getHostId(), nodeDiskSpaceResult);
         parseNodeDiskSpaceResult(nodeDiskSpaceResult);
     }
 
@@ -934,13 +935,8 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
             return;
         }
         nodeDiskSpaceResult.forEach((key, value) -> {
-            if (StrUtil.isEmpty(value)) {
-                throw new OpsException(" disk top path " + key + " is not exist or not enough space.");
-            } else {
-                int diskDirSize = Integer.parseInt(value.replace("G", ""));
-                if (diskDirSize < 2) {
-                    throw new OpsException(" disk top path " + key + " not enough space.");
-                }
+            if (!(StrUtil.contains(value, "G") && Integer.parseInt(value.replace("G", "")) > 2)) {
+                throw new OpsException(" disk check error " + nodeDiskSpaceResult);
             }
         });
     }
@@ -973,13 +969,13 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         Assert.isTrue(CollectionUtils.isNotEmpty(topLevelPaths), "Paths must contain at least one top level directory");
         OpsHostEntity host = opsHostRemoteService.getHost(hostId);
         OpsHostUserEntity hostRootUser = opsHostRemoteService.getHostRootUser(hostId);
-        Session rootSession = opsHostRemoteService.createHostUserSession(host, hostRootUser);
+        HostBean hostBean = opsHostRemoteService.createSessionHostBean(host, hostRootUser);
         topLevelPaths.keySet().forEach(topLevelPath -> {
             try {
-                String topPathSpace = opsHostRemoteService.checkHostDiskSpace(rootSession, topLevelPath) + "G";
-                topLevelPaths.put(topLevelPath, topPathSpace);
-            } catch (OpsException ex) {
-                topLevelPaths.put(topLevelPath, ex.getMessage());
+                topLevelPaths.put(topLevelPath, opsHostRemoteService.checkHostDiskSpace(hostBean, topLevelPath) + "G");
+            } finally {
+                log.info("host [id={}],[ip={}],[path={}],[space size={}]", hostId, host.getPublicIp(), topLevelPath,
+                    topLevelPaths.get(topLevelPath));
             }
         });
     }
