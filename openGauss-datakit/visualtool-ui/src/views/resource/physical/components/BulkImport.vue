@@ -127,8 +127,8 @@ import { KeyValue } from '@/types/global'
 import { nextTick, reactive, ref, toRaw, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import axios from 'axios'
-import {bulkImporErrPlan, bulkImportany, bulkuploadPhy} from '@/api/ops'
-import useLocale from "@/hooks/locale";
+import { bulkImporErrPlan, bulkImportany, bulkuploadPhy } from '@/api/ops'
+import useLocale from '@/hooks/locale'
 
 const { t } = useI18n()
 const { changeLocale, currentLocale } = useLocale()
@@ -442,45 +442,45 @@ const startProgressBar = () => {
 }
 
 const downLoadModule = () => {
-  let url=`/host/downloadTemplate/${currentLocale.value}`;
-  axios.get(url,{responseType: 'blob',headers: {'Content-Type':'application/json;application/octet-stream'}
+  let url = `/host/downloadTemplate/${currentLocale.value}`
+  axios.get(url, { responseType: 'blob', headers: { 'Content-Type': 'application/json;application/octet-stream' }
   })
-    .then((res)=>{
+    .then((res) => {
       if (res) {
-        const blob = new Blob([res], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-        const link = document.createElement("a");
-        const URL = window.URL || window.webkitURL;
-        let herf = URL.createObjectURL(blob);
-        link.href = herf;
-        link.download = currentLocale.value === 'zh-CN' ? '模板.xlsx' : 'Template.xlsx';
-        link.click();
-        window.URL.revokeObjectURL(herf);
+        const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+        const link = document.createElement('a')
+        const URL = window.URL || window.webkitURL
+        let herf = URL.createObjectURL(blob)
+        link.href = herf
+        link.download = currentLocale.value === 'zh-CN' ? '模板.xlsx' : 'Template.xlsx'
+        link.click()
+        window.URL.revokeObjectURL(herf)
       }
-    }).catch((err)=>{
-    console.log("error:"+err);
+    }).catch((err) => {
+    console.log('error:' + err)
   })
 }
 
 const downLoadErrRep = () => {
   const uuid = data.uid
-  let url=`/host/downloadErrorExcel/${uuid}`;
-  axios.get(url,{responseType: 'blob',headers: {'Content-Type':'application/json;application/octet-stream'}
+  let url = `/host/downloadErrorExcel/${uuid}`
+  axios.get(url, { responseType: 'blob', headers: { 'Content-Type': 'application/json;application/octet-stream' }
   })
-    .then((res)=>{
+    .then((res) => {
       if (res) {
-        const blob = new Blob([res], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-        const link = document.createElement("a");
-        const URL = window.URL || window.webkitURL;
-        let herf = URL.createObjectURL(blob);
-        link.href = herf;
-        const date = new Date();
-        const formattedDate = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}${date.getHours().toString().padStart(2, '0')}${date.getMinutes().toString().padStart(2, '0')}${date.getSeconds().toString().padStart(2, '0')}`;
-        link.download = currentLocale.value === 'zh-CN' ? `错误报告_${formattedDate}.xlsx` : `Error Report_${formattedDate}.xlsx`;
-        link.click();
-        window.URL.revokeObjectURL(herf);
+        const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+        const link = document.createElement('a')
+        const URL = window.URL || window.webkitURL
+        let herf = URL.createObjectURL(blob)
+        link.href = herf
+        const date = new Date()
+        const formattedDate = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}${date.getHours().toString().padStart(2, '0')}${date.getMinutes().toString().padStart(2, '0')}${date.getSeconds().toString().padStart(2, '0')}`
+        link.download = currentLocale.value === 'zh-CN' ? `错误报告_${formattedDate}.xlsx` : `Error Report_${formattedDate}.xlsx`
+        link.click()
+        window.URL.revokeObjectURL(herf)
       }
-    }).catch((err)=>{
-    console.log("error:"+err);
+    }).catch((err) => {
+    console.log('error:' + err)
   })
 }
 

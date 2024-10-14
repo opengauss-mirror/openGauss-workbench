@@ -13,8 +13,8 @@
     <template #footer>
       <div class="flex-between">
         <div>
-          <a-button :loading="data.loading" type="primary" @click="submit">确定</a-button>
-          <a-button class="mr" @click="close">取消</a-button>
+          <a-button :loading="data.loading" type="primary" @click="submit">{{ $t('components.Package.5mtcyb0rty17') }}</a-button>
+          <a-button class="mr" @click="close">{{ $t('components.Package.5mtcyb0rty18') }}</a-button>
         </div>
       </div>
     </template>
@@ -25,79 +25,73 @@
       auto-label-width
       labelAlign="left"
     >
-      <a-form-item field="sysTem" :label="$t('操作系统')" validate-trigger="blur" @change="updateOsData" name="sysTem">
+      <a-form-item field="sysTem" :label="$t('components.Package.5mtcyb0rty07')" validate-trigger="blur" @change="updateOsData" name="sysTem">
         <a-radio-group v-model="tempOs.value" button-style="solid" :disabled="editDisabledFlag">
           <a-radio :value="OS.OPEN_EULER">openEuler20.03</a-radio>
           <a-radio :value="OS.CENTOS">centOs</a-radio>
           <a-radio :value="OS.All">openEuler22.03</a-radio>
-          <!--          <a-radio :value="kyLin">麒麟系统</a-radio>-->
         </a-radio-group>
       </a-form-item>
-      <a-form-item field="arch" :label="$t('系统架构')" validate-trigger="blur" @change="updateArchData" name="arch">
+      <a-form-item field="arch" :label="$t('components.Package.5mtcyb0rty32')" validate-trigger="blur" @change="updateArchData" name="arch">
         <a-radio-group v-model="tempArch.value" :disabled="editDisabledFlag">
           <a-radio :value="CpuArch.X86_64">x86_64</a-radio>
           <a-radio :disabled="OS.CENTOS === tempOs.value" :value="CpuArch.AARCH64">aarch64</a-radio>
         </a-radio-group>
       </a-form-item>
-      <a-form-item field="version" :label="$t('版本类型')" validate-trigger="blur" @change="updateVersionData" name="version">
+      <a-form-item field="version" :label="$t('components.Package.5mtcyb0rty33')" validate-trigger="blur" @change="updateVersionData" name="version">
         <a-radio-group v-model="tempVersion.value" :disabled="editDisabledFlag">
-          <a-radio :value="OpenGaussVersionEnum.MINIMAL_LIST">极简版</a-radio>
-          <a-radio :value="OpenGaussVersionEnum.LITE">轻量版</a-radio>
-          <a-radio :value="OpenGaussVersionEnum.ENTERPRISE">企业版</a-radio>
+          <a-radio :value="OpenGaussVersionEnum.MINIMAL_LIST">{{ $t('components.Package.MINIMAL_LIST') }}</a-radio>
+          <a-radio :value="OpenGaussVersionEnum.LITE">{{ $t('components.Package.LITE') }}</a-radio>
+          <a-radio :value="OpenGaussVersionEnum.ENTERPRISE">{{ $t('components.Package.ENTERPRISE') }}</a-radio>
         </a-radio-group>
       </a-form-item>
-      <a-form-item field="packageVersionNum" :label="$t('版本号')"  name="packageVersionNum">
+      <a-form-item field="packageVersionNum" :label="$t('components.Package.5mtcyb0rty10')"  name="packageVersionNum">
         <div class="item" >
           <a-select
             v-if="!editDisabledFlag"
-            v-model:value="tempVersionNum"
-            :ref="tempVersionNum.value"
-            allow-create
-            placeholder="请输入版本号"
-            :options="packageVersionNum"
-            :default-value="tempVersionNum"
-            :inputmode="true"
-            @blur="insertVersionNum"
+            v-model="tempVersionNum"
+            :ref="tempVersionNum" 
+            :placeholder="$t('components.Package.5mtcyb0rty34')"
+            :options="packageVersionNum"    
+            :inputmode="true"  
             @search="searchVersionNum"
             @change="checkContains"
           >
-          </a-select><br>
-          <a-input v-if="editDisabledFlag" disabled :default-value="tempVersionNum.value"></a-input>
+          </a-select>
+          <a-input v-if="editDisabledFlag" disabled :default-value="tempVersionNum"></a-input>
           <br><p class="ant-upload-hint" v-if="!contains">
-          {{$t(' 当前版本为新输入版本号，可') }}
-          <a-button type="text" href="https://opengauss.org/zh/download/archive/">前往官网</a-button>
-          {{ $t('查看版本号是否存在，如不存在则会下载失败') }} </p>
+          {{ $t('components.Package.5mtcyb0rty35') }}
+          <a-button type="text" href="https://opengauss.org/zh/download/archive/">{{ $t('components.Package.5mtcyb0rty36') }}</a-button>
+          {{ $t('components.Package.5mtcyb0rty37') }} </p>
         </div>
       </a-form-item>
-      <a-form-item field="name" :label="$t('安装包名称')" name="name">
+      <a-form-item field="name" :label="$t('components.Package.5mtcyb0rty06')" name="name">
         <a-input
           v-model="data.formData.name"
-          :placeholder="$t('安装包名称')"
+          :placeholder="$t('components.Package.5mtcyb0rty06')"
           @input="data.isNameDirty = true"
-          :rules="[{ required: true }]"
           :disabled="editDisabledFlag"
         />
       </a-form-item>
-      <a-form-item field="path" :label="$t('在线下载地址')" name="path">
+      <a-form-item field="path" :label="$t('components.Package.5mtcyb0rty38')" name="path">
         <div class="item" style="width:100%" >
           <a-textarea v-model="tempPackageUrl" show-count :maxlength="1000" :default-value="data.formData.packageUrl"  readonly></a-textarea>
           <p class="ant-upload-hint" v-if="data.formData.packageUrl && netStatus">
-            {{$t(' 根据上述配置信息匹配安装包，显示该安装包的在线下载地址进行下载安装，如未匹配到相应的安装包或不是目标安装包， 您可以进行 ') }}
-            <a-button type="text" @click="uploadStatusChange">离线上传</a-button>
+            {{ $t('components.Package.5mtcyb0rty39') }}
+            <a-button type="text" @click="uploadStatusChange">{{ $t('components.Package.5mtcyb0rty22') }}</a-button>
           </p>
-          <p v-if="!netStatus" class="ant-upload-hint">{{$t(' 根据上述配置信息匹配安装包。由于网络未连接，信息仅供显示无法下载。请上传离线安装包。 ') }}</p>
+          <p v-if="!netStatus" class="ant-upload-hint">{{ $t('components.Package.5mtcyb0rty40') }}</p>
         </div>
       </a-form-item>
       <a-form-item
         v-if="uploadStatusTag.value === true || !netStatus"
         field="packagePath"
-        :label="$t('离线安装包')"
+        :label="$t('components.Package.5mtcyb0rty41')"
         name="packagePath"
       >
         <a-upload
           v-model:file-list="fileListPPPP"
           :limit="1"
-
           :auto-upload="false"
           draggable
           @before-remove="handleBeforeRemove"
@@ -111,9 +105,9 @@
                 </div>
                 <div class="tips-1">
                   <span>{{
-                      $t('可将文件拖至此处 或 选择文件')
+                      $t('components.Package.5mtcyb0rty42')
                     }}
-                    <a-button  #upload-button >选择文件</a-button>
+                    <a-button  #upload-button >{{ $t('components.Package.5mtcyb0rty43') }}</a-button>
                   </span>
                 </div>
               </div>
@@ -151,8 +145,8 @@ import dayjs from 'dayjs'
 import { FileItem, Message, Modal } from '@arco-design/web-vue'
 import message from '@arco-design/web-vue/es/message'
 import Socket from '@/utils/websocket'
-import axios from "axios";
-import {Path} from "@antv/x6";
+import axios from 'axios'
+import { Path } from '@antv/x6'
 import isValid = Path.isValid;
 const { t } = useI18n()
 
@@ -188,7 +182,7 @@ interface UploadInfo {
   file: File
 }
 
-const tempVersionNum = reactive({ value: '' })
+const tempVersionNum = ref('5.0.2')
 
 const contains = ref(true)
 const checkContains = (inputValue:any) => {
@@ -206,7 +200,7 @@ const checkContains = (inputValue:any) => {
       checkVersionNumber(params).then((res) => {
         if (res.code !== 200) {
           Message.error({
-            content: data.formData.packageVersionNum + '不存在，请重新选择'
+            content: t('components.Package.5mtcyb0rty44', { versionNum: data.formData.packageVersionNum })
           })
           data.formData.packageVersionNum = ''
           tempVersionNum.value = null
@@ -215,7 +209,7 @@ const checkContains = (inputValue:any) => {
         }
       }) .catch(error => {
         message.error({
-          content: '版本号' + data.formData.packageVersionNum + '不存在，请重新选择'
+          content: t('components.Package.5mtcyb0rty44', { versionNum: data.formData.packageVersionNum })
         })
         data.formData.packageVersionNum = '5.0.0'
         tempVersionNum.value = '5.0.0'
@@ -225,25 +219,24 @@ const checkContains = (inputValue:any) => {
     }
   }
 }
-const insertVersionNum = (value:any) => {
-  tempVersionNum.value = value.target.value
-}
+
 const searchVersionNum = (value:any) => {
   data.formData.packageVersionNum = (value != null && value !== '') ? value : undefined
 }
 
-const formRules = reactive({
+const formRules = computed(() => { 
+  return {
   packageVersionNum: [
-    { required: true, message: t('请选择版本号')}
+    { required: true, message: t('components.Package.5mtcyb0rty45') }
   ],
   name: [
-    { required: true, message: t('请输入安装包名称') },
+    { required: true, message: t('components.Package.5mtcyb0rty46') },
     {
       validator: (value: any, cb: any) => {
         return new Promise((resolve) => {
           hasPkgName(value).then((res: KeyValue) => {
             if (res.data) {
-              cb(t('请勿输入重复包名'))
+              cb(t('components.Package.5mtcyb0rty47'))
               isValid.value = false
               resolve(false)
             } else {
@@ -258,7 +251,7 @@ const formRules = reactive({
     validator: (value: any, cb: any) => {
       return new Promise((resolve, reject) => {
         if (data.fileList.length <= 0 && uploadStatusTag.value === true) {
-          cb(t('请选择一个安装包进行上传'))
+          cb(t('components.Package.5mtcyb0rty48'))
           isValid.value = false
           resolve(false)
           return
@@ -268,6 +261,7 @@ const formRules = reactive({
       })
     }
   }]
+} 
 })
 
 const fileListPPPP = ref([])
@@ -345,7 +339,7 @@ const fetchVersionNum = () => {
       res.data.forEach(item => { packageVersionNum.value.push(item) })
     } else {
       Message.error({
-        content: '获取版本号失败'
+        content: t('components.Package.5mtcyb0rty49')
       })
     }
   }) .catch(error => {
@@ -360,7 +354,7 @@ const getPackageUrl = () => {
     osVersion: data.formData.osVersion,
     cpuArch: data.formData.cpuArch,
     openGaussVersion: data.formData.packageVersion,
-    openGaussVersionNum: data.formData.packageVersionNum,
+    openGaussVersionNum: data.formData.packageVersionNum
   }
   checkVersionNumber(params).then((res) => {
     if (res.code === 200) {
@@ -374,7 +368,7 @@ const getPackageUrl = () => {
       console.log('error')
     }
     let name = data.formData.packageUrl.split('/')
-    //需要去除后缀
+    // 需要去除后缀
     data.formData.name = name.pop()
   }) .catch(error => {
     console.error({
@@ -398,18 +392,18 @@ const open = (
   type: string,
   packageData?: KeyValue,
   addOptionFlag?: number,
-  wsBusiness?: string,
+  wsBusiness?: string
 ) => {
   getUploadPath()
   fetchVersionNum()
   // getSystemSetting()
   data.type = type
   if (type === 'create') {
-    data.title = t('添加安装包')
+    data.title = t('components.Package.5mtcyb0rty50')
     uploadStatusTag.value = false
     editDisabledFlag.value = false
   } else {
-    data.title = t('更新安装包')
+    data.title = t('components.Package.5mtcyb0rty51')
     editDisabledFlag.value = true
   }
   wsBusinessId.value = wsBusiness
@@ -476,7 +470,7 @@ defineExpose({
 const tempOs = reactive({ value: OS.CENTOS })
 const updateOsData = (value:string) => {
   tempOs.value = value.target.value
-  if (tempOs.value === OS.CENTOS && data.formData.cpuArch ===  CpuArch.AARCH64) {
+  if (tempOs.value === OS.CENTOS && data.formData.cpuArch === CpuArch.AARCH64) {
     tempArch.value = CpuArch.X86_64
     data.formData.cpuArch = CpuArch.X86_64
     data.formData.osVersion = '7'
@@ -492,7 +486,7 @@ const updateOsData = (value:string) => {
 }
 const tempArch = reactive({ value: CpuArch.X86_64 })
 const updateArchData = (value:string) => {
-  if (data.formData.os === OS.CENTOS && value.target.value ===  CpuArch.AARCH64) {
+  if (data.formData.os === OS.CENTOS && value.target.value === CpuArch.AARCH64) {
     tempArch.value = CpuArch.X86_64
     data.formData.cpuArch = CpuArch.X86_64
   } else {
@@ -532,13 +526,13 @@ const submit = async () => {
             onUploadProgress: (event) => {
               let percent
               if (event.lengthComputable) {
-                percent = Math.round((event.loaded * 100) / event.total);
+                percent = Math.round((event.loaded * 100) / event.total)
               }
-              progressPercent.value = percent?Number((percent * 0.01).toFixed(2)) :0
+              progressPercent.value = percent ? Number((percent * 0.01).toFixed(2)) : 0
             },
             data: formData
           }).then((res) => {
-            if(res.code === 200) {
+            if (res.code === 200) {
               close()
             }
           }).catch((error) => {
@@ -565,13 +559,13 @@ const submit = async () => {
           onUploadProgress: (event) => {
             let percent
             if (event.lengthComputable) {
-              percent = Math.round((event.loaded * 100) / event.total);
+              percent = Math.round((event.loaded * 100) / event.total)
             }
-            progressPercent.value = percent?Number((percent * 0.01).toFixed(2)):0
+            progressPercent.value = percent ? Number((percent * 0.01).toFixed(2)) : 0
           },
           data: formData
         }).then((res) => {
-          if(res.code === 200) {
+          if (res.code === 200) {
             close()
           }
         }).catch((error) => {
