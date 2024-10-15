@@ -158,7 +158,7 @@
               </div>
             </template>
             <template #cell="{ record }">
-              <input style="position: center; margin-left: 100px" v-model="record.isAdjustKernelParam" class="checkbox" type = "checkbox" :disabled="isDisable(record.isSystemAdmin)"/>
+              <input style="position: center; margin-left: 100px" v-model="record.isAdjustKernelParam" class="checkbox" type = "checkbox" :disabled="!record.isSystemAdmin"/>
             </template>
           </a-table-column>
           <a-table-column :title="$t('step1.index.5q091ixiibk0')" align="center" :width="100" fixed="right">
@@ -192,7 +192,7 @@
 import { reactive, ref, computed, watch, onMounted, toRaw, h, compile } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import AddJdbc from '../components/AddJdbc.vue'
-import { sourceClusters, targetClusters, sourceClusterDbsData, targetClusterDbsData } from '@/api/task'
+import { sourceClusters, targetClusters, sourceClusterDbsData, targetClusterDbsData, isAdmin } from '@/api/task'
 import useTheme from '@/hooks/theme'
 import { useI18n } from 'vue-i18n'
 import dataTblModal from './dataTableModal.vue'
@@ -573,7 +573,7 @@ watch(tableData, (val) => {
 }, { deep: true })
 
 // add sub task data
-const addSubTask = (targetDB) => {
+const addSubTask = async (targetDB) => {
   if (!selectSourceDB.sourceDBName) {
     Message.error('The source database cannot be empty')
     return
@@ -582,9 +582,10 @@ const addSubTask = (targetDB) => {
     Message.error('The destination database is selected')
     return
   }
-  //targetDBs could have same name,but can not be same DB
-  const id=selectSourceDB.sourceNodeName+selectSourceDB.sourceDBName+targetDB.parentName+targetDB.title
-  tableData.value.unshift({
+
+  // targetDBs could have same name,but can not be same DB
+  const id = selectSourceDB.sourceNodeName + selectSourceDB.sourceDBName + targetDB.parentName + targetDB.title
+  const currentTask = {
     sourceNodeName: selectSourceDB.sourceNodeName,
     sourceNodeInfo: selectSourceDB.sourceInfo,
     sourceDBName: selectSourceDB.sourceDBName,
@@ -595,13 +596,13 @@ const addSubTask = (targetDB) => {
     targetDBName: targetDB.title,
     configType: 1,
     isAdjustKernelParam: false,
-    isSystemAdmin: targetDB.isSystemAdmin,
+    isSystemAdmin: false,
     taskParamsObject: {
       basic: [],
       more: []
     },
     id
-  })
+  }
   selectSourceDB.sourceInfo = {}
   selectSourceDB.sourceNodeName = ''
   selectSourceDB.sourceDBName = ''
@@ -610,14 +611,22 @@ const addSubTask = (targetDB) => {
   selectedData.value = ''
   tblListShowflag.value = 0
   selecTblbf.value = ''
-}
 
-const isDisable = (val) => {
-  if (val === true) {
-    return false
-  } else {
-    return true
+  const { host, port, username, password } = targetDB.parentInfo
+  const requestData = {
+    publicIp: host,
+    dbPort: port,
+    dbUser: username,
+    dbUserPassword: password,
   }
+  try {
+    const { data } = await isAdmin(requestData)
+    currentTask.isSystemAdmin = data
+  } catch (error) {
+    Message.error(t('step1.index.5q091ixih5i1'))
+  }
+
+  tableData.value.unshift(currentTask)
 }
 
 // remove sub task
