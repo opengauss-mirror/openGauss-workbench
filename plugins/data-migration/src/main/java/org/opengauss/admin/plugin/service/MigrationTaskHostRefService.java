@@ -109,4 +109,12 @@ public interface MigrationTaskHostRefService extends IService<MigrationTaskHostR
      * @return tables
      */
     IPage<Object> pageByDB(Page page, String dbName, String url, String username, String password);
+
+    /**
+     * is openGauss connect user admin
+     *
+     * @param clusterNode cluster node
+     * @return boolean
+     */
+    boolean isConnectUserAdmin(OpsClusterNodeVO clusterNode);
 }

@@ -257,4 +257,15 @@ public class MigrationTaskResourceController extends BaseController {
         IPage<Object> page = migrationTaskHostRefService.pageByDB(startPage(), dbName, url, username, password);
         return getDataTable(page);
     }
+
+    /**
+     * is openGauss connect user admin
+     *
+     * @param clusterNode cluster node
+     * @return AjaxResult
+     */
+    @PostMapping("/isAdmin")
+    public AjaxResult isConnectUserAdmin(@RequestBody OpsClusterNodeVO clusterNode) {
+        return AjaxResult.success(migrationTaskHostRefService.isConnectUserAdmin(clusterNode));
+    }
 }

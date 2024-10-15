@@ -285,9 +285,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 clusterNodeVO.setDbUser(on.getDbUser());
                 clusterNodeVO.setDbUserPassword(encryptionUtils.decrypt(on.getDbUserPassword()));
                 clusterNodeVO.setHostPort(on.getHostPort());
-                clusterNodeVO.setIsSystemAdmin(
-                    JdbcUtil.judgeSystemAdmin(on.getPublicIp(), String.valueOf(on.getDbPort()), on.getDbUser(),
-                    encryptionUtils.decrypt(on.getDbUserPassword())));
+                clusterNodeVO.setIsSystemAdmin(false);
                 return clusterNodeVO;
             }).collect(Collectors.toList());
             clusterVO.setClusterNodes(nodes);
@@ -315,8 +313,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 clusterNodeVO.setDbUserPassword(on.getPassword());
                 clusterNodeVO.setHostname(on.getName());
                 clusterNodeVO.setHostPort(22);
-                clusterNodeVO.setIsSystemAdmin(
-                        JdbcUtil.judgeSystemAdmin(on.getIp(), on.getPort(), on.getUsername(), on.getPassword()));
+                clusterNodeVO.setIsSystemAdmin(false);
                 return clusterNodeVO;
             }).collect(Collectors.toList());
             clusterVO.setClusterNodes(nodes);
@@ -1160,5 +1157,18 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         }
         page.setRecords(tables);
         return page;
+    }
+
+    @Override
+    public boolean isConnectUserAdmin(OpsClusterNodeVO clusterNode) {
+        if (clusterNode == null || clusterNode.getDbPort() == null
+                || StringUtils.isAnyBlank(
+                        clusterNode.getPublicIp(), clusterNode.getDbUser(), clusterNode.getDbUserPassword())) {
+            log.warn("Invalid input data. Please check the input parameters.");
+            return false;
+        }
+
+        return JdbcUtil.judgeSystemAdmin(clusterNode.getPublicIp(), clusterNode.getDbPort().toString(),
+                clusterNode.getDbUser(), clusterNode.getDbUserPassword());
     }
 }
