@@ -573,13 +573,20 @@
             "5qtkk97a2e51": "满足；",
             "5qtkk97a2e52": "不满足，类型为：",
             "5qtkk97a2e53": "，应改为sql_compatibility=",
-            "5qtkk97a2e54": "逻辑复制数量：",
+            "5qtkk97a2e54": "openGauss逻辑复制数量：",
             "5qtkk97a2e55": "可用；",
             "5qtkk97a2e56": "，达到最大值，不可用；",
             "5qtkk97a2e57": "，应改为：",
-            "5qtkk97a2e58": "逻辑复制主备同步参数：",
+            "5qtkk97a2e58": "openGauss逻辑复制主备同步参数：",
             "5qtkk97a2e59": "已开启；",
-            "5qtkk97a2e60": "未开启，应改为：enable_slot_log="
+            "5qtkk97a2e60": "未开启，应改为：enable_slot_log=",
+            "5qtkk97a2e61": "openGauss复制连接权限：",
+            "5qtkk97a2e62": "不满足，",
+            "5qtkk97a2e63": "用户没有复制连接权限；",
+            "5qtkk97a2e64": "连接类型不支持，仅支持：host或hostnossl类型；",
+            "5qtkk97a2e65": "用户在当前执行机ip地址没有复制连接权限，ip：",
+            "5qtkk97a2e66": "认证方法不支持，仅支持：sha256或md5类型；",
+            "5qtkk97a2e67": "sql异常："
         }
     },
     "third": {
