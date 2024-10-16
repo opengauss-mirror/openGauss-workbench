@@ -36,6 +36,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -157,51 +158,50 @@ public class JschExecUtil {
      * @return result
      */
     public String execCommand(Session session, String command) {
-        BufferedReader reader = null;
         Channel channel = null;
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         try {
             if (!session.isConnected()) {
-                // 设置一些配置，例如不检查主机密钥
                 Properties config = new Properties();
                 config.put("StrictHostKeyChecking", "no");
                 session.setConfig(config);
-                // 连接会话
                 session.connect(SESSION_TIMEOUT);
             }
 
-            // 打开执行命令的通道
             channel = session.openChannel("exec");
             if (channel instanceof ChannelExec) {
-                // 设置要执行的命令
                 ((ChannelExec) channel).setCommand(command);
             }
-            // 连接通道
-            channel.connect();
 
-            // 创建读取通道输入流的缓冲读取器
-            reader = new BufferedReader(new InputStreamReader(channel.getInputStream(), StandardCharsets.UTF_8));
-            String line;
-            // 逐行读取并输出结果
-            while ((line = reader.readLine()) != null) {
-                result.append(line.trim());
+            try (InputStream in = channel.getInputStream();
+                 InputStream err = ((ChannelExec) channel).getErrStream();
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+                 BufferedReader errorReader = new BufferedReader(new InputStreamReader(err, StandardCharsets.UTF_8))) {
+                channel.connect();
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    result.append(line.trim()).append("\n");
+                }
+
+                StringBuilder errorResult = new StringBuilder();
+                while ((line = errorReader.readLine()) != null) {
+                    errorResult.append(line.trim()).append("\n");
+                }
+
+                int exitStatus = channel.getExitStatus();
+                if (exitStatus != 0) {
+                    log.error("Command: {} execution failed with exit status: {}", command, exitStatus);
+                    log.error("Error output: {}", errorResult.toString().trim());
+                }
             }
         } catch (JSchException | IOException e) {
             throw new OpsException(e.getMessage());
         } finally {
-            // 关闭读取器
-            if (Objects.nonNull(reader)) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    log.error("close reader error");
-                }
-            }
-            // 断开通道
             if (Objects.nonNull(channel)) {
                 channel.disconnect();
             }
         }
-        return result.toString();
+        return result.toString().trim();
     }
 }
