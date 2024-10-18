@@ -35,6 +35,7 @@ import org.opengauss.admin.plugin.domain.MigrationThirdPartySoftwareConfig;
 import org.opengauss.admin.plugin.enums.ToolsConfigEnum;
 import org.opengauss.admin.plugin.exception.PortalInstallException;
 import org.opengauss.admin.plugin.utils.ShellUtil;
+import org.opengauss.admin.plugin.vo.ShellInfoVo;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -242,6 +243,7 @@ public class PortalHandle {
         commandSb.append("java -Dpath=").append(portalHome);
         commandSb.append(" -Dworkspace.id=").append(task.getId());
         commandSb.append(params);
+        commandSb.append(" -Dorder.invoked.timestamp=").append(task.getOrderInvokedTimestamp());
         commandSb.append(" -Dorder=").append(command);
         commandSb.append(" -Dskip=true -jar ").append(portalHome).append(portalJarName);
         log.info("check before migration,host: {}, command: {}", host.getHost(), commandSb);
@@ -267,15 +269,27 @@ public class PortalHandle {
         commandSb.append("java -Dpath=").append(portalHome);
         commandSb.append(" -Dworkspace.id=").append(task.getId());
         commandSb.append(params);
+        commandSb.append(" -Dorder.invoked.timestamp=").append(task.getOrderInvokedTimestamp());
         commandSb.append(" -Dorder=").append(task.getMigrationOperations());
         commandSb.append(" -Dskip=true -jar ").append(portalHome).append(portalJarName);
         log.info("start portal,host: {}, command: {}", host.getHost(), commandSb.toString());
         ShellUtil.execCommand(host.getHost(), host.getPort(), host.getRunUser(), host.getRunPassword(), commandSb.toString());
     }
 
-    public static void finishPortal(String host, Integer port, String user, String pass, String installPath, String portalJarName, MigrationTask task) {
+    /**
+     * finish the portal
+     *
+     * @param shellInfo shell information
+     * @param installPath portal install path
+     * @param portalJarName portal jar name
+     * @param task migration task
+     */
+    public static void finishPortal(
+            ShellInfoVo shellInfo, String installPath, String portalJarName, MigrationTask task) {
         String portalHome = installPath + "portal/";
-        ShellUtil.execCommand(host, port, user, pass, "java -Dpath=" + portalHome + " -Dworkspace.id=" + task.getId() + " -Dorder=stop_plan -Dskip=true -jar " + portalHome + portalJarName);
+        ShellUtil.execCommand(shellInfo, "java -Dpath=" + portalHome
+                + " -Dworkspace.id=" + task.getId() + " -Dorder.invoked.timestamp=" + task.getOrderInvokedTimestamp()
+                + " -Dorder=stop_plan -Dskip=true -jar " + portalHome + portalJarName);
     }
 
     public static void stopIncrementalPortal(String host, Integer port, String user, String pass, String installPath, String portalJarName, MigrationTask task) {
