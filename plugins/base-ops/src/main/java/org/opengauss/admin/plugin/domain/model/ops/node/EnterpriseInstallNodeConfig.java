@@ -24,9 +24,11 @@
 package org.opengauss.admin.plugin.domain.model.ops.node;
 
 import cn.hutool.core.util.StrUtil;
+
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
+
 import lombok.Data;
 
 import java.util.Objects;
@@ -80,35 +82,33 @@ public class EnterpriseInstallNodeConfig {
 
     private String azPriority;
 
-    public void checkConfig() {
+    /**
+     * Check configuration
+     *
+     * @param isInstallCM isInstallCM
+     */
+    public void checkConfig(Boolean isInstallCM) {
         if (Objects.isNull(clusterRole)) {
             throw new OpsException("Cluster role error");
         }
         if (StrUtil.isEmpty(hostId)) {
             throw new OpsException("wrong host id");
         }
-
         if (StrUtil.isEmpty(publicIp)) {
             throw new OpsException("public IP error");
         }
-
         if (StrUtil.isEmpty(privateIp)) {
             throw new OpsException("Intranet IP error");
         }
-
         if (StrUtil.isEmpty(hostname)) {
             throw new OpsException("wrong hostname");
         }
-
         if (StrUtil.isEmpty(installUserId)) {
             throw new OpsException("install user error");
         }
-
-
-        if (StrUtil.isEmpty(cmDataPath)) {
+        if (isInstallCM && StrUtil.isEmpty(cmDataPath)) {
             throw new OpsException("cm data path error");
         }
-
         if (StrUtil.isEmpty(dataPath)) {
             throw new OpsException("[" + hostname + "]data path error");
         }

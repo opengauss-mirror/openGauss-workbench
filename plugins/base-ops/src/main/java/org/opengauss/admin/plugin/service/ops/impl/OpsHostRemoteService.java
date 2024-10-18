@@ -24,16 +24,21 @@
 package org.opengauss.admin.plugin.service.ops.impl;
 
 import cn.hutool.core.util.StrUtil;
+
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.jcraft.jsch.Session;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.core.domain.entity.ops.OpsAzEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.core.vo.HostBean;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.model.ops.JschResult;
 import org.opengauss.admin.plugin.domain.model.ops.RetBuffer;
 import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
+import org.opengauss.admin.plugin.utils.OpsAssert;
 import org.opengauss.admin.plugin.utils.OpsJschExecPlugin;
 import org.opengauss.admin.plugin.utils.JschRetBufferUtil;
 import org.opengauss.admin.plugin.utils.JschUtil;
@@ -46,11 +51,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import javax.annotation.Resource;
+
 import java.io.IOException;
 import java.util.Objects;
 import java.util.Map;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -84,35 +89,6 @@ public class OpsHostRemoteService {
     private EncryptionUtils encryptionUtils;
 
     /**
-     * cache session
-     *
-     * @param hostId      hostId
-     * @param hostUserId  hostUserId
-     * @param rootSession session
-     */
-    public void cacheSession(String hostId, String hostUserId, Session rootSession) {
-        SESSION_MAP.putIfAbsent(hostId + "_" + hostUserId, rootSession);
-    }
-
-    /**
-     * get session from cache
-     *
-     * @param hostId     hostId
-     * @param hostUserId hostUserId
-     * @return session
-     */
-    public Session getCacheSession(String hostId, String hostUserId) {
-        Session session = SESSION_MAP.get(hostId + "_" + hostUserId);
-        if (Objects.nonNull(session) && !session.isConnected()) {
-            session.disconnect();
-            SESSION_MAP.remove(hostId + "_" + hostUserId);
-            return null;
-        }
-        return session;
-    }
-
-
-    /**
      * get host by hostId, service called from plugin-main hostFacade
      *
      * @param hostId hostId
@@ -121,18 +97,16 @@ public class OpsHostRemoteService {
     public OpsHostEntity getHost(String hostId) {
         Assert.isTrue(StrUtil.isNotEmpty(hostId), "hostId does not empty");
         OpsHostEntity hostEntity = hostFacade.getById(hostId);
-        if (Objects.isNull(hostEntity)) {
-            throw new OpsException("host information does not exist");
-        }
+        OpsAssert.nonNull(hostEntity, "host information does not exist");
         return hostEntity;
     }
 
     /**
      * query host list by condition
      *
-     * @param os        os
+     * @param os os
      * @param osVersion osVersion
-     * @param cpuArch   cpuArch
+     * @param cpuArch cpuArch
      * @return host list
      */
     public List<OpsHostEntity> getHostList(String os, String osVersion, String cpuArch) {
@@ -153,11 +127,10 @@ public class OpsHostRemoteService {
         return userEntity;
     }
 
-
     /**
      * create a session
      *
-     * @param host     host
+     * @param host host
      * @param hostUser host user
      * @return session
      */
@@ -166,20 +139,36 @@ public class OpsHostRemoteService {
         Assert.isTrue(Objects.nonNull(hostUser), "hostUser information does not exist");
         Assert.isTrue(StrUtil.isNotEmpty(hostUser.getPassword()), "hostUser password does not exist");
         return jschRetBufferUtil.getSession(host.getPublicIp(), host.getPort(), hostUser.getUsername(),
-                        encryptionUtils.decrypt(hostUser.getPassword()))
-                .orElseThrow(() -> new OpsException("Failed to establish connection with host"));
+                encryptionUtils.decrypt(hostUser.getPassword()))
+            .orElseThrow(() -> new OpsException("Failed to establish connection with host"));
+    }
+
+    /**
+     * create a host session bean
+     *
+     * @param host host
+     * @param hostUser host user
+     * @return hostBean
+     */
+    public HostBean createSessionHostBean(OpsHostEntity host, OpsHostUserEntity hostUser) {
+        Assert.isTrue(Objects.nonNull(host), "host information does not exist");
+        Assert.isTrue(Objects.nonNull(hostUser), "hostUser information does not exist");
+        Assert.isTrue(StrUtil.isNotEmpty(hostUser.getPassword()), "hostUser password does not exist");
+        return new HostBean(host.getPublicIp(), host.getPort(), hostUser.getUsername(),
+            encryptionUtils.decrypt(hostUser.getPassword()));
     }
 
     /**
      * get host disk space
      *
-     * @param rootSession  rootSession
+     * @param hostBean hostBean
      * @param topLevelPath topLevelPath
      * @return result
      */
-    public int checkHostDiskSpace(Session rootSession, String topLevelPath) {
+    public int checkHostDiskSpace(HostBean hostBean, String topLevelPath) {
         String command = SshCommandConstants.DIR_FREE_HARD_DISK.replace("{0}", topLevelPath);
-        String freeHardDisk = opsJschExecPlugin.execCommand(rootSession, command);
+        String freeHardDisk = opsJschExecPlugin.execCommand(hostBean, command);
+        OpsAssert.isTrue(!freeHardDisk.contains("No such file or directory"), freeHardDisk);
         return translateDiskFreeSpaceUnitGb(freeHardDisk);
     }
 
@@ -188,8 +177,10 @@ public class OpsHostRemoteService {
         String[] split = freeHardDisk.split("\n");
         for (String s : split) {
             try {
-                res += Integer.parseInt(s.replace("G", " ").trim());
-            } catch (NumberFormatException ingore) {
+                if (s.contains("G")) {
+                    res += Integer.parseInt(s.replace("G", " ").trim());
+                }
+            } catch (NumberFormatException ignored) {
             }
         }
         return res;
@@ -248,7 +239,7 @@ public class OpsHostRemoteService {
     /**
      * check port used
      *
-     * @param hostId   hostId
+     * @param hostId hostId
      * @param hostPort hostPort
      * @return true if port used
      */
@@ -259,8 +250,8 @@ public class OpsHostRemoteService {
     /**
      * check port used
      *
-     * @param id           hostId
-     * @param port         hostPort
+     * @param id hostId
+     * @param port hostPort
      * @param rootPassword rootPassword
      * @return true if port used
      */
@@ -279,20 +270,13 @@ public class OpsHostRemoteService {
      * portUsed
      *
      * @param rootSession root user session
-     * @param port        port number
+     * @param port port number
      * @return boolean is port used
      */
     private boolean portUsed(Session rootSession, Integer port) {
-        ArrayList<String> dependencies = new ArrayList<>();
-        dependencies.add("lsof");
-
-        ArrayList<String> missingDependencies = jschUtil.checkDependencies(rootSession, dependencies);
-        jschUtil.installDependencies(rootSession, missingDependencies);
-
         String command = "lsof -i:" + port;
         try {
-            String checkPortUsed = executeCommandThenReturnEmpty(command, rootSession,
-                    null, "check port used");
+            String checkPortUsed = executeCommandThenReturnEmpty(command, rootSession, null, "check port used");
             return StrUtil.isNotEmpty(checkPortUsed);
         } catch (OpsException e) {
             log.error("Failed to probe port {}", e.getMessage());
@@ -312,7 +296,7 @@ public class OpsHostRemoteService {
     /**
      * get host user by host id and username
      *
-     * @param hostId       hostId
+     * @param hostId hostId
      * @param hostUsername hostUsername
      * @return host user
      */
@@ -342,17 +326,17 @@ public class OpsHostRemoteService {
     /**
      * execute command
      *
-     * @param command     command
+     * @param command command
      * @param rootSession rootSession
-     * @param desc        desc
+     * @param desc desc
      * @return result
      */
     public String executeCommand(String command, Session rootSession, String desc) {
         try {
             JschResult jschResult = jschRetBufferUtil.executeCommand(command, rootSession);
             if (0 != jschResult.getExitCode()) {
-                log.error("Failed to execute command {} , exit code: {}, log: {}", command,
-                        jschResult.getExitCode(), jschResult.getResult());
+                log.error("Failed to execute command {} , exit code: {}, log: {}", command, jschResult.getExitCode(),
+                    jschResult.getResult());
                 throw new OpsException("Failed to execute command");
             }
             return jschResult.getResult().trim();
@@ -365,18 +349,18 @@ public class OpsHostRemoteService {
     /**
      * execute command
      *
-     * @param command     command
+     * @param command command
      * @param rootSession rootSession
-     * @param retBuffer   retBuffer
-     * @param desc        desc
+     * @param retBuffer retBuffer
+     * @param desc desc
      * @return result
      */
     public String executeCommand(String command, Session rootSession, RetBuffer retBuffer, String desc) {
         try {
             JschResult jschResult = jschRetBufferUtil.executeCommandWithRetBuffer(command, rootSession, retBuffer);
             if (0 != jschResult.getExitCode()) {
-                log.error("Failed to execute command {} , exit code: {}, log: {}", command,
-                        jschResult.getExitCode(), jschResult.getResult());
+                log.error("Failed to execute command {} , exit code: {}, log: {}", command, jschResult.getExitCode(),
+                    jschResult.getResult());
                 throw new OpsException("Failed to execute command");
             }
             return jschResult.getResult().trim();
@@ -389,19 +373,18 @@ public class OpsHostRemoteService {
     /**
      * execute command then return empty
      *
-     * @param command     command
+     * @param command command
      * @param rootSession rootSession
-     * @param retBuffer   retBuffer
-     * @param desc        desc
+     * @param retBuffer retBuffer
+     * @param desc desc
      * @return result
      */
     public String executeCommandThenReturnEmpty(String command, Session rootSession, RetBuffer retBuffer, String desc) {
         try {
-            JschResult jschResult = jschRetBufferUtil.executeCommand(command, rootSession, retBuffer,
-                    null, false);
+            JschResult jschResult = jschRetBufferUtil.executeCommand(command, rootSession, retBuffer, null, false);
             if (0 != jschResult.getExitCode()) {
-                log.error("Failed to execute command {} , exit code: {}, log: {}", command,
-                        jschResult.getExitCode(), jschResult.getResult());
+                log.error("Failed to execute command {} , exit code: {}, log: {}", command, jschResult.getExitCode(),
+                    jschResult.getResult());
             }
             return jschResult.getResult().trim();
         } catch (Exception e) {
@@ -410,17 +393,35 @@ public class OpsHostRemoteService {
         }
     }
 
+    /**
+     * execute command then return empty
+     *
+     * @param command command
+     * @param rootSession rootSession
+     * @param retBuffer retBuffer
+     * @return result
+     */
     public String executeCommand(String command, Session rootSession, RetBuffer retBuffer) {
         return executeCommand(command, rootSession, retBuffer, "");
     }
 
-    public String executeCommand(String command, Session rootSession, RetBuffer retBuffer, Map<String, String> autoResponse) {
+    /**
+     * execute command then return empty
+     *
+     * @param command command
+     * @param rootSession rootSession
+     * @param retBuffer retBuffer
+     * @param autoResponse autoResponse
+     * @return result
+     */
+    public String executeCommand(String command, Session rootSession, RetBuffer retBuffer,
+        Map<String, String> autoResponse) {
         try {
-            JschResult jschResult = jschRetBufferUtil
-                    .executeCommandWithRetBufferAndAutoResponse(command, rootSession, retBuffer, autoResponse);
+            JschResult jschResult = jschRetBufferUtil.executeCommandWithRetBufferAndAutoResponse(command, rootSession,
+                retBuffer, autoResponse);
             if (0 != jschResult.getExitCode()) {
-                log.error("Failed to execute command {} , exit code: {}, log: {}", command,
-                        jschResult.getExitCode(), jschResult.getResult());
+                log.error("Failed to execute command {} , exit code: {}, log: {}", command, jschResult.getExitCode(),
+                    jschResult.getResult());
                 throw new OpsException("Failed to execute command");
             }
             return jschResult.getResult().trim();
@@ -433,43 +434,50 @@ public class OpsHostRemoteService {
     /**
      * execute command
      *
-     * @param command                     command
-     * @param rootSession                 rootSession
-     * @param retBuffer                   retBuffer
-     * @param autoResponse                autoResponse
+     * @param command command
+     * @param rootSession rootSession
+     * @param retBuffer retBuffer
+     * @param autoResponse autoResponse
      * @param shouldHandleErrorBeforeExit shouldHandleErrorBeforeExit
      * @return JschResult
      */
     public JschResult executeCommand(String command, Session rootSession, RetBuffer retBuffer,
-                                     Map<String, String> autoResponse, boolean shouldHandleErrorBeforeExit) {
+        Map<String, String> autoResponse, boolean shouldHandleErrorBeforeExit) {
         try {
-            return jschRetBufferUtil
-                    .executeCommand(command, rootSession, retBuffer, autoResponse, shouldHandleErrorBeforeExit);
+            return jschRetBufferUtil.executeCommand(command, rootSession, retBuffer, autoResponse,
+                shouldHandleErrorBeforeExit);
         } catch (IOException | InterruptedException e) {
             log.error("Failed to execute command {}", command, e);
             throw new OpsException("Failed to execute command: " + command);
         }
     }
 
-    public void executeUpload(Session rootSession, RetBuffer retBuffer, String sourcePath, String installPackageFullPath) {
+    /**
+     * upload file
+     *
+     * @param rootSession rootSession
+     * @param retBuffer retBuffer
+     * @param sourcePath sourcePath
+     * @param installPackageFullPath installPackageFullPath
+     */
+    public void executeUpload(Session rootSession, RetBuffer retBuffer, String sourcePath,
+        String installPackageFullPath) {
         jschRetBufferUtil.upload(rootSession, retBuffer, sourcePath, installPackageFullPath);
     }
 
-
+    /**
+     * create root session
+     *
+     * @param hostId hostId
+     * @param rootPassword rootPassword
+     * @return Session
+     */
     public Session createRootSession(String hostId, String rootPassword) {
         OpsHostEntity hostEntity = getHost(hostId);
-        if (Objects.isNull(hostEntity)) {
-            throw new OpsException("host information not found");
-        }
-
+        OpsAssert.isTrue(Objects.nonNull(hostEntity), "host information not found");
         OpsHostUserEntity rootUserEntity = getHostRootUser(hostId);
-        if (Objects.nonNull(rootUserEntity) && StrUtil.isNotEmpty(rootUserEntity.getPassword())) {
-            rootPassword = rootUserEntity.getPassword();
-        }
-
-        if (StrUtil.isEmpty(rootPassword)) {
-            throw new OpsException("root password does not exist");
-        }
+        OpsAssert.isTrue(Objects.nonNull(rootUserEntity), "root user does not exist");
+        OpsAssert.isTrue(StrUtil.isNotEmpty(rootUserEntity.getPassword()), "root password does not exist");
         return createHostUserSession(hostEntity, rootUserEntity);
     }
 
