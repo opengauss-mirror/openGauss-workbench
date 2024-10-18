@@ -24,6 +24,7 @@
 package org.opengauss.admin.plugin.service.ops.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ObjectUtil;
@@ -1899,7 +1900,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                             + "Similar to it are :" + clusterId);
                 }
             } catch (IndexOutOfBoundsException | NullPointerException e) {
-                log.warn("checkPublicIpAndPort, no same cluster");
+                log.info("checkPublicIpAndPort, no same cluster");
             }
         }
         opsClusterEntity.setDeployType(hosts.length > 1 ? CLUSTER : SINGLE_NODE);
@@ -1914,6 +1915,26 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         opsClusterNodeEntityList.clear();
     }
 
+    private List<OpsImportSshEntity> getExistHostInfos(String hostIp, OpsImportEntity opsImportEntity) {
+        List<OpsImportSshEntity> rootPortAndPasswordlist = opsImportSshMapper
+                .queryHostInfo("root", hostIp);
+        if (CollectionUtil.isEmpty(rootPortAndPasswordlist)) {
+            markErrorInfo(opsImportEntity);
+            opsImportEntity.setErrorInfo("please import host information:" + hostIp);
+        }
+        return rootPortAndPasswordlist;
+    }
+
+    private List<OpsImportSshEntity> getExistHostUserInfos(String hostIp, OpsImportEntity opsImportEntity) {
+        List<OpsImportSshEntity> hostAndUserIdlist = opsImportSshMapper
+                .queryHostInfo(opsImportEntity.getInstallUsername(), hostIp);
+        if (CollectionUtil.isEmpty(hostAndUserIdlist)) {
+            markErrorInfo(opsImportEntity);
+            opsImportEntity.setErrorInfo("please import hostUser information.");
+        }
+        return hostAndUserIdlist;
+    }
+
     private Session createSession(String hostIp, List<OpsImportSshEntity> rootPortAndPasswordlist,
                                   OpsImportEntity opsImportEntity) {
         Session session = null;
@@ -1924,7 +1945,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         } catch (OpsException opsException) {
             log.error(opsException + hostIp);
             markErrorInfo(opsImportEntity);
-            opsImportEntity.setErrorInfo(opsException + hostIp);
+            opsImportEntity.setErrorInfo(hostIp + ":" + opsException);
         }
         return session;
     }
@@ -1957,48 +1978,44 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         if (list == null || list.isEmpty()) {
             return list;
         }
-        Session session = null;
         for (int i = 0; i < list.size(); i++) {
+            OpsImportEntity clusterInfo = list.get(i);
             try {
-                list.get(i).checkConfig();
+                clusterInfo.checkConfig();
             } catch (OpsException e) {
-                list.get(i).setImportStatus("fail");
-                list.get(i).setErrorInfo("please fill in all the blanks!" + e);
+                clusterInfo.setImportStatus("fail");
+                clusterInfo.setErrorInfo("please fill in all the blanks!" + e);
                 continue;
             }
             infoAndConn = true;
             masterIsNormal = false;
-            String[] hostIps = list.get(i).getPublicIp().split(",");
+            String[] hostIps = clusterInfo.getPublicIp().split(",");
             for (int j = 0; j < hostIps.length; j++) {
-                List<OpsImportSshEntity> rootPortAndPasswordlist = opsImportSshMapper
-                        .queryHostInfo("root", hostIps[j]);
-                if (rootPortAndPasswordlist == null || rootPortAndPasswordlist.isEmpty()) {
-                    markErrorInfo(list.get(i));
-                    list.get(i).setErrorInfo("please import host information:" + hostIps[j]);
+                if (getExistHostInfos(hostIps[j], clusterInfo).size() == 0) {
                     continue;
                 }
-                List<OpsImportSshEntity> hostAndUserIdlist = opsImportSshMapper
-                        .queryHostInfo(list.get(i).getInstallUsername(), hostIps[j]);
-                if (hostAndUserIdlist == null || hostAndUserIdlist.isEmpty()) {
-                    markErrorInfo(list.get(i));
-                    list.get(i).setErrorInfo("please import hostUser information.");
+                if (getExistHostUserInfos(hostIps[j], clusterInfo).size() == 0) {
                     continue;
                 }
-                session = createSession(hostIps[0], rootPortAndPasswordlist, list.get(i));
-                String versionType = judgeVersionType(session, list.get(i));
+                Session session = createSession(hostIps[0], getExistHostInfos(hostIps[j], clusterInfo), clusterInfo);
+                if (!session.isConnected()) {
+                    continue;
+                }
+                String versionType = judgeVersionType(session, clusterInfo);
                 try {
                     OpsParseExcelEntity opsParseExcelEntity = new OpsParseExcelEntity(versionType, session,
-                            list.get(i), hostAndUserIdlist.get(0), hostIps[j], j, hostIps.length);
+                        clusterInfo, getExistHostUserInfos(hostIps[j], clusterInfo).get(0),
+                        hostIps[j], j, hostIps.length);
                     selectClusterInfo(opsParseExcelEntity);
+                    closeSession(session);
                 } catch (OpsException opsException) {
-                    markErrorInfo(list.get(i));
-                    list.get(i).setErrorInfo("selectClusterInfo opsException:" + opsException);
+                    markErrorInfo(clusterInfo);
+                    clusterInfo.setErrorInfo("selectClusterInfo opsException:" + opsException);
                 }
             }
-            boolean isSameCluster = checkPortAndIp(hostIps, list.get(i));
-            saveCluster(isSameCluster, list.get(i));
+            boolean isSameCluster = checkPortAndIp(hostIps, clusterInfo);
+            saveCluster(isSameCluster, clusterInfo);
         }
-        closeSession(session);
         return list;
     }
 
