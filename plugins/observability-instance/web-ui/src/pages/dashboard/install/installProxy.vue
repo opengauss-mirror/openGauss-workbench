@@ -11,12 +11,12 @@
       <div class="dialog-content" v-show="installData.length != 0">
         <div>
           <el-steps direction="vertical" :active="doingIndex">
-            <el-step v-for="item in installData" :key="item.name" :title="item.name">
+            <el-step v-for="item in installData" :key="item.name" :title="item.name" :class="{ error: item.state == 'ERROR' }">
               <template #description>
                 <div v-for="msg in item.msgs" :key="msg">
                   <b>{{ msg }}</b>
                 </div>
-                <el-input v-if="item.error" v-model="item.error" :rows="5" type="textarea" readonly />
+                <el-input v-if="item.error" v-model="item.error" :rows="5" type="textarea" readonly/>
               </template>
             </el-step>
           </el-steps>
@@ -603,4 +603,15 @@ onBeforeUnmount(() => {
 .suggest-info {
   margin-bottom: 10px;
 }
+
+:deep(.is-finish) {
+  color: green;
+  border-color: green;
+}
+
+:deep(.error *) {
+  color: red !important;
+  border-color: red !important;
+}
+
 </style>
