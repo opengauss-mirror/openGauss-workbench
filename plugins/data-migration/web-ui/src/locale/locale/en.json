@@ -354,7 +354,8 @@
             "5q091ixih2g0": "Adjusting kernel parameters with the aim of improving migration efficiency; Only when the database migration user is an administrator can this be checked.",
             "5q091ixih2h0": "Number of selected tables:",
             "5q091ixih2i0": "Search for table names on the current page...",
-            "5q091ixih5i0": "Select all on current page"
+            "5q091ixih5i0": "Select all on current page",
+            "5q091ixih5i1": "Failed to get user type"
         }
     },
     "step2": {

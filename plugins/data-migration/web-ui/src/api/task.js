@@ -95,3 +95,7 @@ export function saveToolsParams (globalToolsParam) {
 export function hasParamKey (paramKey,configId,portalHostID) {
   return axios.get(`/plugins/data-migration/toolsParam/hasParamKey/?paramKey=${paramKey}&configId=${configId}&portalHostID=${portalHostID}`)
 }
+
+export function isAdmin (data) {
+  return axios.post('/plugins/data-migration/resource/isAdmin', data)
+}
