@@ -49,6 +49,7 @@ import org.opengauss.admin.plugin.enums.TaskStatus;
 import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationMainTaskMapper;
 import org.opengauss.admin.plugin.service.*;
+import org.opengauss.admin.plugin.vo.ShellInfoVo;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -384,6 +385,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
      */
     @Override
     public AjaxResult startTask(Integer id) {
+        long startTaskTimestamp = System.currentTimeMillis();
         MigrationMainTask mainTask = getById(id);
         if (mainTask == null) {
             return AjaxResult.error(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
@@ -401,6 +403,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 int size = hosts.stream().filter(h -> h.getRunnableCount() > 0).collect(Collectors.toList()).size();
                 int curHostIndex = x % size;
                 MigrationTask t = tasks.get(x);
+                t.setOrderInvokedTimestamp(startTaskTimestamp);
                 MigrationTaskHostRef h = hosts.get(curHostIndex);
                 h.addPlaceHolderCount();
                 threadPoolTaskExecutor.submit(() -> migrationTaskService.runTask(h, t, globalParams));
@@ -410,6 +413,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 Integer runnableCount = h.getRunnableCount();
                 for (int i = tasks.size() - 1; i >= tasks.size() - runnableCount; i--) {
                     MigrationTask t = tasks.get(i);
+                    t.setOrderInvokedTimestamp(startTaskTimestamp);
                     threadPoolTaskExecutor.submit(() -> migrationTaskService.runTask(h, t, globalParams));
                     tasks.remove(i);
                 }
@@ -455,32 +459,41 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
 
     @Override
     public void finishTask(Integer id) {
+        long finishTaskTimestamp = System.currentTimeMillis();
         List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(id);
-        LoginUser loginUser = SecurityUtils.getLoginUser();
-        tasks.stream().forEach(t -> {
-            MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(t.getRunHostId());
-            PortalHandle.finishPortal(t.getRunHost(), t.getRunPort(), t.getRunUser(), encryptionUtils.decrypt(t.getRunPass()), installHost.getInstallPath(), installHost.getJarName(), t);
-            MigrationTask update = MigrationTask.builder().id(t.getId()).execStatus(TaskStatus.MIGRATION_FINISH.getCode()).finishTime(new Date()).build();
-            migrationTaskOperateRecordService.saveRecord(t.getId(), TaskOperate.FINISH_MIGRATION, loginUser.getUsername());
-            migrationTaskService.updateById(update);
+        tasks.forEach(task -> {
+            task.setOrderInvokedTimestamp(finishTaskTimestamp);
+            doFinishTask(task);
         });
         updateStatus(id, MainTaskStatus.FINISH);
     }
 
     @Override
     public AjaxResult finishSubTask(Integer id) {
+        long finishTaskTimestamp = System.currentTimeMillis();
         MigrationTask subTask = migrationTaskService.getById(id);
         if (subTask == null) {
-            return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getCode(), MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getMsg());
+            return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getCode(),
+                    MigrationErrorCode.SUB_TASK_NOT_EXISTS_ERROR.getMsg());
         }
-        MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(subTask.getRunHostId());
-        PortalHandle.finishPortal(subTask.getRunHost(), subTask.getRunPort(),
-                subTask.getRunUser(), encryptionUtils.decrypt(subTask.getRunPass()), installHost.getInstallPath(), installHost.getJarName(), subTask);
-        MigrationTask update = MigrationTask.builder().id(subTask.getId()).execStatus(TaskStatus.MIGRATION_FINISH.getCode()).finishTime(new Date()).build();
+        subTask.setOrderInvokedTimestamp(finishTaskTimestamp);
+        doFinishTask(subTask);
+        return AjaxResult.success();
+    }
+
+    private void doFinishTask(MigrationTask task) {
+        MigrationHostPortalInstall portalHost =
+                migrationHostPortalInstallHostService.getOneByHostId(task.getRunHostId());
+        ShellInfoVo shellInfo = new ShellInfoVo(
+                task.getRunHost(), task.getRunPort(), task.getRunUser(), encryptionUtils.decrypt(task.getRunPass()));
+        PortalHandle.finishPortal(shellInfo, portalHost.getInstallPath(), portalHost.getJarName(), task);
+
+        MigrationTask update = MigrationTask.builder().id(task.getId())
+                .execStatus(TaskStatus.MIGRATION_FINISH.getCode()).finishTime(new Date()).build();
         migrationTaskService.updateById(update);
         LoginUser loginUser = SecurityUtils.getLoginUser();
-        migrationTaskOperateRecordService.saveRecord(subTask.getId(), TaskOperate.FINISH_MIGRATION, loginUser.getUsername());
-        return AjaxResult.success();
+        migrationTaskOperateRecordService.saveRecord(
+                task.getId(), TaskOperate.FINISH_MIGRATION, loginUser.getUsername());
     }
 
     @Override

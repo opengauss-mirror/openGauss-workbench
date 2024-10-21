@@ -117,6 +117,9 @@ public class MigrationTask {
     @TableField(exist = false)
     private Boolean isSystemAdmin;
 
+    @TableField(exist = false)
+    private long orderInvokedTimestamp;
+
     @Tolerate
     public MigrationTask(){
 
