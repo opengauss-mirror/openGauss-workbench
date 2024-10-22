@@ -144,6 +144,7 @@ public class SysUserController extends BaseController {
     @PreAuthorize("@ss.hasPermi('system:user:edit')")
     @PutMapping
     public AjaxResult edit(@Validated @RequestBody SysUser user) {
+        user.setPassword(null);
         userService.checkUserAllowed(user);
         if (StringUtils.isNotEmpty(user.getPhonenumber())
                 && UserConstants.NOT_UNIQUE.equals(userService.checkPhoneUnique(user))) {
