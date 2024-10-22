@@ -153,7 +153,7 @@ public class CronJobSqlServiceImpl implements CronJobSqlService {
         ) {
             String sql = String.format(UPDATE_JOB_SQL, request.getJobId(),
                     request.getNextRunDate(), request.getInterval().replace("'", "''"),
-                    request.getJobContent().replace("'","''"));
+                    request.getJobContent().replace("'", "''"));
             ExecuteUtils.execute(connection, sql);
         }
     }
