@@ -142,7 +142,7 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
   mvn clean package -Dmaven.test.skip
   ```
   
-- 打包完成后在bsae-ops/target目录中找到base-ops-6.0.0-repackage.jar即为插件安装包。
+- 打包完成后在bsae-ops/target目录中找到base-ops-7.0.0-RC1-repackage.jar即为插件安装包。
 
 - 打开并登陆openGauss一体化平台，点击插件管理-安装插件，将上诉步骤获得的安装包上传并安装。
 

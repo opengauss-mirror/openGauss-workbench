@@ -35,7 +35,7 @@
   
   #编译打包
   mvn clean package -Dmaven.test.skip
-  打包完成后在intelligent-parameter-tuning/target目录中找到MetaTune-6.0.0-repackage.jar即为插件安装包。
+  打包完成后在intelligent-parameter-tuning/target目录中找到MetaTune-7.0.0-RC1-repackage.jar即为插件安装包。
   打开并登陆openGauss一体化平台，点击插件管理-安装插件，将上诉步骤获得的安装包上传并安装。
 
 ##### 软件环境要求
