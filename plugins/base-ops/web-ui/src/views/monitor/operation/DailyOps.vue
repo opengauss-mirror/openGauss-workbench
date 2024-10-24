@@ -1,7 +1,7 @@
 <template>
-  <div class="daily-ops-c" style="background-color:rgb(246 246 246);">
+  <div class="daily-ops-c" >
     <div>
-      <span style="font-size: 20px;">{{ $t('operation.DailyOps.sl3u5s5cf2y0') }}</span>
+      <span class="mainTitle">{{ $t('operation.DailyOps.sl3u5s5cf2y0') }}</span>
       <div style="float:right">
         <a-link class="my-link">{{ $t('operation.DailyOps.sl3u5s5cf2y1') }}</a-link>&nbsp;&nbsp;
         <a-link class="my-link">{{ $t('operation.DailyOps.5mplp1xbyqc0') }}</a-link>&nbsp;&nbsp;
@@ -2369,7 +2369,10 @@ const handleGucSettingComplete = (clusterData: KeyValue, clusterIndex: number) =
   padding: 20px 20px 0px;
   overflow-y: auto;
   height: calc(100vh - 130px);
-
+  .search-cluster{
+    width:25%;
+    margin-left:20px;
+  }
   .empty-icon-size {
     width: 100px;
     height: 100px;
@@ -2379,7 +2382,10 @@ const handleGucSettingComplete = (clusterData: KeyValue, clusterIndex: number) =
     font-weight: bold;
     color: var(--color-neutral-4);
   }
-
+  .mainTitle {
+    font-size: 20px;
+    color: var(--color-neutral-10)
+  }
   .item-c {
     padding: 20px;
     border-radius: 8px;
@@ -2538,12 +2544,13 @@ const handleGucSettingComplete = (clusterData: KeyValue, clusterIndex: number) =
   box-sizing: border-box; /* 确保 padding 和 border 不会增加额外宽度 */
 }
 .barDiv{
-  background-color: white;
   margin-right: 20px;
+  span {
+    color: var(--color-neutral-10)
+  }
 }
-span{
-  color: rgb(0, 0, 0);
-}
+
+
 .my-button{
   border: 1px solid rgb(206, 206, 206);
 }
@@ -2562,7 +2569,7 @@ span{
   height: 100%;
   padding: 0px 20px;
   cursor: pointer;
-  color: black;
+  color: var(--color-neutral-10);
 }
 
 </style>

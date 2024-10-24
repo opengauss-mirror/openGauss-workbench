@@ -264,11 +264,14 @@ const logDownload = () => {
 
 <style scoped>
 .clusterManage {
-  background-color: #f4f6fa;
+  background-color: var(--color-neutral-2);
   height: auto;
+  span {
+    color:var(--color-neutral-10)
+  }
 }
 .header {
-  background-color: #fdfeff;
+  background-color: var(--color-bg-1);
   padding: 1% 1% 0 1%
 }
 .operation {
@@ -286,11 +289,14 @@ const logDownload = () => {
 }
 table {
   line-height: 37px;
+  td {
+    color:var(--color-neutral-10)
+  }
 }
 .hostInfo {
   width: 98%;
   height: 15%;
-  background-color: #fdfeff;
+  background-color: var(--color-bg-1);
   margin-left: 1%;
   margin-right: 1%;
   padding-left: 1%;
@@ -305,7 +311,7 @@ table {
 .clusterInfo {
   width: 98%;
   height: 30%;
-  background-color: #fdfeff;
+  background-color: var(--color-bg-1);
   margin-left: 1%;
   margin-right: 1%;
   padding-left: 1%;
@@ -314,7 +320,7 @@ table {
 .nodeInfo {
   width: 98%;
   height: 30%;
-  background-color: #fdfeff;
+  background-color: var(--color-bg-1);
   margin-left: 1%;
   margin-right: 1%;
   padding-left: 1%;

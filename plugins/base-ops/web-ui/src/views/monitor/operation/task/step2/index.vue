@@ -1,7 +1,6 @@
 <template>
   <a-spin class="body" :loading="loading" :tip="$t('operation.task.step2s5cf2y0')">
     <a-collapse
-      style="background: #f4f6fa"
       :default-active-key="activeCluster"
       class="node1"
     >
@@ -299,12 +298,11 @@ const fetchHostIp = () => {
 <style scoped>
 .body {
   display: block;
-  background-color: #f4f6fa;
+
 }
 .node1 {
   width: 97%;
   height: auto;
-  background-color: #ffffff !important;
   margin-left: 1%;
   padding-left: 1%;
 }
@@ -315,15 +313,12 @@ const fetchHostIp = () => {
 .hardware {
   width: 99%;
   height: auto;
-  background-color: white;
 }
 .software {
   width: 99%;
   height: auto;
-  background-color: #ffffff;
 }
 .rowHeader {
-  background-color: #ffffff;
   width: 98%;
   margin-left: 1%;
   line-height: 54px;
@@ -332,13 +327,11 @@ const fetchHostIp = () => {
 .hardEnv {
   display: inline-block;
   width: 15%;
-  background-color: rgb(247,248,250);
   margin-left: 1%;
 }
 .softEnv {
   display: inline-block;
   width: 23%;
-  background-color: rgb(247,248,250);
   margin-left: 1%;
 }
 .icon-s {
