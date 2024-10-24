@@ -15,12 +15,21 @@
  */
 package org.opengauss.admin.common.utils;
 
-import org.apache.commons.codec.binary.Base64;
+import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.codec.binary.Base64;
+import org.opengauss.admin.common.exception.ServiceException;
+
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
@@ -32,6 +41,7 @@ import java.security.spec.X509EncodedKeySpec;
  * @date: 2021/9/28 11:40 PM
  * @since JDK 1.8
  */
+@Slf4j
 public class RsaUtils {
     // Rsa
     public static String privateKey = "MIICeAIBADANBgkqhkiG9w0BAQEFAASCAmIwggJeAgEAAoGBAPFEkDAkYwcE4odb\n" +
@@ -55,7 +65,7 @@ public class RsaUtils {
      * @param text             text
      * @return
      */
-    public static String decryptByPrivateKey(String text) throws Exception {
+    public static String decryptByPrivateKey(String text) throws ServiceException {
         return decryptByPrivateKey(privateKey, text);
     }
 
@@ -97,14 +107,23 @@ public class RsaUtils {
      * @param privateKeyString privateKeyString
      * @param text             text
      */
-    public static String decryptByPrivateKey(String privateKeyString, String text) throws Exception {
-        PKCS8EncodedKeySpec pkcs8EncodedKeySpec5 = new PKCS8EncodedKeySpec(Base64.decodeBase64(privateKeyString));
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        PrivateKey tempPrivateKey = keyFactory.generatePrivate(pkcs8EncodedKeySpec5);
-        Cipher cipher = Cipher.getInstance("RSA");
-        cipher.init(Cipher.DECRYPT_MODE, tempPrivateKey);
-        byte[] result = cipher.doFinal(Base64.decodeBase64(text));
-        return new String(result);
+    public static String decryptByPrivateKey(String privateKeyString, String text) throws ServiceException {
+        try {
+            PKCS8EncodedKeySpec pkcs8EncodedKeySpec5 = new PKCS8EncodedKeySpec(Base64.decodeBase64(privateKeyString));
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            PrivateKey tempPrivateKey = keyFactory.generatePrivate(pkcs8EncodedKeySpec5);
+            Cipher cipher = Cipher.getInstance("RSA");
+            cipher.init(Cipher.DECRYPT_MODE, tempPrivateKey);
+            byte[] result = cipher.doFinal(Base64.decodeBase64(text));
+            return new String(result, StandardCharsets.UTF_8);
+        } catch (InvalidKeyException | InvalidKeySpecException e) {
+            log.error("Invalid params", e);
+            throw new ServiceException("Invalid params");
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | IllegalBlockSizeException
+            | BadPaddingException e) {
+            log.error("decrypt failed", e);
+            throw new ServiceException("decrypt failed");
+        }
     }
 
     /**

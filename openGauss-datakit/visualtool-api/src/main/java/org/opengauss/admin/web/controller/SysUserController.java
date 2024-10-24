@@ -25,6 +25,7 @@
 package org.opengauss.admin.web.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+
 import org.opengauss.admin.common.annotation.Log;
 import org.opengauss.admin.common.constant.UserConstants;
 import org.opengauss.admin.common.core.controller.BaseController;
@@ -34,13 +35,16 @@ import org.opengauss.admin.common.core.domain.entity.SysUser;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.common.enums.BusinessType;
 import org.opengauss.admin.common.enums.ResponseCode;
+import org.opengauss.admin.common.utils.RsaUtils;
 import org.opengauss.admin.common.utils.SecurityUtils;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.system.service.ISysRoleService;
 import org.opengauss.admin.system.service.ISysUserService;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -69,7 +73,7 @@ public class SysUserController extends BaseController {
      * Query User Page List
      */
     @ApiOperation(value = "page list", notes = "page list")
-    @ApiImplicitParams({
+    @ApiImplicitParams ({
     })
     @PreAuthorize("@ss.hasPermi('system:user:list')")
     @GetMapping("/list")
@@ -78,12 +82,11 @@ public class SysUserController extends BaseController {
         return getDataTable(result);
     }
 
-
     /**
      * Get By Id
      */
     @ApiOperation(value = "get by id", notes = "get by id")
-    @ApiImplicitParams({
+    @ApiImplicitParams ({
     })
     @PreAuthorize("@ss.hasPermi('system:user:query')")
     @GetMapping(value = {"/", "/{userId}"})
@@ -103,7 +106,7 @@ public class SysUserController extends BaseController {
      */
     @Log(title = "users", businessType = BusinessType.INSERT)
     @ApiOperation(value = "save", notes = "save")
-    @ApiImplicitParams({
+    @ApiImplicitParams ({
     })
     @PreAuthorize("@ss.hasPermi('system:user:add')")
     @PostMapping
@@ -130,7 +133,7 @@ public class SysUserController extends BaseController {
             return AjaxResult.error(ResponseCode.USER_REMARK_MAX_LENGTH_ERROR.code());
         }
         user.setCreateBy(getUsername());
-        user.setPassword(SecurityUtils.encryptPassword(user.getPassword()));
+        user.setPassword(SecurityUtils.encryptPassword(RsaUtils.decryptByPrivateKey(user.getPassword())));
         return toAjax(userService.insertUser(user));
     }
 
@@ -139,7 +142,7 @@ public class SysUserController extends BaseController {
      */
     @Log(title = "users", businessType = BusinessType.UPDATE)
     @ApiOperation(value = "update", notes = "update")
-    @ApiImplicitParams({
+    @ApiImplicitParams ({
     })
     @PreAuthorize("@ss.hasPermi('system:user:edit')")
     @PutMapping
@@ -174,7 +177,7 @@ public class SysUserController extends BaseController {
      */
     @Log(title = "users", businessType = BusinessType.DELETE)
     @ApiOperation(value = "delete", notes = "delete")
-    @ApiImplicitParams({
+    @ApiImplicitParams ({
     })
     @PreAuthorize("@ss.hasPermi('system:user:remove')")
     @DeleteMapping("/{userIds}")
@@ -190,12 +193,12 @@ public class SysUserController extends BaseController {
      */
     @Log(title = "users", businessType = BusinessType.UPDATE)
     @ApiOperation(value = "reset pwd", notes = "reset pwd")
-    @ApiImplicitParams({
+    @ApiImplicitParams ({
     })
     @PutMapping("/resetPwd")
     public AjaxResult resetPwd(@RequestBody SysUser user) {
         userService.checkUserAllowed(user);
-        user.setPassword(SecurityUtils.encryptPassword(user.getPassword()));
+        user.setPassword(SecurityUtils.encryptPassword(RsaUtils.decryptByPrivateKey(user.getPassword())));
         user.setUpdateBy(getUsername());
         return toAjax(userService.resetPwd(user));
     }
@@ -205,7 +208,7 @@ public class SysUserController extends BaseController {
      */
     @Log(title = "users", businessType = BusinessType.UPDATE)
     @ApiOperation(value = "update status", notes = "update status")
-    @ApiImplicitParams({
+    @ApiImplicitParams ({
     })
     @PreAuthorize("@ss.hasPermi('system:user:edit')")
     @PutMapping("/changeStatus")
