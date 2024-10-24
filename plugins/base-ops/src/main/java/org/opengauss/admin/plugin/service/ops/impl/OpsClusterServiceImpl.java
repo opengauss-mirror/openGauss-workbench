@@ -383,9 +383,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     private String getCpuArch(Session rootSession) {
-        String command = "lscpu | grep Architecture: | head -n 1 | awk -F ':' '{print $2}'";
         try {
-            JschResult jschResult = jschUtil.executeCommand(command, rootSession);
+            JschResult jschResult = jschUtil.executeCommand(SshCommandConstants.CPU_ARCH, rootSession);
             if (jschResult.getExitCode() != 0) {
                 log.error("Failed to get cpu architecture information,exitCode:{},res:{}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to get cpu architecture information");
