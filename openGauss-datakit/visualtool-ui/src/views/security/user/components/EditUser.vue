@@ -28,7 +28,7 @@
               message: $t('components.EditUser.5n7v8xco9u80')
             }
           ]">
-            <a-input-password v-model="form.password" :placeholder="$t('components.EditUser.5m6nh3mglzg0')" minlength="6" maxlength="20" />
+            <a-input-password :key="passwordKey" v-model="form.password" :placeholder="$t('components.EditUser.5m6nh3mglzg0')" minlength="6" maxlength="20" />
           </a-form-item>
         </a-col>
         <a-col :span="12">
@@ -111,23 +111,27 @@
     emits('update:open', v)
   })
 
+  const passwordKey = ref(1)
+
   watch(() => props.open, (v) => {
     if (v) {
       if (props.options.userId) {
-        const userInfo = toRaw(props.options)
-        form['userName'] = userInfo.userName
-        form['nickName'] = userInfo.nickName
-        form['phonenumber'] = userInfo.phonenumber
-        form['status'] = userInfo.status
-        form['remark'] = userInfo.remark
+        const { userName, nickName, phonenumber, status, remark } = toRaw(props.options)
+        form.userName = userName
+        form.nickName = nickName
+        form.phonenumber = phonenumber
+        form.status = status
+        form.remark = remark
+        form.password = void 0
       } else {
-        form['userName'] = undefined
-        form['password'] = undefined
-        form['nickName'] = undefined
-        form['phonenumber'] = undefined
-        form['roleIds'] = undefined
-        form['status'] = '0'
-        form['remark'] = undefined
+        form.userName = undefined
+        form.password = undefined
+        form.nickName = undefined
+        form.phonenumber = undefined
+        form.roleIds = undefined
+        form.status = '0'
+        form.remark = undefined
+        passwordKey.value += 1
       }
       formRef.value?.clearValidate()
       getUserRole(props.options.userId)
