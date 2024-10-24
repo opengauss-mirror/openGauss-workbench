@@ -281,4 +281,14 @@ public class CommonConstants {
      * HTTP_TIMEOUT
      */
     public static final int HTTP_TIMEOUT = 3000;
+
+    /**
+     * ALERT_LOG_EXP_NAME
+     */
+    public static final String ALERT_LOG_EXP_NAME = "alertLogExpName";
+
+    /**
+     * ALERT_LOG_EXP
+     */
+    public static final String ALERT_LOG_EXP = "alertLogExp";
 }
