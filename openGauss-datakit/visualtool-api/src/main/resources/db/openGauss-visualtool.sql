@@ -605,6 +605,32 @@ COMMENT ON COLUMN "public"."ops_package_path_dict"."update_by" IS '更新者';
 COMMENT ON COLUMN "public"."ops_package_path_dict"."update_time" IS '更新时间';
 COMMENT ON TABLE "public"."ops_package_path_dict" IS 'openGauss包名称字典表';
 
+
+CREATE OR REPLACE FUNCTION update_ops_package_path_dict_structure() RETURNS integer AS '
+BEGIN
+    IF
+        ( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema = ''public'' AND TABLE_NAME = ''ops_package_path_dict'' AND COLUMN_NAME = ''os_version'' ) = 0
+    THEN
+        ALTER TABLE ops_package_path_dict ADD COLUMN os_version varchar(255) AFTER os;
+        UPDATE ops_package_path_dict SET os_version = ''7'' WHERE (os_version IS NULL OR os_version = '''') AND os=''CentOS'';
+        UPDATE ops_package_path_dict SET os_version = ''20.03'' WHERE (os_version IS NULL OR os_version = '''') AND os = ''openEuler'' AND url_path NOT LIKE ''%2203%'';
+        UPDATE ops_package_path_dict SET os_version = ''22.03'', os = ''openEuler'' WHERE (os_version IS NULL OR os_version = '''') AND os LIKE ''%%openEuler%%'' AND url_path LIKE ''%2203%'' ;
+    END IF;
+    IF
+        ( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema = ''public'' AND TABLE_NAME = ''ops_package_path_dict'' AND COLUMN_NAME = ''pkg_tmp_use_version'' ) = 0
+    THEN
+        ALTER TABLE ops_package_path_dict ADD COLUMN pkg_tmp_use_version varchar(255) AFTER package_name_tmp;
+        UPDATE ops_package_path_dict SET pkg_tmp_use_version = ''3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1'' WHERE (pkg_tmp_use_version IS NULL OR pkg_tmp_use_version = '''') ;
+    END IF;
+    RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT update_ops_package_path_dict_structure();
+
+DROP FUNCTION update_ops_package_path_dict_structure;
+
+
 CREATE OR REPLACE FUNCTION add_host_user_field_func() RETURNS integer AS 'BEGIN
 IF
 ( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host_user'' AND COLUMN_NAME = ''sudo'' ) = 0
