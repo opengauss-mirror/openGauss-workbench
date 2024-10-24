@@ -44,7 +44,9 @@ export function getUserList (query: any) {
 }
 
 export function createUser (payload: any) {
-  return axios.post('/system/user', payload)
+  const formData = { ...payload }
+  formData.password = encrypt(payload.password)
+  return axios.post('/system/user', formData)
 }
 
 export function userDelete (userId: string) {
@@ -60,15 +62,16 @@ export function updateUser (payload: any) {
 }
 
 export function resetCode (payload: any) {
-  return axios.put('/system/user/resetPwd', payload)
+  const formData = { ...payload }
+  formData.password = encrypt(payload.password)
+  return axios.put('/system/user/resetPwd', formData)
 }
 
-export function updateCode (payload: any) {
-  return axios({
-    url: '/system/user/profile/updatePwd',
-    method: 'PUT',
-    params: payload
-  })
+export function updateCode (data: any) { 
+  const formatData = { ...data }
+  formatData.newPassword = encrypt(formatData.newPassword)
+  formatData.oldPassword = encrypt(formatData.oldPassword)
+  return axios.put('/system/user/profile/updatePwd', formatData)
 }
 
 export function userRoleList (userId?: string) {

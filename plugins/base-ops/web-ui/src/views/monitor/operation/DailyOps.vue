@@ -267,8 +267,16 @@
       </a-table>
       <div v-if="anyMenuOpen" class="overlay" @click="closeAllMenus"></div>
     </div>
-
-    <div v-if="showClusterInfo && list.pageTag === 'clusterInfo'">
+    <div v-show="list.pageTag === 'clusterInfo'">
+    <a-input-search 
+    :placeholder="$t('operation.DailyOps.sl3u5s5cf299')" 
+    v-model="searchClusterName" 
+    @search="getList" 
+    @press-enter="getList" 
+    class="search-cluster" 
+    max-length="255" 
+    allow-clear />
+    <div v-show="showClusterInfo && list.pageTag === 'clusterInfo'">
       <div
         v-for="(clusterData, index) in data.clusterList"
         :key="index"
@@ -618,6 +626,7 @@
         </a-spin>
       </div>
     </div>
+  </div>
     <div
       class="full-w full-h flex-col"
       v-if="showInit && list.pageTag === 'clusterInfo'"
@@ -1495,13 +1504,24 @@ const showInit = computed(() => {
   return normalClusters.length === 0 && !data.loading
 })
 
+const searchClusterName = ref('')
+
 const getList = () => new Promise(resolve => {
   data.loading = true
   clusterList().then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       resolve(true)
       data.clusterList = []
+      if(data.socketArr.length){
+        data.socketArr.forEach((item: Socket<any, any>) => {
+        item?.destroy()
+      })
+      }
+      data.socketArr = []
       res.data.forEach((item: KeyValue, index: number) => {
+        if(item.clusterId.indexOf(searchClusterName.value) === -1){
+          return;
+        }
         item.isHidden = false
         item.isShow = true
         item.state = -1
@@ -1599,11 +1619,13 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
   }
   const websocket = new Socket({ url: `${param.businessId}` })
   websocket.onopen(() => {
+    // clusterIndex is not reliable
+  const currentCluster = data.clusterList.filter(item => item.clusterId === clusterData.clusterId)[0]
     clusterMonitor(param).then((res: KeyValue) => {
       if (Number(res.code) !== 200) {
-        data.clusterList[clusterIndex].clusterNodes[index].state = 'false'
+        currentCluster.clusterNodes[index].state = 'false'
         if (clusterData.version !== OpenGaussVersionEnum.ENTERPRISE) {
-          data.clusterList[clusterIndex].clusterNodes[index].nodeState = 'false'
+          currentCluster.clusterNodes[index].nodeState = 'false'
         }
         websocket.destroy()
       } else {
@@ -1611,34 +1633,38 @@ const openHostWebSocket = (clusterData: KeyValue, nodeData: KeyValue, clusterInd
         data.socketArr.push(websocket)
       }
     }).catch(() => {
-      data.clusterList[clusterIndex].clusterNodes[index].state = 'false'
+      currentCluster.clusterNodes[index].state = 'false'
       if (clusterData.version !== OpenGaussVersionEnum.ENTERPRISE) {
-        data.clusterList[clusterIndex].clusterNodes[index].nodeState = 'false'
+        currentCluster.clusterNodes[index].nodeState = 'false'
       }
       websocket.destroy()
     })
   })
   websocket.onclose(() => {
-    data.clusterList[clusterIndex].clusterNodes[index].state = 'false'
-    if (clusterData.version !== OpenGaussVersionEnum.ENTERPRISE) {
-      data.clusterList[clusterIndex].clusterNodes[index].nodeState = 'false'
+  const currentCluster = data.clusterList.filter(item => item.clusterId === clusterData.clusterId)[0]
+    if (currentCluster) {
+      currentCluster.clusterNodes[index].state = 'false'
+      if (clusterData.version !== OpenGaussVersionEnum.ENTERPRISE) {
+        currentCluster.clusterNodes[index].nodeState = 'false'
+      }
     }
   })
   websocket.onmessage((messageData: any) => {
-    if (!data.clusterList[clusterIndex].loading) {
+    const currentCluster = data.clusterList.filter(item => item.clusterId === clusterData.clusterId)[0]
+    if (currentCluster && !currentCluster.loading) {
       const eventData = JSON.parse(messageData)
-      data.clusterList[clusterIndex].clusterNodes[index].nodeState = eventData.state
+      currentCluster.clusterNodes[index].nodeState = eventData.state
       // reset instance nodeState and nodeRole
-      setInstanceState(data.clusterList[clusterIndex], data.clusterList[clusterIndex].clusterNodes[index])
-      data.clusterList[clusterIndex].clusterNodes[index].cpu = eventData.cpu
-      data.clusterList[clusterIndex].clusterNodes[index].memory = eventData.memory
-      data.clusterList[clusterIndex].clusterNodes[index].lock = eventData.lock
-      data.clusterList[clusterIndex].clusterNodes[index].session = eventData.session
-      data.clusterList[clusterIndex].clusterNodes[index].connectNum = eventData.connectNum
-      data.clusterList[clusterIndex].clusterNodes[index].kernel = eventData.kernel
+      setInstanceState(currentCluster, currentCluster.clusterNodes[index])
+      currentCluster.clusterNodes[index].cpu = eventData.cpu
+      currentCluster.clusterNodes[index].memory = eventData.memory
+      currentCluster.clusterNodes[index].lock = eventData.lock
+      currentCluster.clusterNodes[index].session = eventData.session
+      currentCluster.clusterNodes[index].connectNum = eventData.connectNum
+      currentCluster.clusterNodes[index].kernel = eventData.kernel
       if (eventData.memorySize) {
         if (!isNaN(Number(eventData.memorySize))) {
-          data.clusterList[clusterIndex].clusterNodes[index].memorySize = (Number(eventData.memorySize) / 1024 / 1024).toFixed(2)
+          currentCluster.clusterNodes[index].memorySize = (Number(eventData.memorySize) / 1024 / 1024).toFixed(2)
         }
       }
       // if (clusterData.version === 'MINIMAL_LIST' && clusterData.deployType === 'CLUSTER') {
@@ -2369,7 +2395,10 @@ const handleGucSettingComplete = (clusterData: KeyValue, clusterIndex: number) =
   padding: 20px 20px 0px;
   overflow-y: auto;
   height: calc(100vh - 130px);
-
+  .search-cluster{
+    width:25%;
+    margin-left:20px;
+  }
   .empty-icon-size {
     width: 100px;
     height: 100px;
