@@ -2051,8 +2051,8 @@ THEN
 ALTER TABLE sys_setting ADD COLUMN portal_jar_name text COLLATE "pg_catalog"."default";
 COMMENT ON COLUMN "public"."sys_setting"."portal_jar_name" IS ''portal的jar名称'';
 UPDATE "public"."sys_setting" SET portal_pkg_download_url = ''https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/'';
-UPDATE "public"."sys_setting" SET portal_pkg_name = ''PortalControl-6.0.0.tar.gz'';
-UPDATE "public"."sys_setting" SET portal_jar_name = ''portalControl-6.0.0-exec.jar'';
+UPDATE "public"."sys_setting" SET portal_pkg_name = ''PortalControl-7.0.0rc1.tar.gz'';
+UPDATE "public"."sys_setting" SET portal_jar_name = ''portalControl-7.0.0rc1-exec.jar'';
 END IF;
 RETURN 0;
 END;'
@@ -2073,7 +2073,7 @@ ON COLUMN "public"."sys_setting"."upload_path" IS '文件上传目录';
 -- ----------------------------
 -- Records of sys_setting
 -- ----------------------------
-INSERT INTO "public"."sys_setting" VALUES (1, 1, '/ops/files/', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/', 'PortalControl-6.0.0.tar.gz', 'portalControl-6.0.0-exec.jar') ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."sys_setting" VALUES (1, 1, '/ops/files/', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/', 'PortalControl-7.0.0rc1.tar.gz', 'portalControl-7.0.0rc1-exec.jar') ON DUPLICATE KEY UPDATE NOTHING;
 
 CREATE OR REPLACE FUNCTION add_user_field_func() RETURNS integer AS 'BEGIN
 IF
