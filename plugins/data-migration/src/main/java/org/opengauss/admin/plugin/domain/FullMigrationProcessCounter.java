@@ -69,6 +69,7 @@ public class FullMigrationProcessCounter {
             totalErrorCount += subProcessCounter.getErrorCount();
             totalWaitCount += subProcessCounter.getWaitCount();
             unCountedNumber += subProcessCounter.isUncounted() ? 1 : 0;
+            totalRunningCount += subProcessCounter.getRunningCount();
         }
     }
 
