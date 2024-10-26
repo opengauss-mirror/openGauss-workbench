@@ -1,5 +1,5 @@
 <template>
-  <div class="page-header">
+  <div class="page-header" id="notifyWayIndex">
     <div class="icon"></div>
     <div class="title" v-if="activeName === 'notifyWay'">{{ t('notifyWay.title') }}</div>
     <div class="title" v-if="activeName === 'notifyConfig'">{{ t('notifyConfig.title') }}</div>

@@ -1,6 +1,6 @@
 <template>
   <cluster ref="clusterRef" v-if="indexs.showingComponent == 'cluster'" @goback="backToHome"></cluster>
-  <div class="tab-wrapper" v-show="indexs.showingComponent == 'list'">
+  <div class="tab-wrapper" v-show="indexs.showingComponent == 'list'" id="instanceClusterList">
     <el-container>
       <el-main style="position: relative; padding-top: 0px" class="padding-fix">
         <div class="page-header" style="padding-left: 20px">

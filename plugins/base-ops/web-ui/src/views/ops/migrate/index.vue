@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="app-container" id="migrate">
     <div class="main-bd">
       <div class="upgrade-container">
         <svg-icon icon-class="developing" class="icon-size mb"></svg-icon>

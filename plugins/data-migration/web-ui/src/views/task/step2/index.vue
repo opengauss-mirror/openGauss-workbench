@@ -1,5 +1,5 @@
 <template>
-  <div class="step2-container">
+  <div class="step2-container" id="migrationStep2">
     <div class="warn-con">
       <a-alert>
         {{$t('step2.index.5q092waasqk0')}}

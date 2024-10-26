@@ -1,5 +1,5 @@
 <template>
-  <div class="panel-c">
+  <div class="panel-c" id="tuningChooseVersion">
     <div class="panel-header">
       <div class="label-color mb ft-xlg">{{ $t('components.ChooseVersion.5mpmxod8xno0') }}</div>
       <div class="flex-row-start mb">

@@ -1,6 +1,6 @@
 
 <template>
-  <div class="app-container">
+  <div class="app-container" id="childShare">
     <div class="main-bd">
       <div class="navbar">
         <div class="left-side" @click="toHome">

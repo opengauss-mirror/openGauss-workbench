@@ -1,5 +1,5 @@
 <template>
-  <div class="home-container">
+  <div class="home-container" id="migrationTask">
     <div class="main-con">
       <div class="title-con">
         <div class="title">{{$t('task.index.5q08xss4gss0')}}</div>

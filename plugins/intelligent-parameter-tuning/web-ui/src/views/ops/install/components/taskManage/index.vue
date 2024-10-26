@@ -1,5 +1,5 @@
 <template>
-  <div class="package-list">
+  <div class="package-list" id="tuningTaskManage">
     <div class="flex-between flex-supplement mb">
       <div class="flex-row">
         <div class="flex-row mr">

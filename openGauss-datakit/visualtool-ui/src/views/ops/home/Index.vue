@@ -1,5 +1,5 @@
 <template>
-    <div class="home-c">
+    <div class="home-c" id="home">
         <div class="left mr">
             <cluster-top></cluster-top>
             <cluster-list :has-plugin="data.isInstallPlugin"></cluster-list>

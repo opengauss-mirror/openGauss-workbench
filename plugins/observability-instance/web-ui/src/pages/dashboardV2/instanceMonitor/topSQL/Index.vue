@@ -1,7 +1,7 @@
 <template>
   <IndexBar :tabId="props.tabId"></IndexBar>
   <div style="margin-bottom: 0px"></div>
-  <div class="top-sql">
+  <div class="top-sql" id="topSQL">
     <el-tabs v-model="typeTab" class="tab2">
       <el-tab-pane label="DB_TIME" name="db_time" />
       <el-tab-pane label="CPU_TIME" name="cpu_time" />

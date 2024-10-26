@@ -8,7 +8,7 @@
     @goback="backToHome"
     @taskCreated="taskCreated"
   />
-  <div class="tab-wrapper" v-show="indexs.showingComponent === 'index'">
+  <div class="tab-wrapper" v-show="indexs.showingComponent === 'index'" id="diagnosisTrack">
     <el-container>
       <el-aside :width="isCollapse ? '0px' : '300px'">
         <div style="height: 8px"></div>

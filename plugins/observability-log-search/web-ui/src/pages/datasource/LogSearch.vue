@@ -1,5 +1,5 @@
 <template>
-    <el-container>
+    <el-container id="logSearch">
         <el-aside :width="isCollapse ? '0px' : '300px'">
             <div style="height: 13px"></div>
             <Install />

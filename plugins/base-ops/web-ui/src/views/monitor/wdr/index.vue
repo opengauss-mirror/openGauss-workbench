@@ -1,5 +1,5 @@
 <template>
-  <div class="wdr-c">
+  <div class="wdr-c" id="wdr">
     <div class="flex-col mb">
       <div class="full-w mb" style="display: flex; justify-content:space-around">
         <div class="flex-col-start" style="width: 33.3%">

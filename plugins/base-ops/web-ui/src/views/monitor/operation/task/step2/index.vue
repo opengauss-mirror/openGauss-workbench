@@ -1,5 +1,5 @@
 <template>
-  <a-spin class="body" :loading="loading" :tip="$t('operation.task.step2s5cf2y0')">
+  <a-spin class="body" :loading="loading" :tip="$t('operation.task.step2s5cf2y0')" id="taskStep2">
     <a-collapse
       :default-active-key="activeCluster"
       class="node1"

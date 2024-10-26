@@ -1,5 +1,5 @@
 <template>
-  <div class="simple-install-c">
+  <div class="simple-install-c" id="simpleInstall">
     <div class="label-color">{{ $t('simpleInstall.index.5mpn813gtvs0') }}</div>
     <a-divider class="mb-lg" />
     <div

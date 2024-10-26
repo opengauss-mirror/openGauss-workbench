@@ -1,5 +1,5 @@
 <template>
-  <div class="upgrade-container">
+  <div class="upgrade-container" id="indicators">
     <svg-icon icon-class="developing" class="icon-size mb"></svg-icon>
     <div class="content ft-lg">{{  $t('indicators.index.5mpli5dxtx80')  }}</div>
   </div>

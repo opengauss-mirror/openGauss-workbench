@@ -1,5 +1,5 @@
 <template>
-  <div class="downloadContainer" >
+  <div class="downloadContainer" id="compatibilityAssessment">
     <div class="home-container">
       <div class="formCommon">
         <a-collapse style="margin-bottom: 20px;">

@@ -1,5 +1,5 @@
 <template>
-  <div class="is-waiting">
+  <div class="is-waiting" id="databaseDesign">
     <div class="dd-icon">
       <svg-icon icon-class="modeling-waiting"></svg-icon>
       <div class="text">{{ $t('modeling.dy_common.page_empty') }}</div>

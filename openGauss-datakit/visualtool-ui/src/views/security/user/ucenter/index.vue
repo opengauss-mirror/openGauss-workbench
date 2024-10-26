@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="app-container" id="userCenter">
     <div class="main-bd">
       <div class="user-info-con">
         <div class="user-avatar-con">

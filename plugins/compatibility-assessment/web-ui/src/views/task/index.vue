@@ -1,5 +1,5 @@
 <template>
-  <div class="package-list">
+  <div class="package-list" id="compatibilityTask">
     <div class="flex-between mb">
       <div class="flex-row">
         <a-button type="primary" class="mr" @click="handleAdd('create')">

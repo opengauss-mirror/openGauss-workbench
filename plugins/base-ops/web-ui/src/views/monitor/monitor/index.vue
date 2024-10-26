@@ -1,5 +1,5 @@
 <template>
-  <div class="cluster-monitor-container">
+  <div class="cluster-monitor-container" id="monitor">
     <div class="top full-w mb">
       <div class="label-color ft-b ft-m">{{ $t('monitor.index.5mplmn5z06k0') }}
         <span style="color: grey; font-size: 12px" v-if="data.tip !==''">

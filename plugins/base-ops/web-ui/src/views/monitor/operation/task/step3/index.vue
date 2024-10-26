@@ -1,5 +1,5 @@
 <template>
-  <div class="clusterManage">
+  <div class="clusterManage" id="taskStep3">
     <div class="hostInfo">
       <span style="font-weight: bold;">安装包配置</span><br><br>
       <table>

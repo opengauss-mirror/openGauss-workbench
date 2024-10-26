@@ -119,7 +119,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="statistical-information">
+  <div class="statistical-information" id="statisticalInformation">
     <div class="s-i-row">
       <div class="s-i-col-right" style="margin-bottom: 20px">
         <my-card class="my-card" :title="$t('sql.consumingBreakdownTitle')" :bodyPadding="false">

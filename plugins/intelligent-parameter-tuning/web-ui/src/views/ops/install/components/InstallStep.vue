@@ -1,5 +1,5 @@
 <template>
-  <div class="panel-c">
+  <div class="panel-c" id="tuningInstallStep">
     <offline-install
       v-if="installStore.benchMark === BenchMarkEnum.SYSBENCH "
       ref="offlineInstallRef"

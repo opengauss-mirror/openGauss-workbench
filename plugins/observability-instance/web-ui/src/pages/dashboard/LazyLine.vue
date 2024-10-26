@@ -138,6 +138,7 @@ watch(serverData, () => { load(true, true) }, { deep: true })
 
 <template>
 <my-line
+    id="instanceLazyLine"
     ref="lineRef"
     :data="data"
     :xData="xData"

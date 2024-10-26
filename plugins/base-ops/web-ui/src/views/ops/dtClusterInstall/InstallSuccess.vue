@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-col full-w full-h">
+  <div class="flex-col full-w full-h" id="dtInstallSuccess">
     <svg-icon icon-class="ops-install-success" class="icon-size mb"></svg-icon>
     <div class="label-color mb-lg">
       {{ $t("dtCluster.installSuccess") }}

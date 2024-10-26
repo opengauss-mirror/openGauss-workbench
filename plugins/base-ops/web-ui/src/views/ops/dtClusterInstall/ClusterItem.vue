@@ -1,5 +1,5 @@
 <template>
-  <div class="cluster-install-item">
+  <div class="cluster-install-item" id="dtClusterInstallItem">
     <div class="corner-mark">
       {{ role }}
     </div>

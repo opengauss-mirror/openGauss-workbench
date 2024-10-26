@@ -1,5 +1,5 @@
 <template>
-  <div class="install">
+  <div class="install" id="tuningInstall">
     <div class="install-body">
       <transition appear :enter-active-class="'install-enter-active animate__animated ' + enterTransition"
         :leave-active-class="'install-leave-active animate__animated ' + leaveTransition"

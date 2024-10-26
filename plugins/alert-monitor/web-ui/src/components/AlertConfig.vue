@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div id="alertConfig">
         <div class="page-header">
             <div class="icon"></div>
             <div class="title">{{ t('app.setAlertConfig') }}</div>

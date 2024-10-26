@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="app-container" id="physicalMange">
     <div class="main-bd">
       <div class="physical-list">
         <div class="flex-between mb-s">

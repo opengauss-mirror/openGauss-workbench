@@ -3,12 +3,13 @@
     v-model="tab"
     class="tast-detail-tabs"
     v-if="props.pointData?.pointType === 'CENTER' && !props.pointData?.pointData"
+    id="pointInfoWrapper"
   >
     <el-tab-pane :label="$t('historyDiagnosis.explanation')" :name="1">
       <div class="explanation">{{ props.pointData?.pointDetail }}</div>
     </el-tab-pane>
   </el-tabs>
-  <el-tabs v-model="tab" class="tast-detail-tabs" v-else>
+  <el-tabs v-model="tab" class="tast-detail-tabs"     id="pointInfoWrapper" v-else>
     <el-tab-pane :label="$t('historyDiagnosis.result')" :name="1">
       <div>
         <div class="suggest-content" v-if="props.pointData?.pointState === 'NOT_MATCH_OPTION'">
