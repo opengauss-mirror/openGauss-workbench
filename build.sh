@@ -164,7 +164,7 @@ function get_git_log(){
 function build_pkg() {
     cd $root_path
     echo "build dir:${root_path} ,to run cmd: mvn ${mvn_target} ${mvn_args}"
-    mvn ${mvn_target} ${mvn_args}
+    mvn --threads=4C ${mvn_target} ${mvn_args}
     if [ $? -ne 0 ]; then
       echo "Build datakit failed..."
       exit 1
