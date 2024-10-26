@@ -199,7 +199,8 @@ CREATE TABLE IF NOT EXISTS "public"."ops_cluster" (
     "om_tools_path" varchar(255) COLLATE "pg_catalog"."default",
     "core_path" varchar(255) COLLATE "pg_catalog"."default",
     "port" varchar(255) COLLATE "pg_catalog"."default",
-    "enable_dcf" int2
+    "enable_dcf" int2,
+    "dcf_port" varchar(255) COLLATE "pg_catalog"."default"
     )
 ;
 COMMENT ON COLUMN "public"."ops_cluster"."cluster_id" IS '集群标识';
@@ -223,6 +224,24 @@ COMMENT ON COLUMN "public"."ops_cluster"."om_tools_path" IS '企业版om路径';
 COMMENT ON COLUMN "public"."ops_cluster"."core_path" IS '企业版核心路径';
 COMMENT ON COLUMN "public"."ops_cluster"."port" IS '企业版端口';
 COMMENT ON COLUMN "public"."ops_cluster"."enable_dcf" IS '是否开启DCF  0否1是';
+COMMENT ON COLUMN "public"."ops_cluster"."dcf_port" IS 'DCF端口';
+
+
+CREATE OR REPLACE FUNCTION add_dcf_port() RETURNS integer AS '
+BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_cluster'' AND COLUMN_NAME =
+''dcf_port'' ) = 0
+THEN
+ALTER TABLE ops_cluster ADD COLUMN dcf_port varchar(255);
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_dcf_port();
+
+DROP FUNCTION add_dcf_port;
 
 -- ----------------------------
 -- Table structure for ops_cluster_node

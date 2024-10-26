@@ -59,6 +59,8 @@ public class EnterpriseInstallConfig implements ClusterInstallConfig {
 
     private Boolean enableDCF;
 
+    private Integer dcfPort;
+
     private String databaseUsername;
 
     private String databasePassword;

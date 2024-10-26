@@ -159,7 +159,11 @@ public class ImportClusterBody {
             opsClusterEntity.setOmToolsPath(enterpriseInstallConfig.getOmToolsPath());
             opsClusterEntity.setCorePath(enterpriseInstallConfig.getCorePath());
             opsClusterEntity.setPort(enterpriseInstallConfig.getPort());
-            opsClusterEntity.setEnableDcf(enterpriseInstallConfig.getEnableDCF());
+            boolean isDcfEnable = enterpriseInstallConfig.getEnableDCF();
+            opsClusterEntity.setEnableDcf(isDcfEnable);
+            if (isDcfEnable) {
+                opsClusterEntity.setDcfPort(enterpriseInstallConfig.getDcfPort());
+            }
             opsClusterEntity.setInstallPackagePath(enterpriseInstallConfig.getInstallPackagePath());
             if (StrUtil.isEmpty(xmlConfigPath)) {
                 opsClusterEntity.setXmlConfigPath(enterpriseInstallConfig.getInstallPackagePath()

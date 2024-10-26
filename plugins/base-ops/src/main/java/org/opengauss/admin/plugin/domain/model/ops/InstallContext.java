@@ -191,7 +191,11 @@ public class InstallContext implements Cloneable {
             opsClusterEntity.setOmToolsPath(enterpriseInstallConfig.getOmToolsPath());
             opsClusterEntity.setCorePath(enterpriseInstallConfig.getCorePath());
             opsClusterEntity.setPort(enterpriseInstallConfig.getPort());
-            opsClusterEntity.setEnableDcf(enterpriseInstallConfig.getEnableDCF());
+            boolean isDcfEnable = enterpriseInstallConfig.getEnableDCF();
+            opsClusterEntity.setEnableDcf(isDcfEnable);
+            if (isDcfEnable) {
+                opsClusterEntity.setDcfPort(enterpriseInstallConfig.getDcfPort());
+            }
             opsClusterEntity.setXmlConfigPath(enterpriseInstallConfig.getInstallPackagePath() + "/cluster_config.xml");
         } else if (openGaussVersion == OpenGaussVersionEnum.LITE) {
             opsClusterEntity.setInstallPackagePath(liteInstallConfig.getInstallPackagePath());
