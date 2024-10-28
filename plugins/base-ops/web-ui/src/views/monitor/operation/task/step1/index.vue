@@ -1863,16 +1863,13 @@ const changeHostipFlag = computed(() => {
   height: 100%;
   margin: 0 auto;
   padding: 20px;
-  background-color: #f4f6fa;
 }
 
 .main {
-  background-color: #f4f6fa;
   display: flex;
   .left {
     flex: 1;
     .module {
-      background-color: white;
       height: auto;
       margin-bottom: 20px;
       display: flex;
@@ -1880,6 +1877,12 @@ const changeHostipFlag = computed(() => {
       flex-wrap: wrap;
       justify-content: flex-start;
       padding:20px;
+      h2 {
+       color: var(--color-neutral-10);
+      }
+      p {
+       color: var(--color-neutral-10);
+      }
       .item {
         width: 100%;
         margin-bottom: 20px;
