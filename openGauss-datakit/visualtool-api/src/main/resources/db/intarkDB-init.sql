@@ -70,7 +70,8 @@ CREATE TABLE IF NOT EXISTS "ops_cluster" (
     "port" varchar(255),
     "enable_dcf" int8,
     "env_path" varchar(255),
-    "xml_config_path" varchar(255)
+    "xml_config_path" varchar(255),
+    "dcf_port" varchar(255)
     )
 ;
 COMMENT ON COLUMN "ops_cluster"."cluster_id" IS '集群标识';
@@ -96,6 +97,7 @@ COMMENT ON COLUMN "ops_cluster"."port" IS '企业版端口';
 COMMENT ON COLUMN "ops_cluster"."enable_dcf" IS '是否开启DCF  0否1是';
 COMMENT ON COLUMN "ops_cluster"."env_path" IS '环境变量文件路径';
 COMMENT ON COLUMN "ops_cluster"."xml_config_path" IS 'xml配置路径';
+COMMENT ON COLUMN "ops_cluster"."dcf_port" IS 'DCF端口';
 
 -- ----------------------------
 -- Table structure for ops_cluster_node

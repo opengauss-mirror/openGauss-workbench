@@ -95,7 +95,7 @@
         />
       </a-form-item>
       <a-row :gutter="16">
-        <a-col :span="12">
+        <a-col :span="8">
           <a-form-item
             field="isInstallCM"
             :label="$t('enterprise.NodeConfig.else3')"
@@ -106,14 +106,30 @@
             />
           </a-form-item>
         </a-col>
-        <a-col :span="12">
+        <a-col :span="8">
           <a-form-item
             v-if="data.isInstallCM && data.databaseKernelArch === DatabaseKernelArch.MASTER_SLAVE"
             field="enableDCF"
             :label="$t('enterprise.ClusterConfig.5mpm3ku3jkw0')"
           >
-            <a-checkbox v-model="data.enableDCF">
-            </a-checkbox>
+            <a-switch
+              @change="isEnableDcfChange"
+              v-model="data.enableDCF"
+            />
+          </a-form-item>
+        </a-col>
+        <a-col :span="8">
+          <a-form-item
+            v-if="data.isInstallCM && data.enableDCF && data.databaseKernelArch === DatabaseKernelArch.MASTER_SLAVE"
+            field="dcfPort"
+            :label="$t('enterprise.ClusterConfig.5mpm3ku3jmn0')"
+          >
+            <a-input-number
+              v-model="data.dcfPort"
+              :placeholder="$t('enterprise.ClusterConfig.5mpm3ku3j300')"
+              :min="1"
+              :max="65535"
+            />
           </a-form-item>
         </a-col>
       </a-row>
@@ -225,6 +241,18 @@ const data = computed({
 })
 
 const formRules = computed(() => {
+  function validatePort(value: any, cb: any) {
+    return new Promise(resolve => {
+      // 校验数据库端口
+      if (value < 1024 || value > 65529) {
+        cb(t('enterprise.ClusterConfig.5mpm3ku3jux0'))
+        resolve(false)
+      } else {
+        resolve(true)
+      }
+    })
+  }
+
   return {
     clusterId: [
       { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3hik0') },
@@ -384,15 +412,7 @@ const formRules = computed(() => {
       { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3j300') },
       {
         validator: (value: any, cb: any) => {
-          return new Promise(resolve => {
-            // 校验数据库端口
-            if (value < 1024 || value > 65529) {
-              cb(t('enterprise.ClusterConfig.5mpm3ku3jux0'))
-              resolve(false)
-            } else {
-              resolve(true)
-            }
-          })
+          return validatePort(value, cb);
         }
       }
     ],
@@ -425,6 +445,14 @@ const formRules = computed(() => {
               resolve(false)
             }
           })
+        }
+      }
+    ],
+    dcfPort: [
+      { required: true, 'validate-trigger': 'blur', message: t('enterprise.ClusterConfig.5mpm3ku3jnl0')},
+      {
+        validator: (value: any, cb: any) => {
+          return validatePort(value, cb);
         }
       }
     ],
@@ -568,6 +596,13 @@ const formRules = computed(() => {
 const isInstallCMChange = (val: boolean) => {
   if (!val) {
     data.value.enableDCF = false
+    data.value.dcfPort = 17783
+  }
+}
+
+const isEnableDcfChange = (val: boolean) => {
+  if (!val) {
+    data.value.dcfPort = 17783
   }
 }
 

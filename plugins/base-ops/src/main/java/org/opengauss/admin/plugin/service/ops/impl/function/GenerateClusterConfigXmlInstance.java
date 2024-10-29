@@ -376,7 +376,7 @@ public class GenerateClusterConfigXmlInstance {
                 EnterpriseInstallNodeConfig enterpriseInstallNodeConfig = nodeConfigList.get(i);
                 String format = MessageFormat.format(template, i + 1,
                         enterpriseInstallNodeConfig.getPrivateIp(),
-                        String.valueOf(installContext.getEnterpriseInstallConfig().getPort()),
+                        String.valueOf(installContext.getEnterpriseInstallConfig().getDcfPort()),
                         enterpriseInstallNodeConfig
                                 .getClusterRole() == ClusterRoleEnum.MASTER ? "LEADER" : "FOLLOWER");
                 res.append(format);
@@ -394,6 +394,4 @@ public class GenerateClusterConfigXmlInstance {
             appendSharingStorageClusterParam(document, cluster, installContext);
         }
     }
-
-
 }

@@ -534,6 +534,9 @@ const validateSpecialFields = async () => {
   validMethodArr.push(await validatePath(props.clusterData.installPackagePath, encryptPwd, form.value.hostId))
   if (props.clusterData.isInstallCM) {
     validMethodArr.push(await validatePort(form.value.cmPort, encryptPwd, form.value.hostId))
+    if (props.clusterData.enableDcf) {
+      validMethodArr.push(await validatePort(props.clusterData.dcfPort, encryptPwd, form.value.hostId))
+    }
   }
   if (props.clusterData.envPath && installType.value === 'import') {
     validMethodArr.push(await validateFile(props.clusterData.envPath, encryptPwd, form.value.hostId))

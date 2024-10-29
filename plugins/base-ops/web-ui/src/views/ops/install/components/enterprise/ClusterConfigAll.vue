@@ -93,6 +93,7 @@ const data = reactive<KeyValue>({
       corePath: '/opt/openGauss/corefile',
       port: 5432,
       enableDCF: false,
+      dcfPort:17783,
       databaseUsername: '',
       databasePassword: '',
       isInstallCM: false,
@@ -337,6 +338,12 @@ const beforeConfirm = async (): Promise<boolean> => {
       validRes = false
       data.activeTab = 'clusterPane'
     }
+
+    if (data.form.cluster.isInstallCM && data.form.cluster.enableDCF && data.form.cluster.dcfPort === data.form.cluster.port) {
+      clusterFormRef.value?.pathValidate("dcfPort", t('enterprise.ClusterConfig.5mpm3ku3jxo0'))
+      validRes = false
+      data.activeTab = 'clusterPane'
+    }
   }
 
   if (validRes) {
@@ -376,7 +383,7 @@ const beforeConfirm = async (): Promise<boolean> => {
             validRes = false
           }
 
-          // 校验各个节点cm port不能相同
+          // 校验各个节点cm port是否相同
           if (data.form.cluster.isInstallCM) {
             if (data.form.nodes[i].cmPort !== data.form.nodes[j].cmPort) {
               refList.value[j].userDefineValidate("cmPort", t('enterprise.ClusterConfig.5mpm3ku3jwo0'))
@@ -395,6 +402,14 @@ const beforeConfirm = async (): Promise<boolean> => {
               refList.value[i].userDefineValidate("cmPort", t('enterprise.ClusterConfig.5mpm3ku3jyx0'))
               data.activeTab = data.form.nodes[i].id;
               validRes = false
+            }
+            // dcf端口需要与数据库及CM端口不同
+            if (data.form.cluster.enableDCF) {
+              if (data.form.nodes[i].cmPort === data.form.cluster.dcfPort) {
+                refList.value[i].userDefineValidate("cmPort", t('enterprise.ClusterConfig.5mpm3ku3jzx0'))
+                data.activeTab = data.form.nodes[i].id;
+                validRes = false
+              }
             }
         }
       }
