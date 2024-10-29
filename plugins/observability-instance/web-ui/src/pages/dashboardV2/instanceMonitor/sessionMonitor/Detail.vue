@@ -1,5 +1,5 @@
 <template>
-  <div class="tab-wrapper">
+  <div class="tab-wrapper" id="sessionDetail">
     <el-container>
       <el-main style="position: relative; padding-top: 0px">
         <div class="page-header">

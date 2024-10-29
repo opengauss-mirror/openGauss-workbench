@@ -1,5 +1,5 @@
 <template>
-  <div class="panel-c">
+  <div class="panel-c" id="installStep">
     <simple-install
       v-if="installStore.openGaussVersion === OpenGaussVersionEnum.MINIMAL_LIST && installType === 'install'"
       :curr-step="currStep"

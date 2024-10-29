@@ -1,7 +1,7 @@
 <template>
   <div style="margin-bottom: 50px"></div>
   <IndexBar :tabId="props.tabId"></IndexBar>
-  <div class="small-charts">
+  <div class="small-charts" id="performanceLoad">
     <div style="display: flex; flex-direction: row; justify-content: space-between">
       <div class="container" :class="[cpuBackGroud]">
         <div class="title">CPU</div>

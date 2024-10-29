@@ -1,5 +1,5 @@
 <template>
-  <div class="upgrade-container">
+  <div class="upgrade-container" id="upgrade">
     <a-steps :current="data.currStep">
       <a-step>{{ $t('upgrade.index.5uunxx6pdzg0') }}</a-step>
       <a-step>{{ $t('upgrade.index.5uunxx6pf5w0') }}</a-step>

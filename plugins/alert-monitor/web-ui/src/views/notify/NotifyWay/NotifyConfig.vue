@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="notifyConfig">
     <el-row>
       <el-col :span="3">
         <el-checkbox v-model="emailConfig.enable" style="width: auto;" :true-label="1" :false-label="0">{{

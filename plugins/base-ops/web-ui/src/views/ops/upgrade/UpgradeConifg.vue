@@ -1,5 +1,5 @@
 <template>
-  <div class="upgrade-config-c">
+  <div class="upgrade-config-c" id="upgradeConfig">
     <div class="cluster-select-c">
       <div class="flex-between mb">
         <div class="select-cluster-top-left">

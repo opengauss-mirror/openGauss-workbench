@@ -1,5 +1,5 @@
 <template>
-  <div class="login-container">
+  <div class="login-container" id="login">
     <div class="logo">
       <img alt="logo" src="@/assets/images/login-logo.png" />
       <div class="logo-text">{{$t('login.index.5mpi5tn6irc0')}}</div>

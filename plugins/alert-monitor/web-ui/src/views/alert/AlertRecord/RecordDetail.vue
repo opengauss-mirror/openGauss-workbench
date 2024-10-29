@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="alertRecordDetail">
     <div class="page-header">
       <div class="icon"></div>
       <div class="title">{{ t('alertRecord.detailTitle') }}</div>

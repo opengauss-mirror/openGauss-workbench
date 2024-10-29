@@ -1,5 +1,5 @@
 <template>
-  <div class="daily-ops-c" >
+  <div class="daily-ops-c" id="dailyOps">
     <div>
       <span class="mainTitle">{{ $t('operation.DailyOps.sl3u5s5cf2y0') }}</span>
       <div style="float:right">

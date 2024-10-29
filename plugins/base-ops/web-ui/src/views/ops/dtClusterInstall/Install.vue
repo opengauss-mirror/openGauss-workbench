@@ -1,5 +1,5 @@
 <template>
-  <a-row :gutter="20" justify="center" class="mb">
+  <a-row :gutter="20" justify="center" class="mb" id="dtInstall">
     <a-col :span="16" v-if="status === STATUS.INSTALLING || status === STATUS.FAILURE">
       <Installing
         :status="status"

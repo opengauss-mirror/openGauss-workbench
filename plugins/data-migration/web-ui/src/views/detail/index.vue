@@ -1,5 +1,5 @@
 <template>
-  <div class="detail-container">
+  <div class="detail-container" id="migrationDetail">
     <div class="title-con">
       <div class="title-left">
         <div class="title">

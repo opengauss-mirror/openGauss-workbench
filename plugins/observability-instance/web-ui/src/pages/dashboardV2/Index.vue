@@ -1,5 +1,5 @@
 <template>
-  <div class="tab-wrapper">
+  <div class="tab-wrapper" id="instanceDashboard2">
     <el-container>
       <el-aside :width="isCollapse ? '0px' : '310px'">
         <div style="height: 13px"></div>

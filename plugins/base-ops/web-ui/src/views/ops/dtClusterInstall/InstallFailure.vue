@@ -1,5 +1,5 @@
 <template>
-  <a-row>
+  <a-row id="dtInstallFail">
     <div class="panel-w flex-col-start">
       <div class="flex-between mb">
         <a-select class="mr-s" style="width: 300px" v-model="hostIdx" @change="hostChange">

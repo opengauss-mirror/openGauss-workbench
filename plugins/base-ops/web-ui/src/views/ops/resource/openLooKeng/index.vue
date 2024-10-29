@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="app-container" id="opsResource">
     <div class="main-bd">
       <div class="az-list">
         <div class="flex-between mb">

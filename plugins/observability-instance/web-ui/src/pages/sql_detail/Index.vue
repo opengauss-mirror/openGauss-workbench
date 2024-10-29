@@ -1,5 +1,5 @@
 <template>
-  <div class="sql-detail" v-loading="statisticalInfoLoading">
+  <div class="sql-detail" v-loading="statisticalInfoLoading" id="sqlDetail">
     <my-card
       :title="$t('sql.sqlText')"
       :bodyPadding="false"

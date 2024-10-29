@@ -1,5 +1,5 @@
 <template>
-  <div v-if="showMain">
+  <div v-if="showMain" id="alertCluster">
     <div class="page-header">
       <div class="icon"></div>
       <div class="title">{{ t('AlertClusterNodeConf.title') }}</div>

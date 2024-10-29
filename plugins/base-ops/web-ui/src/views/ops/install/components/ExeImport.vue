@@ -1,5 +1,5 @@
 <template>
-  <div class="exe-install-c">
+  <div class="exe-install-c" id="exeImport">
     <div
       class="flex-col full-w full-h"
       v-if="exeResult === exeResultEnum.SUCESS"

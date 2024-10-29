@@ -1,5 +1,5 @@
 <template>
-  <div style="margin-top: 6px">
+  <div style="margin-top: 6px" id="collectConfig">
     <div class="filter-bar">
       <div class="item" style="flex-grow: 1">
         <el-input

@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="app-container" id="pluginManage">
     <div class="main-bd">
       <a-spin :loading="doLoading" style="display: block;">
         <div class="search-con">

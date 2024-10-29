@@ -1,5 +1,5 @@
 <template>
-  <div class="panel-c panel-overflow" style="padding:0 20%">
+  <div class="panel-c panel-overflow" style="padding:0 20%" id="tuningOnline">
     <a-form
     ref="formDwgRef"
     :model="formDwg"

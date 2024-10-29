@@ -1,5 +1,5 @@
 <template>
-  <div class="tab-wrapper">
+  <div class="tab-wrapper" id="instanceClusterMonitor">
     <el-container>
       <el-main style="position: relative; padding-top: 0px" class="padding-fix">
         <div class="page-header" style="padding-left: 20px">

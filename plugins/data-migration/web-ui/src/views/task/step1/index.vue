@@ -1,5 +1,5 @@
 <template>
-  <div class="step1-container">
+  <div class="step1-container" id="migrationStep1">
     <div class="form-con">
       <div class="form-left" >
         <a-card bordered style="width: 400px;">

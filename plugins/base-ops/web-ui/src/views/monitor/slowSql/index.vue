@@ -1,5 +1,5 @@
 <template>
-  <div class="slow-sql-c">
+  <div class="slow-sql-c" id="slowSql">
     <div class="flex-row mb">
       <div class="flex-row mr">
         <div class="label-color top-label mr-s">{{ $t('slowSql.index.5mplw69rv000') }}</div>

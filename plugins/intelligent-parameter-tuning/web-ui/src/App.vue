@@ -2,13 +2,13 @@
   <a-config-provider :locale="locale">
     <router-view v-slot="{ Component, route }">
       <keep-alive>
-        <div class="app-container" v-if="route.meta && route.meta.keepAlive">
+        <div class="app-container" v-if="route.meta && route.meta.keepAlive" id="tuningMain">
           <div class="main-bd">
             <component :is="Component" :key="route.meta.usePathKey ? route.fullPath : undefined" />
           </div>
         </div>
       </keep-alive>
-      <div class="app-container" v-if="!(route.meta && route.meta.keepAlive)">
+      <div class="app-container" v-if="!(route.meta && route.meta.keepAlive)" id="tuningMain">
         <div class="main-bd">
           <component :is="Component" :key="route.meta.usePathKey ? route.fullPath : undefined" />
         </div>

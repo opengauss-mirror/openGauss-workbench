@@ -1,5 +1,5 @@
 <template>
-  <div class="step3-container">
+  <div class="step3-container" id="migrationStep3">
     <div class="warn-con">
       <a-alert>{{ $t('step3.index.5q093f8y7g00') }}</a-alert>
     </div>

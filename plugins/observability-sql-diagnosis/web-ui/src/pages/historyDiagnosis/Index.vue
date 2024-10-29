@@ -5,7 +5,7 @@
     v-if="indexs.showingComponent == 'setting'"
     @goback="backToHome"
   />
-  <div class="tab-wrapper" v-show="indexs.showingComponent == 'index'">
+  <div class="tab-wrapper" v-show="indexs.showingComponent == 'index'" id="historyDiagnosis">
     <el-container>
       <el-main style="position: relative; padding-top: 0px">
         <el-form

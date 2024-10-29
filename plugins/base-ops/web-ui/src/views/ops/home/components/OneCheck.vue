@@ -6,6 +6,7 @@
     :visible="checkData.checkVisible"
     @cancel="handleCheckCancel"
     unmountOnClose
+    id="oneCheck"
   >
     <template #title>
       {{ $t('components.OneCheck.5mpiji1q2ng0') }}

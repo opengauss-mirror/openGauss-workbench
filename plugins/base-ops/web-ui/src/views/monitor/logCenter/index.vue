@@ -1,5 +1,5 @@
 <template>
-  <div class="log-center-container">
+  <div class="log-center-container" id="logCenter">
     <div class="flex-row">
       <div class="label-color query-label mr-s">{{ $t('logCenter.index.5mpllm8hjao0') }}</div>
       <a-select class="select-w mr-lg" style="width: 200px" :loading="data.clusterListLoading" v-model="data.clusterId"

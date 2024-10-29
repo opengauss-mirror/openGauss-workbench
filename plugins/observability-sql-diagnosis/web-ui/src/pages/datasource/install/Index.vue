@@ -1,5 +1,5 @@
 <template>
-  <div class="top-sql">
+  <div class="top-sql" id="diagnosisInstall">
     <div class="tab-wrapper-container">
       <div class="search-form-multirow" style="margin-bottom: 10px">
         <div class="row" style="justify-content: flex-start">

@@ -1,5 +1,5 @@
 <template>
-  <a-row justify="center">
+  <a-row justify="center" id="dtInstalling">
     <a-alert class="mb tip" type="warning" v-if="status === STATUS.INSTALLING">
       {{ $t("dtCluster.installing") }}
     </a-alert>

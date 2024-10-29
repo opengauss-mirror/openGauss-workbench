@@ -1,6 +1,6 @@
 <!-- Copyright(c) vue-admin-perfect(zouzhibin). -->
 <template>
-  <div class="main-container-wrapper">
+  <div class="main-container-wrapper" id="dataStudio">
     <Splitpanes class="default-theme main-container-split" :dbl-click-splitter="false">
       <Pane min-size="20" max-size="40" size="20">
         <Sidebar class="sidebar-container" />

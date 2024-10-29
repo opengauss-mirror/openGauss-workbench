@@ -1,5 +1,5 @@
 <template>
-  <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title"
+  <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title" id="clusterBackUpDlg"
     :ok-loading="data.loading" :modal-style="{ width: '450px' }" @ok="handleOk" @cancel="close"
     :okText="$t('operation.ClusterBackupDlg.5mplmzbrmkg0')">
     <a-form :model="data.formData" ref="formRef" :label-col="{ style: { width: '200px' } }" :rules="data.rules">

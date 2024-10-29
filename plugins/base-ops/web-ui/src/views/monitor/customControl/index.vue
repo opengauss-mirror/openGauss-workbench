@@ -1,5 +1,5 @@
 <template>
-  <div class="custom-control-container">
+  <div class="custom-control-container" id="customControl">
     <div
       class="flex-col-start"
       v-if="data.hosts.length"

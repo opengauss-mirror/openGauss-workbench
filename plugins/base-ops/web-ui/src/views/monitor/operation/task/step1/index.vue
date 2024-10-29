@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="container" id="taskStep1">
     <div class="main">
       <div class="left">
         <div ref="module1" class="module" id="server">

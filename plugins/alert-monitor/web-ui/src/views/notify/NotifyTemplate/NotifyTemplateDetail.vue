@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="notifyTemplateDetail">
     <div class="page-header">
       <div class="icon"></div>
       <div class="title" v-if="state === 'add'">{{ t('notifyTemplate.addTitle') }}</div>

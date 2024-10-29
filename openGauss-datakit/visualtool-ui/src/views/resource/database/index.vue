@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="app-container" id="databaseManage">
     <div class="main-bd">
       <div class="upgrade-container">
         <div class="flex-between mb-s">

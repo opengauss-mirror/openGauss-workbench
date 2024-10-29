@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="notifyWayDetail">
     <el-form :model="formData" size="default" :rules="formRules" ref="formRef" label-position="left" label-width="130px">
       <el-form-item :label="$t('notifyWay.name')" prop="name">
         <el-input v-model="formData.name" :placeholder="$t('notifyWay.namePlaceholder')" :disabled="disabled"></el-input>

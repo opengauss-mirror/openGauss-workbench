@@ -1,5 +1,5 @@
 <template>
-  <div class="panel-c panel-overflow">
+  <div class="panel-c panel-overflow" id="offlineInstall">
     <div class="panel-header">
       <div class="label-color mb ft-xlg">
         {{ $t('components.OfflineInstall.5mpn1nway8c0') }} {{ currentVersion }}

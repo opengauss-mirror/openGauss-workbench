@@ -154,7 +154,7 @@ const tableRowClassName = ({ row }: { row: { id: string } }) => {
 </script>
 
 <template>
-  <div class="implementation-plan" v-if="error == null">
+  <div class="implementation-plan" v-if="error == null" id="implementPlan">
     <div class="i-p-filter">
       <el-tooltip effect="light" placement="bottom-end" style="color: #fff">
         <template #content

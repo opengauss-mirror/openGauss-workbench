@@ -1,5 +1,5 @@
 <template>
-  <div class="clusterManage">
+  <div class="clusterManage" id="opTaskDetail">
     <div class="header">
       <div>
         <a-link type="primary" @click="clusterManage">{{$t('operation.DailyOps.sl3u5s5cf2y0')}}</a-link> /

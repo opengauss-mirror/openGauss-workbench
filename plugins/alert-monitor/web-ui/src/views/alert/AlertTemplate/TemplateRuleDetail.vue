@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="alertTemplateRule">
     <div class="page-header" v-if="titleList.length > 0">
       <div class="icon"></div>
       <div class="title">{{ titleList[titleList.length - 1] }}</div>

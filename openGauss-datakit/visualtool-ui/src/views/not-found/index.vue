@@ -1,5 +1,5 @@
 <template>
-  <div class="content">
+  <div class="content" id="notFound">
     <a-result class="result" status="404" :subtitle="'not found'"> </a-result>
     <div class="operation-row">
       <a-button key="back" type="primary" @click="back"> back </a-button>

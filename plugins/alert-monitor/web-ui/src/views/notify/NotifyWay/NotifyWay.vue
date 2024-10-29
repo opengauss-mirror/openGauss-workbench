@@ -1,5 +1,5 @@
 <template>
-  <div v-if="showMain">
+  <div v-if="showMain" id="notifyWay">
     <div class="search-form">
       <div class="filter">
         <el-button type="primary" @click="addTemplate">{{ $t('app.add') }}</el-button>

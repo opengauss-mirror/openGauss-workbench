@@ -1,5 +1,5 @@
 <template>
-  <div class="page-container">
+  <div class="page-container" id="pointInfos">
     <div class="detail-left" v-show="!showLarge">
       <my-card :title="$t('datasource.analysisReport')" :bodyPadding="false">
         <div class="filter">

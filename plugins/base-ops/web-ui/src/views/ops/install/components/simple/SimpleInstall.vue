@@ -1,5 +1,5 @@
 <template>
-  <div class="simple-install-c full-h">
+  <div class="simple-install-c full-h" id="simpleInstall">
     <a-steps :current="currStep">
       <a-step>{{ $t('simple.SimpleInstall.else0') }}
       </a-step>
