@@ -28,7 +28,7 @@
       <a-form-item field="sysTem" :label="$t('components.Package.5mtcyb0rty07')" validate-trigger="blur" @change="updateOsData" name="sysTem">
         <a-radio-group v-model="tempOs.value" button-style="solid" :disabled="editDisabledFlag">
           <a-radio :value="OS.OPEN_EULER">openEuler20.03</a-radio>
-          <a-radio :value="OS.CENTOS">centOs</a-radio>
+          <a-radio :value="OS.CENTOS">CentOs</a-radio>
           <a-radio :value="OS.All">openEuler22.03</a-radio>
         </a-radio-group>
       </a-form-item>
@@ -50,10 +50,10 @@
           <a-select
             v-if="!editDisabledFlag"
             v-model="tempVersionNum"
-            :ref="tempVersionNum" 
+            :ref="tempVersionNum"
             :placeholder="$t('components.Package.5mtcyb0rty34')"
-            :options="packageVersionNum"    
-            :inputmode="true"  
+            :options="packageVersionNum"
+            :inputmode="true"
             @search="searchVersionNum"
             @change="checkContains"
           >
@@ -224,44 +224,44 @@ const searchVersionNum = (value:any) => {
   data.formData.packageVersionNum = (value != null && value !== '') ? value : undefined
 }
 
-const formRules = computed(() => { 
+const formRules = computed(() => {
   return {
-  packageVersionNum: [
-    { required: true, message: t('components.Package.5mtcyb0rty45') }
-  ],
-  name: [
-    { required: true, message: t('components.Package.5mtcyb0rty46') },
-    {
-      validator: (value: any, cb: any) => {
-        return new Promise((resolve) => {
-          hasPkgName(value).then((res: KeyValue) => {
-            if (res.data) {
-              cb(t('components.Package.5mtcyb0rty47'))
-              isValid.value = false
-              resolve(false)
-            } else {
-              resolve(true)
-            }
+    packageVersionNum: [
+      { required: true, message: t('components.Package.5mtcyb0rty45') }
+    ],
+    name: [
+      { required: true, message: t('components.Package.5mtcyb0rty46') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise((resolve) => {
+            hasPkgName(value).then((res: KeyValue) => {
+              if (res.data && !editDisabledFlag.value) {
+                cb(t('components.Package.5mtcyb0rty47'))
+                isValid.value = false
+                resolve(false)
+              } else {
+                resolve(true)
+              }
+            })
           })
+        }
+      }
+    ],
+    packagePath: [{
+      validator: (value: any, cb: any) => {
+        return new Promise((resolve, reject) => {
+          if (data.fileList.length <= 0 && uploadStatusTag.value === true) {
+            cb(t('components.Package.5mtcyb0rty48'))
+            isValid.value = false
+            resolve(false)
+            return
+          } else {
+            resolve(true)
+          }
         })
       }
-    }
-  ],
-  packagePath: [{
-    validator: (value: any, cb: any) => {
-      return new Promise((resolve, reject) => {
-        if (data.fileList.length <= 0 && uploadStatusTag.value === true) {
-          cb(t('components.Package.5mtcyb0rty48'))
-          isValid.value = false
-          resolve(false)
-          return
-        } else {
-          resolve(true)
-        }
-      })
-    }
-  }]
-} 
+    }]
+  }
 })
 
 const fileListPPPP = ref([])
@@ -396,7 +396,6 @@ const open = (
 ) => {
   getUploadPath()
   fetchVersionNum()
-  // getSystemSetting()
   data.type = type
   if (type === 'create') {
     data.title = t('components.Package.5mtcyb0rty50')
@@ -427,18 +426,25 @@ const open = (
     getPackageUrl()
   } else {
     Object.assign(data.formData, {
-      packageId: packageData.packageId,
-      name: packageData.name,
-      os: packageData.os,
-      osVersion: packageData.osVersion,
-      cpuArch: packageData.cpuArch,
-      packageVersion: packageData.packageVersion,
-      packageVersionNum: packageData.packageVersionNum,
-      packageUrl: packageData.packageUrl,
+      packageId: packageData.packageId || '',
+      name: packageData.name || '',
+      os: packageData.os || OS.CENTOS,
+      osVersion: packageData.osVersion || '7',
+      cpuArch: packageData.cpuArch || CpuArch.X86_64,
+      packageVersion: packageData.packageVersion || OpenGaussVersionEnum.MINIMAL_LIST,
+      packageVersionNum: packageData.packageVersionNum || versionnum,
+      packageUrl: packageData.packageUrl || '',
       packagePath: packageData.packagePath as UploadInfo,
-      type: packageData.type,
+      type: packageData.type || 'openGauss',
       remark: packageData.remark
     })
+    if(packageData.cpuArch == CpuArch.AARCH64 && packageData.os == '') {
+      data.formData.os = OS.OPEN_EULER
+      data.formData.osVersion = '20.03'
+    }
+    if(packageData.cpuArch == CpuArch.AARCH64 && packageData.os == OS.CENTOS) {
+      data.formData.cpuArch = CpuArch.X86_64
+    }
     if (data.formData.packagePath?.realPath) {
       data.fileList = [{
         uid: '-1',
@@ -446,6 +452,9 @@ const open = (
         url: data.formData.packagePath.realPath
       }]
       uploadStatusTag.value = false
+    }
+    if (data.formData.name == '') {
+      getPackageUrl()
     }
   }
   if (addOptionFlag === 0) {
@@ -456,6 +465,9 @@ const open = (
     uploadStatusTag.value = true
   }
   tempOs.value = data.formData.os
+  if (data.formData.osVersion == '22.03' && data.formData.os == OS.OPEN_EULER) {
+    tempOs.value = OS.All
+  }
   tempArch.value = data.formData.cpuArch
   tempVersion.value = data.formData.packageVersion
   tempVersionNum.value = data.formData.packageVersionNum
@@ -470,9 +482,12 @@ defineExpose({
 const tempOs = reactive({ value: OS.CENTOS })
 const updateOsData = (value:string) => {
   tempOs.value = value.target.value
-  if (tempOs.value === OS.CENTOS && data.formData.cpuArch === CpuArch.AARCH64) {
-    tempArch.value = CpuArch.X86_64
-    data.formData.cpuArch = CpuArch.X86_64
+  if (tempOs.value === OS.CENTOS) {
+    if (data.formData.cpuArch === CpuArch.AARCH64) {
+      tempArch.value = CpuArch.X86_64
+      data.formData.cpuArch = CpuArch.X86_64
+    }
+    data.formData.os = OS.CENTOS
     data.formData.osVersion = '7'
   } else if (tempOs.value === OS.All) {
     data.formData.os = OS.OPEN_EULER
@@ -481,7 +496,6 @@ const updateOsData = (value:string) => {
     data.formData.os = OS.OPEN_EULER
     data.formData.osVersion = '20.03'
   }
-  // data.formData.os = OS.OPEN_EULER
   getPackageUrl()
 }
 const tempArch = reactive({ value: CpuArch.X86_64 })
@@ -550,28 +564,28 @@ const submit = async () => {
         formData.append('uploadFile', data.fileList.file)
         formData.append('osVersion', data.fileList.osVersion)
         if (progressPercent.value === 0) {
-        axios({
-          url: `/plugins/base-ops/installPackageManager/v2/save/upload/`,
-          method: 'POST',
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          },
-          onUploadProgress: (event) => {
-            let percent
-            if (event.lengthComputable) {
-              percent = Math.round((event.loaded * 100) / event.total)
+          axios({
+            url: `/plugins/base-ops/installPackageManager/v2/save/upload/`,
+            method: 'POST',
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            },
+            onUploadProgress: (event) => {
+              let percent
+              if (event.lengthComputable) {
+                percent = Math.round((event.loaded * 100) / event.total)
+              }
+              progressPercent.value = percent ? Number((percent * 0.01).toFixed(2)) : 0
+            },
+            data: formData
+          }).then((res) => {
+            if (res.code === 200) {
+              close()
             }
-            progressPercent.value = percent ? Number((percent * 0.01).toFixed(2)) : 0
-          },
-          data: formData
-        }).then((res) => {
-          if (res.code === 200) {
-            close()
-          }
-        }).catch((error) => {
-          console.log(error)
-        })
-      }
+          }).catch((error) => {
+            console.log(error)
+          })
+        }
       }
     } else {
       if (!editDisabledFlag.value) {
