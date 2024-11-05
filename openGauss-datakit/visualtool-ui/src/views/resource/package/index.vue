@@ -5,14 +5,14 @@
         <div class="flex-between mb-s">
           <div style="display:flex; flex-wrap: nowrap;">
             <a-button type="primary" class="mr" @click="addPackInstall('create')">{{
-            $t('components.Package.5mtcyb0rty02')
-          }}</a-button>
+                $t('components.Package.5mtcyb0rty02')
+              }}</a-button>
             <a-button type="primary" class="mr" @click="checkSelectedPack">{{
-            $t('components.Package.5mtcyb0rty03')
-          }}</a-button>
+                $t('components.Package.5mtcyb0rty03')
+              }}</a-button>
             <a-button type="primary" class="mr" @click="deleteSelectedHosts">{{
-            $t('components.Package.5mtcyb0rty04')
-          }}</a-button>
+                $t('components.Package.5mtcyb0rty04')
+              }}</a-button>
           </div>
         </div>
       </div>
@@ -175,7 +175,12 @@ const addPackInstall = (type: string, data?: KeyValue, addOptionFlag?:number) =>
 }
 const showDownloadPopup = ref(false)
 const addPackClose = () => {
-  init()
+  parentTags.value.forEach(e => e.children = [])
+  fetchOs()
+  fetchArch()
+  fetchVersion()
+  fetchVersionNum()
+  getListData(filter.pageSize, filter.pageNum, searchFormData)
 }
 
 const addPackSubmit = () => {
@@ -386,7 +391,7 @@ const searchInfoPackage = reactive({
 })
 const addSearchPackage = (total:number) => {
   tableEmptyFlag.value = total === 0
-  searchInfoPackage.os = searchFormData.get('os') ? searchFormData.get('os') : OS.CENTOS
+  searchInfoPackage.os = searchFormData.get('os') ? searchFormData.get('os') : ''
   searchInfoPackage.cpuArch = searchFormData.get('cpuArch') ? searchFormData.get('cpuArch') : CpuArch.X86_64
   searchInfoPackage.packageVersion = searchFormData.get('packageVersion') ? searchFormData.get('packageVersion') : OpenGaussVersionEnum.MINIMAL_LIST
   searchInfoPackage.packageVersionNum = searchFormData.get('packageVersionNum') ? searchFormData.get('packageVersionNum') : '5.0.0'
@@ -553,7 +558,7 @@ const getListData = (pageSize?:number, pageNum?:number, formData?: FormData) => 
       packageUrl: '',
       packagePath: {},
       remark: '',
-      hostLabel: ''
+      hostLabel: false
     }
     res.rows.forEach(item => {
       tempPackage.name = item.name
@@ -571,7 +576,13 @@ const getListData = (pageSize?:number, pageNum?:number, formData?: FormData) => 
         tempPackage.packageUrl = ''
       }
       tempPackage.packagePath = item.packagePath
-      tempPackage.hostLabel = item.packageUrl ? true : false
+      if (item.packageUrl && item.packagePath) {
+        let name = item.packageUrl.split('/')
+        let tempname = name.pop()
+        if (item.packagePath.name == tempname) {
+          tempPackage.hostLabel = true
+        }
+      }
       list.data.push({ ...tempPackage })
     })
     list.page.total = res.total
@@ -660,7 +671,12 @@ const simulateDownload = async () => {
 
 const handleOk = () => {
   processVisible.value = false
-  init()
+  parentTags.value.forEach(e => e.children = [])
+  fetchOs()
+  fetchArch()
+  fetchVersion()
+  fetchVersionNum()
+  getListData(filter.pageSize, filter.pageNum, searchFormData)
 }
 const close = () => {
   processVisible.value = false
