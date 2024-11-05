@@ -1,0 +1,25 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
+<suite name="ApiTest">
+    <test name="visualtool-api">
+        <classes>
+            <class name="org.opengauss.visualtool.api.SysLoginControllerTest"/>
+            <class name="org.opengauss.visualtool.api.SysLogControllerTest"/>
+            <class name="org.opengauss.visualtool.api.SysMenuControllerTest"/>
+            <class name="org.opengauss.visualtool.api.SysOperlogControllerTest"/>
+            <class name="org.opengauss.visualtool.api.SysProfileControllerTest"/>
+            <class name="org.opengauss.visualtool.api.SysRoleControllerTest"/>
+            <class name="org.opengauss.visualtool.api.SysSettingControllerTest"/>
+            <class name="org.opengauss.visualtool.api.SystemPluginControllerTest"/>
+            <class name="org.opengauss.visualtool.api.SysUserControllerTest"/>
+            <class name="org.opengauss.visualtool.api.SysWhiteListControllerTest"/>
+            <class name="org.opengauss.visualtool.api.ops.AzControllerTest"/>
+            <class name="org.opengauss.visualtool.api.ops.EncryptionControllerTest"/>
+            <class name="org.opengauss.visualtool.api.ops.HostControllerTest"/>
+            <class name="org.opengauss.visualtool.api.ops.HostUserControllerTest"/>
+            <class name="org.opengauss.visualtool.api.ops.JdbcDbClusterControllerTest"/>
+            <class name="org.opengauss.visualtool.api.ops.JdbcDbClusterNodeControllerTest"/>
+            <class name="org.opengauss.visualtool.api.ops.OpsClusterControllerTest"/>
+            <class name="org.opengauss.visualtool.api.ops.OpsHostTagControllerTest"/>
+        </classes>
+    </test>
+</suite>
