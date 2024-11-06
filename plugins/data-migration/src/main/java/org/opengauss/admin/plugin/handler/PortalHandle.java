@@ -122,7 +122,8 @@ public class PortalHandle {
         JschResult existsPortalInstallFileResult = ShellUtil.execCommandGetResult(installParams.getHost(), installParams.getPort(), installParams.getRunUser(), installParams.getRunPassword(), "[ -f " + installParams.getInstallPath() + installParams.getPkgName() + " ] && echo 1 || echo 0");
         if (existsPortalInstallFileResult.isOk() && Integer.parseInt(existsPortalInstallFileResult.getResult().trim()) == 0) {
             //download portal
-            String downloadCommand = "wget -P " + installParams.getInstallPath() + " " + installParams.getPkgDownloadUrl() + installParams.getPkgName();
+            String downloadCommand = String.format("wget -t 1 -P %s %s", installParams.getInstallPath(),
+                    installParams.getPkgDownloadUrl() + installParams.getPkgName());
             log.info("wget download portal,command: {}", downloadCommand);
             JschResult wgetResult = ShellUtil.execCommandGetResult(installParams.getHost(), installParams.getPort(),
                     installParams.getRunUser(), installParams.getRunPassword(), downloadCommand);
