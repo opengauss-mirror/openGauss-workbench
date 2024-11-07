@@ -271,9 +271,9 @@ async function fetchTblList () {
                   found = true
                 }
                 if (found) {
-                  if (!selectedTblCurrent.value.some(tip => tip.name === item)) {
+                  piecePreTbl[i] = ''
+                  if (!Object.values(selectedTblCurrent.value).includes(item)) {
                     selectedTblCurrent.value.push(item)
-                    tempId = tempId + 1
                   }
                 }
                 found = false
@@ -283,7 +283,14 @@ async function fetchTblList () {
         }
       }
       searchTblCurrent.value = [...selectedTblCurrent.value]
-      selectedTbllength.value =  Object.keys(searchTblCurrent.value).length
+      let notFoundTbl = 0
+      for (let i = 0; i < piecePreTbl.length; i++) {
+        let str = piecePreTbl[i].toString().replace(/[\[\]"]/g, '')
+        if (str !== '') {
+          notFoundTbl = notFoundTbl + 1
+        }
+      }
+      selectedTbllength.value =  Object.keys(selectedTblCurrent.value).length + notFoundTbl
     })
     .catch(error => {
       console.error('Error fetching data:', error)
