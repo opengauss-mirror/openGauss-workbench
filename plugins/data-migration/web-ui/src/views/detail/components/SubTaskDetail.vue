@@ -524,6 +524,9 @@ const getSubTaskDetail = () => {
     .then((res) => {
       loading.value = false
       subTaskInfo.value = res.data.task
+      if (subTaskInfo.value.finishTime !== null) {
+        clearInterval(timer)
+      }
       const seconds = subTaskInfo.value.finishTime
         ? dayjs(subTaskInfo.value.finishTime).diff(
             dayjs(subTaskInfo.value.execTime),
