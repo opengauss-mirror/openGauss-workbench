@@ -287,7 +287,7 @@ watchEffect(
 const filterTableData = (type) => {
   if ((type === 1 && onlyError.value) || (type === 2 && onlyCheckError.value)) {
     tableListData.table = props.fullData['table'].filter(
-      (item) => item.status === SUB_TASK_STATUS.FULL_CHECK_FINISH
+      (item) => (item.status === SUB_TASK_STATUS.FULL_CHECK_FINISH || item.status === SUB_TASK_STATUS.INCREMENTAL_START)
     )
     tableListData.view = props.fullData['view'].filter(
       (item) => item.status === SUB_TASK_STATUS.FULL_CHECK_FINISH
