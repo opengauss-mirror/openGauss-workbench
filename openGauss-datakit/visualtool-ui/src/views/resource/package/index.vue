@@ -589,7 +589,6 @@ const getListData = (pageSize?:number, pageNum?:number, formData?: FormData) => 
   }) .finally(() => {
     list.loading = false
     addSearchPackage(list.page.total)
-    handleSelected(selectedRowKeys.value)
   }) .catch(error => {
     console.error('522' + error)
   })
@@ -623,12 +622,25 @@ const webSocketOpen = (type: string, data?: KeyValue, addOptionFlag?:number) => 
   websocket.onmessage = function (event) {
     processVisible.value = true
     const messageData = event.data
-    if (!isNaN(Number(messageData))) {
-      const percent = Number(messageData)
-      currPercent.value = percent
-      if (percent === 100) {
+    if (messageData === 'File download Failed') {
+      Message.error({
+        content: t('components.Package.5mtcyb0rty52')
+      })
+      handleOk()
+      websocket.close()
+    } else {
+      if (!isNaN(Number(messageData))) {
+        const percent = Number(messageData)
+        currPercent.value = percent
+        if (percent === 100) {
+          percentLoading.value = false
+          websocket.close()
+        }
+      } else if (messageData === 'DOWNLOAD_FINISH') {
         percentLoading.value = false
         websocket.close()
+      } else {
+        console.error('WebSocket error')
       }
     }
   }
@@ -649,6 +661,11 @@ const downloadPackage = () => {
           percentLoading.value = false
           downloadWs.value?.destroy()
         }
+      } else if (messageData === 'DOWNLOAD_FINISH') {
+        percentLoading.value = false
+        websocket.close()
+      } else {
+        console.error('WebSocket error')
       }
     }
     simulateDownload()

@@ -28,7 +28,7 @@
       <a-form-item field="sysTem" :label="$t('components.Package.5mtcyb0rty07')" validate-trigger="blur" @change="updateOsData" name="sysTem">
         <a-radio-group v-model="tempOs.value" button-style="solid" :disabled="editDisabledFlag">
           <a-radio :value="OS.OPEN_EULER">openEuler20.03</a-radio>
-          <a-radio :value="OS.CENTOS">CentOs</a-radio>
+          <a-radio :value="OS.CENTOS">CentOS</a-radio>
           <a-radio :value="OS.All">openEuler22.03</a-radio>
         </a-radio-group>
       </a-form-item>

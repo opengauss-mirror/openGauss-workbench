@@ -376,7 +376,8 @@
             "5mtcyb0rty48": "请选择一个安装包进行上传",
             "5mtcyb0rty49": "获取版本号失败",
             "5mtcyb0rty50": "添加安装包",
-            "5mtcyb0rty51": "更新安装包"
+            "5mtcyb0rty51": "更新安装包",
+            "5mtcyb0rty52": "文件下载失败，请检查下载地址或者网络连接是否正确"
         },
         "SystemAlarm": {
             "cpuWarning": "CPU告警",
