@@ -701,7 +701,7 @@ const checkFreeDisk = async () => {
         if (res.code === 200) {
           const space = Number(res.data[path].slice(0, res.data[path].length - 1));
           if (space < 2) {
-            Message.error(`${path} disk space is less than 2G`);
+            Message.error(`${data.form.publicIp}(${data.form.privateIp}):${path} disk space is less than 2G`);
             flag.value = false;
           }
         }
