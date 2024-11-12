@@ -694,6 +694,7 @@ const getInstallPackageList = () => {
   if (data.form.hostId) {
     if (data.hostObj[data.form.hostId]) {
       data.form.os = data.hostObj[data.form.hostId].os
+      data.form.osVersion = data.hostObj[data.form.hostId].osVersion
       data.form.cpuArch = data.hostObj[data.form.hostId].cpuArch
       data.form.sysArch = data.hostObj[data.form.hostId].os + '_' + data.hostObj[data.form.hostId].cpuArch
       data.isNeedPwd = !data.hostObj[data.form.hostId].isRemember
@@ -701,6 +702,7 @@ const getInstallPackageList = () => {
     data.installLoading = true
     const param = {
       os: data.form.os,
+      osVersion: data.form.osVersion,
       cpuArch: data.form.cpuArch,
       packageVersion: 'MINIMAL_LIST'
     }

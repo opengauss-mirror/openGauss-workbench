@@ -107,6 +107,7 @@ public class InstallPackageManagerController extends BaseController {
 
     @GetMapping("/list")
     public AjaxResult list(@RequestParam(value = "os", required = false) String os,
+                           @RequestParam(value = "osVersion", required = false) String osVersion,
                            @RequestParam(value = "cpuArch", required = false) String cpuArch,
                            @RequestParam(value = "packageVersion", required = false) OpenGaussVersionEnum packageVersion,
                            @RequestParam(value = "packageVersionNum", required = false) String packageVersionNum,
@@ -114,6 +115,7 @@ public class InstallPackageManagerController extends BaseController {
 
         LambdaQueryWrapper<OpsPackageManagerEntity> queryWrapper = Wrappers.lambdaQuery(OpsPackageManagerEntity.class)
                 .eq(StrUtil.isNotEmpty(os), OpsPackageManagerEntity::getOs, os)
+                .eq(StrUtil.isNotEmpty(osVersion), OpsPackageManagerEntity::getOsVersion, osVersion)
                 .eq(StrUtil.isNotEmpty(cpuArch), OpsPackageManagerEntity::getCpuArch, cpuArch)
                 .eq(Objects.nonNull(packageVersion), OpsPackageManagerEntity::getPackageVersion, Objects.nonNull(packageVersion) ? packageVersion.name() : null)
                 .eq(StrUtil.isNotEmpty(packageVersionNum), OpsPackageManagerEntity::getPackageVersionNum, packageVersionNum)

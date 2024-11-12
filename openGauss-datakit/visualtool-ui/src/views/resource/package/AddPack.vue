@@ -562,7 +562,7 @@ const submit = async () => {
         formData.append('packageUrl', '')
         formData.append('packageVersion', data.formData.packageVersion)
         formData.append('uploadFile', data.fileList.file)
-        formData.append('osVersion', data.fileList.osVersion)
+        formData.append('osVersion', data.formData.osVersion)
         if (progressPercent.value === 0) {
           axios({
             url: `/plugins/base-ops/installPackageManager/v2/save/upload/`,
