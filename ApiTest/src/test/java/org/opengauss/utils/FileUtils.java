@@ -6,11 +6,15 @@ package org.opengauss.utils;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.opengauss.exception.ApiTestException;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * FileUtils
@@ -45,6 +49,24 @@ public class FileUtils {
     public static void deleteFile(String filePath) {
         if (!new File(filePath).delete()) {
             logger.error("Failed to delete the file: " + filePath);
+        }
+    }
+
+    /**
+     * create parent directory if not exists
+     *
+     * @param filePath filePath
+     */
+    public static void createParentDirectoryIfNotExists(String filePath) {
+        Path path = Paths.get(filePath);
+        Path parent = path.getParent();
+
+        if (parent != null && !Files.exists(parent)) {
+            try {
+                Files.createDirectories(parent);
+            } catch (IOException e) {
+                throw new ApiTestException("Unable to create the parent directory: " + parent, e);
+            }
         }
     }
 }

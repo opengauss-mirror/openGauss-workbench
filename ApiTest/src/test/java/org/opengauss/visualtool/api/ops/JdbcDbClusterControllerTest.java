@@ -58,7 +58,7 @@ public class JdbcDbClusterControllerTest {
     private final String singleNodeDeployType = "SINGLE_NODE";
     private final String clusterNameModel = "%s(%d)-1";
 
-    private final File csvFile = new File("src/test/resources/file/ops/jdbc-template.csv");
+    private final File csvFile = new File("src/test/resources/temp/jdbc-template.csv");
 
     @Test
     public void setTestBasePath() {
@@ -186,6 +186,7 @@ public class JdbcDbClusterControllerTest {
                 .header("Content-Length", Matchers.not(Matchers.equalTo("0")));
 
         try (InputStream inputStream = response.asInputStream()) {
+            FileUtils.createParentDirectoryIfNotExists(csvFile.getPath());
             FileUtils.writeToFile(inputStream, csvFile.getPath());
         } catch (IOException e) {
             throw new ApiTestException("Write jdbc-template.csv failed. ", e);
