@@ -32,6 +32,7 @@ import org.opengauss.admin.common.core.vo.MenuVo;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.*;
 
@@ -211,12 +212,12 @@ public class SysMenu {
     }
 
 
-    @NotBlank(message = "orderNum cannot be empty")
+    @NotNull(message = "orderNum cannot be empty")
     public Integer getOrderNum() {
         return orderNum;
     }
 
-
+    @NotBlank(message = "path cannot be empty")
     @Size(min = 0, max = 200, message = "path cannot exceed 200 characters")
     public String getPath() {
         return path;

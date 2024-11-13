@@ -36,7 +36,7 @@
             <if test="title != null  and title != ''">
                 and title like concat('%', #{title}, '%')
             </if>
-            <if test="entity.ipList != null  and entity.ipList != ''">
+            <if test="ipList != null and ipList != ''">
                 and ip_list like concat('%', #{ipList}, '%')
             </if>
         </where>
