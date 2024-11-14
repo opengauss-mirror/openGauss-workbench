@@ -376,7 +376,8 @@
             "5mtcyb0rty48": "Select an installation package to upload",
             "5mtcyb0rty49": "Failed to get the version number",
             "5mtcyb0rty50": "Add package",
-            "5mtcyb0rty51": "Update package"
+            "5mtcyb0rty51": "Update package",
+            "5mtcyb0rty52": "File download failed. Kindly verify the accuracy of the download link or ensure that network connection is functioning properly."
         },
         "SystemAlarm": {
             "cpuWarning": "CPU Alarm",
