@@ -6,6 +6,7 @@ package org.opengauss.global;
 
 import cn.hutool.core.util.ObjectUtil;
 import io.restassured.RestAssured;
+import io.restassured.config.SSLConfig;
 import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
 import org.opengauss.utils.LoginUtils;
@@ -40,6 +41,7 @@ public class Constants {
      * @return RequestSpecification
      */
     public static RequestSpecification getRequestSpecification() {
+        RestAssured.config = RestAssured.config().sslConfig(new SSLConfig().relaxedHTTPSValidation());
         if (ObjectUtil.isEmpty(TOKEN)) {
             return RestAssured.given();
         }
