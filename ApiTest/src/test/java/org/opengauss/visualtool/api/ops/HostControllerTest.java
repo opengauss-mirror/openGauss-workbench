@@ -42,7 +42,7 @@ public class HostControllerTest {
 
     private String currentLocale = "zh-CN";
     private String uuid;
-    private final File xlsxFile = new File("src/test/resources/file/ops/模板.xlsx");
+    private final File xlsxFile = new File("src/test/resources/temp/模板.xlsx");
 
     @Test
     public void setTestBasePath() {
@@ -180,6 +180,7 @@ public class HostControllerTest {
                 .header("Content-Length", Matchers.not(Matchers.equalTo("0")));
 
         try (InputStream inputStream = response.asInputStream()) {
+            FileUtils.createParentDirectoryIfNotExists(xlsxFile.getPath());
             FileUtils.writeToFile(inputStream, xlsxFile.getPath());
         } catch (IOException e) {
             throw new ApiTestException("Write 模板.xlsx failed. ", e);
