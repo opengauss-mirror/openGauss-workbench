@@ -70,3 +70,12 @@ export function getDataTypeList(data) {
     params: data,
   });
 }
+
+// get user member list
+export function getUserMemberList(data) {
+  return request({
+    url:  `/dataStudio/web/v1/metaData/userMember`,
+    method: 'get',
+    params: data,
+  });
+}
