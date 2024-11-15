@@ -5,6 +5,7 @@
         <div style="display: grid; grid-template-columns: auto auto;">
           <h2>{{$t('step1.index.5q091ixigjo1')}} {{ tempdbname }}</h2><br>
           <p v-if="selectedTbllength > 0" style="color: red">{{$t('step1.index.5q091ixih2h0')}} {{selectedTbllength}}</p>
+          <p> {{selectedTbllength.value}}</p>
         </div>
         <span class="close" @click="closeModal">&times;</span>
         <a-input
@@ -55,7 +56,7 @@
             show-total
             show-jumper
             show-page-size
-            defaultPageSize="50"
+            defaultPageSize = 50
             :total="totalNum"
             :current="currentPage"
             :page-size="pageSize"
@@ -107,7 +108,6 @@ const filteredItems = computed(() => {
   const query = searchTblNam.value.toLowerCase()
   const filtered = data.value.filter(item => item.toLowerCase().includes(query))
   totalNum.value = searchTblNam.value.length > 0? filtered.length: data.totalNum
-  const filteredCurrentPage = filtered.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value)
   isLoading.value = false
   return filtered.map(item => ({ name: item }))
 })
@@ -128,7 +128,7 @@ const selectedTbllength = ref(0)
 const handleSelected = (keys) => {
   selectedTblCurrent.value = keys
   searchTblCurrent.value = [...selectedTblCurrent.value]
-  selectedTbllength.value =  Object.keys(selectedTblCurrent.value).length
+  selectedTbllength.value =  Object.keys(selectedTblCurrent.value).length + notFoundTbl.value
 }
 const handleSearchSelected = (keys) => {
   if (searchTblNam.value.length > 0) {
@@ -140,7 +140,6 @@ const handleSearchSelected = (keys) => {
           selectedTblCurrent.value = [...selectedTblCurrent.value.filter(pics => pics !== item)]
         }
       })
-
     } else {
       keys.forEach(item => {
         if (!selectedTblCurrent.value.includes(item)) {
@@ -148,7 +147,7 @@ const handleSearchSelected = (keys) => {
         }
       })
       searchTblCurrent.value = keys
-      selectedTbllength.value =  Object.keys(selectedTblCurrent.value).length + tempSearchLength
+      selectedTbllength.value =  Object.keys(selectedTblCurrent.value).length + tempSearchLength + notFoundTbl.value
     }
   }
 }
@@ -170,16 +169,20 @@ const handleSubmit = () => {
       }
     })
   }
-  let pagenum = data.totalNum / pageSize.value
   Object.entries(selectedTblCurrent.value).forEach(([key, array]) => {
     selectedTbl.value.push(array)
+  })
+  piecePreTbl.forEach(item => {
+    if(!selectedTbl.value.includes(item) && item !== '') {
+      selectedTbl.value.push(item)
+    }
   })
   let dataToSend = {
     selectedValue: selectedTbl.value,
     selecTbl: tempdbname.value
   }
   if (selectedTbl.value.length === data.totalNum && data.totalNum !== 0) {
-    dataToSend.selectedValue = ''
+    dataToSend.selectedValue.unshift('')
     emits('data-selected', dataToSend)
   } else {
     emits('data-selected', dataToSend)
@@ -223,8 +226,7 @@ watch(
   }
 )
 
-let piecePreTbl = ''
-const selectAllPage = ref(false)
+let piecePreTbl = []
 const tempdbname = ref('')
 const useInFo = new FormData
 const tableAllSele = ref(false)
@@ -239,13 +241,15 @@ const getTblSelec = async() => {
     if (preseletedTbl && (preseletedTbl === '"全部"' || preseletedTbl === '全部')) {
       tableAllSele.value = true
     } else if (preseletedTbl) {
-      piecePreTbl = preseletedTbl.split(',')
+      piecePreTbl = JSON.parse(preseletedTbl)
     }
   }
   useInFo.append('url', c.value)
   useInFo.append('username', username)
   useInFo.append('password', password)
 }
+
+const notFoundTbl = ref(0)
 
 async function fetchTblList () {
   isLoading.value = false
@@ -255,42 +259,20 @@ async function fetchTblList () {
         data.value = response.rows
         totalNum.value = response.total
         data.totalNum = response.total
-        if (tableAllSele.value) {
-          data.value.forEach(item => {
-            selectedTblCurrent.value.push(item)
+        if (piecePreTbl.length > 0) {
+          const setPreTbl = new Set(piecePreTbl)
+          const listC = data.value.filter(value => setPreTbl.has(value))
+          piecePreTbl = piecePreTbl.filter(value => !listC.includes(value))
+          listC.forEach(item => {
+            if (!Object.values(selectedTblCurrent.value).includes(item)) {
+              selectedTblCurrent.value.push(item)
+            }
           })
-          selectAllPage.value = true
-        } else {
-          if (piecePreTbl.length > 0) {
-            let tempId = 0
-            data.value.forEach(item => {
-              let found = false
-              for (let i = 0; i < piecePreTbl.length; i++) {
-                let str = piecePreTbl[i].toString().replace(/[\[\]"]/g, '')
-                if (str === item) {
-                  found = true
-                }
-                if (found) {
-                  piecePreTbl[i] = ''
-                  if (!Object.values(selectedTblCurrent.value).includes(item)) {
-                    selectedTblCurrent.value.push(item)
-                  }
-                }
-                found = false
-              }
-            })
-          }
         }
       }
+      notFoundTbl.value = piecePreTbl.filter(char => char !== '').length
       searchTblCurrent.value = [...selectedTblCurrent.value]
-      let notFoundTbl = 0
-      for (let i = 0; i < piecePreTbl.length; i++) {
-        let str = piecePreTbl[i].toString().replace(/[\[\]"]/g, '')
-        if (str !== '') {
-          notFoundTbl = notFoundTbl + 1
-        }
-      }
-      selectedTbllength.value =  Object.keys(selectedTblCurrent.value).length + notFoundTbl
+      selectedTbllength.value =  Object.keys(selectedTblCurrent.value).length + notFoundTbl.value
     })
     .catch(error => {
       console.error('Error fetching data:', error)
@@ -330,9 +312,10 @@ const drag = (event) => {
 
 const init = () => {
   selectedTblCurrent.value = []
-  selectedTbl.value.length = []
+  selectedTbl.value = []
   selectedTbllength.value = 0
   searchBeforPage.value = 0
+  notFoundTbl.value = 0
   getTblSelec()
   fetchTblList()
   winCon.value = true

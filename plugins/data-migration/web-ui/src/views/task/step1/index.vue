@@ -264,7 +264,7 @@ const dataTblWin = async (nodeData) => {
   seleDBMsg.dbName = nodeData?.title
   if (selectedData.value.length > 0 && selecTblbf && selecTblbf.value && selecTblbf.value === seleDBMsg.dbName) {
     if (selectedData.value[0] === '') {
-      seleDBMsg.seletedTbl = '全部'
+      seleDBMsg.seletedTbl = selectedData.value
       isSelectAll.value = true
     } else {
       seleDBMsg.seletedTbl = selectedData.value
@@ -275,7 +275,6 @@ const dataTblWin = async (nodeData) => {
     isSelectAll.value = true
   } else {
     selecTblbf.value = ''
-    seleDBMsg.seletedTbl = ''
     seleDBMsg.seletedTbl = ''
   }
   if (seleDBMsg.url) {
@@ -299,7 +298,7 @@ const handleTableSeleted = (data) => {
   } else {
     tblListShowflag.value = 0
   }
-  if(selectedData.value===''){
+  if(selectedData.value[0] === ''){
     isSelectAll.value=true
   }
 }
@@ -406,6 +405,7 @@ const sourceNodeSelect = (selectedKeys, data) => {
     selectSourceDB.sourceInfo = data.node.parentInfo,
       selectSourceDB.sourceNodeName = data.node.parentName
     selectSourceDB.sourceDBName = data.node.title
+    selecTblbf.value = ''
   } else {
     selectedSourceKey.value = []
     selectSourceDB.sourceInfo = {}
