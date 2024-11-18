@@ -113,25 +113,16 @@ const getTermObj = (): Terminal => {
     // rendererType: 'dom',
     fontSize: 14,
     rows: 40,
-    cols: 200,
+    cols: 90,
     cursorBlink: true,
     convertEol: true,
     disableStdin: false,
-    // lineHeight: 2,
-    // letterSpacing: 5,
+    letterSpacing: 8,
+    lineHeight: 2,
     cursorStyle: 'underline',
     theme: {
       background: 'black'
     }
-  }
-  if (window.screen.width >= 2560 && window.screen.width < 3840) {
-    termConfig.rows = 60
-    termConfig.lineHeight = 1
-    termConfig.letterSpacing = 4
-  } else if (window.screen.width >= 3840) {
-    termConfig.rows = 80
-    termConfig.lineHeight = 2
-    termConfig.letterSpacing = 8
   }
   return new Terminal(termConfig)
 }
