@@ -44,6 +44,19 @@ public class FixedTuning {
     public static final String CHECK_PYTHON_VERSION = "python3 -c 'import sys; print(sys.version_info >= (3, 7, 0))'";
 
     /**
+     * CHECK_SYSBENCH
+     */
+    public static final String CHECK_SYSBENCH = "command -v sysbench > /dev/null 2>&1 && echo True || echo False";
+
+    /**
+     * Check dependency items
+     */
+    public static final String CHECK_RELY = "missing=\"\";rpm -q openssl-devel > /dev/null "
+            + "|| missing+=\"openssl-devel \"; "
+            + "rpm -q python3-devel > /dev/null || missing+=\"python3-devel \"; rpm -q libffi-devel > /dev/null"
+            + " || missing+=\"libffi-devel \"; [ -n \"$missing\" ] && echo \"请安装$missing\" || echo \"\"";
+
+    /**
      * BOOL_TRUE
      */
     public static final String BOOL_TRUE = "True";
@@ -119,21 +132,6 @@ public class FixedTuning {
     public static final Integer UNZIP = 5;
 
     /**
-     * PYTHON_ENV_PROC
-     */
-    public static final Integer PYTHON_ENV_PROC = 10;
-
-    /**
-     * PYTHON_ENV_PROC
-     */
-    public static final Integer PYTHON_HEBO_PROC = 15;
-
-    /**
-     * PYTHON_STRATEGY_PROC
-     */
-    public static final Integer PYTHON_STRATEGY_PROC = 20;
-
-    /**
      * initValue
      */
     public static final Integer INIT_VALUE = 0;
@@ -147,6 +145,27 @@ public class FixedTuning {
      * SEARCH_RES
      */
     public static final String SEARCH_RES = "datname";
+
+
+    /**
+     * SEARCH_DATABASE
+     */
+    public static final String SEARCH = "SELECT nspname FROM pg_namespace";
+
+    /**
+     * SEARCH_RES
+     */
+    public static final String RES = "nspname";
+
+    /**
+     * NO
+     */
+    public static final String NO = "否";
+
+    /**
+     * YES
+     */
+    public static final String YES = "是";
 
     /**
      * EXECUTE_JOB
@@ -227,39 +246,19 @@ public class FixedTuning {
     public static final String SYSBENCH_EXECUTE_PATH = "data";
 
     /**
-     * ENV_YUM
-     */
-    public static final String ENV_YUM = "yum -y install postgresql-devel"
-            + "&& yum install gcc libffi-devel python3-devel openssl-devel -y" + DETERMINE;
-
-    /**
-     * CREATA_SYSBENCH_ENV
-     */
-    public static final String CREATA_SYSBENCH_ENV = "yum -y install make automake libtool pkgconfig libaio-devel "
-            + "&& yum -y install mariadb-devel openssl-devel "
-            + "&& ./autogen.sh "
-            + "&& ./configure --with-pgsql "
-            + "&& make -j && make install " + DETERMINE;
-
-    /**
      * PYTHON3_ENV
      */
     public static final String PYTHON3_ENV = "pip3 install -r requirements.txt " + DETERMINE;
 
     /**
-     * CHECK_SYSBENCH_VERSION
-     */
-    public static final String CHECK_SYSBENCH_VERSION = "sysbench --version " + DETERMINE;
-
-    /**
      * JSON_HELPER_COMMAND
      */
-    public static final String JSON_HELPER_COMMAND = "python3 SuperWG/DWG/jsonHelper/jsonHelper.py " + DETERMINE;
+    public static final String JSON_HELPER_COMMAND = "python3 jsonHelper.py " + DETERMINE;
 
     /**
      * WORKLOAD_PATH
      */
-    public static final String WORKLOAD_COMMAND = "python3 SuperWG/DWG/src/WorkloadGenerator.py " + DETERMINE;
+    public static final String WORKLOAD_COMMAND = "python3 WorkloadGenerator.py " + DETERMINE;
 
     /**
      * LOAD_FILE_PATH
@@ -314,17 +313,17 @@ public class FixedTuning {
     /**
      * APPLY_TO_DATABASE_COMMAND_OFFLINE
      */
-    public static final String APPLY_TO_DATABASE_COMMAND_OFFLINE = "gs_guc set -c %s -D %s";
+    public static final String APPLY_TO_DATABASE_COMMAND_OFFLINE = "gs_guc set -Z datanode -N all -I all -c %s";
 
     /**
      * APPLY_TO_DATABASE_COMMAND_ONLINE
      */
-    public static final String APPLY_TO_DATABASE_COMMAND_ONLINE = "gs_guc reload -c %s -D %s";
+    public static final String APPLY_TO_DATABASE_COMMAND_ONLINE = "gs_guc reload -Z datanode -N all -I all -c %s";
 
     /**
      * DATABASE_COMMAND_RESTART
      */
-    public static final String DATABASE_COMMAND_RESTART = "gs_ctl restart -D %s -M primary";
+    public static final String DATABASE_COMMAND_RESTART = "gs_om -t  restart";
 
     /**
      * FALSE

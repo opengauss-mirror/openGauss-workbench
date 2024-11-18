@@ -58,14 +58,12 @@
 
 ##### 注意事项
 jdk版本为11+
-maven版本为3.6.3
 datakit 所在服务器环境要求:
 1. yum 命令能够正常使用
-2. python环境 python3.7+,能够正确执行python3 命令
-3. 每一个openGauss数据库集群第一次训练会校验python环境是否正常安装项目需要的依赖,如果返回python环境失败，或者hebo安装失败
-4. 假设datakit的安装目录为/usr/local/work,前往/usr/local/work/data/tuning/log/,
-5. 查看训练日志文件
+2. python环境 python3.7+,能够正确执行python3,pip3 命令
+3. 如果是sysbench压测模式,会检测是否安装sysbench,没安装时,请安装sysbench,每一个openGauss数据库集群第一次训练会校验python环境是否正常安装项目需要的依赖,没有安装对应的依赖,执行下面命令:
+   执行以下命令：
 * yum -y install postgresql-devel
 * yum install gcc libffi-devel python3-devel openssl-devel -y
-* pip3 install -r requirements.txt, 
-* pip3 install -e .的执行详情
+4. datakit平台,在服务器管理页面,配置被测数据库所在的服务器信息,安装数据库的用户信息,实例管理配置被测数据库的连接信息
+5. 被测数据库在测试过程中最好是空闲状态,不被其他服务所依赖使用

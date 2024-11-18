@@ -44,8 +44,6 @@ public enum TuningEnum implements TuningStrategy {
                     config.getLogPath());
             boolean isSysbench = CommandLineRunner.runCommand(TuningHelper.getSysBenchCommand(node, config,
                     sysbenchCommand), FixedTuning.SYSBENCH_EXECUTE_PATH, config.getLogPath(), FixedTuning.TIME_OUT);
-            // 执行完Sysbench Update progress
-            TuningHelper.updateProcess(config.getTrainingId(), FixedTuning.PYTHON_STRATEGY_PROC);
             if (isSysbench) {
                 CommandLineRunner.appendToFile("Successfully created the database for stress "
                         + "testing and started executing python3 main.py", config.getLogPath());
@@ -65,25 +63,24 @@ public enum TuningEnum implements TuningStrategy {
             if (!config.getIsCustomPayloads().equals("1")) {
                 // Use custom payload for all No
                 TuningHelper.appendRes(config, workPath);
+                String jsonHelpPath = workPath + "SuperWG/DWG/jsonHelper/";
                 CommandLineRunner.appendToFile("Start executing jsonHelper.py", config.getLogPath());
-                if (!CommandLineRunner.runCommand(FixedTuning.JSON_HELPER_COMMAND, workPath, config.getLogPath(),
+                if (!CommandLineRunner.runCommand(FixedTuning.JSON_HELPER_COMMAND, jsonHelpPath, config.getLogPath(),
                         FixedTuning.TIME_OUT)) {
                     CommandLineRunner.appendToFile("Executing jsonHelper. py failed, "
                             + "modifying task status to failed", config.getLogPath());
                     TuningHelper.updateStatusFailed(config.getTrainingId());
                 }
-                TuningHelper.updateProcess(config.getTrainingId(), FixedTuning.PYTHON_ENV_PROC);
+                String workLoadPath = workPath + "SuperWG/DWG/src/";
                 CommandLineRunner.appendToFile("Start executing WorkloadGenerator.py", config.getLogPath());
-                if (!CommandLineRunner.runCommand(FixedTuning.WORKLOAD_COMMAND, workPath, config.getLogPath(),
+                if (!CommandLineRunner.runCommand(FixedTuning.WORKLOAD_COMMAND, workLoadPath, config.getLogPath(),
                         FixedTuning.TIME_OUT_MAIN)) {
                     CommandLineRunner.appendToFile("Executing WorkloadGenerator. py failed, "
                             + "modifying task status to failed", config.getLogPath());
                     TuningHelper.updateStatusFailed(config.getTrainingId());
                 }
-                TuningHelper.updateProcess(config.getTrainingId(), FixedTuning.PYTHON_STRATEGY_PROC);
                 TuningHelper.execute(config, workPath, executePath);
             } else {
-                TuningHelper.updateProcess(config.getTrainingId(), FixedTuning.PYTHON_STRATEGY_PROC);
                 TuningHelper.appendRes(config, workPath);
                 TuningHelper.execute(config, workPath, executePath);
             }

@@ -44,9 +44,9 @@ import org.quartz.JobExecutionException;
 public class ProgressJob implements Job {
     private final Integer totalTaskProgress = 100;
 
-    private final Integer other = 20;
+    private final Integer other = 5;
 
-    private final Integer mainPy = 80;
+    private final Integer mainPy = 95;
 
     @Override
     public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {

@@ -221,4 +221,12 @@ public interface TuningService {
      * @return RespBean
      */
     RespBean stopTask(List<String> ids);
+
+    /**
+     * getSchema
+     *
+     * @param clusterName clusterName
+     * @return RespBean
+     */
+    RespBean getSchema(String clusterName);
 }

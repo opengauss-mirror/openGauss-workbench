@@ -28,6 +28,7 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.jcraft.jsch.Session;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -52,6 +53,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
@@ -96,7 +98,6 @@ import org.opengauss.tun.utils.IdUtils;
 import org.opengauss.tun.utils.JschUtil;
 import org.opengauss.tun.utils.SchedulerUtils;
 import org.opengauss.tun.utils.file.FileLoader;
-import org.opengauss.tun.utils.jdbc.JdbcUtil;
 import org.opengauss.tun.utils.response.RespBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -165,7 +166,7 @@ public class TuningServiceImpl implements TuningService {
         // Obtain node information
         OpsJdbcDbClusterNodeEntity node = getNode(config.getClusterName());
         // Verify
-        validate(config, workPath);
+        validate(config, FixedTuning.SYSBENCH_FILE_PATH);
         // Parsing custom payloads
         AssertUtil.save(1, configMpper.insert(getConfig(config, node)), "Training task save failed");
         TuningDto dto = new TuningDto(config, executePath, workPath, node, sysbenchCommand, sysbenchAddPermissions);
@@ -218,8 +219,18 @@ public class TuningServiceImpl implements TuningService {
 
     private void checkTuning(TrainingConfig config, String workPath) {
         // check Python version
-        AssertUtil.isTrue(CommandLineRunner.runCommand(FixedTuning.CHECK_PYTHON_VERSION,
+        AssertUtil.isTrue(!CommandLineRunner.runCommand(FixedTuning.CHECK_PYTHON_VERSION,
                 workPath, "", 1), "Python 3 version must be greater than or equal to 3.7.0");
+        // If it is sysbench, check if sysbench is installed
+        if (FixedTuning.SYSBENCH.equals(config.getBenchmark())) {
+            AssertUtil.isTrue(!CommandLineRunner.runCommand(FixedTuning.CHECK_SYSBENCH,
+                    workPath, "", 1), "The current pressure testing mode is sysbench. "
+                    + "Please install sysbench");
+        }
+        // Check dependencies postgresql-devel
+        String rely = CommandLineRunner.runCommand(FixedTuning.CHECK_RELY,
+                workPath, 1).trim();
+        AssertUtil.isTrue(StrUtil.isNotEmpty(rely), rely);
         List<TrainingConfig> configs = configMpper.selectList(new QueryWrapper<TrainingConfig>()
                 .eq("cluster_name", config.getClusterName()));
         TrainingConfig config1 = configs.stream().filter(item -> item.getOnline().equals(FixedTuning.FALSE))
@@ -237,20 +248,19 @@ public class TuningServiceImpl implements TuningService {
     private TrainingConfig getConfig(TrainingConfig config, OpsJdbcDbClusterNodeEntity node) {
         String id = IdUtils.getId();
         config.setTrainingId(id);
+        // Set the connection information for the database
         config.setHost(node.getIp());
         config.setPort(node.getPort());
         config.setUser(node.getUsername());
         config.setPassword(node.getPassword());
-        Optional<LinuxConfig> optional = getLinuxConfig(node.getIp());
-        AssertUtil.isTrue(!optional.isPresent(), "Failed to obtain open gauss database server information");
-        config.setRootPassword(getLinuxConfig(node.getIp()).get().getPassword());
-        // 校验数据库,schema信息
-        Connection connection = getConnection(config.getClusterName(), config.getDb());
-        List<String> schemas = JdbcUtil.getAllSchemas(connection, config.getDb());
-        AssertUtil.isTrue(!schemas.contains(config.getSchemaName().trim()),
-                "The schema does not exist in the database");
-        // 校验 linxu omm 用户连接信息
-        checkConnection(config, optional.get());
+        // Set server root connection information
+        Optional<LinuxConfig> rootOpt = getLinuxConfig(node.getIp(), "root");
+        AssertUtil.isTrue(!rootOpt.isPresent(), "Failed to obtain root server information");
+        config.setRootPassword(rootOpt.get().getPassword());
+        // Set the user connection information for installing the database
+        Optional<LinuxConfig> dbOpt = getLinuxConfig(node.getIp(), config.getOsUser());
+        AssertUtil.isTrue(!dbOpt.isPresent(), "Failed to obtain opengauss database server information");
+        config.setOmmPassword(dbOpt.get().getPassword());
         config.setStartTime(DateUtil.getTimeNow());
         config.setLogPath(getTuningLogPath(id));
         List<String> fileNames = parsingCustomPayloads(config, config.getLogPath());
@@ -275,18 +285,6 @@ public class TuningServiceImpl implements TuningService {
         return tuningRecordsPath;
     }
 
-    private void checkConnection(TrainingConfig trainingConfig, LinuxConfig config) {
-        // ssh 连接
-        Session ommSession = JschUtil.obtainSession(LinuxConfig.builder().host(trainingConfig.getHost())
-                .port(config.getPort()).userName("omm").password(trainingConfig.getOmmPassword()).build());
-        // 校验路径
-        Session rootSession = JschUtil.obtainSession(config);
-        AssertUtil.isTrue(!JschUtil.isPathExists(rootSession, trainingConfig.getOpengaussNodePath()),
-                "The data path does not exist");
-        JschUtil.closeSession(ommSession);
-        JschUtil.closeSession(rootSession);
-    }
-
     private SysConfig buildSysConfig(DbTypeEnum dbType, String url, String username, String password) {
         return SysConfig.builder()
                 .userName(username)
@@ -308,10 +306,10 @@ public class TuningServiceImpl implements TuningService {
         return node.get();
     }
 
-    private Optional<LinuxConfig> getLinuxConfig(String host) {
+    private Optional<LinuxConfig> getLinuxConfig(String host, String user) {
         List<OpsHostEntity> entities = hostService.list();
         List<OpsHostUserEntity> userEntities = hostUserService.list();
-        Map<String, OpsHostUserEntity> userMap = userEntities.stream().filter(item -> item.getUsername().equals("root"))
+        Map<String, OpsHostUserEntity> userMap = userEntities.stream().filter(item -> item.getUsername().equals(user))
                 .collect(Collectors.toMap(OpsHostUserEntity::getHostId, Function.identity()));
         return entities.stream()
                 .filter(entity -> entity.getPublicIp().equals(host))
@@ -342,8 +340,18 @@ public class TuningServiceImpl implements TuningService {
     @Override
     public RespBean getDatabase(String clusterName) {
         try (Connection connection = getConnection(clusterName, "")) {
-            List<String> databases = retrieveDatabases(connection);
+            List<String> databases = retrieveDatabases(connection, FixedTuning.SEARCH_DATABASE, FixedTuning.SEARCH_RES);
             return RespBean.success("success", databases);
+        } catch (SQLException e) {
+            throw new ServiceException(e.getMessage());
+        }
+    }
+
+    @Override
+    public RespBean getSchema(String clusterName) {
+        try (Connection connection = getConnection(clusterName, "")) {
+            List<String> schema = retrieveDatabases(connection, FixedTuning.SEARCH, FixedTuning.RES);
+            return RespBean.success("success", schema);
         } catch (SQLException e) {
             throw new ServiceException(e.getMessage());
         }
@@ -359,12 +367,12 @@ public class TuningServiceImpl implements TuningService {
         return ConnectionUtils.getConnection(gaussConfig);
     }
 
-    private List<String> retrieveDatabases(Connection connection) throws SQLException {
+    private List<String> retrieveDatabases(Connection connection, String sql, String searches) throws SQLException {
         List<String> databases = new ArrayList<>();
         try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(FixedTuning.SEARCH_DATABASE)) {
+             ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                String dbName = rs.getString(FixedTuning.SEARCH_RES);
+                String dbName = rs.getString(searches);
                 databases.add(dbName);
             }
         }
@@ -452,48 +460,43 @@ public class TuningServiceImpl implements TuningService {
         // Obtain information on the server where the OpenGaussian database is located and obtain a session
         TrainingConfig config = configMpper.selectById(applyVo.getTrainingId());
         AssertUtil.isTrue(ObjectUtil.isEmpty(config), "Training record does not exist");
-        Optional<LinuxConfig> optional = getLinuxConfig(config.getHost());
+        Optional<LinuxConfig> optional = getLinuxConfig(config.getHost(), config.getOsUser());
         AssertUtil.isTrue(!optional.isPresent(), "Failed to obtain openGauss database server information");
         // 获取omm用户session
-        LinuxConfig ommUser = optional.get();
-        ommUser.setUserName("omm");
-        ommUser.setPassword(config.getOmmPassword());
-        Session session = JschUtil.obtainSession(ommUser);
-        String command = getOptCommand(applyVo.getIsOptimization(), applyVo.getData(), config) + FixedTuning.DETERMINE;
+        LinuxConfig dbUser = optional.get();
+        dbUser.setUserName(config.getOsUser());
+        dbUser.setPassword(config.getOmmPassword());
+        Session session = JschUtil.obtainSession(dbUser);
+        boolean isAll = applyVo.getData().stream().allMatch(s -> s.getRestart()
+                .equalsIgnoreCase(FixedTuning.NO));
+        boolean isOnLine = FixedTuning.TRUE.equals(config.getOnline());
+        String command = getOptCommand(applyVo.getIsOptimization(),
+                applyVo.getData(), isOnLine) + FixedTuning.DETERMINE;
         String res = JschUtil.executeCommand(session, command);
-        String message = String.format("Execute command:%s The result is:%s", command, res);
-        if (res.contains(FixedTuning.SUCCESS_INSTALL)) {
-            // The set command requires restarting the database
-            if (command.contains("set")) {
-                String reStart = String.format(FixedTuning.DATABASE_COMMAND_RESTART, config.getOpengaussNodePath());
-                String restartResult = JschUtil.executeCommand(session, reStart);
-                log.info("The result of restarting the database is-->{}", restartResult);
-            }
-            return RespBean.success("success", message);
-        } else {
-            return RespBean.error(message);
+        if (res.contains(FixedTuning.SUCCESS_INSTALL) && !isAll && !isOnLine) {
+            String restartResult = JschUtil.executeCommand(session, FixedTuning.DATABASE_COMMAND_RESTART);
+            log.info("The result of restarting the database is-->{}", restartResult);
         }
+        return RespBean.success("success", String.format("Execute command:%s The result is:%s", command, res));
     }
 
-    private String getOptCommand(Boolean isOptimization, List<ParameterShow> show, TrainingConfig config) {
+    private String getOptCommand(Boolean isOpt, List<ParameterShow> show, boolean isOnLine) {
         StringBuilder commandBuilder = new StringBuilder();
-        int index = 0;
-        int size = show.size();
         for (ParameterShow param : show) {
             String parameterName = param.getParameterName();
-            String parameterValues = isOptimization
+            String parameterValues = isOpt
                     ? param.getSuggestedParameterValues() : param.getInitialParameterValues();
-            commandBuilder.append("\"").append(parameterName).append("=").append(parameterValues).append("\"");
-            if (index < size - 1) {
-                commandBuilder.append(" -c ");
+            if (StrUtil.isNotEmpty(parameterValues)) {
+                commandBuilder.append("\"").append(parameterName).append("=").append(parameterValues).append("\"")
+                        .append(" -c ");
             }
-            index++;
         }
-        boolean isAll = show.stream().allMatch(s -> s.getRestart().equalsIgnoreCase("否"));
         String core = commandBuilder.toString();
-        String applyToDatabaseCommand = isAll
+        String applyToDatabaseCommand = isOnLine
                 ? FixedTuning.APPLY_TO_DATABASE_COMMAND_ONLINE : FixedTuning.APPLY_TO_DATABASE_COMMAND_OFFLINE;
-        return String.format(applyToDatabaseCommand, core, config.getOpengaussNodePath());
+        String command = String.format(applyToDatabaseCommand, core);
+        int lastCPos = command.lastIndexOf(" -c");
+        return command.substring(0, lastCPos).trim();
     }
 
     private void setLogDetails(TuningLog log) {

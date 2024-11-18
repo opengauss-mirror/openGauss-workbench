@@ -44,29 +44,27 @@
     <a-form-item
     field="schemaName"
     :label="$t('install.Offline.5mpn60ejri14')"
-  >
-    <a-input
+  > 
+    <a-select
       v-model="formSysbench.schemaName"
       :placeholder="$t('install.Offline.7mpn60ejri14')"
-    />
+      @change=""
+    >
+      <a-option
+        v-for="option in schemaNameList"
+        :label="option.label"
+        :value="option.value"
+        :key="option.value"
+      ></a-option>
+    </a-select>
     </a-form-item>
     <a-form-item
-      field="opengaussNodePath"
+      field="osUser"
       :label="$t('install.Offline.5mpn60ejri15')"
     >
       <a-input
-        v-model="formSysbench.opengaussNodePath"
+        v-model="formSysbench.osUser"
         :placeholder="$t('install.Offline.7mpn60ejri15')"
-      />
-    </a-form-item>
-    <a-form-item
-      field="ommPassword"
-      :label="$t('install.Offline.5mpn60ejri16')"
-      :validate-trigger="blur"
-    >
-      <a-input-password
-        v-model="formSysbench.ommPassword"
-        :placeholder="$t('install.Offline.7mpn60ejri16')"
       />
     </a-form-item>
     <a-form-item field="hasPressureTab" :label="$t('install.Offline.5mpn60ejri17')" >
@@ -201,9 +199,8 @@ const formSysbenchRef = ref();
 const formSysbench = reactive({
   clusterName: "",
   db: "",
-  schemaName: "public",
-  opengaussNodePath: "/opt/module/opengauss/data",
-  ommPassword: "",
+  schemaName: "",
+  osUser: "",
   hasPressureTab: "1",
   tables: "20",
   tableSize: "100000",
@@ -260,28 +257,13 @@ const formRules = computed(() => {
         },
       },
     ],
-    opengaussNodePath: [
+    osUser: [
       { required: true, message: t("install.Offline.6mpn60ejri15") },
       {
         validator: (value, cb) => {
           return new Promise((resolve) => {
             if (!value.trim()) {
               cb(t("install.Offline.6mpn60ejri15"));
-              resolve(false);
-            } else {
-              resolve(true);
-            }
-          });
-        },
-      },
-    ],
-    ommPassword: [
-      { required: true, message: t("install.Offline.6mpn60ejri16") },
-      {
-        validator: (value, cb) => {
-          return new Promise((resolve) => {
-            if (!value.trim()) {
-              cb(t("install.Offline.6mpn60ejri16"));
               resolve(false);
             } else {
               resolve(true);
@@ -424,6 +406,7 @@ onMounted(() => {
   if(storeData.value.isCopy){
     Object.assign(formSysbench, storeData.value.copyData)
     emits('selectdbList', formSysbench.clusterName)
+    emits('selectschemaNameList', formSysbench.clusterName)
   }
 })
 const props = defineProps({
@@ -432,11 +415,19 @@ const props = defineProps({
       default () {
         return []
       }
+    },
+    schemaNameList: {
+      type: Array as PropType<string[]>,
+      default () {
+        return []
+      }
     }
 })
-const emits = defineEmits(['selectdbList'])
+const emits = defineEmits(['selectdbList','selectschemaNameList'])
 const selectChange = (e) => {
-  emits('selectdbList', e)
+  emits('selectdbList', e);
+  emits('selectschemaNameList', e);
+  formSysbench.schemaName = 'public';
 }
 const getFormData = (object) => {
     const formData = new FormData()
@@ -460,8 +451,7 @@ const submit = () => {
         clusterName: formSysbench.clusterName,
         db: formSysbench.db,
         schemaName: formSysbench.schemaName,
-        opengaussNodePath: formSysbench.opengaussNodePath,
-        ommPassword: formSysbench.ommPassword,
+        osUser: formSysbench.osUser,
         hasPressureTab: formSysbench.hasPressureTab,
         tables: formSysbench.tables,
         tableSize: formSysbench.tableSize,

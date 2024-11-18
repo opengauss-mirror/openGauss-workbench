@@ -44,29 +44,27 @@
     <a-form-item
     field="schemaName"
     :label="$t('install.Offline.5mpn60ejri14')"
-  >
-    <a-input
+  > 
+    <a-select
       v-model="formDwg.schemaName"
       :placeholder="$t('install.Offline.7mpn60ejri14')"
-    />
+      @change=""
+    >
+      <a-option
+        v-for="option in schemaNameList"
+        :label="option.label"
+        :value="option.value"
+        :key="option.value"
+      ></a-option>
+    </a-select>
     </a-form-item>
     <a-form-item
-      field="opengaussNodePath"
+      field="osUser"
       :label="$t('install.Offline.5mpn60ejri15')"
     >
       <a-input
-        v-model="formDwg.opengaussNodePath"
+        v-model="formDwg.osUser"
         :placeholder="$t('install.Offline.7mpn60ejri15')"
-      />
-    </a-form-item>
-    <a-form-item
-      field="ommPassword"
-      :label="$t('install.Offline.5mpn60ejri16')"
-      :validate-trigger="blur"
-    >
-      <a-input-password
-        v-model="formDwg.ommPassword"
-        :placeholder="$t('install.Offline.7mpn60ejri16')"
       />
     </a-form-item>
     <p style="font-size: 20px;font-weight: bold;">{{$t('install.Offline.5mpn60ejri20')}}</p>
@@ -366,7 +364,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onBeforeMount, onMounted, reactive, ref, inject } from 'vue'
+import { computed, onBeforeMount, onMounted, reactive, ref, inject, nextTick } from 'vue'
 import {
   listInstallPackage,
   getPackageCpuArch,
@@ -404,9 +402,8 @@ const formDwgRef = ref();
 const formDwg = reactive({
   clusterName: "",
   db: "",
-  schemaName: "public",
-  opengaussNodePath: "/opt/module/opengauss/data",
-  ommPassword: "",
+  schemaName: "",
+  osUser: "",
   samplingNumber: "10",
   iteration: "2",
   threads: "10",
@@ -470,28 +467,13 @@ const formRules = computed(() => {
         },
       },
     ],
-    opengaussNodePath: [
+    osUser: [
       { required: true, message: t("install.Offline.6mpn60ejri15") },
       {
         validator: (value, cb) => {
           return new Promise((resolve) => {
             if (!value.trim()) {
               cb(t("install.Offline.6mpn60ejri15"));
-              resolve(false);
-            } else {
-              resolve(true);
-            }
-          });
-        },
-      },
-    ],
-    ommPassword: [
-      { required: true, message: t("install.Offline.6mpn60ejri16") },
-      {
-        validator: (value, cb) => {
-          return new Promise((resolve) => {
-            if (!value.trim()) {
-              cb(t("install.Offline.6mpn60ejri16"));
               resolve(false);
             } else {
               resolve(true);
@@ -702,11 +684,19 @@ const props = defineProps({
       default () {
         return []
       }
+    },
+    schemaNameList: {
+      type: Array as PropType<string[]>,
+      default () {
+        return []
+      }
     }
 })
-const emits = defineEmits(['selectdbList'])
+const emits = defineEmits(['selectdbList','selectschemaNameList'])
 const selectChange = (e) => {
-  emits('selectdbList', e)
+  emits('selectdbList', e);
+  emits('selectschemaNameList', e);
+  formDwg.schemaName = 'public';
 }
 const handleUpload = (fileList) => {
   formDwg.customLoad = []
@@ -765,6 +755,7 @@ onMounted(() => {
   if(storeData.value.isCopy){
     Object.assign(formDwg, storeData.value.copyData)
     emits('selectdbList', formDwg.clusterName)
+    emits('selectschemaNameList', formDwg.clusterName)
     getFile(formDwg.trainingId)
   }
 })
@@ -794,8 +785,7 @@ const submit = () => {
       clusterName: formDwg.clusterName,
       db: formDwg.db,
       schemaName: formDwg.schemaName,
-      opengaussNodePath: formDwg.opengaussNodePath,
-      ommPassword: formDwg.ommPassword,
+      osUser: formDwg.osUser,
       samplingNumber: formDwg.samplingNumber,
       iteration: formDwg.iteration,
       threads: formDwg.threads,
