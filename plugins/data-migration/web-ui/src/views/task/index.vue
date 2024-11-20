@@ -10,11 +10,7 @@
       </div>
       <a-divider />
       <div class="task-steps-con">
-        <a-steps :current="currentStep">
-          <a-step :description="$t('task.index.5q08zucvfwc0')">{{$t('task.index.5q08xss4k9w0')}}</a-step>
-          <a-step :description="$t('task.index.5q090g6io340')">{{$t('task.index.5q08xss4khc0')}}</a-step>
-          <a-step :description="$t('task.index.5q090g6iouw0')">{{$t('task.index.5q08xss4kkw0')}}</a-step>
-        </a-steps>
+        <common-steps :current="currentStep" :steps="steps"></common-steps>
       </div>
       <!-- step1 -->
       <step1 v-if="currentStep === 1" ref="stepOneComp" :sub-task-config="subTaskConfig" @syncConfig="syncSubTask" />
@@ -32,17 +28,27 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, provide } from 'vue'
+import { ref, reactive, onMounted, provide, computed } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import Step1 from './step1'
 import Step2 from './step2'
 import Step3 from './step3'
+import commonSteps from '@/components/commonSteps'
 import { migrationSave, migrationUpdate, defaultParams } from '@/api/task'
 import { taskEditInfo } from '@/api/detail'
 import dayjs from 'dayjs'
 import { mergeObjectArray } from '@/utils'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const currentStep = ref(1)
+const steps = computed(() => [
+    {stepIndex: 1,title: t('task.index.5q08xss4k9w0'), description: t('task.index.5q08zucvfwc0')},
+    {stepIndex: 2,title: t('task.index.5q08xss4khc0'), description: t('task.index.5q090g6io340')},
+    {stepIndex: 3,title: t('task.index.5q090g6iouw0'), description: t('task.index.5q08xss4kkw0')},
+  ]
+)
+
 const taskId = ref()
 const taskName = ref('')
 const subTaskConfig = ref([])
