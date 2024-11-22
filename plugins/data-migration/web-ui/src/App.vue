@@ -1,11 +1,15 @@
 <template>
   <a-config-provider :locale="locale">
-    <router-view v-slot="{ Component, route }">
-      <keep-alive>
-        <component :is="Component" v-if="route.meta && route.meta.keepAlive" :key="route.meta.usePathKey ? route.fullPath : undefined" />
-      </keep-alive>
-      <component :is="Component" v-if="!(route.meta && route.meta.keepAlive)" :key="route.meta.usePathKey ? route.fullPath : undefined" />
-    </router-view>
+    <el-config-provider :locale="elLocale">
+      <router-view v-slot="{ Component, route }">
+        <keep-alive>
+          <component :is="Component" v-if="route.meta && route.meta.keepAlive"
+            :key="route.meta.usePathKey ? route.fullPath : undefined" />
+        </keep-alive>
+        <component :is="Component" v-if="!(route.meta && route.meta.keepAlive)"
+          :key="route.meta.usePathKey ? route.fullPath : undefined" />
+      </router-view>
+    </el-config-provider>
   </a-config-provider>
 </template>
 
@@ -13,6 +17,8 @@
 import { computed, onMounted } from 'vue'
 import enUS from '@arco-design/web-vue/es/locale/lang/en-us'
 import zhCN from '@arco-design/web-vue/es/locale/lang/zh-cn'
+import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+import en from 'element-plus/dist/locale/en.mjs'
 import useLocale from '@/hooks/locale'
 import useTheme from '@/hooks/theme'
 
@@ -76,5 +82,9 @@ const locale = computed(() => {
     default:
       return zhCN
   }
+})
+
+const elLocale = computed(() => {
+  return currentLocale.value === 'zh-CN' ? zhCn : en
 })
 </script>
