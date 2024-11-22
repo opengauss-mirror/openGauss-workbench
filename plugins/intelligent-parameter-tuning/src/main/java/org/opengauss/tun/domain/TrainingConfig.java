@@ -51,7 +51,13 @@ public class TrainingConfig {
     private String db;          // 数据库名称
     private String user;        // 数据库用户
     private String password;    // 数据库密码
-    private String ommPassword; // omm 用户密码
+    private String osUser;      // 安装数据库的用户
+    private String chroot = "False";      // 数据库是否安装在沙箱环境
+    private String distributed = "False";  // 数据库是否是分布式
+    private String distDnPort; // 分布式环境下DN节点的端口号
+    private String initParam;
+    private String workloadRestore; // 还原负载的SQL，将负载中insert对应的数据转为delete，在每轮压测完执行还原
+    private String ommPassword; // 安装数据库的用户密码
     private String opengaussNodePath;  // opengauss_node_path
     private String rootPassword;      // 服务器root 用户密码
     private String hasPressureTab;             // 是否有压测表

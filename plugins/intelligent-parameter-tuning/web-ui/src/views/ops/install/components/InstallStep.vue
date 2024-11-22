@@ -4,19 +4,23 @@
       v-if="installStore.benchMark === BenchMarkEnum.SYSBENCH "
       ref="offlineInstallRef"
       @selectdbList="getAlldbName"
+      @selectschemaNameList="getAllschemaName"
       :dbList="dbList"
+      :schemaNameList="schemaNameList"
     />
     <online-install
       v-if="installStore.benchMark === BenchMarkEnum.DWG "
       ref="onlineInstallRef"
       @selectdbList="getAlldbName"
+      @selectschemaNameList="getAllschemaName"
       :dbList="dbList"
+      :schemaNameList="schemaNameList"
     />
   </div>
 </template>
 <script lang="ts" setup>
 import { onMounted, computed, ref, provide } from 'vue'
-import { trainingModel, getAllCluster, getAlldbList } from '@/api/ops' // eslint-disable-line
+import { trainingModel, getAllCluster, getAlldbList, getSchemaNameList } from '@/api/ops' // eslint-disable-line
 import OfflineInstall from './OfflineInstall.vue'
 import OnlineInstall from './OnlineInstall.vue'
 import { useOpsStore } from '@/store'
@@ -25,6 +29,7 @@ import { BenchMarkEnum } from '@/types/ops/install'
 const opsStore = useOpsStore()
 const selectParams = ref([]);
 const dbList = ref([]);
+const schemaNameList = ref([]);
 const offlineInstallRef = ref<InstanceType<typeof OfflineInstall> | null>(null)
 const onlineInstallRef = ref<InstanceType<typeof OnlineInstall> | null>(null)
 provide('selectParams',selectParams)
@@ -60,6 +65,22 @@ const getAlldbName = (id) => {
         data.push(temp)
       })
       dbList.value = data
+    }
+  }).finally(() => {
+  })
+}
+const getAllschemaName = (id) => {
+  getSchemaNameList({clusterName:id}).then((res: KeyValue) => {
+    let data = []
+    if (Number(res.code) === 200) {
+      res.obj.forEach((item: KeyValue) => {
+        const temp = {
+          label: item,
+          value: item
+        }
+        data.push(temp)
+      })
+      schemaNameList.value = data
     }
   }).finally(() => {
   })

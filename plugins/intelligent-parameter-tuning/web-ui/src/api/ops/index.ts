@@ -333,6 +333,12 @@ export const getAlldbList = (data: string) => {
   })
 }
 
+export const getSchemaNameList = (data: string) => {
+  return axios.get('intelligent/tuning/obtain/schema', {
+    params: data
+  })
+}
+
 export const getFiles = (data: KeyValue) => {
   return axios.get(`intelligent/tuning/obtain/file/${data.trainingId}`)
 }

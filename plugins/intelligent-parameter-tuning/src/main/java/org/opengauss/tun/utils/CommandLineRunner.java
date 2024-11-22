@@ -20,6 +20,7 @@
 package org.opengauss.tun.utils;
 
 import cn.hutool.core.util.StrUtil;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -30,6 +31,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
+
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.tun.common.FixedTuning;
 
@@ -70,10 +72,35 @@ public class CommandLineRunner {
             result.append(output).append(StrUtil.LF).append(error);
             appendToFile(result.toString(), writePath);
             String res = result.toString();
-            return res.contains(FixedTuning.SUCCESS_INSTALL) || res.equals(FixedTuning.BOOL_TRUE);
+            return res.contains(FixedTuning.SUCCESS_INSTALL) || res.trim().equals(FixedTuning.BOOL_TRUE);
         } catch (IOException | InterruptedException exception) {
             log.error("Command execution failed: {}", exception.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * runCommand
+     *
+     * @param command  command
+     * @param filePath filePath
+     * @param timeOut  timeOut
+     * @return boolean
+     */
+    public static String runCommand(String command, String filePath, long timeOut) {
+        try {
+            ProcessBuilder builder = new ProcessBuilder("bash", "-c", command);
+            builder.directory(new File(filePath));
+            Process process = builder.start();
+            String output = readFromStream(process.getInputStream());
+            String error = readFromStream(process.getErrorStream());
+            process.waitFor(timeOut, TimeUnit.MINUTES);
+            StringBuilder result = new StringBuilder();
+            result.append(output).append(StrUtil.LF).append(error);
+            return result.toString();
+        } catch (IOException | InterruptedException exception) {
+            log.error("Command execution failed: {}", exception.getMessage());
+            return "";
         }
     }
 

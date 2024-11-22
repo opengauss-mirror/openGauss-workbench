@@ -20,8 +20,10 @@
 package org.opengauss.tun.quartz;
 
 import cn.hutool.core.util.StrUtil;
+
 import java.io.IOException;
 import java.io.PrintWriter;
+
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsJdbcDbClusterNodeEntity;
 import org.opengauss.admin.common.exception.ServiceException;
@@ -71,8 +73,6 @@ public class ExecuteJob implements Job {
         createHeboEnvironment(config, workPath, recordPath);
         // python更新进度1
         TuningHelper.updateProcess(config.getTrainingId(), FixedTuning.ENV);
-        // Create a sysbench environment
-        sysbenchEnvCreate(config, recordPath, dto.getSysbenchAddPermissions());
         // write file
         writeConfigPy(config, executePath + FixedTuning.PYTHON_CONF);
         writeConfigPy(config, executePath + FixedTuning.JSONHELP_CONF);
@@ -94,13 +94,7 @@ public class ExecuteJob implements Job {
         if (cache.includeKey(config.getClusterName())) {
             return;
         }
-        boolean isYum = CommandLineRunner.runCommand(FixedTuning.ENV_YUM, workPath, config.getLogPath(),
-                FixedTuning.TIME_OUT);
-        String yumSuccMsg = "Successfully executed the installation commands:"
-                + " - yum -y install postgresql-devel"
-                + " - yum install gcc libffi-devel python3-devel openssl-devel -y";
         String errMsg = "Failed to create python environment, updating task status to failed";
-        handleRes(isYum, yumSuccMsg, errMsg, recordPath, config);
         boolean isSuccess = CommandLineRunner.runCommand(FixedTuning.PYTHON3_ENV, workPath, config.getLogPath(),
                 FixedTuning.TIME_OUT);
         String requirementsSuccMsg = "Successfully executed the installation commands:"
@@ -125,28 +119,6 @@ public class ExecuteJob implements Job {
         }
     }
 
-    private void sysbenchEnvCreate(TrainingConfig config, String recordPath, String sysbenchAddPermissions) {
-        if (config.getBenchmark().equals(FixedTuning.SYSBENCH)) {
-            TuningHelper.record("Start detecting the sysbench environment", recordPath);
-            // Check the sysbench version and install if necessary
-            checkAndInstallSysbench(config, recordPath);
-        }
-    }
-
-    private void checkAndInstallSysbench(TrainingConfig config, String recordPath) {
-        if (!isSysbenchInstalled(config, recordPath)) {
-            TuningHelper.record("Check the sysbench version is incorrect", recordPath);
-            TuningHelper.updateStatusFailed(config.getTrainingId());
-        }
-    }
-
-    private boolean isSysbenchInstalled(TrainingConfig config, String recordPath) {
-        TuningHelper.record("Check if sysbench installation was successful", recordPath);
-        return CommandLineRunner.runCommand(FixedTuning.CHECK_SYSBENCH_VERSION,
-                FixedTuning.SYSBENCH_FILE_PATH, config.getLogPath(), FixedTuning.TIME_OUT);
-    }
-
-
     private void writeConfigPy(TrainingConfig train, String filePath) {
         try (PrintWriter writer = new PrintWriter(filePath)) {
             TuningBuilder builder = new TuningBuilder();
@@ -158,7 +130,7 @@ public class ExecuteJob implements Job {
                     .appendProperty("online", train.getOnline()).appendNote("# 是否进行微调, iteration为微调次数")
                     .appendProperty("finetune", train.getFinetune()).appendNote("# 微调过程中是否允许重启")
                     .appendProperty("restart_when_finetune", train.getRestartWhenFinetune())
-                    .appendNote("# 数据库待调整的配置参数文件").appendProperty("knobs_file", "'knobs_config/knobs-13.json'")
+                    .appendNote("# 数据库待调整的配置参数文件").appendProperty("knobs_file", "'knobs_config/knobs-43.json'")
                     .appendNote("# 进行重要性排名后, 选取的配置参数的数量")
                     .appendProperty("ranked_knobs_number", train.getRankedKnobsNumber())
                     .appendProperty("method", "'HEBO'").appendProperty("log_path", "'log'")
@@ -168,6 +140,7 @@ public class ExecuteJob implements Job {
                     .appendProperty("port", train.getPort()).appendProperty("db", "'" + train.getDb() + "'")
                     .appendProperty("user", "'" + train.getUser() + "'")
                     .appendProperty("password", "'" + train.getPassword() + "'")
+                    .appendProperty("os_user", "'" + train.getOsUser() + "'")
                     .appendProperty("omm_password", "'" + train.getOmmPassword() + "'")
                     .appendProperty("opengauss_node_path", "'" + train.getOpengaussNodePath() + "'")
                     .appendProperty("root_password", "'" + train.getRootPassword() + "'")
@@ -184,7 +157,7 @@ public class ExecuteJob implements Job {
                     .appendSectionBreak().appendSectionBreak().appendNote("# dwg配置").appendNote("# 需要解析的schema名称")
                     .appendProperty("schema_name", "'" + train.getSchemaName() + "'")
                     .appendNote("# 执行gs_dump命令后在服务端保存的结果(建表语句等, 用于生成负载)")
-                    .appendProperty("remote_cache_path", "'/home/omm/test.sql'");
+                    .appendProperty("remote_cache_path", "'/home/" + train.getOsUser() + "/test.sql'");
             writeConfigDwg(builder, train);
             writer.write(builder.build());
         } catch (IOException e) {
@@ -203,6 +176,7 @@ public class ExecuteJob implements Job {
                 .appendProperty("json_extract_result_path", "'" + "workloads/schema/res.json" + "'")
                 .appendNote("# 生成负载的保存路径, 也是使用dwg压测所用的负载")
                 .appendProperty("workload", "'" + "workloads/res.wg" + "'")
+                .appendProperty("workload_restore", "'workloads/restore.sql'")
                 .appendNote("# 每个线程成功执行sql_num_print条sql后在控制台输出信息")
                 .appendProperty("sql_num_print", train.getSqlNumPrint())
                 .appendSectionBreak().appendSectionBreak().appendNote("# hardware configs")
@@ -215,9 +189,9 @@ public class ExecuteJob implements Job {
                 .appendProperty("average_query_column_num", train.getAverageQueryColumnNum())
                 .appendProperty("group_by_ratio_if_read_sql", train.getGroupByRatioIfReadSql())
                 .appendProperty("order_by_desc_or_asc_if_grouped", train.getOrderByDescOrAscIfGrouped())
-                .appendProperty("taskset", "False")
-                .appendProperty("backup", "False")
-                .appendProperty("restart_when_online", "False")
+                .appendProperty("taskset", "False").appendProperty("distributed", train.getDistributed())
+                .appendProperty("chroot", train.getChroot()).appendProperty("dist_dn_port", train.getDistDnPort())
+                .appendProperty("restart_when_online", "False").appendProperty("init_param", train.getInitParam())
                 .appendProperty("index_weight", "1")
                 .appendProperty("primary_key_weight", "1").appendProperty("backup_path",
                         "'/data/bak_gaussdb_data/sys/data'");

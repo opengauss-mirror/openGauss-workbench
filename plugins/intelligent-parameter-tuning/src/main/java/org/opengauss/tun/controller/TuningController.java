@@ -126,6 +126,17 @@ public class TuningController {
     }
 
     /**
+     * getDatabase
+     *
+     * @param clusterName clusterName
+     * @return RespBean
+     */
+    @GetMapping("/obtain/schema")
+    public RespBean getSchema(@RequestParam String clusterName) {
+        return tuningService.getSchema(clusterName);
+    }
+
+    /**
      * getTaskclusterName
      *
      * @return RespBean
