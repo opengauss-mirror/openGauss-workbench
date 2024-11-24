@@ -353,4 +353,10 @@ public interface SshCommandConstants {
      * command to get openGauss OM package
      */
     String GET_OM_PACKAGE = "ls {0} | grep -i 'om.*\\.tar\\.gz'";
+
+    /**
+     * create dir and check write permission
+     */
+    String CREATE_DIR_AND_CHECK_WRITE_PERM = "if [ ! -d \"{0}\" ]; then mkdir -p \"{0}\"; fi\n"
+            + "if [ -w \"{0}\" ]; then echo \"had write permission\"; else echo \"{1}\"; fi";
 }

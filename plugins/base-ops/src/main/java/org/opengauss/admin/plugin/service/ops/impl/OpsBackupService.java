@@ -37,6 +37,7 @@ import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.plugin.domain.model.ops.JschResult;
 import org.opengauss.admin.plugin.domain.model.ops.OpsClusterBody;
+import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
 import org.opengauss.admin.plugin.domain.model.ops.WsSession;
 import org.opengauss.admin.plugin.domain.model.ops.cache.TaskManager;
 import org.opengauss.admin.plugin.domain.model.ops.cache.WsConnectorManager;
@@ -64,6 +65,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
+import java.text.MessageFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -126,7 +128,6 @@ public class OpsBackupService extends ServiceImpl<OpsBackupMapper, OpsBackupEnti
         }
 
         WsSession retWsSession = wsConnectorManager.getSession(backup.getBusinessId()).orElseThrow(()->new OpsException("websocket session not exist"));
-        backup.setBackupPath("/home/"+installUserEntity.getUsername()+"/backup/");
         RequestAttributes context = RequestContextHolder.currentRequestAttributes();
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             RequestContextHolder.setRequestAttributes(context);
@@ -298,17 +299,18 @@ public class OpsBackupService extends ServiceImpl<OpsBackupMapper, OpsBackupEnti
         Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), installUserEntity.getUsername(), encryptionUtils.decrypt(installUserEntity.getPassword())).orElseThrow(() -> new OpsException("Failed to establish connection with host"));
 
         try {
-            String createPathCommand = "mkdir -p " + backup.getBackupPath();
+            String createPathCommand = MessageFormat.format(SshCommandConstants.CREATE_DIR_AND_CHECK_WRITE_PERM,
+                    backup.getBackupPath(), "not allow write backup file");
             JschResult jschResult = jschUtil.executeCommand(createPathCommand, rootSession, retWsSession);
-            if (jschResult.getExitCode() != 0) {
+            if (jschResult.getExitCode() != 0 || jschResult.getResult().contains("not allow write backup file")) {
                 log.error("Failed to create backup directory，exitCode:{},msg:{}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Failed to create backup directory");
             }
         } catch (Exception e) {
             log.error("Failed to create backup directory", e);
             throw new OpsException("Failed to create backup directory");
-        }finally {
-            if (Objects.nonNull(rootSession) && rootSession.isConnected()){
+        } finally {
+            if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
                 rootSession.disconnect();
             }
         }
@@ -316,7 +318,7 @@ public class OpsBackupService extends ServiceImpl<OpsBackupMapper, OpsBackupEnti
         Session installSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), installUserEntity.getUsername(), encryptionUtils.decrypt(installUserEntity.getPassword())).orElseThrow(() -> new OpsException("Failed to connect to master node host"));
         try {
             String backupCommand = "gs_dumpall -p " + clusterEntity.getPort() + " -f " + backup.getBackupPath() + "/" + name;
-            JschResult jschResult = jschUtil.executeCommand(backupCommand, envPath,installSession, retWsSession);
+            JschResult jschResult = jschUtil.executeCommand(backupCommand, envPath, installSession, retWsSession);
             if (jschResult.getExitCode() != 0) {
                 log.error("Backup failed，exitCode:{},msg:{}", jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("Backup failed");
@@ -324,8 +326,8 @@ public class OpsBackupService extends ServiceImpl<OpsBackupMapper, OpsBackupEnti
         } catch (Exception e) {
             log.error("Backup failed", e);
             throw new OpsException("Backup failed");
-        }finally {
-            if (Objects.nonNull(installSession) && installSession.isConnected()){
+        } finally {
+            if (Objects.nonNull(installSession) && installSession.isConnected()) {
                 installSession.disconnect();
             }
         }

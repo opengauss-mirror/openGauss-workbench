@@ -6,6 +6,10 @@
       <a-form-item :label="$t('operation.ClusterBackupDlg.5mplmzbrntg0')">
         <div class="label-color">{{ data.formData.clusterId }}</div>
       </a-form-item>
+      <a-form-item :label="$t('operation.ClusterBackupDlg.5mplmzbro8g0')">
+        <a-textarea v-model="data.formData.backupPath"
+          :placeholder="$t('operation.ClusterBackupDlg.5mplmzbroj00')"></a-textarea>
+      </a-form-item>
       <a-form-item :label="$t('operation.ClusterBackupDlg.5mplmzbrosg0')">
         <a-textarea v-model="data.formData.remark"
           :placeholder="$t('operation.ClusterBackupDlg.5mplmzbrp1s0')"></a-textarea>
@@ -53,11 +57,11 @@ const handleOk = () => {
   })
 }
 
-const open = (clusterId: string) => {
+const open = (clusterId: string, installerUser: string) => {
   data.show = true
   data.title = t('operation.ClusterBackupDlg.5mplmzbrpas0')
   data.formData.clusterId = clusterId
-  data.formData.backupPath = ''
+  data.formData.backupPath = `/home/${installerUser}/backup`
   data.formData.remark = ''
 }
 

@@ -382,9 +382,6 @@ COMMENT ON COLUMN "public"."modeling_visualization_snapshots"."update_by" IS '�
 COMMENT ON COLUMN "public"."modeling_visualization_snapshots"."update_time" IS '更新时间';
 COMMENT ON COLUMN "public"."modeling_visualization_snapshots"."remark" IS '描述';
 
-DROP TABLE IF EXISTS "public"."ops_backup";
-DROP TABLE IF EXISTS "public"."ops_wdr";
-
 CREATE TABLE IF NOT EXISTS  "public"."ops_backup" (
     "backup_id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
     "cluster_id" varchar(255) COLLATE "pg_catalog"."default",
