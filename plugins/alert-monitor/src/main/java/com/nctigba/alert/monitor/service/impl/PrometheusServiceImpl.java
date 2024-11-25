@@ -34,6 +34,7 @@ import cn.hutool.crypto.CryptoException;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
+
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gitee.starblues.bootstrap.PluginContextHolder;
@@ -56,7 +57,9 @@ import com.nctigba.alert.monitor.mapper.NctigbaEnvMapper;
 import com.nctigba.alert.monitor.service.AlertConfigService;
 import com.nctigba.alert.monitor.service.PrometheusService;
 import com.nctigba.alert.monitor.util.YamlUtils;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.exception.ServiceException;
 import org.opengauss.admin.common.exception.base.BaseException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
@@ -64,6 +67,7 @@ import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -141,9 +145,9 @@ public class PrometheusServiceImpl implements PrometheusService {
         if (StrUtil.isBlank(env.getPath())) {
             throw new ServiceException("uninstall the prometheus");
         }
+        String url = "http://" + CommonConstants.LOCAL_IP + ":" + env.getPort() + "/api/v1/status/runtimeinfo";
         try {
-            String str = HttpUtil.get("http://" + CommonConstants.LOCAL_IP + ":" + env.getPort()
-                + "/api/v1/status/runtimeinfo", CommonConstants.HTTP_TIMEOUT);
+            String str = HttpUtil.get(url, CommonConstants.HTTP_TIMEOUT);
             if (StrUtil.isBlank(str)) {
                 throw new ServiceException("result is empty!");
             }
@@ -151,8 +155,8 @@ public class PrometheusServiceImpl implements PrometheusService {
             if (!"success".equals(resJson.getStr("status"))) {
                 throw new ServiceException("result status is not success!");
             }
-        } catch (Exception e){
-            log.error("The main prometheus is not health: {}", e.getMessage());
+        } catch (Exception e) {
+            log.error("The main prometheus is not health: {} : error {}", url, e.getMessage());
             throw new ServiceException("The main prometheus is not health: " + e.getMessage());
         }
     }
@@ -175,14 +179,15 @@ public class PrometheusServiceImpl implements PrometheusService {
         }
         return BeanUtil.fillBeanWithMap(map, new PrometheusConfigDTO(), false);
     }
+
     private PrometheusConfigDTO.Alert.Alertmanager createAlertmanager() {
         List<PrometheusConfigDTO.Alert.Alertmanager.Conf> staticConfigs = new ArrayList<>();
         PrometheusConfigDTO.Alert.Alertmanager.Conf conf = new PrometheusConfigDTO.Alert.Alertmanager.Conf();
-        List<String> targets = alertConfigList.stream().map(
-            item -> item.getAlertIp() + ":" + item.getAlertPort()).collect(Collectors.toList());
+        List<String> targets = alertConfigList.stream()
+            .map(item -> item.getAlertIp() + ":" + item.getAlertPort())
+            .collect(Collectors.toList());
         conf.setTargets(targets);
         staticConfigs.add(conf);
-
         AlertmanagerProperty alertmanagerPro = alertProperty.getAlertmanager();
         String apiVersion = alertmanagerPro.getApiVersion();
         String pathPrefix = alertmanagerPro.getPathPrefix();
@@ -196,8 +201,8 @@ public class PrometheusServiceImpl implements PrometheusService {
             Boolean bool = environmentProvider.getBoolean("server.ssl.enabled");
             http = bool != null && bool ? "https" : "http";
         }
-        PrometheusConfigDTO.Alert.Alertmanager.TlsConfig tlsConfig =
-            new PrometheusConfigDTO.Alert.Alertmanager.TlsConfig();
+        PrometheusConfigDTO.Alert.Alertmanager.TlsConfig tlsConfig
+            = new PrometheusConfigDTO.Alert.Alertmanager.TlsConfig();
         tlsConfig.setInsecureSkipVerify(true);
         alertmanager.setTlsConfig(tlsConfig);
         alertmanager.setScheme(http);
@@ -206,6 +211,7 @@ public class PrometheusServiceImpl implements PrometheusService {
         alertmanager.setIsEnableHttp2(true);
         return alertmanager;
     }
+
     private PrometheusConfigDTO createUpdatePromConfig(PrometheusConfigDTO config) {
         PrometheusConfigDTO cloneConfig = ObjectUtil.clone(config);
         PrometheusConfigDTO.Alert alerting = cloneConfig.getAlerting();
@@ -226,13 +232,13 @@ public class PrometheusServiceImpl implements PrometheusService {
         cloneConfig.setGlobal(global);
         return cloneConfig;
     }
+
     private synchronized void uploadConfigFile(Map config, String path, String fileName) throws IOException {
         File configFile = File.createTempFile("prom", ".tmp");
         FileUtil.appendUtf8String(YamlUtils.dump(config), configFile);
         Files.copy(configFile.toPath(), Paths.get(path).resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
         Files.delete(configFile.toPath());
-        String res = HttpUtil.post(
-            "http://" + CommonConstants.LOCAL_IP + ":" + env.getPort() + "/-/reload", "");
+        String res = HttpUtil.post("http://" + CommonConstants.LOCAL_IP + ":" + env.getPort() + "/-/reload", "");
         log.info(res);
         if (StrUtil.isNotBlank(res)) {
             throw new ServiceException("reload prometheus fail!");
@@ -255,9 +261,10 @@ public class PrometheusServiceImpl implements PrometheusService {
             }
             Map configMap = new ObjectMapper().convertValue(updateConfig, HashMap.class);
             uploadConfigFile(configMap, env.getPath(), CommonConstants.PROMETHEUS_YML);
-        } catch (IOException | CryptoException | ServiceException | NullPointerException | BaseException
-                | IORuntimeException e) {
+        } catch (IOException | CryptoException | NullPointerException | IORuntimeException e) {
             log.warn("init prometheus configuration fail: {}", e.getMessage());
+        } catch (ServiceException | BaseException busException) {
+            log.warn("init prometheus configuration fail: {}", busException.getMessage());
         }
     }
 
@@ -273,7 +280,6 @@ public class PrometheusServiceImpl implements PrometheusService {
                 throw new ServiceException("The alert IP or the alert Port is empty!");
             }
             alertConfigList = Arrays.asList(alertConfigDO);
-
             PrometheusConfigDTO config = getPromConfig();
             PrometheusConfigDTO updateConfig = createUpdatePromConfig(config);
             if (config.equals(updateConfig)) {
@@ -293,26 +299,23 @@ public class PrometheusServiceImpl implements PrometheusService {
      * @param url http://IP:9090/api/v1/query_range?
      * @param port 9090
      * @param query query=promQL &start=1683316800 &end=1683489600 &step=691
-     *
-     *              step = Math.max(Math.floor(60 * 60 * 1000 / 250000), 1)
-     *              Default of one hour,this.props.options.range=60 * 60 * 1000
-     *
+     * <p>
+     * step = Math.max(Math.floor(60 * 60 * 1000 / 250000), 1)
+     * Default of one hour,this.props.options.range=60 * 60 * 1000
      * @param startTime startTime = endTime - this.props.options.range / 1000
      * @param endTime end = this.getEndTime().valueOf() / 1000
      * @return {"status":"success","data":{"resultType":"matrix",
-     *        "result":[{"metric":{"instance":"6bd124fa-4a28-4f29-82a9-a81c880a5b32"},
-     *        "values":[[1683472020,"1.5090909090907871"],[1683472365,"1.418181818182191"],
-     *        [1683472710,"1.418181818182191"],[1683473055,"1.5090909090907871"],[1683473400,"1.4909090909085592"],[
-     *        1683473745,"1.3454545454549844"],[1683474090,"1.3272727272727707"],[1683474435,"1.5454545454535662"],
-     *        [1683474780,"1.2181818181819466"],[1683475125,"1.2545454545463883"],[1683475470,"1.399999999999153"],
-     *        [1683475815,"1.87272727272682"],[1683476160,"1.836363636364041"],[1683476505,"100"],[1683476850,"100"],
-     *        [1683477195,"1.45454545454578"],[1683477540,"1.5636363636374284"],[1683477885,"1.5454545454535662"],
-     *        [1683478230,"1.3272727272735807"],[1683478575,"1.7454545454546206"],[1683478920,"1.472727272728008"],
-     *        [1683479265,"1.4909090909085592"]]}]}}
+     * "result":[{"metric":{"instance":"6bd124fa-4a28-4f29-82a9-a81c880a5b32"},
+     * "values":[[1683472020,"1.5090909090907871"],[1683472365,"1.418181818182191"],
+     * [1683472710,"1.418181818182191"],[1683473055,"1.5090909090907871"],[1683473400,"1.4909090909085592"],[
+     * 1683473745,"1.3454545454549844"],[1683474090,"1.3272727272727707"],[1683474435,"1.5454545454535662"],
+     * [1683474780,"1.2181818181819466"],[1683475125,"1.2545454545463883"],[1683475470,"1.399999999999153"],
+     * [1683475815,"1.87272727272682"],[1683476160,"1.836363636364041"],[1683476505,"100"],[1683476850,"100"],
+     * [1683477195,"1.45454545454578"],[1683477540,"1.5636363636374284"],[1683477885,"1.5454545454535662"],
+     * [1683478230,"1.3272727272735807"],[1683478575,"1.7454545454546206"],[1683478920,"1.472727272728008"],
+     * [1683479265,"1.4909090909085592"]]}]}}
      */
-    public List queryRange(
-        String url, String port, String query, LocalDateTime startTime,
-        LocalDateTime endTime) {
+    public List queryRange(String url, String port, String query, LocalDateTime startTime, LocalDateTime endTime) {
         Instant startInstant = startTime.toInstant(ZoneOffset.of("+8"));
         Instant endInstant = endTime.toInstant(ZoneOffset.of("+8"));
         int step = Math.max(Long.valueOf((endInstant.toEpochMilli() - startInstant.toEpochMilli()) / 250000).intValue(),
@@ -359,10 +362,10 @@ public class PrometheusServiceImpl implements PrometheusService {
         }
     }
 
-    private Optional<AlertRuleConfigDTO> getAlertRuleConfigDto(Long templateId)
-        throws IOException {
+    private Optional<AlertRuleConfigDTO> getAlertRuleConfigDto(Long templateId) throws IOException {
         String ruleDir = alertProperty.getRuleFilePrefix().endsWith(CommonConstants.SLASH)
-            ? alertProperty.getRuleFilePrefix() : (alertProperty.getRuleFilePrefix() + CommonConstants.SLASH);
+            ? alertProperty.getRuleFilePrefix()
+            : (alertProperty.getRuleFilePrefix() + CommonConstants.SLASH);
         String dir = env.getPath() + CommonConstants.SLASH + ruleDir;
         String fileName = "rule_template_" + templateId + alertProperty.getRuleFileSuffix();
         Path filePath = Paths.get(dir + CommonConstants.SLASH + fileName);
@@ -376,6 +379,7 @@ public class PrometheusServiceImpl implements PrometheusService {
         }
         return Optional.of(BeanUtil.fillBeanWithMap(map, new AlertRuleConfigDTO(), false));
     }
+
     private void uploadRuleConfig(AlertRuleConfigDTO config, Long templateId) throws IOException {
         String dir = env.getPath() + CommonConstants.SLASH + alertProperty.getRuleFilePrefix()
             + (alertProperty.getRuleFilePrefix().endsWith("/") ? "" : "/");
@@ -387,8 +391,7 @@ public class PrometheusServiceImpl implements PrometheusService {
                 return;
             }
             Files.delete(filePath);
-            String res = HttpUtil.post("http://" + CommonConstants.LOCAL_IP + ":" + env.getPort()
-                + "/-/reload", "");
+            String res = HttpUtil.post("http://" + CommonConstants.LOCAL_IP + ":" + env.getPort() + "/-/reload", "");
             if (StrUtil.isNotBlank(res)) {
                 throw new ServiceException("reload prometheus fail!");
             }
@@ -406,8 +409,8 @@ public class PrometheusServiceImpl implements PrometheusService {
         List<AlertTemplateRuleItemDO> alertTemplateRuleItemDOS = alertTemplateRuleDO.getAlertRuleItemList();
         if (CollectionUtil.isEmpty(alertTemplateRuleItemDOS)) {
             alertTemplateRuleItemDOS = alertTemplateRuleItemMapper.selectList(
-                Wrappers.<AlertTemplateRuleItemDO>lambdaQuery().eq(AlertTemplateRuleItemDO::getTemplateRuleId,
-                    alertTemplateRuleDO.getId()));
+                Wrappers.<AlertTemplateRuleItemDO>lambdaQuery()
+                    .eq(AlertTemplateRuleItemDO::getTemplateRuleId, alertTemplateRuleDO.getId()));
         }
         String ruleExpComb = alertTemplateRuleDO.getRuleExpComb();
         ruleExpComb = parseRuleExpComb(ruleExpComb, alertTemplateRuleItemDOS, instances);
@@ -435,7 +438,7 @@ public class PrometheusServiceImpl implements PrometheusService {
     }
 
     private String parseRuleExpComb(String ruleExpComb, List<AlertTemplateRuleItemDO> alertTemplateRuleItemDOS,
-                                    String instances) {
+        String instances) {
         int position = 0;
         int start = 0;
         boolean isAnd = false;
@@ -458,9 +461,10 @@ public class PrometheusServiceImpl implements PrometheusService {
                 key = OR;
             }
             String ruleMark = ruleExpComb.substring(start, position);
-            AlertTemplateRuleItemDO alertTemplateRuleItemDO =
-                alertTemplateRuleItemDOS.stream().filter(item -> item.getRuleMark().equals(ruleMark.trim()))
-                    .findFirst().orElse(null);
+            AlertTemplateRuleItemDO alertTemplateRuleItemDO = alertTemplateRuleItemDOS.stream()
+                .filter(item -> item.getRuleMark().equals(ruleMark.trim()))
+                .findFirst()
+                .orElse(null);
             if (alertTemplateRuleItemDO == null) {
                 continue;
             }
@@ -476,9 +480,10 @@ public class PrometheusServiceImpl implements PrometheusService {
         }
         String ruleMark = ruleExpComb.substring(start);
         if (StrUtil.isNotBlank(ruleMark)) {
-            AlertTemplateRuleItemDO alertTemplateRuleItemDO =
-                alertTemplateRuleItemDOS.stream().filter(item -> item.getRuleMark().equals(ruleMark.trim()))
-                    .findFirst().orElse(null);
+            AlertTemplateRuleItemDO alertTemplateRuleItemDO = alertTemplateRuleItemDOS.stream()
+                .filter(item -> item.getRuleMark().equals(ruleMark.trim()))
+                .findFirst()
+                .orElse(null);
             ruleExp += subRuleExp(isAnd, alertTemplateRuleItemDO.getRuleExp(), alertTemplateRuleItemDO.getOperate(),
                 alertTemplateRuleItemDO.getLimitValue());
         }
@@ -487,8 +492,8 @@ public class PrometheusServiceImpl implements PrometheusService {
     }
 
     private String subRuleExp(Boolean isAnd, String ruleExp, String operate, BigDecimal limitValue) {
-        return (isAnd ? "on(instance) " : "") + ruleExp
-            + (StrUtil.isNotBlank(operate) ? (operate + limitValue.toString()) : "");
+        return (isAnd ? "on(instance) " : "") + ruleExp + (StrUtil.isNotBlank(operate) ? (operate
+            + limitValue.toString()) : "");
     }
 
     /**
@@ -508,12 +513,7 @@ public class PrometheusServiceImpl implements PrometheusService {
     private synchronized void updateRuleConfig(Long templateId, String clusterNodeIds) {
         // update the rule configuration file of the prometheus
         try {
-            List<AlertTemplateRuleDO> alertTemplateRuleDOS = alertTemplateRuleMapper.selectList(
-                Wrappers.<AlertTemplateRuleDO>lambdaQuery().eq(AlertTemplateRuleDO::getTemplateId, templateId)
-                    .eq(AlertTemplateRuleDO::getRuleType, CommonConstants.INDEX_RULE)
-                    .eq(AlertTemplateRuleDO::getIsIncluded, CommonConstants.IS_INCLUDED)
-                    .eq(AlertTemplateRuleDO::getIsDeleted, CommonConstants.IS_NOT_DELETE)
-                    .eq(AlertTemplateRuleDO::getEnable, CommonConstants.ENABLE));
+            List<AlertTemplateRuleDO> alertTemplateRuleDOS = queryAlertTemplateRuleDOS(templateId);
             if (CollectionUtil.isEmpty(alertTemplateRuleDOS)) {
                 return;
             }
@@ -521,13 +521,12 @@ public class PrometheusServiceImpl implements PrometheusService {
             if (StrUtil.isBlank(clusterNodeIds) && alertRuleConfigDtoOptional.isEmpty()) {
                 return;
             }
-            AlertRuleConfigDTO config = alertRuleConfigDtoOptional.isEmpty() ? new AlertRuleConfigDTO()
+            AlertRuleConfigDTO config = alertRuleConfigDtoOptional.isEmpty()
+                ? new AlertRuleConfigDTO()
                 : alertRuleConfigDtoOptional.get();
-            List<String> ruleNames = alertTemplateRuleDOS.stream().map(item -> "rule_" + item.getId()).collect(
-                Collectors.toList());
+            List<String> ruleNames = collectRuleNames(alertTemplateRuleDOS);
             if (StrUtil.isBlank(clusterNodeIds)) {
-                List<AlertRuleConfigDTO.Group> groups = config.getGroups().stream().filter(
-                    item -> !ruleNames.contains(item.getName())).collect(Collectors.toList());
+                List<AlertRuleConfigDTO.Group> groups = filterAlertRuleConfigGroup(config, ruleNames);
                 if (!CollectionUtil.containsAll(groups, config.getGroups())) {
                     config.setGroups(groups);
                     uploadRuleConfig(config, templateId);
@@ -538,11 +537,9 @@ public class PrometheusServiceImpl implements PrometheusService {
                 config.setGroups(new ArrayList<>());
             }
             String instances = String.join("|", clusterNodeIds.split(CommonConstants.DELIMITER));
-            List<AlertRuleConfigDTO.Group> groupList = alertTemplateRuleDOS.stream().map(
-                item -> createRuleGroup(item, instances)).collect(Collectors.toList());
+            List<AlertRuleConfigDTO.Group> groupList = collectAlertRuleConfigGroup(alertTemplateRuleDOS, instances);
             AlertRuleConfigDTO cloneConfig = ObjectUtil.clone(config);
-            List<AlertRuleConfigDTO.Group> groups = cloneConfig.getGroups().stream().filter(
-                item -> !ruleNames.contains(item.getName())).collect(Collectors.toList());
+            List<AlertRuleConfigDTO.Group> groups = filterAlertRuleConfigGroup(cloneConfig, ruleNames);
             groups.addAll(groupList);
             cloneConfig.setGroups(new ArrayList<>(new LinkedHashSet<>(groups)));
             if (config.equals(cloneConfig)) {
@@ -555,17 +552,45 @@ public class PrometheusServiceImpl implements PrometheusService {
         }
     }
 
+    private static List<AlertRuleConfigDTO.Group> filterAlertRuleConfigGroup(AlertRuleConfigDTO cloneConfig,
+        List<String> ruleNames) {
+        return cloneConfig.getGroups()
+            .stream()
+            .filter(item -> !ruleNames.contains(item.getName()))
+            .collect(Collectors.toList());
+    }
+
+    private List<AlertRuleConfigDTO.Group> collectAlertRuleConfigGroup(List<AlertTemplateRuleDO> alertTemplateRuleDOS,
+        String instances) {
+        return alertTemplateRuleDOS.stream().map(item -> createRuleGroup(item, instances)).collect(Collectors.toList());
+    }
+
+    private static List<String> collectRuleNames(List<AlertTemplateRuleDO> alertTemplateRuleDOS) {
+        return alertTemplateRuleDOS.stream().map(item -> "rule_" + item.getId()).collect(Collectors.toList());
+    }
+
+    private List<AlertTemplateRuleDO> queryAlertTemplateRuleDOS(Long templateId) {
+        List<AlertTemplateRuleDO> alertTemplateRuleDOS = alertTemplateRuleMapper.selectList(
+            Wrappers.<AlertTemplateRuleDO>lambdaQuery()
+                .eq(AlertTemplateRuleDO::getTemplateId, templateId)
+                .eq(AlertTemplateRuleDO::getRuleType, CommonConstants.INDEX_RULE)
+                .eq(AlertTemplateRuleDO::getIsIncluded, CommonConstants.IS_INCLUDED)
+                .eq(AlertTemplateRuleDO::getIsDeleted, CommonConstants.IS_NOT_DELETE)
+                .eq(AlertTemplateRuleDO::getEnable, CommonConstants.ENABLE));
+        return alertTemplateRuleDOS;
+    }
+
     private String getClusterNodeIdsByTemplateId(Long templateId) {
-        List<AlertClusterNodeConfDO> nodeConfList =
-            clusterNodeConfMapper.selectList(Wrappers.<AlertClusterNodeConfDO>lambdaQuery()
+        List<AlertClusterNodeConfDO> nodeConfList = clusterNodeConfMapper.selectList(
+            Wrappers.<AlertClusterNodeConfDO>lambdaQuery()
                 .eq(AlertClusterNodeConfDO::getTemplateId, templateId)
-                .eq(AlertClusterNodeConfDO::getIsDeleted,
-                    CommonConstants.IS_NOT_DELETE));
+                .eq(AlertClusterNodeConfDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
         if (CollectionUtil.isEmpty(nodeConfList)) {
             return "";
         }
-        return nodeConfList.stream().map(item -> item.getClusterNodeId()).collect(
-            Collectors.joining(CommonConstants.DELIMITER));
+        return nodeConfList.stream()
+            .map(item -> item.getClusterNodeId())
+            .collect(Collectors.joining(CommonConstants.DELIMITER));
     }
 
     /**
@@ -595,8 +620,10 @@ public class PrometheusServiceImpl implements PrometheusService {
             String instances = String.join("|", clusterNodeIds.split(CommonConstants.DELIMITER));
             AlertRuleConfigDTO.Group ruleGroup = createRuleGroup(alertTemplateRuleDO, instances);
             AlertRuleConfigDTO cloneConfig = ObjectUtil.clone(config);
-            List<AlertRuleConfigDTO.Group> groups = cloneConfig.getGroups().stream().filter(
-                item -> !ruleName.equals(item.getName())).collect(Collectors.toList());
+            List<AlertRuleConfigDTO.Group> groups = cloneConfig.getGroups()
+                .stream()
+                .filter(item -> !ruleName.equals(item.getName()))
+                .collect(Collectors.toList());
             groups.add(ruleGroup);
             cloneConfig.setGroups(new ArrayList<>(new LinkedHashSet<>(groups)));
             if (config.equals(cloneConfig)) {
@@ -628,9 +655,9 @@ public class PrometheusServiceImpl implements PrometheusService {
             }
             AlertRuleConfigDTO config = configDtoOptional.get();
             List<AlertRuleConfigDTO.Group> groups = config.getGroups();
-            List<AlertRuleConfigDTO.Group> newGroups = groups.stream().filter(
-                item -> !item.getName().equals("rule_" + alertTemplateRuleDO.getId())).collect(
-                Collectors.toList());
+            List<AlertRuleConfigDTO.Group> newGroups = groups.stream()
+                .filter(item -> !item.getName().equals("rule_" + alertTemplateRuleDO.getId()))
+                .collect(Collectors.toList());
             config.setGroups(newGroups);
             uploadRuleConfig(config, templateId);
         } catch (IOException e) {

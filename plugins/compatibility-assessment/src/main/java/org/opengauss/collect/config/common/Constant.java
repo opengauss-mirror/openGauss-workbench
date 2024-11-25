@@ -258,6 +258,6 @@ public class Constant {
     /**
      * FIND_ALL_JAVA
      */
-    public static final String FIND_ALL_JAVA = "ps -ef | grep java | grep -v grep | "
+    public static final String FIND_USER_ALL_JAVA = "ps -ux | grep java | grep -v grep | "
             + "awk '{print \"pid:\" $2 \"  javaName:\" $NF}'";
 }

@@ -16,7 +16,8 @@
  * HostServiceImpl.java
  *
  * IDENTIFICATION
- * openGauss-visualtool/visualtool-service/src/main/java/org/opengauss/admin/system/service/ops/impl/HostServiceImpl.java
+ * openGauss-visualtool/visualtool-service/src/main/java/org/opengauss/admin/system/service/ops/impl/HostServiceImpl
+ * .java
  *
  * -------------------------------------------------------------------------
  */
@@ -26,6 +27,7 @@ package org.opengauss.admin.system.service.ops.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.StrUtil;
+
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.exception.ExcelDataConvertException;
 import com.alibaba.fastjson.JSON;
@@ -38,8 +40,9 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.Session;
+
 import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.constant.ops.SshCommandConstants;
+
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.*;
@@ -50,16 +53,17 @@ import org.opengauss.admin.common.core.domain.model.ops.host.tag.HostTagInputDto
 import org.opengauss.admin.common.core.handler.ops.cache.SSHChannelManager;
 import org.opengauss.admin.common.core.handler.ops.cache.TaskManager;
 import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
-import org.opengauss.admin.common.core.vo.HostBean;
 import org.opengauss.admin.common.core.vo.HostInfoVo;
 import org.opengauss.admin.common.enums.OsSupportMap;
 import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.common.utils.OpsAssert;
 import org.opengauss.admin.common.utils.excel.ImportAsynInfoUtils;
-import org.opengauss.admin.common.utils.ops.JschExecUtil;
 import org.opengauss.admin.common.utils.ops.JschUtil;
 import org.opengauss.admin.common.utils.ops.WsUtil;
 import org.opengauss.admin.system.domain.HostRecordDataListener;
 import org.opengauss.admin.system.mapper.ops.OpsHostMapper;
+import org.opengauss.admin.system.plugin.beans.SshLogin;
+import org.opengauss.admin.system.service.JschExecutorService;
 import org.opengauss.admin.system.service.ops.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -71,23 +75,26 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
 import javax.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
+ * HostService
+ *
  * @author lhf
  * @date 2022/8/7 22:28
  **/
 @Slf4j
 @Service
 public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> implements IHostService {
-
     private String isSwitchingLanguage;
     @Autowired
     private IHostUserService hostUserService;
@@ -96,9 +103,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     @Autowired
     private OpsHostMapper hostMapper;
     @Autowired
-    private JschUtil jschUtil;
-    @Autowired
-    private JschExecUtil jschExecUtil;
+    private JschExecutorService jschExecutorService;
     @Autowired
     private EncryptionUtils encryptionUtils;
     @Autowired
@@ -108,12 +113,16 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     @Autowired
     private WsUtil wsUtil;
     @Autowired
+    private JschUtil jschUtil;
+    @Autowired
     private IOpsHostTagRelService opsHostTagRelService;
     @Autowired
     private IOpsHostTagService opsHostTagService;
 
     Cache<String, List<ErrorHostRecord>> errorExcel = CacheBuilder.newBuilder()
-            .maximumSize(1000).expireAfterWrite(1, TimeUnit.DAYS).build();
+        .maximumSize(1000)
+        .expireAfterWrite(1, TimeUnit.DAYS)
+        .build();
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -122,15 +131,15 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         if (Objects.nonNull(hostEntity) && hostEntity.getPort().equals(hostBody.getPort())) {
             throw new OpsException("host[" + hostEntity.getPublicIp() + "]already exists, please do not add it again");
         }
-
-        HostBean hostBean = new HostBean(hostBody.getPublicIp(), hostBody.getPort(), "root",
-                encryptionUtils.decrypt(hostBody.getPassword()));
-        hostEntity = hostBody.toHostEntity(buildHostInfo(hostBean));
+        OpsAssert.isTrue(StrUtil.isNotEmpty(hostBody.getUsername()), "username is empty");
+        SshLogin sshLogin = new SshLogin(hostBody.getPublicIp(), hostBody.getPort(), hostBody.getUsername(),
+            encryptionUtils.decrypt(hostBody.getPassword()));
+        hostEntity = hostBody.toHostEntity(buildHostInfo(sshLogin));
         save(hostEntity);
         opsHostTagRelService.cleanHostTag(hostEntity.getHostId());
         opsHostTagService.addTag(HostTagInputDto.of(hostBody.getTags(), hostEntity.getHostId()));
-        OpsHostUserEntity hostUserEntity = hostBody.toRootUser(hostEntity.getHostId());
-        return hostUserService.save(hostUserEntity);
+        HostUserBody hostUserBody = hostBody.toUserBody(hostEntity.getHostId());
+        return hostUserService.add(hostUserBody);
     }
 
     @Override
@@ -160,14 +169,16 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         try {
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             response.setCharacterEncoding("utf-8");
-            String fileName = URLEncoder.encode("模板", "UTF-8").replaceAll("\\+", "%20");
+            String fileName = URLEncoder.encode("模板", StandardCharsets.UTF_8).replaceAll("\\+", "%20");
             response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
             OutputStream out = response.getOutputStream();
             if ("zh-CN".equals(currentLocale)) {
                 EasyExcel.write(out, HostRecord.class).sheet("模板").doWrite(new ArrayList<HostRecord>());
             } else {
-                EasyExcel.write(out, HostRecord.class).head(head(0))
-                        .sheet("Template").doWrite(new ArrayList<HostRecord>());
+                EasyExcel.write(out, HostRecord.class)
+                    .head(head(0))
+                    .sheet("Template")
+                    .doWrite(new ArrayList<HostRecord>());
             }
             out.flush();
             out.close();
@@ -183,15 +194,17 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         try {
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             response.setCharacterEncoding("utf-8");
-            String fileName = URLEncoder.encode("错误报告" + new SimpleDateFormat("yyyyMMddHHmmss")
-                    .format(new Date()), "UTF-8").replaceAll("\\+", "%20");
+            String fileName = URLEncoder.encode("错误报告" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()),
+                StandardCharsets.UTF_8).replaceAll("\\+", "%20");
             response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
             OutputStream out = response.getOutputStream();
             if ("zh-CN".equals(isSwitchingLanguage)) {
                 EasyExcel.write(out, ErrorHostRecord.class).sheet("错误报告").doWrite(errorhostRecords);
             } else {
-                EasyExcel.write(out, ErrorHostRecord.class).head(head(1))
-                        .sheet("Error Report").doWrite(errorhostRecords);
+                EasyExcel.write(out, ErrorHostRecord.class)
+                    .head(head(1))
+                    .sheet("Error Report")
+                    .doWrite(errorhostRecords);
             }
             out.flush();
             out.close();
@@ -215,11 +228,11 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         } catch (IllegalArgumentException e) {
             log.error("File format mismatch.", e);
             throw new OpsException("The format of the file you are trying to import does not match the template. "
-                    + "Please re-download the template and fill it out again.");
+                + "Please re-download the template and fill it out again.");
         } catch (ExcelDataConvertException e) {
             log.error("Data parsing format error.", e);
             throw new OpsException(e.getRowIndex() + "row" + (e.getColumnIndex() + 1)
-                    + "column,parsing exception, please modify and re-upload.");
+                + "column,parsing exception, please modify and re-upload.");
         }
     }
 
@@ -286,8 +299,11 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         if (!"root".equals(hostRecord.getUserName())) {
             throw new OpsException("The user is not a root user.");
         }
-        Session session = connectivityTest(hostRecord);
+        Session session = null;
+        SshLogin sshLogin = new SshLogin(hostRecord.getPublicIp(), hostRecord.getPort(), hostRecord.getUserName(),
+            encryptionUtils.decrypt(hostRecord.getPassword()));
         try {
+            session = jschExecutorService.createSession(sshLogin);
             hostRecord.toHostEntity(getHostInfoVo(session));
             HostBody hostBody = hostRecord.toHostBody();
             hostBody.setPassword(encryptionUtils.encrypt(hostBody.getPassword()));
@@ -318,21 +334,22 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     }
 
     private List<List<String>> createBaseHeaders() {
-        return new ArrayList<>(Arrays.asList(Arrays.asList("id"), Arrays.asList("name"), Arrays.asList("privateIP"),
-                Arrays.asList("publicIP"), Arrays.asList("port"), Arrays.asList("userName"), Arrays.asList("password"),
-                Arrays.asList("isAdmin(yes|no)"), Arrays.asList("tags"), Arrays.asList("remark")));
+        return new ArrayList<>(
+            Arrays.asList(List.of("id"), List.of("name"), List.of("privateIP"), List.of("publicIP"), List.of("port"),
+                List.of("userName"), List.of("password"), List.of("isAdmin(yes|no)"), List.of("tags"),
+                List.of("remark")));
     }
 
     private List<List<String>> head(int tempOrerro) {
         List<List<String>> headers = createBaseHeaders();
         if (tempOrerro == 1) {
-            headers.add(Arrays.asList("timestamp"));
+            headers.add(List.of("timestamp"));
         }
         return headers;
     }
 
     private synchronized void addHostRecordToErrorMap(String uuid, Cache<String, List<ErrorHostRecord>> errorExcel,
-                                                      HostRecord hostRecord) {
+        HostRecord hostRecord) {
         List<ErrorHostRecord> list = errorExcel.getIfPresent(uuid);
         if (list == null) {
             list = new ArrayList<>();
@@ -342,21 +359,15 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     }
 
     private Boolean checkRecord(HostRecord hostRecord) {
-        return Objects.nonNull(hostRecord.getName()) && Objects.nonNull(hostRecord.getIsAdmin())
-                && Objects.nonNull(hostRecord.getPublicIp()) && Objects.nonNull(hostRecord.getPrivateIp())
-                && Objects.nonNull(hostRecord.getPort()) && Objects.nonNull(hostRecord.getUserName())
-                && Objects.nonNull(hostRecord.getPassword());
-    }
-
-    private Session connectivityTest(HostRecord hostRecord) {
-        return jschUtil.getSession(hostRecord.getPublicIp(), hostRecord.getPort(), hostRecord.getUserName(),
-                        encryptionUtils.decrypt(hostRecord.getPassword()))
-                .orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
+        return Objects.nonNull(hostRecord.getName()) && Objects.nonNull(hostRecord.getIsAdmin()) && Objects.nonNull(
+            hostRecord.getPublicIp()) && Objects.nonNull(hostRecord.getPrivateIp()) && Objects.nonNull(
+            hostRecord.getPort()) && Objects.nonNull(hostRecord.getUserName()) && Objects.nonNull(
+            hostRecord.getPassword());
     }
 
     private boolean isAdminUser(HostRecord hostRecord) {
         String isAdmin = hostRecord.getIsAdmin();
-        return "是".equals(isAdmin) || "yes".equals(isAdmin) ? true : false;
+        return "是".equals(isAdmin) || "yes".equals(isAdmin);
     }
 
     private List<String> addAllTagsToNewCollection(List<String> tags) {
@@ -367,16 +378,13 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         return hostTags;
     }
 
-    private HostInfoVo buildHostInfo(HostBean hostBean) {
+    private HostInfoVo buildHostInfo(SshLogin sshLogin) {
         HostInfoVo hostInfoVo = new HostInfoVo();
-        Session session = null;
+        // 创建Session异常，则
+        Session session = jschExecutorService.createSession(sshLogin);
         try {
-            log.info("get host info {}", hostBean.toString());
-            session = jschExecUtil.createSession(hostBean);
-            hostInfoVo.setHostname(jschExecUtil.execCommand(session, SshCommandConstants.HOSTNAME));
-            hostInfoVo.setCpuArch(jschExecUtil.execCommand(session, SshCommandConstants.CPU_ARCH));
-            hostInfoVo.setOs(jschExecUtil.execCommand(session, SshCommandConstants.OS));
-            hostInfoVo.setOsVersion(jschExecUtil.execCommand(session, SshCommandConstants.OS_VERSION));
+            log.info("get host info {}", sshLogin);
+            hostInfoVo = getHostInfoVo(session);
         } catch (OpsException e) {
             log.error("Failed to get host info", e);
         } finally {
@@ -387,25 +395,20 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         return hostInfoVo;
     }
 
-    private HostInfoVo getHostInfoVo(Session rootSession) {
+    private HostInfoVo getHostInfoVo(Session session) {
         HostInfoVo hostInfoVo = new HostInfoVo();
-        hostInfoVo.setHostname(jschExecUtil.execCommand(rootSession, SshCommandConstants.HOSTNAME));
-        hostInfoVo.setCpuArch(jschExecUtil.execCommand(rootSession, SshCommandConstants.CPU_ARCH));
-        hostInfoVo.setOs(jschExecUtil.execCommand(rootSession, SshCommandConstants.OS));
-        hostInfoVo.setOsVersion(jschExecUtil.execCommand(rootSession, SshCommandConstants.OS_VERSION));
+        hostInfoVo.setHostname(jschExecutorService.getHostname(session));
+        hostInfoVo.setCpuArch(jschExecutorService.getCpuArch(session));
+        hostInfoVo.setOs(jschExecutorService.getOs(session));
+        hostInfoVo.setOsVersion(jschExecutorService.getOsVersion(session));
         return hostInfoVo;
     }
 
-
     @Override
     public boolean ping(HostBody hostBody) {
-        Session session = jschUtil.getSession(hostBody.getPublicIp(), hostBody.getPort(), hostBody.getUsername(),
-                encryptionUtils.decrypt(hostBody.getPassword())).orElse(null);
-        if (session != null) {
-            session.disconnect();
-            return true;
-        }
-        return false;
+        SshLogin sshLogin = new SshLogin(hostBody.getPublicIp(), hostBody.getPort(), hostBody.getUsername(),
+            encryptionUtils.decrypt(hostBody.getPassword()));
+        return jschExecutorService.checkOsUserExist(sshLogin);
     }
 
     @Override
@@ -425,16 +428,14 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         if (Objects.isNull(hostEntity)) {
             throw new OpsException("host information does not exist");
         }
-
         List<OpsHostUserEntity> opsHostUserEntities = hostUserService.listHostUserByHostId(hostId);
         if (CollUtil.isEmpty(opsHostUserEntities)) {
             throw new OpsException("User information not found");
         }
-
         OpsHostUserEntity root = opsHostUserEntities.stream()
-                .filter(opsHostUserEntity -> "root".equals(opsHostUserEntity.getUsername()))
-                .findFirst()
-                .orElseThrow(() -> new OpsException("root user information not found"));
+            .filter(opsHostUserEntity -> "root".equals(opsHostUserEntity.getUsername()))
+            .findFirst()
+            .orElseThrow(() -> new OpsException("root user information not found"));
         if (StrUtil.isEmpty(root.getPassword())) {
             if (StrUtil.isEmpty(rootPassword)) {
                 throw new OpsException("root password does not exist");
@@ -442,14 +443,9 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
                 root.setPassword(rootPassword);
             }
         }
-
-        Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root",
-                encryptionUtils.decrypt(root.getPassword())).orElse(null);
-        if (session != null) {
-            session.disconnect();
-            return true;
-        }
-        return false;
+        SshLogin rootLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), root.getUsername(),
+            encryptionUtils.decrypt(root.getPassword()));
+        return jschExecutorService.checkOsUserExist(rootLogin);
     }
 
     @Override
@@ -459,16 +455,13 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         if (Objects.isNull(hostEntity)) {
             throw new OpsException("host information does not exist");
         }
-
         List<OpsHostUserEntity> opsHostUserEntities = hostUserService.listHostUserByHostId(hostId);
         OpsHostUserEntity root = null;
         if (CollUtil.isNotEmpty(opsHostUserEntities)) {
-            root = opsHostUserEntities.stream().filter(hostUser -> "root".equals(hostUser.getUsername()))
-                    .findFirst().orElse(null);
+            root = opsHostUserEntities.stream().filter(OpsHostUserEntity::isRootUser).findFirst().orElse(null);
         }
-
         if (Objects.isNull(root)) {
-            root = hostBody.toRootUser(hostId);
+            root = hostBody.toUser(hostId);
             hostUserService.save(root);
         } else {
             if (Objects.nonNull(hostBody.getIsRemember()) && hostBody.getIsRemember()) {
@@ -479,17 +472,14 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
                 hostUserService.cleanPassword(root.getHostUserId());
             }
         }
-
-        Session session = jschUtil.getSession(hostBody.getPublicIp(), hostBody.getPort(),
-                        "root", encryptionUtils.decrypt(hostBody.getPassword()))
-                .orElseThrow(() -> new OpsException("Failed to establish a session with the host"));
+        SshLogin sshLogin = new SshLogin(hostBody.getPublicIp(), hostBody.getPort(), hostBody.getUsername(),
+            encryptionUtils.decrypt(hostBody.getPassword()));
+        Session session = jschExecutorService.createSession(sshLogin);
         OpsHostEntity newHostEntity = hostBody.toHostEntity(getHostInfoVo(session));
         newHostEntity.setHostId(hostId);
         updateById(newHostEntity);
-
         opsHostTagRelService.cleanHostTag(hostId);
         opsHostTagService.addTag(HostTagInputDto.of(hostBody.getTags(), hostId));
-
         return true;
     }
 
@@ -500,7 +490,6 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         }
         final IPage<OpsHostVO> opsHostVOIPage = hostMapper.pageHost(page, name, tagIds, os, tagIds.size());
         final List<OpsHostVO> records = opsHostVOIPage.getRecords();
-
         populateIsRememberVO(records);
         populateTags(records);
         return opsHostVOIPage;
@@ -509,58 +498,38 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     @Override
     public void ssh(SSHBody sshBody) {
         WsSession wsSession = wsConnectorManager.getSession(sshBody.getBusinessId())
-                .orElseThrow(() -> new OpsException("websocket session not exist"));
-
-        Session session = jschUtil.getSession(sshBody.getIp(), sshBody.getSshPort(), sshBody.getSshUsername(),
-                        encryptionUtils.decrypt(sshBody.getSshPassword()))
-                .orElseThrow(() -> new OpsException("Failed to establish session with host"));
-
-        ChannelShell channelShell = jschUtil.openChannelShell(session);
-
+            .orElseThrow(() -> new OpsException("websocket session not exist"));
+        Session session = jschExecutorService.createSession(
+            new SshLogin(sshBody.getIp(), sshBody.getSshPort(), sshBody.getSshUsername(),
+                encryptionUtils.decrypt(sshBody.getSshPassword())));
+        ChannelShell channelShell = jschExecutorService.openChannelShell(session);
         SSHChannelManager.registerChannelShell(sshBody.getBusinessId(), channelShell);
-
-        Future<?> future = threadPoolTaskExecutor.submit(() -> jschUtil.channelToWsSession(channelShell, wsSession));
-
+        Future<?> future = threadPoolTaskExecutor.submit(
+            () -> jschExecutorService.channelToWsSession(channelShell, wsSession));
         TaskManager.registry(sshBody.getBusinessId(), future);
     }
 
     @Override
     public void ssh(String hostId, SSHBody sshBody) {
         OpsHostEntity hostEntity = getById(hostId);
-        if (Objects.isNull(hostEntity)) {
-            throw new OpsException("host info not found");
-        }
-
+        OpsAssert.nonNull(hostEntity, "host info not found");
+        OpsAssert.isTrue(StrUtil.isNotEmpty(sshBody.getSshUsername()), "ssh username can not be empty");
         String password = null;
-
         OpsHostUserEntity hostUserEntity = hostUserService.getHostUserByUsername(hostId, sshBody.getSshUsername());
-        if (Objects.isNull(hostUserEntity)) {
-            throw new OpsException("host user " + sshBody.getSshUsername() + " info not found");
-        }
-
+        OpsAssert.nonNull(hostUserEntity, "host user " + sshBody.getSshUsername() + " info not found");
         password = hostUserEntity.getPassword();
         if (StrUtil.isEmpty(password)) {
             password = sshBody.getSshPassword();
         }
-
-        if (StrUtil.isEmpty(password)) {
-            throw new OpsException("user " + sshBody.getSshUsername() + " password not found");
-        }
-
-
+        OpsAssert.isTrue(StrUtil.isNotEmpty(password), "ssh username password can not be empty");
         WsSession wsSession = wsConnectorManager.getSession(sshBody.getBusinessId())
-                .orElseThrow(() -> new OpsException("websocket session not exist"));
-
-        Session session = jschUtil.getSession(sshBody.getIp(), sshBody.getSshPort(), sshBody.getSshUsername(),
-                        encryptionUtils.decrypt(password))
-                .orElseThrow(() -> new OpsException("Failed to establish session with host"));
-
+            .orElseThrow(() -> new OpsException("websocket session not exist"));
+        Session session = jschExecutorService.createSession(
+            new SshLogin(sshBody.getIp(), sshBody.getSshPort(), sshBody.getSshUsername(),
+                encryptionUtils.decrypt(password)));
         ChannelShell channelShell = jschUtil.openChannelShell(session);
-
         SSHChannelManager.registerChannelShell(sshBody.getBusinessId(), channelShell);
-
         Future<?> future = threadPoolTaskExecutor.submit(() -> jschUtil.channelToWsSession(channelShell, wsSession));
-
         TaskManager.registry(sshBody.getBusinessId(), future);
     }
 
@@ -569,13 +538,12 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         if (CollUtil.isEmpty(ipSet)) {
             return Collections.emptyMap();
         }
-
         LambdaQueryWrapper<OpsHostEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostEntity.class)
-                .in(OpsHostEntity::getPublicIp, ipSet);
-
+            .in(OpsHostEntity::getPublicIp, ipSet);
         List<OpsHostEntity> hostList = list(queryWrapper);
-        return hostList.stream().filter(host -> StrUtil.isNotEmpty(host.getOs()))
-                .collect(Collectors.toMap(OpsHostEntity::getPublicIp, OpsHostEntity::getOs));
+        return hostList.stream()
+            .filter(host -> StrUtil.isNotEmpty(host.getOs()))
+            .collect(Collectors.toMap(OpsHostEntity::getPublicIp, OpsHostEntity::getOs));
     }
 
     @Override
@@ -586,48 +554,33 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         return list;
     }
 
-
     @Override
-    public Map<String, Object> monitor(String hostId, String businessId, String rootPassword) {
+    public Map<String, Object> monitor(String hostId, String businessId, String password) {
         Map<String, Object> res = new HashMap<>();
         res.put("res", true);
-        Session rootSession = null;
+        SshLogin sshLogin;
         try {
             OpsHostEntity hostEntity = getById(hostId);
             Assert.notNull(hostEntity, "host info not found");
-
-            OpsHostUserEntity rootUserEntity = hostUserService.getRootUserByHostId(hostId);
-            Assert.notNull(rootUserEntity, "root user info not found");
-
-            if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
-                rootUserEntity.setPassword(rootPassword);
+            OpsHostUserEntity user = hostUserService.getAnyUserByHostId(hostId);
+            Assert.notNull(user, "user info not found");
+            if (StrUtil.isEmpty(user.getPassword())) {
+                user.setPassword(password);
             }
-            Assert.isTrue(StrUtil.isNotEmpty(rootUserEntity.getPassword()),
-                    "root user password not found");
-            Optional<Session> session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(),
-                    rootUserEntity.getUsername(), encryptionUtils.decrypt(rootUserEntity.getPassword()));
-            Assert.isTrue(session.isPresent(), "The root user failed to establish a connection");
-            rootSession = session.get();
-        } catch (IllegalArgumentException e) {
+            Assert.isTrue(StrUtil.isNotEmpty(user.getPassword()), "user password not found");
+            sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
+                encryptionUtils.decrypt(user.getPassword()));
+        } catch (IllegalArgumentException | OpsException e) {
             res.put("res", false);
             res.put("msg", e.getMessage());
             return res;
         }
-
         WsSession wsSession = wsConnectorManager.getSession(businessId)
-                .orElseThrow(() -> new OpsException("response session does not exist"));
-
-        Session finalRootSession = rootSession;
+            .orElseThrow(() -> new OpsException("response session does not exist"));
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             try {
-                doMonitor(wsSession, finalRootSession);
+                doMonitor(wsSession, sshLogin);
             } finally {
-                if (Objects.nonNull(finalRootSession) && finalRootSession.isConnected()) {
-                    try {
-                        finalRootSession.disconnect();
-                    } catch (Exception ignore) {
-                    }
-                }
                 wsUtil.close(wsSession);
             }
         });
@@ -638,28 +591,25 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     @Override
     public void updateHostOsVersion(OpsHostEntity opsHostEntity) {
         String hostId = opsHostEntity.getHostId();
-        String username = "root";
-
-        LambdaQueryWrapper<OpsHostUserEntity> userEntityQueryWrapper = new LambdaQueryWrapper<>();
-        userEntityQueryWrapper.eq(OpsHostUserEntity::getHostId, hostId).eq(OpsHostUserEntity::getUsername, username);
-        OpsHostUserEntity opsHostUserEntity = hostUserService.getOne(userEntityQueryWrapper);
-
-        HostBean hostBean = new HostBean(opsHostEntity.getPublicIp(), opsHostEntity.getPort(), username,
-                encryptionUtils.decrypt(opsHostUserEntity.getPassword()));
-        opsHostEntity.setOsVersion(jschExecUtil.execCommand(hostBean, SshCommandConstants.OS_VERSION));
+        List<OpsHostUserEntity> userList = hostUserService.listHostUserByHostId(hostId);
+        OpsAssert.isTrue(CollUtil.isNotEmpty(userList), "host does not config user");
+        OpsHostUserEntity userEntity = userList.stream().findAny().get();
+        SshLogin sshLogin = new SshLogin(opsHostEntity.getPublicIp(), opsHostEntity.getPort(), userEntity.getUsername(),
+            encryptionUtils.decrypt(userEntity.getPassword()));
+        opsHostEntity.setOsVersion(jschExecutorService.getOsVersion(sshLogin));
         updateById(opsHostEntity);
     }
 
-    private void doMonitor(WsSession wsSession, Session rootSession) {
+    private void doMonitor(WsSession wsSession, SshLogin sshLogin) {
         while (wsSession.getSession().isOpen()) {
             HostMonitorVO hostMonitorVO = new HostMonitorVO();
             try {
-                String[] net = netMonitor(rootSession);
+                String[] net = netMonitor(sshLogin);
                 hostMonitorVO.setUpSpeed(net[0]);
                 hostMonitorVO.setDownSpeed(net[1]);
-                hostMonitorVO.setCpu(cpuMonitor(rootSession));
-                hostMonitorVO.setMemory(memoryMonitor(rootSession));
-                hostMonitorVO.setDisk(diskMonitor(rootSession));
+                hostMonitorVO.setCpu(cpuMonitor(sshLogin));
+                hostMonitorVO.setMemory(memoryMonitor(sshLogin));
+                hostMonitorVO.setDisk(diskMonitor(sshLogin));
             } catch (OpsException ex) {
                 log.error("doMonitor error", ex);
             }
@@ -672,43 +622,20 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         }
     }
 
-    private String diskMonitor(Session rootSession) {
-        String command = "df -Th | egrep -v \"(tmpfs|sr0)\" |"
-                + " tail -n +2|tr -s \" \" | cut -d \" \" -f6|tr -d \"%\"|head -n 1";
-        return jschExecUtil.execCommand(rootSession, command);
+    private String diskMonitor(SshLogin sshLogin) {
+        return jschExecutorService.diskMonitor(sshLogin);
     }
 
-    private String memoryMonitor(Session rootSession) {
-        String command = "free -m | awk -F '[ :]+' 'NR==2{printf \"%d\", ($2-$7)/$2*100}'";
-        return jschExecUtil.execCommand(rootSession, command);
+    private String memoryMonitor(SshLogin sshLogin) {
+        return jschExecutorService.memoryMonitor(sshLogin);
     }
 
-    private String cpuMonitor(Session rootSession) {
-        String command = "top -b -n1 | fgrep \"Cpu(s)\" | tail -1 |"
-                + " awk -F'id,' '{split($1, vs, \",\"); v=vs[length(vs)];"
-                + " sub(/\\s+/, \"\", v);sub(/\\s+/, \"\", v); printf \"%d\", 100-v;}'";
-        return jschExecUtil.execCommand(rootSession, command);
+    private String cpuMonitor(SshLogin sshLogin) {
+        return jschExecutorService.cpuMonitor(sshLogin);
     }
 
-    private String[] netMonitor(Session rootSession) {
-        String[] res = new String[2];
-        String netCardNameCommand = "cat /proc/net/dev | awk '{i++; if(i>2){print $1}}' |"
-                + " sed 's/^[\\t]*//g' | sed 's/[:]*$//g' | head -n 1";
-        String netCardName = jschExecUtil.execCommand(rootSession, netCardNameCommand);
-
-        String command = "rx_net1=$(ifconfig "
-                + netCardName + " | awk '/RX packets/{print $5}') && tx_net1=$(ifconfig "
-                + netCardName + " | awk '/TX packets/{print $5}') && sleep 1 && rx_net2=$(ifconfig "
-                + netCardName + " | awk '/RX packets/{print $5}') && tx_net2=$(ifconfig "
-                + netCardName + " | awk '/TX packets/{print $5}') &&"
-                + " rx_net=$[($rx_net2-$rx_net1)] && tx_net=$[($tx_net2-$tx_net1)] && echo \"$rx_net|$tx_net\"";
-        String rxNet = jschExecUtil.execCommand(rootSession, command);
-        String[] split = rxNet.split("\\|");
-        if (split.length == 2) {
-            res[0] = split[0];
-            res[1] = split[1];
-        }
-        return res;
+    private String[] netMonitor(SshLogin sshLogin) {
+        return jschExecutorService.getNetMonitor(sshLogin, false);
     }
 
     private void populateTags(List<OpsHostVO> list) {
@@ -732,7 +659,6 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
                     isRememberHostIds.add(opsHostUserEntity.getHostId());
                 }
             }
-
             for (OpsHostVO opsHostEntity : list) {
                 opsHostEntity.setIsRemember(isRememberHostIds.contains(opsHostEntity.getHostId()));
             }
@@ -750,7 +676,6 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
                     isRememberHostIds.add(opsHostUserEntity.getHostId());
                 }
             }
-
             for (OpsHostEntity opsHostEntity : list) {
                 opsHostEntity.setIsRemember(isRememberHostIds.contains(opsHostEntity.getHostId()));
             }
@@ -762,9 +687,8 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         if (StrUtil.isEmpty(publicIp)) {
             return null;
         }
-
         LambdaQueryWrapper<OpsHostEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostEntity.class)
-                .eq(OpsHostEntity::getPublicIp, publicIp);
+            .eq(OpsHostEntity::getPublicIp, publicIp);
         return getOne(queryWrapper, false);
     }
 
@@ -776,9 +700,8 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
      */
     public OpsHostEntity getMappedHostEntityById(String hostId) {
         OpsHostEntity opsHostEntity = getById(hostId);
-        OsSupportMap osMapEnum = OsSupportMap.of(opsHostEntity.getOs(),
-                opsHostEntity.getOsVersion(),
-                opsHostEntity.getCpuArch());
+        OsSupportMap osMapEnum = OsSupportMap.of(opsHostEntity.getOs(), opsHostEntity.getOsVersion(),
+            opsHostEntity.getCpuArch());
         opsHostEntity.setOs(osMapEnum.getOs());
         opsHostEntity.setOsVersion(osMapEnum.getOsVersion());
         return opsHostEntity;

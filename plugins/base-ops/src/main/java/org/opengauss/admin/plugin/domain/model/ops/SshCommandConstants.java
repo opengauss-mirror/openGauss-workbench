@@ -32,46 +32,7 @@ public interface SshCommandConstants {
      * default bashrc
      */
     String DEFAULT_ENV_BASHRC = "~/.bashrc";
-    /**
-     * query operating system
-     */
-    String OS = "cat /etc/os-release | grep ID= | head -n 1 | awk -F '=' '{print $2}' | sed 's/\\\"//g'";
-    /**
-     * Query the operating system version
-     */
-    String OS_VERSION = "cat /etc/os-release | grep VERSION_ID= | head -n 1|awk -F '=' '{print $2}' | sed 's/\\\"//g'";
-    /**
-     * free memory space
-     */
-    String FREE_MEMORY = "free -g |head -n 2| tail -n 1 | awk '{print $4}'";
-    /**
-     * memory usage
-     */
-    String MEMORY_USING = "head -2 /proc/meminfo | awk 'NR==1{t=$2}NR==2{f=$2;print(t-f)*100/t}'";
-    /**
-     * memory size
-     */
-    String MEMORY_TOTAL = "cat /proc/meminfo | grep MemTotal | awk -F ' ' '{print $2}'";
-    /**
-     * Number of CPU cores
-     */
-    String CPU_CORE_NUM = "cat /proc/cpuinfo | grep 'processor' |wc -l";
-    /**
-     * CPU frequency
-     */
-    String CPU_FREQUENCY = "cat /proc/cpuinfo | grep 'model name' |awk -F ':' '{print $2}'| awk -F ' ' '{print $7}' | sort | head -n 1";
-    /**
-     * CPU usage
-     */
-    String CPU_USING = "top -b -n2 -p 1 | fgrep \"Cpu(s)\" | tail -1 | awk -F'id,' -v prefix=\"$prefix\" '{ split($1, vs, \",\"); v=vs[length(vs)]; sub(\"%\",\"\", v); printf \"%s%.1f\\n\", prefix, 100 - v }'";
-    /**
-     * cpu arch
-     */
-    String CPU_ARCH = "LC_ALL=C lscpu | grep Architecture: | head -n 1 | awk -F ':' '{print $2}'";
-    /**
-     * free hard disk space
-     */
-    String FREE_HARD_DISK = "df -BG | awk -F ' ' '{print $4}' | sort";
+
     /**
      * free hard disk space dir
      */
@@ -82,21 +43,9 @@ public interface SshCommandConstants {
     String DEPENDENCY = "yum list installed | egrep 'libaio-devel|flex|bison|ncurses-devel|glibc-devel|patch|redhat" +
             "-lsb-core|readline-devel|lsscsi'";
     /**
-     * base dependencies
-     */
-    String BASE_DEPENDENCY = "yum list installed | egrep 'coreutils|procps-ng|openssh-clients|unzip|lsof|grep|tar'";
-    /**
-     * base dependencies
-     */
-    String OPENEULER_BASE_DEPENDENCY = "yum list installed | egrep 'coreutils|procps-ng|openssh|unzip|lsof|grep|tar'";
-    /**
      * monitor dependencies
      */
     String MONITOR_DEPENDENCY = "yum list installed | egrep 'coreutils|procps-ng|grep'";
-    /**
-     * firewall
-     */
-    String FIREWALL = "systemctl status firewalld | head -n 3 | tail -n 1 | awk '{print $2}'";
 
     /**
      * Install user
@@ -107,10 +56,6 @@ public interface SshCommandConstants {
      */
     String CREATE_OMM_USER = "useradd omm";
 
-    /**
-     * OMM user password
-     */
-    String CHANGE_OMM_PASSWORD_TEMPLATE = "passwd {0}";
     /**
      * Modify OMM password
      */

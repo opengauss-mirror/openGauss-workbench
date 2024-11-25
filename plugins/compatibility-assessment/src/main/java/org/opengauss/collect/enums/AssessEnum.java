@@ -20,14 +20,18 @@
 package org.opengauss.collect.enums;
 
 import cn.hutool.core.util.ObjectUtil;
+
 import com.jcraft.jsch.Session;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.collect.domain.Assessment;
 import org.opengauss.collect.domain.CollectPeriod;
 import org.opengauss.collect.domain.LinuxConfig;
@@ -79,7 +83,7 @@ public enum AssessEnum implements AssessmentStrategy {
                     continue;
                 }
                 Optional<LinuxConfig> config = MonitSpringUtils.getClass(SqlOperationImpl.class)
-                        .getLinuxConfig(period.getHost());
+                    .getLinuxConfig(period.getHost(), period.getHostUser());
                 AssertUtil.isTrue(!config.isPresent(), "Host does not exist");
                 Session session = JschUtil.obtainSession(config.get());
                 // 获得文件路径
@@ -91,8 +95,7 @@ public enum AssessEnum implements AssessmentStrategy {
                         Future<String> future = MonitorManager.mine().workDownload(new Callable<String>() {
                             @Override
                             public String call() throws Exception {
-                                return JschUtil.downLoadLocal(session, remotePath + name,
-                                        dataKitPath + name);
+                                return JschUtil.downLoadLocal(session, remotePath + name, dataKitPath + name);
                             }
                         });
                         res.add(future.get());

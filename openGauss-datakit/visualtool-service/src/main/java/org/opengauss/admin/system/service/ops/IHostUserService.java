@@ -25,6 +25,7 @@
 package org.opengauss.admin.system.service.ops;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.HostUserBody;
 
@@ -50,6 +51,14 @@ public interface IHostUserService extends IService<OpsHostUserEntity> {
     OpsHostUserEntity getOmmUserByHostId(String hostId);
 
     OpsHostUserEntity getRootUserByHostId(String hostId);
+
+    /**
+     * get any user by hostId
+     *
+     * @param hostId hostId
+     * @return user
+     */
+    OpsHostUserEntity getAnyUserByHostId(String hostId);
 
     void cleanPassword(String hostUserId);
 

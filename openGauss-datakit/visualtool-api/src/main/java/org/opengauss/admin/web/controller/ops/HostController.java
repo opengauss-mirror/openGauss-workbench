@@ -25,7 +25,7 @@
 package org.opengauss.admin.web.controller.ops;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import io.swagger.annotations.ApiOperation;
+
 import org.opengauss.admin.common.core.controller.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -44,6 +44,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -63,7 +64,7 @@ public class HostController extends BaseController {
     @Autowired
     private IHostService hostService;
 
-    private HashMap<String, InputStream> fileStreamMap = new HashMap();
+    private final HashMap<String, InputStream> fileStreamMap = new HashMap();
 
     @PostMapping
     public AjaxResult add(@RequestBody @Validated HostBody hostBody) {
@@ -92,17 +93,14 @@ public class HostController extends BaseController {
      *
      * @param uuid The unique identifier of the file.
      * @param isInvoke A flag that indicates whether to perform file processing;
-     *                 0 means to process, and non-zero means not to process.
+     * 0 means to process, and non-zero means not to process.
      * @param currentLocale The current user's locale, used for internationalization support.
      * @return AjaxResult The result of the method execution,
-     *          which includes whether the operation was successful, along with related messages and data.
+     * which includes whether the operation was successful, along with related messages and data.
      */
     @PostMapping("/invokeFile")
-    public AjaxResult invokeFile(
-            @RequestParam String uuid,
-            @RequestParam Integer isInvoke,
-            @RequestParam String currentLocale
-    ) {
+    public AjaxResult invokeFile(@RequestParam String uuid, @RequestParam Integer isInvoke,
+        @RequestParam String currentLocale) {
         if (isInvoke == 0) {
             hostService.invokeFile(uuid, fileStreamMap, currentLocale);
         }
@@ -116,7 +114,7 @@ public class HostController extends BaseController {
      *
      * @param response HTTP response object, used to send files to the client.
      * @param currentLocale The current user's locale,
-     *                      used to determine which version of the template to download.
+     * used to determine which version of the template to download.
      */
     @GetMapping("/downloadTemplate/{currentLocale}")
     public void downloadTemplate(HttpServletResponse response, @PathVariable String currentLocale) {
@@ -132,7 +130,9 @@ public class HostController extends BaseController {
     @GetMapping("get_import_plan")
     public AjaxResult getImportPlanByUuid(@RequestParam String uuid) {
         ImportAsynInfo asynInfo = ImportAsynInfoUtils.getAsynInfo(uuid);
-        return asynInfo == null ? AjaxResult.error("The progress information has been fully obtained.") : asynInfo.getMsg() == null ? AjaxResult.success(asynInfo) : AjaxResult.error(asynInfo.getMsg());
+        return asynInfo == null
+            ? AjaxResult.error("The progress information has been fully obtained.")
+            : asynInfo.getMsg() == null ? AjaxResult.success(asynInfo) : AjaxResult.error(asynInfo.getMsg());
     }
 
     @GetMapping("/listAll")
@@ -141,8 +141,18 @@ public class HostController extends BaseController {
         return AjaxResult.success(hostEntityList);
     }
 
+    /**
+     * Query the list of hosts based on the AZ ID.
+     *
+     * @param name name
+     * @param tagIds tagIds
+     * @param os osName
+     * @return page list
+     */
     @GetMapping("/page")
-    public TableDataInfo page(@RequestParam(required = false) String name, @RequestParam(value = "tagIds",required = false) Set<String> tagIds, @RequestParam(value = "os",required = false) String os) {
+    public TableDataInfo page(@RequestParam(required = false) String name,
+        @RequestParam(value = "tagIds", required = false) Set<String> tagIds,
+        @RequestParam(value = "os", required = false) String os) {
         IPage<OpsHostVO> page = hostService.pageHost(startPage(), name, tagIds, os);
         return getDataTable(page);
     }
@@ -150,24 +160,40 @@ public class HostController extends BaseController {
     @PostMapping("/ping")
     public AjaxResult ping(@RequestBody @Validated HostBody hostBody) {
         boolean ping = hostService.ping(hostBody);
-        return ping ? AjaxResult.success(): AjaxResult.error("Connectivity test failed");
+        return ping ? AjaxResult.success() : AjaxResult.error("Connectivity test failed");
     }
 
+    /**
+     * ping host.
+     *
+     * @param hostId host id
+     * @param rootPassword pwd
+     * @return ping status
+     * @deprecated Use {@link #ping(String, String)} instead.
+     */
+    @Deprecated
     @GetMapping("/ping/{hostId}")
-    public AjaxResult ping(@PathVariable String hostId, @RequestParam(value = "rootPassword", required = false) String rootPassword) {
+    public AjaxResult ping(@PathVariable String hostId,
+        @RequestParam(value = "rootPassword", required = false) String rootPassword) {
         boolean ping = hostService.ping(hostId, rootPassword);
-        return ping ? AjaxResult.success(): AjaxResult.error("Connectivity test failed");
+        return ping ? AjaxResult.success() : AjaxResult.error("Connectivity test failed");
     }
 
     @DeleteMapping("/{hostId}")
     public AjaxResult del(@PathVariable String hostId) {
         boolean del = hostService.del(hostId);
-        return del? AjaxResult.success() : AjaxResult.error("Failed to delete host");
+        return del ? AjaxResult.success() : AjaxResult.error("Failed to delete host");
     }
 
+    /**
+     * edit host.
+     *
+     * @param hostId host id
+     * @param hostBody host body
+     * @return edit status
+     */
     @PutMapping("/{hostId}")
-    public AjaxResult edit(@PathVariable String hostId,
-                           @RequestBody @Validated HostBody hostBody) {
+    public AjaxResult edit(@PathVariable String hostId, @RequestBody @Validated HostBody hostBody) {
         boolean edit = hostService.edit(hostId, hostBody);
         return edit ? AjaxResult.success() : AjaxResult.error("Failed to edit host");
     }
@@ -178,15 +204,31 @@ public class HostController extends BaseController {
         return AjaxResult.success();
     }
 
+    /**
+     * ssh host
+     *
+     * @param hostId host id
+     * @param sshBody ss body
+     * @return ssh status
+     */
     @PostMapping("/ssh/{hostId}")
-    public AjaxResult ssh(@PathVariable("hostId") String hostId,@RequestBody SSHBody sshBody) {
-        hostService.ssh(hostId,sshBody);
+    public AjaxResult ssh(@PathVariable("hostId") String hostId, @RequestBody SSHBody sshBody) {
+        hostService.ssh(hostId, sshBody);
         return AjaxResult.success();
     }
 
+    /**
+     * montior host
+     *
+     * @param hostId host id
+     * @param businessId business id
+     * @param rootPassword pwd
+     * @return monitor status
+     */
     @GetMapping("/monitor")
-    public AjaxResult monitor(@RequestParam String hostId, @RequestParam String businessId, @RequestParam(value = "rootPassword",required = false) String rootPassword){
-        return AjaxResult.success(hostService.monitor(hostId,businessId,rootPassword));
+    public AjaxResult monitor(@RequestParam String hostId, @RequestParam String businessId,
+        @RequestParam(value = "rootPassword", required = false) String rootPassword) {
+        return AjaxResult.success(hostService.monitor(hostId, businessId, rootPassword));
     }
 
     @GetMapping("/listSupportOsName")

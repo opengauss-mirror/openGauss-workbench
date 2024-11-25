@@ -16,7 +16,8 @@
  * OpsHostUserEntity.java
  *
  * IDENTIFICATION
- * openGauss-visualtool/visualtool-common/src/main/java/org/opengauss/admin/common/core/domain/entity/ops/OpsHostUserEntity.java
+ * openGauss-visualtool/visualtool-common/src/main/java/org/opengauss/admin/common/core/domain/entity/ops
+ * /OpsHostUserEntity.java
  *
  * -------------------------------------------------------------------------
  */
@@ -26,7 +27,11 @@ package org.opengauss.admin.common.core.domain.entity.ops;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+
+import org.opengauss.admin.common.constant.CommonConstants;
 import org.opengauss.admin.common.core.domain.BaseEntity;
+
+import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -44,4 +49,13 @@ public class OpsHostUserEntity extends BaseEntity {
     private String password;
     private String hostId;
     private Boolean sudo;
+
+    /**
+     * Check if the user is the root user.
+     *
+     * @return boolean
+     */
+    public boolean isRootUser() {
+        return StrUtil.equalsIgnoreCase(username, CommonConstants.ROOT_USER);
+    }
 }

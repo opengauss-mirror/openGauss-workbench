@@ -37,13 +37,16 @@ import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
+import org.opengauss.admin.plugin.service.ops.impl.BatchImportClusterService;
+import org.opengauss.admin.plugin.service.ops.impl.ImportClusterService;
 import org.opengauss.admin.plugin.vo.ops.*;
 import org.opengauss.admin.plugin.vo.ops.SessionVO;
 import org.opengauss.admin.plugin.vo.ops.SlowSqlVO;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,10 +63,13 @@ import java.util.Map;
 @RequestMapping("/opsCluster")
 public class OpsClusterController extends BaseController {
 
-    @Autowired
+    @Resource
     private IOpsClusterService opsClusterService;
-
-    @Autowired
+    @Resource
+    private ImportClusterService importClusterService;
+    @Resource
+    private BatchImportClusterService batchImportClusterService;
+    @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private OpsFacade opsFacade;
 
@@ -204,7 +210,7 @@ public class OpsClusterController extends BaseController {
 
     @PostMapping("/import")
     public AjaxResult importCluster(@RequestBody ImportClusterBody importClusterBody) {
-        opsClusterService.importCluster(importClusterBody);
+        importClusterService.importCluster(importClusterBody);
         return AjaxResult.success();
     }
 
@@ -216,25 +222,24 @@ public class OpsClusterController extends BaseController {
      */
     @GetMapping("/downloadImportFile/{currentLocale}")
     public void downloadImportFile(@PathVariable String currentLocale, HttpServletResponse response) {
-        opsClusterService.downloadImportFile(response, currentLocale);
+        batchImportClusterService.downloadImportFile(response, currentLocale);
     }
 
     @PostMapping("/uploadImportFile")
     public AjaxResult uploadImportFile(MultipartFile file) {
-        opsImportEntities = opsClusterService.uploadImportFile(file);
+        opsImportEntities = batchImportClusterService.uploadImportFile(file);
         return AjaxResult.success();
     }
 
     @GetMapping("/parseExcel")
     public AjaxResult parseExcel() {
-        opsImportEntities = opsClusterService.parseExcel(opsImportEntities);
+        opsImportEntities = batchImportClusterService.parseExcel(opsImportEntities);
         return AjaxResult.success(opsImportEntities.size());
     }
 
     @GetMapping("/importSuccessCount")
     public AjaxResult importSuccessCount() {
-        int importSuccessCount = opsClusterService.importSuccessCount();
-        return AjaxResult.success(importSuccessCount);
+        return AjaxResult.success(batchImportClusterService.responseImportSuccessCount());
     }
 
     /**
@@ -245,7 +250,7 @@ public class OpsClusterController extends BaseController {
      */
     @GetMapping("/downloadErrorFile/{currentLocale}")
     public void downloadErrorFile(@PathVariable String currentLocale, HttpServletResponse response) {
-        opsClusterService.downloadErrorFile(response, opsImportEntities, currentLocale);
+        batchImportClusterService.downloadErrorFile(response, opsImportEntities, currentLocale);
     }
 
     @GetMapping("/monitor")

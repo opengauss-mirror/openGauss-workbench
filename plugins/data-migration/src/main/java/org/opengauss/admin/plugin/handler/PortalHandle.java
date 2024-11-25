@@ -392,6 +392,7 @@ public class PortalHandle {
             return new String[0];
         }
         String[] infos = result.getResult().trim().split("\n");
+
         return infos;
     }
 

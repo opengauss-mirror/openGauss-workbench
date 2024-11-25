@@ -56,11 +56,14 @@ public interface SshCommandConstants {
     /**
      * CPU frequency
      */
-    String CPU_FREQUENCY = "cat /proc/cpuinfo | grep 'model name' |awk -F ':' '{print $2}'| awk -F ' ' '{print $7}' | sort | head -n 1";
+    String CPU_FREQUENCY
+        = "cat /proc/cpuinfo | grep 'model name' |awk -F ':' '{print $2}'| awk -F ' ' '{print $7}' | sort | head -n 1";
     /**
      * CPU usage
      */
-    String CPU_USING = "top -b -n2 -p 1 | fgrep \"Cpu(s)\" | tail -1 | awk -F'id,' -v prefix=\"$prefix\" '{ split($1, vs, \",\"); v=vs[length(vs)]; sub(\"%\",\"\", v); printf \"%s%.1f\\n\", prefix, 100 - v }'";
+    String CPU_USING =
+        "top -b -n2 -p 1 | fgrep \"Cpu(s)\" | tail -1 | awk -F'id,' -v prefix=\"$prefix\" '{ split($1, vs, \",\"); "
+            + "v=vs[length(vs)]; sub(\"%\",\"\", v); printf \"%s%.1f\\n\", prefix, 100 - v }'";
     /**
      * free hard disk space
      */
@@ -68,7 +71,18 @@ public interface SshCommandConstants {
     /**
      * rely
      */
-    String DEPENDENCY = "yum list installed | egrep 'libaio-devel|flex|bison|ncurses-devel|glibc-devel|patch|readline-devel' | wc -l";
+    String DEPENDENCY
+        = "yum list installed | egrep 'libaio-devel|flex|bison|ncurses-devel|glibc-devel|patch|readline-devel'";
+
+    /**
+     * base dependencies
+     */
+    String BASE_DEPENDENCY = "yum list installed | egrep 'coreutils|procps-ng|openssh-clients|unzip|lsof|grep|tar'";
+    /**
+     * base dependencies
+     */
+    String OPENEULER_BASE_DEPENDENCY = "yum list installed | egrep 'coreutils|procps-ng|openssh|unzip|lsof|grep|tar'";
+
     /**
      * firewall
      */
@@ -90,7 +104,12 @@ public interface SshCommandConstants {
 
     String LIMITS_CHECK = " cat /etc/security/limits.conf | grep 1048576 ";
 
-    String LIMITS = "echo -e \"* hard nofile 1048576\\n* soft nproc 1048576\\n* hard nproc 1048576\\n* soft nproc 1048576\" >> /etc/security/limits.conf";
+    /**
+     * linux limits config
+     */
+    String LIMITS =
+        "echo -e \"* hard nofile 1048576\\n* soft nproc 1048576\\n* hard nproc 1048576\\n* soft nproc 1048576\" >> "
+            + "/etc/security/limits.conf";
 
     /**
      * hostname
@@ -202,11 +221,15 @@ public interface SshCommandConstants {
     /**
      * Lite masternode installation
      */
-    String LITE_MASTER_INSTALL = "echo {0} | sh {1}/install.sh --mode primary -D {2} -R {3} -C \"replconninfo1=''localhost={4} localport={5} remotehost={6} remoteport={7}''\"  --start";
+    String LITE_MASTER_INSTALL =
+        "echo {0} | sh {1}/install.sh --mode primary -D {2} -R {3} -C \"replconninfo1=''localhost={4} localport={5}"
+            + " remotehost={6} remoteport={7}''\"  --start";
     /**
      * Lite install from node
      */
-    String LITE_SLAVE_INSTALL = "echo {0} | sh {1}/install.sh --mode standby -D {2} -R {3} -C \"replconninfo1=''localhost={4} localport={5} remotehost={6} remoteport={7}''\"  --start";
+    String LITE_SLAVE_INSTALL =
+        "echo {0} | sh {1}/install.sh --mode standby -D {2} -R {3} -C \"replconninfo1=''localhost={4} localport={5}"
+            + " remotehost={6} remoteport={7}''\"  --start";
     /**
      * light version uninstall
      */
@@ -246,4 +269,85 @@ public interface SshCommandConstants {
      * cpu arch
      */
     String CPU_ARCH = "LC_ALL=C lscpu | grep Architecture: | head -n 1 | awk -F ':' '{print $2}'";
+    /**
+     * check os user exist
+     */
+    String CHECK_OS_USER_EXIST = "export PATH=$PATH:/sbin:/usr/sbin &&  id -u %s";
+    /**
+     * message constants no such user
+     */
+    String NO_SUCH_USER = "no such user";
+    /**
+     * create os user
+     */
+    String CREATE_OS_USER = "useradd %s";
+    /**
+     * check os user sudo permission
+     */
+    String CREATE_OS_USER_SUDO = "sudo -l -U %s";
+    /**
+     * check os memory free -m
+     */
+    String MEMORY_MONITOR = "free -m | awk -F '[ :]+' 'NR==2{printf \"%d\", ($2-$7)/$2*100}'";
+    /**
+     * check os cpu load
+     */
+    String CPU_MONITOR = "top -b -n1 | fgrep \"Cpu(s)\" | tail -1 |"
+        + " awk -F'id,' '{split($1, vs, \",\"); v=vs[length(vs)];"
+        + " sub(/\\s+/, \"\", v);sub(/\\s+/, \"\", v); printf \"%d\", 100-v;}'";
+    /**
+     * check os disk usage
+     */
+    String DISK_MONITOR = "df -Th | egrep -v \"(tmpfs|sr0)\" |"
+        + " tail -n +2|tr -s \" \" | cut -d \" \" -f6|tr -d \"%\"|head -n 1";
+    /**
+     * check os net card name
+     */
+    String NET_CARD_NAME = "export PATH=$PATH:/sbin:/usr/sbin && ip -o -4 addr show | grep %s | awk '{print $2}'";
+    /**
+     * check os net card rx tx
+     */
+    String NET_MONITOR = "export PATH=$PATH:/sbin:/usr/sbin  net_card_name=\"%s\"\n"
+        + "    rx_net1=$(ip -s link show $net_card_name | awk '/RX:/{getline; print $1}')\n"
+        + "    tx_net1=$(ip -s link show $net_card_name | awk '/TX:/{getline; print $1}')\n" + "    sleep 1\n"
+        + "    rx_net2=$(ip -s link show $net_card_name | awk '/RX:/{getline; print $1}')\n"
+        + "    tx_net2=$(ip -s link show $net_card_name | awk '/TX:/{getline; print $1}')\n"
+        + "    rx_net=$((rx_net2 - rx_net1))\n" + "    tx_net=$((tx_net2 - tx_net1))\n"
+        + "    echo \"$rx_net|$tx_net\"";
+    /**
+     * check os port conflict
+     */
+    String CHECK_OS_PORT_CONFLICT = "export PATH=$PATH:/sbin:/usr/sbin &&  ss -tuln | grep -E \":%d\\s+\" | wc -l";
+    /**
+     * check os openGauss Version
+     */
+    String OPENGAUSS_MAIN_VERSION_NUM = "gsql -V|  grep -oP 'openGauss \\K[\\w.]+'";
+    /**
+     * check os user java version
+     */
+    String JAVA_VERSION = "java -version";
+    /**
+     * base host info: contains cpu core number, remaining memory, available disk space
+     */
+    String HOST_BASE_INFO = "cat /proc/cpuinfo |grep \"processor\"|wc -l && grep MemFree /proc/meminfo "
+        + "| awk '{val=$2/1024}END{print val}' && df -Th | egrep -v \"(tmpfs|sr0)\" | tail -n +2| "
+        + "tr -s \" \" | cut -d \" \" -f5 | tr -d \"G\" | awk '{sum+=$1}END{print sum}'";
+    /**
+     * check path is empty
+     */
+    String CHECK_PATH_EMPTY = "if [ $(ls -A %s | wc -l) -eq 0 ]; then\n echo dir_empty\n else\n echo dir_no_empty\n fi";
+    /**
+     * check file is exist
+     */
+    String CHECK_FILE_EXIST = "if [ -e %s ]; then  echo file_exist; else   echo file_not_exist; fi";
+    /**
+     * check result
+     * file_exist
+     */
+    String CHECK_RESULT_FILE_EXIST = "file_exist";
+    /**
+     * check result
+     * dir_empty:
+     */
+    String CHECK_RESULT_PATH_EMPTY = "dir_empty";
 }

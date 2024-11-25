@@ -20,6 +20,7 @@
 package org.opengauss.collect.web.controller;
 
 import java.util.List;
+
 import org.opengauss.collect.domain.Assessment;
 import org.opengauss.collect.domain.CollectPeriod;
 import org.opengauss.collect.service.SqlOperation;
@@ -98,13 +99,15 @@ public class SqlOperationController extends BaseController {
     /**
      * downloadChrome
      *
-     * @param host     host
+     * @param host host
+     * @param hostUser hostUser
      * @param filePath filePath
      * @param response response
      */
     @RequestMapping(value = "/download", method = RequestMethod.GET)
-    public void downloadChrome(@RequestParam String host, @RequestParam String filePath, HttpServletResponse response) {
-        operation.downloadChrome(host, filePath, response);
+    public void downloadChrome(@RequestParam String host, @RequestParam String hostUser, @RequestParam String filePath,
+        HttpServletResponse response) {
+        operation.downloadChrome(host, hostUser, filePath, response);
     }
 
     /**
@@ -142,11 +145,12 @@ public class SqlOperationController extends BaseController {
      * getPids
      *
      * @param host host
-     * @return RespBean
+     * @param hostUser hostUser
+     * @return RespBean RespBean
      */
     @RequestMapping(value = "/all/pids", method = RequestMethod.GET)
-    public RespBean getPids(@RequestParam String host) {
-        return operation.getAllPids(host);
+    public RespBean getPids(@RequestParam String host, @RequestParam String hostUser) {
+        return operation.getAllPids(host, hostUser);
     }
 
     /**
@@ -163,13 +167,12 @@ public class SqlOperationController extends BaseController {
     /**
      * sqlAssessStart
      *
-     * @param assessment   assessment
+     * @param assessment assessment
      * @param sqlInputType sqlInputType
      * @return RespBean
      */
     @RequestMapping(value = "/assess/start", method = RequestMethod.POST)
-    public RespBean sqlAssessStart(@ModelAttribute Assessment assessment,
-                                   @RequestParam String sqlInputType) {
+    public RespBean sqlAssessStart(@ModelAttribute Assessment assessment, @RequestParam String sqlInputType) {
         return operation.startAssessmentSql(assessment, sqlInputType, getUserId());
     }
 

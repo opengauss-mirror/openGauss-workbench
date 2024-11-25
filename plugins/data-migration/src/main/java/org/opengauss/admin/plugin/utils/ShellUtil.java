@@ -355,24 +355,4 @@ public class ShellUtil {
                     "Failed to install dependencies. Command: {%s}, Result: {%s}", command, jschResult.getResult()));
         }
     }
-
-    /**
-     * Checks whether the port is occupied. If yes, throw an exception.
-     *
-     * @param rootShellInfo root shell information
-     * @param port port
-     */
-    public static void checkPortUsed(ShellInfoVo rootShellInfo, String port) {
-        String command = "lsof -i:" + port;
-        JschResult jschResult = ShellUtil.execCommandGetResult(rootShellInfo, command);
-        if (StringUtils.isNotEmpty(jschResult.getResult())) {
-            if (jschResult.isOk()) {
-                String errorMessage = "Port " + port + " is occupied.";
-                log.error(errorMessage);
-                throw new ShellException(errorMessage);
-            } else {
-                log.error("Failed to execute command: {}, Result: {}", command, jschResult.getResult());
-            }
-        }
-    }
 }

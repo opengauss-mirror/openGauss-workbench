@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
  *
  * openGauss is licensed under Mulan PSL v2.
  * You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -13,28 +13,35 @@
  * See the Mulan PSL v2 for more details.
  * -------------------------------------------------------------------------
  *
- * SSHBody.java
+ * SshLogin.java
  *
  * IDENTIFICATION
- * base-ops/src/main/java/org/opengauss/admin/plugin/domain/model/ops/SSHBody.java
+ * visualtool-service/src/main/java/org/opengauss/admin/system/plugin/beans/SshLogin.java
  *
  * -------------------------------------------------------------------------
  */
 
-package org.opengauss.admin.plugin.domain.model.ops;
+package org.opengauss.admin.system.plugin.beans;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
- * SSHBody
+ * HostLogin
  *
- * @author lhf
- * @date 2022/8/8 13:57
+ * @author wangchao
+ * @since 2024/6/22 9:41
  **/
 @Data
-public class SSHBody {
-    private String hostId;
-    private String sshUsername;
-    private String rootPassword;
-    private String businessId;
+@AllArgsConstructor
+public class SshLogin {
+    private String host;
+    private Integer port;
+    private String username;
+    private String password;
+
+    @Override
+    public String toString() {
+        return "[host=" + host + ", username=" + username + "]";
+    }
 }

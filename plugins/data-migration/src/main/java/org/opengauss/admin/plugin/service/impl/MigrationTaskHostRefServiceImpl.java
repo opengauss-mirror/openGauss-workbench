@@ -27,15 +27,18 @@ package org.opengauss.admin.plugin.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+
 import lombok.extern.slf4j.Slf4j;
+
+import org.opengauss.admin.common.constant.ops.SshCommandConstants;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
@@ -47,6 +50,7 @@ import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterInputDto;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterNodeInputDto;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
+import org.opengauss.admin.common.utils.OpsAssert;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.file.FileUploadUtils;
 import org.opengauss.admin.common.utils.ops.JdbcUtil;
@@ -76,13 +80,14 @@ import org.opengauss.admin.plugin.utils.ShellUtil;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 import org.opengauss.admin.plugin.vo.TargetClusterNodeVO;
 import org.opengauss.admin.plugin.vo.TargetClusterVO;
+import org.opengauss.admin.system.plugin.beans.SshLogin;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.plugin.facade.JdbcDbClusterFacade;
+import org.opengauss.admin.system.plugin.facade.JschExecutorFacade;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.opengauss.admin.system.plugin.facade.SysSettingFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -101,16 +106,17 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
 
 /**
  * @author xielibo
@@ -118,49 +124,53 @@ import java.util.stream.Collectors;
  **/
 @Service
 @Slf4j
-public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHostRefMapper, MigrationTaskHostRef> implements MigrationTaskHostRefService {
+public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHostRefMapper, MigrationTaskHostRef>
+    implements MigrationTaskHostRefService {
 
-    @Autowired
+    @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostFacade hostFacade;
 
-    @Autowired
+    @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostUserFacade hostUserFacade;
 
-    @Autowired
+    @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private OpsFacade opsFacade;
 
-    @Autowired
+    @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private EncryptionUtils encryptionUtils;
 
-    @Autowired
+    @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private JdbcDbClusterFacade jdbcDbClusterFacade;
 
-    @Autowired
+    @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private SysSettingFacade sysSettingFacade;
 
+    @Resource
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private JschExecutorFacade jschExecutorFacade;
 
-    @Autowired
+    @Resource
     private MigrationTaskHostRefMapper migrationTaskHostRefMapper;
-    @Autowired
+    @Resource
     private MigrationTaskService migrationTaskService;
-    @Autowired
+    @Resource
     private MigrationHostPortalInstallHostService migrationHostPortalInstallHostService;
-    @Autowired
+    @Resource
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
-    @Autowired
+    @Resource
     private TbMigrationTaskGlobalToolsParamService toolsParamService;
 
-    @Autowired
+    @Resource
     private MigrationMqInstanceService migrationThirdPartySoftwareInstanceService;
 
-    @Autowired
+    @Resource
     private TbMigrationTaskGlobalToolsParamService taskGlobalToolsParamService;
 
     @Override
@@ -173,12 +183,13 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     @Override
     public List<MigrationTaskHostRef> listByMainTaskId(Integer mainTaskId) {
         List<MigrationTaskHostRef> hosts = migrationTaskHostRefMapper.selectByMainTaskId(mainTaskId);
-        hosts.stream().forEach(h -> {
+        hosts.forEach(h -> {
             OpsHostEntity opsHost = hostFacade.getById(h.getRunHostId());
             h.setHostName(opsHost.getHostname());
             h.setHost(opsHost.getPublicIp());
             h.setPort(opsHost.getPort());
-            MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(h.getRunHostId());
+            MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(
+                h.getRunHostId());
             h.setUser(installHost.getRunUser());
             h.setPassword(installHost.getRunPassword());
         });
@@ -192,51 +203,47 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
      */
     @Override
     public List<MigrationHostDto> getHosts() {
-        ThreadPoolExecutor taskExecutor = ThreadUtil.newExecutor(15, 30);
         List<OpsHostEntity> opsHostEntities = hostFacade.listAll();
-        List<Future<MigrationHostDto>> futureList = new ArrayList<>();
-        for (OpsHostEntity host : opsHostEntities) {
-            Future<MigrationHostDto> future = taskExecutor.submit(() -> {
-                MigrationHostDto eachOne = new MigrationHostDto();
-                eachOne.setHostInfo(host);
-                List<MigrationTask> tasks = migrationTaskService.listRunningTaskByHostId(host.getHostId());
-                eachOne.setTasks(tasks);
-                MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(host.getHostId());
-                if (installHost == null) {
-                    OpsHostEntity opsHost = hostFacade.getById(host.getHostId());
-                    String[] opsHosInfo = getOpsHosInfo(host.getHostId(), opsHost.getPublicIp(), opsHost.getPort());
-                    if (opsHosInfo.length == 0) {
-                        return null;
-                    }
-                    eachOne.setBaseInfos(ListUtil.toList(opsHosInfo));
-                    eachOne.setInstallPortalStatus(PortalInstallStatus.NOT_INSTALL.getCode());
-                } else {
-                    String password = encryptionUtils.decrypt(installHost.getRunPassword());
-                    String[] hostInfo = PortalHandle.getHostBaseInfo(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), password);
-                    if (hostInfo.length == 0) {
-                        return null;
-                    }
-                    eachOne.setBaseInfos(ListUtil.toList(hostInfo));
-                    eachOne.setInstallInfo(installHost);
-                    eachOne.setInstallPortalStatus(installHost.getInstallStatus());
-                }
-                return eachOne;
-            });
-            futureList.add(future);
-        }
         List<MigrationHostDto> result = new ArrayList<>();
-        for (Future<MigrationHostDto> item : futureList) {
-            try {
-                MigrationHostDto futureResult = item.get();
-                if (futureResult != null) {
-                    result.add(futureResult);
+        opsHostEntities.parallelStream().forEach(host -> {
+            MigrationHostDto eachOne = new MigrationHostDto();
+            eachOne.setHostInfo(host);
+            List<MigrationTask> tasks = migrationTaskService.listRunningTaskByHostId(host.getHostId());
+            eachOne.setTasks(tasks);
+            MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(
+                host.getHostId());
+            if (installHost == null) {
+                String[] opsHosInfo = getOpsHosInfo(host.getHostId(), host.getPublicIp(), host.getPort());
+                if (opsHosInfo.length == 0) {
+                    log.warn("Host no install , opsHostInfo is empty {}", host);
+                    return;
                 }
-            } catch (ExecutionException | InterruptedException e) {
-                log.error("get host future result failed: " + e.getMessage());
+                eachOne.setBaseInfos(ListUtil.toList(opsHosInfo));
+                eachOne.setInstallPortalStatus(PortalInstallStatus.NOT_INSTALL.getCode());
+            } else {
+                String password = encryptionUtils.decrypt(installHost.getRunPassword());
+                String[] hostInfo = getHostBaseInfo(installHost.getHost(), installHost.getPort(),
+                    installHost.getRunUser(), password);
+                if (hostInfo.length == 0) {
+                    log.warn("Host install , opsHostInfo is empty {}", host);
+                    return;
+                }
+                eachOne.setBaseInfos(ListUtil.toList(hostInfo));
+                eachOne.setInstallInfo(installHost);
+                eachOne.setInstallPortalStatus(installHost.getInstallStatus());
             }
-        }
-        taskExecutor.shutdown();
+            result.add(eachOne);
+        });
+        result.sort(Comparator.comparing(o -> o.getHostInfo().getPublicIp()));
         return result;
+    }
+
+    private String[] getHostBaseInfo(String host, int port, String userName, String password) {
+        SshLogin sshLogin = new SshLogin(host, port, userName, password);
+        String execResult = jschExecutorFacade.execCommand(sshLogin, SshCommandConstants.HOST_BASE_INFO);
+        String[] hostInfo = execResult.split("\n");
+        log.warn("host base info execResult:{}", Arrays.toString(hostInfo));
+        return hostInfo;
     }
 
     @Override
@@ -247,7 +254,8 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
 
     @Override
     public void saveDbResource(CustomDbResource dbResource) {
-        saveSource(dbResource.getClusterName(), dbResource.getDbUrl(), dbResource.getUserName(), dbResource.getPassword());
+        saveSource(dbResource.getClusterName(), dbResource.getDbUrl(), dbResource.getUserName(),
+            dbResource.getPassword());
     }
 
     @Override
@@ -272,7 +280,8 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             clusterVO.setClusterId(o.getClusterId());
             clusterVO.setClusterName(o.getClusterName());
             clusterVO.setVersion(o.getVersion());
-            clusterVO.setVersionNum(StringUtils.isNotBlank(o.getVersionNum()) ? o.getVersionNum() : TaskConstant.DEFAULT_OPENGAUSS_VERSION);
+            clusterVO.setVersionNum(
+                StringUtils.isNotBlank(o.getVersionNum()) ? o.getVersionNum() : TaskConstant.DEFAULT_OPENGAUSS_VERSION);
             List<TargetClusterNodeVO> nodes = o.getClusterNodes().stream().map(on -> {
                 TargetClusterNodeVO clusterNodeVO = new TargetClusterNodeVO();
                 clusterNodeVO.setNodeId(on.getNodeId());
@@ -342,13 +351,11 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     @Override
     public List<Map<String, Object>> getOpsClusterDbNames(OpsClusterNodeVO clusterNode) {
         List<Map<String, Object>> dbList = new ArrayList<>();
-        if (clusterNode.getHostPort() != 22
-                || (opsFacade.isNodeInOpsCluster(clusterNode.getNodeId())
-                && opsFacade.getOpsClusterVOByNodeId(clusterNode.getNodeId()).getClusterNodes().size() > 1
-                && !isPrimaryNodeInCluster(clusterNode))) {
+        if (clusterNode.getHostPort() != 22 || (opsFacade.isNodeInOpsCluster(clusterNode.getNodeId())
+            && opsFacade.getOpsClusterVOByNodeId(clusterNode.getNodeId()).getClusterNodes().size() > 1
+            && !isPrimaryNodeInCluster(clusterNode))) {
             return dbList;
         }
-
         String sql = "select datname from pg_database;";
         List<Map<String, Object>> resultSet = queryTarget(clusterNode, "", sql);
         resultSet.forEach(ret -> {
@@ -370,8 +377,8 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
      */
     private boolean isPrimaryNodeInCluster(OpsClusterNodeVO clusterNode) {
         String sql = "select * from pg_stat_get_wal_senders();";
-        String url = JdbcUtil.getOpengaussJdbcUrl(
-                clusterNode.getPublicIp(), clusterNode.getDbPort().toString(), clusterNode.getDbName(), "");
+        String url = JdbcUtil.getOpengaussJdbcUrl(clusterNode.getPublicIp(), clusterNode.getDbPort().toString(),
+            clusterNode.getDbName(), "");
         return JdbcUtil.hasResultSetByExecuteQuery(url, sql, clusterNode.getDbUser(),
             encryptionUtils.decrypt(clusterNode.getDbUserPassword()));
     }
@@ -437,30 +444,31 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
      * SQL querying based on OpenGauss.
      *
      * @param clusterNode ClusterNode Object
-     * @param schema      schema
-     * @param sql         sql
+     * @param schema schema
+     * @param sql sql
      * @return result list
      */
     private List<Map<String, Object>> queryTarget(OpsClusterNodeVO clusterNode, String schema, String sql) {
         return queryBySqlOnOpengauss(clusterNode.getPublicIp(), clusterNode.getDbPort().toString(),
-            clusterNode.getDbName(), clusterNode.getDbUser(),
-            encryptionUtils.decrypt(clusterNode.getDbUserPassword()), schema, sql);
+            clusterNode.getDbName(), clusterNode.getDbUser(), encryptionUtils.decrypt(clusterNode.getDbUserPassword()),
+            schema, sql);
     }
 
     /**
      * SQL querying based on OpenGauss.
      *
-     * @param host     host of db
-     * @param port     host of db
+     * @param host host of db
+     * @param port host of db
      * @param database database of db
-     * @param dbUser   user of db
-     * @param dbPass   password of db
-     * @param schema   schema of db
-     * @param sql      sql
+     * @param dbUser user of db
+     * @param dbPass password of db
+     * @param schema schema of db
+     * @param sql sql
      * @return result list
      */
     @Override
-    public List<Map<String, Object>> queryBySqlOnOpengauss(String host, String port, String database, String dbUser, String dbPass, String schema, String sql) {
+    public List<Map<String, Object>> queryBySqlOnOpengauss(String host, String port, String database, String dbUser,
+        String dbPass, String schema, String sql) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("jdbc:opengauss://");
         stringBuilder.append(host).append(":");
@@ -499,8 +507,11 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     @Override
     public List<OpsHostUserEntity> getHostUsers(String hostId) {
         OpsHostEntity opsHost = hostFacade.getById(hostId);
+        OpsAssert.nonNull(opsHost, "host id " + hostId + " not exist");
         List<OpsHostUserEntity> opsHostUserEntities = hostUserFacade.listHostUserByHostId(hostId);
-        List<OpsHostUserEntity> notRootUsers = opsHostUserEntities.stream().filter(x -> !x.getUsername().equals("root")).collect(Collectors.toList());
+        List<OpsHostUserEntity> notRootUsers = opsHostUserEntities.stream()
+            .filter(x -> !x.getUsername().equals("root"))
+            .collect(Collectors.toList());
         return notRootUsers;
     }
 
@@ -518,7 +529,8 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public AjaxResult installPortalFromDatakit(String hostId, MigrationHostPortalInstall install, Integer userId) throws PortalInstallException {
+    public AjaxResult installPortalFromDatakit(String hostId, MigrationHostPortalInstall install, Integer userId)
+        throws PortalInstallException {
         SysSettingEntity sysSettingEntity = sysSettingFacade.getSysSetting(userId);
         if (sysSettingEntity == null) {
             throw new PortalInstallException("not found system setting, please try again");
@@ -533,10 +545,10 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             MultipartFile file = FileUploadUtils.inputStreamToMultipartFile(in, "file", install.getPkgName());
             install.setFile(file);
         } catch (Exception ex) {
-            String errMsg = String.format("transfer portal package %s to multipart file failed: %s", pkgPath, ex.getMessage());
+            String errMsg = String.format("transfer portal package %s to multipart file failed: %s", pkgPath,
+                ex.getMessage());
             throw new PortalInstallException(errMsg);
         }
-
         return installPortalProc(hostId, install, false);
     }
 
@@ -546,26 +558,25 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         if (!install.getInstallType().equals(PortalInstallType.IMPORT_INSTALL.getCode())) {
             preinstall(opsHost, install);
         }
-        MigrationHostPortalInstall oldInstall = migrationHostPortalInstallHostService.getOneByHostId(install.getRunHostId());
         OpsHostUserEntity hostUser = hostUserFacade.getById(install.getHostUserId());
         String realInstallPath = getInstallPath(install.getInstallPath(), hostUser.getUsername());
         AjaxResult result = checkPermission(opsHost, hostUser, realInstallPath);
         if (!result.isOk()) {
             return result;
         }
-
-        MigrationHostPortalInstall physicalInstallParams =
-                preparePhysicalInstallParams(opsHost, hostUser, install, realInstallPath);
-
+        MigrationHostPortalInstall physicalInstallParams = preparePhysicalInstallParams(opsHost, hostUser, install,
+            realInstallPath);
         if (PortalInstallType.IMPORT_INSTALL.getCode().equals(install.getInstallType())) {
             handleImportInstallation(physicalInstallParams);
             return AjaxResult.success();
         }
         MigrationThirdPartySoftwareConfig thirdPartySoftwareConfig = saveThirdPartySoftwareRecord(install,
-                physicalInstallParams);
+            physicalInstallParams);
         physicalInstallParams.setThirdPartySoftwareConfig(thirdPartySoftwareConfig);
         syncInstallPortalHandler(physicalInstallParams);
         // if reinstall path changed, clear old package
+        MigrationHostPortalInstall oldInstall = migrationHostPortalInstallHostService.getOneByHostId(
+            install.getRunHostId());
         if (isReInstall && !realInstallPath.equals(oldInstall.getInstallPath())) {
             deletePortal(hostId, false);
         }
@@ -579,31 +590,25 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
      * @param install portal install information
      */
     private void preinstall(OpsHostEntity opsHost, MigrationHostPortalInstall install) {
-        // check root user password
-        OpsHostUserEntity rootUser = hostUserFacade.getRootUserByHostId(opsHost.getHostId());
-        if (StringUtils.isEmpty(rootUser.getPassword())) {
-            String errorMessage = "The root user password of the host is empty.";
+        OpsHostUserEntity installUser = hostUserFacade.getById(install.getHostUserId());
+        if (StringUtils.isEmpty(installUser.getPassword())) {
+            String errorMessage = "The install-user-password of the host is empty.";
             log.error(errorMessage);
             throw new PortalInstallException(errorMessage);
         }
-
         // check port used
         Integer configType = install.getThirdPartySoftwareConfig().getThirdPartySoftwareConfigType();
+        SshLogin sshLogin = new SshLogin(opsHost.getPublicIp(), opsHost.getPort(), installUser.getUsername(),
+            encryptionUtils.decrypt(installUser.getPassword()));
         if (configType.equals(ThirdPartySoftwareConfigType.INSTALL.getCode())) {
-            ShellInfoVo rootShellInfo = ShellInfoVo.getInstance(
-                    opsHost, rootUser.getUsername(), encryptionUtils.decrypt(rootUser.getPassword()));
-            checkPortUsed(rootShellInfo, install);
+            checkPortUsed(sshLogin, install);
         }
-
         // check java environment
-        OpsHostUserEntity installUser = hostUserFacade.getById(install.getHostUserId());
-        ShellInfoVo userShellInfo = ShellInfoVo.getInstance(
-                opsHost, installUser.getUsername(), encryptionUtils.decrypt(installUser.getPassword()));
-        checkJavaEnv(userShellInfo);
+        checkJavaEnv(sshLogin);
     }
 
-    private MigrationHostPortalInstall preparePhysicalInstallParams(
-            OpsHostEntity opsHost, OpsHostUserEntity hostUser, MigrationHostPortalInstall install, String installPath) {
+    private MigrationHostPortalInstall preparePhysicalInstallParams(OpsHostEntity opsHost, OpsHostUserEntity hostUser,
+        MigrationHostPortalInstall install, String installPath) {
         MigrationHostPortalInstall physicalInstallParams = new MigrationHostPortalInstall();
         physicalInstallParams.setRunHostId(opsHost.getHostId());
         physicalInstallParams.setHost(opsHost.getPublicIp());
@@ -619,7 +624,6 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         physicalInstallParams.setInstallStatus(PortalInstallStatus.INSTALLING.getCode());
         physicalInstallParams.setInstallType(install.getInstallType());
         physicalInstallParams.setFile(install.getFile());
-
         if (physicalInstallParams.getInstallType().equals(PortalInstallType.ONLINE_INSTALL.getCode())) {
             physicalInstallParams.setPkgDownloadUrl(install.getPkgDownloadUrl());
             physicalInstallParams.setPkgUploadPath(null);
@@ -630,37 +634,36 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     private void handleImportInstallation(MigrationHostPortalInstall physicalInstallParams) {
         physicalInstallParams.setInstallType(PortalInstallType.IMPORT_INSTALL.getCode());
         boolean isInstallSuccess = PortalHandle.checkInstallStatusAndUpdate(physicalInstallParams,
-                encryptionUtils.decrypt(physicalInstallParams.getRunPassword()));
+            encryptionUtils.decrypt(physicalInstallParams.getRunPassword()));
         migrationHostPortalInstallHostService.saveRecord(physicalInstallParams);
-
         if (isInstallSuccess) {
             threadPoolTaskExecutor.submit(() -> {
                 physicalInstallParams.setRunPassword(encryptionUtils.decrypt(physicalInstallParams.getRunPassword()));
                 loadTaskConfigParams(physicalInstallParams);
-                migrationHostPortalInstallHostService.updateStatus(
-                        physicalInstallParams.getRunHostId(), PortalInstallStatus.INSTALLED.getCode());
+                migrationHostPortalInstallHostService.updateStatus(physicalInstallParams.getRunHostId(),
+                    PortalInstallStatus.INSTALLED.getCode());
             });
         } else {
-            migrationHostPortalInstallHostService.updateStatus(
-                    physicalInstallParams.getRunHostId(), PortalInstallStatus.INSTALL_ERROR.getCode());
+            migrationHostPortalInstallHostService.updateStatus(physicalInstallParams.getRunHostId(),
+                PortalInstallStatus.INSTALL_ERROR.getCode());
         }
     }
 
-    private MigrationThirdPartySoftwareConfig saveThirdPartySoftwareRecord(
-            MigrationHostPortalInstall install, MigrationHostPortalInstall physicalInstallParams) {
+    private MigrationThirdPartySoftwareConfig saveThirdPartySoftwareRecord(MigrationHostPortalInstall install,
+        MigrationHostPortalInstall physicalInstallParams) {
         MigrationThirdPartySoftwareConfig thirdPartySoftwareConfig = null;
-        if (ThirdPartySoftwareConfigType.INSTALL.getCode().equals(install.getThirdPartySoftwareConfig()
-                .getThirdPartySoftwareConfigType())) {
+        if (ThirdPartySoftwareConfigType.INSTALL.getCode()
+            .equals(install.getThirdPartySoftwareConfig().getThirdPartySoftwareConfigType())) {
             thirdPartySoftwareConfig = MigrationThirdPartySoftwareConfig.builder()
-                    .zookeeperPort(install.getThirdPartySoftwareConfig().getZookeeperPort())
-                    .kafkaPort(install.getThirdPartySoftwareConfig().getKafkaPort())
-                    .schemaRegistryPort(install.getThirdPartySoftwareConfig().getSchemaRegistryPort())
-                    .installDir(install.getThirdPartySoftwareConfig().getInstallDir())
-                    .zkIp(physicalInstallParams.getHost())
-                    .kafkaIp(physicalInstallParams.getHost())
-                    .schemaRegistryIp(physicalInstallParams.getHost())
-                    .thirdPartySoftwareConfigType(ThirdPartySoftwareConfigType.INSTALL.getCode())
-                    .build();
+                .zookeeperPort(install.getThirdPartySoftwareConfig().getZookeeperPort())
+                .kafkaPort(install.getThirdPartySoftwareConfig().getKafkaPort())
+                .schemaRegistryPort(install.getThirdPartySoftwareConfig().getSchemaRegistryPort())
+                .installDir(install.getThirdPartySoftwareConfig().getInstallDir())
+                .zkIp(physicalInstallParams.getHost())
+                .kafkaIp(physicalInstallParams.getHost())
+                .schemaRegistryIp(physicalInstallParams.getHost())
+                .thirdPartySoftwareConfigType(ThirdPartySoftwareConfigType.INSTALL.getCode())
+                .build();
             thirdPartySoftwareConfig.replacePathHome(physicalInstallParams.getRunUser());
             log.error("thirdPartySoftwareConfig = {}", thirdPartySoftwareConfig);
             migrationThirdPartySoftwareInstanceService.saveRecord(thirdPartySoftwareConfig);
@@ -671,9 +674,9 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 return MigrationThirdPartySoftwareConfig.builder().build();
             }
             thirdPartySoftwareConfig.setThirdPartySoftwareConfigType(ThirdPartySoftwareConfigType.BIND.getCode());
-            List<String> bindlist =
-                    new ArrayList<>(Arrays.asList(thirdPartySoftwareConfig.getBindPortalHost() == null
-                            ? new String[]{} : thirdPartySoftwareConfig.getBindPortalHost().split(",")));
+            List<String> bindlist = new ArrayList<>(Arrays.asList(thirdPartySoftwareConfig.getBindPortalHost() == null
+                ? new String[] {}
+                : thirdPartySoftwareConfig.getBindPortalHost().split(",")));
             if (!bindlist.contains(install.getHost())) {
                 bindlist.add(physicalInstallParams.getHost());
                 thirdPartySoftwareConfig.setBindPortalHost(StringUtils.join(bindlist, ","));
@@ -711,7 +714,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 isInstallSuccess = false;
             }
             if (!isInstallSuccess && ThirdPartySoftwareConfigType.INSTALL.getCode()
-                    .equals(installParams.getThirdPartySoftwareConfig().getThirdPartySoftwareConfigType())) {
+                .equals(installParams.getThirdPartySoftwareConfig().getThirdPartySoftwareConfigType())) {
                 log.info("install failed remove record");
                 migrationThirdPartySoftwareInstanceService.removeInstance(installParams.getHost());
             }
@@ -719,7 +722,9 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 installPortalLogTemp.append("END_INSTALL_PORTAL").append((char) 10);
                 loadTaskConfigParams(installParams);
             }
-            migrationHostPortalInstallHostService.updateStatus(installParams.getRunHostId(), isInstallSuccess ? PortalInstallStatus.INSTALLED.getCode() : PortalInstallStatus.INSTALL_ERROR.getCode());
+            migrationHostPortalInstallHostService.updateStatus(installParams.getRunHostId(), isInstallSuccess
+                ? PortalInstallStatus.INSTALLED.getCode()
+                : PortalInstallStatus.INSTALL_ERROR.getCode());
             printInstallPortalLog(installParams, installPortalLogTemp.toString());
         });
     }
@@ -731,16 +736,30 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
      */
     private void checkPortalDependencies(MigrationHostPortalInstall installParams, StringBuilder installPortalLogTemp) {
         // get root shell information
+        OpsHostUserEntity runUser = hostUserFacade.getHostUserByUsername(installParams.getRunHostId(),
+            installParams.getRunUser());
+        OpsAssert.nonNull(runUser, "run user " + installParams.getRunUser() + " is not exist");
+        ShellInfoVo runShellInfo = new ShellInfoVo(installParams.getHost(), installParams.getPort(),
+            runUser.getUsername(), encryptionUtils.decrypt(runUser.getPassword()));
+        installPortalLogTemp.append("START_CHECK_PORTAL_DEPENDENCIES").append((char) 10);
+        List<String> dependencies = List.of("mysql-devel", "mysql5-devel", "mariadb-devel", "python3-devel",
+            "python-devel");
+        List<String> missingDependencies = ShellUtil.checkDependencies(runShellInfo, dependencies);
+        if (CollUtil.isNotEmpty(missingDependencies)) {
+            installPortalLogTemp.append("miss dependencies:").append(missingDependencies);
+        }
         OpsHostUserEntity rootUser = hostUserFacade.getRootUserByHostId(installParams.getRunHostId());
+        if (Objects.isNull(rootUser)) {
+            log.warn("host {} does not have root permission, to install dependencies:{} ,",
+                installParams.getRunHostId(), dependencies);
+            installPortalLogTemp.append("no root permission, to install dependencies:").append(dependencies);
+            installPortalLogTemp.append("END_CHECK_PORTAL_DEPENDENCIES").append((char) 10);
+            return;
+        }
         ShellInfoVo rootShellInfo = new ShellInfoVo(installParams.getHost(), installParams.getPort(),
-                rootUser.getUsername(), encryptionUtils.decrypt(rootUser.getPassword()));
-
+            rootUser.getUsername(), encryptionUtils.decrypt(rootUser.getPassword()));
         // Check the mysql-devel mysql5-devel mariadb-devel python3-devel python-devel dependencies.
         // If anyone does not exist, install it.
-        installPortalLogTemp.append("START_CHECK_PORTAL_DEPENDENCIES").append((char) 10);
-        List<String> dependencies =
-                List.of("mysql-devel", "mysql5-devel", "mariadb-devel", "python3-devel", "python-devel");
-        List<String> missingDependencies = ShellUtil.checkDependencies(rootShellInfo, dependencies);
         try {
             ShellUtil.installDependencies(rootShellInfo, missingDependencies);
         } catch (ShellException e) {
@@ -757,8 +776,8 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
      * @param installParams install portal information
      */
     private void removeInstallPortalLog(MigrationHostPortalInstall installParams) {
-        JschResult jschResult = ShellUtil.execCommandGetResult(
-                installParams.getShellInfoVo(), "rm -rf " + installParams.getDatakitLogPath());
+        JschResult jschResult = ShellUtil.execCommandGetResult(installParams.getShellInfoVo(),
+            "rm -rf " + installParams.getDatakitLogPath());
         if (!jschResult.isOk()) {
             log.error("Remove datakit_install_portal.log failed, message: {}", jschResult.getResult());
         }
@@ -770,8 +789,8 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
      * @param installParams portal install information
      */
     private void printInstallPortalLog(MigrationHostPortalInstall installParams, String logInfo) {
-        String command = String.format("mkdir -p %s && echo '%s' >> %s",
-                installParams.getInstallPath(), logInfo, installParams.getDatakitLogPath());
+        String command = String.format("mkdir -p %s && echo '%s' >> %s", installParams.getInstallPath(), logInfo,
+            installParams.getDatakitLogPath());
         JschResult result = ShellUtil.execCommandGetResult(installParams.getShellInfoVo(), command);
         if (!result.isOk()) {
             log.error("Output logs to datakit_install_portal.log failed: " + result.getResult());
@@ -781,12 +800,12 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     /**
      * 加载portal配置文件
      *
+     * @param installParams installParams
      * @author: www
      * @date: 2023/11/28 10:41
      * @description: msg
      * @since: 1.1
      * @version: 1.1
-     * @param installParams installParams
      */
     private void loadTaskConfigParams(MigrationHostPortalInstall installParams) {
         Map<Integer, Map<String, Object>> toolsConfig = null;
@@ -794,8 +813,8 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         try {
             toolsConfig = PortalHandle.loadToolsConfig(installParams);
             Optional<Properties> properties = PortalHandle.loadToolsParamsDesc(installParams.getHost(),
-                    installParams.getPort(), installParams.getRunUser(), installParams.getRunPassword(),
-                    installParams.getInstallPath());
+                installParams.getPort(), installParams.getRunUser(), installParams.getRunPassword(),
+                installParams.getInstallPath());
             if (properties.isPresent()) {
                 toolsParamsDesc = properties.get();
             }
@@ -816,13 +835,11 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 Object value = toolConfig.getValue();
                 taskGlobalToolsParam.setParamValueAndType(value);
                 taskGlobalToolsParam.setPortalHostID(installParams.getRunHostId());
-                taskGlobalToolsParam.setDeleteFlag(
-                        TbMigrationTaskGlobalToolsParam.DeleteFlagEnum.USED.getDeleteFlag());
-                String paramDescKey =
-                        taskGlobalToolsParam.getConfigId() + "."
-                                + taskGlobalToolsParam.getParamValueType() + "." + taskGlobalToolsParam.getParamKey();
-                taskGlobalToolsParam.setParamDesc(toolsParamsDesc == null ? ""
-                        : String.valueOf(toolsParamsDesc.get(paramDescKey)));
+                taskGlobalToolsParam.setDeleteFlag(TbMigrationTaskGlobalToolsParam.DeleteFlagEnum.USED.getDeleteFlag());
+                String paramDescKey = taskGlobalToolsParam.getConfigId() + "."
+                    + taskGlobalToolsParam.getParamValueType() + "." + taskGlobalToolsParam.getParamKey();
+                taskGlobalToolsParam.setParamDesc(
+                    toolsParamsDesc == null ? "" : String.valueOf(toolsParamsDesc.get(paramDescKey)));
                 globalToolsParams.add(taskGlobalToolsParam);
             }
         }
@@ -834,18 +851,18 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(hostId);
         String password = encryptionUtils.decrypt(installHost.getRunPassword());
         String datakitLogPath = installHost.getDatakitLogPath();
-        String datakitContent = PortalHandle.getTaskLogs(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), password, datakitLogPath);
+        String datakitContent = PortalHandle.getTaskLogs(installHost.getHost(), installHost.getPort(),
+            installHost.getRunUser(), password, datakitLogPath);
         if (StringUtils.isNotBlank(datakitContent)) {
             return datakitContent;
         }
-
         String logPath = installHost.getPortalLogPath();
-        String content = PortalHandle.getTaskLogs(installHost.getHost(), installHost.getPort(), installHost.getRunUser(), password, logPath);
+        String content = PortalHandle.getTaskLogs(installHost.getHost(), installHost.getPort(),
+            installHost.getRunUser(), password, logPath);
         String logContent = " ";
         if (StringUtils.isNotBlank(content)) {
             logContent = content;
         }
-
         return logContent;
     }
 
@@ -886,17 +903,18 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     /**
      * get host base information
      *
-     * @param hostId   Id of the OpsHost object
+     * @param hostId Id of the OpsHost object
      * @param publicIp field 'publicIp' of the OpsHost object
-     * @param port     field 'port' of the OpsHost object
+     * @param port field 'port' of the OpsHost object
      * @return host info array
      */
     public String[] getOpsHosInfo(String hostId, String publicIp, Integer port) {
         List<OpsHostUserEntity> opsHostUserEntities = hostUserFacade.listHostUserByHostId(hostId);
-        if (opsHostUserEntities.size() > 0) {
+        if (!opsHostUserEntities.isEmpty()) {
             OpsHostUserEntity hostUser = opsHostUserEntities.get(0);
             if (StringUtils.isNotBlank(hostUser.getPassword())) {
-                return PortalHandle.getHostBaseInfo(publicIp, port, hostUser.getUsername(), encryptionUtils.decrypt(hostUser.getPassword()));
+                return getHostBaseInfo(publicIp, port, hostUser.getUsername(),
+                    encryptionUtils.decrypt(hostUser.getPassword()));
             }
         }
         return new String[0];
@@ -908,13 +926,14 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         MigrationHostPortalInstall install = migrationHostPortalInstallHostService.getOneByHostId(hostId);
         List<MigrationTask> tasks = migrationTaskService.listRunningTaskByHostId(hostId);
         if (CollUtil.isNotEmpty(tasks)) {
-            return AjaxResult.error(MigrationErrorCode.PORTAL_DELETE_ERROR.getCode(), MigrationErrorCode.PORTAL_DELETE_ERROR.getMsg());
+            return AjaxResult.error(MigrationErrorCode.PORTAL_DELETE_ERROR.getCode(),
+                MigrationErrorCode.PORTAL_DELETE_ERROR.getMsg());
         }
-        List<String> bindPortalKafkas =
-                migrationThirdPartySoftwareInstanceService.listBindHostsByPortalHost(install.getHost());
+        List<String> bindPortalKafkas = migrationThirdPartySoftwareInstanceService.listBindHostsByPortalHost(
+            install.getHost());
         if (!CollectionUtils.isEmpty(bindPortalKafkas)) {
             return AjaxResult.error(MigrationErrorCode.PORTAL_DELETE_ERROR_FOR_KAFKA_USED.getCode(),
-                    MigrationErrorCode.PORTAL_DELETE_ERROR_FOR_KAFKA_USED.getMsg());
+                MigrationErrorCode.PORTAL_DELETE_ERROR_FOR_KAFKA_USED.getMsg());
         }
         OpsHostUserEntity hostUser = hostUserFacade.getById(install.getHostUserId());
         String realInstallPath = getInstallPath(install.getInstallPath(), hostUser.getUsername());
@@ -924,60 +943,75 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         OpsHostEntity opsHost = hostFacade.getById(hostId);
         String password = encryptionUtils.decrypt(hostUser.getPassword());
         try {
-            stopKafka(opsHost, hostUser, password, portalHome, install.getJarName(), 0);
+            SshLogin sshLogin = new SshLogin(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(),
+                password);
+            stopKafka(sshLogin, portalHome, install.getJarName(), 0);
         } catch (PortalInstallException ex) {
-            return AjaxResult.error(MigrationErrorCode.STOP_KAFKA_ERROR.getCode(), MigrationErrorCode.STOP_KAFKA_ERROR.getMsg());
+            return AjaxResult.error(MigrationErrorCode.STOP_KAFKA_ERROR.getCode(),
+                MigrationErrorCode.STOP_KAFKA_ERROR.getMsg());
         }
         // if delete file failed, do nothing
         if (onlyPkg != null && !onlyPkg) {
-            String kafkaInstallPath = migrationThirdPartySoftwareInstanceService.removeInstance(install.getHost());
-            if (StringUtils.isEmpty(kafkaInstallPath)) {
-                String propertiesPath = portalHome + "workspace/1/config/toolspath.properties";
-                boolean isPropertiesExists = PortalHandle.fileExists(opsHost.getPublicIp(), opsHost.getPort(),
-                        hostUser.getUsername(), password, propertiesPath);
-                if (isPropertiesExists) {
-                    String command = String.format("grep '^confluent.install.path' %sworkspace/1/config/"
-                            + "toolspath.properties | awk -F '=' '{print $2}' | tr -d ' '", portalHome);
-                    JschResult jschResult = ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(),
-                            hostUser.getUsername(), password, command);
-                    kafkaInstallPath = jschResult.isOk() ? jschResult.getResult().trim() : "";
-                }
-            }
-            if (!StringUtils.isEmpty(kafkaInstallPath)) {
-                ShellUtil.execCommandGetResult(
-                        opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,
-                        "rm -rf  " + kafkaInstallPath + "confluent-5.5.1");
-            }
-
-            ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, "rm -rf  " + realInstallPath + "portal");
+            removeKafkaTools(install, portalHome, opsHost, hostUser, password);
+            ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,
+                "rm -rf  " + realInstallPath + "portal");
             migrationHostPortalInstallHostService.updateStatus(hostId, PortalInstallStatus.NOT_INSTALL.getCode());
         }
         migrationHostPortalInstallHostService.clearPkgUploadPath(hostId);
-        ShellUtil.rmFile(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, realInstallPath + install.getPkgName());
         ShellUtil.rmFile(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,
-                install.getDatakitLogPath());
+            realInstallPath + install.getPkgName());
+        ShellUtil.rmFile(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,
+            install.getDatakitLogPath());
         toolsParamService.removeByHostId(install.getRunHostId());
         return AjaxResult.success();
+    }
+
+    private void removeKafkaTools(MigrationHostPortalInstall install, String portalHome, OpsHostEntity opsHost,
+        OpsHostUserEntity hostUser, String password) {
+        String kafkaInstallPath = migrationThirdPartySoftwareInstanceService.removeInstance(install.getHost());
+        if (StringUtils.isEmpty(kafkaInstallPath)) {
+            String propertiesPath = portalHome + "workspace/1/config/toolspath.properties";
+            boolean isPropertiesExists = PortalHandle.fileExists(opsHost.getPublicIp(), opsHost.getPort(),
+                hostUser.getUsername(), password, propertiesPath);
+            if (isPropertiesExists) {
+                String command = String.format("grep '^confluent.install.path' %sworkspace/1/config/"
+                    + "toolspath.properties | awk -F '=' '{print $2}' | tr -d ' '", portalHome);
+                JschResult jschResult = ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(),
+                    hostUser.getUsername(), password, command);
+                kafkaInstallPath = jschResult.isOk() ? jschResult.getResult().trim() : "";
+            }
+        }
+        if (!StringUtils.isEmpty(kafkaInstallPath)) {
+            ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,
+                "rm -rf  " + kafkaInstallPath + "confluent-5.5.1");
+        }
     }
 
     /**
      * check is install path has Permission
      *
-     * @param opsHost     host to install portal
-     * @param hostUser    user to install portal
+     * @param opsHost host to install portal
+     * @param hostUser user to install portal
      * @param installPath portal install path
      * @return check result
      */
     private AjaxResult checkPermission(OpsHostEntity opsHost, OpsHostUserEntity hostUser, String installPath) {
         String realInstallPath = getInstallPath(installPath, hostUser.getUsername());
         String password = encryptionUtils.decrypt(hostUser.getPassword());
-        boolean isExists = PortalHandle.directoryExists(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, realInstallPath);
+        boolean isExists = PortalHandle.directoryExists(opsHost.getPublicIp(), opsHost.getPort(),
+            hostUser.getUsername(), password, realInstallPath);
         if (isExists) {
-            boolean isExistsAndHasPermission = PortalHandle.checkWritePermission(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, realInstallPath);
-            return isExistsAndHasPermission ? AjaxResult.success() : AjaxResult.error(MigrationErrorCode.PORTAL_INSTALL_PATH_NOT_HAS_WRITE_PERMISSION_ERROR.getMsg());
+            boolean isExistsAndHasPermission = PortalHandle.checkWritePermission(opsHost.getPublicIp(),
+                opsHost.getPort(), hostUser.getUsername(), password, realInstallPath);
+            return isExistsAndHasPermission
+                ? AjaxResult.success()
+                : AjaxResult.error(MigrationErrorCode.PORTAL_INSTALL_PATH_NOT_HAS_WRITE_PERMISSION_ERROR.getMsg());
         } else {
-            boolean createResult = PortalHandle.mkdirDirectory(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password, realInstallPath);
-            return createResult ? AjaxResult.success() : AjaxResult.error(MigrationErrorCode.PORTAL_CREATE_INSTALL_PATH_FAILED.getMsg());
+            boolean isCreateSuccess = PortalHandle.mkdirDirectory(opsHost.getPublicIp(), opsHost.getPort(),
+                hostUser.getUsername(), password, realInstallPath);
+            return isCreateSuccess
+                ? AjaxResult.success()
+                : AjaxResult.error(MigrationErrorCode.PORTAL_CREATE_INSTALL_PATH_FAILED.getMsg());
         }
     }
 
@@ -993,17 +1027,20 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
      * upload portal to remote
      *
      * @param multipartFile file instance
-     * @param install       upload params
+     * @param install upload params
      * @return upload result
      */
-    private UploadInfo uploadPortal(MultipartFile multipartFile, MigrationHostPortalInstall install) throws PortalInstallException {
+    private UploadInfo uploadPortal(MultipartFile multipartFile, MigrationHostPortalInstall install)
+        throws PortalInstallException {
         UploadInfo result = new UploadInfo();
         if (multipartFile == null || StrUtil.isEmpty(multipartFile.getOriginalFilename())) {
             log.warn("Upload file is empty, please check");
             return result;
         }
         try (InputStream in = multipartFile.getInputStream()) {
-            ShellUtil.uploadFile(install.getHost(), install.getPort(), install.getRunUser(), encryptionUtils.decrypt(install.getRunPassword()), install.getInstallPath() + multipartFile.getOriginalFilename(), in);
+            ShellUtil.uploadFile(install.getHost(), install.getPort(), install.getRunUser(),
+                encryptionUtils.decrypt(install.getRunPassword()),
+                install.getInstallPath() + multipartFile.getOriginalFilename(), in);
             result.setName(multipartFile.getOriginalFilename());
             result.setRealPath(install.getInstallPath());
         } catch (Exception e) {
@@ -1017,78 +1054,67 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     /**
      * stop kafka before uninstall portal
      *
-     * @param opsHost    portal install host
-     * @param hostUser   portal install user
-     * @param password   portal install password
+     * @param sshLogin portal install sshLogin
      * @param portalHome portal install path
-     * @param jarName    portal jar name
+     * @param jarName portal jar name
      * @param retryCount failed retry count
      */
-    private void stopKafka(OpsHostEntity opsHost, OpsHostUserEntity hostUser, String password, String portalHome, String jarName, int retryCount) throws PortalInstallException {
+    private void stopKafka(SshLogin sshLogin, String portalHome, String jarName, int retryCount)
+        throws PortalInstallException {
         String jarPath = portalHome + jarName;
         if (retryCount == 0) {
-            boolean isJatExists = PortalHandle.fileExists(opsHost.getPublicIp(), opsHost.getPort(),
-                    hostUser.getUsername(), password, jarPath);
+            boolean isJatExists = PortalHandle.fileExists(sshLogin.getHost(), sshLogin.getPort(),
+                sshLogin.getUsername(), sshLogin.getPassword(), jarPath);
             if (!isJatExists) {
                 return;
             }
         }
-
-        JschResult result = ShellUtil.execCommandGetResult(
-                opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,
-                "java -Dpath=" + portalHome + " -Dorder=stop_kafka -Dskip=true -jar " + jarPath);
+        String stopKafkaCommand = "java -Dpath=" + portalHome + " -Dorder=stop_kafka -Dskip=true -jar " + jarPath;
+        JschResult result = ShellUtil.execCommandGetResult(sshLogin.getHost(), sshLogin.getPort(),
+            sshLogin.getUsername(), sshLogin.getPassword(), stopKafkaCommand);
         if (!result.isOk()) {
             if (retryCount > 3) {
                 throw new PortalInstallException("Stop kafka failed after 3 retries: " + result.getResult());
             }
-            log.error("stop kafka failed {} times, try again", retryCount);
-            stopKafka(opsHost, hostUser, password, portalHome, jarName, ++retryCount);
+            log.error("stop kafka failed {},{} {} times, try again", sshLogin, portalHome, retryCount);
+            stopKafka(sshLogin, portalHome, jarName, ++retryCount);
         }
     }
 
     /**
      * check the third tools install port has used
      *
-     * @param rootShellInfo root user shell info
+     * @param sshLogin sshLogin
      * @param install Migration host portal install information
      */
-    private void checkPortUsed(ShellInfoVo rootShellInfo, MigrationHostPortalInstall install) {
-        // Check the lsof dependency. If it does not exist, install it.
-        List<String> dependencies = List.of("lsof");
-        List<String> missingDependencies = ShellUtil.checkDependencies(rootShellInfo, dependencies);
-        if (!missingDependencies.isEmpty()) {
-            try {
-                ShellUtil.installDependencies(rootShellInfo, missingDependencies);
-            } catch (ShellException e) {
-                log.error("Check port used failed, message: {}", e.getMessage());
-            }
-        }
-
+    private void checkPortUsed(SshLogin sshLogin, MigrationHostPortalInstall install) {
         // check port used
-        ShellUtil.checkPortUsed(rootShellInfo, install.getThirdPartySoftwareConfig().getZookeeperPort());
-        ShellUtil.checkPortUsed(rootShellInfo, install.getThirdPartySoftwareConfig().getKafkaPort());
-        ShellUtil.checkPortUsed(rootShellInfo, install.getThirdPartySoftwareConfig().getSchemaRegistryPort());
+        int zkPort = Integer.parseInt(install.getThirdPartySoftwareConfig().getZookeeperPort());
+        OpsAssert.isTrue(jschExecutorFacade.checkOsPortConflict(sshLogin, zkPort),
+            "Zookeeper port " + zkPort + " is used, please check and try again");
+        int kafkaPort = Integer.parseInt(install.getThirdPartySoftwareConfig().getKafkaPort());
+        OpsAssert.isTrue(jschExecutorFacade.checkOsPortConflict(sshLogin, kafkaPort),
+            "Kafka port " + kafkaPort + " is used, please check and try again");
+        int schemaRegistryPort = Integer.parseInt(install.getThirdPartySoftwareConfig().getSchemaRegistryPort());
+        OpsAssert.isTrue(jschExecutorFacade.checkOsPortConflict(sshLogin, schemaRegistryPort),
+            "schema registry port " + schemaRegistryPort + " is used, please check and try again");
     }
 
     /**
      * check java environment and java version
      *
-     * @param userShellInfo user shell information
+     * @param sshLogin user shell information
      */
-    private void checkJavaEnv(ShellInfoVo userShellInfo) {
+    private void checkJavaEnv(SshLogin sshLogin) {
         // Execute the java -version command. If the command fails, thrown an exception.
-        JschResult jschResult = ShellUtil.execCommandGetResult(userShellInfo, "java -version");
-        if (!jschResult.isOk()) {
-            String errorMessage = "Failed to execute the command: 'java -version', details: "
-                    + jschResult.getResult();
-            log.error(errorMessage);
-            throw new PortalInstallException(errorMessage);
-        }
-
+        String version = jschExecutorFacade.checkJavaVersion(sshLogin);
         // check the java version
         Pattern pattern = Pattern.compile("version \"(1[1-9]|[2-9][0-9]+)\\.");
-        if (!pattern.matcher(jschResult.getResult()).find()) {
-            throw new PortalInstallException("The java version is too early. The java version must be 11+.");
+        if (!pattern.matcher(version).find()) {
+            String errMsg = "The java version is not match 11+, "
+                + "please check environment JAVA_HOME,it must configuration in user ~/.bashrc";
+            log.warn("{} {}", sshLogin, errMsg);
+            throw new PortalInstallException(errMsg);
         }
         log.info("Java version is compatible with the installation requirements.");
     }
@@ -1130,26 +1156,25 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     /**
      * get tables by sourceDb
      *
-     * @param dbName    database name
-     * @param url       source database connection
-     * @param username  username of db connection
-     * @param password  password of db connection
+     * @param dbName database name
+     * @param url source database connection
+     * @param username username of db connection
+     * @param password password of db connection
      * @return page result
      */
     @Override
     public IPage<Object> pageByDB(Page page, String dbName, String url, String username, String password) {
         long offset = (page.getCurrent() - 1) * page.getSize();
         String sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = '%s' "
-                + "and Table_type = 'BASE TABLE' LIMIT %d OFFSET %d";
+            + "and Table_type = 'BASE TABLE' LIMIT %d OFFSET %d";
         String sqlFormat = String.format(sql, dbName, page.getSize(), offset);
         List<Object> tables = new ArrayList<>();
         List<Map<String, Object>> rs = querySource(url, username, password, sqlFormat);
         for (Map<String, Object> map : rs) {
             tables.addAll(map.values());
         }
-
         String countSql = String.format("SELECT count(1) as total FROM information_schema.tables "
-                + "WHERE table_schema = '%s' and Table_type = 'BASE TABLE'", dbName);
+            + "WHERE table_schema = '%s' and Table_type = 'BASE TABLE'", dbName);
         List<Map<String, Object>> rsCount = querySource(url, username, password, countSql);
         if (rsCount.size() > 0) {
             long count = Long.parseLong(rsCount.get(0).get("total").toString());
@@ -1161,14 +1186,12 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
 
     @Override
     public boolean isConnectUserAdmin(OpsClusterNodeVO clusterNode) {
-        if (clusterNode == null || clusterNode.getDbPort() == null
-                || StringUtils.isAnyBlank(
-                        clusterNode.getPublicIp(), clusterNode.getDbUser(), clusterNode.getDbUserPassword())) {
+        if (clusterNode == null || clusterNode.getDbPort() == null || StringUtils.isAnyBlank(clusterNode.getPublicIp(),
+            clusterNode.getDbUser(), clusterNode.getDbUserPassword())) {
             log.warn("Invalid input data. Please check the input parameters.");
             return false;
         }
-
         return JdbcUtil.judgeSystemAdmin(clusterNode.getPublicIp(), clusterNode.getDbPort().toString(),
-                clusterNode.getDbUser(), clusterNode.getDbUserPassword());
+            clusterNode.getDbUser(), clusterNode.getDbUserPassword());
     }
 }
