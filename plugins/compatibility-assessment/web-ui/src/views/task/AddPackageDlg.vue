@@ -32,12 +32,29 @@
           v-model="data.formData.host"
           :placeholder="$t('packageManage.AddPackageDlg.5myq6nneap41')"
           dropdown-style="{ top: 'auto', bottom: 0 }"
+          @change="hostChange"
         >
           <a-option
             v-for="(item, index) in ipList"
             :key="index"
-            :value="item.value"
-            :label="item.label"
+            :value="item.publicIp"
+            :label="item.publicIp"
+          />
+        </a-select>
+      </a-form-item>
+      <a-form-item field="hostUser" :label="$t('packageManage.AddPackageDlg.user')">
+        <a-select
+          v-model="data.formData.hostUser"
+          :placeholder="$t('packageManage.AddPackageDlg.userPlaceholder')"
+          dropdown-style="{ top: 'auto', bottom: 0 }"
+          @change="hostUserChange"
+          @focus="focusUserSelect"
+        >
+          <a-option
+            v-for="(item, index) in userList"
+            :key="index"
+            :value="item.username"
+            :label="item.username"
           />
         </a-select>
       </a-form-item>
@@ -110,18 +127,15 @@ import { FormInstance } from "@arco-design/web-vue/es/form";
 import { nextTick, reactive, ref, computed, onMounted } from "vue";
 import {
   addPackage,
-  analysisPkg,
-  delPkgTar,
   editPackage,
-  hasPkgName,
+  getAllIps, 
+  getAllPids,
+  hostListAll,
+  hostUserListAll
 } from "@/api/ops";
 import { FileItem, Message } from "@arco-design/web-vue";
 import { useI18n } from "vue-i18n";
-import { OpenGaussVersionEnum } from "@/types/ops/install";
-import { getAllIps, getAllPids } from "@/api/ops"; // eslint-disable-line
-import { UploadInfo } from "@/types/resource/package";
 import { Modal } from "@arco-design/web-vue";
-import dayjs from "dayjs";
 
 const { t } = useI18n();
 
@@ -139,6 +153,7 @@ const data = reactive<KeyValue>({
     taskName: "",
     taskId: "",
     host: "",
+    hostUser: "",
     pid: "",
     filePath: "",
     remark: "",
@@ -220,7 +235,6 @@ const emits = defineEmits([`finish`,'']);
 const submitLoading = ref<boolean>(false);
 const formRef = ref<null | FormInstance>(null);
 const handleBeforeOk = () => {
-  console.log('88888888888',data.formData)
   formRef.value?.validate().then((result) => {
     if (!result) {
       submitLoading.value = true;
@@ -300,6 +314,7 @@ const open = (
       taskId: "",
       host: "",
       taskName: "",
+      hostUser: "",
       pid: "",
       filePath: ""
     });
@@ -313,14 +328,16 @@ const open = (
       } else {
         time_Interval = [packageData.timeInterval]
       }
+      const { taskId, taskName, host, hostUser, pid, filePath } = packageData
       Object.assign(data.formData, {
-        taskId: packageData.taskId,
-        taskName: packageData.taskName,
-        host: packageData.host,
+        taskId,
+        taskName,
+        host,
+        hostUser,
         timeInterval: time_Interval,
         timeNone: [],
-        pid: packageData.pid,
-        filePath: packageData.filePath
+        pid,
+        filePath
       });
     }
   }
@@ -331,28 +348,57 @@ const ipList = ref<KeyValue[]>([]);
 
 const getIpList = async () => {
   try {
-    const res = await getAllIps();
+    const res = await hostListAll();
     if (Number(res.code) === 200) {
-      ipList.value = res.obj.map((item) => ({
-        label: item,
-        value: item,
-      }));
+      ipList.value = res.data;
     }
   } catch (error) {
     console.error(error);
   }
 };
 
+const userList = ref<KeyValue[]>([])
+const hostChange = async () =>{
+  data.formData.hostUser = ''
+  data.formData.pid = ''
+  try {
+    const hostId = ipList.value.find(item => item.publicIp === data.formData.host)?.hostId
+    const res = await hostUserListAll(hostId)
+    if(Number(res.code)===200){
+      userList.value = res.data
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+const hostUserChange = () => {
+  data.formData.pid = ''
+}
+
+const focusUserSelect = () => {
+    if (!data.formData.host) {
+      Message.error(t("packageManage.index.5myq5c8zu510"));
+      return;
+    }
+}
+
 const pidList = ref<KeyValue[]>([]);
 
 const getPidList = async () => {
-  let host = data.formData.host;
+  pidList.value = []
+  const host = data.formData.host;
+  const hostUser = data.formData.hostUser
   if (!host) {
     Message.error(t("packageManage.index.5myq5c8zu510"));
     return;
   }
+  if (!hostUser) {
+    Message.error(t("packageManage.AddPackageDlg.userTip"));
+    return;
+  }
   try {
-    const res = await getAllPids(host);
+    const res = await getAllPids(host,hostUser);
     if (Number(res.code) === 200) {
       pidList.value = res.obj.map((item) => ({
         label: item,
@@ -393,6 +439,12 @@ const initData = () => {
       {
         required: true,
         message: t("packageManage.AddPackageDlg.5myq5c8zpu96"),
+      },
+    ],
+    hostUser: [
+      {
+        required: true,
+        message: t("packageManage.AddPackageDlg.userPlaceholder"),
       },
     ],
     timeInterval: [

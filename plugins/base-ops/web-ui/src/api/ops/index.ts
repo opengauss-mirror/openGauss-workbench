@@ -588,3 +588,7 @@ export const checkTaskStatus = (clusterIds: any) => {
 export const reExecuteTask = (clusterId: number) => {
   return axios.post(`/clusterTask/re/install?taskId=${clusterId}`)
 }
+
+export const hostSSHByHostId = (hostId: string, data: KeyValue) => {
+  return axios.post('host/ssh/' + hostId, data)
+}

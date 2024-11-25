@@ -1,14 +1,33 @@
 <template>
-    <a-modal :mask-closable="false" :esc-to-close="false" :ok-loading="submitLoading" :visible="userData.show"
-        :title="userData.title" :modal-style="{ width: '550px' }" @ok="handleBeforeOk" @cancel="close">
+    <a-modal :mask-closable="false" :esc-to-close="false" :visible="userData.show" :title="userData.title"
+        :modal-style="{ width: '550px' }">
+        <template #footer>
+            <div class="flex-between">
+                <div class="flex-row">
+                    <div class="label-color mr" v-if="status !== hostStatusEnum.unTest">{{
+                        $t('components.AddHost.currentStatus')
+                    }}
+                    </div>
+                    <a-tag v-if="status === hostStatusEnum.success" color="green">{{
+                        $t('components.AddHost.5mphy3snvg80')
+                    }}</a-tag>
+                    <a-tag v-if="status === hostStatusEnum.fail" color="red">{{
+                        $t('components.AddHost.5mphy3snwq40')
+                    }}</a-tag>
+                </div>
+                <div>
+                    <a-button @click="close" class="mr">{{ $t('components.AddHost.5mphy3snwxs0') }}</a-button>
+                    <a-button :loading="testLoading" class="mr" @click="handleTestHost">{{
+                        $t('components.AddHost.5mphy3snx3o0')
+                    }}</a-button>
+                    <a-button @click="handleBeforeOk" :loading="submitLoading" type="primary">{{
+                        $t('components.AddHost.5mphy3snx7c0') }}</a-button>
+                </div>
+            </div>
+        </template>
         <a-form :model="userData.formData" ref="formRef" :label-col="{ style: { width: '90px' } }" auto-label-width>
             <a-form-item :label="$t('components.AddHostUser.5mphzt9pc0g0')">
                 {{ userData.formData.privateIp }}({{ userData.formData.publicIp }})
-            </a-form-item>
-            <a-form-item v-if="userData.isNeedPwd" field="rootPassword" :label="$t('components.AddHostUser.rootPassword')"
-                validate-trigger="blur" :rules="[{ required: true, message: $t('components.AddHostUser.5mphzt9pdak0') }]">
-                <a-input-password v-model="userData.formData.rootPassword"
-                    :placeholder="$t('components.AddHostUser.5mphzt9pdak0')" allow-clear />
             </a-form-item>
             <a-form-item field="username" :label="$t('components.AddHostUser.5mphzt9pdn80')" validate-trigger="blur"
                 :rules="[{ required: true, message: t('components.AddHostUser.5mphzt9pdw00') }]">
@@ -33,11 +52,18 @@
 import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { reactive, ref } from 'vue'
-import { addHostUser, editHostUser } from '@/api/ops'
+import { addHostUser, editHostUser, hostPing } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
 import { encryptPassword } from '@/utils/jsencrypt'
 const { t } = useI18n()
+
+enum hostStatusEnum {
+    unTest = -1,
+    success = 1,
+    fail = 0
+}
+
 const userData = reactive({
     show: false,
     title: t('components.AddHostUser.5mphzt9peog0'),
@@ -47,7 +73,7 @@ const userData = reactive({
         hostId: '',
         privateIp: '',
         publicIp: '',
-        rootPassword: '',
+        port: '',
         username: '',
         password: ''
     },
@@ -55,6 +81,36 @@ const userData = reactive({
 })
 
 const emits = defineEmits([`finish`])
+
+const status = ref(hostStatusEnum.unTest)
+const testLoading = ref(false)
+const handleTestHost = () => {
+    formRef.value?.validate().then(async result => {
+        if (!result) {
+            testLoading.value = true
+            const { password, publicIp, privateIp, port, username } = userData.formData
+            const encryptPwd = await encryptPassword(password)
+            const param = {
+                privateIp,
+                publicIp,
+                port,
+                password: encryptPwd,
+                username
+            }
+            hostPing(param).then((res: KeyValue) => {
+                if (Number(res.code) === 200) {
+                    status.value = hostStatusEnum.success
+                } else {
+                    status.value = hostStatusEnum.fail
+                }
+            }).catch(() => {
+                status.value = hostStatusEnum.fail
+            }).finally(() => {
+                testLoading.value = false
+            })
+        }
+    })
+}
 
 const submitLoading = ref<boolean>(false)
 const formRef = ref<null | FormInstance>(null)
@@ -73,10 +129,8 @@ const close = () => {
 
 const handleConfirm = async () => {
     submitLoading.value = true
-    const rootPwd = await encryptPassword(userData.formData.rootPassword)
     const userPwd = await encryptPassword(userData.formData.password)
     const param = Object.assign({}, userData.formData)
-    param.rootPassword = rootPwd
     param.password = userPwd
     if (userData.formData.id) {
         // edit
@@ -90,7 +144,6 @@ const handleConfirm = async () => {
     } else {
         const param = {
             hostId: userData.formData.hostId,
-            rootPassword: rootPwd,
             username: userData.formData.username,
             password: userPwd
         }
@@ -109,16 +162,18 @@ const handleCancel = () => {
 }
 
 const open = (type: string, hostData: KeyValue, data?: KeyValue) => {
+    status.value = hostStatusEnum.unTest
     userData.show = true
     userData.isNeedPwd = !hostData.isRemember
+    const { hostId, privateIp, publicIp, port } = hostData
     if (type === 'create') {
         userData.title = t('components.AddHostUser.5mphzt9peog0')
         Object.assign(userData.formData, {
             id: '',
-            hostId: hostData.hostId,
-            privateIp: hostData.privateIp,
-            publicIp: hostData.publicIp,
-            rootPassword: '',
+            hostId,
+            privateIp,
+            publicIp,
+            port,
             username: '',
             password: ''
         })
@@ -126,10 +181,10 @@ const open = (type: string, hostData: KeyValue, data?: KeyValue) => {
         userData.title = t('components.AddHostUser.updateUser')
         Object.assign(userData.formData, {
             id: data?.hostUserId,
-            hostId: hostData.hostId,
-            privateIp: hostData.privateIp,
-            publicIp: hostData.publicIp,
-            rootPassword: '',
+            hostId,
+            privateIp,
+            publicIp,
+            port,
             username: data?.username,
             password: ''
         })
@@ -141,3 +196,5 @@ defineExpose({
 })
 
 </script>
+
+<style scoped></style>

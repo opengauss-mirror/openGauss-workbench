@@ -220,6 +220,14 @@ const columns = computed(() => [
     tooltip: true,
   },
   {
+    title: t("packageManage.AddPackageDlg.user"),
+    dataIndex: "hostUser",
+    ellipsis: true,
+    width: 80,
+    align: "center",
+    tooltip: true,
+  },
+  {
     title: t("packageManage.index.5myq5c8zpu82"),
     dataIndex: "timeInterval",
     slotName: "timeInterval",
@@ -234,6 +242,7 @@ const columns = computed(() => [
     ellipsis: true,
     align: "left",
     width: 100,
+    tooltip: true,
   },
   {
     title: t("packageManage.index.4myq5c8zu5w0"),
@@ -380,7 +389,7 @@ const fileDownload = (record: KeyValue) => {
       record.progress = Math.floor((0.99 / 1) * 100) / 100;
     }
   }, 1000);
-  downloadFile(record.host, record.filePath)
+  downloadFile(record.host, record.filePath, record.hostUser)
     .then((res: any) => {
       if (res) {
         const blob = new Blob([res], {

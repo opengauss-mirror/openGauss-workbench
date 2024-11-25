@@ -51,28 +51,37 @@
                 (item.publicIp ? item.publicIp : '--') + ')'
               }}</a-option>
             </a-select>
-            <icon-code-square
-              :size="25"
-              class="label-color"
-              style="cursor: pointer;"
-              @click="showTerminal"
-            />
+         
           </div>
           <template #extra>
             <label class="label-color">{{ data.form.sysArch }}</label>
           </template>
         </a-form-item>
         <a-form-item
-          v-if="data.isNeedPwd"
-          field="rootPassword"
-          :label="$t('simpleInstall.index.else2')"
+          field="hostUser"
+          :label="$t('simpleInstall.index.user')"
           validate-trigger="blur"
         >
-          <a-input-password
-            v-model="data.form.rootPassword"
-            :placeholder="$t('simpleInstall.index.5mpn813gupc0')"
-            allow-clear
-          />
+        <div class="flex-row mr-s">
+          <a-select
+            style="width: 313px;"
+            v-model="data.form.hostUser"
+            :placeholder="$t('simpleInstall.index.userPlaceholder')"
+            @change="hostUserChange"
+          >
+            <a-option
+            v-for="item in data.hostUserList"
+            :key="item.hostUserId"
+            :value="item.hostUserId"
+            >{{ item.username }}</a-option>
+          </a-select>
+        <icon-code-square
+              :size="25"
+              class="label-color"
+              style="cursor: pointer;"
+              @click="showTerminal"
+            />
+            </div>
         </a-form-item>
         <a-form-item
           field="install"
@@ -253,7 +262,7 @@
 <script lang="ts" setup>
 import { KeyValue } from '@/types/global'
 import { onBeforeUnmount, onMounted, reactive, ref, computed, nextTick, inject } from 'vue'
-import { hostListAll, hostUserListWithoutRoot, quickInstall, openSSH, packageListAll, portUsed, pathEmpty, hostPingById, getSysUploadPath } from '@/api/ops'
+import { hostListAll, hostUserListWithoutRoot, quickInstall, openSSH, packageListAll, portUsed, pathEmpty, hostPing, getSysUploadPath } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import {
   ClusterRoleEnum,
@@ -279,6 +288,7 @@ const data = reactive<KeyValue>({
   loading: false,
   form: {
     hostId: '',
+    hostUser: '',
     rootPassword: '',
     rootPasswordEncrypt: '',
     os: '',
@@ -293,10 +303,12 @@ const data = reactive<KeyValue>({
   publicIp: '',
   installUserId: '',
   installUsername: '',
+  installUserPassword: '',
   hostLoading: false,
   isNeedPwd: false,
   hostObj: {},
   hostList: [],
+  hostUserList: [],
   installLoading: false,
   installObj: {},
   installPackageList: [],
@@ -322,6 +334,7 @@ const loadingFunc = inject<any>('loading')
 const formRules = computed(() => {
   return {
     hostId: [{ required: true, 'validate-trigger': 'change', message: t('simpleInstall.index.5mpn813gwbk0') }],
+    hostUser: [{ required: true, 'validate-trigger': 'change', message: '请选择用户' }],
     rootPassword: [{ required: true, 'validate-trigger': 'blur', message: t('simpleInstall.index.5mpn813gupc0') }],
     install: [{
       validator: (value: any, cb: any) => {
@@ -360,10 +373,9 @@ const handleInstall = async () => {
     data.form.rootPasswordEncrypt = encryptPwd
     // password is isok
     try {
-      const param = {
-        rootPassword: encryptPwd
-      }
-      const passwordValid: KeyValue = await hostPingById(data.form.hostId, param)
+      const { privateIp, publicIp, installUsername, installUserPassword } = data
+      const hostParam = { privateIp, publicIp, username: installUsername, password: installUserPassword, port: 22 }
+      const passwordValid: KeyValue = await hostPing(hostParam)
       if (Number(passwordValid.code) !== 200) {
         formRef.value?.setFields({
           rootPassword: {
@@ -389,13 +401,13 @@ const handleInstall = async () => {
       //  port is used
       const portParam = {
         port: data.form.port,
-        rootPassword: data.form.rootPasswordEncrypt
       }
       const portValid: KeyValue = await portUsed(data.form.hostId, portParam)
       if (Number(portValid.code) === 200) {
         if (portValid.data) {
           data.validVisible = true
           data.loading = false
+          Message.error('Port check exception')
           return
         }
       } else {
@@ -405,7 +417,6 @@ const handleInstall = async () => {
       // installPath is not empty
       const pathParam = {
         path: data.form.installPath + '/data',
-        rootPassword: data.form.rootPasswordEncrypt
       }
       const pathValid: KeyValue = await pathEmpty(data.form.hostId, pathParam)
         .catch((error) => {
@@ -414,6 +425,7 @@ const handleInstall = async () => {
       if (Number(pathValid.code) === 200) {
         if (!pathValid.data) {
           data.validVisible = true
+          Message.error('installPath check exception')
           return
         }
       } else {
@@ -424,7 +436,6 @@ const handleInstall = async () => {
       openLogSocket()
     } catch (error: any) {
       console.error('port or installPath check exception', error)
-      Message.error('port or installPath check exception')
     } finally {
       data.loading = false
     }
@@ -550,7 +561,7 @@ const openSocket = () => {
   terminalSocket.onopen(() => {
     const param = {
       hostId: data.form.hostId,
-      rootPassword: data.form.rootPasswordEncrypt,
+      sshUsername: data.installUsername,
       wsConnectType: WsConnectType.SSH,
       businessId: `simple_terminal_${socketKey}`
     }
@@ -578,7 +589,6 @@ const exeInstall = async (socket: Socket<any, any>, businessId: string, term: Te
         nodeConfigList: [{
           clusterRole: ClusterRoleEnum.MASTER,
           hostId: data.form.hostId,
-          rootPassword: data.isNeedPwd ? data.form.rootPasswordEncrypt : '',
           installUserId: data.installUserId,
           installPath: '/opt/openGauss',
           isInstallDemoDatabase: true
@@ -737,6 +747,11 @@ const hostChange = () => {
 }
 
 const getHostUser = () => {
+  data.form.hostUser = ''
+  data.installUserId = ''
+  data.installUsername = ''
+  data.installUsername = ''
+  data.hostUserList = []
   if (data.form.hostId) {
     if (data.hostObj[data.form.hostId]) {
       data.privateIp = data.hostObj[data.form.hostId].privateIp
@@ -744,12 +759,12 @@ const getHostUser = () => {
     }
     hostUserListWithoutRoot(data.form.hostId).then((res: KeyValue) => {
       if (Number(res.code) === 200) {
-        if (res.data.length) {
-          data.installUserId = res.data[0].hostUserId
-          data.installUsername = res.data[0].username
-        } else {
-          data.installUserId = ''
-          data.installUsername = ''
+        data.hostUserList = res.data
+        if (data.hostUserList.length) {
+          data.form.hostUser = data.hostUserList[0].hostUserId
+          data.installUsername = data.hostUserList[0].username
+          data.installUserId = data.hostUserList[0].hostUserId
+          data.installUserPassword = data.hostUserList[0].password
         }
       } else {
         Message.error('Failed to obtain user data from the host')
@@ -757,6 +772,13 @@ const getHostUser = () => {
     })
   }
 }
+
+const hostUserChange = (userId) => {
+    const userInfo = data.hostUserList.find(item => item.hostUserId === userId)
+    data.installUsername = userInfo?.username
+    data.installUserId = userId
+    data.installUserPassword = userInfo?.password
+} 
 
 const goInstall = () => {
   data.validVisible = false
@@ -802,18 +824,11 @@ const handleDownloadLog = () => {
 
 const hostTerminalRef = ref<null | InstanceType<typeof HostTerminal>>(null)
 const showTerminal = () => {
-  // isRemember password
-  if (data.isNeedPwd) {
-    if (!data.form.rootPassword) {
-      formRef.value?.setFields({
-        rootPassword: {
-          status: 'error',
-          message: t('simple.InstallConfig.5mpmu0laqwo0')
-        }
-      })
-      return
-    }
+  if(!data.installUsername){
+    Message.error(t('simpleInstall.index.userPlaceholder'))
+    return
   }
+
   if (!data.form.hostId) {
     formRef.value?.setFields({
       hostId: {
@@ -828,7 +843,7 @@ const showTerminal = () => {
     hostId: data.form.hostId,
     port: data.form.port,
     ip: data.publicIp,
-    password: data.form.rootPassword
+    sshUsername: data.installUsername,
   })
 }
 

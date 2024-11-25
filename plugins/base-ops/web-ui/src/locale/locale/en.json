@@ -6,7 +6,10 @@
             "5mplfut5bj80": "Host",
             "5mplfut5kuc0": "Please enter the password",
             "5mplfut5lgo0": "Safety Inspection",
-            "5mplfut5lus0": "Please select root password"
+            "5mplfut5lus0": "Please enter root password",
+            "user": "user",
+            "userPlaceholder": "Please select user",
+            "noDevice": "No device information available."
         },
         "index": {
             "else1": "No host information is available",
@@ -1178,6 +1181,8 @@
             "5mpn813gtvs0": "Installing a minimalist version of openGauss",
             "5mpn813guf00": "Host IP",
             "5mpn813gukw0": "Please select the host IP address",
+            "user": "user",
+            "userPlaceholder": "Please select user",
             "5mpn813gupc0": "Please enter the root password",
             "5mpn813gut00": "One-click installation",
             "5mpn813guxc0": "Installing",
