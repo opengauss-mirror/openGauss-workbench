@@ -16,7 +16,8 @@
  * HostUserServiceImpl.java
  *
  * IDENTIFICATION
- * openGauss-visualtool/visualtool-service/src/main/java/org/opengauss/admin/system/service/ops/impl/HostUserServiceImpl.java
+ * openGauss-visualtool/visualtool-service/src/main/java/org/opengauss/admin/system/service/ops/impl
+ * /HostUserServiceImpl.java
  *
  * -------------------------------------------------------------------------
  */
@@ -26,12 +27,15 @@ package org.opengauss.admin.system.service.ops.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jcraft.jsch.Session;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.constant.ops.SshCommandConstants;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
@@ -39,9 +43,11 @@ import org.opengauss.admin.common.core.domain.model.ops.HostUserBody;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.exception.ops.UserAlreadyExistsException;
+import org.opengauss.admin.common.utils.OpsAssert;
 import org.opengauss.admin.common.utils.ops.JschUtil;
-import org.opengauss.admin.system.mapper.ops.OpsEncryptionMapper;
 import org.opengauss.admin.system.mapper.ops.OpsHostUserMapper;
+import org.opengauss.admin.system.plugin.beans.SshLogin;
+import org.opengauss.admin.system.service.JschExecutorService;
 import org.opengauss.admin.system.service.ops.IHostService;
 import org.opengauss.admin.system.service.ops.IHostUserService;
 import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
@@ -52,6 +58,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.*;
+
+import javax.annotation.Resource;
 
 /**
  * @author lhf
@@ -65,10 +73,10 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
     private IHostService hostService;
     @Autowired
     private JschUtil jschUtil;
+    @Resource
+    private JschExecutorService jschExecutorService;
     @Autowired
     private EncryptionUtils encryptionUtils;
-    @Autowired
-    private OpsEncryptionMapper encryptionMapper;
     @Autowired
     private IOpsClusterNodeService opsClusterNodeService;
 
@@ -78,7 +86,7 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
             return Collections.emptyList();
         }
         LambdaQueryWrapper<OpsHostUserEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostUserEntity.class)
-                .eq(OpsHostUserEntity::getHostId, hostId);
+            .eq(OpsHostUserEntity::getHostId, hostId);
         return list(queryWrapper);
     }
 
@@ -88,8 +96,7 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
             return false;
         }
         LambdaQueryWrapper<OpsHostUserEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostUserEntity.class)
-                .eq(OpsHostUserEntity::getHostId, hostId);
-
+            .eq(OpsHostUserEntity::getHostId, hostId);
         return remove(queryWrapper);
     }
 
@@ -98,9 +105,8 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
         if (CollUtil.isEmpty(hostIdList)) {
             return Collections.emptyList();
         }
-
         LambdaQueryWrapper<OpsHostUserEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostUserEntity.class)
-                .in(OpsHostUserEntity::getHostId, hostIdList);
+            .in(OpsHostUserEntity::getHostId, hostIdList);
         return list(queryWrapper);
     }
 
@@ -112,105 +118,51 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
         if (Objects.isNull(hostEntity)) {
             throw new OpsException("host information does not exist");
         }
-
         String username = hostUserBody.getUsername();
         LambdaQueryWrapper<OpsHostUserEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostUserEntity.class)
-                .eq(OpsHostUserEntity::getHostId, hostId)
-                .eq(OpsHostUserEntity::getUsername, username);
-
+            .eq(OpsHostUserEntity::getHostId, hostId)
+            .eq(OpsHostUserEntity::getUsername, username);
         long count = count(queryWrapper);
         if (count > 0) {
             throw new UserAlreadyExistsException("User information already exists");
         }
-
         OpsHostUserEntity rootUser = getRootUserByHostId(hostId);
+        SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), username,
+            encryptionUtils.decrypt(hostUserBody.getPassword()));
+        OpsHostUserEntity opsHostUserEntity;
         if (Objects.isNull(rootUser)) {
-            rootUser = new OpsHostUserEntity();
-            rootUser.setUsername("root");
-            rootUser.setPassword(hostUserBody.getPassword());
-        }
-
-        if (StrUtil.isEmpty(rootUser.getPassword())) {
-            if (StrUtil.isNotEmpty(hostUserBody.getRootPassword())) {
-                rootUser.setPassword(hostUserBody.getRootPassword());
+            if (jschExecutorService.checkOsUserExist(sshLogin)) {
+                opsHostUserEntity = hostUserBody.toEntity(false);
+                opsHostUserEntity.setSudo(opsHostUserEntity.isRootUser());
             } else {
-                throw new OpsException("root password does not exist");
+                throw new OpsException("User does not exist and no permission to create os user");
             }
-        }
-
-        Boolean sudo = false;
-        if (physicalExist(hostEntity.getPublicIp(), hostEntity.getPort(), rootUser, username)) {
-            try {
-                Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), username, encryptionUtils.decrypt(hostUserBody.getPassword())).orElseThrow(() -> new OpsException("Incorrect password, please enter correct password"));
-                if (Objects.isNull(session)) {
-                    throw new OpsException("Incorrect password, please enter correct password");
-                } else {
-                    session.disconnect();
-                }
-            } catch (Exception e) {
-                log.error("connection exception:", e);
-                throw new OpsException("Incorrect password, please enter correct password");
-            }
-
-            sudo = getSudo(hostEntity.getPublicIp(), hostEntity.getPort(),rootUser,username);
         } else {
-            createPhysicalUser(hostEntity.getPublicIp(), hostEntity.getPort(), rootUser, hostUserBody.getUsername(), hostUserBody.getPassword());
+            SshLogin rootLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), rootUser.getUsername(),
+                encryptionUtils.decrypt(rootUser.getPassword()));
+            OpsAssert.isTrue(StrUtil.isNotEmpty(rootUser.getPassword()),
+                "Incorrect password, not have permission to create os user");
+            Boolean isSudo = jschExecutorService.checkOsUserSudo(rootLogin, username);
+            if (jschExecutorService.checkOsUserExist(rootLogin, username)) {
+                OpsAssert.isTrue(jschExecutorService.checkOsUserExist(sshLogin),
+                    "Incorrect password, please enter correct password");
+            } else {
+                createPhysicalUser(rootLogin, hostUserBody.getUsername(), hostUserBody.getPassword());
+            }
+            opsHostUserEntity = hostUserBody.toEntity(isSudo);
         }
-
-        OpsHostUserEntity opsHostUserEntity = hostUserBody.toEntity(sudo);
         return save(opsHostUserEntity);
     }
 
-    private Boolean getSudo(String publicIp, Integer port, OpsHostUserEntity rootUser, String username) {
-        if (Objects.isNull(rootUser)) {
-            throw new OpsException("The root user information was not obtained");
-        }
-
-        Session session = jschUtil.getSession(publicIp, port, "root", encryptionUtils.decrypt(rootUser.getPassword())).orElseThrow(() -> new OpsException("root user login failed"));
+    private void createPhysicalUser(SshLogin rootLogin, String username, String password) {
         try {
-            String command = "sudo -l -U " + username;
-            JschResult jschResult = jschUtil.executeCommand(command, session);
-
-            return Objects.nonNull(jschResult) && StrUtil.isNotEmpty(jschResult.getResult()) && !jschResult.getResult().contains("not allowed to run");
-        }catch (Exception e){
-            log.error("get sudo fail：",e);
-        }finally {
-            if (Objects.nonNull(session) && session.isConnected()){
-                session.disconnect();
-            }
-        }
-        return false;
-    }
-
-    private void createPhysicalUser(String publicIp, Integer port, OpsHostUserEntity rootUser, String username, String password) {
-        if (Objects.isNull(rootUser)) {
-            throw new OpsException("The root user information was not obtained");
-        }
-
-        Session session = jschUtil.getSession(publicIp, port, "root", encryptionUtils.decrypt(rootUser.getPassword())).orElseThrow(() -> new OpsException("root user login failed"));
-
-        try {
-            JschResult jschResult = null;
-            try {
-
-                String command = "useradd " + username;
-                jschResult = jschUtil.executeCommand(command, session);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (0 != jschResult.getExitCode()) {
-                log.error("create" + username + "User failed, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("create " + username + " User failed");
-            }
-        } catch (IOException e) {
-            log.error("create" + username + "User failed", e);
-            if (Objects.nonNull(session) && session.isConnected()) {
-                session.disconnect();
-            }
+            jschExecutorService.createOsUser(rootLogin, username);
+        } catch (OpsException ex) {
             throw new OpsException("create" + username + "User failed");
         }
-
+        Session session = null;
         try {
+            session = jschExecutorService.createSession(rootLogin);
             Map<String, String> autoResponse = new HashMap<>();
             autoResponse.put("password:", encryptionUtils.decrypt(password));
             autoResponse.put("password:", encryptionUtils.decrypt(password));
@@ -222,7 +174,8 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
                 throw new OpsException("Do not interrupt the thread");
             }
             if (0 != jschResult.getExitCode()) {
-                log.error("update" + username + "User password failed, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
+                log.error("update" + username + "User password failed, exit code: {}, log: {}",
+                    jschResult.getExitCode(), jschResult.getResult());
                 throw new OpsException("update" + username + "User password failed");
             }
         } catch (IOException e) {
@@ -231,33 +184,6 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
                 session.disconnect();
             }
             throw new OpsException("update" + username + "User password failed");
-        }
-
-        if (Objects.nonNull(session) && session.isConnected()) {
-            session.disconnect();
-        }
-    }
-
-    private boolean physicalExist(String publicIp, Integer port, OpsHostUserEntity rootUser, String username) {
-        if (Objects.isNull(rootUser)) {
-            throw new OpsException("The root user information was not obtained");
-        }
-
-        Session session = jschUtil.getSession(publicIp, port, "root", encryptionUtils.decrypt(rootUser.getPassword())).orElseThrow(() -> new OpsException("root user login failed"));
-        try {
-            String command = "id -u " + username;
-            JschResult jschResult = jschUtil.executeCommand(command, session);
-            if (0 != jschResult.getExitCode()) {
-                return false;
-            } else {
-                return true;
-            }
-        } catch (Exception e) {
-            log.error("query" + username + "User failed", e);
-            if (Objects.nonNull(session) && session.isConnected()) {
-                session.disconnect();
-            }
-            throw new OpsException("query " + username + " User failed");
         } finally {
             if (Objects.nonNull(session) && session.isConnected()) {
                 session.disconnect();
@@ -272,49 +198,42 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
         if (Objects.isNull(hostUserEntity)) {
             throw new OpsException("User information does not exist");
         }
-
         String hostId = hostUserEntity.getHostId();
         OpsHostEntity hostEntity = hostService.getById(hostId);
         if (Objects.isNull(hostEntity)) {
             throw new OpsException("host information does not exist");
         }
-
+        OpsHostUserEntity newEntity;
         OpsHostUserEntity rootUserEntity = getRootUserByHostId(hostId);
+        SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserBody.getUsername(),
+            encryptionUtils.decrypt(hostUserBody.getPassword()));
         if (Objects.isNull(rootUserEntity)) {
-            rootUserEntity = new OpsHostUserEntity();
-            rootUserEntity.setUsername("root");
-            rootUserEntity.setPassword(hostUserBody.getPassword());
-        }
-
-        if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
-            if (StrUtil.isNotEmpty(hostUserBody.getRootPassword())) {
-                rootUserEntity.setPassword(hostUserBody.getRootPassword());
-            } else {
-                throw new OpsException("root password does not exist");
-            }
-        }
-
-        Boolean sudo = getSudo(hostEntity.getPublicIp(),hostEntity.getPort(),rootUserEntity,hostUserEntity.getUsername());
-        OpsHostUserEntity newEntity = hostUserBody.toEntity(sudo);
-        newEntity.setHostId(hostUserEntity.getHostId());
-        newEntity.setHostUserId(hostUserEntity.getHostUserId());
-
-        if (physicalExist(hostEntity.getPublicIp(), hostEntity.getPort(), rootUserEntity, newEntity.getUsername())) {
-            try {
-                Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserBody.getUsername(), encryptionUtils.decrypt(hostUserBody.getPassword())).orElseThrow(() -> new OpsException("user already exists，incorrect password, please enter correct password"));
-                if (Objects.isNull(session)) {
-                    throw new OpsException("user already exists , incorrect password, please enter correct password");
-                } else {
-                    session.disconnect();
-                }
-            } catch (Exception e) {
-                log.error("connection exception:", e);
-                throw new OpsException("user already exists , incorrect password, please enter correct password");
-            }
+            OpsAssert.isTrue(jschExecutorService.checkOsUserExist(sshLogin),
+                "The user does not exist or password error");
+            newEntity = hostUserBody.toEntity(false);
+            newEntity.setHostId(hostUserEntity.getHostId());
+            newEntity.setHostUserId(hostUserEntity.getHostUserId());
         } else {
-            createPhysicalUser(hostEntity.getPublicIp(), hostEntity.getPort(), rootUserEntity, newEntity.getUsername(), hostUserBody.getRootPassword());
+            if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
+                if (StrUtil.isNotEmpty(hostUserBody.getRootPassword())) {
+                    rootUserEntity.setPassword(hostUserBody.getRootPassword());
+                } else {
+                    throw new OpsException("root password does not exist");
+                }
+            }
+            SshLogin rootLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(),
+                rootUserEntity.getUsername(), encryptionUtils.decrypt(rootUserEntity.getPassword()));
+            Boolean isSudo = jschExecutorService.checkOsUserSudo(rootLogin, hostUserBody.getUsername());
+            newEntity = hostUserBody.toEntity(isSudo);
+            newEntity.setHostId(hostUserEntity.getHostId());
+            newEntity.setHostUserId(hostUserEntity.getHostUserId());
+            if (jschExecutorService.checkOsUserExist(rootLogin, newEntity.getUsername())) {
+                OpsAssert.isTrue(jschExecutorService.checkOsUserExist(sshLogin),
+                    "Incorrect password, please enter correct password");
+            } else {
+                createPhysicalUser(rootLogin, newEntity.getUsername(), hostUserBody.getRootPassword());
+            }
         }
-
         return updateById(newEntity);
     }
 
@@ -328,44 +247,53 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
         if (Objects.isNull(hostUserEntity)) {
             throw new OpsException("User information does not exist");
         }
-
-        if ("root".equals(hostUserEntity.getUsername())) {
-            throw new OpsException("Can't delete root user");
+        List<OpsHostUserEntity> list = listHostUserByHostId(hostUserEntity.getHostId());
+        if (list.size() > 1) {
+            return removeById(hostUserId);
+        } else {
+            log.warn("The last user of host[{}] cannot be deleted", hostUserEntity.getHostId());
+            return false;
         }
-
-        return removeById(hostUserId);
     }
 
     @Override
     public OpsHostUserEntity getOmmUserByHostId(String hostId) {
         LambdaQueryWrapper<OpsHostUserEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostUserEntity.class)
-                .eq(OpsHostUserEntity::getHostId, hostId)
-                .eq(OpsHostUserEntity::getUsername, "omm");
+            .eq(OpsHostUserEntity::getHostId, hostId)
+            .eq(OpsHostUserEntity::getUsername, "omm");
         return getOne(queryWrapper, false);
     }
 
     @Override
     public OpsHostUserEntity getRootUserByHostId(String hostId) {
         LambdaQueryWrapper<OpsHostUserEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostUserEntity.class)
-                .eq(OpsHostUserEntity::getHostId, hostId)
-                .eq(OpsHostUserEntity::getUsername, "root");
+            .eq(OpsHostUserEntity::getHostId, hostId)
+            .eq(OpsHostUserEntity::getUsername, "root");
         return getOne(queryWrapper, false);
+    }
+
+    @Override
+    public OpsHostUserEntity getAnyUserByHostId(String hostId) {
+        LambdaQueryWrapper<OpsHostUserEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostUserEntity.class)
+            .eq(OpsHostUserEntity::getHostId, hostId);
+        List<OpsHostUserEntity> list = list(queryWrapper);
+        return list.stream().filter(user -> StrUtil.isNotEmpty(user.getPassword())).findAny().orElse(null);
     }
 
     @Override
     public void cleanPassword(String hostUserId) {
         LambdaUpdateWrapper<OpsHostUserEntity> updateWrapper = Wrappers.lambdaUpdate(OpsHostUserEntity.class)
-                .set(OpsHostUserEntity::getPassword, null)
-                .set(OpsHostUserEntity::getSudo,Boolean.TRUE)
-                .eq(OpsHostUserEntity::getHostUserId, hostUserId);
+            .set(OpsHostUserEntity::getPassword, null)
+            .set(OpsHostUserEntity::getSudo, Boolean.TRUE)
+            .eq(OpsHostUserEntity::getHostUserId, hostUserId);
         update(updateWrapper);
     }
 
     @Override
     public OpsHostUserEntity getHostUserByUsername(String hostId, String username) {
         LambdaQueryWrapper<OpsHostUserEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostUserEntity.class)
-                .eq(OpsHostUserEntity::getHostId, hostId)
-                .eq(OpsHostUserEntity::getUsername, username);
-        return getOne(queryWrapper,false);
+            .eq(OpsHostUserEntity::getHostId, hostId)
+            .eq(OpsHostUserEntity::getUsername, username);
+        return getOne(queryWrapper, false);
     }
 }

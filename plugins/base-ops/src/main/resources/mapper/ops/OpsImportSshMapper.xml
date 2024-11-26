@@ -7,18 +7,16 @@
 
     <select id="queryHostInfo"  resultType="org.opengauss.admin.plugin.domain.entity.ops.OpsImportSshEntity">
         SELECT ops_host.host_id, ops_host_user.host_user_id, ops_host.port, ops_host_user.password
-        FROM ops_host
-                 JOIN ops_host_user
-                      ON ops_host.host_id = ops_host_user.host_id
-                          and ops_host_user.username = #{installUserName}
-                          and ops_host.public_ip = #{publicIp};
+        FROM ops_host JOIN ops_host_user ON ops_host.host_id = ops_host_user.host_id
+            and ops_host_user.username = #{installUserName}
+            and ops_host.public_ip = #{publicIp} limit 1;
     </select>
     <select id="checkPublicIpAndPort"  resultType="java.lang.String">
-        SELECT DISTINCT c.cluster_id
-        FROM ops_cluster AS c
-                 LEFT JOIN ops_cluster_node AS cn ON c.cluster_id = cn.cluster_id
-                 LEFT JOIN ops_host AS h ON cn.host_id = h.host_id
-        WHERE h.public_ip = #{publicIp} AND c.port = #{databasePort};
+      SELECT DISTINCT c.cluster_id
+      FROM ops_cluster AS c
+      LEFT JOIN ops_cluster_node AS cn ON c.cluster_id = cn.cluster_id
+      LEFT JOIN ops_host AS h ON cn.host_id = h.host_id
+      WHERE h.public_ip = #{publicIp} AND c.port = #{databasePort};
     </select>
 
 </mapper>

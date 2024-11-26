@@ -23,10 +23,11 @@
 
 package org.opengauss.admin.plugin.domain.entity.ops;
 
-import com.jcraft.jsch.Session;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import org.opengauss.admin.system.plugin.beans.SshLogin;
 
 /**
  * ParseClusterExcel properties
@@ -41,7 +42,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class OpsParseExcelEntity {
     private String versionType;
-    private Session session;
+    private SshLogin sshLogin;
     private OpsImportEntity opsImportEntity;
     private OpsImportSshEntity hostAndUserId;
     private String publicIp;

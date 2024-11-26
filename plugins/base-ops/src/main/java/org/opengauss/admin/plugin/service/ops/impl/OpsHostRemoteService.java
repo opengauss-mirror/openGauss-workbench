@@ -41,10 +41,11 @@ import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
 import org.opengauss.admin.plugin.utils.OpsAssert;
 import org.opengauss.admin.plugin.utils.OpsJschExecPlugin;
 import org.opengauss.admin.plugin.utils.JschRetBufferUtil;
-import org.opengauss.admin.plugin.utils.JschUtil;
+import org.opengauss.admin.system.plugin.beans.SshLogin;
 import org.opengauss.admin.system.plugin.facade.AzFacade;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
+import org.opengauss.admin.system.plugin.facade.JschExecutorFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -56,7 +57,6 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.Map;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * OpHostRemoteService
@@ -68,7 +68,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @Scope("prototype")
 public class OpsHostRemoteService {
-    private static final Map<String, Session> SESSION_MAP = new ConcurrentHashMap<>();
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private AzFacade azFacade;
@@ -78,8 +77,7 @@ public class OpsHostRemoteService {
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostUserFacade hostUserFacade;
-    @Resource
-    private JschUtil jschUtil;
+
     @Resource
     private OpsJschExecPlugin opsJschExecPlugin;
     @Resource
@@ -87,6 +85,9 @@ public class OpsHostRemoteService {
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private EncryptionUtils encryptionUtils;
+    @Resource
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private JschExecutorFacade jschExecutorFacade;
 
     /**
      * get host by hostId, service called from plugin-main hostFacade
@@ -256,32 +257,8 @@ public class OpsHostRemoteService {
      * @return true if port used
      */
     public boolean portUsed(String id, Integer port, String rootPassword) {
-        Session rootSession = createRootSession(id, rootPassword);
-        try {
-            return portUsed(rootSession, port);
-        } finally {
-            if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
-                rootSession.disconnect();
-            }
-        }
-    }
-
-    /**
-     * portUsed
-     *
-     * @param rootSession root user session
-     * @param port port number
-     * @return boolean is port used
-     */
-    private boolean portUsed(Session rootSession, Integer port) {
-        String command = "lsof -i:" + port;
-        try {
-            String checkPortUsed = executeCommandThenReturnEmpty(command, rootSession, null, "check port used");
-            return StrUtil.isNotEmpty(checkPortUsed);
-        } catch (OpsException e) {
-            log.error("Failed to probe port {}", e.getMessage());
-            return false;
-        }
+        SshLogin sshLogin = buildHostSshLoginByRootOrNormalUser(id);
+        return !jschExecutorFacade.checkOsPortConflict(sshLogin, port);
     }
 
     /**
@@ -466,22 +443,6 @@ public class OpsHostRemoteService {
     }
 
     /**
-     * create root session
-     *
-     * @param hostId hostId
-     * @param rootPassword rootPassword
-     * @return Session
-     */
-    public Session createRootSession(String hostId, String rootPassword) {
-        OpsHostEntity hostEntity = getHost(hostId);
-        OpsAssert.isTrue(Objects.nonNull(hostEntity), "host information not found");
-        OpsHostUserEntity rootUserEntity = getHostRootUser(hostId);
-        OpsAssert.isTrue(Objects.nonNull(rootUserEntity), "root user does not exist");
-        OpsAssert.isTrue(StrUtil.isNotEmpty(rootUserEntity.getPassword()), "root password does not exist");
-        return createHostUserSession(hostEntity, rootUserEntity);
-    }
-
-    /**
      * close session
      *
      * @param session session
@@ -490,5 +451,74 @@ public class OpsHostRemoteService {
         if (Objects.nonNull(session) && session.isConnected()) {
             session.disconnect();
         }
+    }
+
+    /**
+     * 检查Host指定路径是否为空
+     *
+     * @param hostId hostId
+     * @param path path
+     * @return true/false
+     */
+    public boolean pathEmpty(String hostId, String path) {
+        SshLogin sshLogin = buildHostSshLoginByRootOrNormalUser(hostId);
+        return jschExecutorFacade.checkPathEmpty(sshLogin, path);
+    }
+
+    private SshLogin buildHostSshLoginByRootOrNormalUser(String hostId) {
+        OpsHostEntity hostEntity = getHost(hostId);
+        OpsAssert.isTrue(Objects.nonNull(hostEntity), "host information not found");
+        OpsHostUserEntity hostUser = getHostUserRootOrNormal(hostId);
+        SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), hostUser.getUsername(),
+            encryptionUtils.decrypt(hostUser.getPassword()));
+        return sshLogin;
+    }
+
+    /**
+     * get host user,when has root ,return root user,otherwise return normal user
+     *
+     * @param hostId host id
+     * @return host user
+     * @throws OpsException host user not found
+     */
+    private OpsHostUserEntity getHostUserRootOrNormal(String hostId) {
+        List<OpsHostUserEntity> userList = hostUserFacade.listHostUserByHostId(hostId);
+        OpsHostUserEntity hostUser = userList.stream()
+            .filter(user -> StrUtil.isNotEmpty(user.getPassword()))
+            .filter(user -> StrUtil.equalsIgnoreCase(user.getUsername(), "root"))
+            .findFirst()
+            .orElse(null);
+        if (Objects.isNull(hostUser)) {
+            hostUser = userList.stream()
+                .filter(user -> StrUtil.isNotEmpty(user.getPassword()))
+                .findAny()
+                .orElseThrow(() -> new OpsException("host user does not exist"));
+        }
+        return hostUser;
+    }
+
+    /**
+     * check file exist
+     *
+     * @param hostId hostId
+     * @param file file
+     * @return boolean
+     */
+    public boolean checkFileExist(String hostId, String file) {
+        SshLogin sshLogin = buildHostSshLoginByRootOrNormalUser(hostId);
+        return jschExecutorFacade.checkFileExist(sshLogin, file);
+    }
+
+    /**
+     * create session with root or normal user
+     *
+     * @param hostId host
+     * @return Session
+     */
+    public Session createPluginSessionWithRootOrNormalUser(String hostId) {
+        SshLogin sshLogin = buildHostSshLoginByRootOrNormalUser(hostId);
+        return jschRetBufferUtil.getSession(sshLogin.getHost(), sshLogin.getPort(), sshLogin.getUsername(),
+                sshLogin.getPassword())
+            .orElseThrow(() -> new OpsException("create plugin session with root or normal user failed"));
     }
 }

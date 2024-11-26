@@ -76,6 +76,7 @@ public class DbDataProload {
             statement.executeUpdate("DROP TABLE IF EXISTS collect_period");
             statement.executeUpdate("CREATE TABLE collect_period (task_id TEXT, "
                     + "host TEXT, "
+                    + "host_user TEXT, "
                     + "task_name TEXT, "
                     + "start_time TEXT, "
                     + "end_time TEXT, "

@@ -20,6 +20,7 @@
 package org.opengauss.collect.service;
 
 import java.util.Optional;
+
 import org.opengauss.collect.domain.Assessment;
 import org.opengauss.collect.domain.CollectPeriod;
 import org.opengauss.collect.domain.LinuxConfig;
@@ -37,11 +38,12 @@ public interface SqlOperation {
     /**
      * downloadChrome
      *
-     * @param host     host
+     * @param host host
+     * @param hostUser hostUser
      * @param filePath filePath
      * @param response response
      */
-    void downloadChrome(String host, String filePath, HttpServletResponse response);
+    void downloadChrome(String host, String hostUser, String filePath, HttpServletResponse response);
 
     /**
      * startCollectingSql
@@ -55,16 +57,17 @@ public interface SqlOperation {
      * getLinuxConfig
      *
      * @param host host
+     * @param hostUser hostUser
      * @return LinuxConfig LinuxConfig
      */
-    Optional<LinuxConfig> getLinuxConfig(String host);
+    Optional<LinuxConfig> getLinuxConfig(String host, String hostUser);
 
     /**
      * startAssessmentSql
      *
-     * @param assessment   assessment
+     * @param assessment assessment
      * @param sqlInputType sqlInputType
-     * @param userId       userId
+     * @param userId userId
      * @return RespBean
      */
     RespBean startAssessmentSql(Assessment assessment, String sqlInputType, Integer userId);
@@ -73,7 +76,7 @@ public interface SqlOperation {
      * downloadAssessmentSql
      *
      * @param reportFileName reportFileName
-     * @param response       response
+     * @param response response
      */
     void downloadAssessmentSql(String reportFileName, HttpServletResponse response);
 
@@ -88,9 +91,10 @@ public interface SqlOperation {
      * getAllPids
      *
      * @param host host
+     * @param hostUser hostUser
      * @return RespBean RespBean
      */
-    RespBean getAllPids(String host);
+    RespBean getAllPids(String host, String hostUser);
 
     /**
      * getAllPids

@@ -19,7 +19,6 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
-import javax.validation.constraints.Max;
 import javax.validation.constraints.NotEmpty;
 
 /**
@@ -33,26 +32,20 @@ import javax.validation.constraints.NotEmpty;
 public class OpsDeviceManagerEntity {
     @TableId
     @NotEmpty
-    @Max(64)
     private String name;
 
     @NotEmpty
-    @Max(64)
     private String hostIp;
 
     @NotEmpty
-    @Max(5)
     private String port;
 
     @NotEmpty
-    @Max(64)
     private String userName;
 
     @NotEmpty
-    @Max(256)
     private String password;
 
     @NotEmpty
-    @Max(64)
     private String pairId;
 }

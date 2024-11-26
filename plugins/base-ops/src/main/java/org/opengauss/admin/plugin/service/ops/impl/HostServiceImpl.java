@@ -23,9 +23,10 @@
 
 package org.opengauss.admin.plugin.service.ops.impl;
 
-import cn.hutool.core.util.StrUtil;
 import com.jcraft.jsch.Session;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.enums.ops.DiskQueryMethodEnum;
 import org.opengauss.admin.plugin.domain.model.ops.JschResult;
@@ -37,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -57,26 +59,7 @@ public class HostServiceImpl implements IHostService {
 
     @Override
     public boolean pathEmpty(String id, String path, String rootPassword) {
-        Session rootSession = opsHostRemoteService.createRootSession(id, rootPassword);
-        try {
-            return pathEmpty(rootSession, path);
-        } finally {
-            if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
-                rootSession.disconnect();
-            }
-        }
-    }
-
-    private boolean pathEmpty(Session rootSession, String path) {
-        String command = "ls " + path;
-        try {
-            JschResult jschResult = opsHostRemoteService.executeCommand(command, rootSession, null, null, false);
-            String pathEmpty = jschResult.getResult().trim();
-            return StrUtil.equals("", pathEmpty) || pathEmpty.contains("No such file or directory");
-        } catch (OpsException e) {
-            log.error("Failed to probe data directory ", e);
-            throw new OpsException("Failed to probe data directory");
-        }
+        return opsHostRemoteService.pathEmpty(id, path);
     }
 
     @Override
@@ -86,17 +69,7 @@ public class HostServiceImpl implements IHostService {
 
     @Override
     public boolean fileExist(String id, String file, String rootPassword) {
-        Session rootSession = opsHostRemoteService.createRootSession(id, rootPassword);
-        try {
-            return fileExist(rootSession, file);
-        } catch (OpsException e) {
-            log.error("Failed to find file", e);
-            return false;
-        } finally {
-            if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
-                rootSession.disconnect();
-            }
-        }
+        return opsHostRemoteService.checkFileExist(id, file);
     }
 
     private List<String> nvmeLunQuery(Session rootSession, String command) {
@@ -107,7 +80,6 @@ public class HostServiceImpl implements IHostService {
                 log.warn(result.getResult());
                 return res;
             }
-
             String[] parts = result.getResult().split(System.lineSeparator());
             res = Arrays.asList(parts);
             return res;
@@ -155,24 +127,24 @@ public class HostServiceImpl implements IHostService {
 
     @Override
     public List<String> scsiLunQuery(String id, String rootPassword) {
-        Session rootSession = opsHostRemoteService.createRootSession(id, rootPassword);
+        Session userSession = opsHostRemoteService.createPluginSessionWithRootOrNormalUser(id);
         try {
-            return scsiLunQuery(rootSession);
+            return scsiLunQuery(userSession);
         } finally {
-            if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
-                rootSession.disconnect();
+            if (Objects.nonNull(userSession) && userSession.isConnected()) {
+                userSession.disconnect();
             }
         }
     }
 
     @Override
     public List<String> nvmeLunQuery(String id, String rootPassword) {
-        Session rootSession = opsHostRemoteService.createRootSession(id, rootPassword);
+        Session userSession = opsHostRemoteService.createPluginSessionWithRootOrNormalUser(id);
         try {
-            return nvmeLunQuery(rootSession);
+            return nvmeLunQuery(userSession);
         } finally {
-            if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
-                rootSession.disconnect();
+            if (Objects.nonNull(userSession) && userSession.isConnected()) {
+                userSession.disconnect();
             }
         }
     }
@@ -191,22 +163,11 @@ public class HostServiceImpl implements IHostService {
                 }
             }
             log.error("Can't obtain the disk info by {}, {} and {} ", SshCommandConstants.UPADMIN,
-                    SshCommandConstants.UPADMIN_PLUS, SshCommandConstants.LS_SCSI);
+                SshCommandConstants.UPADMIN_PLUS, SshCommandConstants.LS_SCSI);
             throw new OpsException("Failed to obtain the disk info");
         } catch (Exception e) {
             log.error("Can't execute command ", e);
             throw new OpsException("Failed to obtain the disk info");
-        }
-    }
-
-    private boolean fileExist(Session rootSession, String file) {
-        String command = "[ -f '" + file + "' ]";
-        try {
-            jschUtil.executeCommand(command, rootSession);
-            return true;
-        } catch (Exception e) {
-            log.error("Failed to find file", e);
-            throw new OpsException("Failed to find file");
         }
     }
 }

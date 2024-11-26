@@ -31,7 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
-import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
+import org.opengauss.admin.common.constant.ops.SshCommandConstants;
 import org.opengauss.admin.plugin.domain.model.ops.env.EnvProperty;
 import org.opengauss.admin.plugin.domain.model.ops.env.HardwareEnv;
 import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;

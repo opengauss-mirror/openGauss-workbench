@@ -23,6 +23,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -42,6 +43,7 @@ public class CollectPeriod {
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long taskId;
     private String host;
+    private String hostUser;
     private String taskName;
     private String startTime;
     private String endTime;

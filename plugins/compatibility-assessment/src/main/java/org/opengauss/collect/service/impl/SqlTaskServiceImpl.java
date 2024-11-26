@@ -21,12 +21,16 @@ package org.opengauss.collect.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.jcraft.jsch.Session;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import org.opengauss.admin.common.utils.OpsAssert;
 import org.opengauss.collect.config.common.Constant;
 import org.opengauss.collect.domain.CollectPeriod;
 import org.opengauss.collect.domain.LinuxConfig;
@@ -64,9 +68,8 @@ public class SqlTaskServiceImpl implements SqlTaskService {
 
     @Override
     public RespBean getTaskList(CollectPeriod period) {
-        QueryWrapper wrapper = new QueryWrapper<CollectPeriod>()
-                .eq(StrUtil.isNotEmpty(period.getTaskName()), "task_name", period.getTaskName())
-                .eq(StrUtil.isNotEmpty(period.getHost()), "host", period.getHost());
+        QueryWrapper wrapper = new QueryWrapper<CollectPeriod>().eq(StrUtil.isNotEmpty(period.getTaskName()),
+            "task_name", period.getTaskName()).eq(StrUtil.isNotEmpty(period.getHost()), "host", period.getHost());
         List<CollectPeriod> list = periodMapper.selectList(wrapper);
         return RespBean.success("success", list, list.size());
     }
@@ -75,19 +78,20 @@ public class SqlTaskServiceImpl implements SqlTaskService {
     public RespBean saveTask(CollectPeriod period) {
         // check taskName
         checkName(period.getTaskName());
-        AssertUtil.isTrue(!ValidatorUtil.validatePath(period.getFilePath()), "The file path is incorrect");
+        OpsAssert.isTrue(ValidatorUtil.validatePath(period.getFilePath()), "The file path is incorrect");
+        OpsAssert.isTrue(StrUtil.isNotEmpty(period.getHostUser()), "The host user is incorrect");
         Long id = IdUtils.SNOWFLAKE.nextId();
         period.setTaskId(id);
-        Optional<LinuxConfig> config = operation.getLinuxConfig(period.getHost());
-        AssertUtil.isTrue(!config.isPresent(), "host message is not exist");
+        Optional<LinuxConfig> config = operation.getLinuxConfig(period.getHost(), period.getHostUser());
+        OpsAssert.isTrue(config.isPresent(), "host message is not exist");
         Session session = JschUtil.obtainSession(config.get());
         // Check and create collection.sql if necessary  Check and create stack.txt if necessary
         String pid = StringUtil.getPid(period.getPid());
         // period.getFilePath 检验/ljp/quew/  以/ 结尾
         String suffix = Constant.CHECK_SUFFIX.replace(Constant.INSERTION_UPLOADPATH, period.getFilePath());
         String command = Constant.CHECK_PREFIX + pid + suffix;
-        AssertUtil.isTrue(JschUtil.executeCommand(session, command).contains("not"),
-                "Process with pid " + pid + " does not exist");
+        String result = JschUtil.executeCommand(session, command);
+        OpsAssert.isTrue(!result.contains("not"), "Process with pid " + pid + " does not exist");
         // close session
         JschUtil.closeSession(session);
         periodMapper.insert(period);
@@ -100,10 +104,10 @@ public class SqlTaskServiceImpl implements SqlTaskService {
         CollectPeriod status = periodMapper.selectById(period.getTaskId());
         AssertUtil.isTrue(!ValidatorUtil.validatePath(period.getFilePath()), "The file path is incorrect");
         AssertUtil.isTrue(!status.getCurrentStatus().equals(Constant.TASK_STOP),
-                "Running or completed tasks cannot be modified");
+            "Running or completed tasks cannot be modified");
         // 检查taskName是否重复
-        CollectPeriod existingPeriod = periodMapper.selectOne(new QueryWrapper<CollectPeriod>()
-                .eq("task_name", period.getTaskName()));
+        CollectPeriod existingPeriod = periodMapper.selectOne(
+            new QueryWrapper<CollectPeriod>().eq("task_name", period.getTaskName()));
         if (existingPeriod != null && !existingPeriod.getTaskId().equals(period.getTaskId())) {
             return RespBean.error("Task name already exists");
         }
@@ -125,8 +129,7 @@ public class SqlTaskServiceImpl implements SqlTaskService {
     @Override
     public RespBean checkName(String name) {
         // 检查taskName是否重复
-        CollectPeriod existingPeriod = periodMapper.selectOne(new QueryWrapper<CollectPeriod>()
-                .eq("task_name", name));
+        CollectPeriod existingPeriod = periodMapper.selectOne(new QueryWrapper<CollectPeriod>().eq("task_name", name));
         AssertUtil.isTrue(ObjectUtil.isNotEmpty(existingPeriod), "Task name already exists");
         return RespBean.success("ok");
     }
@@ -145,7 +148,6 @@ public class SqlTaskServiceImpl implements SqlTaskService {
 
     @Override
     public List<CollectPeriod> getListByPid(String pid) {
-        return periodMapper.selectList(
-                new QueryWrapper<CollectPeriod>().eq(StrUtil.isNotEmpty(pid), "pid", pid));
+        return periodMapper.selectList(new QueryWrapper<CollectPeriod>().eq(StrUtil.isNotEmpty(pid), "pid", pid));
     }
 }

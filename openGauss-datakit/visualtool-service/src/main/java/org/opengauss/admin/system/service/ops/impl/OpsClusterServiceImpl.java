@@ -16,22 +16,25 @@
  * OpsClusterServiceImpl.java
  *
  * IDENTIFICATION
- * openGauss-visualtool/visualtool-service/src/main/java/org/opengauss/admin/system/service/ops/impl/OpsClusterServiceImpl.java
+ * openGauss-visualtool/visualtool-service/src/main/java/org/opengauss/admin/system/service/ops/impl
+ * /OpsClusterServiceImpl.java
  *
  * -------------------------------------------------------------------------
  */
-
 
 package org.opengauss.admin.system.service.ops.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.jcraft.jsch.Session;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.constant.ops.SshCommandConstants;
+
 import org.opengauss.admin.common.core.domain.entity.ops.*;
 import org.opengauss.admin.common.core.domain.model.ops.*;
 import org.opengauss.admin.common.core.domain.model.ops.check.*;
@@ -41,16 +44,16 @@ import org.opengauss.admin.common.enums.ops.ClusterRoleEnum;
 import org.opengauss.admin.common.enums.ops.DeployTypeEnum;
 import org.opengauss.admin.common.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.common.exception.ops.OpsException;
-import org.opengauss.admin.common.utils.ops.JschUtil;
 import org.opengauss.admin.common.utils.ops.WsUtil;
 import org.opengauss.admin.system.mapper.ops.OpsClusterMapper;
+import org.opengauss.admin.system.plugin.beans.SshLogin;
+import org.opengauss.admin.system.service.JschExecutorService;
 import org.opengauss.admin.system.service.ops.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -60,13 +63,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.annotation.Resource;
+
 /**
  * @author lhf
  * @date 2022/8/6 17:38
  **/
 @Slf4j
 @Service
-public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClusterEntity> implements IOpsClusterService {
+public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClusterEntity>
+    implements IOpsClusterService {
     @Autowired
     private IHostService hostService;
     @Autowired
@@ -78,45 +84,52 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @Autowired
     private IOpsJdbcDbClusterService opsJdbcDbClusterService;
     @Autowired
-    private IOpsAzService opsAzService;
-    @Autowired
     private IOpsCheckService opsCheckService;
-    @Autowired
-    private JschUtil jschUtil;
     @Autowired
     private WsConnectorManager wsConnectorManager;
     @Autowired
     private WsUtil wsUtil;
+    @Resource
+    private JschExecutorService jschExecutorService;
     @Autowired
     private EncryptionUtils encryptionUtils;
-
 
     @Override
     public List<OpsClusterVO> listCluster() {
         List<OpsClusterVO> res = new ArrayList<>();
-        List<OpsClusterEntity> opsClusterEntities = list(Wrappers.lambdaQuery(OpsClusterEntity.class).orderByDesc(OpsClusterEntity::getCreateTime));
-        List<String> clusterIds = opsClusterEntities.stream().map(OpsClusterEntity::getClusterId).collect(Collectors.toList());
+        List<OpsClusterEntity> opsClusterEntities = list(
+            Wrappers.lambdaQuery(OpsClusterEntity.class).orderByDesc(OpsClusterEntity::getCreateTime));
+        List<String> clusterIds = opsClusterEntities.stream()
+            .map(OpsClusterEntity::getClusterId)
+            .collect(Collectors.toList());
         Map<String, OpsCheckEntity> checkResMap = opsCheckService.mapLastResByClusterIds(clusterIds);
-        Map<String, List<OpsClusterNodeEntity>> clusterNodeMap = opsClusterNodeService.listClusterNodeByClusterIds(clusterIds);
+        Map<String, List<OpsClusterNodeEntity>> clusterNodeMap = opsClusterNodeService.listClusterNodeByClusterIds(
+            clusterIds);
         Map<String, OpsHostEntity> hostEntityMap = new HashMap<>();
-        List<String> hostIds = clusterNodeMap.values().stream().flatMap(nodeList -> nodeList.stream()).map(OpsClusterNodeEntity::getHostId).collect(Collectors.toList());
+        List<String> hostIds = clusterNodeMap.values()
+            .stream()
+            .flatMap(nodeList -> nodeList.stream())
+            .map(OpsClusterNodeEntity::getHostId)
+            .collect(Collectors.toList());
         Map<String, OpsHostUserEntity> hostUserEntityMap = new HashMap<>();
         Map<String, OpsHostUserEntity> rootUserMap = new HashMap<>();
         if (CollUtil.isNotEmpty(hostIds)) {
             List<OpsHostEntity> opsHostEntities = hostService.listByIds(hostIds);
             if (CollUtil.isNotEmpty(opsHostEntities)) {
-                hostEntityMap.putAll(opsHostEntities.stream().collect(Collectors.toMap(OpsHostEntity::getHostId, Function.identity())));
-
-                List<OpsHostUserEntity> opsHostUserEntities = hostUserService.listHostUserByHostIdList(opsHostEntities.stream().map(OpsHostEntity::getHostId).collect(Collectors.toList()));
-                hostUserEntityMap.putAll(opsHostUserEntities.stream().collect(Collectors.toMap(OpsHostUserEntity::getHostUserId, Function.identity())));
-                hostUserEntityMap.putAll(opsHostUserEntities.stream().filter(hostUserEntity -> "root".equals(hostUserEntity.getUsername())).collect(Collectors.toMap(OpsHostUserEntity::getHostId, Function.identity())));
+                hostEntityMap.putAll(
+                    opsHostEntities.stream().collect(Collectors.toMap(OpsHostEntity::getHostId, Function.identity())));
+                List<OpsHostUserEntity> opsHostUserEntities = hostUserService.listHostUserByHostIdList(
+                    opsHostEntities.stream().map(OpsHostEntity::getHostId).collect(Collectors.toList()));
+                hostUserEntityMap.putAll(opsHostUserEntities.stream()
+                    .collect(Collectors.toMap(OpsHostUserEntity::getHostUserId, Function.identity())));
+                hostUserEntityMap.putAll(opsHostUserEntities.stream()
+                    .filter(hostUserEntity -> "root".equals(hostUserEntity.getUsername()))
+                    .collect(Collectors.toMap(OpsHostUserEntity::getHostId, Function.identity())));
             }
         }
-
         for (OpsClusterEntity opsClusterEntity : opsClusterEntities) {
             OpsClusterVO opsClusterVO = OpsClusterVO.of(opsClusterEntity);
             String clusterId = opsClusterEntity.getClusterId();
-
             OpsCheckEntity checkRes = checkResMap.get(clusterId);
             if (Objects.nonNull(checkRes)) {
                 HashMap<String, Integer> checkSummary = new HashMap<>();
@@ -124,7 +137,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 if (Objects.nonNull(checkVO)) {
                     Map<String, List<CheckItemVO>> summary = checkVO.summary();
                     if (CollUtil.isNotEmpty(summary)) {
-
                         summary.forEach((k, v) -> {
                             checkSummary.put(k, v.size());
                         });
@@ -134,44 +146,39 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 opsClusterVO.setLastCheckAt(checkRes.getCreateTime());
             }
             res.add(opsClusterVO);
-
             List<OpsClusterNodeVO> clusterNodeVOS = new ArrayList<>();
             opsClusterVO.setClusterNodes(clusterNodeVOS);
-
             List<OpsClusterNodeEntity> opsClusterNodeEntities = clusterNodeMap.get(clusterId);
             if (CollUtil.isEmpty(opsClusterNodeEntities)) {
                 continue;
             }
-
             for (OpsClusterNodeEntity opsClusterNodeEntity : opsClusterNodeEntities) {
                 OpsClusterNodeVO opsClusterNodeVO = OpsClusterNodeVO.of(opsClusterNodeEntity);
                 String hostId = opsClusterNodeEntity.getHostId();
                 OpsHostEntity hostEntity = hostEntityMap.get(hostId);
                 if (Objects.nonNull(hostEntity)) {
-                    OpsHostUserEntity rootUser = hostUserEntityMap.get(hostEntity.getHostId());
                     OpsHostUserEntity installUser = hostUserEntityMap.get(opsClusterNodeEntity.getInstallUserId());
                     opsClusterNodeVO.setPublicIp(hostEntity.getPublicIp());
                     opsClusterNodeVO.setPrivateIp(hostEntity.getPrivateIp());
                     opsClusterNodeVO.setHostPort(hostEntity.getPort());
-                    opsClusterNodeVO.setIsRemember(StrUtil.isNotEmpty(rootUser.getPassword()));
+                    OpsHostUserEntity rootUser = hostUserEntityMap.get(hostId);
+                    opsClusterNodeVO.setIsRemember(
+                        Objects.nonNull(rootUser) && StrUtil.isNotEmpty(rootUser.getPassword()));
                     opsClusterNodeVO.setHostname(hostEntity.getHostname());
-                    opsClusterNodeVO.setHostId(hostEntity.getHostId());
+                    opsClusterNodeVO.setHostId(hostId);
                     opsClusterNodeVO.setDbPort(opsClusterEntity.getPort());
                     opsClusterNodeVO.setDbName("postgres");
                     opsClusterNodeVO.setDbUser(opsClusterEntity.getDatabaseUsername());
                     opsClusterNodeVO.setDbUserPassword(encryptionUtils.decrypt(opsClusterEntity.getDatabasePassword()));
                     opsClusterNodeVO.setHostOs(hostEntity.getOs());
                     opsClusterNodeVO.setHostCpuArch(hostEntity.getCpuArch());
-
                     if (OpenGaussVersionEnum.ENTERPRISE == opsClusterEntity.getVersion()) {
                         opsClusterNodeVO.setInstallPath(opsClusterEntity.getInstallPath());
                     }
-
                     if (Objects.nonNull(installUser)) {
                         opsClusterNodeVO.setInstallUserName(installUser.getUsername());
                     }
                 }
-
                 clusterNodeVOS.add(opsClusterNodeVO);
             }
         }
@@ -193,16 +200,15 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         if (Objects.isNull(clusterEntity)) {
             throw new OpsException("Cluster information does not exist");
         }
-
         List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService.listClusterNodeByClusterId(clusterId);
         if (CollUtil.isEmpty(opsClusterNodeEntities)) {
             throw new OpsException("Cluster node information does not exist");
         }
-
-        OpsClusterNodeEntity nodeEntity = opsClusterNodeEntities.stream().filter(opsClusterNodeEntity -> opsClusterNodeEntity.getHostId().equals(hostId)).findFirst().orElseThrow(() -> new OpsException("Cluster node information does not exist"));
-
+        OpsClusterNodeEntity nodeEntity = opsClusterNodeEntities.stream()
+            .filter(opsClusterNodeEntity -> opsClusterNodeEntity.getHostId().equals(hostId))
+            .findFirst()
+            .orElseThrow(() -> new OpsException("Cluster node information does not exist"));
         String installUserId = nodeEntity.getInstallUserId();
-
         OpsHostEntity hostEntity = hostService.getById(hostId);
         if (Objects.isNull(hostEntity)) {
             throw new OpsException("Node host information does not exist");
@@ -211,15 +217,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         if (Objects.isNull(hostUserEntity)) {
             throw new OpsException("Node installation user information does not exist");
         }
-
-        OpsHostUserEntity rootUserEntity = hostUserService.getRootUserByHostId(hostId);
-        if (Objects.isNull(rootUserEntity)) {
-            throw new OpsException("Node root user information does not exist");
-        }
-
-        WsSession wsSession = wsConnectorManager.getSession(businessId).orElseThrow(() -> new OpsException("response session does not exist"));
-        Session ommSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserEntity.getUsername(), encryptionUtils.decrypt(hostUserEntity.getPassword())).orElseThrow(() -> new OpsException("Install user connection failed"));
-
         String dataPath = nodeEntity.getDataPath();
         if (OpenGaussVersionEnum.MINIMAL_LIST == clusterEntity.getVersion()) {
             if (clusterEntity.getDeployType() == DeployTypeEnum.CLUSTER) {
@@ -232,21 +229,27 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 dataPath = dataPath + "/single_node";
             }
         }
-
-
         final String realDataPath = dataPath;
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             Connection connection = null;
+            WsSession wsSession = wsConnectorManager.getSession(businessId)
+                .orElseThrow(() -> new OpsException("response session does not exist"));
             try {
                 String driver = "org.opengauss.Driver";
-                String sourceURL = "jdbc:opengauss://" + hostEntity.getPublicIp() + ":" + clusterEntity.getPort() + "/postgres";
+                String sourceURL = "jdbc:opengauss://" + hostEntity.getPublicIp() + ":" + clusterEntity.getPort()
+                    + "/postgres";
                 Properties info = new Properties();
                 info.setProperty("user", clusterEntity.getDatabaseUsername());
                 info.setProperty("password", encryptionUtils.decrypt(clusterEntity.getDatabasePassword()));
                 try {
                     Class.forName(driver);
                     connection = DriverManager.getConnection(sourceURL, info);
-                    doMonitor(wsSession, ommSession, clusterEntity.getVersion(), connection, realDataPath, clusterEntity.getEnvPath());
+                    // create ssH login
+                    SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(),
+                        hostUserEntity.getUsername(), encryptionUtils.decrypt(hostUserEntity.getPassword()));
+                    MonitorParam monitorParam = new MonitorParam(realDataPath, clusterEntity.getVersion(),
+                        clusterEntity.getEnvPath());
+                    doMonitor(wsSession, sshLogin, monitorParam, connection);
                 } catch (Exception e) {
                     log.error("Failed to obtain a connection {}", e.getMessage());
                 }
@@ -255,14 +258,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     try {
                         connection.close();
                     } catch (SQLException e) {
-
                     }
                 }
-
-                if (Objects.nonNull(ommSession) && ommSession.isConnected()) {
-                    ommSession.disconnect();
-                }
-
                 wsUtil.close(wsSession);
             }
 
@@ -277,7 +274,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         int poolSize = threadPoolTaskExecutor.getPoolSize();
         int corePoolSize = threadPoolTaskExecutor.getCorePoolSize();
         int keepAliveSeconds = threadPoolTaskExecutor.getKeepAliveSeconds();
-
         res.put("activeCount", activeCount);
         res.put("poolSize", poolSize);
         res.put("corePoolSize", corePoolSize);
@@ -303,11 +299,11 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         checkClusterVO.setCheckDilateSysTab(parseCheckItem(result, "CheckDilateSysTab"));
         checkClusterVO.setCheckProStartTime(parseCheckItem(result, "CheckProStartTime"));
         checkClusterVO.setCheckMpprcFile(parseCheckItem(result, "CheckMpprcFile"));
-
         checkVO.setCluster(checkClusterVO);
         // database
         CheckDbVO checkDbVO = new CheckDbVO();
         checkDbVO.setCheckCurConnCount(parseCheckItem(result, "CheckCurConnCount"));
+        checkDbVO.setCheckPgxcgroup(parseCheckItem(result, "CheckPgxcgroup"));
         checkDbVO.setCheckCursorNum(parseCheckItem(result, "CheckCursorNum"));
         checkDbVO.setCheckNodeGroupName(parseCheckItem(result, "CheckNodeGroupName"));
         checkDbVO.setCheckTableSpace(parseCheckItem(result, "CheckTableSpace"));
@@ -316,7 +312,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         checkDbVO.setCheckPgxcRedistb(parseCheckItem(result, "CheckPgxcRedistb"));
         checkDbVO.setCheckNodeGroupName(parseCheckItem(result, "CheckNodeGroupName"));
         checkDbVO.setCheckTDDate(parseCheckItem(result, "CheckTDDate"));
-
         checkVO.setDb(checkDbVO);
         // os
         CheckOSVO checkOSVO = new CheckOSVO();
@@ -342,7 +337,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         checkOSVO.setCheckKeyProAdj(parseCheckItem(result, "CheckKeyProAdj"));
         checkOSVO.setCheckFilehandle(parseCheckItem(result, "CheckFilehandle"));
         checkOSVO.setCheckDropCache(parseCheckItem(result, "CheckDropCache"));
-
         checkVO.setOs(checkOSVO);
         // device
         CheckDeviceVO checkDeviceVO = new CheckDeviceVO();
@@ -355,7 +349,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         checkDeviceVO.setCheckIOrequestqueue(parseCheckItem(result, "CheckIOrequestqueue"));
         checkDeviceVO.setCheckMaxAsyIOrequests(parseCheckItem(result, "CheckMaxAsyIOrequests"));
         checkDeviceVO.setCheckIOConfigure(parseCheckItem(result, "CheckIOConfigure"));
-
         checkVO.setDevice(checkDeviceVO);
         // network
         CheckNetworkVO checkNetworkVO = new CheckNetworkVO();
@@ -366,9 +359,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         checkNetworkVO.setCheckMultiQueue(parseCheckItem(result, "CheckMultiQueue"));
         checkNetworkVO.setCheckRouting(parseCheckItem(result, "CheckRouting"));
         checkNetworkVO.setCheckNICModel(parseCheckItem(result, "CheckNICModel"));
-
         checkVO.setNetwork(checkNetworkVO);
-
         return checkVO;
     }
 
@@ -379,24 +370,19 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         int indexStart = result.indexOf(item);
         int reIndex = result.indexOf("\n", indexStart);
         int indexEnd = result.indexOf(".............", reIndex);
-
         if ("CheckMpprcFile.".equals(item)) {
             indexEnd = result.indexOf("Analysis the check result", reIndex);
         }
-
         if (indexEnd <= indexStart) {
             log.error("index end le index start");
             return checkItemVO;
         }
-
         String substring = result.substring(indexStart, indexEnd);
         if (StrUtil.isNotEmpty(substring)) {
             String[] split = substring.split("\n");
-
             if (split.length < 2) {
                 return checkItemVO;
             }
-
             StringBuffer msg = new StringBuffer();
             for (int i = 0; i < split.length; i++) {
                 String line = split[i];
@@ -411,66 +397,39 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     }
                 }
             }
-
             checkItemVO.setMsg(msg.toString());
         }
-
         return checkItemVO;
     }
 
-    private void doMonitor(WsSession wsSession, Session ommSession, OpenGaussVersionEnum version, Connection connection, String dataPath, String envPath) {
+    private void doMonitor(WsSession wsSession, SshLogin sshLogin, MonitorParam monitorParam, Connection connection) {
         AtomicBoolean hasError = new AtomicBoolean(false);
         while (wsSession.getSession().isOpen() && !hasError.get()) {
             NodeMonitorVO nodeMonitorVO = new NodeMonitorVO();
-            CountDownLatch countDownLatch = new CountDownLatch(11);
+            CountDownLatch countDownLatch = new CountDownLatch(2);
             threadPoolTaskExecutor.submit(() -> {
                 try {
                     nodeMonitorVO.setTime(System.currentTimeMillis());
+                    nodeMonitorVO.setCpu(cpu(sshLogin));
+                    nodeMonitorVO.setMemory(memory(sshLogin));
+                    nodeMonitorVO.setNet(net(sshLogin));
+                    nodeMonitorVO.setKernel(kernel(sshLogin));
+                    nodeMonitorVO.setMemorySize(memorySize(sshLogin));
                 } catch (Exception e) {
                     log.error("time error : {}", e.getMessage());
                     hasError.set(true);
                 } finally {
                     countDownLatch.countDown();
                 }
-
             });
-
             threadPoolTaskExecutor.submit(() -> {
                 try {
-                    nodeMonitorVO.setCpu(cpu(ommSession));
-                } catch (Exception e) {
-                    log.error("cpu monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
-                    nodeMonitorVO.setMemory(memory(ommSession));
-                } catch (Exception e) {
-                    log.error("memory monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
-                    nodeMonitorVO.setNet(net(ommSession));
-                } catch (Exception e) {
-                    log.error("net monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
-                    nodeMonitorVO.setState(state(ommSession, version, dataPath, envPath));
+                    nodeMonitorVO.setState(state(sshLogin, monitorParam.getVersion(), monitorParam.getDataPath(),
+                        monitorParam.getEnvPath()));
+                    nodeMonitorVO.setLock(lock(connection));
+                    nodeMonitorVO.setSession(session(connection));
+                    nodeMonitorVO.setConnectNum(connectNum(connection));
+                    nodeMonitorVO.setSessionMemoryTop10(sessionMemoryTop10(connection));
                 } catch (Exception e) {
                     log.error("state monitor error : {}", e.getMessage());
                     hasError.set(true);
@@ -478,73 +437,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     countDownLatch.countDown();
                 }
             });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
-                    nodeMonitorVO.setLock(lock(connection));
-                } catch (Exception e) {
-                    log.error("lock monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
-                    nodeMonitorVO.setSession(session(connection));
-                } catch (Exception e) {
-                    log.error("session monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
-                    nodeMonitorVO.setConnectNum(connectNum(connection));
-                } catch (Exception e) {
-                    log.error("connectNum monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
-                    nodeMonitorVO.setSessionMemoryTop10(sessionMemoryTop10(connection));
-                } catch (Exception e) {
-                    log.error("sessionMemoryTop10 monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
-                    nodeMonitorVO.setKernel(kernel(ommSession));
-                } catch (Exception e) {
-                    log.error("kernel monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
-            threadPoolTaskExecutor.submit(() -> {
-                try {
-                    nodeMonitorVO.setMemorySize(memorySize(ommSession));
-                } catch (Exception e) {
-                    log.error("memorySize monitor error : {}", e.getMessage());
-                    hasError.set(true);
-                } finally {
-                    countDownLatch.countDown();
-                }
-            });
-
             try {
                 countDownLatch.await();
             } catch (InterruptedException e) {
@@ -552,19 +444,30 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             }
             wsUtil.sendText(wsSession, JSON.toJSONString(nodeMonitorVO));
             try {
-                TimeUnit.SECONDS.sleep(1L);
+                TimeUnit.SECONDS.sleep(5L);
             } catch (InterruptedException e) {
                 log.error("monitor sleep is interrupted {}", e.getMessage());
             }
         }
+    }
 
+    /**
+     * MonitorParam 类的功能说明
+     *
+     * 该类用于存储监控参数。
+     */
+    @AllArgsConstructor
+    @Data
+    private class MonitorParam {
+        private String dataPath;
+        private OpenGaussVersionEnum version;
+        private String envPath;
     }
 
     private List<Map<String, String>> sessionMemoryTop10(Connection connection) {
         String sql = "SELECT * FROM pv_session_memory_detail() ORDER BY usedsize desc limit 10";
         List<Map<String, String>> res = new ArrayList<>();
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
+        try (Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery(sql)) {
             while (resultSet.next()) {
                 HashMap<String, String> model = new HashMap<>();
                 model.put(resultSet.getString("sessid"), resultSet.getString("usedsize"));
@@ -574,7 +477,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             log.error("Failed to query session memory top10 {}", e.getMessage());
             throw new OpsException("Failed to query session memory top10");
         }
-
         return res;
     }
 
@@ -582,8 +484,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     public String connectNum(Connection connection) {
         String sql = "SELECT count(*) FROM (SELECT pg_stat_get_backend_idset() AS backendid) AS s";
         String res = null;
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
+        try (Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery(sql)) {
             if (resultSet.next()) {
                 res = resultSet.getString("count");
             }
@@ -591,7 +492,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             log.error("Failed to query the number of connections  {}", e.getMessage());
             throw new OpsException("Failed to query the number of connections");
         }
-
         return res;
     }
 
@@ -599,8 +499,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     public String session(Connection connection) {
         String sql = "SELECT count(*) FROM pg_stat_activity";
         String res = null;
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
+        try (Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery(sql)) {
             if (resultSet.next()) {
                 res = resultSet.getString("count");
             }
@@ -608,7 +507,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             log.error("Failed to query the number of connections {}", e.getMessage());
             throw new OpsException("Failed to query the number of connections");
         }
-
         return res;
     }
 
@@ -616,8 +514,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     public String lock(Connection connection) {
         String sql = "SELECT count(*) FROM pg_locks";
         String res = null;
-        try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
+        try (Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery(sql)) {
             if (resultSet.next()) {
                 res = resultSet.getString("count");
             }
@@ -625,10 +522,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             log.error("Failed to query the number of connections {}", e.getMessage());
             throw new OpsException("Failed to query the number of connections");
         }
-
         return res;
     }
-
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -640,286 +535,165 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         if (Objects.isNull(clusterEntity)) {
             throw new OpsException("Cluster information cannot be empty");
         }
-
         if (OpenGaussVersionEnum.ENTERPRISE != clusterEntity.getVersion()) {
             throw new OpsException("Only Enterprise edition is supported");
         }
-
         List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService.listClusterNodeByClusterId(clusterId);
         if (CollUtil.isEmpty(opsClusterNodeEntities)) {
             throw new OpsException("Cluster node information cannot be empty");
         }
-
-        OpsClusterNodeEntity nodeEntity = opsClusterNodeEntities.stream().filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER).findFirst().orElseThrow(() -> new OpsException("Masternode information not found"));
-
+        OpsClusterNodeEntity nodeEntity = opsClusterNodeEntities.stream()
+            .filter(node -> node.getClusterRole() == ClusterRoleEnum.MASTER)
+            .findFirst()
+            .orElseThrow(() -> new OpsException("Masternode information not found"));
         String hostId = nodeEntity.getHostId();
         String installUserId = nodeEntity.getInstallUserId();
-
         OpsHostEntity hostEntity = hostService.getById(hostId);
         if (Objects.isNull(hostEntity)) {
             throw new OpsException("host information does not exist");
         }
-
-        OpsHostUserEntity rootUserEntity = hostUserService.getRootUserByHostId(hostId);
-        if (Objects.isNull(rootUserEntity)) {
-            throw new OpsException("User root was not found");
-        }
-
-        if (StrUtil.isEmpty(rootUserEntity.getPassword()) && StrUtil.isEmpty(rootPassword)) {
-            throw new OpsException("root password cannot be empty");
-        }
-
-        if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
-            rootUserEntity.setPassword(rootPassword);
-        }
-
         OpsHostUserEntity hostUserEntity = hostUserService.getById(installUserId);
         if (Objects.isNull(hostUserEntity)) {
             throw new OpsException("Installation user information does not exist");
         }
-
-        Session session = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserEntity.getUsername(), encryptionUtils.decrypt(hostUserEntity.getPassword())).orElseThrow(() -> new OpsException("Connection failed"));
-        String res = doCheck(rootUserEntity, session, clusterEntity.getEnvPath());
-        if (Objects.nonNull(session) && session.isConnected()) {
-            session.disconnect();
+        SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserEntity.getUsername(),
+            encryptionUtils.decrypt(hostUserEntity.getPassword()));
+        String res;
+        String rootPwd = getRootPassword(hostId, rootPassword);
+        if (hasRootPassword(rootPwd)) {
+            res = doCheckWithRootItems(rootPwd, sshLogin, clusterEntity.getEnvPath());
+        } else {
+            // 如果没有root密码，则跳过root检查项
+            res = doCheckSkipRootItems(sshLogin, clusterEntity.getEnvPath());
         }
-
         OpsCheckEntity opsCheckEntity = new OpsCheckEntity();
         opsCheckEntity.setCheckRes(res);
         opsCheckEntity.setClusterId(clusterId);
         opsCheckService.save(opsCheckEntity);
-
         CheckVO checkVO = parseCheckResToCheckVO(res);
-
         return CheckSummaryVO.of(checkVO);
     }
 
+    private boolean hasRootPassword(String rootPassword) {
+        return StrUtil.isNotEmpty(rootPassword);
+    }
 
-    private String doCheck(OpsHostUserEntity rootUserEntity, Session session, String envPath) {
+    private String getRootPassword(String hostId, String rootPassword) {
+        OpsHostUserEntity rootUserEntity = hostUserService.getRootUserByHostId(hostId);
+        String pwd = Objects.nonNull(rootUserEntity) ? rootUserEntity.getPassword() : "";
+        return StrUtil.isNotEmpty(pwd) ? pwd : rootPassword;
+    }
+
+    private String doCheckWithRootItems(String rootPassword, SshLogin sshLogin, String envPath) {
         log.info("One-click self-test start");
         String command = "gs_check -e inspect";
-
         try {
             Map<String, String> autoResponse = new HashMap<>();
             autoResponse.put("Please enter root privileges user[root]:", "root");
-            autoResponse.put("Please enter password for user[root]:", encryptionUtils.decrypt(rootUserEntity.getPassword()));
-            JschResult jschResult = jschUtil.executeCommand(envPath, command, session, autoResponse);
-            if (0 != jschResult.getExitCode()) {
-                log.error("A self-test error occurred, exit code {}, exit result {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("One key self-test error");
-            } else {
-                String result = jschResult.getResult();
-                return result;
-
-            }
+            autoResponse.put("Please enter password for user[root]:", encryptionUtils.decrypt(rootPassword));
+            return jschExecutorService.execCommandAutoResponse(sshLogin, command, envPath, autoResponse);
         } catch (Exception e) {
             log.error("One-click self-test results {}", e.getMessage());
-            if (Objects.nonNull(session) && session.isConnected()) {
-                session.disconnect();
-            }
             throw new OpsException("One key self-test error");
         } finally {
             log.info("One-click self-test end");
         }
     }
 
-    private String memorySize(Session rootSession) {
+    private String doCheckSkipRootItems(SshLogin sshLogin, String envPath) {
+        log.info("One-click self-test start");
+        String command = "gs_check -e inspect --skip-root-items";
         try {
-            JschResult jschResult = jschUtil.executeCommand(SshCommandConstants.MEMORY_TOTAL, rootSession);
-            if (0 != jschResult.getExitCode()) {
-                log.error("Query memory size failed, exit code: {}, message: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Query memory size failed");
-            } else {
-                return jschResult.getResult();
-            }
+            return jschExecutorService.execCommand(sshLogin, command, envPath);
         } catch (Exception e) {
-            log.error("Failed to query memory size {}", e.getMessage());
-            throw new OpsException("Failed to query memory size");
+            log.error("One-click self-test results {}", e.getMessage());
+            throw new OpsException("One key self-test error");
+        } finally {
+            log.info("One-click self-test end");
         }
     }
 
-    private String kernel(Session rootSession) {
-        try {
-            JschResult jschResult = jschUtil.executeCommand(SshCommandConstants.CPU_CORE_NUM, rootSession);
-            if (0 != jschResult.getExitCode()) {
-                log.error("Failed to query core count, exit code: {}, message: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Failed to query core count");
-            } else {
-                return jschResult.getResult();
-            }
-        } catch (Exception e) {
-            log.error("Failed to query the number of cores {}", e.getMessage());
-            throw new OpsException("Failed to query the number of cores");
-        }
+    private String memorySize(SshLogin sshLogin) {
+        return jschExecutorService.getMemoryTotal(sshLogin);
     }
 
-    private String state(Session ommSession, OpenGaussVersionEnum version, String dataPath, String envPath) {
+    private String kernel(SshLogin sshLogin) {
+        return jschExecutorService.getCpuCoreNum(sshLogin);
+    }
+
+    private String state(SshLogin sshLogin, OpenGaussVersionEnum version, String dataPath, String envPath) {
         if (OpenGaussVersionEnum.ENTERPRISE == version) {
             String command = "gs_om -t status --detail";
-            JschResult jschResult = null;
-            try {
-                Map<String, Object> res = new HashMap<>();
-                try {
-                    jschResult = jschUtil.executeCommand(command, ommSession, envPath);
-                } catch (InterruptedException e) {
-                    throw new OpsException("thread is interrupted");
-                }
-                if (0 != jschResult.getExitCode()) {
-                    log.error("Failed to get status info, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
-                    throw new OpsException("Failed to get status information");
-                }
-
-                String result = jschResult.getResult();
-                int clusterStateIndex = result.indexOf("cluster_state");
-                String clusterState = null;
-                if (clusterStateIndex < 1) {
-
-                } else {
-                    int splitIndex = result.indexOf(":", clusterStateIndex);
-                    int lineEndIndex = result.indexOf("\n", clusterStateIndex);
-                    clusterState = result.substring(splitIndex + 1, lineEndIndex).trim();
-                    res.put("cluster_state", clusterState);
-                }
-
-                Map<String, String> nodeState = new HashMap<>(1);
-                Map<String, String> nodeRole = new HashMap<>(1);
-                res.put("nodeState", nodeState);
-                res.put("nodeRole", nodeRole);
-
-
-                int datanodeStateIndex = result.indexOf("Datanode State");
-                if (datanodeStateIndex < 1) {
-
-                } else {
-                    int splitIndex = result.indexOf("------------------", datanodeStateIndex);
-                    String dataNodeStateStr = result.substring(splitIndex);
-
-                    String[] dataNode = dataNodeStateStr.split("\n");
-                    for (String s : dataNode) {
-                        String[] s1 = s.replaceAll(" +", " ").split(" ");
-
-                        String state = "";
-
-                        if (s1.length >= 9) {
-                            for (int i = 8; i < s1.length; i++) {
-                                state += (s1[i] + " ");
-                            }
-                            nodeState.put(s1[1], state.trim());
-                            nodeRole.put(s1[1], s1[7]);
-                        } else if (s1.length >= 8) {
-                            for (int i = 7; i < s1.length; i++) {
-                                state += (s1[i] + " ");
-                            }
-                            nodeState.put(s1[1], state.trim());
-                            nodeRole.put(s1[1], s1[6]);
-                        }
-                    }
-                }
-                return JSON.toJSONString(res);
-            } catch (IOException e) {
-                log.error("Failed to get status information {}", e.getMessage());
-                throw new OpsException("Failed to get status information");
+            Map<String, Object> res = new HashMap<>();
+            String result = jschExecutorService.execCommand(sshLogin, command, envPath);
+            int clusterStateIndex = result.indexOf("cluster_state");
+            String clusterState = null;
+            if (clusterStateIndex >= 1) {
+                int splitIndex = result.indexOf(":", clusterStateIndex);
+                int lineEndIndex = result.indexOf("\n", clusterStateIndex);
+                clusterState = result.substring(splitIndex + 1, lineEndIndex).trim();
+                res.put("cluster_state", clusterState);
             }
+            return parseNodeStateAndRole(result, res);
         } else {
             String command = "gs_ctl status -D " + dataPath;
-            JschResult jschResult = null;
-            try {
-                try {
-                    jschResult = jschUtil.executeCommand(command, ommSession, envPath);
-                } catch (InterruptedException e) {
-                    throw new OpsException("thread is interrupted");
-                }
-                if (0 != jschResult.getExitCode()) {
-                    log.error("Failed to get status info, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
-                    throw new OpsException("Failed to get status information");
-                }
+            String result = jschExecutorService.execCommand(sshLogin, command, envPath);
+            return result.contains("no server running") ? "false" : "true";
+        }
+    }
 
-                String result = jschResult.getResult();
-                if (result.contains("no server running")) {
-                    return "false";
-                } else {
-                    return "true";
+    private static String parseNodeStateAndRole(String result, Map<String, Object> res) {
+        Map<String, String> nodeState = new HashMap<>(1);
+        Map<String, String> nodeRole = new HashMap<>(1);
+        int datanodeStateIndex = result.indexOf("Datanode State");
+        if (datanodeStateIndex >= 1) {
+            int splitIndex = result.indexOf("------------------", datanodeStateIndex);
+            String dataNodeStateStr = result.substring(splitIndex);
+            String[] dataNode = dataNodeStateStr.split("\n");
+            parseNodeStateAndRole(dataNode, nodeState, nodeRole);
+        }
+        res.put("nodeState", nodeState);
+        res.put("nodeRole", nodeRole);
+        return JSON.toJSONString(res);
+    }
+
+    private static void parseNodeStateAndRole(String[] dataNode, Map<String, String> nodeState,
+        Map<String, String> nodeRole) {
+        for (String s : dataNode) {
+            String[] s1 = s.replaceAll(" +", " ").split(" ");
+            String state = "";
+            if (s1.length >= 9) {
+                for (int i = 8; i < s1.length; i++) {
+                    state += (s1[i] + " ");
                 }
-            } catch (IOException e) {
-                log.error("Failed to get status information {}", e.getMessage());
-                throw new OpsException("Failed to get status information");
+                nodeState.put(s1[1], state.trim());
+                nodeRole.put(s1[1], s1[7]);
+            } else if (s1.length >= 8) {
+                for (int i = 7; i < s1.length; i++) {
+                    state += (s1[i] + " ");
+                }
+                nodeState.put(s1[1], state.trim());
+                nodeRole.put(s1[1], s1[6]);
             }
         }
     }
 
-    private List<NodeNetMonitor> net(Session rootSession) {
+    private List<NodeNetMonitor> net(SshLogin sshLogin) {
         List<NodeNetMonitor> res = new ArrayList<>();
-        String command = SshCommandConstants.NET;
-        JschResult jschResult = null;
-        try {
-            try {
-                jschResult = jschUtil.executeCommand(command, rootSession);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (0 != jschResult.getExitCode()) {
-                log.error("Failed to get network info, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Failed to get network information");
-            }
-
-            String result = jschResult.getResult();
-            String[] split = result.split("\n");
-            for (int i = 2; i < split.length; i++) {
-                String s = split[i];
-                String[] line = s.split(":");
-                NodeNetMonitor nodeNetMonitor = new NodeNetMonitor();
-                nodeNetMonitor.setFace(StrUtil.trim(line[0]));
-                nodeNetMonitor.setReceive(line[1].trim().replaceAll(" +", " ").split(" ")[0]);
-                nodeNetMonitor.setTransmit(line[1].trim().replaceAll(" +", " ").split(" ")[8]);
-                res.add(nodeNetMonitor);
-            }
-        } catch (IOException e) {
-            log.error("Failed to get network information {}", e.getMessage());
-            throw new OpsException("Failed to get network information");
-        }
-
+        String[] netMonitor = jschExecutorService.getNetMonitor(sshLogin, true);
+        NodeNetMonitor nodeNetMonitor = new NodeNetMonitor();
+        nodeNetMonitor.setFace(StrUtil.trim(netMonitor[0]));
+        nodeNetMonitor.setReceive(netMonitor[1]);
+        nodeNetMonitor.setTransmit(netMonitor[2]);
+        res.add(nodeNetMonitor);
         return res;
     }
 
-    private String memory(Session rootSession) {
-        String command = SshCommandConstants.MEMORY_USING;
-        JschResult jschResult = null;
-        try {
-            try {
-                jschResult = jschUtil.executeCommand(command, rootSession);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (0 != jschResult.getExitCode()) {
-                log.error("Getting memory usage failed, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Failed to get memory usage");
-            }
-
-            return jschResult.getResult();
-        } catch (IOException e) {
-            log.error("Failed to get memory usage {}", e.getMessage());
-            throw new OpsException("Failed to get memory usage");
-        }
+    private String memory(SshLogin sshLogin) {
+        return jschExecutorService.getMemoryUsing(sshLogin);
     }
 
-    private String cpu(Session rootSession) {
-        String command = SshCommandConstants.CPU_USING;
-        JschResult jschResult = null;
-        try {
-            try {
-                jschResult = jschUtil.executeCommand(command, rootSession);
-            } catch (InterruptedException e) {
-                throw new OpsException("thread is interrupted");
-            }
-            if (0 != jschResult.getExitCode()) {
-                log.error("Getting cpu usage failed, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Failed to get cpu usage");
-            }
-
-            return jschResult.getResult();
-        } catch (IOException e) {
-            log.error("Failed to get cpu usage {}", e.getMessage());
-            throw new OpsException("Failed to get cpu usage");
-        }
+    private String cpu(SshLogin sshLogin) {
+        return jschExecutorService.getCpuUsing(sshLogin);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2024-2024. All rights reserved.
  *
  * openGauss is licensed under Mulan PSL v2.
  * You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -13,28 +13,27 @@
  * See the Mulan PSL v2 for more details.
  * -------------------------------------------------------------------------
  *
- * SSHBody.java
+ * CommonConstants.java
  *
  * IDENTIFICATION
- * base-ops/src/main/java/org/opengauss/admin/plugin/domain/model/ops/SSHBody.java
+ * openGauss-datakit/visualtool-common/src/main/java/org/opengauss/admin/common/constant/CommonConstants.java
  *
  * -------------------------------------------------------------------------
  */
 
-package org.opengauss.admin.plugin.domain.model.ops;
-
-import lombok.Data;
+package org.opengauss.admin.common.constant;
 
 /**
- * SSHBody
+ * CommonConstants
  *
- * @author lhf
- * @date 2022/8/8 13:57
- **/
-@Data
-public class SSHBody {
-    private String hostId;
-    private String sshUsername;
-    private String rootPassword;
-    private String businessId;
+ * @author wangchao
+ * @since 2024/10/29 09:26
+ */
+public interface CommonConstants {
+
+    /**
+     * host root username
+     */
+    String ROOT_USER = "root";
+
 }

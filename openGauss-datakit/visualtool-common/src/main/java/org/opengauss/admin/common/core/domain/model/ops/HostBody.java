@@ -24,14 +24,17 @@
 
 package org.opengauss.admin.common.core.domain.model.ops;
 
+import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+
+import org.opengauss.admin.common.constant.CommonConstants;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.vo.HostInfoVo;
-import org.opengauss.admin.common.utils.ops.JschUtil;
 
 import javax.validation.constraints.NotEmpty;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -69,14 +72,39 @@ public class HostBody {
         return hostEntity;
     }
 
-    public OpsHostUserEntity toRootUser(String hostId) {
+    /**
+     * Convert to user entity
+     *
+     * @param hostId hostId
+     * @return User
+     */
+    public OpsHostUserEntity toUser(String hostId) {
         OpsHostUserEntity hostUserEntity = new OpsHostUserEntity();
-        hostUserEntity.setUsername("root");
+        hostUserEntity.setUsername(username);
         hostUserEntity.setHostId(hostId);
-        hostUserEntity.setSudo(Boolean.TRUE);
-        if (Objects.nonNull(isRemember) && isRemember){
+        if (hostUserEntity.isRootUser()) {
+            hostUserEntity.setSudo(Boolean.TRUE);
+        }
+        if (Objects.nonNull(isRemember) && isRemember) {
             hostUserEntity.setPassword(password);
         }
         return hostUserEntity;
+    }
+
+    /**
+     * Convert to user body
+     *
+     * @param hostId hostId
+     * @return User
+     */
+    public HostUserBody toUserBody(String hostId) {
+        HostUserBody hostUserBody = new HostUserBody();
+        hostUserBody.setUsername(username);
+        hostUserBody.setHostId(hostId);
+        if (StrUtil.equalsIgnoreCase(username, CommonConstants.ROOT_USER)) {
+            hostUserBody.setSudo(Boolean.TRUE);
+        }
+        hostUserBody.setPassword(password);
+        return hostUserBody;
     }
 }

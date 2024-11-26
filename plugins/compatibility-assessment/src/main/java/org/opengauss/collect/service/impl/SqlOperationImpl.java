@@ -21,9 +21,11 @@ package org.opengauss.collect.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
+
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.jcraft.jsch.Session;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,12 +47,15 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.common.exception.ServiceException;
+import org.opengauss.admin.common.utils.OpsAssert;
 import org.opengauss.admin.system.plugin.facade.SysSettingFacade;
 import org.opengauss.admin.system.service.ops.IHostService;
 import org.opengauss.admin.system.service.ops.IHostUserService;
@@ -127,13 +132,12 @@ public class SqlOperationImpl implements SqlOperation {
     @Autowired
     private AssessmentMapper assessmentMapper;
 
-
     @Override
-    public RespBean getAllPids(String host) {
-        Optional<LinuxConfig> config = getLinuxConfig(host);
+    public RespBean getAllPids(String host, String hostUser) {
+        Optional<LinuxConfig> config = getLinuxConfig(host, hostUser);
         AssertUtil.isTrue(!config.isPresent(), "Host does not exist");
         Session session = JschUtil.obtainSession(config.get());
-        String mes = JschUtil.executeCommand(session, Constant.FIND_ALL_JAVA);
+        String mes = JschUtil.executeCommand(session, Constant.FIND_USER_ALL_JAVA);
         List<String> list = mes.lines().collect(Collectors.toList());
         AssertUtil.isTrue(CollectionUtil.isEmpty(list), "The server has no Java process");
         return RespBean.success("success", list);
@@ -144,12 +148,14 @@ public class SqlOperationImpl implements SqlOperation {
         return RespBean.success("success", getSystemPath(userId));
     }
 
-
     @Override
-    public void downloadChrome(String host, String filePath, HttpServletResponse response) {
-        Optional<LinuxConfig> config = getLinuxConfig(host);
+    public void downloadChrome(String host, String hostUser, String filePath, HttpServletResponse response) {
+        OpsAssert.isTrue(StrUtil.isNotEmpty(host), "Host cannot be empty");
+        OpsAssert.isTrue(StrUtil.isNotEmpty(hostUser), "HostUser cannot be empty");
+        Optional<LinuxConfig> config = getLinuxConfig(host, hostUser);
         AssertUtil.isTrue(!config.isPresent(), "Host does not exist");
         Session session = JschUtil.obtainSession(config.get());
+        OpsAssert.nonNull(session, "Host Session create failed");
         // 获得文件路径
         List<String> fileNames = JschUtil.getFileNamesByPath(session, filePath, true);
         List<File> files = new ArrayList<>();
@@ -204,27 +210,26 @@ public class SqlOperationImpl implements SqlOperation {
      * getLinuxConfig
      *
      * @param host host
+     * @param hostUser hostUser
      * @return Optional<LinuxConfig>  Optional
      */
-    public Optional<LinuxConfig> getLinuxConfig(String host) {
+    public Optional<LinuxConfig> getLinuxConfig(String host, String hostUser) {
         List<OpsHostEntity> entities = hostService.list();
         List<OpsHostUserEntity> userEntities = hostUserService.list();
-        Map<String, OpsHostUserEntity> userMap = userEntities.stream().filter(item -> item.getUsername().equals("root"))
-                .collect(Collectors.toMap(OpsHostUserEntity::getHostId, Function.identity()));
-        return entities.stream()
-                .filter(entity -> entity.getPublicIp().equals(host))
-                .findFirst()
-                .flatMap(entity -> {
-                    LinuxConfig config = new LinuxConfig();
-                    config.setHost(host);
-                    config.setPort(entity.getPort());
-                    OpsHostUserEntity userEntity = userMap.get(entity.getHostId());
-                    if (userEntity != null) {
-                        config.setUserName(userEntity.getUsername());
-                        config.setPassword(encryptionUtils.decrypt(userEntity.getPassword()));
-                    }
-                    return Optional.of(config);
-                });
+        Map<String, OpsHostUserEntity> userMap = userEntities.stream()
+            .filter(item -> item.getUsername().equals(hostUser))
+            .collect(Collectors.toMap(OpsHostUserEntity::getHostId, Function.identity()));
+        return entities.stream().filter(entity -> entity.getPublicIp().equals(host)).findFirst().flatMap(entity -> {
+            LinuxConfig config = new LinuxConfig();
+            config.setHost(host);
+            config.setPort(entity.getPort());
+            OpsHostUserEntity userEntity = userMap.get(entity.getHostId());
+            if (userEntity != null) {
+                config.setUserName(userEntity.getUsername());
+                config.setPassword(encryptionUtils.decrypt(userEntity.getPassword()));
+            }
+            return Optional.of(config);
+        });
     }
 
     @Override
@@ -234,7 +239,7 @@ public class SqlOperationImpl implements SqlOperation {
         String envPath = Constant.ENV_PATH;
         // 下载评估文件
         String downCommand = String.format(Constant.DOWN_LOAD_PATH, Constant.ASSESS_VERSION, Constant.ASSESS_PATH,
-                Constant.ASSESS_VERSION);
+            Constant.ASSESS_VERSION);
         boolean isSucc = CommandLineRunner.runCommand(downCommand, envPath, Constant.DOWN_TIME_OUT);
         log.info("Download evaluation files---->{}", isSucc);
         // 推送评估文件到envPath
@@ -272,8 +277,8 @@ public class SqlOperationImpl implements SqlOperation {
 
     private String getSystemPath(Integer userId) {
         return Optional.ofNullable(sysSettingFacade.getSysSetting(userId))
-                .map(sysSetting -> sysSetting.getUploadPath() + Constant.ACT_PATH)
-                .orElse("");
+            .map(sysSetting -> sysSetting.getUploadPath() + Constant.ACT_PATH)
+            .orElse("");
     }
 
     /**
@@ -292,18 +297,17 @@ public class SqlOperationImpl implements SqlOperation {
 
     private void checkAssessment(Assessment assessment, String sqlInputType) {
         // 校验opengauss数据库
-        String gaussUrl = "jdbc:opengauss://" + assessment.getOpengaussHost()
-                + ":" + assessment.getOpengaussPort() + "/" + assessment.getOpengaussDbname() + "?batchMode=off";
+        String gaussUrl = "jdbc:opengauss://" + assessment.getOpengaussHost() + ":" + assessment.getOpengaussPort()
+            + "/" + assessment.getOpengaussDbname() + "?batchMode=off";
         ConnectionUtils.getConnection(DbTypeEnum.OPENGAUSS.getDriverClass(), gaussUrl, assessment.getOpengaussUser(),
-                assessment.getOpengaussPassword());
+            assessment.getOpengaussPassword());
         if (sqlInputType.equals(Constant.ASSESS_COLLECT)) {
             // 校验mysql数据库
-            String mysqlUrl = "jdbc:mysql://" + assessment.getMysqlHost()
-                    + ":" + assessment.getMysqlPort() + "/" + assessment.getMysqlDbname()
-                    + "?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/"
-                    + "Shanghai&useSSL=false&allowPublicKeyRetrieval=true";
+            String mysqlUrl = "jdbc:mysql://" + assessment.getMysqlHost() + ":" + assessment.getMysqlPort() + "/"
+                + assessment.getMysqlDbname() + "?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/"
+                + "Shanghai&useSSL=false&allowPublicKeyRetrieval=true";
             ConnectionUtils.getConnection(DbTypeEnum.MYSQL.getDriverClass(), mysqlUrl, assessment.getMysqlUser(),
-                    assessment.getMysqlPassword());
+                assessment.getMysqlPassword());
         }
     }
 
@@ -323,20 +327,20 @@ public class SqlOperationImpl implements SqlOperation {
         try (PrintWriter writer = new PrintWriter(filePath)) {
             AssessmentBuilder builder = new AssessmentBuilder();
             builder.appendProperty("assessmenttype", assessment.getAssessmenttype())
-                    .appendProperty("filedir", assessment.getFiledir())
-                    .appendProperty("sqltype", assessment.getSqltype())
-                    .appendSectionBreak()
-                    .appendProperty("mysql.password", assessment.getMysqlPassword())
-                    .appendProperty("mysql.user", assessment.getMysqlUser())
-                    .appendProperty("mysql.port", assessment.getMysqlPort())
-                    .appendProperty("mysql.host", assessment.getMysqlHost())
-                    .appendProperty("mysql.dbname", assessment.getMysqlDbname())
-                    .appendSectionBreak()
-                    .appendProperty("opengauss.user", assessment.getOpengaussUser())
-                    .appendProperty("opengauss.password", assessment.getOpengaussPassword())
-                    .appendProperty("opengauss.port", assessment.getOpengaussPort())
-                    .appendProperty("opengauss.host", assessment.getOpengaussHost())
-                    .appendProperty("opengauss.dbname", assessment.getOpengaussDbname());
+                .appendProperty("filedir", assessment.getFiledir())
+                .appendProperty("sqltype", assessment.getSqltype())
+                .appendSectionBreak()
+                .appendProperty("mysql.password", assessment.getMysqlPassword())
+                .appendProperty("mysql.user", assessment.getMysqlUser())
+                .appendProperty("mysql.port", assessment.getMysqlPort())
+                .appendProperty("mysql.host", assessment.getMysqlHost())
+                .appendProperty("mysql.dbname", assessment.getMysqlDbname())
+                .appendSectionBreak()
+                .appendProperty("opengauss.user", assessment.getOpengaussUser())
+                .appendProperty("opengauss.password", assessment.getOpengaussPassword())
+                .appendProperty("opengauss.port", assessment.getOpengaussPort())
+                .appendProperty("opengauss.host", assessment.getOpengaussHost())
+                .appendProperty("opengauss.dbname", assessment.getOpengaussDbname());
             writer.write(builder.build());
         } catch (IOException e) {
             throw new ServiceException(e.getMessage());
@@ -365,8 +369,8 @@ public class SqlOperationImpl implements SqlOperation {
 
     @Override
     public RespBean sqlAssessInit() {
-        Optional<Assessment> optionalAssessment = Optional.ofNullable(assessmentCache
-                .getIfPresent(Constant.ASSESS_PATH));
+        Optional<Assessment> optionalAssessment = Optional.ofNullable(
+            assessmentCache.getIfPresent(Constant.ASSESS_PATH));
         optionalAssessment.ifPresent(assessment -> {
             assessment.setMysqlPassword("");
             assessment.setOpengaussPassword("");
@@ -374,18 +378,18 @@ public class SqlOperationImpl implements SqlOperation {
             assessment.setSqltype("");
         });
         return optionalAssessment.map(assessment -> RespBean.success("success", assessment))
-                .orElse(RespBean.success("success"));
+            .orElse(RespBean.success("success"));
     }
 
     @Override
     public RespBean startCollectingSql(CollectPeriod task) {
         CollectPeriod period = periodMapper.selectById(task.getTaskId());
         AssertUtil.isTrue(Constant.TASK_RUN.equals(period.getCurrentStatus()),
-                "The task is running, you cannot do this");
+            "The task is running, you cannot do this");
         AssertUtil.isTrue(Constant.TASK_COMPLETED.equals(period.getCurrentStatus()),
-                "The task is completed, you cannot do this");
+            "The task is completed, you cannot do this");
         String host = task.getHost();
-        Optional<LinuxConfig> config = getLinuxConfig(host);
+        Optional<LinuxConfig> config = getLinuxConfig(host, task.getHostUser());
         AssertUtil.isTrue(!config.isPresent(), "host is not exists");
         try {
             createAndStartScheduler(task, config.get());
@@ -412,25 +416,23 @@ public class SqlOperationImpl implements SqlOperation {
             jobDataMap.put(Constant.EXECUTE_TIME, executionTime);
             jobDataMap.put(Constant.TASK, task);
             jobDataMap.put(Constant.CONFIG, config);
-            JobDetail detail = SchedulerUtil.getJobDetail(startTime,
-                    Constant.SCHEDULER_GROUP, jobDataMap, PileInsertionJob.class);
-            Trigger trigger = SchedulerUtil.getTrigger(startTime,
-                    Constant.SCHEDULER_GROUP, startTime, "", 0);
+            JobDetail detail = SchedulerUtil.getJobDetail(startTime, Constant.SCHEDULER_GROUP, jobDataMap,
+                PileInsertionJob.class);
+            Trigger trigger = SchedulerUtil.getTrigger(startTime, Constant.SCHEDULER_GROUP, startTime, "", 0);
             checkDetail(detail);
             scheduler.scheduleJob(detail, trigger);
             // Heartbeat detection scheduler
-            JobDetail beatDetail = SchedulerUtil.getJobDetail(startTime
-                    + "Heartbeat", Constant.SCHEDULER_GROUP, jobDataMap, HeartbeatJob.class);
-            Trigger beatTrigger = SchedulerUtil.getTrigger(startTime
-                            + "Heartbeat", Constant.SCHEDULER_GROUP, startTime,
-                    endTime, DateUtil.getInterval(executionTime));
+            JobDetail beatDetail = SchedulerUtil.getJobDetail(startTime + "Heartbeat", Constant.SCHEDULER_GROUP,
+                jobDataMap, HeartbeatJob.class);
+            Trigger beatTrigger = SchedulerUtil.getTrigger(startTime + "Heartbeat", Constant.SCHEDULER_GROUP, startTime,
+                endTime, DateUtil.getInterval(executionTime));
             checkDetail(beatDetail);
             scheduler.scheduleJob(beatDetail, beatTrigger);
             // Task completion change status
-            JobDetail statusDetail = SchedulerUtil.getJobDetail(startTime + "status",
-                    Constant.SCHEDULER_GROUP, jobDataMap, ModifyStateJob.class);
-            Trigger statustrigger = SchedulerUtil.getTrigger(startTime + "status",
-                    Constant.SCHEDULER_GROUP, endTime, "", 0);
+            JobDetail statusDetail = SchedulerUtil.getJobDetail(startTime + "status", Constant.SCHEDULER_GROUP,
+                jobDataMap, ModifyStateJob.class);
+            Trigger statustrigger = SchedulerUtil.getTrigger(startTime + "status", Constant.SCHEDULER_GROUP, endTime,
+                "", 0);
             checkDetail(statusDetail);
             scheduler.scheduleJob(statusDetail, statustrigger);
         }
@@ -444,11 +446,10 @@ public class SqlOperationImpl implements SqlOperation {
         // 获取当前时间
         LocalDateTime now = LocalDateTime.now();
         // 检查timeMap中是否有值小于当前时间的情况
-        return timeMap.keySet().stream()
-                .anyMatch(key -> {
-                    LocalDateTime time = LocalDateTime.parse(timeMap.get(key), formatter);
-                    return time.isBefore(now);
-                });
+        return timeMap.keySet().stream().anyMatch(key -> {
+            LocalDateTime time = LocalDateTime.parse(timeMap.get(key), formatter);
+            return time.isBefore(now);
+        });
     }
 
     private void checkDetail(JobDetail detail) throws SchedulerException {
