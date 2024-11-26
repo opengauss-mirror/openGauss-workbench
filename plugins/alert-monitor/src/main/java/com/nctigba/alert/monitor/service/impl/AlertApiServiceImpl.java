@@ -25,12 +25,15 @@ package com.nctigba.alert.monitor.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.event.NotifyEvent;
+import com.nctigba.alert.monitor.mapper.AlertRuleItemSrcMapper;
 import com.nctigba.alert.monitor.mapper.AlertShieldingMapper;
 import com.nctigba.alert.monitor.mapper.AlertTemplateMapper;
+import com.nctigba.alert.monitor.mapper.AlertTemplateRuleItemMapper;
 import com.nctigba.alert.monitor.mapper.AlertTemplateRuleMapper;
 import com.nctigba.alert.monitor.mapper.NotifyMessageMapper;
 import com.nctigba.alert.monitor.mapper.NotifyTemplateMapper;
@@ -38,9 +41,11 @@ import com.nctigba.alert.monitor.mapper.NotifyWayMapper;
 import com.nctigba.alert.monitor.model.entity.AlertClusterNodeConfDO;
 import com.nctigba.alert.monitor.model.entity.AlertRecordDO;
 import com.nctigba.alert.monitor.model.entity.AlertRecordDetailDO;
+import com.nctigba.alert.monitor.model.entity.AlertRuleItemSrcDO;
 import com.nctigba.alert.monitor.model.entity.AlertShieldingDO;
 import com.nctigba.alert.monitor.model.entity.AlertTemplateDO;
 import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleDO;
+import com.nctigba.alert.monitor.model.entity.AlertTemplateRuleItemDO;
 import com.nctigba.alert.monitor.model.entity.NotifyWayDO;
 import com.nctigba.alert.monitor.model.query.api.AlertApiReq;
 import com.nctigba.alert.monitor.service.AlertApiService;
@@ -92,6 +97,10 @@ public class AlertApiServiceImpl implements AlertApiService {
     @Autowired
     private AlertTemplateRuleMapper templateRuleMapper;
     @Autowired
+    private AlertTemplateRuleItemMapper templateRuleItemMapper;
+    @Autowired
+    private AlertRuleItemSrcMapper ruleItemSrcMapper;
+    @Autowired
     private NotifyWayMapper notifyWayMapper;
     @Autowired
     private NotifyTemplateMapper notifyTemplateMapper;
@@ -130,10 +139,10 @@ public class AlertApiServiceImpl implements AlertApiService {
                 Long templateId = Long.valueOf(labels.get("templateId"));
                 String clusterNodeId = labels.get("instance");
                 long count = clusterNodeConfService.count(Wrappers.<AlertClusterNodeConfDO>lambdaQuery()
-                    .eq(AlertClusterNodeConfDO::getTemplateId, templateId)
-                    .eq(AlertClusterNodeConfDO::getClusterNodeId, clusterNodeId)
-                    .eq(AlertClusterNodeConfDO::getType, CommonConstants.INSTANCE)
-                    .eq(AlertClusterNodeConfDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
+                        .eq(AlertClusterNodeConfDO::getTemplateId, templateId)
+                        .eq(AlertClusterNodeConfDO::getClusterNodeId, clusterNodeId)
+                        .eq(AlertClusterNodeConfDO::getType, CommonConstants.INSTANCE)
+                        .eq(AlertClusterNodeConfDO::getIsDeleted, CommonConstants.IS_NOT_DELETE));
                 if (count == 0) {
                     continue;
                 }
@@ -172,10 +181,10 @@ public class AlertApiServiceImpl implements AlertApiService {
 
     private boolean checkIsShielding(String clusterNodeId) {
         List<AlertShieldingDO> shieldingDOList = shieldingMapper.selectList(Wrappers.<AlertShieldingDO>lambdaQuery()
-            .eq(AlertShieldingDO::getIsDeleted, CommonConstants.IS_NOT_DELETE)
-            .eq(AlertShieldingDO::getIsEnable, CommonConstants.IS_ENABLE));
+                .eq(AlertShieldingDO::getIsDeleted, CommonConstants.IS_NOT_DELETE)
+                .eq(AlertShieldingDO::getIsEnable, CommonConstants.IS_ENABLE));
         shieldingDOList = shieldingDOList.stream().filter(
-            f -> f.getClusterNodeIds().contains(clusterNodeId)).collect(Collectors.toList());
+                f -> f.getClusterNodeIds().contains(clusterNodeId)).collect(Collectors.toList());
         if (CollectionUtil.isEmpty(shieldingDOList)) {
             return false;
         }
@@ -198,7 +207,7 @@ public class AlertApiServiceImpl implements AlertApiService {
                 }
             }
             if (CommonConstants.SHIELDING_SCHEDULED.equals(type) && !isOneEmptyTime
-                && isDateInRange(now, startDate, endDate) && isTimeInRange(now, startTime, endTime)) {
+                    && isDateInRange(now, startDate, endDate) && isTimeInRange(now, startTime, endTime)) {
                 return true;
             }
         }
@@ -252,7 +261,7 @@ public class AlertApiServiceImpl implements AlertApiService {
     private void alertToRecover(String clusterNodeId, Long templateId, Long templateRuleId) {
         List<AlertRecordDO> alertRecords = recordService.getList(clusterNodeId, templateId, templateRuleId);
         if (CollectionUtil.isEmpty(alertRecords)
-            || CommonConstants.RECOVER_STATUS.equals(alertRecords.get(0).getAlertStatus())) {
+                || CommonConstants.RECOVER_STATUS.equals(alertRecords.get(0).getAlertStatus())) {
             return;
         }
         AlertRecordDO alertRecord = alertRecords.get(0);
@@ -268,8 +277,8 @@ public class AlertApiServiceImpl implements AlertApiService {
         AlertRecordDO alertRecordDO = null;
         DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         if (CollectionUtil.isEmpty(alertRecordDOS)
-            || alertRecordDOS.get(0).getAlertStatus().equals(CommonConstants.RECOVER_STATUS)
-            || !df.format(alertApiReq.getStartsAt()).equals(df.format(alertRecordDOS.get(0).getStartTime()))
+                || alertRecordDOS.get(0).getAlertStatus().equals(CommonConstants.RECOVER_STATUS)
+                || !df.format(alertApiReq.getStartsAt()).equals(df.format(alertRecordDOS.get(0).getStartTime()))
         ) {
             if (alertApiReq.getAlertStatus().equals(CommonConstants.RECOVER_STATUS)) {
                 return Optional.empty();
@@ -290,31 +299,32 @@ public class AlertApiServiceImpl implements AlertApiService {
                 Arrays.asList(alertTemplateRuleDO.getNotifyWayIds().split(CommonConstants.DELIMITER)));
         String notifyWayNames = notifyWayDOS.stream().map(item -> item.getName()).collect(
                 Collectors.joining(CommonConstants.DELIMITER));
-        Map<String, String> alertParams = generateAlertParams(alertApiReq);
+        Map<String, String> alertParams = generateAlertParams(alertApiReq, alertTemplateRuleDO);
         alertRecordDO.setNotifyWayIds(alertTemplateRuleDO.getNotifyWayIds()).setNotifyWayNames(notifyWayNames)
-            .setEndTime(alertApiReq.getEndsAt()).setDuration(
-                Duration.between(alertRecordDO.getStartTime(), alertRecordDO.getEndTime()).toSeconds())
-            .setClusterId(alertParams.get("clusterId")).setAlertStatus(alertApiReq.getAlertStatus())
-            .setAlertContent(TextParserUtils.parse(alertTemplateRuleDO.getRuleContent(), alertParams))
-            .setType(CommonConstants.INSTANCE);
+                .setEndTime(alertApiReq.getEndsAt()).setDuration(
+                        Duration.between(alertRecordDO.getStartTime(), alertRecordDO.getEndTime()).toSeconds())
+                .setClusterId(alertParams.get("clusterId")).setAlertStatus(alertApiReq.getAlertStatus())
+                .setAlertContent(TextParserUtils.parse(alertTemplateRuleDO.getRuleContent(), alertParams))
+                .setType(CommonConstants.INSTANCE);
         AlertRecordDetailDO detail = new AlertRecordDetailDO();
         detail.setClusterId(alertRecordDO.getClusterId()).setRecordId(alertRecordDO.getId())
-            .setLevel(alertRecordDO.getLevel()).setNotifyWayIds(alertRecordDO.getNotifyWayIds())
-            .setNotifyWayNames(alertRecordDO.getNotifyWayNames()).setClusterNodeId(alertRecordDO.getClusterNodeId())
-            .setAlertContent(alertRecordDO.getAlertContent()).setAlertStatus(alertRecordDO.getAlertStatus())
-            .setTemplateId(alertRecordDO.getTemplateId()).setTemplateName(alertRecordDO.getTemplateName())
-            .setTemplateRuleId(alertRecordDO.getTemplateRuleId()).setType(CommonConstants.INSTANCE)
-            .setTemplateRuleName(alertRecordDO.getTemplateRuleName()).setAlertContent(alertRecordDO.getAlertContent())
-            .setTemplateRuleType(alertRecordDO.getTemplateRuleType())
-            .setStartTime(alertRecordDO.getStartTime()).setEndTime(alertRecordDO.getEndTime())
-            .setNotifyStatus(CommonConstants.UNSEND).setCreateTime(LocalDateTime.now());
+                .setLevel(alertRecordDO.getLevel()).setNotifyWayIds(alertRecordDO.getNotifyWayIds())
+                .setNotifyWayNames(alertRecordDO.getNotifyWayNames()).setClusterNodeId(alertRecordDO.getClusterNodeId())
+                .setAlertContent(alertRecordDO.getAlertContent()).setAlertStatus(alertRecordDO.getAlertStatus())
+                .setTemplateId(alertRecordDO.getTemplateId()).setTemplateName(alertRecordDO.getTemplateName())
+                .setTemplateRuleId(alertRecordDO.getTemplateRuleId()).setType(CommonConstants.INSTANCE)
+                .setTemplateRuleName(alertRecordDO.getTemplateRuleName())
+                .setAlertContent(alertRecordDO.getAlertContent())
+                .setTemplateRuleType(alertRecordDO.getTemplateRuleType())
+                .setStartTime(alertRecordDO.getStartTime()).setEndTime(alertRecordDO.getEndTime())
+                .setNotifyStatus(CommonConstants.UNSEND).setCreateTime(LocalDateTime.now());
         List<AlertRecordDetailDO> details = new ArrayList<>();
         details.add(detail);
         alertRecordDO.setRecordDetailList(details);
         return Optional.of(alertRecordDO);
     }
 
-    private Map<String, String> generateAlertParams(AlertApiReq alertApiReq) {
+    private Map<String, String> generateAlertParams(AlertApiReq alertApiReq, AlertTemplateRuleDO alertTemplateRuleDO) {
         Map<String, String> labels = alertApiReq.getLabels();
         Map<String, String> alertParams = new HashMap<>();
         alertParams.putAll(labels);
@@ -349,6 +359,7 @@ public class AlertApiServiceImpl implements AlertApiService {
         if (opsClusterEntity == null) {
             throw new ServiceException("cluster is not found");
         }
+
         String nodeName =
                 opsClusterEntity.getClusterId() + "/" + opsHost.getPublicIp() + ":" + opsClusterEntity.getPort()
                         + "(" + opsClusterNodeEntity.getClusterRole() + ")";
@@ -356,11 +367,35 @@ public class AlertApiServiceImpl implements AlertApiService {
         alertParams.put("hostname", opsHost.getHostname());
         alertParams.put("port", opsClusterEntity.getPort() != null ? opsClusterEntity.getPort().toString() : "");
         alertParams.put("hostIp", opsHost.getPublicIp());
-        alertParams.put(
-                "cluster",
+        alertParams.put("cluster",
                 StrUtil.isNotBlank(opsClusterEntity.getClusterName()) ? opsClusterEntity.getClusterName()
                         : opsClusterEntity.getClusterId());
         alertParams.put("clusterId", opsClusterEntity.getClusterId());
+
+        addNewAlertParams(alertParams, alertTemplateRuleDO);
         return alertParams;
+    }
+
+    private void addNewAlertParams(Map<String, String> alertParams, AlertTemplateRuleDO alertTemplateRuleDO) {
+        List<AlertTemplateRuleItemDO> templateRuleItems = templateRuleItemMapper.selectList(
+                Wrappers.<AlertTemplateRuleItemDO>lambdaQuery().eq(AlertTemplateRuleItemDO::getTemplateRuleId,
+                        alertTemplateRuleDO.getId()));
+        if (CollectionUtil.isNotEmpty(templateRuleItems)) {
+            AlertTemplateRuleItemDO templateRuleItem = templateRuleItems.get(0);
+            String ruleExpName = templateRuleItem.getRuleExpName();
+            AlertRuleItemSrcDO ruleItemSrc = ruleItemSrcMapper.selectList(
+                    Wrappers.<AlertRuleItemSrcDO>lambdaQuery().eq(AlertRuleItemSrcDO::getName,
+                            ruleExpName)).stream().findFirst().orElse(null);
+            if (ruleItemSrc != null) {
+                String ruleName = Locale.getDefault().equals(Locale.CHINA) ? ruleItemSrc.getNameZh()
+                        : ruleItemSrc.getNameEn();
+                alertParams.put("ruleName", ruleName);
+            }
+            String limitValue = templateRuleItem.getLimitValue()
+                    + (StringUtils.isEmpty(templateRuleItem.getUnit()) ? "" : templateRuleItem.getUnit());
+            alertParams.put("limitValue", limitValue);
+        }
+        String duration = alertTemplateRuleDO.getNotifyDuration() + alertTemplateRuleDO.getNotifyDurationUnit();
+        alertParams.put("duration", duration);
     }
 }

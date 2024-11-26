@@ -39,6 +39,7 @@ public class AlertPluginInfoDTO {
     private String ruleCode;
     private String instanceId;
     private String instance;
+    private String hostname;
     private String ip;
     private String port;
     private LocalDateTime alertTime;

@@ -352,6 +352,9 @@ export default {
     alertStatus: 'alert status',
     level: 'alert level',
     content: 'alert content',
-    curVal: 'current value'
+    curVal: 'current value',
+    limitValue: 'alert threshold',
+    ruleName: 'rule name',
+    duration: 'alert duration',
   }
 }

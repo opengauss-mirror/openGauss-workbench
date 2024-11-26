@@ -352,6 +352,9 @@ export default {
     alertStatus: '告警状态',
     level: '告警级别',
     content: '告警内容',
-    curVal: '当前值'
+    curVal: '当前值',
+    limitValue: '告警阈值',
+    ruleName: '指标名称',
+    duration: '持续时长',
   }
 }

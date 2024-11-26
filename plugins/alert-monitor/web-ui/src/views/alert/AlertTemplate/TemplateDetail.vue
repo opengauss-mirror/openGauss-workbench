@@ -163,7 +163,9 @@ const showRuleExpDesc = (rule: any) => {
       if (!item.operate) {
         return `[${item.ruleMark}]: ${name}`
       }
-      return `[${item.ruleMark}]: ${name + paramStr + ' ' + (item.action === 'normal' ? (item.operate + item.limitValue + item.unit) : t(`alertRule.${item.action}Action`))}`
+      return `[${item.ruleMark}]: ${name + paramStr + ' ' + (item.action === 'normal' ? (
+          item.operate + item.limitValue + (item.unit || '')
+      ) : t(`alertRule.${item.action}Action`))}`
     }).join('<br />')
   } else {
     return alertRuleItemList.map((item: any) => {

@@ -58,7 +58,19 @@ const param = {
   level: {
     name: i18n.global.t('contentParam.level'),
     preVal: 'serious'
-  }
+  },
+  limitValue: {
+    name: i18n.global.t('contentParam.limitValue'),
+    preVal: '95%'
+  },
+  ruleName: {
+    name: i18n.global.t('contentParam.ruleName'),
+    preVal: 'CPUUsage'
+  },
+  duration: {
+    name: i18n.global.t('contentParam.duration'),
+    preVal: '1m'
+  },
 }
 
 export function getAlertContentParam() {
