@@ -281,4 +281,34 @@ public interface GainObjectSQLService {
     default String resourceListSQL() {
         throw new CustomException(DebugUtils.getMessage());
     }
+
+    /**
+     * user member sql
+     *
+     * @param uuid uuid
+     * @param isSystemAdmin isSystemAdmin
+     * @return String
+     * @throws SQLException SQLException
+     */
+    default String userMemberSQL(String uuid, boolean isSystemAdmin) throws SQLException {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * current connect user sql
+     *
+     * @return String
+     */
+    default String currentUserInfoSQL() {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * get all system admin sql
+     *
+     * @return String
+     */
+    default String getAllSystemAdminSQL() {
+        throw new CustomException(DebugUtils.getMessage());
+    }
 }

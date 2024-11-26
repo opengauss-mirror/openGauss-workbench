@@ -40,10 +40,14 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Deque;
+import java.util.ArrayDeque;
 
 import static com.nctigba.datastudio.constants.CommonConstants.NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.OID;
@@ -216,6 +220,136 @@ public class QueryMetaArrayServiceImpl implements QueryMetaArrayService {
                 resourceList.add(resultSet.getString(1));
             }
             return resourceList;
+        }
+    }
+
+    @Override
+    public List<Map<String, String>> userMemberList(String uuid) throws SQLException {
+        try (
+                Connection connection = connectionConfig.connectDatabase(uuid);
+                Statement statement = connection.createStatement();
+                ResultSet userInfo = statement.executeQuery(
+                        gainObjectSQLService.get(comGetUuidType(uuid)).currentUserInfoSQL())
+        ) {
+            // 目前尝试实现方法：记忆化BFS
+            String currentRoleId = "";
+            String currentRoleName = "";
+            boolean isSystemAdmin = false;
+            while (userInfo.next()) {
+                currentRoleId = userInfo.getString(1);
+                currentRoleName = userInfo.getString(2);
+                isSystemAdmin = userInfo.getBoolean(3);
+            }
+            if (currentRoleId.isBlank()) {
+                throw new CustomException("Get current user information failed!");
+            }
+            return userMemberBfs(uuid, currentRoleId, currentRoleName, isSystemAdmin);
+        }
+    }
+
+    private List<Map<String, String>> userMemberBfs(String uuid, String roleId,
+                                                    String rolName, boolean isSystemAdmin) throws SQLException {
+        try (
+                Connection connection = connectionConfig.connectDatabase(uuid);
+                Statement statement = connection.createStatement()
+        ) {
+            List<Map<String, String>> userMemberList = new ArrayList<>();
+
+            // 该用户是系统管理员用户
+            if (isSystemAdmin) {
+                log.info("user " + rolName + "is System Admin.");
+                return userMemberAdmin(uuid, roleId);
+            }
+
+            // 该用户不是系统管理员用户
+            log.info("user" + rolName + "is not System Admin.");
+
+            // BFS
+            Set<String> set = new HashSet<>();
+            Deque<String> deque = new ArrayDeque<>();
+            // 添加自己
+            Map<String, String> self = new HashMap<>();
+            self.put(OID, roleId);
+            self.put(NAME, rolName);
+            userMemberList.add(self);
+            set.add(roleId);
+            deque.offer(roleId);
+
+            // bfs方式添加所有的直接和间接成员
+            while (!deque.isEmpty()) {
+                int len = deque.size();
+                for (int i = 0; i < len; i++) {
+                    String curRoleId = deque.poll();
+                    List<Map<String, String>> subUserMemberList =
+                            userMemberBfsHelper(uuid, curRoleId, set, deque);
+                    userMemberList.addAll(subUserMemberList);
+                }
+            }
+
+            // 添加上系统管理员用户
+            try (
+                    ResultSet systemAdminResult = statement.executeQuery(
+                            gainObjectSQLService.get(comGetUuidType(uuid)).getAllSystemAdminSQL())
+            ) {
+                while (systemAdminResult.next()) {
+                    String systemAdminRoleId = systemAdminResult.getString(1);
+                    if (set.contains(systemAdminRoleId)) {
+                        continue;
+                    }
+                    Map<String, String> map = new HashMap<>();
+                    map.put(OID, systemAdminRoleId);
+                    map.put(NAME, systemAdminResult.getString(2));
+                    userMemberList.add(map);
+                }
+            }
+
+            // 基于用户名称进行升序排序，之后返回结果
+            userMemberList.sort((o1, o2) ->
+                    o1.values().iterator().next().compareTo(o2.values().iterator().next()));
+
+            return userMemberList;
+        }
+    }
+
+    private List<Map<String, String>> userMemberAdmin(String uuid, String roleId) throws SQLException {
+        try (
+                Connection connection = connectionConfig.connectDatabase(uuid);
+                Statement statement = connection.createStatement();
+                ResultSet adminResultSet = statement.executeQuery(
+                        gainObjectSQLService.get(comGetUuidType(uuid)).userMemberSQL(roleId, true))
+        ) {
+            List<Map<String, String>> adminMemberList = new ArrayList<>();
+            while (adminResultSet.next()) {
+                Map<String, String> map = new HashMap<>();
+                map.put(OID, adminResultSet.getString(1));
+                map.put(NAME, adminResultSet.getString(2));
+                adminMemberList.add(map);
+            }
+            return adminMemberList;
+        }
+    }
+
+    private List<Map<String, String>> userMemberBfsHelper(String uuid, String curRoleId,
+                                                          Set<String> set, Deque<String> deque) throws SQLException {
+        try (
+                Connection connection = connectionConfig.connectDatabase(uuid);
+                Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery(
+                        gainObjectSQLService.get(comGetUuidType(uuid)).userMemberSQL(curRoleId, false))
+        ) {
+            List<Map<String, String>> subUserMemberList = new ArrayList<>();
+            while (resultSet.next()) {
+                String masterId = resultSet.getString(1);
+                if (!set.contains(masterId)) {
+                    Map<String, String> map = new HashMap<>();
+                    map.put(OID, masterId);
+                    map.put(NAME, resultSet.getString(2));
+                    subUserMemberList.add(map);
+                    set.add(masterId);
+                    deque.offer(masterId);
+                }
+            }
+            return subUserMemberList;
         }
     }
 }

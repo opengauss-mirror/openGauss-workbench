@@ -429,4 +429,38 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     public String resourceListSQL() {
         return "select respool_name from PG_RESOURCE_POOL";
     }
+
+    @Override
+    public String userMemberSQL(String roleId, boolean isSystemAdmin) throws SQLException {
+        String ddl;
+        if (isSystemAdmin) {
+            ddl = "select oid,rolname from pg_roles order by rolname;";
+        } else {
+            // 需要非管理员用户具有pg_authid的权限
+            ddl = "select distinct pm.roleid as roleid, pa.rolname as rolname "
+                    + "from pg_auth_members pm left join pg_authid pa on pa.oid = pm.roleid "
+                    + "where pm.member = " + roleId
+                    + " order by rolname;";
+        }
+        log.info("userMemberSQL response is : " + ddl);
+        return ddl;
+    }
+
+    @Override
+    public String currentUserInfoSQL() {
+        String ddl;
+        ddl = "select pr.oid as roleid, pr.rolname, pr.rolsystemadmin from pg_roles pr "
+                + "where rolname = (SELECT usename FROM pg_stat_activity WHERE pid = pg_backend_pid());";
+        log.info("currentUserInfoSQL response is : " + ddl);
+        return ddl;
+    }
+
+    @Override
+    public String getAllSystemAdminSQL() {
+        String ddl;
+        // 需要用户有 pg_authid 权限
+        ddl = "select oid,rolname from pg_authid where rolsystemadmin = true;";
+        log.info("getAllSystemAdminSQL response is : " + ddl);
+        return ddl;
+    }
 }

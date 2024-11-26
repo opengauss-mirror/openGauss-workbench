@@ -87,7 +87,7 @@
   import { FormInstance, FormRules } from 'element-plus';
   import { useI18n } from 'vue-i18n';
   import { Generateform } from '../type';
-  import { getSchemaList } from '@/api/metaData';
+  import { getSchemaList, getUserMemberList } from '@/api/metaData';
 
   const props = withDefaults(
     defineProps<{
@@ -119,6 +119,11 @@
     const res = (await getSchemaList({ uuid: props.uuid })) as unknown as string[];
     ownerList.value = res;
   };
+
+  const fetchUserMemberList = async () => {
+    const res = (await getUserMemberList({ uuid: props.uuid })) as unknown as string[];
+    ownerList.value = res;
+  }
 
   const rules = reactive<FormRules>({
     tablespaceName: [
@@ -155,7 +160,8 @@
     ruleFormRef.value.resetFields();
   };
   onMounted(() => {
-    nextTick(fetchSchemaList);
+    // nextTick(fetchSchemaList);
+    nextTick(fetchUserMemberList);
   });
   defineExpose({
     formRef,

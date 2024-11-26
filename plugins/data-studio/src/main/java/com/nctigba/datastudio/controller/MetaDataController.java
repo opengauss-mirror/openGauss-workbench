@@ -196,4 +196,16 @@ public class MetaDataController {
     public List<String> resourceList(@RequestParam("uuid") String uuid) throws SQLException {
         return queryMetaArrayService.resourceList(uuid);
     }
+
+    /**
+     * user member list
+     *
+     * @param uuid uuid
+     * @return List
+     * @throws SQLException SQLException
+     */
+    @GetMapping(value = "/userMember", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<Map<String, String>> userMemberList(@RequestParam("uuid") String uuid) throws SQLException {
+        return queryMetaArrayService.userMemberList(uuid);
+    }
 }

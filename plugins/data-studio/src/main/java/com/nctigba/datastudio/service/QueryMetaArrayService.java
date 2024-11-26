@@ -119,4 +119,12 @@ public interface QueryMetaArrayService {
      */
     List<String> resourceList(String uuid) throws SQLException;
 
+    /**
+     * user member list
+     *
+     * @param uuid uuid
+     * @return List
+     * @throws SQLException SQLException
+     */
+    List<Map<String, String>> userMemberList(String uuid) throws SQLException;
 }
