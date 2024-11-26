@@ -39,12 +39,15 @@
                       <a-button type="primary" size="mini" @click="dataTblWin(nodeData)" v-if="checkBtnShow(nodeData)" class="add-sub-btn">{{$t('step1.index.5q091ixigdc1')}}</a-button>
                     </div>
                   </template>
-                  <span v-else>
+                  <div v-else style="width:250px;" @mouseover="showButtonSourceDB(nodeData)" @mouseleave="hideButtonSourceDB">
+                  <span>
                     {{ nodeData?.title?.substr(0, index) }}
                     <span style="color: var(--color-primary-light-4);">
                       {{ nodeData?.title?.substr(index, searchSourceKey.length) }}
                     </span>{{ nodeData?.title?.substr(index + searchSourceKey.length) }}
+                    <a-button type="primary" size="mini" @click="dataTblWin(nodeData)" v-if="checkBtnShow(nodeData)" class="add-sub-btn">{{$t('step1.index.5q091ixigdc1')}}</a-button>
                   </span>
+                </div>
                 </template>
               </a-tree>
               <a-empty v-if="!sourceTreeData.length" />
@@ -94,12 +97,14 @@
                       <a-button v-if="nodeData?.isLeaf && nodeData?.isSelect" class="add-sub-btn" type="primary" size="mini" @click="addSubTask(nodeData)">{{$t('step1.index.5q091ixigog0')}}</a-button>
                     </div>
                   </template>
-                  <span v-else>
+                  <div v-else class="add-sub-task">
+                    <span>
                     {{ nodeData?.title?.substr(0, index) }}
                     <span style="color: var(--color-primary-light-4);">
                       {{ nodeData?.title?.substr(index, searchTargetKey.length) }}
-                    </span>{{ nodeData?.title?.substr(index + searchTargetKey.length) }}
-                  </span>
+                    </span>{{ nodeData?.title?.substr(index + searchTargetKey.length) }}</span>
+                    <a-button v-if="nodeData?.isLeaf && nodeData?.isSelect" class="add-sub-btn" type="primary" size="mini" @click="addSubTask(nodeData)">{{$t('step1.index.5q091ixigog0')}}</a-button>
+                </div>
                 </template>
               </a-tree>
               <a-empty v-if="!targetTreeData.length" />
