@@ -6,26 +6,26 @@
       <a-form-item :label="$t('customControl.HostPwdDlg.5mplfut5bj80')">
         <a-select :loading="data.hostListLoading" v-model="data.formData.hostId"
           :placeholder="$t('customControl.HostPwdDlg.else2')" @change="hostChange">
-          <a-option v-for="(item, index) in data.hostList" :key="index" :label="item.label" :value="item.value" />
+          <a-option v-for="(item, index) in data.hostList" :key="index" :label="item.label" :value="item.hostId" />
         </a-select>
       </a-form-item>
-      <a-form-item v-if="data.isShowPwd" field="password" :label="$t('customControl.HostPwdDlg.else1')"
-        validate-trigger="blur">
-        <a-input-password v-model="data.formData.password" :placeholder="$t('customControl.HostPwdDlg.5mplfut5kuc0')"
-          allow-clear />
+      <a-form-item :label="$t('customControl.HostPwdDlg.user')">
+        <a-select :loading="data.userListLoading" v-model="data.formData.username"
+          :placeholder="$t('customControl.HostPwdDlg.userPlaceholder')" @change="userChange">
+          <a-option v-for="(item, index) in data.userList" :key="index" :label="item.username" :value="item.username" />
+        </a-select>
       </a-form-item>
     </a-form>
-    <label v-else>暂无设备信息</label>
+    <label v-else>{{ $t('customControl.HostPwdDlg.noDevice') }}</label>
   </a-modal>
 </template>
 
 <script setup lang="ts">
-
 import { nextTick, reactive, ref, computed } from 'vue'
 import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { useI18n } from 'vue-i18n'
-import { hostListAll, hostPingById } from '@/api/ops'
+import { hostListAll, hostPing, hostUserListAll } from '@/api/ops'
 import { encryptPassword } from '@/utils/jsencrypt'
 const { t } = useI18n()
 const data = reactive<KeyValue>({
@@ -33,13 +33,16 @@ const data = reactive<KeyValue>({
   title: t('customControl.HostPwdDlg.5mplfut5lgo0'),
   loading: false,
   hostListLoading: false,
+  userListLoading: false,
   excludeHosts: [],
   hostList: [],
+  userList: [],
   hostObj: {},
   isShowPwd: false,
   hideCancel: false,
   formData: {
     hostId: '',
+    username: '',
     password: ''
   }
 })
@@ -80,18 +83,19 @@ const close = () => {
 const emits = defineEmits([`finish`])
 
 const handleOk = () => {
-  console.log('show formData', data.formData)
   if (data.formData.hostId) {
     formRef.value?.validate().then(async result => {
       if (!result) {
         const encryptPwd = await encryptPassword(data.formData.password)
-        // valid password
-        const param = {
-          rootPassword: encryptPwd
+        console.log(currentHost)
+        const { privateIp, publicIp, port } = currentHost
+        const { username, password } = currentUser
+        const hostParam = {
+          privateIp, publicIp, port,username, password:password||undefined
         }
         data.loading = true
         try {
-          const passwordValid: KeyValue = await hostPingById(data.formData.hostId, param)
+          const passwordValid: KeyValue = await hostPing(hostParam)
           if (Number(passwordValid.code) !== 200) {
             formRef.value?.setFields({
               password: {
@@ -102,6 +106,7 @@ const handleOk = () => {
           } else {
             emits(`finish`, {
               hostId: data.formData.hostId,
+              username: data.formData.username,
               password: encryptPwd
             })
             close()
@@ -137,13 +142,13 @@ const getHostList = () => {
           data.hostObj[item.hostId] = item
           data.hostList.push({
             label: `${item.privateIp}(${item.publicIp})`,
-            value: item.hostId
+            ...item
           })
         }
       })
       if (data.hostList.length) {
-        data.formData.hostId = data.hostList[0].value
-        data.isShowPwd = !data.hostObj[data.formData.hostId].isRemember
+        data.formData.hostId = data.hostList[0].hostId
+        hostChange()
       }
     }
   }).finally(() => {
@@ -151,8 +156,30 @@ const getHostList = () => {
   })
 }
 
-const hostChange = () => {
+let currentHost:KeyValue = {}
+const hostChange = async () => {
   data.isShowPwd = !data.hostObj[data.formData.hostId].isRemember
+  data.userList = []
+  data.userListLoading = true
+  console.log(data.hostList,data.formData.hostId)
+  currentHost = data.hostList.find(item => item.hostId === data.formData.hostId)
+  try {
+    const res = await hostUserListAll(data.formData.hostId)
+    if(res.code === 200){
+      data.userList = res.data
+      data.formData.username = res.data[0]?.username
+      userChange()
+      data.userListLoading = false
+    }
+  } catch (error) {
+    console.log(error)
+    data.userListLoading = false
+  }
+}
+
+let currentUser:KeyValue = {}
+const userChange = () => {
+  currentUser = data.userList.find(item => item.username === data.formData.username)
 }
 
 const open = (hosts: KeyValue[]) => {

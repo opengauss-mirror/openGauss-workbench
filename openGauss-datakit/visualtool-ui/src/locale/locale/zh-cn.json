@@ -236,6 +236,8 @@
             "ipAddress": "内网IP",
             "name": "名称",
             "namePlaceholder": "请输入物理机名称",
+            "username": "用户名",
+            "usernamePlaceholder": "请输入用户名称",
             "tags": "标签",
             "tagsPlaceholder": "请输入或者选择标签",
             "5mphy3snvg80": "可用",
@@ -257,6 +259,11 @@
             "5mphy3snz5k0": "新增物理机",
             "5mphy3snzb80": "当前服务器不可用",
             "5mphy3snzrk0": "编辑物理机"
+        },
+        "HostUserChoose":{
+            "title": "选择用户",
+            "tip": "当前保存有多个用户，且无root用户，请选择登录终端的用户",
+            "userChoosePlaceholder": "请选择用户"
         },
         "AddHostUser": {
             "else1": "确认",
@@ -287,6 +294,7 @@
             "5mpi1bru2700": "确定要删除？",
             "5mpi1bru2lo0": "确定",
             "5mpi1bru2s00": "取消",
+            "oneUserTip": "至少需要保留一个用户",
             "5mpi1bru2yo0": "删除",
             "5mpi1bru3dk0": "用户管理",
             "5mpi1bru3vk0": "用户名",
@@ -738,6 +746,7 @@
             "disk": "磁盘使用率",
             "baseInfo": "基本信息",
             "diskInfo": "硬件信息",
+            "noUserTip": "暂无用户，请先添加用户",
             "tipInfo": "前提：保存主机时需记住密码，才能实时获取数据。否则不能获取",
             "realTime": "实时",
             "detail": "详情",

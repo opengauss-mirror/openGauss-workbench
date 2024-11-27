@@ -27,11 +27,10 @@
 </template>
 
 <script setup lang="ts">
-
 import { KeyValue } from '@/types/global'
 import Socket from '@/utils/websocket'
 import { reactive, ref, nextTick } from 'vue'
-import { hostSSHByHostId } from '@/api/ops'
+import { hostSSHByHostId, hostUserPage } from '@/api/ops'
 import { WsConnectType } from '@/types/ops/install'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
@@ -73,7 +72,6 @@ const openSocket = () => {
       ip: data.formData.ip,
       sshPort: data.formData.sshPort,
       sshUsername: data.formData.sshUsername,
-      sshPassword: data.formData.sshPassword,
       businessId: `jdbc_terminal_${socketKey}`
     }
     data.loading = true
@@ -131,15 +129,16 @@ const getTermObj = (): Terminal => {
   return new Terminal(termConfig)
 }
 
-const open = (hostData: KeyValue) => {
+const open = async (hostData: KeyValue) => {
   data.show = true
   data.title = t('database.HostTerminal.5oxhoh5r6ls0')
+  const { hostId, ip, port, password, username } = hostData
   Object.assign(data.formData, {
-    hostId: hostData.hostId,
-    ip: hostData.ip,
-    sshPort: hostData.port,
-    sshUsername: 'root',
-    sshPassword: hostData.password
+    hostId,
+    ip,
+    sshPort: port,
+    sshUsername: username,
+    sshPassword: password
   })
   nextTick(() => {
     openSocket()

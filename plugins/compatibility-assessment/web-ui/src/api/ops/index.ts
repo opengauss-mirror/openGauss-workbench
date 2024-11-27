@@ -4,9 +4,9 @@ import { downloadPackage, OpenLookengInstallConfig, SSHBody } from '@/types/ops/
 import { UploadInfo } from '@/types/resource/package'
 import { appRoutes } from '@/router/routes'
 
-export const downloadFile = (host: string,filePath: string) => {
+export const downloadFile = (host: string,filePath: string, hostUser:string) => {
   return axios.get('operate/download', {
-    params: { host: host,filePath:filePath},
+    params: { host,filePath, hostUser },
     responseType: 'blob',
     headers: {'Content-Type':'application/json;application/octet-stream'}
   })
@@ -35,9 +35,9 @@ export const getRightIps = () => {
   return axios.get('assess/opengauss/ip')
 }
 
-export const getAllPids = (host:String) => {
+export const getAllPids = (host:string, hostUser:string) => {
   return axios.get('operate/all/pids',{
-    params: { host: host },
+    params: { host, hostUser },
   })
 }
 
@@ -104,4 +104,12 @@ export const getListResult = (data: KeyValue) => {
 
 export const deleteAssess = (assessmentId: string) => {
   return axios.get(`/assess/delete/${assessmentId}`)
+}
+
+export const hostListAll = () => {
+  return axios.get('host/listAll')
+}
+
+export const hostUserListAll = (hostId: string) => {
+  return axios.get(`hostUser/listAll/${hostId}`)
 }

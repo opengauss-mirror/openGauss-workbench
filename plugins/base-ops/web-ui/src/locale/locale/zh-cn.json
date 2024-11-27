@@ -6,7 +6,10 @@
             "5mplfut5bj80": "主机信息",
             "5mplfut5kuc0": "请输入密码",
             "5mplfut5lgo0": "安全检验",
-            "5mplfut5lus0": "请选择root密码"
+            "5mplfut5lus0": "请输入root密码",
+            "user": "用户",
+            "userPlaceholder": "请选择用户",
+            "noDevice": "暂无设备信息"
         },
         "index": {
             "else1": "暂无主机信息",
@@ -1179,6 +1182,8 @@
             "5mpn813gtvs0": "正在安装openGauss的极简版",
             "5mpn813guf00": "主机IP",
             "5mpn813gukw0": "请选择主机IP",
+            "user": "用户",
+            "userPlaceholder": "请选择用户",
             "5mpn813gupc0": "请输入root密码",
             "5mpn813gut00": "一键安装",
             "5mpn813guxc0": "正在安装",

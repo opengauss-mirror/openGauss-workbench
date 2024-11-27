@@ -40,6 +40,7 @@
             $t('components.AddHost.5mphy3snwxs0')
           }}</a-button>
           <a-button
+            v-if="isAdd"
             :loading="data.testLoading"
             class="mr"
             @click="handleTestHost"
@@ -107,6 +108,18 @@
         />
       </a-form-item>
       <a-form-item
+        field="username"
+        :label="$t('components.AddHost.username')"
+        validate-trigger="blur"
+        v-if="isAdd"
+      >
+        <a-input
+          v-model.trim="data.formData.username"
+          :placeholder="$t('components.AddHost.usernamePlaceholder')"
+        ></a-input>
+      </a-form-item>
+      <a-form-item
+        v-if="isAdd"
         field="password"
         :label="$t('components.AddHost.5mphy3sny4w0')"
         validate-trigger="blur"
@@ -120,11 +133,6 @@
           allow-clear
           ref="formPwdRef"
         />
-        <a-checkbox
-          style="width: 150px"
-          v-model="data.formData.isRemember"
-        >{{ $t('components.AddHost.else2')
-        }}</a-checkbox>
       </a-form-item>
       <a-form-item
         field="tags"
@@ -190,7 +198,7 @@ const data = reactive<KeyValue>({
     publicIp: '',
     port: 22,
     password: '',
-    isRemember: false,
+    isRemember: true,
     tags: [],
     remark: ''
   }
@@ -249,6 +257,21 @@ const formRules = computed(() => {
     ],
     port: [
       { required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxzk0') }
+    ],
+    username: [
+      { required: true, 'validate-trigger': 'blur', message: t('components.AddHost.usernamePlaceholder') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('database.JdbcInstance.5oxhtcbobtc0'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
     ],
     password: [{ required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snyao0') }]
   }
@@ -349,7 +372,7 @@ const handleTestHost = () => {
         publicIp: data.formData.publicIp,
         port: data.formData.port,
         password: encryptPwd,
-        isRemember: data.formData.isRemember,
+        isRemember: true,
         remark: data.formData.remark,
         username: 'root'
       })
@@ -400,12 +423,15 @@ const getHostPassword = (hostId: string) => {
   })
 }
 
+const isAdd = ref(true)
 const open = (type: string, editData?: KeyValue) => {
   data.show = true
   getAllTag()
   data.status = hostStatusEnum.unTest
   data.loading = false
+  isAdd.value = true
   if (type === 'update' && data) {
+    isAdd.value = false
     data.title = t('components.AddHost.5mphy3snzrk0')
     Object.assign(data.formData, editData)
     if (data.formData.isRemember) {
@@ -420,7 +446,7 @@ const open = (type: string, editData?: KeyValue) => {
       privateIp: '',
       publicIp: '',
       password: '',
-      isRemember: false,
+      isRemember: true,
       port: 22,
       remark: ''
     })

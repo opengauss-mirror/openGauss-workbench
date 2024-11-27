@@ -10,15 +10,19 @@
                     {{ record.sudo ? $t('components.HostUserMng.yes') : $t('components.HostUserMng.no') }}
                 </template>
                 <template #operation="{ record }">
-                    <div class="flex-row-start" v-if="record.username !== 'root'">
+                    <div class="flex-row-start">
                         <a-link class="mr" @click="handleEditUser('update', record)">{{
                             $t('components.HostUserMng.5mpi1bru1n40')
                         }}</a-link>
                         <a-popconfirm :content="$t('components.HostUserMng.5mpi1bru2700')" type="warning"
+                            v-if="list.data?.length > 1"
                             :ok-text="$t('components.HostUserMng.5mpi1bru2lo0')"
                             :cancel-text="$t('components.HostUserMng.5mpi1bru2s00')" @ok="handleDelUser(record.hostUserId)">
                             <a-link status="danger">{{ $t('components.HostUserMng.5mpi1bru2yo0') }}</a-link>
                         </a-popconfirm>
+                        <a-tooltip :content="$t('components.HostUserMng.oneUserTip')" v-else>
+                            <a-link disabled>{{ $t('components.HostUserMng.5mpi1bru2yo0') }}</a-link>
+                        </a-tooltip>
                     </div>
                 </template>
             </a-table>
@@ -103,4 +107,3 @@ defineExpose({
 })
 </script>
 
-<style lang="less" scoped></style>

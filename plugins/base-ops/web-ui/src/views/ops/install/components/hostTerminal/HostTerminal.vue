@@ -75,6 +75,7 @@ const openSocket = () => {
     const param = {
       hostId: data.formData.hostId,
       rootPassword: data.formData.sshPassword,
+      sshUsername: data.formData.sshUsername,
       wsConnectType: WsConnectType.SSH,
       businessId: bid
     }
@@ -137,7 +138,7 @@ const open = async (hostData: KeyValue) => {
     hostId: hostData.hostId,
     ip: hostData.ip,
     sshPort: hostData.port,
-    sshUsername: 'root',
+    sshUsername: hostData.sshUsername,
     sshPassword: await encryptPassword(hostData.password)
   })
   nextTick(() => {

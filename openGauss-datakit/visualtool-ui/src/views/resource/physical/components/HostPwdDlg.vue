@@ -15,7 +15,6 @@
 </template>
 
 <script setup lang="ts">
-
 import { nextTick, reactive, ref } from 'vue'
 import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'

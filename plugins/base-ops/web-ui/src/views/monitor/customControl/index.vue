@@ -132,6 +132,8 @@ const handleAdd = () => {
 
 const handleAddHost = (hostData: KeyValue) => {
   if (hostData.hostId) {
+    const currentHostObj = data.hostObj[hostData.hostId]
+    currentHostObj.username = hostData.username
     data.hosts.push(data.hostObj[hostData.hostId])
     handleConnect(hostData, data.hosts.length - 1)
   }
@@ -177,7 +179,7 @@ const getHostList = () => {
         if (!data.hostObj[data.hostId].isRemember) {
           openDlgToValid(data.hostId)
         } else {
-          handleAddHost(data.hostObj[data.hostId])
+          handleAdd()
         }
       } else {
         data.noHost = true
@@ -191,6 +193,7 @@ const getHostList = () => {
 const handleConnect = (hostData: any, index: number) => {
   data.hostId = hostData.hostId
   data.rootPassword = hostData.password
+  data.username = hostData.username
   openSocket(index)
 }
 
@@ -202,6 +205,7 @@ const openSocket = (index: number) => {
     const param = {
       hostId: data.hostId,
       rootPassword: data.rootPassword,
+      sshUsername: data.username,
       wsConnectType: WsConnectType.SSH,
       businessId: `custom_terminal_${socketKey}`
     }

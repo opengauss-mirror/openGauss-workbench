@@ -138,7 +138,7 @@
                     <icon-code-square
                       :size="25"
                       style="cursor: pointer;"
-                      @click="showTerminal(record)"
+                      @click="checkUser(record)"
                     />
                   </div>
                   <div class="flex-row">
@@ -189,12 +189,6 @@
                     color="green"
                     class="mr-s"
                   >{{ $t('physical.index.realTime') }}</a-tag>
-                  <a-tooltip
-                    :content="$t('physical.index.tipInfo')"
-                    position="rt"
-                  >
-                    <icon-question-circle-fill :size="18" />
-                  </a-tooltip>
                 </div>
               </template>
               <template #cell="{ record }">
@@ -336,6 +330,7 @@
           ref="batchLabelDlgRef"
           @finish="batchFinish"
         ></batch-label-dlg>
+        <choose-terminal-user ref="chooseTerminalUserRef" @getUser="showTerminal"></choose-terminal-user>
       </div>
     </div>
   </div>
@@ -345,7 +340,7 @@
 import { KeyValue } from '@/types/global'
 import { Message, Table } from '@arco-design/web-vue'
 import { onMounted, reactive, ref, onUnmounted } from 'vue'
-import { hostPage, delHost, hostMonitor, hostTagListAll } from '@/api/ops' // eslint-disable-line
+import { hostPage, delHost, hostMonitor, hostTagListAll, hostUserPage } from '@/api/ops' // eslint-disable-line
 import AddHost from './components/AddHost.vue'
 import BulkImport from './components/BulkImport.vue'
 import HostPwdDlg from './components/HostPwdDlg.vue'
@@ -356,6 +351,7 @@ import VChart from 'vue-echarts'
 import Socket from '@/utils/websocket'
 import LabelManageDlg from './label/LabelManageDlg.vue'
 import BatchLabelDlg from './components/BatchLabelDlg.vue'
+import ChooseTerminalUser from './components/ChooseTerminalUser.vue'
 import WujieVue from 'wujie-vue3'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
@@ -475,9 +471,7 @@ const getListData = () => new Promise(resolve => {
         item.isCpu = false
         item.isMemory = false
         item.isDisk = false
-        if (item.isRemember) {
-          openHostMonitor(item, index)
-        }
+        openHostMonitor(item, index)
         list.data.push(item)
       })
       list.page.total = res.total
@@ -529,7 +523,6 @@ const openHostMonitor = (hostData: KeyValue, index: number) => {
     list.data[index].downSpeed = eventData.downSpeed
     list.data[index].upSpeed = eventData.upSpeed
     list.data[index].isCpu = true
-    console.log('get theme', localStorage.getItem('opengauss-theme'))
 
     if (localStorage.getItem('opengauss-theme') === 'dark') {
       list.data[index].cpuOption.color[1] = data.colorYellow
@@ -587,20 +580,45 @@ const pageSizeChange = (e: number) => {
   getListData()
 }
 
+const chooseTerminalUserRef = ref<null | InstanceType<typeof ChooseTerminalUser>>(null)
+let currentTermData = {}
+const checkUser = async (hostData) => {
+  currentTermData = hostData
+  const { code, rows } = await hostUserPage(hostData.hostId) 
+  if (Number(code) === 200) {
+      if(rows?.length===0){
+        Message.error(t('physical.index.noUserTip'))
+        return
+      }
+      if (rows?.length === 1) {
+        showTerminal(rows[0].username)
+        return
+      }
+      const hasRoot = rows.some(item => item.username === 'root')
+      if (hasRoot) {
+        showTerminal('root')
+        return
+      }
+      chooseTerminalUserRef.value?.openChooseUser(rows)  
+  }
+}
+
 const hostPwdRef = ref<null | InstanceType<typeof HostPwdDlg>>(null)
-const showTerminal = (hostData: KeyValue) => {
-  // isRemember password
-  if (hostData.isRemember) {
-    // showTerminal
-    handleShowTerminal({
+const showTerminal = async (username: string) => {
+  if (!username) {
+    Message.error(t('physical.index.noUserTip'))
+    return
+  }
+  const hostData = {
+    ...currentTermData,
+    username
+  }
+  handleShowTerminal({
       hostId: hostData.hostId,
       port: hostData.port,
-      ip: hostData.publicIp
+      ip: hostData.publicIp,
+      username
     })
-  } else {
-    // show pwdDlg
-    hostPwdRef.value?.open(hostData)
-  }
 }
 
 const hostTerminalRef = ref<null | InstanceType<typeof HostTerminal>>(null)
@@ -630,7 +648,6 @@ const getCommonLabels = () => {
   list.selectedHostIds.forEach((hostId: string | number) => {
     selectedArr.push(data.selectedData[hostId])
   })
-  console.log('show selectedData', list.selectedHostIds, data.selectedData, selectedArr)
 
   // get length max
   let maxObj: any = null

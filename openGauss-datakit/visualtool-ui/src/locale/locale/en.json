@@ -236,6 +236,8 @@
             "ipAddress": "Intranet IP",
             "name": "name",
             "namePlaceholder": "Please enter the Host Name",
+            "username": "username",
+            "usernamePlaceholder": "Please enter username",
             "tags": "label",
             "tagsPlaceholder": "Please enter or select a label",
             "5mphy3snvg80": "available",
@@ -257,6 +259,11 @@
             "5mphy3snz5k0": "Adding a Dedicated Server",
             "5mphy3snzb80": "The current server is unavailable",
             "5mphy3snzrk0": "Edit Host"
+        },
+        "HostUserChoose":{
+            "title": "Choose user",
+            "tip": "There are currently multiple users, and there is no root user. Please select the user you want to log in to the terminal.",
+            "userChoosePlaceholder": "Please choose a user"
         },
         "AddHostUser": {
             "else1": "Confirm",
@@ -287,6 +294,7 @@
             "5mpi1bru2700": "Make sure to delete？",
             "5mpi1bru2lo0": "confirm",
             "5mpi1bru2s00": "cancel",
+            "oneUserTip": "At least one user should be kept.",
             "5mpi1bru2yo0": "delete",
             "5mpi1bru3dk0": "User Management",
             "5mpi1bru3vk0": "User name",
@@ -739,6 +747,7 @@
             "baseInfo": "BaseInfo",
             "diskInfo": "DiskInfo",
             "realTime": "RealTime",
+            "noUserTip": "No users yet. Please add users first.",
             "tipInfo": "Prerequisites: Remember the password when saving the host to obtain data in real time. Otherwise it cannot be obtained",
             "detail": "Detail",
             "labelBatch": "Tag Setting",
