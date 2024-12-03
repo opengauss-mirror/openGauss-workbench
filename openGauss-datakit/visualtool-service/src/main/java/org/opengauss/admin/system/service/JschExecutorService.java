@@ -276,6 +276,16 @@ public class JschExecutorService {
     }
 
     /**
+     * get host base info : contains cpu core number, remaining memory, available disk space
+     *
+     * @param sshLogin ssh login
+     * @return base info
+     */
+    public String getHostBaseInfo(SshLogin sshLogin) {
+        return new JschExecutor().execCommand(sshLogin, SshCommandConstants.HOST_BASE_INFO);
+    }
+
+    /**
      * 获取内存总量
      *
      * @param sshLogin ssh登录信息

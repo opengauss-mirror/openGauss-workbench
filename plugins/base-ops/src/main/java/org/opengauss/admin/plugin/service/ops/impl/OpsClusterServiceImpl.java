@@ -71,6 +71,7 @@ import org.opengauss.admin.plugin.vo.ops.SessionVO;
 import org.opengauss.admin.plugin.vo.ops.SlowSqlVO;
 import org.opengauss.admin.system.plugin.beans.SshLogin;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
+import org.opengauss.admin.system.plugin.facade.HostMonitorFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.plugin.facade.JschExecutorFacade;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
@@ -125,6 +126,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostUserFacade hostUserFacade;
+    @Resource
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private HostMonitorFacade hostMonitorFacade;
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private OpsFacade opsFacade;
@@ -276,46 +280,13 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Set<String> cpuArch = new HashSet<>();
         for (HostInfoHolder hostInfoHolder : hostInfoHolderList) {
             OpsHostEntity hostEntity = hostInfoHolder.getHostEntity();
-            OpsHostUserEntity installUserEntity;
-            if (root) {
-                installUserEntity = hostInfoHolder.getHostUserEntities()
-                    .stream()
-                    .filter(user -> user.getUsername().equalsIgnoreCase("root"))
-                    .findFirst()
-                    .orElseThrow(() -> new OpsException(
-                        "Host [" + hostEntity.getPublicIp() + "] root user information not found"));
-            } else {
-                installUserEntity = hostInfoHolder.getHostUserEntities()
-                    .stream()
-                    .filter(user -> !user.getUsername().equalsIgnoreCase("root"))
-                    .findFirst()
-                    .orElseThrow(() -> new OpsException(
-                        "Host [" + hostEntity.getPublicIp() + "] root user information not found"));
-            }
-            SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(),
-                installUserEntity.getUsername(), encryptionUtils.decrypt(installUserEntity.getPassword()));
-            os.add(getOS(sshLogin));
-            osVersion.add(getOSVersion(sshLogin));
-            cpuArch.add(getCpuArch(sshLogin));
+            os.add(getOS(hostEntity.getHostId()));
+            osVersion.add(getOSVersion(hostEntity.getHostId()));
+            cpuArch.add(getCpuArch(hostEntity.getHostId()));
         }
-        if (os.size() > 1) {
-            throw new OpsException("The system information of multiple hosts is inconsistent");
-        }
-        if (osVersion.size() > 1) {
-            throw new OpsException("System version information is inconsistent");
-        }
-        if (cpuArch.size() > 1) {
-            throw new OpsException("CPU architecture information is inconsistent");
-        }
-        if (os.size() < 1) {
-            throw new OpsException("System information not detected");
-        }
-        if (osVersion.size() < 1) {
-            throw new OpsException("System version information not detected");
-        }
-        if (cpuArch.size() < 1) {
-            throw new OpsException("No cpu architecture information detected");
-        }
+        OpsAssert.isTrue(os.size() == 1, "The system information of hosts is inconsistent");
+        OpsAssert.isTrue(osVersion.size() == 1, "System version information is inconsistent");
+        OpsAssert.isTrue(cpuArch.size() == 1, "CPU architecture information is inconsistent");
         String osInfo = null;
         for (String osInfo0 : os) {
             osInfo = osInfo0;
@@ -340,16 +311,16 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return osInfoEnum;
     }
 
-    private String getCpuArch(SshLogin sshLogin) {
-        return jschExecutorFacade.getCpuArch(sshLogin);
+    private String getCpuArch(String hostId) {
+        return hostMonitorFacade.getCpuArch(hostId);
     }
 
-    private String getOSVersion(SshLogin sshLogin) {
-        return jschExecutorFacade.getOsVersion(sshLogin);
+    private String getOSVersion(String hostId) {
+        return hostMonitorFacade.getOsVersion(hostId);
     }
 
-    private String getOS(SshLogin sshLogin) {
-        return jschExecutorFacade.getOs(sshLogin);
+    private String getOS(String hostId) {
+        return hostMonitorFacade.getOs(hostId);
     }
 
     @Override
@@ -1491,8 +1462,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                         clusterEntity.getDatabaseUsername(),
                         encryptionUtils.decrypt(clusterEntity.getDatabasePassword()))
                     .orElseThrow(() -> new OpsException("Unable to connect to the database"));
-                MonitorPluginParam monitorParam = new MonitorPluginParam(dataPath, clusterEntity.getVersion(),
-                    clusterEntity.getEnvPath());
+                MonitorPluginParam monitorParam = new MonitorPluginParam(hostEntity.getHostId(), dataPath,
+                    clusterEntity.getVersion(), clusterEntity.getEnvPath());
                 doMonitor(wsSession, sshLogin, monitorParam, connection);
             } catch (Exception e) {
                 log.error("get connection fail , ip:{} , port:{}, username:{}", hostEntity.getPublicIp(),
@@ -1518,6 +1489,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @AllArgsConstructor
     @Data
     private class MonitorPluginParam {
+        private String hostId;
         private String dataPath;
         private OpenGaussVersionEnum version;
         private String envPath;
@@ -2024,17 +1996,17 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             threadPoolTaskExecutor.submit(() -> {
                 try {
                     nodeMonitorVO.setTime(System.currentTimeMillis());
-                    nodeMonitorVO.setCpu(cpu(sshLogin));
-                    nodeMonitorVO.setMemory(memory(sshLogin));
-                    nodeMonitorVO.setNet(net(sshLogin));
+                    nodeMonitorVO.setCpu(cpu(monitorParam.getHostId()));
+                    nodeMonitorVO.setMemory(memory(monitorParam.getHostId()));
+                    nodeMonitorVO.setNet(net(monitorParam.getHostId()));
                     nodeMonitorVO.setState(
                         state(sshLogin, monitorParam.version, monitorParam.dataPath, monitorParam.envPath));
                     nodeMonitorVO.setLock(lock(connection));
                     nodeMonitorVO.setSession(session(connection));
                     nodeMonitorVO.setConnectNum(connectNum(connection));
                     nodeMonitorVO.setSessionMemoryTop10(sessionMemoryTop10(connection));
-                    nodeMonitorVO.setKernel(kernel(sshLogin));
-                    nodeMonitorVO.setMemorySize(memorySize(sshLogin));
+                    nodeMonitorVO.setKernel(kernel(monitorParam.getHostId()));
+                    nodeMonitorVO.setMemorySize(memorySize(monitorParam.getHostId()));
                 } catch (Exception e) {
                     log.error("cpu monitor error : {}", e.getMessage());
                     hasError.set(true);
@@ -2125,12 +2097,12 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return res;
     }
 
-    private String memorySize(SshLogin sshLogin) {
-        return jschExecutorFacade.getMemoryTotal(sshLogin);
+    private String memorySize(String hostId) {
+        return hostMonitorFacade.getMemoryTotal(hostId);
     }
 
-    private String kernel(SshLogin sshLogin) {
-        return jschExecutorFacade.getCpuCoreNum(sshLogin);
+    private String kernel(String hostId) {
+        return hostMonitorFacade.getCpuCoreNum(hostId);
     }
 
     private String state(SshLogin sshLogin, OpenGaussVersionEnum version, String dataPath, String envPath) {
@@ -2217,10 +2189,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         res.put("cmState", cmState);
     }
 
-    private List<NodeNetMonitor> net(SshLogin sshLogin) {
+    private List<NodeNetMonitor> net(String hostId) {
         List<NodeNetMonitor> res = new ArrayList<>();
         boolean hasNetName = true;
-        String[] split = jschExecutorFacade.getNetMonitor(sshLogin, hasNetName);
+        String[] split = hostMonitorFacade.getNetMonitor(hostId, hasNetName);
         NodeNetMonitor nodeNetMonitor = new NodeNetMonitor();
         nodeNetMonitor.setFace(StrUtil.trim(split[0]));
         nodeNetMonitor.setReceive(split[1]);
@@ -2229,12 +2201,12 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return res;
     }
 
-    private String memory(SshLogin sshLogin) {
-        return jschExecutorFacade.getMemoryUsing(sshLogin);
+    private String memory(String hostId) {
+        return hostMonitorFacade.getMemoryUsing(hostId);
     }
 
-    private String cpu(SshLogin sshLogin) {
-        return jschExecutorFacade.getCpuUsing(sshLogin);
+    private String cpu(String hostId) {
+        return hostMonitorFacade.getCpuUsing(hostId);
     }
 
     private void doUnInstall(UnInstallContext unInstallContext, Boolean force) {
