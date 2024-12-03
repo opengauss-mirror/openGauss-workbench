@@ -81,6 +81,7 @@
       >
         <a-input
           v-model.trim="data.formData.privateIp"
+          :disabled="!isAdd"
           :placeholder="$t('components.AddHost.5mphy3snxdo0')"
         ></a-input>
       </a-form-item>
@@ -91,6 +92,7 @@
       >
         <a-input
           v-model.trim="data.formData.publicIp"
+          :disabled="!isAdd"
           :placeholder="$t('components.AddHost.5mphy3snxmw0')"
           @blur="handleBlur"
         ></a-input>
