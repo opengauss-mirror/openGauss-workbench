@@ -38,18 +38,6 @@
             </a-select>
             <div v-else>{{ checkData.clusterId }}</div>
           </a-form-item>
-          <a-form-item
-            field="rootPassword"
-            :label="$t('components.OneCheck.else6')"
-            v-if="checkData.isShowPassword"
-          >
-            <a-input-password
-              v-model.trim="checkData.rootPassword"
-              :placeholder="$t('components.OneCheck.else7')"
-              allow-clear
-              style="width: 170px;"
-            />
-          </a-form-item>
         </a-form>
         <a-button
           type="primary"
@@ -366,7 +354,6 @@ import { clusterList, clusterCheck } from '@/api/ops'
 import { oneCheck } from './oneCheck'
 import { Message, TableColumnData } from '@arco-design/web-vue'
 import { OpenGaussVersionEnum } from '@/types/ops/install'
-import { encryptPassword } from '@/utils/jsencrypt'
 import { useI18n } from 'vue-i18n'
 import { computed } from 'vue'
 const { t } = useI18n()
@@ -376,8 +363,6 @@ const checkData = reactive<KeyValue>({
   checkLoading: false,
   checkResult: false,
   clusterId: '',
-  rootPassword: '',
-  isShowPassword: false,
   isChoose: true,
   clusterList: [],
   clusterObj: {},
@@ -399,7 +384,6 @@ const columns: TableColumnData[] = [
 const formRules = computed(() => {
   return {
     clusterId: [{ required: true, 'validate-trigger': 'change', message: t('components.OneCheck.5mpiji1q3wo0') }],
-    rootPassword: [{ required: true, 'validate-trigger': 'blur', message: t('components.OneCheck.else7') }]
   }
 })
 
@@ -417,15 +401,6 @@ const getClusterList = () => new Promise(resolve => {
           checkData.clusterObj[item.clusterId] = item
         }
       })
-      if (checkData.clusterList.length) {
-        checkData.clusterId = checkData.clusterList[0].value
-        // Check whether hosts in the cluster remember the password
-        const currentClusterObj = checkData.clusterObj[checkData.clusterId]
-        const hasPwd = currentClusterObj.clusterNodes.some((node: KeyValue) => {
-          return node.isRemember === true
-        })
-        checkData.isShowPassword = !hasPwd
-      }
     } else resolve(false)
   }).finally(() => {
     checkData.clusterListLoading = false
@@ -444,10 +419,8 @@ const handleCheck = () => {
       }
       if (checkData.clusterId) {
         checkData.loading = true
-        encryptPassword(checkData.rootPassword).then((encryptPwd) => {
           const param = {
             clusterId: checkData.clusterId,
-            rootPassword: encryptPwd
           }
           clusterCheck(param).then((res: KeyValue) => {
             if (Number(res.code) === 200) {
@@ -462,7 +435,6 @@ const handleCheck = () => {
           }).finally(() => {
             checkData.loading = false
           })
-        })
       }
     }
   })
