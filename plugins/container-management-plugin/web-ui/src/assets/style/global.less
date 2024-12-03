@@ -1,0 +1,63 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: unset !important;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-bg-1);
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+#app {
+  background: var(--color-bg-2);
+}
+
+.select-comp-container {
+  position: relative;
+  width: 100%;
+}
+
+.cm-search-form-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  min-height: 72px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--bg-white);
+}
+
+.cm-table-content {
+  padding: 20px;
+  background-color: var(--bg-white);
+}
+
+.cm-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #24515d;
+  margin-bottom: 16px;
+}
+
+.arco-input-wrapper .arco-input[disabled] {
+  -webkit-text-fill-color: var(--color-text-3)
+}
+
+.arco-btn-primary[type='button'] {
+  color: var(--color-bg-2);
+
+  &:hover {
+    color: var(--color-bg-2);
+  }
+
+  &.arco-btn-loading {
+    color: var(--color-bg-2);
+  }
+}

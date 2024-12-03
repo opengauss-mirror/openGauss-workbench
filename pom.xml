@@ -226,6 +226,7 @@
         <module>plugins/intelligent-parameter-tuning</module>
         <module>plugins/openGauss-tools-monitor</module>
         <module>plugins/oauth-login</module>
+        <module>plugins/container-management-plugin</module>
     </modules>
     <packaging>pom</packaging>
     

@@ -1,0 +1,50 @@
+server:
+  port: 8080
+context:
+  listener:
+    classes: org.opengauss.admin.container.listener.PluginListener
+spring:
+  resources:
+    static-locations: classpath:resources
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: org.opengauss.Driver
+    url: jdbc:opengauss://ip:port/postgres?currentSchema=public&batchMode=off
+    username: username
+    password: password
+
+mybatis-plus:
+  typeAliasesPackage: org.opengauss.admin.container.domain
+  mapperLocations: classpath*:mapper/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 自定义配置文件
+myProps:
+  # CMDB系统接口
+  customCmdbSystemUrl: http://zuulnocas.cmdb.cmos:20070/cmdb/api-service/api/getAppInformation
+  initdb:
+    enable: true
+  platform4a:
+    host: http://127.0.0.1:8080
+    url: /zyzx/syncDataApi/api/dbSync
+    businessSystemCode: 1
+    resourceDomainId: 2
+  lock:
+    expireInterval: 3
+    generalDataAudit: GeneralDataAuditLockKey
+    opengaussClusterRegister: OpengaussClusterRegisterLockKey
+    opengaussOperatorRefresh: OpengaussOperatorRefreshLockKey
+  monitor:
+    url: http://manu-monitor-service.web.cmos/api
+    host: no
+  openGaussOperator:
+    quantity:
+      max: 100
+
+
+logging:
+  level:
+    root: INFO
+  file:
+    name: /dbops/logs/container-management.log
