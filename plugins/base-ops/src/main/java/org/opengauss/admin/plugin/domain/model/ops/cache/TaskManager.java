@@ -23,6 +23,8 @@
 
 package org.opengauss.admin.plugin.domain.model.ops.cache;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,6 +35,7 @@ import java.util.concurrent.TimeUnit;
  * @author lhf
  * @date 2022/8/11 20:37
  **/
+@Slf4j
 public class TaskManager {
     private static final ConcurrentHashMap<String, Future<?>> TASK_CONTEXT = new ConcurrentHashMap<>();
 
@@ -44,6 +47,12 @@ public class TaskManager {
         return (int) TASK_CONTEXT.keySet().stream().filter(s -> s.startsWith(businessPrefix)).count();
     }
 
+    /**
+     * cancel task
+     *
+     * @param sessionId session id
+     * @return task future
+     */
     public static Optional<Future<?>> remove(String sessionId) {
         Future<?> future = TASK_CONTEXT.get(sessionId);
         while (Objects.nonNull(future) && !future.isCancelled()) {
@@ -51,10 +60,9 @@ public class TaskManager {
             try {
                 TimeUnit.SECONDS.sleep(2);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.warn("remove task {} interrupted", sessionId);
             }
         }
-
         return Optional.ofNullable(TASK_CONTEXT.remove(sessionId));
     }
 }

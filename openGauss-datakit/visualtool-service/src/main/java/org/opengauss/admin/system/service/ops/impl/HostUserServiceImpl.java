@@ -191,6 +191,18 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
         }
     }
 
+    /**
+     * <pre>
+     * The function of editing users currently only supports modifying the user passwords,
+     * and does not support the passwords of remote server users.
+     * After modifying the passwords of server users, the passwords of users
+     * managed by DataKit itself need to be manually modified and updated.
+     * <pre/>
+     *
+     * @param hostUserId host User Id
+     * @param hostUserBody host User Body
+     * @return boolean edit result
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean edit(String hostUserId, HostUserBody hostUserBody) {
@@ -203,37 +215,14 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
         if (Objects.isNull(hostEntity)) {
             throw new OpsException("host information does not exist");
         }
-        OpsHostUserEntity newEntity;
-        OpsHostUserEntity rootUserEntity = getRootUserByHostId(hostId);
+        // no root user, or directly modify the root user,
+        // detect the current modification user information and build the user information entity object
         SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserBody.getUsername(),
             encryptionUtils.decrypt(hostUserBody.getPassword()));
-        if (Objects.isNull(rootUserEntity)) {
-            OpsAssert.isTrue(jschExecutorService.checkOsUserExist(sshLogin),
-                "The user does not exist or password error");
-            newEntity = hostUserBody.toEntity(false);
-            newEntity.setHostId(hostUserEntity.getHostId());
-            newEntity.setHostUserId(hostUserEntity.getHostUserId());
-        } else {
-            if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
-                if (StrUtil.isNotEmpty(hostUserBody.getRootPassword())) {
-                    rootUserEntity.setPassword(hostUserBody.getRootPassword());
-                } else {
-                    throw new OpsException("root password does not exist");
-                }
-            }
-            SshLogin rootLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(),
-                rootUserEntity.getUsername(), encryptionUtils.decrypt(rootUserEntity.getPassword()));
-            Boolean isSudo = jschExecutorService.checkOsUserSudo(rootLogin, hostUserBody.getUsername());
-            newEntity = hostUserBody.toEntity(isSudo);
-            newEntity.setHostId(hostUserEntity.getHostId());
-            newEntity.setHostUserId(hostUserEntity.getHostUserId());
-            if (jschExecutorService.checkOsUserExist(rootLogin, newEntity.getUsername())) {
-                OpsAssert.isTrue(jschExecutorService.checkOsUserExist(sshLogin),
-                    "Incorrect password, please enter correct password");
-            } else {
-                createPhysicalUser(rootLogin, newEntity.getUsername(), hostUserBody.getRootPassword());
-            }
-        }
+        OpsAssert.isTrue(jschExecutorService.checkOsUserExist(sshLogin), "The user does not exist or password error");
+        OpsHostUserEntity newEntity = hostUserBody.toEntity(false);
+        newEntity.setHostId(hostUserEntity.getHostId());
+        newEntity.setHostUserId(hostUserEntity.getHostUserId());
         return updateById(newEntity);
     }
 

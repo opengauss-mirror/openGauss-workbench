@@ -38,7 +38,6 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.opengauss.admin.common.constant.ops.SshCommandConstants;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
@@ -82,6 +81,7 @@ import org.opengauss.admin.plugin.vo.TargetClusterNodeVO;
 import org.opengauss.admin.plugin.vo.TargetClusterVO;
 import org.opengauss.admin.system.plugin.beans.SshLogin;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
+import org.opengauss.admin.system.plugin.facade.HostMonitorFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.plugin.facade.JdbcDbClusterFacade;
 import org.opengauss.admin.system.plugin.facade.JschExecutorFacade;
@@ -130,7 +130,9 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostFacade hostFacade;
-
+    @Resource
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private HostMonitorFacade hostMonitorFacade;
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostUserFacade hostUserFacade;
@@ -205,7 +207,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     public List<MigrationHostDto> getHosts() {
         List<OpsHostEntity> opsHostEntities = hostFacade.listAll();
         List<MigrationHostDto> result = new ArrayList<>();
-        opsHostEntities.parallelStream().forEach(host -> {
+        opsHostEntities.forEach(host -> {
             MigrationHostDto eachOne = new MigrationHostDto();
             eachOne.setHostInfo(host);
             List<MigrationTask> tasks = migrationTaskService.listRunningTaskByHostId(host.getHostId());
@@ -213,7 +215,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(
                 host.getHostId());
             if (installHost == null) {
-                String[] opsHosInfo = getOpsHosInfo(host.getHostId(), host.getPublicIp(), host.getPort());
+                String[] opsHosInfo = getHostBaseInfo(host.getHostId());
                 if (opsHosInfo.length == 0) {
                     log.warn("Host no install , opsHostInfo is empty {}", host);
                     return;
@@ -221,9 +223,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 eachOne.setBaseInfos(ListUtil.toList(opsHosInfo));
                 eachOne.setInstallPortalStatus(PortalInstallStatus.NOT_INSTALL.getCode());
             } else {
-                String password = encryptionUtils.decrypt(installHost.getRunPassword());
-                String[] hostInfo = getHostBaseInfo(installHost.getHost(), installHost.getPort(),
-                    installHost.getRunUser(), password);
+                String[] hostInfo = getHostBaseInfo(host.getHostId());
                 if (hostInfo.length == 0) {
                     log.warn("Host install , opsHostInfo is empty {}", host);
                     return;
@@ -238,12 +238,11 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         return result;
     }
 
-    private String[] getHostBaseInfo(String host, int port, String userName, String password) {
-        SshLogin sshLogin = new SshLogin(host, port, userName, password);
-        String execResult = jschExecutorFacade.execCommand(sshLogin, SshCommandConstants.HOST_BASE_INFO);
-        String[] hostInfo = execResult.split("\n");
-        log.warn("host base info execResult:{}", Arrays.toString(hostInfo));
-        return hostInfo;
+    private String[] getHostBaseInfo(String hostId) {
+        String cpuCoreNum = hostMonitorFacade.getCpuCoreNum(hostId);
+        String remainingMemory = hostMonitorFacade.getRemainingMemory(hostId);
+        String availableDiskSpace = hostMonitorFacade.getAvailableDiskSpace(hostId);
+        return new String[] {cpuCoreNum, remainingMemory, availableDiskSpace};
     }
 
     @Override
@@ -898,26 +897,6 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             throw new PortalInstallException(errMsg);
         }
         return uploadInfo;
-    }
-
-    /**
-     * get host base information
-     *
-     * @param hostId Id of the OpsHost object
-     * @param publicIp field 'publicIp' of the OpsHost object
-     * @param port field 'port' of the OpsHost object
-     * @return host info array
-     */
-    public String[] getOpsHosInfo(String hostId, String publicIp, Integer port) {
-        List<OpsHostUserEntity> opsHostUserEntities = hostUserFacade.listHostUserByHostId(hostId);
-        if (!opsHostUserEntities.isEmpty()) {
-            OpsHostUserEntity hostUser = opsHostUserEntities.get(0);
-            if (StringUtils.isNotBlank(hostUser.getPassword())) {
-                return getHostBaseInfo(publicIp, port, hostUser.getUsername(),
-                    encryptionUtils.decrypt(hostUser.getPassword()));
-            }
-        }
-        return new String[0];
     }
 
     @Override

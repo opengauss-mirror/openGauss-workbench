@@ -63,6 +63,7 @@ import org.opengauss.admin.common.utils.ops.WsUtil;
 import org.opengauss.admin.system.domain.HostRecordDataListener;
 import org.opengauss.admin.system.mapper.ops.OpsHostMapper;
 import org.opengauss.admin.system.plugin.beans.SshLogin;
+import org.opengauss.admin.system.service.HostMonitorCacheService;
 import org.opengauss.admin.system.service.JschExecutorService;
 import org.opengauss.admin.system.service.ops.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,8 +119,9 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     private IOpsHostTagRelService opsHostTagRelService;
     @Autowired
     private IOpsHostTagService opsHostTagService;
-
-    Cache<String, List<ErrorHostRecord>> errorExcel = CacheBuilder.newBuilder()
+    @Autowired
+    private HostMonitorCacheService hostMonitorCacheService;
+    private Cache<String, List<ErrorHostRecord>> errorExcel = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(1, TimeUnit.DAYS)
         .build();
@@ -419,6 +421,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         }
         removeById(hostId);
         hostUserService.removeByHostId(hostId);
+        hostMonitorCacheService.deleteHostCache(hostId);
         return true;
     }
 
@@ -558,18 +561,9 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     public Map<String, Object> monitor(String hostId, String businessId, String password) {
         Map<String, Object> res = new HashMap<>();
         res.put("res", true);
-        SshLogin sshLogin;
         try {
             OpsHostEntity hostEntity = getById(hostId);
             Assert.notNull(hostEntity, "host info not found");
-            OpsHostUserEntity user = hostUserService.getAnyUserByHostId(hostId);
-            Assert.notNull(user, "user info not found");
-            if (StrUtil.isEmpty(user.getPassword())) {
-                user.setPassword(password);
-            }
-            Assert.isTrue(StrUtil.isNotEmpty(user.getPassword()), "user password not found");
-            sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), user.getUsername(),
-                encryptionUtils.decrypt(user.getPassword()));
         } catch (IllegalArgumentException | OpsException e) {
             res.put("res", false);
             res.put("msg", e.getMessage());
@@ -579,7 +573,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             .orElseThrow(() -> new OpsException("response session does not exist"));
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             try {
-                doMonitor(wsSession, sshLogin);
+                doMonitor(wsSession, hostId);
             } finally {
                 wsUtil.close(wsSession);
             }
@@ -600,16 +594,16 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         updateById(opsHostEntity);
     }
 
-    private void doMonitor(WsSession wsSession, SshLogin sshLogin) {
+    private void doMonitor(WsSession wsSession, String hostId) {
         while (wsSession.getSession().isOpen()) {
             HostMonitorVO hostMonitorVO = new HostMonitorVO();
             try {
-                String[] net = netMonitor(sshLogin);
+                String[] net = netMonitor(hostId);
                 hostMonitorVO.setUpSpeed(net[0]);
                 hostMonitorVO.setDownSpeed(net[1]);
-                hostMonitorVO.setCpu(cpuMonitor(sshLogin));
-                hostMonitorVO.setMemory(memoryMonitor(sshLogin));
-                hostMonitorVO.setDisk(diskMonitor(sshLogin));
+                hostMonitorVO.setCpu(cpuMonitor(hostId));
+                hostMonitorVO.setMemory(memoryMonitor(hostId));
+                hostMonitorVO.setDisk(diskMonitor(hostId));
             } catch (OpsException ex) {
                 log.error("doMonitor error", ex);
             }
@@ -622,20 +616,20 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         }
     }
 
-    private String diskMonitor(SshLogin sshLogin) {
-        return jschExecutorService.diskMonitor(sshLogin);
+    private String diskMonitor(String hostId) {
+        return hostMonitorCacheService.diskMonitor(hostId);
     }
 
-    private String memoryMonitor(SshLogin sshLogin) {
-        return jschExecutorService.memoryMonitor(sshLogin);
+    private String memoryMonitor(String hostId) {
+        return hostMonitorCacheService.getMemoryUsing(hostId);
     }
 
-    private String cpuMonitor(SshLogin sshLogin) {
-        return jschExecutorService.cpuMonitor(sshLogin);
+    private String cpuMonitor(String hostId) {
+        return hostMonitorCacheService.getCpuUsing(hostId);
     }
 
-    private String[] netMonitor(SshLogin sshLogin) {
-        return jschExecutorService.getNetMonitor(sshLogin, false);
+    private String[] netMonitor(String hostId) {
+        return hostMonitorCacheService.getNetMonitor(hostId, false);
     }
 
     private void populateTags(List<OpsHostVO> list) {

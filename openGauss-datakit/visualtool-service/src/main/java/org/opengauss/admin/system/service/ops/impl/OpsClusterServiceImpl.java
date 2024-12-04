@@ -47,6 +47,7 @@ import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.ops.WsUtil;
 import org.opengauss.admin.system.mapper.ops.OpsClusterMapper;
 import org.opengauss.admin.system.plugin.beans.SshLogin;
+import org.opengauss.admin.system.service.HostMonitorCacheService;
 import org.opengauss.admin.system.service.JschExecutorService;
 import org.opengauss.admin.system.service.ops.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,6 +92,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     private WsUtil wsUtil;
     @Resource
     private JschExecutorService jschExecutorService;
+    @Resource
+    private HostMonitorCacheService hostMonitorCacheService;
     @Autowired
     private EncryptionUtils encryptionUtils;
 
@@ -247,8 +250,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     // create ssH login
                     SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(),
                         hostUserEntity.getUsername(), encryptionUtils.decrypt(hostUserEntity.getPassword()));
-                    MonitorParam monitorParam = new MonitorParam(realDataPath, clusterEntity.getVersion(),
-                        clusterEntity.getEnvPath());
+                    MonitorParam monitorParam = new MonitorParam(hostEntity.getHostId(), realDataPath,
+                        clusterEntity.getVersion(), clusterEntity.getEnvPath());
                     doMonitor(wsSession, sshLogin, monitorParam, connection);
                 } catch (Exception e) {
                     log.error("Failed to obtain a connection {}", e.getMessage());
@@ -410,11 +413,11 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             threadPoolTaskExecutor.submit(() -> {
                 try {
                     nodeMonitorVO.setTime(System.currentTimeMillis());
-                    nodeMonitorVO.setCpu(cpu(sshLogin));
-                    nodeMonitorVO.setMemory(memory(sshLogin));
-                    nodeMonitorVO.setNet(net(sshLogin));
-                    nodeMonitorVO.setKernel(kernel(sshLogin));
-                    nodeMonitorVO.setMemorySize(memorySize(sshLogin));
+                    nodeMonitorVO.setCpu(cpu(monitorParam.getHostId()));
+                    nodeMonitorVO.setMemory(memory(monitorParam.getHostId()));
+                    nodeMonitorVO.setNet(net(monitorParam.getHostId()));
+                    nodeMonitorVO.setKernel(kernel(monitorParam.getHostId()));
+                    nodeMonitorVO.setMemorySize(memorySize(monitorParam.getHostId()));
                 } catch (Exception e) {
                     log.error("time error : {}", e.getMessage());
                     hasError.set(true);
@@ -459,6 +462,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @AllArgsConstructor
     @Data
     private class MonitorParam {
+        private String hostId;
         private String dataPath;
         private OpenGaussVersionEnum version;
         private String envPath;
@@ -613,12 +617,12 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         }
     }
 
-    private String memorySize(SshLogin sshLogin) {
-        return jschExecutorService.getMemoryTotal(sshLogin);
+    private String memorySize(String hostId) {
+        return hostMonitorCacheService.getMemoryTotal(hostId);
     }
 
-    private String kernel(SshLogin sshLogin) {
-        return jschExecutorService.getCpuCoreNum(sshLogin);
+    private String kernel(String hostId) {
+        return hostMonitorCacheService.getCpuCoreNum(hostId);
     }
 
     private String state(SshLogin sshLogin, OpenGaussVersionEnum version, String dataPath, String envPath) {
@@ -678,9 +682,9 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         }
     }
 
-    private List<NodeNetMonitor> net(SshLogin sshLogin) {
+    private List<NodeNetMonitor> net(String hostId) {
         List<NodeNetMonitor> res = new ArrayList<>();
-        String[] netMonitor = jschExecutorService.getNetMonitor(sshLogin, true);
+        String[] netMonitor = hostMonitorCacheService.getNetMonitor(hostId, true);
         NodeNetMonitor nodeNetMonitor = new NodeNetMonitor();
         nodeNetMonitor.setFace(StrUtil.trim(netMonitor[0]));
         nodeNetMonitor.setReceive(netMonitor[1]);
@@ -689,11 +693,11 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         return res;
     }
 
-    private String memory(SshLogin sshLogin) {
-        return jschExecutorService.getMemoryUsing(sshLogin);
+    private String memory(String hostId) {
+        return hostMonitorCacheService.getMemoryUsing(hostId);
     }
 
-    private String cpu(SshLogin sshLogin) {
-        return jschExecutorService.getCpuUsing(sshLogin);
+    private String cpu(String hostId) {
+        return hostMonitorCacheService.getCpuUsing(hostId);
     }
 }
