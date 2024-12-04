@@ -139,7 +139,7 @@ import {
   checkNetStatus,
   checkVersionNumber,
   packageUploadUpdate,
-  delPkgTar, getSysUploadPath, hasPkgName, download
+  delPkgTar, getSysUploadPath, hasPkgName, download, packageOnlineUpdate
 } from '@/api/ops'
 import dayjs from 'dayjs'
 import { FileItem, Message, Modal } from '@arco-design/web-vue'
@@ -368,7 +368,6 @@ const getPackageUrl = () => {
       console.log('error')
     }
     let name = data.formData.packageUrl.split('/')
-    // 需要去除后缀
     data.formData.name = name.pop()
   }) .catch(error => {
     console.error({
@@ -559,7 +558,7 @@ const submit = async () => {
         formData.append('os', data.formData.os)
         formData.append('cpuArch', data.formData.cpuArch)
         formData.append('packageVersionNum', data.formData.packageVersionNum)
-        formData.append('packageUrl', '')
+        formData.append('packageUrl', data.formData.packageUrl)
         formData.append('packageVersion', data.formData.packageVersion)
         formData.append('uploadFile', data.fileList.file)
         formData.append('osVersion', data.formData.osVersion)
@@ -606,6 +605,26 @@ const submit = async () => {
         }).catch((error) => {
           console.log(error)
         })
+      } else if ( data.formData.packageId) {
+        const params = new URLSearchParams();
+        params.append('packageId', data.formData.packageId)
+        params.append('wsBusinessId', wsBusinessId.value)
+        const config = {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }
+        packageOnlineUpdate(params, config)
+          .then(res => {
+            if (res.code === 200) {
+              data.show = false
+            }
+          })
+          .catch(error => {
+            console.error('online update error:', error)
+          })
+      } else {
+        console.log('download error')
       }
     }
   }
