@@ -291,14 +291,12 @@ export const batchPackageOnline = (data: FormData) => {
   return axios.post(`/plugins/base-ops/installPackageManager/v2/save/online`, data)
 }
 
-// export const batchPackageUpload = (name:KeyValue, os: KeyValue, cpuArch: KeyValue, packageVersion: KeyValue, packageVersionNum: KeyValue, packageUrl: KeyValue, uploadFile:any) => {
 export const batchPackageUpload = (uploadFileParam:any) => {
-  // return axios.post(`/plugins/base-ops/installPackageManager/v2/save/upload/?name=${name}&os=${os}&cpuArch=${cpuArch}&packageVersion=${packageVersion}&packageVersionNum=${packageVersionNum}&packageUrl=${packageUrl}`, uploadFile)
   return axios.post(`/plugins/base-ops/installPackageManager/v2/save/upload/`, uploadFileParam)
 }
 
-export const packageOnlineUpdate = (params: KeyValue) => {
-  return axios.post(`/plugins/base-ops/installPackageManager/v2/save/upload`, { params: params })
+export const packageOnlineUpdate = (params: URLSearchParams, config: KeyValue) => {
+  return axios.post(`/plugins/base-ops/installPackageManager/v2/update/online`, params, config)
 }
 
 export const packageUploadUpdate = (params: KeyValue, data: KeyValue) => {
