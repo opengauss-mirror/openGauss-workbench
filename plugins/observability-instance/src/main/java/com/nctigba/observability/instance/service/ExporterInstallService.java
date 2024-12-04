@@ -708,6 +708,7 @@ public class ExporterInstallService extends AbstractInstaller {
             paramMap.put("port", port);
             String instance = "Exporter(" + publicIp + ":" + port + ")";
             paramMap.put("instance", instance);
+            paramMap.put("hostname", item.getHost().getHostname());
             paramMap.put("alertTime", LocalDateTime.now());
             paramMap.put("pluginCode", CommonConstants.PLUGIN_CODE);
             paramMap.put("ruleCode", CommonConstants.EXPORTER_EXCEPTION_STATUS);

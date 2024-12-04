@@ -76,6 +76,8 @@ public class AlertSupplier {
     @Autowired
     private AlertTemplateRuleService templateRuleService;
     @Autowired
+    private AlertTemplateRuleMapper templateRuleMapper;
+    @Autowired
     private NotifyWayMapper notifyWayMapper;
     @Autowired
     private AlertRecordService recordService;
@@ -83,8 +85,6 @@ public class AlertSupplier {
     private AlertRecordDetailService recordDetailService;
     @Autowired
     private ApplicationContext context;
-    @Autowired
-    private AlertTemplateRuleMapper alertTemplateRuleMapper;
 
     /**
      * saveAlertRule
@@ -138,7 +138,7 @@ public class AlertSupplier {
                 continue;
             }
             List<AlertTemplateRuleDO> ruleList =
-                alertTemplateRuleMapper.getAlertConfigTemplateRuleList(info.getPluginCode(), info.getRuleCode());
+                    templateRuleMapper.getAlertConfigTemplateRuleList(info.getPluginCode(), info.getRuleCode());
             if (CollectionUtil.isEmpty(ruleList)) {
                 continue;
             }
@@ -188,6 +188,7 @@ public class AlertSupplier {
     private Map<String, String> getParams(AlertPluginInfoDTO info, String level) {
         Map<String, String> paramMap = new HashMap<>();
         paramMap.put("nodeName", info.getInstance());
+        paramMap.put("hostname", info.getHostname());
         paramMap.put("ip", info.getIp());
         paramMap.put("hostIp", info.getPort());
         paramMap.put("alertTime", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(info.getAlertTime()));
