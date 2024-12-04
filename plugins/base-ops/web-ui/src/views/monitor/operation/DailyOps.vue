@@ -268,13 +268,13 @@
       <div v-if="anyMenuOpen" class="overlay" @click="closeAllMenus"></div>
     </div>
     <div v-show="list.pageTag === 'clusterInfo'">
-    <a-input-search 
-    :placeholder="$t('operation.DailyOps.sl3u5s5cf299')" 
-    v-model="searchClusterName" 
-    @search="getList" 
-    @press-enter="getList" 
-    class="search-cluster" 
-    max-length="255" 
+    <a-input-search
+    :placeholder="$t('operation.DailyOps.sl3u5s5cf299')"
+    v-model="searchClusterName"
+    @search="getList"
+    @press-enter="getList"
+    class="search-cluster"
+    max-length="255"
     allow-clear />
     <div v-show="showClusterInfo && list.pageTag === 'clusterInfo'">
       <div
@@ -1965,7 +1965,8 @@ const backupRef = ref<null | InstanceType<typeof ClusterBackupDlg>>(null)
 const backupClusterIndex = ref()
 const handleBackupDlg = (clusterIndex: number) => {
   backupClusterIndex.value = clusterIndex
-  backupRef.value?.open(data.clusterList[clusterIndex].clusterId)
+  backupRef.value?.open(data.clusterList[clusterIndex].clusterId,
+    data.clusterList[clusterIndex].clusterNodes[0].installUserName)
 }
 
 const handleBackup = (backupData: KeyValue) => {
