@@ -63,6 +63,11 @@
         }
     },
     "components": {
+        "FusionSearch": {
+            "addFilters": "Please add filters",
+            "confirm": "Confirm",
+            "cancel": "Cancel"
+        },
         "UpdateDefaultCode": {
             "5nus586u4jg0": "Rest Default Password",
             "5n7vbkp1s580": "Change Password",

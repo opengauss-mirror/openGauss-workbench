@@ -18,25 +18,9 @@
       </div>
     </div>
     <div>
-      <a-cascader
-        v-model="selectedOptionsValue.value"
-        labelInValue
-        :placeholder="$t('components.Package.5mtcyb0rty05')"
-        :options="parentTags"
-        :field-names="{label:'value', value:'name', children:'children' }"
-        multiple
-        allow-create
-        allow-clear
-        mode="tags"
-        expand-trigger="click"
-        :show-search="true"
-        :show-all-levels="true"
-        :inputmode="true"
-        @change="searchTag"
-      >
-      </a-cascader>
+      <fusionSearch  @clickSearch="clickSearch" :labelOptions="labelOptions"/>
     </div>
-    <div>
+    <div class="packageList">
       <a-table
         row-key="packageId"
         :data="list.data"
@@ -141,11 +125,80 @@ import Socket from '@/utils/websocket'
 import WujieVue from 'wujie-vue3'
 import { useI18n } from 'vue-i18n'
 import AddPack from './AddPack.vue'
+import FusionSearch from '@/components/fusion-search'
 import { CpuArch, OS } from '../../../../../../plugins/base-ops/web-ui/src/types/os'
 import { OpenGaussVersionEnum } from '@/types/ops/install'
+import { searchType } from '@/types/searchType'
 
 const { t } = useI18n()
 const { bus } = WujieVue
+const labelOptions = ref<KeyValue>({
+  os: {
+    label: '操作系统',
+    value: 'os',
+    placeholder: '请选择操作系统',
+    selectType: searchType.SELECT,
+    options: [
+      {
+        value: OS.CENTOS,
+        label: OS.CENTOS
+      },
+      {
+        value: OS.OPEN_EULER,
+        label: OS.OPEN_EULER
+      }
+    ]
+  },
+  cpuArch: {
+    label: 'cpu架构',
+    value: 'cpuArch',
+    placeholder: '请选择cpu架构',
+    selectType: searchType.SELECT,
+    options: [
+      {
+        value: CpuArch.AARCH64,
+        label: CpuArch.AARCH64
+      },
+      {
+        value: CpuArch.X86_64,
+        label: CpuArch.X86_64
+      }
+    ]
+  },
+  packageVersion: {
+    label: 'openGauss版本',
+    value: 'packageVersion',
+    placeholder: '请选择openGauss版本',
+    selectType: searchType.SELECT,
+    options:[
+    {
+        value: OpenGaussVersionEnum.MINIMAL_LIST,
+        label: OpenGaussVersionEnum.MINIMAL_LIST
+      },
+      {
+        value: OpenGaussVersionEnum.LITE,
+        label: OpenGaussVersionEnum.LITE
+      },
+      {
+        value: OpenGaussVersionEnum.ENTERPRISE,
+        label: OpenGaussVersionEnum.ENTERPRISE
+      }
+    ]
+  },
+  packageVersionNum: {
+    label: '版本号',
+    value: 'packageVersionNum',
+    placeholder: '请选择版本号',
+    selectType: searchType.SELECT,
+    options:[]
+  },
+  name: {
+    label: '安装包名称',
+    value: 'name',
+    placeholder: '请输入安装包名称',
+    selectType: searchType.INPUT,
+  }
+})
 
 const list = reactive<KeyValue>({
   data: [],
@@ -217,52 +270,15 @@ const parentTags = ref([
   }
 ])
 
+const clickSearch = (params) => {
+    const searchForm = new FormData()
+    Object.keys(params).forEach(e=>{
+      searchForm.append(e,params[e])
+    })
+    getListData(filter.pageSize, filter.pageNum, searchForm)
+}
 const selectedOptionsValue = reactive({ value: '' })
 const searchFormData = new FormData
-const searchTag = (inputValue: any) => {
-  const entries = searchFormData.entries()
-  for (const [key, value] of entries) {
-    searchFormData.delete(key)
-  }
-  const selectedTagGroups = ref<string[]>([])
-  const alertFlag = new Map()
-  alertFlag.set('packageName', 3)
-  alertFlag.set('os', 2)
-  alertFlag.set('cpuArch', 2)
-  alertFlag.set('packageVersion', 3)
-  alertFlag.set('packageVersionNum', countVersionNum)
-  const alertNum = new Map([...alertFlag])
-  inputValue.forEach(item => {
-    parentTags.value.forEach(tag => {
-      if (tag.children.some(piece => piece.name.includes(item))) {
-        let tempname = alertFlag.get(tag.name) - 1
-        alertFlag.set(tag.name, tempname)
-        searchFormData.append(tag.name, item)
-        tag.disabled = true
-        selectedTagGroups.value.push(tag.name)
-      }
-    })
-  })
-  parentTags.value.forEach(tag => {
-    if (alertFlag.get(tag.name) == 0) {
-      Message.error(t('components.Package.5mtcyb0rty25', { tagName: tag.name }))
-      let tempnum = alertNum.get(tag.name) - 1
-      selectedOptionsValue.value.splice(-tempnum)
-    }
-    if (selectedTagGroups.value.includes(tag.name)) {
-      tag.disabled = true
-      tag.children.forEach(item => {
-        if (item.name !== searchFormData.get(tag.name)) {
-          item.disabled = true
-        }
-      })
-    } else {
-      tag.disabled = false
-      tag.children.forEach(item => item.disabled = false)
-    }
-  })
-  getListData(filter.pageSize, filter.pageNum, searchFormData)
-}
 
 const handleSelected = (keys: (string | number)[]) => {
   list.selectedpackageIds = keys
@@ -452,6 +468,12 @@ let countVersionNum = 0
 const fetchVersionNum = () => {
   getVersionNum().then(res => {
     if (Number(res.code) === 200) {
+      labelOptions.value.packageVersionNum.options = res.data.map(e => {
+        return {
+          value: e,
+          label: e
+        }
+      })
       parentTags.value.forEach(tag => {
         if (tag.name === 'packageVersionNum') {
           res.data.forEach(child => {
@@ -704,6 +726,9 @@ init()
 <style lang="less" scoped>
 :deep(.arco-form-layout-inline) {
   flex-wrap: nowrap;
+}
+.packageList {
+  margin-top: 8px;
 }
 .app-container .main-bd {
   min-height: auto;
