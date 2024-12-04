@@ -464,6 +464,12 @@ const getListData = () => new Promise(resolve => {
     if (Number(res.code) === 200) {
       resolve(true)
       list.data = []
+      list.socketArr.forEach((item: Socket<any, any>) => {
+        if (item) {
+          item.destroy()
+        }
+      })
+
       res.rows.forEach((item: KeyValue, index: number) => {
         item.cpuOption = JSON.parse(JSON.stringify(echartsOption.cpuOption))
         item.memoryOption = JSON.parse(JSON.stringify(echartsOption.memoryOption))
