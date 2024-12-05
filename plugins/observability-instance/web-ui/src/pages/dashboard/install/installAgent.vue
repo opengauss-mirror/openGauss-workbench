@@ -12,7 +12,7 @@
       <div class="dialog-content" v-show="installData.length != 0" style="padding-bottom: 0px">
         <div>
           <el-steps direction="vertical" :active="doingIndex">
-            <el-step v-for="item in installData" :key="item.name" :title="item.name">
+            <el-step v-for="item in installData" :key="item.name" :title="item.name" :class="{ error: item.state == 'ERROR' }">
               <template #description>
                 <div v-for="msg in item.msgs" :key="msg">
                   <b>{{ msg }}</b>
@@ -345,5 +345,15 @@ onBeforeUnmount(() => {
 
 .suggest-info {
   margin-bottom: 10px;
+}
+
+:deep(.is-finish) {
+  color: green;
+  border-color: green;
+}
+
+:deep(.error *) {
+  color: red !important;
+  border-color: red !important;
 }
 </style>
