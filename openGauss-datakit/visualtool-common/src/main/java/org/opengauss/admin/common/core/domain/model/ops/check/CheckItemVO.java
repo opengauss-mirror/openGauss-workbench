@@ -16,7 +16,7 @@
  * CheckItemVO.java
  *
  * IDENTIFICATION
- * openGauss-visualtool/visualtool-common/src/main/java/org/opengauss/admin/common/core/domain/model/ops/check/CheckItemVO.java
+ * visualtool-common/src/main/java/org/opengauss/admin/common/core/domain/model/ops/check/CheckItemVO.java
  *
  * -------------------------------------------------------------------------
  */
@@ -27,12 +27,14 @@ package org.opengauss.admin.common.core.domain.model.ops.check;
 import lombok.Data;
 
 /**
+ * CheckItemVO
+ *
  * @author lhf
  * @date 2022/10/21 18:38
  **/
 @Data
 public class CheckItemVO {
-    private String name;
-    private String status;
-    private String msg;
+    private String name = "";
+    private String status = "";
+    private String msg = "";
 }
