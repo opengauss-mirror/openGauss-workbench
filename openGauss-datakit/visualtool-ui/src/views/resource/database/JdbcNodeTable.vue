@@ -3,16 +3,9 @@
     <a-table :data="data.nodeList" :columns="columns" :show-header="false" :pagination="false" :bordered="false">
       <template #baseInfo="{ record }">
         <div class="flex-col-start mr">
-          <!-- <a-tag class="mb-s" color="green" bordered v-if="record.os">{{ record.os }}</a-tag>
-          <a-tag class="cursor-c mb-s" bordered v-else @click="handleGetOs(record.ip)">{{
-            $t('database.JdbcNodeTable.5oxhv6qcm6w0')
-          }}</a-tag> -->
           <div class="flex-row mb-s">
             <div class="mr-s">{{ $t('database.JdbcNodeTable.else5') }}:</div>
-            <div v-if="record.os">{{ record.os }}</div>
-            <a-button v-else type="outline" size="mini" @click="handleGetOs(record.ip)">{{
-              $t('database.JdbcNodeTable.5oxhv6qcm6w0') }}
-            </a-button>
+            <div>{{ record.os ?? '-' }}</div>
           </div>
           <div class="flex-row mb-s">
             <div class="mr-s" style="max-width: 160px;">{{ $t('database.JdbcNodeTable.else1') }}: {{ record.ip }}</div>
@@ -228,13 +221,6 @@ const openNodeMonitor = (nodeData: KeyValue, index: number) => {
 }
 
 const hostPwdRef = ref<null | InstanceType<typeof HostPwdDlg>>(null)
-
-const handleGetOs = (ip: string) => {
-  console.log('show terminal')
-  if (ip) {
-    hostPwdRef.value?.open(ip, 'getOs')
-  }
-}
 
 const showTerminal = (ip: string) => {
   console.log('show terminal')

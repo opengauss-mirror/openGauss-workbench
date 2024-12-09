@@ -1,5 +1,5 @@
 <template>
-    <a-modal :mask-closable="false" :esc-to-close="false" :visible="userData.show" :title="userData.title"
+    <a-modal :mask-closable="false" :esc-to-close="false" :visible="userData.show" :title="userData.title" @cancel="close"
         :modal-style="{ width: '550px' }">
         <template #footer>
             <div class="flex-between">
@@ -32,7 +32,11 @@
             <a-form-item field="username" :label="$t('components.AddHostUser.5mphzt9pdn80')" validate-trigger="blur"
                 :rules="[{ required: true, message: t('components.AddHostUser.5mphzt9pdw00') }]">
                 <a-input v-model="userData.formData.username"
-                    :placeholder="$t('components.AddHostUser.5mphzt9pdw00')"></a-input>
+                    :placeholder="$t('components.AddHostUser.5mphzt9pdw00')" v-if="userData.type === 'create'">
+                </a-input>
+                <span v-else>
+                    {{ userData.formData.username }}
+                </span>
             </a-form-item>
             <a-form-item field="password" :label="$t('components.AddHostUser.5mphzt9pe3s0')" validate-trigger="blur"
                 :rules="[{ required: true, message: t('components.AddHostUser.5mphzt9pec40') }]">
@@ -67,6 +71,7 @@ enum hostStatusEnum {
 const userData = reactive({
     show: false,
     title: t('components.AddHostUser.5mphzt9peog0'),
+    type: 'create',
     isNeedPwd: true,
     formData: {
         id: '',
@@ -162,10 +167,9 @@ const handleCancel = () => {
 }
 
 const open = (type: string, hostData: KeyValue, data?: KeyValue) => {
-    status.value = hostStatusEnum.unTest
-    userData.show = true
     userData.isNeedPwd = !hostData.isRemember
     const { hostId, privateIp, publicIp, port } = hostData
+    userData.type = type
     if (type === 'create') {
         userData.title = t('components.AddHostUser.5mphzt9peog0')
         Object.assign(userData.formData, {
@@ -189,6 +193,8 @@ const open = (type: string, hostData: KeyValue, data?: KeyValue) => {
             password: ''
         })
     }
+    status.value = hostStatusEnum.unTest
+    userData.show = true
 }
 
 defineExpose({
