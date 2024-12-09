@@ -29,7 +29,6 @@ import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.observability.log.config.ElasticsearchProvider;
 import com.nctigba.observability.log.enums.AgentStatusEnum;
@@ -142,8 +141,19 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
                 new Step("elastic.install.step5"),
                 new Step("elastic.install.step6"),
                 new Step("elastic.install.step7"));
-        // @formatter:on
-        int curr = 0;
+        initWsSessionStepTl(wsSession, steps);
+        install(installDTO);
+        if (wsSessionStepTl.get() != null) {
+            wsSessionStepTl.remove();
+        }
+    }
+
+    /**
+     * Install elasticsearch
+     *
+     * @param installDTO Install dto
+     */
+    public void install(ElasticSearchInstallDTO installDTO) {
         String path = installDTO.getPath();
         if (!path.endsWith(File.separator)) {
             path += File.separator;
@@ -151,14 +161,14 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
         // step1
         try {
             var env = envMapper
-                    .selectOne(
-                            Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, InstallType.ELASTICSEARCH));
+                .selectOne(
+                    Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, InstallType.ELASTICSEARCH));
             if (env != null) {
                 throw new CustomException("elastic.install.exists.tip");
             }
             env = new NctigbaEnvDO().setHostid(installDTO.getHostId()).setPort(installDTO.getPort()).setPath(
-                            path).setType(InstallType.ELASTICSEARCH)
-                    .setPath(path + SRC);
+                    path).setType(InstallType.ELASTICSEARCH)
+                .setPath(path + SRC);
             OpsHostEntity hostEntity = hostFacade.getById(installDTO.getHostId());
             if (hostEntity == null) {
                 throw new CustomException("elastic.install.host.tip");
@@ -167,8 +177,8 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
             var user = getUser(hostEntity, installDTO.getUsername());
             env.setUsername(installDTO.getUsername());
             try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
-                    installDTO.getUsername(),
-                    encryptionUtils.decrypt(user.getPassword()))) {
+                installDTO.getUsername(),
+                encryptionUtils.decrypt(user.getPassword()))) {
                 String message = session.execute(String.format(PORT_IS_EXIST, env.getPort()));
                 if (message.contains("true")) {
                     throw new CustomException("elastic.install.port.tip");
@@ -204,17 +214,17 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
                     }
                 }
             }
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             // step2
             try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
-                    installDTO.getUsername(),
-                    encryptionUtils.decrypt(user.getPassword()))) {
+                installDTO.getUsername(),
+                encryptionUtils.decrypt(user.getPassword()))) {
                 var arch = session.execute(command.ARCH);
                 String name = NAME + arch;
                 String tar = name + TAR;
                 var pkg = envMapper.selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery()
-                        .eq(NctigbaEnvDO::getType, InstallType.ELASTICSEARCH_PKG).like(
-                                NctigbaEnvDO::getPath, tar));
+                    .eq(NctigbaEnvDO::getType, InstallType.ELASTICSEARCH_PKG).like(
+                        NctigbaEnvDO::getPath, tar));
                 boolean isDownload = false;
                 if (pkg == null) {
                     isDownload = true;
@@ -226,42 +236,42 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
                     }
                 }
                 if (isDownload) {
-                    addMsg(wsSession, steps, curr, "elastic.install.download.start");
+                    sendMsg(null, "elastic.install.download.start");
                     File f = Download.download(PATH + tar, "pkg/" + tar);
                     pkg = new NctigbaEnvDO().setPath(f.getCanonicalPath()).setType(InstallType.ELASTICSEARCH_PKG);
-                    addMsg(wsSession, steps, curr, "elastic.install.download.success");
+                    sendMsg(null, "elastic.install.download.success");
                     save(pkg);
                 }
-                curr = nextStep(wsSession, steps, curr);
+                nextStep();
                 // step3
                 session.upload(pkg.getPath(), path + tar);
                 session.execute("cd " + path + " && " + command.TAR.parse(tar));
             }
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             // step4
             try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
-                    installDTO.getUsername(),
-                    encryptionUtils.decrypt(user.getPassword()))) {
+                installDTO.getUsername(),
+                encryptionUtils.decrypt(user.getPassword()))) {
                 // config
                 var elasticConfigFile = File.createTempFile("elasticsearch", ".yml");
                 // @formatter:off
                 FileUtil.appendUtf8String(
-                        "path.data: " + "data" + System.lineSeparator()
-                                + "path.logs: " + "logs" + System.lineSeparator()
-                                + "cluster.name: dbTools-es" + System.lineSeparator()
-                                + "cluster.initial_master_nodes: [\"node1\"]" + System.lineSeparator()
-                                + "discovery.seed_hosts: [\"127.0.0.1\"]" + System.lineSeparator()
-                                + "node.name: node1" + System.lineSeparator()
-                                + "network.host: 0.0.0.0" + System.lineSeparator()
-                                + "http.port: " + installDTO.getPort() + System.lineSeparator()
-                                + "http.host: 0.0.0.0" + System.lineSeparator()
-                                + "transport.host: 0.0.0.0" + System.lineSeparator()
-                                + "http.cors.enabled: true" + System.lineSeparator()
-                                + "http.cors.allow-origin: \"*\"" + System.lineSeparator()
-                                + "xpack.security.enrollment.enabled: true" + System.lineSeparator()
-                                + "xpack.security.enabled: false" + System.lineSeparator()
-                                + "xpack.security.http.ssl.enabled: false" + System.lineSeparator()
-                                + "xpack.security.transport.ssl.enabled: false", elasticConfigFile);
+                    "path.data: " + "data" + System.lineSeparator()
+                        + "path.logs: " + "logs" + System.lineSeparator()
+                        + "cluster.name: dbTools-es" + System.lineSeparator()
+                        + "cluster.initial_master_nodes: [\"node1\"]" + System.lineSeparator()
+                        + "discovery.seed_hosts: [\"127.0.0.1\"]" + System.lineSeparator()
+                        + "node.name: node1" + System.lineSeparator()
+                        + "network.host: 0.0.0.0" + System.lineSeparator()
+                        + "http.port: " + installDTO.getPort() + System.lineSeparator()
+                        + "http.host: 0.0.0.0" + System.lineSeparator()
+                        + "transport.host: 0.0.0.0" + System.lineSeparator()
+                        + "http.cors.enabled: true" + System.lineSeparator()
+                        + "http.cors.allow-origin: \"*\"" + System.lineSeparator()
+                        + "xpack.security.enrollment.enabled: true" + System.lineSeparator()
+                        + "xpack.security.enabled: false" + System.lineSeparator()
+                        + "xpack.security.http.ssl.enabled: false" + System.lineSeparator()
+                        + "xpack.security.transport.ssl.enabled: false", elasticConfigFile);
                 // @formatter:on
                 session.execute(String.format(MKDIR_FILE, path + SRC + "/config"));
                 session.upload(elasticConfigFile.getAbsolutePath(), path + SRC + "/config/elasticsearch.yml");
@@ -274,24 +284,28 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
                 utils.uploadShellScript(session, path + SRC + "/", "run_elasticsearch.sh");
             }
             envMapper.insert(env);
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             // step5
             updateFilebeatSet(hostEntity.getPublicIp(), env.getPort());
             startElasticsearch(env);
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             // step6
             checkHealthStatus(env);
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             // step7
-            sendMsg(wsSession, steps, curr, status.DONE);
+            sendMsg(status.DONE, "");
         } catch (Exception e) {
-            steps.get(curr).setState(status.ERROR).add(e.getMessage());
-            wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+            sendMsg(status.ERROR, e.getMessage());
             var sw = new StringWriter();
             try (var pw = new PrintWriter(sw)) {
                 e.printStackTrace(pw);
             }
-            wsUtil.sendText(wsSession, sw.toString());
+            sendMsg(null, sw.toString());
+            log.error("install fail!", e);
+            WsSessionStep wsSessionStep = wsSessionStepTl.get();
+            if (wsSessionStep == null) {
+                throw new CustomException("install fail! " + e.getMessage());
+            }
         }
     }
 
@@ -309,9 +323,20 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
                 new Step("elastic.uninstall.step3"),
                 new Step("elastic.uninstall.step4"),
                 new Step("elastic.uninstall.step5"));
-        // @formatter:on
+        initWsSessionStepTl(wsSession, steps);
+        uninstall(id);
+        if (wsSessionStepTl.get() != null) {
+            wsSessionStepTl.remove();
+        }
+    }
+
+    /**
+     * uninstall
+     *
+     * @param id envId
+     */
+    public void uninstall(String id) {
         // step1
-        var curr = 0;
         try {
             var env = envMapper.selectById(id);
             if (env == null) {
@@ -323,25 +348,29 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
             }
             env.setHost(hostEntity);
             // step2
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             uninstallElasticsearch(env);
             // step3
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             clearInstallFolder(env);
             // step4
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             envMapper.deleteById(id);
             provider.clear();
             // step5
-            sendMsg(wsSession, steps, curr, status.DONE);
+            sendMsg(status.DONE, "");
         } catch (Exception e) {
-            steps.get(curr).setState(status.ERROR).add(e.getMessage());
-            wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+            sendMsg(status.ERROR, e.getMessage());
             var sw = new StringWriter();
             try (var pw = new PrintWriter(sw)) {
                 e.printStackTrace(pw);
             }
-            wsUtil.sendText(wsSession, sw.toString());
+            sendMsg(null, sw.toString());
+            log.error("uninstall fail! ", e);
+            WsSessionStep wsSessionStep = wsSessionStepTl.get();
+            if (wsSessionStep == null) {
+                throw new CustomException("uninstall fail! " + e.getMessage());
+            }
         }
     }
 

@@ -317,6 +317,11 @@ public class PrometheusService extends AbstractInstaller {
                 e.printStackTrace(pw);
             }
             sendMsg(null, sw.toString());
+            log.error("install fail!", e);
+            WsSessionStep wsSessionStep = wsSessionStepTl.get();
+            if (wsSessionStep == null) {
+                throw new CustomException("install fail! " + e.getMessage());
+            }
         }
     }
 
@@ -1594,6 +1599,12 @@ public class PrometheusService extends AbstractInstaller {
                 e.printStackTrace(pw);
             }
             sendMsg(null, sw.toString());
+            log.error("uninstall fail! {}", e.getMessage());
+            log.error(sw.toString());
+            WsSessionStep wsSessionStep = wsSessionStepTl.get();
+            if (wsSessionStep == null) {
+                throw new CustomException("uninstall fail! " + e.getMessage());
+            }
         }
     }
 

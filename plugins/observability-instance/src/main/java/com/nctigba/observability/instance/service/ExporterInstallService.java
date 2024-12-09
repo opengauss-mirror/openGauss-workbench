@@ -51,7 +51,6 @@ import com.nctigba.observability.instance.util.SshSessionUtils;
 import com.nctigba.observability.instance.util.SshSessionUtils.command;
 import com.nctigba.observability.instance.util.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -139,7 +138,7 @@ public class ExporterInstallService extends AbstractInstaller {
      *
      * @param exporterInstallDTO ExporterInstallDTO
      */
-    public AjaxResult install(ExporterInstallDTO exporterInstallDTO) {
+    public void install(ExporterInstallDTO exporterInstallDTO) {
         nextStep();
         String path = exporterInstallDTO.getPath();
         if (StrUtil.isNotBlank(path) && path.endsWith("/")) {
@@ -246,7 +245,11 @@ public class ExporterInstallService extends AbstractInstaller {
                     });
                     sendMsg(Status.ERROR, "exporterinstall.repeat.tip3");
                     errMsgBuilder.append(MessageSourceUtils.get("exporterinstall.repeat.tip3"));
-                    return AjaxResult.error(errMsgBuilder.toString());
+                    WsSessionStep wsSessionStep = wsSessionStepTl.get();
+                    if (wsSessionStep == null) {
+                        throw new CustomException("install fail! " + errMsgBuilder.toString());
+                    }
+                    return;
                 }
 
                 // install exporter java programe
@@ -291,7 +294,6 @@ public class ExporterInstallService extends AbstractInstaller {
                 nextStep();
                 sendMsg(Status.DONE, "");
             }
-            return AjaxResult.success();
         } catch (Exception e) {
             if (StrUtil.isBlank(exporterInstallDTO.getEnvId()) && expEnv != null) {
                 envMapper.deleteById(expEnv);
@@ -302,7 +304,11 @@ public class ExporterInstallService extends AbstractInstaller {
                 e.printStackTrace(pw);
             }
             sendMsg(null, sw.toString());
-            return AjaxResult.error(e.getMessage() + ":" + sw);
+            log.error("install fail!", e);
+            WsSessionStep wsSessionStep = wsSessionStepTl.get();
+            if (wsSessionStep == null) {
+                throw new CustomException("install fail! " + e.getMessage());
+            }
         }
     }
 
