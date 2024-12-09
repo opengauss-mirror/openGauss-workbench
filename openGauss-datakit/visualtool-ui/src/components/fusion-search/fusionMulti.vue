@@ -6,8 +6,8 @@
     </el-option>
     <template #footer>
       <div class="footerBtn">
-        <el-button @click="confirm" type="primary" size="small">{{ $t('components.FusionSearch.Confirm') }}</el-button>
-        <el-button size="small" @click="cancel">{{ $t('components.FusionSearch.Cancel') }}</el-button>
+        <el-button @click="confirm" type="primary" size="small">{{ $t('components.FusionSearch.confirm') }}</el-button>
+        <el-button size="small" @click="cancel">{{ $t('components.FusionSearch.cancel') }}</el-button>
       </div>
     </template>
   </el-select>
