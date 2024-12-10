@@ -376,6 +376,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         if ("CheckMpprcFile.".equals(item)) {
             indexEnd = result.indexOf("Analysis the check result", reIndex);
         }
+        if (indexStart == -1) {
+            log.warn("gs check item {} not found", item);
+            return checkItemVO;
+        }
         if (indexEnd <= indexStart) {
             log.error("index end le index start");
             return checkItemVO;
@@ -456,7 +460,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     /**
      * MonitorParam 类的功能说明
-     *
+     * <p>
      * 该类用于存储监控参数。
      */
     @AllArgsConstructor
@@ -589,26 +593,23 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     }
 
     private String doCheckWithRootItems(String rootPassword, SshLogin sshLogin, String envPath) {
-        log.info("One-click self-test start");
         String command = "gs_check -e inspect";
-        try {
-            Map<String, String> autoResponse = new HashMap<>();
-            autoResponse.put("Please enter root privileges user[root]:", "root");
-            autoResponse.put("Please enter password for user[root]:", encryptionUtils.decrypt(rootPassword));
-            return jschExecutorService.execCommandAutoResponse(sshLogin, command, envPath, autoResponse);
-        } catch (Exception e) {
-            log.error("One-click self-test results {}", e.getMessage());
-            throw new OpsException("One key self-test error");
-        } finally {
-            log.info("One-click self-test end");
-        }
+        Map<String, String> autoResponse = new HashMap<>();
+        autoResponse.put("Please enter root privileges user[root]:", "root");
+        autoResponse.put("Please enter password for user[root]:", encryptionUtils.decrypt(rootPassword));
+        return doCheckItems(sshLogin, command, envPath, autoResponse);
     }
 
     private String doCheckSkipRootItems(SshLogin sshLogin, String envPath) {
-        log.info("One-click self-test start");
         String command = "gs_check -e inspect --skip-root-items";
+        Map<String, String> autoResponse = new HashMap<>();
+        return doCheckItems(sshLogin, command, envPath, autoResponse);
+    }
+
+    private String doCheckItems(SshLogin sshLogin, String command, String envPath, Map<String, String> autoResponse) {
+        log.info("One-click self-test start");
         try {
-            return jschExecutorService.execCommand(sshLogin, command, envPath);
+            return jschExecutorService.execCommandAutoResponse(sshLogin, command, envPath, autoResponse);
         } catch (Exception e) {
             log.error("One-click self-test results {}", e.getMessage());
             throw new OpsException("One key self-test error");
