@@ -102,13 +102,23 @@ public class HostMonitorFacade {
     }
 
     /**
-     * 获取cpu核心数
+     * get host cpu core number
      *
      * @param hostId host id
-     * @return cpu核心数
+     * @return cpu core num
      */
     public String getCpuCoreNum(String hostId) {
         return hostMonitorCacheService.getCpuCoreNum(hostId);
+    }
+
+    /**
+     * get host cpu frequency  eg. 2.4GHz
+     *
+     * @param hostId host id
+     * @return cpu frequency
+     */
+    public String getCpuFrequency(String hostId) {
+        return hostMonitorCacheService.getCpuFrequency(hostId);
     }
 
     /**
@@ -139,5 +149,15 @@ public class HostMonitorFacade {
      */
     public String getAvailableDiskSpace(String hostId) {
         return hostMonitorCacheService.getAvailableDiskSpace(hostId);
+    }
+
+    /**
+     * get migration host info cpu core num ,remaining memory, available disk space
+     *
+     * @param hostId host info
+     * @return migration host info
+     */
+    public String getMigrationHostInfo(String hostId) {
+        return hostMonitorCacheService.getMigrationHostInfo(hostId);
     }
 }

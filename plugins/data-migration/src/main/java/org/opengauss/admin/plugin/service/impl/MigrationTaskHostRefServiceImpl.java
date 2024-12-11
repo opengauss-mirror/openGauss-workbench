@@ -239,10 +239,11 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     }
 
     private String[] getHostBaseInfo(String hostId) {
-        String cpuCoreNum = hostMonitorFacade.getCpuCoreNum(hostId);
-        String remainingMemory = hostMonitorFacade.getRemainingMemory(hostId);
-        String availableDiskSpace = hostMonitorFacade.getAvailableDiskSpace(hostId);
-        return new String[] {cpuCoreNum, remainingMemory, availableDiskSpace};
+        String hostInfo = hostMonitorFacade.getMigrationHostInfo(hostId);
+        if (StrUtil.isEmpty(hostInfo)) {
+            return new String[3];
+        }
+        return hostInfo.split("\n");
     }
 
     @Override

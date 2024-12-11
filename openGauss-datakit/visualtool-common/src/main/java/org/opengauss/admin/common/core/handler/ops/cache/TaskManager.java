@@ -48,13 +48,13 @@ public class TaskManager {
         Future<?> future = TASK_CONTEXT.get(businessId);
         while (Objects.nonNull(future) && !future.isCancelled()) {
             future.cancel(true);
+            log.warn("remove task message: {}", businessId);
             try {
-                TimeUnit.SECONDS.sleep(2);
-            } catch (InterruptedException e) {
-                log.error("remove task error, message: {}", e.getMessage());
+                TimeUnit.MILLISECONDS.sleep(200);
+            } catch (InterruptedException ignore) {
+                log.debug("thread interrupted while waiting for task {}cancellation", businessId);
             }
         }
-
         return Optional.ofNullable(TASK_CONTEXT.remove(businessId));
     }
 }

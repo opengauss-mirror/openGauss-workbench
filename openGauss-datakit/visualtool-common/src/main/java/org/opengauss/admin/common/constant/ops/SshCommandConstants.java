@@ -37,37 +37,18 @@ public interface SshCommandConstants {
      * Query the operating system version
      */
     String OS_VERSION = "cat /etc/os-release | grep VERSION_ID= | head -n 1|awk -F '=' '{print $2}' | sed 's/\\\"//g'";
+
     /**
-     * free memory space
+     * get memory info
      */
-    String FREE_MEMORY = "free -g |head -n 2| tail -n 1 | awk '{print $4}'";
-    /**
-     * memory usage
-     */
-    String MEMORY_USING = "head -2 /proc/meminfo | awk 'NR==1{t=$2}NR==2{f=$2;print(t-f)*100/t}'";
-    /**
-     * memory size
-     */
-    String MEMORY_TOTAL = "cat /proc/meminfo | grep MemTotal | awk -F ' ' '{print $2}'";
-    /**
-     * Number of CPU cores
-     */
-    String CPU_CORE_NUM = "cat /proc/cpuinfo | grep 'processor' |wc -l";
-    /**
-     * CPU frequency
-     */
-    String CPU_FREQUENCY
-        = "cat /proc/cpuinfo | grep 'model name' |awk -F ':' '{print $2}'| awk -F ' ' '{print $7}' | sort | head -n 1";
+    String MEMORY = "free -g |head -n 2| tail -n 1  | tr -s \" \"";
+
     /**
      * CPU usage
      */
     String CPU_USING =
         "top -b -n2 -p 1 | fgrep \"Cpu(s)\" | tail -1 | awk -F'id,' -v prefix=\"$prefix\" '{ split($1, vs, \",\"); "
             + "v=vs[length(vs)]; sub(\"%\",\"\", v); printf \"%s%.1f\\n\", prefix, 100 - v }'";
-    /**
-     * free hard disk space
-     */
-    String FREE_HARD_DISK = "df -BG | awk -F ' ' '{print $4}' | sort | head -n 1";
     /**
      * rely
      */
@@ -285,21 +266,12 @@ public interface SshCommandConstants {
      * check os user sudo permission
      */
     String CREATE_OS_USER_SUDO = "sudo -l -U %s";
+
     /**
-     * check os memory free -m
+     * check os disk info
      */
-    String MEMORY_MONITOR = "free -m | awk -F '[ :]+' 'NR==2{printf \"%d\", ($2-$7)/$2*100}'";
-    /**
-     * check os cpu load
-     */
-    String CPU_MONITOR = "top -b -n1 | fgrep \"Cpu(s)\" | tail -1 |"
-        + " awk -F'id,' '{split($1, vs, \",\"); v=vs[length(vs)];"
-        + " sub(/\\s+/, \"\", v);sub(/\\s+/, \"\", v); printf \"%d\", 100-v;}'";
-    /**
-     * check os disk usage
-     */
-    String DISK_MONITOR = "df -Th | egrep -v \"(tmpfs|sr0)\" |"
-        + " tail -n +2|tr -s \" \" | cut -d \" \" -f6|tr -d \"%\"|head -n 1";
+    String DISK_MONITOR = "df -Th | egrep -v \"(tmpfs|sr0)\" | tail -n +2| tr -s \" \"";
+
     /**
      * check os net card name
      */
@@ -350,4 +322,9 @@ public interface SshCommandConstants {
      * dir_empty:
      */
     String CHECK_RESULT_PATH_EMPTY = "dir_empty";
+
+    /**
+     * get host cpu info
+     */
+    String CPU = "lscpu | grep \"CPU(s):\\|Architecture\\|MHz\"";
 }
