@@ -496,16 +496,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         if (Objects.isNull(hostEntity)) {
             throw new OpsException("host information not found");
         }
-        OpsHostUserEntity rootUserEntity = hostUserFacade.getRootUserByHostId(opsClusterNodeEntity.getHostId());
-        if (Objects.isNull(rootUserEntity)) {
-            throw new OpsException("User root was not found");
-        }
-        if (StrUtil.isEmpty(rootUserEntity.getPassword()) && StrUtil.isEmpty(upgradeBody.getHostRootPassword())) {
-            throw new OpsException("root password cannot be empty");
-        }
-        if (StrUtil.isNotEmpty(rootUserEntity.getPassword())) {
-            upgradeBody.setHostRootPassword(rootUserEntity.getPassword());
-        }
         Session ommSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(),
                 installUserEntity.getUsername(), encryptionUtils.decrypt(installUserEntity.getPassword()))
             .orElseThrow(() -> new OpsException("Install user connection failed"));
@@ -737,10 +727,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         OpsHostUserEntity installUserEntity = hostUserList.stream()
             .filter(opsHostUserEntity -> !"root".equalsIgnoreCase(opsHostUserEntity.getUsername()))
             .findFirst()
-            .orElseThrow(() -> new OpsException("[" + opsHostEntity.getHostname() + "]root user not found"));
+            .orElseThrow(() -> new OpsException("[" + opsHostEntity.getHostname() + "] user not found"));
         Session session = jschUtil.getSession(opsHostEntity.getPublicIp(), opsHostEntity.getPort(),
                 installUserEntity.getUsername(), encryptionUtils.decrypt(installUserEntity.getPassword()))
-            .orElseThrow(() -> new OpsException("root user failed to establish connection"));
+            .orElseThrow(() -> new OpsException("user failed to establish connection"));
         List<HostFile> ls = jschUtil.ls(session, path);
         if (Objects.nonNull(session) && session.isConnected()) {
             session.disconnect();
@@ -1109,24 +1099,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     .filter(hostUser -> hostUser.getHostId().equals(host.getHostId()))
                     .collect(Collectors.toList())))
                 .collect(Collectors.toList());
-            for (HostInfoHolder hostInfoHolder : hostInfoHolderList) {
-                List<OpsHostUserEntity> userEntities = hostInfoHolder.getHostUserEntities();
-                OpsHostUserEntity rootUserEntity = userEntities.stream()
-                    .filter(userEntity -> "root".equals(userEntity.getUsername()))
-                    .findFirst()
-                    .orElseThrow(() -> new OpsException(
-                        "[" + hostInfoHolder.getHostEntity().getPublicIp() + "]root user information not found"));
-                if (clusterEntity.getVersion() == OpenGaussVersionEnum.ENTERPRISE) {
-                    if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
-                        if (StrUtil.isNotEmpty(unInstallBody.getRootPasswords().get(rootUserEntity.getHostId()))) {
-                            rootUserEntity.setPassword(
-                                unInstallBody.getRootPasswords().get(rootUserEntity.getHostId()));
-                        } else {
-                            throw new OpsException("root password not found");
-                        }
-                    }
-                }
-            }
+
             unInstallContext.setHostInfoHolders(hostInfoHolderList);
             unInstallContext.setOs(checkOS(unInstallContext.getHostInfoHolders(), false));
             RequestAttributes context = RequestContextHolder.currentRequestAttributes();
@@ -1199,9 +1172,10 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             OpsHostUserEntity rootUserEntity = userEntities.stream()
                 .filter(userEntity -> "root".equals(userEntity.getUsername()))
                 .findFirst()
-                .orElseThrow(() -> new OpsException(
-                    "[" + hostInfoHolder.getHostEntity().getPublicIp() + "]root user information not found"));
-            userEntities.remove(rootUserEntity);
+                .orElse(null);
+            if (Objects.nonNull(rootUserEntity)) {
+                userEntities.remove(rootUserEntity);
+            }
         }
         opsClusterContext.setHostInfoHolders(hostInfoHolderList);
     }
