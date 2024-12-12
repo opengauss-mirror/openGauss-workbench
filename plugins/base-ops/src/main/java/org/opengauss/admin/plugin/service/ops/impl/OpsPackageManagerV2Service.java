@@ -45,6 +45,7 @@ import org.opengauss.admin.plugin.domain.model.ops.OpsPackageVO;
 import org.opengauss.admin.plugin.domain.model.ops.WsSession;
 import org.opengauss.admin.plugin.domain.model.ops.cache.TaskManager;
 import org.opengauss.admin.plugin.domain.model.ops.cache.WsConnectorManager;
+import org.opengauss.admin.plugin.enums.ops.OpsPackageSource;
 import org.opengauss.admin.plugin.mapper.ops.OpsPackageManagerMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerV2Service;
 import org.opengauss.admin.plugin.utils.DownloadUtil;
@@ -140,13 +141,13 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
         if (Objects.equals(entity.getRemark(), OpsConstants.PACKAGE_REMARK)) {
             removeById(entity.getPackageId());
             log.info("checking package list, packageId: {}, realPath file not exit,delete package :{} ",
-                    entity.getPackageId(), entity.getRealPath());
+                entity.getPackageId(), entity.getRealPath());
         } else {
             UpdateWrapper<OpsPackageManagerEntity> wrapper = new UpdateWrapper<>();
-            wrapper.set("package_path", "").eq("package_id", entity.getPackageId());
+            wrapper.set("package_path", "").set("source", "").eq("package_id", entity.getPackageId());
             update(wrapper);
             log.info("checking package list, packageId: {}, realPath file not exit,clear package_path :{} ",
-                    entity.getPackageId(), entity.getRealPath());
+                entity.getPackageId(), entity.getRealPath());
         }
         return isValid;
     }
@@ -196,6 +197,7 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
         // create package path
         UploadInfo packagePath = getPackagePath(entity, userId);
         entity.setPackagePath(packagePath);
+        entity.setSource(OpsPackageSource.ONLINE.getName());
         String realPath = entity.getRealPath();
         checkPackageStoragePath(realPath, false);
         // get download progress session
@@ -215,6 +217,7 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
             UploadInfo packagePath = getPackagePath(entity, userId);
             entity.setPackagePath(packagePath);
         }
+        entity.setSource(OpsPackageSource.ONLINE.getName());
         String realPath = entity.getRealPath();
         checkPackageStoragePath(realPath, true);
         // get download progress session
@@ -240,6 +243,7 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
         pkg.setPackagePath(packagePath);
         uploadPackage(pkg, false);
         // save package info
+        pkg.setSource(OpsPackageSource.OFFLINE.getName());
         save(pkg);
     }
 
@@ -250,6 +254,7 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
             pkg.setPackagePath(packagePath);
         }
         uploadPackage(pkg, true);
+        pkg.setSource(OpsPackageSource.OFFLINE.getName());
         updatePackagePath(pkg);
     }
 
@@ -257,6 +262,7 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
         LambdaUpdateWrapper<OpsPackageManagerEntity> updateWrapper = Wrappers.lambdaUpdate();
         updateWrapper.eq(OpsPackageManagerEntity::getPackageId, pkg.getPackageId());
         updateWrapper.set(OpsPackageManagerEntity::getPackagePath, pkg.getPackagePath(), FASTJSON_TYPE_HANDLER);
+        updateWrapper.set(OpsPackageManagerEntity::getSource, pkg.getSource());
         update(updateWrapper);
     }
 

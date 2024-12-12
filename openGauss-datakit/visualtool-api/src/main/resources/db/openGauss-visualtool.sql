@@ -973,6 +973,7 @@ CREATE TABLE IF NOT EXISTS "public"."ops_package_manager"(
     "package_version_num" varchar(255) COLLATE "pg_catalog"."default",
     "package_url" varchar(1024) COLLATE "pg_catalog"."default",
     "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "source" varchar(255) COLLATE "pg_catalog"."default",
     "create_by" varchar(64) COLLATE "pg_catalog"."default",
     "create_time" timestamp(6),
     "update_by" varchar(64) COLLATE "pg_catalog"."default",
@@ -1068,6 +1069,20 @@ SELECT add_pkg_name();
 
 DROP FUNCTION add_pkg_name;
 
+CREATE OR REPLACE FUNCTION add_pkg_source() RETURNS integer AS '
+    BEGIN
+        IF
+            ( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_package_manager'' AND COLUMN_NAME = ''source'' ) = 0
+        THEN
+            ALTER TABLE ops_package_manager ADD COLUMN source VARCHAR(255);
+        END IF;
+        RETURN 0;
+    END;'
+    LANGUAGE plpgsql;
+
+SELECT add_pkg_source();
+
+DROP FUNCTION add_pkg_source;
 
 CREATE
 OR REPLACE FUNCTION add_field_ops_package_manager() RETURNS integer AS '

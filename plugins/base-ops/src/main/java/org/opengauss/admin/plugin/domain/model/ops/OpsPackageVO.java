@@ -55,6 +55,7 @@ public class OpsPackageVO {
     private String packageUrl;
     private UploadInfo packagePath;
     private String type;
+    private String source;
     @JsonIgnore
     @JSONField(serialize = false, deserialize = false)
     private MultipartFile file;
@@ -74,6 +75,7 @@ public class OpsPackageVO {
         entity.setPackageUrl(packageUrl);
         entity.setPackagePath(packagePath);
         entity.setType(type);
+        entity.setSource(source);
         entity.setFile(file);
         entity.setRemark(remark);
         return entity;

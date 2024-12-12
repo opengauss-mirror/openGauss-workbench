@@ -64,6 +64,7 @@ public class OpsPackageManagerEntity extends BaseEntity {
     @TableField(typeHandler = FastjsonTypeHandler.class)
     private UploadInfo packagePath;
     private String type;
+    private String source;
     @TableField(exist = false)
     @JsonIgnore
     @JSONField(serialize = false, deserialize = false)
@@ -94,6 +95,7 @@ public class OpsPackageManagerEntity extends BaseEntity {
         vo.setCpuArch(cpuArch);
         vo.setRemark(getRemark());
         vo.setType(type);
+        vo.setSource(source);
         vo.setPackageUrl(packageUrl);
         vo.setPackagePath(packagePath);
         vo.setUpdateTime(getUpdateTime());
