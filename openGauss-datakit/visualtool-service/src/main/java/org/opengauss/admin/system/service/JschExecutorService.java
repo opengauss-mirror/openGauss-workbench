@@ -134,6 +134,34 @@ public class JschExecutorService {
     }
 
     /**
+     * <pre>
+     * Get the cpu info of the remote machine
+     *
+     * eg. x86_64
+     * lscpu | grep "CPU(s):\|Architecture\|MHz"
+     * Architecture:          x86_64
+     * CPU(s):                8
+     * CPU MHz:               2799.974
+     * NUMA node0 CPU(s):     0-7
+     *
+     * eg. aarch64
+     * lscpu | grep "CPU(s):\|Architecture\|MHz"
+     * Architecture:                    aarch64
+     * CPU(s):                          12
+     * CPU max MHz:                     2400.0000
+     * CPU min MHz:                     2400.0000
+     * NUMA node0 CPU(s):               0-5
+     * NUMA node1 CPU(s):               6-11
+     * </pre>
+     *
+     * @param sshLogin ssh login info
+     * @return cpu info
+     */
+    public String getCpu(SshLogin sshLogin) {
+        return execCommand(sshLogin, SshCommandConstants.CPU);
+    }
+
+    /**
      * 检查端口是否被占用
      *
      * @param sshLogin ssh登录信息
@@ -226,36 +254,6 @@ public class JschExecutorService {
     }
 
     /**
-     * Get the cpu info of the remote machine
-     *
-     * @param sshLogin ssh login info
-     * @return cpu info
-     */
-    public String cpuMonitor(SshLogin sshLogin) {
-        return execCommand(sshLogin, SshCommandConstants.CPU_MONITOR);
-    }
-
-    /**
-     * Get the memory info of the remote machine
-     *
-     * @param sshLogin ssh login info
-     * @return memory info
-     */
-    public String memoryMonitor(SshLogin sshLogin) {
-        return execCommand(sshLogin, SshCommandConstants.MEMORY_MONITOR);
-    }
-
-    /**
-     * Get the disk info of the remote machine
-     *
-     * @param sshLogin ssh login info
-     * @return disk info
-     */
-    public String diskMonitor(SshLogin sshLogin) {
-        return execCommand(sshLogin, SshCommandConstants.DISK_MONITOR);
-    }
-
-    /**
      * 获取cpu使用率
      *
      * @param sshLogin ssh登录信息
@@ -266,13 +264,13 @@ public class JschExecutorService {
     }
 
     /**
-     * 获取内存使用率
+     * get memory info of the remote machine
      *
-     * @param sshLogin ssh登录信息
-     * @return 内存使用率
+     * @param sshLogin ssh login
+     * @return memory info
      */
-    public String getMemoryUsing(SshLogin sshLogin) {
-        return new JschExecutor().execCommand(sshLogin, SshCommandConstants.MEMORY_USING);
+    public String getMemory(SshLogin sshLogin) {
+        return new JschExecutor().execCommand(sshLogin, SshCommandConstants.MEMORY);
     }
 
     /**
@@ -286,23 +284,21 @@ public class JschExecutorService {
     }
 
     /**
-     * 获取内存总量
+     * <pre>
+     * Obtain the usage information of each partition of the server disk
+     * eg.
+     * /dev/vda1 ext4 79G 68G 7.7G 90% /"
+     * /dev/vdb1 ext4 197G 168G 20G 90% /data
+     * /dev/vdc1 xfs 50G 20G 31G 40% /data1
+     * /dev/vdc2 xfs 50G 22G 29G 44% /data2
+     * /dev/vdd1 ext4 99G 17G 78G 18% /219bak
+     * </pre>
      *
-     * @param sshLogin ssh登录信息
-     * @return 内存总量
+     * @param sshLogin ssh login
+     * @return base info
      */
-    public String getMemoryTotal(SshLogin sshLogin) {
-        return new JschExecutor().execCommand(sshLogin, SshCommandConstants.MEMORY_TOTAL);
-    }
-
-    /**
-     * 获取cpu核心数
-     *
-     * @param sshLogin ssh登录信息
-     * @return cpu核心数
-     */
-    public String getCpuCoreNum(SshLogin sshLogin) {
-        return new JschExecutor().execCommand(sshLogin, SshCommandConstants.CPU_CORE_NUM);
+    public String getDiskMonitor(SshLogin sshLogin) {
+        return new JschExecutor().execCommand(sshLogin, SshCommandConstants.DISK_MONITOR);
     }
 
     /**
@@ -448,7 +444,11 @@ public class JschExecutorService {
         if (result.contains("ls: cannot access") && result.contains("Permission denied")) {
             throw new OpsException("checkPathEmpty error: ls cannot access, permission denied");
         }
-        return StrUtil.contains(result, SshCommandConstants.CHECK_RESULT_PATH_EMPTY);
+        // ls: cannot access '/data/software/openGauss': No such file or directory
+        boolean isEmpty = StrUtil.contains(result, SshCommandConstants.CHECK_RESULT_PATH_EMPTY)
+            || result.contains("ls: cannot access") && result.contains("No such file or directory");
+        log.info("check {} path {} is empty: {}", sshLogin, path, isEmpty);
+        return isEmpty;
     }
 
     /**

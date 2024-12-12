@@ -617,7 +617,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     }
 
     private String diskMonitor(String hostId) {
-        return hostMonitorCacheService.diskMonitor(hostId);
+        return hostMonitorCacheService.getDiskUse(hostId);
     }
 
     private String memoryMonitor(String hostId) {

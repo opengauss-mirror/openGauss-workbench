@@ -116,16 +116,21 @@ public class DownloadUtil {
             this.wsSession = wsSession;
         }
 
+        /**
+         * download monitor
+         *
+         * @param bytes byte
+         */
         public void count(long bytes) {
             count += bytes;
             long currentPercent = count * 100 / max;
-
             if (currentPercent > percent) {
                 this.percent = currentPercent;
-                log.info("========{}========", this.percent + "%");
+                if (currentPercent % 10 == 0) {
+                    log.info("========{}========", this.percent + "%");
+                }
                 wsUtil.sendText(wsSession, this.percent / 100.00 + "");
             }
-
         }
 
         public void end() {

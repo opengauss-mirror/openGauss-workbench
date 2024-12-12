@@ -23,12 +23,15 @@
 
 package org.opengauss.admin.system.service;
 
+import com.alibaba.fastjson.JSONObject;
+
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.core.vo.HostRealtimeStatistics;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.system.plugin.beans.SshLogin;
 import org.opengauss.admin.system.service.ops.IHostService;
@@ -84,20 +87,15 @@ public class HostMonitorCacheService {
                     OpsHostUserEntity user = getHostUserRootOrNormal(host.getHostId());
                     SshLogin sshLogin = new SshLogin(host.getPublicIp(), host.getPort(), user.getUsername(),
                         encryptionUtils.decrypt(user.getPassword()));
-                    String os = jschExecutorService.getOs(sshLogin);
-                    String osVersion = jschExecutorService.getOsVersion(sshLogin);
-                    String cpuArch = jschExecutorService.getCpuArch(sshLogin);
-                    String cpuCoreNum = jschExecutorService.getCpuCoreNum(sshLogin);
-                    String memoryTotal = jschExecutorService.getMemoryTotal(sshLogin);
                     Map<String, String> hostInfoMap = cacheMap.getOrDefault(host.getHostId(), new HashMap<>());
-                    hostInfoMap.put(CacheConstants.OS, os);
-                    hostInfoMap.put(CacheConstants.OS_VERSION, osVersion);
-                    hostInfoMap.put(CacheConstants.CPU_ARCH, cpuArch);
-                    hostInfoMap.put(CacheConstants.CPU_CORE_NUM, cpuCoreNum);
-                    hostInfoMap.put(CacheConstants.MEMORY_TOTAL, memoryTotal);
+                    os(sshLogin, hostInfoMap);
+                    osVersion(sshLogin, hostInfoMap);
+                    cpu(sshLogin, hostInfoMap);
+                    disk(sshLogin, hostInfoMap);
+                    log.info("monitor host cache {} success {}", host.getPublicIp(), hostInfoMap);
                     cacheMap.put(host.getHostId(), hostInfoMap);
                 } catch (Exception ex) {
-                    log.warn("monitor host cache {} error : {}", host.getPublicIp(), ex.getMessage());
+                    log.warn("monitor host cache {} error : ", host.getPublicIp(), ex);
                 }
             });
         }, 5, 5 * 60, TimeUnit.SECONDS);
@@ -111,28 +109,119 @@ public class HostMonitorCacheService {
                         encryptionUtils.decrypt(user.getPassword()));
                     Map<String, String> hostInfoMap = cacheMap.getOrDefault(host.getHostId(), new HashMap<>());
                     // cpu using
-                    String cpuUsing = jschExecutorService.getCpuUsing(sshLogin);
-                    hostInfoMap.put(CacheConstants.CPU_USING, cpuUsing);
+                    cpuUsing(sshLogin, hostInfoMap);
                     // memory using
-                    String memoryUsing = jschExecutorService.getMemoryUsing(sshLogin);
-                    hostInfoMap.put(CacheConstants.MEMORY_USING, memoryUsing);
-                    // disk using
-                    String diskMonitor = jschExecutorService.diskMonitor(sshLogin);
-                    hostInfoMap.put(CacheConstants.DISK_MONITOR, diskMonitor);
-                    // available disk space and memory remaining
-                    String baseInfo = jschExecutorService.getHostBaseInfo(sshLogin);
-                    String[] split = baseInfo.split(CacheConstants.SPL_N);
-                    hostInfoMap.put(CacheConstants.MEMORY_REMAINING, split[1]);
-                    hostInfoMap.put(CacheConstants.AVAILABLE_DISK_SPACE, split[2]);
+                    memory(sshLogin, hostInfoMap);
+                    // host base info for migration
+                    hostForMigration(sshLogin, hostInfoMap);
                     // net monitor
-                    String[] netMonitor2 = jschExecutorService.getNetMonitor(sshLogin, true);
-                    hostInfoMap.put(CacheConstants.NET_MONITOR, ArrayUtil.join(netMonitor2, "|"));
+                    netMonitor(sshLogin, hostInfoMap);
+                    log.info("monitor host cache {} success {}", host.getPublicIp(), hostInfoMap);
                     cacheMap.put(host.getHostId(), hostInfoMap);
                 } catch (Exception ex) {
                     log.warn("monitor host cache {} error : {}", host.getPublicIp(), ex.getMessage());
                 }
             });
         }, 5, 6, TimeUnit.SECONDS);
+    }
+
+    private void cpuUsing(SshLogin sshLogin, Map<String, String> hostInfoMap) {
+        String cpuUsing = jschExecutorService.getCpuUsing(sshLogin);
+        if (StrUtil.isNotEmpty(cpuUsing)) {
+            hostInfoMap.put(CacheConstants.CPU_USING, cpuUsing);
+        }
+    }
+
+    private void netMonitor(SshLogin sshLogin, Map<String, String> hostInfoMap) {
+        String[] netMonitor2 = jschExecutorService.getNetMonitor(sshLogin, true);
+        if (ArrayUtil.isNotEmpty(netMonitor2)) {
+            hostInfoMap.put(CacheConstants.NET_MONITOR, ArrayUtil.join(netMonitor2, "|"));
+        }
+    }
+
+    private void hostForMigration(SshLogin sshLogin, Map<String, String> hostInfoMap) {
+        String baseInfo = jschExecutorService.getHostBaseInfo(sshLogin);
+        if (StrUtil.isNotEmpty(baseInfo)) {
+            hostInfoMap.put(CacheConstants.MIGRATION_HOST, baseInfo);
+        }
+    }
+
+    private void memory(SshLogin sshLogin, Map<String, String> hostInfoMap) {
+        String memory = jschExecutorService.getMemory(sshLogin);
+        if (StrUtil.isEmpty(memory)) {
+            return;
+        }
+        HostRealtimeStatistics ofMemory = HostRealtimeStatistics.ofMemory(memory);
+        hostInfoMap.put(CacheConstants.MEMORY, JSONObject.toJSONString(ofMemory));
+    }
+
+    private void disk(SshLogin sshLogin, Map<String, String> hostInfoMap) {
+        try {
+            String res = jschExecutorService.getDiskMonitor(sshLogin);
+            if (StrUtil.isNotEmpty(res)) {
+                HostRealtimeStatistics ofDisk = HostRealtimeStatistics.ofDisk(res);
+                hostInfoMap.put(CacheConstants.DISK_MONITOR, JSONObject.toJSONString(ofDisk));
+            }
+        } catch (OpsException ex) {
+            log.error("error occurred while getting disk monitor {}", ex.getMessage());
+        }
+    }
+
+    private void cpu(SshLogin sshLogin, Map<String, String> hostInfoMap) {
+        try {
+            String ofCpu = jschExecutorService.getCpu(sshLogin);
+            if (StrUtil.isEmpty(ofCpu)) {
+                return;
+            }
+            String[] split = ofCpu.split("\n");
+            for (String line : split) {
+                if (line.contains("Architecture")) {
+                    String[] arch = line.split(":");
+                    hostInfoMap.put(CacheConstants.CPU_ARCH, arch[1].trim());
+                } else if (line.contains("CPU(s):") && !line.contains("node")) {
+                    String[] arch = line.split(":");
+                    hostInfoMap.put(CacheConstants.CPU_CORE_NUM, arch[1].trim());
+                } else if (line.contains("CPU max MHz:")) {
+                    // arm frequency
+                    String[] arch = line.split(":");
+                    hostInfoMap.put(CacheConstants.CPU_FREQUENCY, toCpuGHz(arch[1].trim()));
+                } else if (line.contains("CPU MHz:")) {
+                    // x86 frequency
+                    String[] arch = line.split(":");
+                    hostInfoMap.put(CacheConstants.CPU_FREQUENCY, toCpuGHz(arch[1].trim()));
+                } else {
+                    log.debug("Unknown cpu info: {}", line);
+                }
+            }
+        } catch (OpsException ex) {
+            log.error("error occurred while getting cpu monitor {}", ex.getMessage());
+        }
+    }
+
+    private String toCpuGHz(String cpuMHz) {
+        return String.format("%.2fGHz", Float.parseFloat(cpuMHz) / 1000);
+    }
+
+    private void osVersion(SshLogin sshLogin, Map<String, String> hostInfoMap) {
+        try {
+            String res = jschExecutorService.getOsVersion(sshLogin);
+            if (StrUtil.isNotEmpty(res)) {
+                hostInfoMap.put(CacheConstants.OS_VERSION, res);
+            }
+        } catch (OpsException ex) {
+            log.error("error occurred while get os version {}", ex.getMessage());
+        }
+    }
+
+    private void os(SshLogin sshLogin, Map<String, String> hostInfoMap) {
+        try {
+            String res = jschExecutorService.getOs(sshLogin);
+            if (StrUtil.isNotEmpty(res)) {
+                hostInfoMap.put(CacheConstants.OS, res);
+            }
+        } catch (OpsException ex) {
+            log.error("error occurred while get os {}", ex.getMessage());
+        }
     }
 
     /**
@@ -192,6 +281,16 @@ public class HostMonitorCacheService {
     }
 
     /**
+     * get host cpu core number
+     *
+     * @param hostId host id
+     * @return host cpu core number
+     */
+    public String getCpuCoreNum(String hostId) {
+        return getCacheValue(hostId, CacheConstants.CPU_CORE_NUM);
+    }
+
+    /**
      * get host cpu architecture information
      *
      * @param hostId host id
@@ -199,6 +298,26 @@ public class HostMonitorCacheService {
      */
     public String getCpuArch(String hostId) {
         return getCacheValue(hostId, CacheConstants.CPU_ARCH);
+    }
+
+    /**
+     * get host cpu using
+     *
+     * @param hostId host id
+     * @return host cpu using
+     */
+    public String getCpuUsing(String hostId) {
+        return getCacheValue(hostId, CacheConstants.CPU_USING);
+    }
+
+    /**
+     * get host cpu frequency
+     *
+     * @param hostId host id
+     * @return host cpu frequency
+     */
+    public String getCpuFrequency(String hostId) {
+        return getCacheValue(hostId, CacheConstants.CPU_FREQUENCY);
     }
 
     private String getCacheValue(String hostId, String key) {
@@ -229,53 +348,73 @@ public class HostMonitorCacheService {
     }
 
     /**
-     * get host cpu using
-     *
-     * @param hostId host id
-     * @return host cpu using
-     */
-    public String getCpuUsing(String hostId) {
-        return getCacheValue(hostId, CacheConstants.CPU_USING);
-    }
-
-    /**
-     * get host memory using
+     * get host memory using percent
      *
      * @param hostId host id
      * @return host memory using
      */
     public String getMemoryUsing(String hostId) {
-        return getCacheValue(hostId, CacheConstants.MEMORY_USING);
+        String ofMemory = getCacheValue(hostId, CacheConstants.MEMORY);
+        if (StrUtil.isEmpty(ofMemory)) {
+            return "";
+        }
+        HostRealtimeStatistics memory = JSONObject.parseObject(ofMemory, HostRealtimeStatistics.class);
+        return memory.getUse();
     }
 
     /**
-     * get host memory remaining unit MB
+     * get host memory remaining unit G
      *
      * @param hostId host id
      * @return host memory remaining
      */
     public String getRemainingMemory(String hostId) {
-        return getCacheValue(hostId, CacheConstants.MEMORY_REMAINING);
+        String ofMemory = getCacheValue(hostId, CacheConstants.MEMORY);
+        if (StrUtil.isEmpty(ofMemory)) {
+            return "";
+        }
+        HostRealtimeStatistics memory = JSONObject.parseObject(ofMemory, HostRealtimeStatistics.class);
+        return HostRealtimeStatistics.toString(memory.getAvailable());
     }
 
     /**
-     * get host cpu core number
-     *
-     * @param hostId host id
-     * @return host cpu core number
-     */
-    public String getCpuCoreNum(String hostId) {
-        return getCacheValue(hostId, CacheConstants.CPU_CORE_NUM);
-    }
-
-    /**
-     * get host memory total unit MB
+     * get host memory total unit G
      *
      * @param hostId host id
      * @return host memory total
      */
     public String getMemoryTotal(String hostId) {
-        return getCacheValue(hostId, CacheConstants.MEMORY_TOTAL);
+        String ofMemory = getCacheValue(hostId, CacheConstants.MEMORY);
+        if (StrUtil.isEmpty(ofMemory)) {
+            return "";
+        }
+        HostRealtimeStatistics memory = JSONObject.parseObject(ofMemory, HostRealtimeStatistics.class);
+        return HostRealtimeStatistics.toString(memory.getTotal());
+    }
+
+    /**
+     * get migration host info cpu core num ,remaining memory, available disk space
+     *
+     * @param hostId hostId
+     * @return migration host info
+     */
+    public String getMigrationHostInfo(String hostId) {
+        return getCacheValue(hostId, CacheConstants.MIGRATION_HOST);
+    }
+
+    /**
+     * get host disk available unit GB
+     *
+     * @param hostId host id
+     * @return host disk total
+     */
+    public String getAvailableDiskSpace(String hostId) {
+        String diskMonitor = getCacheValue(hostId, CacheConstants.DISK_MONITOR);
+        if (StrUtil.isEmpty(diskMonitor)) {
+            return "";
+        }
+        HostRealtimeStatistics disk = JSONObject.parseObject(diskMonitor, HostRealtimeStatistics.class);
+        return HostRealtimeStatistics.toString(disk.getAvailable());
     }
 
     /**
@@ -284,18 +423,40 @@ public class HostMonitorCacheService {
      * @param hostId host id
      * @return host disk total
      */
-    public String getAvailableDiskSpace(String hostId) {
-        return getCacheValue(hostId, CacheConstants.AVAILABLE_DISK_SPACE);
+    public String getDiskTotalSpace(String hostId) {
+        String diskMonitor = getCacheValue(hostId, CacheConstants.DISK_MONITOR);
+        if (StrUtil.isEmpty(diskMonitor)) {
+            return "";
+        }
+        HostRealtimeStatistics disk = JSONObject.parseObject(diskMonitor, HostRealtimeStatistics.class);
+        return HostRealtimeStatistics.toString(disk.getTotal());
     }
 
     /**
-     * get host disk using
+     * get host disk used unit GB
      *
      * @param hostId host id
-     * @return host disk using
+     * @return host disk used
      */
-    public String diskMonitor(String hostId) {
-        return getCacheValue(hostId, CacheConstants.DISK_MONITOR);
+    public String getDiskUsedSpace(String hostId) {
+        String diskMonitor = getCacheValue(hostId, CacheConstants.DISK_MONITOR);
+        if (StrUtil.isEmpty(diskMonitor)) {
+            return "";
+        }
+        HostRealtimeStatistics disk = JSONObject.parseObject(diskMonitor, HostRealtimeStatistics.class);
+        return HostRealtimeStatistics.toString(disk.getUsed());
+    }
+
+    /**
+     * get host disk use percent
+     *
+     * @param hostId host id
+     * @return host disk percent
+     */
+    public String getDiskUse(String hostId) {
+        String diskMonitor = getCacheValue(hostId, CacheConstants.DISK_MONITOR);
+        HostRealtimeStatistics disk = JSONObject.parseObject(diskMonitor, HostRealtimeStatistics.class);
+        return disk.getUse();
     }
 
     /**
@@ -323,24 +484,19 @@ public class HostMonitorCacheService {
         String CPU_CORE_NUM = "cpuCoreNum";
 
         /**
-         * host memory total
-         */
-        String MEMORY_TOTAL = "memoryTotal";
-
-        /**
          * host cpu using
          */
         String CPU_USING = "cpuUsing";
 
         /**
-         * host memory using
+         * host momory
          */
-        String MEMORY_USING = "memoryUsing";
+        String MEMORY = "memory";
 
         /**
-         * host memory remaining MB
+         * migration Host
          */
-        String MEMORY_REMAINING = "memoryRemaining";
+        String MIGRATION_HOST = "migrationHost";
 
         /**
          * host network tx | rx
@@ -363,13 +519,13 @@ public class HostMonitorCacheService {
         String SPL_N = "\n";
 
         /**
-         * host disk available space GB
-         */
-        String AVAILABLE_DISK_SPACE = "AvailableDiskSpace";
-
-        /**
-         * host disk using
+         * host disk monitor
          */
         String DISK_MONITOR = "diskMonitor";
+
+        /**
+         * cpu frequency
+         */
+        String CPU_FREQUENCY = "cpuFrequency";
     }
 }
