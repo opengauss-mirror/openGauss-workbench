@@ -53,7 +53,7 @@
             <template #cell="{ record }">{{ record.hostLabel? $t('components.Package.5mtcyb0rty23'): $t('components.Package.5mtcyb0rty22') }}</template>
           </a-table-column>
           <a-table-column :title="$t('components.Package.5mtcyb0rty12')" data-index="packageUrl" :width="200">
-            <template #cell="{ record }">{{record.packageUrl}}</template>
+            <template #cell="{ record }">{{record.hostLabel?record.packageUrl:record.realPath}}</template>
           </a-table-column>
           <a-table-column :title="$t('components.Package.5mtcyb0rty13')" data-index="operation" :width="280">
             <template #cell="{ record }">
@@ -579,6 +579,7 @@ const getListData = (pageSize?:number, pageNum?:number, formData?: FormData) => 
       packageUrl: '',
       packagePath: {},
       remark: '',
+      realPath: '',
       hostLabel: false
     }
     res.rows.forEach(item => {
@@ -589,20 +590,22 @@ const getListData = (pageSize?:number, pageNum?:number, formData?: FormData) => 
       tempPackage.cpuArch = item.cpuArch
       tempPackage.packageVersion = item.packageVersion
       tempPackage.packageVersionNum = item.packageVersionNum
-      if (item.packageUrl) {
-        tempPackage.packageUrl = item.packageUrl
-      } else if (item.packagePath && item.packagePath.realPath) {
-        tempPackage.packageUrl = item.packagePath.realPath
-      } else {
-        tempPackage.packageUrl = ''
-      }
+      tempPackage.realPath = item.realPath?item.realPath:item.packagePath.realPath
+      tempPackage.packageUrl = item.packageUrl
       tempPackage.packagePath = item.packagePath
-      if (item.packageUrl && item.packagePath) {
-        let name = item.packageUrl.split('/')
-        let tempname = name.pop()
-        if (item.packagePath.name == tempname) {
+      if (item.source && item.source  === 'online') {
+        tempPackage.hostLabel = true
+      } else if (item.source && item.source  === 'offline') {
+        tempPackage.hostLabel = false
+      } else if (item.source === null) {
+        let sysFilNam = item.packageUrl.split('/').pop()
+        if (item.fileName && item.fileName === sysFilNam ) {
           tempPackage.hostLabel = true
+        } else {
+          tempPackage.hostLabel = false
         }
+      } else {
+        console.log('get package info error')
       }
       list.data.push({ ...tempPackage })
     })
