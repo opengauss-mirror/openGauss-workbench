@@ -118,7 +118,7 @@ org.yaml:snakeyaml:jar:1.28:compile
 com.gitee.starblues:spring-brick-loader:jar:3.1.0-eb-1:provided
 org.springframework.security:spring-security-config:jar:5.5.3:provided
 org.opengauss:visualtool-common:jar:0.0.1-SNAPSHOT:provided
-commons-io:commons-io:jar:2.11.0:compile
+commons-io:commons-io:jar:2.14.0:compile
 org.mybatis.spring.boot:mybatis-spring-boot-autoconfigure:jar:2.2.0:provided
 com.baomidou:mybatis-plus-core:jar:3.5.2:compile
 org.apiguardian:apiguardian-api:jar:1.1.0:test
