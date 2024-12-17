@@ -1,121 +1,131 @@
 <template>
-  <a-modal
-    :mask-closable="false"
-    :esc-to-close="false"
-    :visible="data.show"
-    :title="data.title"
-    :ok-loading="data.loading"
-    :modal-style="{ width: '650px'}"
-    :footer="false"
-    @open="open"
-    @close="handleClose"
-    @cancel="handleClose"
-  >
+  <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title"
+    :ok-loading="data.loading" :modal-style="{ width: '650px' }" :footer="false" @open="open" @cancel="handleClose">
     <div v-if="data.status === fileStatusEnum.unLoad">
-      <div class = "upload_box">
-        <div class="upload_context"
-             ref="dropArea"
-             @dragover.prevent="handleDragOver"
-             @dragenter.prevent="handleDragLeave"
-             @drop.prevent="handleDrop"
-        >
+      <div class="upload_box">
+        <div class="upload_context" ref="dropArea" @dragover.prevent="handleDragOver" @dragenter.prevent="handleDragLeave"
+          @drop.prevent="handleDrop">
           <svg-icon icon-class="clouduploadsharp" style="font-size: 100px"></svg-icon>
-          <p class="content" >{{ $t ('bulk.BulkImport.5exv06n8x1kj0')}}</p>
-          <input ref="uploadFileRef" style="display: none" type="file" name="file" @change="uploadchange"/>
-          <a-button class="mr" @click = "uploadFilClick" :style="{ backgroundColor: 'red', color: 'white'}">{{ $t ('bulk.BulkImport.5exv06n8x1ki0')}}</a-button>
+          <p class="content">{{ $t('bulk.BulkImport.5exv06n8x1kj0') }}</p>
+          <input ref="uploadFileRef" style="display: none" type="file" name="file" @change="uploadchange" />
+          <a-button class="mr" @click="uploadFilClick" :style="{ backgroundColor: 'red', color: 'white' }">{{ $t
+            ('bulk.BulkImport.5exv06n8x1ki0') }}</a-button>
         </div>
       </div>
-      <div><a style="float:left; text-align:left" class="content">{{ $t ('bulk.BulkImport.5exv06n8x1ky0')}}</a>
+      <div><a style="float:left; text-align:left" class="content">{{ $t('bulk.BulkImport.5exv06n8x1ky0') }}</a>
         <a-link style="float:right; text-align:right " class="btn" @click="downLoadModule">
-          <svg-icon icon-class="download" class = "icon.xg"></svg-icon>
-          <a class="mr" type="text" style="color: red" download = "模板.xlsx">{{ $t ('bulk.BulkImport.5exv06n8x1ku0')}}</a>
+          <svg-icon icon-class="download" class="icon.xg"></svg-icon>
+          <a class="mr" type="text" style="color: red" download="模板.xlsx">{{ $t('bulk.BulkImport.5exv06n8x1ku0') }}</a>
         </a-link>
       </div>
     </div>
-    <div v-if="data.status === fileStatusEnum.formLoading" >
+    <div v-if="data.status === fileStatusEnum.formLoading">
       <div v-if="data.formLoaFlag === formLoaFlaEnum.waiting">
-        <p>{{ $t ('bulk.BulkImport.5exv06n8x1kv0')}}</p>
+        <p>{{ $t('bulk.BulkImport.5exv06n8x1kv0') }}</p>
         <div style="display: grid; grid-auto-flow: column; gap: 5px; overflow-x: auto;">
           <p v-for="file in data.files" :key="file.id">{{ file.name }}</p>
         </div>
-        <div class = 'inflexside'>
-          <div class = 'progress'>
-            <div class = 'progress-bar' :style = "{ width: `${progress}%`}"></div>
+        <div class='inflexside'>
+          <div class='progress'>
+            <div class='progress-bar' :style="{ width: `${progress}%` }"></div>
           </div>
-          <p style="float:right; text-align:right ">&nbsp;&nbsp;{{ progress}}%</p>
+          <p style="float:right; text-align:right ">&nbsp;&nbsp;{{ progress }}%</p>
         </div>
       </div>
     </div>
     <div v-if="data.formLoaFlag === formLoaFlaEnum.formWin">
-      <a-button class = 'btn' @click = "reupload">{{ $t ('bulk.BulkImport.5exv06n8x1ko0')}}</a-button>
-      <p>{{ $t ('bulk.BulkImport.5exv06n8x1kp0')}}</p>
+      <a-button class='btn' @click="reupload">{{ $t('bulk.BulkImport.5exv06n8x1ko0') }}</a-button>
+      <p>{{ $t('bulk.BulkImport.5exv06n8x1kp0') }}</p>
       <div :class="['upload_box']" :style="{ height: '5px' }">
-        <div class="content_box"
-             ref="dropArea"
-             @dragover.prevent = "handleDragOver"
-             @dragenter.prevent = "handleDragLeave"
-             @drop.prevent = "handleDrop"
-             :style = "{backgroundColor: maskColor}"
-        >
+        <div class="content_box" ref="dropArea" @dragover.prevent="handleDragOver" @dragenter.prevent="handleDragLeave"
+          @drop.prevent="handleDrop" :style="{ backgroundColor: maskColor }">
           <div style="flex: 1; display: flex; align-items: center;">
             <svg-icon icon-class="file-zip" style="font-size: 50px"></svg-icon>
             <div style="display: grid; grid-auto-flow: column; gap: 5px; overflow-x: auto;">
               <p v-for="file in data.files" :key="file.id">{{ file.name }}</p>
             </div>
-            <br><p :style="{ color: 'lightgrey'} " >{{(data.files[0].size / 1024).toFixed(2) }}KB</p>
+            <br>
+            <p :style="{ color: 'lightgrey' }">{{ (data.files[0]?.size / 1024).toFixed(2) }}KB</p>
           </div>
-          <a-button class = "mr" @click = "reupload" style="margin-left: auto;">{{ $t ('bulk.BulkImport.5exv06n8x1kz0')}}</a-button>
-          <input ref="uploadFileRef" style="display: none" type="file" name="file" @change="uploadchange"/>
+          <a-button class="mr" @click="reupload" style="margin-left: auto;">{{ $t
+            ('bulk.BulkImport.5exv06n8x1kz0') }}</a-button>
+          <input ref="uploadFileRef" style="display: none" type="file" name="file" @change="uploadchange" />
         </div>
       </div>
-      <div v-if="data.formstatus === 'pass'" >
-        <p>{{ $t ('bulk.BulkImport.5exv06n8x1kq0')}}</p>
+      <div v-if="data.formstatus === 'pass'">
+        <p>{{ $t('bulk.BulkImport.5exv06n8x1kq0') }}</p>
         <div style="text-align: center;">
-          <a-button class = 'mr' @click = "anaFilClick">{{ $t ('bulk.BulkImport.5exv06n8x1ka0')}}</a-button>
-          <a-button class = 'mr' @click = "handleClose">{{ $t ('bulk.BulkImport.5exv06n8x1kb0')}}</a-button>
+          <a-button class='mr' @click="anaFilClick">{{ $t('bulk.BulkImport.5exv06n8x1ka0') }}</a-button>
+          <a-button class='mr' @click="handleClose">{{ $t('bulk.BulkImport.5exv06n8x1kb0') }}</a-button>
         </div>
       </div>
-      <div v-else-if="data.formstatus === 'tooBig'"><p>{{ $t('bulk.BulkImport.5exv06n8x1kc0')}}</p></div>
-      <div v-else-if="data.formstatus === 'mul'"><p>{{ $t('bulk.BulkImport.5exv06n8x1kd0')}}</p></div>
-      <div v-else-if="data.formstatus === 'formErr'"><p>{{ $t('bulk.BulkImport.5exv06n8x1kw0')}}</p></div>
-      <div v-else><p>{{ $t('bulk.BulkImport.5exv06n8x1ke0)')}} + {{data.formstatus}}</p></div>
+      <div v-else-if="data.formstatus === 'tooBig'">
+        <p>{{ $t('bulk.BulkImport.5exv06n8x1kc0') }}</p>
+      </div>
+      <div v-else-if="data.formstatus === 'mul'">
+        <p>{{ $t('bulk.BulkImport.5exv06n8x1kd0') }}</p>
+      </div>
+      <div v-else-if="data.formstatus === 'formErr'">
+        <p>{{ $t('bulk.BulkImport.5exv06n8x1kw0') }}</p>
+      </div>
+      <div v-else>
+        <p>{{ $t('bulk.BulkImport.5exv06n8x1ke0)') }} + {{ data.formstatus }}</p>
+      </div>
     </div>
 
-    <div v-if="data.status === fileStatusEnum.fileParsing" class = "['upload_box']" :style="{ height: 'auto' }">
-      <div class = "content_box">
+    <div v-if="data.status === fileStatusEnum.fileParsing" class="['upload_box']" :style="{ height: 'auto' }">
+      <div class="content_box">
         <div v-if="data.formLoaFlag === formLoaFlaEnum.anyWin" style="text-align: center">
-          <img :src="currentLocale === 'zh-CN' ? require('@/assets/images/ops/bulkimport-ing.png') : require('@/assets/images/ops/bulkimport-ing-en.png')" alt="Icon">
+          <img
+            :src="currentLocale === 'zh-CN' ? require('@/assets/images/ops/bulkimport-ing.png') : require('@/assets/images/ops/bulkimport-ing-en.png')"
+            alt="Icon">
           <br><svg-icon icon-class="file-search-suc" style="font-size: 100px"></svg-icon><br>
-          <p :style="{ color: 'gray'}" >{{$t('bulk.BulkImport.5exv06n8x1kn0')}}</p>
-          <br><p :style="{ color: 'light-gray'}" >{{ $t('bulk.BulkImport.5exv06n8x1kh1')}}</p>
+          <p :style="{ color: 'gray' }">{{ $t('bulk.BulkImport.5exv06n8x1kn0') }}</p>
+          <br>
+          <p :style="{ color: 'light-gray' }">{{ $t('bulk.BulkImport.5exv06n8x1kh1') }}</p>
         </div>
         <div v-if="data.formLoaFlag === formLoaFlaEnum.loadErr" style="text-align: center">
-          <img :src="currentLocale === 'zh-CN' ? require('@/assets/images/ops/bulkimport-fail.png') : require('@/assets/images/ops/bulkimport-fail-en.png')" alt="Icon">
+          <img
+            :src="currentLocale === 'zh-CN' ? require('@/assets/images/ops/bulkimport-fail.png') : require('@/assets/images/ops/bulkimport-fail-en.png')"
+            alt="Icon">
           <br><svg-icon icon-class="file-search-fail" style="font-size: 100px"></svg-icon><br>
-          <p :style="{ color: 'red'}" style="display: inline;">{{ $t('bulk.BulkImport.5exv06n8x1kx0')}}</p>
-          <p :style="{ color: 'grey'}" style="display: inline;">{{ $t('bulk.BulkImport.5exv06n8x1ke0')}}</p>
-          <a-button :style="{ color: 'lightblue'}" @click = "reupload" style="display: inline;">{{ $t('bulk.BulkImport.5exv06n8x1ko0')}}</a-button>
+          <p :style="{ color: 'red' }" style="display: inline;">{{ $t('bulk.BulkImport.5exv06n8x1kx0') }}</p>
+          <p :style="{ color: 'grey' }" style="display: inline;">{{ $t('bulk.BulkImport.5exv06n8x1ke0') }}</p>
+          <a-button :style="{ color: 'lightblue' }" @click="reupload" style="display: inline;">{{
+            $t('bulk.BulkImport.5exv06n8x1ko0') }}</a-button>
         </div>
         <div v-if="data.formLoaFlag === formLoaFlaEnum.loadWin" style="text-align: center">
-          <img :src="currentLocale === 'zh-CN' ? require('@/assets/images/ops/bulkimport-import.png') : require('@/assets/images/ops/bulkimport-import-en.png')" alt="Icon">
+          <img
+            :src="currentLocale === 'zh-CN' ? require('@/assets/images/ops/bulkimport-import.png') : require('@/assets/images/ops/bulkimport-import-en.png')"
+            alt="Icon">
           <!--        <p :style="{ color: 'gray'}" >{{ $t('bulk.BulkImport.5exv06n8x1ki1')}}</p>-->
-          <div class = 'inflexside'>
-            <div class = 'progress'>
-              <div class = 'progress-bar' :style = "{ width: `${progressWidth}%`}"></div>
+          <div class='inflexside'>
+            <div class='progress'>
+              <div class='progress-bar' :style="{ width: `${progressWidth}%` }"></div>
             </div>
-            <p style="float:right; text-align:right; color: lightgrey ">&nbsp;&nbsp;{{progressWidth.toFixed(0)}}%</p>
+            <p style="float:right; text-align:right; color: lightgrey ">&nbsp;&nbsp;{{ progressWidth.toFixed(0) }}%</p>
           </div>
         </div>
         <div v-if="data.formLoaFlag === formLoaFlaEnum.loadSuc" style="text-align: center">
-          <img :src="currentLocale === 'zh-CN' ? require('@/assets/images/ops/bulkimport-done.png') : require('@/assets/images/ops/bulkimport-done-en.png')" alt="Icon">
-          <br><p :style="{ color: 'grey'}" style="display: inline;">{{ $t('bulk.BulkImport.5exv06n8x1ki1')}} {{totalNum}} {{ $t('bulk.BulkImport.5exv06n8x1kj1')}}</p><br>
-          <p :style="{ color: 'lightgreen'}" style="display: inline;">{{sucNum}} {{ $t('bulk.BulkImport.5exv06n8x1kk1')}}</p>
-          <p :style="{ color: 'grey'}" style="display: inline;">{{ $t('bulk.BulkImport.5exv06n8x1kl1')}}</p>
-          <p :style="{ color: 'red'}" style="display: inline;">{{totalNum-sucNum}} {{ $t('bulk.BulkImport.5exv06n8x1kk1')}}</p>
-          <p :style="{ color: 'grey'}" style="display: inline;">{{ $t('bulk.BulkImport.5exv06n8x1km1')}}</p><br>
-          <br><a-button :style="{ color: 'red'}" @click = "downLoadErrRep" style="display: inline;">{{ $t('bulk.BulkImport.5exv06n8x1kn1')}}</a-button><br>
-          <br><a-button @click = "open" :style="{ backgroundColor: 'red', color: 'white'}">{{ $t('bulk.BulkImport.5exv06n8x1kr0')}}</a-button>
-          <a-button @click = "handleClose">&emsp;{{ $t('bulk.BulkImport.5exv06n8x1ks0')}}&emsp; </a-button>
+          <img
+            :src="currentLocale === 'zh-CN' ? require('@/assets/images/ops/bulkimport-done.png') : require('@/assets/images/ops/bulkimport-done-en.png')"
+            alt="Icon">
+          <br>
+          <p :style="{ color: 'grey' }" style="display: inline;">{{ $t('bulk.BulkImport.5exv06n8x1ki1') }} {{ totalNum }}
+            {{
+              $t('bulk.BulkImport.5exv06n8x1kj1') }}</p><br>
+          <p :style="{ color: 'lightgreen' }" style="display: inline;">{{ sucNum }} {{ $t('bulk.BulkImport.5exv06n8x1kk1')
+          }}
+          </p>
+          <p :style="{ color: 'grey' }" style="display: inline;">{{ $t('bulk.BulkImport.5exv06n8x1kl1') }}</p>
+          <p :style="{ color: 'red' }" style="display: inline;">{{ totalNum - sucNum }} {{
+            $t('bulk.BulkImport.5exv06n8x1kk1') }}</p>
+          <p :style="{ color: 'grey' }" style="display: inline;">{{ $t('bulk.BulkImport.5exv06n8x1km1') }}</p><br>
+          <br><a-button :style="{ color: 'red' }" @click="downLoadErrRep" style="display: inline;">{{
+            $t('bulk.BulkImport.5exv06n8x1kn1') }}</a-button><br>
+          <br><a-button @click="open" :style="{ backgroundColor: 'red', color: 'white' }">{{
+            $t('bulk.BulkImport.5exv06n8x1kr0') }}</a-button>
+          <a-button @click="handleClose">&emsp;{{ $t('bulk.BulkImport.5exv06n8x1ks0') }}&emsp; </a-button>
         </div>
       </div>
     </div>
@@ -124,14 +134,15 @@
 
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
-import { nextTick, reactive, ref, toRaw, computed, onMounted, onBeforeUnmount } from 'vue'
+import { reactive, ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import axios from 'axios'
 import { bulkImporErrPlan, bulkImportany, bulkuploadPhy } from '@/api/ops'
 import useLocale from '@/hooks/locale'
+import showMessage from '@/hooks/showMessage'
 
 const { t } = useI18n()
-const { changeLocale, currentLocale } = useLocale()
+const { currentLocale } = useLocale()
 
 enum fileStatusEnum {
   unLoad = 0,
@@ -139,7 +150,7 @@ enum fileStatusEnum {
   fileParsing = 2,
 }
 
-enum formLoaFlaEnum{
+enum formLoaFlaEnum {
   formWin = -1,
   waiting = 0,
   anyWin = 2,
@@ -148,7 +159,7 @@ enum formLoaFlaEnum{
   loadSuc = 6,
 }
 
-let intervalIdP : number | null = null
+let intervalIdP: number | null = null
 let percentage = ref(0)
 let totalNum = ref(0)
 let sucNum = ref(0)
@@ -218,7 +229,7 @@ const maskColor = computed(() => {
 })
 
 const uploadFileRef = ref()
-const uploadchange = (e:any) => {
+const uploadchange = (e: any) => {
   const chooseFile = e.target.files
   data.files.push(e.target.files[0])
   uploadFilPhy(chooseFile)
@@ -352,7 +363,7 @@ const fetchProgress = async () => {
     }
   } catch (error: any) {
     if (error.response && error.response.status === 500) {
-      alert('Server error, please try again later.')
+      showMessage('error', 'Server error, please try again later.')
     } else {
       console.error('Error fetching progress:', error)
     }
@@ -367,7 +378,7 @@ const anaFilClick = () => {
   anaFilPhy()
 }
 
-const checkUploadFil = (uploadFlag:number) => {
+const checkUploadFil = (uploadFlag: number) => {
   var formDataUploadFil = new FormData()
   const uid = data.uid
   formDataUploadFil.append('uuid', uid)
@@ -384,13 +395,12 @@ const checkUploadFil = (uploadFlag:number) => {
 const isUploading = ref(false)
 const anaFilPhy = async () => {
   data.formLoaFlag = formLoaFlaEnum.anyWin
-  setTimeout(() => {}, 300)
   isUploading.value = true
   progressWidth.value = 0
   sessionStorage.setItem('isUploading', 'true')
   refreshCount.value = 0
   if (data.uid.length <= 1) {
-    alert('error uid length')
+    showMessage('error', 'error uid length')
     data.formLoaFlag = formLoaFlaEnum.loadErr
     data.percent = 0
   }
@@ -403,7 +413,6 @@ const anaFilPhy = async () => {
       data.formLoaFlag = formLoaFlaEnum.loadWin
     }
     if (data.percent === 100) {
-      setTimeout(() => {}, 500)
       data.formLoaFlag = formLoaFlaEnum.loadSuc
     }
   }
@@ -443,7 +452,8 @@ const startProgressBar = () => {
 
 const downLoadModule = () => {
   let url = `/host/downloadTemplate/${currentLocale.value}`
-  axios.get(url, { responseType: 'blob', headers: { 'Content-Type': 'application/json;application/octet-stream' }
+  axios.get(url, {
+    responseType: 'blob', headers: { 'Content-Type': 'application/json;application/octet-stream' }
   })
     .then((res) => {
       if (res) {
@@ -457,14 +467,15 @@ const downLoadModule = () => {
         window.URL.revokeObjectURL(herf)
       }
     }).catch((err) => {
-    console.log('error:' + err)
-  })
+      console.log('error:' + err)
+    })
 }
 
 const downLoadErrRep = () => {
   const uuid = data.uid
   let url = `/host/downloadErrorExcel/${uuid}`
-  axios.get(url, { responseType: 'blob', headers: { 'Content-Type': 'application/json;application/octet-stream' }
+  axios.get(url, {
+    responseType: 'blob', headers: { 'Content-Type': 'application/json;application/octet-stream' }
   })
     .then((res) => {
       if (res) {
@@ -480,8 +491,8 @@ const downLoadErrRep = () => {
         window.URL.revokeObjectURL(herf)
       }
     }).catch((err) => {
-    console.log('error:' + err)
-  })
+      console.log('error:' + err)
+    })
 }
 
 const refreshCount = ref(parseInt(sessionStorage.getItem('refreshCount') || '0'))
@@ -516,11 +527,6 @@ window.addEventListener('beforeunload', () => {
   sessionStorage.setItem('refreshCount', (refreshCount.value + 1).toString())
 })
 
-const close = () => {
-  nextTick(() => {
-  })
-}
-
 defineExpose({
   open
 })
@@ -553,7 +559,7 @@ defineExpose({
     position: absolute;
     top: 0;
     left: 0;
-    width: 100% ;
+    width: 100%;
     height: 100%;
     background-color: rgba(255, 255, 255, 1);
     border: 2px dashed #e2e8f0;
@@ -586,39 +592,44 @@ defineExpose({
   padding: 0 16px;
   border-bottom: 1px solid rgba(#9999, 0.2);
 
-  > a {
+  >a {
     color: #02a7f0;
   }
+
   .loading {
     animation: loading 1s linear infinite;
   }
-  .inflexside{
+
+  .inflexside {
     display: flex;
     align-items: center;
   }
-  .btn{
-    width:80px;
+
+  .btn {
+    width: 80px;
     height: 30px;
-    vertical-align:middle;
+    vertical-align: middle;
     box-sizing: content-box;
     color: red;
   }
-  .content{
-    width:200px;
-    height:30px;
-    vertical-align:middle;
+
+  .content {
+    width: 200px;
+    height: 30px;
+    vertical-align: middle;
     color: grey;
   }
 }
+
 .progress {
   margin-top: 10px;
   width: 95%;
   height: 12px;
   background-color: lightgrey;
 }
+
 .progress-bar {
   height: 100%;
   background-color: red;
   transition: width 0.2s;
-}
-</style>
+}</style>

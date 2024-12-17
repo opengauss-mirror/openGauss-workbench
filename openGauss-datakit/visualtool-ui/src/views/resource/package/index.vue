@@ -170,7 +170,7 @@ const labelOptions = ref<KeyValue>({
     value: 'packageVersion',
     placeholder: '请选择openGauss版本',
     selectType: searchType.SELECT,
-    options:[
+    options: [
     {
         value: OpenGaussVersionEnum.MINIMAL_LIST,
         label: OpenGaussVersionEnum.MINIMAL_LIST
@@ -190,13 +190,13 @@ const labelOptions = ref<KeyValue>({
     value: 'packageVersionNum',
     placeholder: '请选择版本号',
     selectType: searchType.SELECT,
-    options:[]
+    options: []
   },
   name: {
     label: '安装包名称',
     value: 'name',
     placeholder: '请输入安装包名称',
-    selectType: searchType.INPUT,
+    selectType: searchType.INPUT
   }
 })
 
@@ -272,8 +272,8 @@ const parentTags = ref([
 
 const clickSearch = (params) => {
     const searchForm = new FormData()
-    Object.keys(params).forEach(e=>{
-      searchForm.append(e,params[e])
+    Object.keys(params).forEach(e => {
+      searchForm.append(e, params[e])
     })
     getListData(filter.pageSize, filter.pageNum, searchForm)
 }
@@ -590,16 +590,16 @@ const getListData = (pageSize?:number, pageNum?:number, formData?: FormData) => 
       tempPackage.cpuArch = item.cpuArch
       tempPackage.packageVersion = item.packageVersion
       tempPackage.packageVersionNum = item.packageVersionNum
-      tempPackage.realPath = item.realPath?item.realPath:item.packagePath.realPath
+      tempPackage.realPath = item.realPath ? item.realPath : item.packagePath.realPath
       tempPackage.packageUrl = item.packageUrl
       tempPackage.packagePath = item.packagePath
-      if (item.source && item.source  === 'online') {
+      if (item.source && item.source === 'online') {
         tempPackage.hostLabel = true
-      } else if (item.source && item.source  === 'offline') {
+      } else if (item.source && item.source === 'offline') {
         tempPackage.hostLabel = false
       } else if (item.source === null) {
         let sysFilNam = item.packageUrl.split('/').pop()
-        if (item.fileName && item.fileName === sysFilNam ) {
+        if (item.fileName && item.fileName === sysFilNam) {
           tempPackage.hostLabel = true
         } else {
           tempPackage.hostLabel = false

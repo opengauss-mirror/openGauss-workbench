@@ -437,11 +437,11 @@ const open = (
       type: packageData.type || 'openGauss',
       remark: packageData.remark
     })
-    if(packageData.cpuArch == CpuArch.AARCH64 && packageData.os == '') {
+    if (packageData.cpuArch == CpuArch.AARCH64 && packageData.os == '') {
       data.formData.os = OS.OPEN_EULER
       data.formData.osVersion = '20.03'
     }
-    if(packageData.cpuArch == CpuArch.AARCH64 && packageData.os == OS.CENTOS) {
+    if (packageData.cpuArch == CpuArch.AARCH64 && packageData.os == OS.CENTOS) {
       data.formData.cpuArch = CpuArch.X86_64
     }
     if (data.formData.packagePath?.realPath) {
@@ -605,8 +605,8 @@ const submit = async () => {
         }).catch((error) => {
           console.log(error)
         })
-      } else if ( data.formData.packageId) {
-        const params = new URLSearchParams();
+      } else if (data.formData.packageId) {
+        const params = new URLSearchParams()
         params.append('packageId', data.formData.packageId)
         params.append('wsBusinessId', wsBusinessId.value)
         const config = {

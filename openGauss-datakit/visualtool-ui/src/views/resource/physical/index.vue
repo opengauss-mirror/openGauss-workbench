@@ -592,7 +592,7 @@ const checkUser = async (hostData) => {
   currentTermData = hostData
   const { code, rows } = await hostUserPage(hostData.hostId) 
   if (Number(code) === 200) {
-      if(rows?.length===0){
+      if (rows?.length === 0) {
         Message.error(t('physical.index.noUserTip'))
         return
       }

@@ -32,7 +32,7 @@ const props = defineProps({
 
 const selectValue = ref<string | number | boolean>('')
 // this component should get options and return param
-const emit = defineEmits(['blur','cancel'])
+const emit = defineEmits(['blur', 'cancel'])
 const handleBlur = () => {
     const paramLabel = props.options.find(e => e.value === selectValue.value)?.label
     emit('blur', paramLabel, selectValue.value)
@@ -44,7 +44,6 @@ const visibleChange = () => {
 }
 const mainSelectRef = ref(null)
 watch(() => props.focus, () => {
-  console.log(props.focus,666)
   if (props.focus) {
     nextTick(() => {
       mainSelectRef.value?.toggleMenu()
