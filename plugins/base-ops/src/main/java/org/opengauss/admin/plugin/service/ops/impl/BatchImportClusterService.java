@@ -23,7 +23,6 @@
 
 package org.opengauss.admin.plugin.service.ops.impl;
 
-import static org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants.CHANGE_SUB_USER;
 import static org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum.MASTER;
 import static org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum.SLAVE;
 import static org.opengauss.admin.plugin.enums.ops.DeployTypeEnum.CLUSTER;
@@ -67,7 +66,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -288,22 +286,20 @@ public class BatchImportClusterService extends ServiceImpl<OpsClusterMapper, Ops
     private void selectClusterInfo(OpsParseExcelEntity opsParseExcelEntity) {
         String envpath = opsParseExcelEntity.getOpsImportEntity().getEnvPath();
         String enterAndLiteGaussHome = String.format("source %s;echo $GAUSSHOME", envpath);
-        String versionNum = String.format("source %s;gsql -V|awk '\\''{print $3}'\\''", envpath);
+        String versionNum = String.format("source %s;gsql -V|awk '{print $3}'", envpath);
         String command = null;
         if (opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)) {
-            String enterPGDATA = String.format("source %s;gs_om -t view|awk '\\''/^sshChannel 1:%s/,"
-                    + "/^============================================================/'\\''"
-                    + "|grep datanodeLocalDataPath|awk -F '\\'':'\\'' '\\''{print $2}'\\''", envpath,
-                opsParseExcelEntity.getPublicIp());
+            String enterPGDATA = String.format("source %s;gs_om -t view|awk '/^sshChannel 1:%s/,"
+                + "/^============================================================/'"
+                + "|grep datanodeLocalDataPath|awk -F ':' '{print $2}'", envpath, opsParseExcelEntity.getPublicIp());
             String enterJudgeMasterOrSlave = String.format(
-                "source %s;gs_om -t query|grep %s|" + "awk '\\''{print $7}'\\''", envpath,
-                opsParseExcelEntity.getPublicIp());
+                "source %s;gs_om -t query|grep %s|" + "awk '{print $7}'", envpath, opsParseExcelEntity.getPublicIp());
             command = enterAndLiteGaussHome + ";" + enterPGDATA + ";" + versionNum + ";" + enterJudgeMasterOrSlave;
         } else if (opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT)) {
             String liteGaussData = String.format("source %s;echo $GAUSSDATA", envpath);
             command = enterAndLiteGaussHome + ";" + liteGaussData + ";" + versionNum;
         } else if (opsParseExcelEntity.getVersionType().equals(MINI_CONSTANT)) {
-            versionNum = "gsql -V|awk '\\''{print $3}'\\''";
+            versionNum = "gsql -V|awk '{print $3}'";
             String miniGaussHome = "source ~/.bashrc;echo $GAUSSHOME";
             command = miniGaussHome + ";" + versionNum;
         } else {
@@ -328,13 +324,11 @@ public class BatchImportClusterService extends ServiceImpl<OpsClusterMapper, Ops
     }
 
     private void checkEnterNodesNum(OpsParseExcelEntity opsParseExcelEntity, SshLogin sshLogin) {
-        String enterNodes = String.format("source %s;gs_om -t query|grep %s|awk '\\''{print $3}'\\''",
+        String enterNodesCommand = String.format("source %s;gs_om -t query|grep %s|awk '{print $3}'",
             opsParseExcelEntity.getOpsImportEntity().getEnvPath(), opsParseExcelEntity.getOpsImportEntity().getPort());
-        String command = MessageFormat.format(CHANGE_SUB_USER,
-            opsParseExcelEntity.getOpsImportEntity().getInstallUsername(), enterNodes);
         List<String> nodesList = new ArrayList<>();
         try {
-            String enterNodesIp = jschExecutorFacade.execCommand(sshLogin, command);
+            String enterNodesIp = jschExecutorFacade.execCommand(sshLogin, enterNodesCommand);
             String regex = "(\\S+)";
             Pattern pattern = Pattern.compile(regex);
             Matcher matcher = pattern.matcher(enterNodesIp);
@@ -432,10 +426,9 @@ public class BatchImportClusterService extends ServiceImpl<OpsClusterMapper, Ops
         } else if (opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT)) {
             try {
                 isMasterNormal = true;
-                String selectLocal = MessageFormat.format(CHANGE_SUB_USER,
-                    opsParseExcelEntity.getOpsImportEntity().getInstallUsername(),
-                    String.format("source %s;gs_ctl query -D %s|grep local_role|awk '\\''{print $3}'\\''|head -n 1",
-                        opsParseExcelEntity.getOpsImportEntity().getEnvPath(), resultList.get(2)));
+                String selectLocal = String.format(
+                    "source %s;gs_ctl query -D %s|grep local_role|awk '{print $3}'|head -n 1",
+                    opsParseExcelEntity.getOpsImportEntity().getEnvPath(), resultList.get(2));
                 localRole = jschExecutorFacade.execCommand(opsParseExcelEntity.getSshLogin(), selectLocal);
                 localRole = opsParseExcelEntity.getIpNum() == 1 ? NODE_PRIMARY : localRole;
             } catch (OpsException e) {
