@@ -112,7 +112,6 @@ const initTerm = (term: Terminal, ws: WebSocket | undefined) => {
 
 const getTermObj = (): Terminal => {
   const termConfig: any = {
-    // rendererType: 'dom',
     fontSize: 14,
     rows: 40,
     cols: 90,

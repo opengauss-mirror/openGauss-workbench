@@ -1,168 +1,69 @@
 <template>
-  <a-modal
-    :mask-closable="false"
-    :esc-to-close="false"
-    :visible="data.show"
-    :title="data.title"
-    :ok-loading="data.loading"
-    :modal-style="{ width: '650px' }"
-    @cancel="close"
-    @close="close"
-  >
+  <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title"
+    :ok-loading="data.loading" :modal-style="{ width: '650px' }" @cancel="close" @close="close">
     <template #footer>
       <div class="flex-between">
         <div class="flex-row">
-          <div
-            class="label-color mr"
-            v-if="data.status !== hostStatusEnum.unTest"
-          >{{
+          <div class="label-color mr" v-if="data.status !== hostStatusEnum.unTest">{{
             $t('components.AddHost.currentStatus')
           }}
           </div>
-          <a-tag
-            v-if="data.status === hostStatusEnum.success"
-            color="green"
-          >{{
+          <a-tag v-if="data.status === hostStatusEnum.success" color="green">{{
             $t('components.AddHost.5mphy3snvg80')
           }}</a-tag>
-          <a-tag
-            v-if="data.status === hostStatusEnum.fail"
-            color="red"
-          >{{
+          <a-tag v-if="data.status === hostStatusEnum.fail" color="red">{{
             $t('components.AddHost.5mphy3snwq40')
           }}</a-tag>
         </div>
         <div>
-          <a-button
-            class="mr"
-            @click="close"
-          >{{
+          <a-button class="mr" @click="close">{{
             $t('components.AddHost.5mphy3snwxs0')
           }}</a-button>
-          <a-button
-            v-if="isAdd"
-            :loading="data.testLoading"
-            class="mr"
-            @click="handleTestHost"
-          >{{
+          <a-button v-if="isAdd" :loading="data.testLoading" class="mr" @click="handleTestHost">{{
             $t('components.AddHost.5mphy3snx3o0')
           }}</a-button>
-          <a-button
-            :loading="data.loading"
-            type="primary"
-            @click="submit"
-          >{{
+          <a-button :loading="data.loading" type="primary" @click="submit">{{
             $t('components.AddHost.5mphy3snx7c0')
           }}</a-button>
         </div>
       </div>
 
     </template>
-    <a-form
-      :model="data.formData"
-      ref="formRef"
-      auto-label-width
-      :rules="formRules"
-    >
-      <a-form-item
-        field="name"
-        :label="$t('components.AddHost.name')"
-        validate-trigger="blur"
-      >
-        <a-input
-          v-model.trim="data.formData.name"
-          :placeholder="$t('components.AddHost.namePlaceholder')"
-        ></a-input>
+    <a-form :model="data.formData" ref="formRef" auto-label-width :rules="formRules">
+      <a-form-item field="name" :label="$t('components.AddHost.name')" validate-trigger="blur">
+        <a-input v-model.trim="data.formData.name" :placeholder="$t('components.AddHost.namePlaceholder')"></a-input>
       </a-form-item>
-      <a-form-item
-        field="privateIp"
-        :label="$t('components.AddHost.ipAddress')"
-        validate-trigger="blur"
-      >
-        <a-input
-          v-model.trim="data.formData.privateIp"
-          :disabled="!isAdd"
-          :placeholder="$t('components.AddHost.5mphy3snxdo0')"
-        ></a-input>
+      <a-form-item field="privateIp" :label="$t('components.AddHost.ipAddress')" validate-trigger="blur">
+        <a-input v-model.trim="data.formData.privateIp" :disabled="!isAdd"
+          :placeholder="$t('components.AddHost.5mphy3snxdo0')"></a-input>
       </a-form-item>
-      <a-form-item
-        field="publicIp"
-        :label="$t('components.AddHost.5mphy3snxis0')"
-        validate-trigger="blur"
-      >
-        <a-input
-          v-model.trim="data.formData.publicIp"
-          :disabled="!isAdd"
-          :placeholder="$t('components.AddHost.5mphy3snxmw0')"
-          @blur="handleBlur"
-        ></a-input>
+      <a-form-item field="publicIp" :label="$t('components.AddHost.5mphy3snxis0')" validate-trigger="blur">
+        <a-input v-model.trim="data.formData.publicIp" :disabled="!isAdd"
+          :placeholder="$t('components.AddHost.5mphy3snxmw0')" @blur="handleBlur"></a-input>
       </a-form-item>
-      <a-form-item
-        field="port"
-        :label="$t('components.AddHost.5mphy3snxtc0')"
-        validate-trigger="blur"
-      >
-        <a-input-number
-          v-model="data.formData.port"
-          :placeholder="$t('components.AddHost.5mphy3snxzk0')"
-          :min="0"
-          :max="65535"
-        />
+      <a-form-item field="port" :label="$t('components.AddHost.5mphy3snxtc0')" validate-trigger="blur">
+        <a-input-number v-model="data.formData.port" :placeholder="$t('components.AddHost.5mphy3snxzk0')" :min="0"
+          :max="65535" />
       </a-form-item>
-      <a-form-item
-        field="username"
-        :label="$t('components.AddHost.username')"
-        validate-trigger="blur"
-        v-if="isAdd"
-      >
-        <a-input
-          v-model.trim="data.formData.username"
-          :placeholder="$t('components.AddHost.usernamePlaceholder')"
-        ></a-input>
+      <a-form-item field="username" :label="$t('components.AddHost.username')" validate-trigger="blur" v-if="isAdd">
+        <a-input v-model.trim="data.formData.username"
+          :placeholder="$t('components.AddHost.usernamePlaceholder')"></a-input>
       </a-form-item>
-      <a-form-item
-        v-if="isAdd"
-        field="password"
-        :label="$t('components.AddHost.5mphy3sny4w0')"
-        validate-trigger="blur"
-      >
-        <a-input-password
-          v-model="data.formData.password"
-          :placeholder="$t('components.AddHost.5mphy3snyao0')"
-          @focus="passwordFocus"
-          @blur="passwordBlur"
-          :invisible-button="data.formData.password !== data.emptyPwd"
-          allow-clear
-          ref="formPwdRef"
-        />
+      <a-form-item v-if="isAdd" field="password" :label="$t('components.AddHost.5mphy3sny4w0')" validate-trigger="blur">
+        <a-input-password v-model="data.formData.password" :placeholder="$t('components.AddHost.5mphy3snyao0')"
+          @focus="passwordFocus" @blur="passwordBlur" :invisible-button="data.formData.password !== data.emptyPwd"
+          allow-clear ref="formPwdRef" />
       </a-form-item>
-      <a-form-item
-        field="tags"
-        :label="$t('components.AddHost.tags')"
-      >
-        <a-select
-          :loading="data.tagsLoading"
-          v-model="data.formData.tags"
-          :placeholder="$t('components.AddHost.tagsPlaceholder')"
-          allow-create
-          multiple
-          allow-clear
-          @change="tagsChange"
-        >
-          <a-option
-            v-for="item in data.tagsList"
-            :key="item.value"
-            :value="item.value"
-          >{{
+      <a-form-item field="tags" :label="$t('components.AddHost.tags')">
+        <a-select :loading="data.tagsLoading" v-model="data.formData.tags"
+          :placeholder="$t('components.AddHost.tagsPlaceholder')" allow-create multiple allow-clear @change="tagsChange">
+          <a-option v-for="item in data.tagsList" :key="item.value" :value="item.value">{{
             item.label
           }}</a-option>
         </a-select>
       </a-form-item>
       <a-form-item :label="$t('components.AddHost.5mphy3snysg0')">
-        <a-textarea
-          v-model.trim="data.formData.remark"
-          :placeholder="$t('components.AddHost.5mphy3snyxc0')"
-        ></a-textarea>
+        <a-textarea v-model.trim="data.formData.remark" :placeholder="$t('components.AddHost.5mphy3snyxc0')"></a-textarea>
       </a-form-item>
     </a-form>
   </a-modal>
@@ -361,22 +262,23 @@ const passwordBlur = () => {
 const handleTestHost = () => {
   formRef.value?.validate().then(async result => {
     if (!result) {
+      const { privateIp, publicIp, port, remark, username, hostId, password } = data.formData
       data.testLoading = true
       let encryptPwd
-      if (data.formData.hostId && data.formData.password === data.emptyPwd) {
+      if (hostId && password === data.emptyPwd) {
         encryptPwd = data.oldPwd
       } else {
-        encryptPwd = await encryptPassword(data.formData.password)
+        encryptPwd = await encryptPassword(password)
       }
       const param = {}
       Object.assign(param, {
-        privateIp: data.formData.privateIp,
-        publicIp: data.formData.publicIp,
-        port: data.formData.port,
+        privateIp,
+        publicIp,
+        port,
         password: encryptPwd,
         isRemember: true,
-        remark: data.formData.remark,
-        username: 'root'
+        remark,
+        username
       })
 
       hostPing(toRaw(param)).then((res: KeyValue) => {
