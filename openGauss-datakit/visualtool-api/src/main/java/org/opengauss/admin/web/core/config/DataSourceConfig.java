@@ -39,7 +39,9 @@ import org.springframework.context.annotation.Profile;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Optional;
 
 /**
@@ -58,6 +60,7 @@ public class DataSourceConfig {
     DataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSourceProperties properties,
                                                                             DataSource dataSource) {
         checkConnection(properties);
+        checkPermission(properties);
         String driverClassName = properties.getDriverClassName();
         Optional<DbDataLocationEnum> dbDataLocationEnum = DbDataLocationEnum.of(driverClassName);
         DatabaseInitializationSettings settings = new DatabaseInitializationSettings();
@@ -80,6 +83,30 @@ public class DataSourceConfig {
             }
         } catch (SQLException e) {
             log.error("Failed to get connection to the database: ", e);
+            System.exit(SpringApplication.exit(applicationContext, () -> 1));
+        }
+    }
+
+    private void checkPermission(DataSourceProperties properties) {
+        String permissionSql = String.format(
+                "select rolsystemadmin from pg_roles where rolname= '%s';", properties.getUsername());
+
+        try (Connection connection = DriverManager.getConnection(
+                properties.getUrl(), properties.getUsername(), properties.getPassword());
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(permissionSql)) {
+            String permissionResult = "f";
+            if (resultSet.next()) {
+                permissionResult = resultSet.getString(1);
+            }
+
+            if (permissionResult == null || !permissionResult.equals("t")) {
+                log.error("The database user permission does not meet requirements. "
+                        + "Please set the user as the sysadmin.");
+                System.exit(SpringApplication.exit(applicationContext, () -> 1));
+            }
+        } catch (SQLException e) {
+            log.error("Failed to check the permission of the database user: ", e);
             System.exit(SpringApplication.exit(applicationContext, () -> 1));
         }
     }
