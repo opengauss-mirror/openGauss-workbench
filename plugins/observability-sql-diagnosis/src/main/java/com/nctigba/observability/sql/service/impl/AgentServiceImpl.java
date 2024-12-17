@@ -28,7 +28,6 @@ import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.nctigba.observability.sql.enums.AgentStatusEnum;
@@ -138,8 +137,25 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                 new Step("agent.install.step5"),
                 new Step("agent.install.step6"),
                 new Step("agent.install.step7"));
-        // @formatter:on
-        var curr = 0;
+        initWsSessionStepTl(wsSession, steps);
+        install(nodeId, port, username, rootPassword, path, callbackPath);
+        if (wsSessionStepTl.get() != null) {
+            wsSessionStepTl.remove();
+        }
+    }
+
+    /**
+     * Install agent
+     *
+     * @param nodeId       Install node
+     * @param path         Install path
+     * @param callbackPath Callback path
+     * @param rootPassword Root password
+     * @param port         Install port
+     * @param username     Install user
+     */
+    public void install(String nodeId, int port, String username, String rootPassword, String path,
+                        String callbackPath) {
         // step1
         try {
             if (StrUtil.isBlank(callbackPath)) {
@@ -151,8 +167,8 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
             var node = clusterManager.getOpsNodeById(nodeId);
             var hostId = node.getHostId();
             var env = envMapper.selectOne(
-                    Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.AGENT)
-                            .eq(NctigbaEnvDO::getNodeid, nodeId));
+                Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.AGENT)
+                    .eq(NctigbaEnvDO::getNodeid, nodeId));
             if (env != null) {
                 throw new CustomException("agent.install.agent.tip");
             }
@@ -160,7 +176,7 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                 path += File.separator;
             }
             env = new NctigbaEnvDO().setHostid(hostId).setNodeid(nodeId).setPort(port).setUsername(username)
-                    .setType(NctigbaEnvDO.envType.AGENT);
+                .setType(NctigbaEnvDO.envType.AGENT);
             env.setParam("{\"callbackPath\":\"" + callbackPath + "\"}");
             env.setPath(path);
             try (var session = connect(env, rootPassword)) {
@@ -181,7 +197,7 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                         throw new CustomException("agent.install.installFolder.tip");
                     }
                 }
-                curr = nextStep(wsSession, steps, curr);
+                nextStep();
                 // step2
                 if (!session.test(UNZIP_VERSION)) {
                     session.execute(String.format(YUM_INSTALL, "unzip zip"));
@@ -190,7 +206,7 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                 if (!python_v.toLowerCase().startsWith("python ")) {
                     throw new CustomException("agent.install.pythonVersion.tip");
                 }
-                addMsg(wsSession, steps, curr, python_v);
+                sendMsg(null, python_v);
                 // bcc-tool
                 if (!session.test(Command.STAT.parse(BCC_PATH))) {
                     for (int i = 0; i < CHECK_COUNT; i++) {
@@ -201,11 +217,11 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                             if (i == 2) {
                                 throw new CustomException("agent.install.bcc.tip");
                             }
-                            addMsg(wsSession, steps, curr, "bcc install fail " + i + ", retrying");
+                            sendMsg(null, "bcc install fail " + i + ", retrying");
                         }
                     }
                 } else {
-                    addMsg(wsSession, steps, curr, "bcc exists");
+                    sendMsg(null, "bcc exists");
                 }
                 // FlameGraph
                 File graph = File.createTempFile("FlameGraph", ".zip");
@@ -217,8 +233,8 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                 session.execute(String.format(INSTALL_FLAME_GRAPH, path));
                 // jdk version
                 String jdkVersion = getJavaVersion(env, rootPassword);
-                addMsg(wsSession, steps, curr, jdkVersion);
-                curr = nextStep(wsSession, steps, curr);
+                sendMsg(null, jdkVersion);
+                nextStep();
                 // step3
                 // upload
                 File f = File.createTempFile(JAR_NAME, ".jar");
@@ -227,31 +243,35 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                 }
                 session.upload(f.getCanonicalPath(), path + NAME);
                 Files.delete(f.toPath());
-                curr = nextStep(wsSession, steps, curr);
+                nextStep();
                 // step4
                 // run shell
                 uploadShell(env, rootPassword, jdkVersion);
                 env.setStatus(AgentStatusEnum.UNKNOWN.getStatus());
                 env.setUpdateTime(new Date());
                 envMapper.insert(env);
-                curr = nextStep(wsSession, steps, curr);
+                nextStep();
                 // step5
                 execStartCmd(env, rootPassword);
-                curr = nextStep(wsSession, steps, curr);
+                nextStep();
                 // step6
                 checkHealthStatus(env);
-                curr = nextStep(wsSession, steps, curr);
+                nextStep();
                 // step7
-                sendMsg(wsSession, steps, curr, status.DONE);
+                sendMsg(status.DONE, "");
             }
         } catch (Exception e) {
-            steps.get(curr).setState(status.ERROR).add(e.getMessage());
-            wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+            sendMsg(status.ERROR, e.getMessage());
             var sw = new StringWriter();
             try (var pw = new PrintWriter(sw)) {
                 e.printStackTrace(pw);
             }
-            wsUtil.sendText(wsSession, sw.toString());
+            sendMsg(null, sw.toString());
+            log.error("install fail!", e);
+            WsSessionStep wsSessionStep = wsSessionStepTl.get();
+            if (wsSessionStep == null) {
+                throw new CustomException("install fail! " + e.getMessage());
+            }
         }
     }
 
@@ -281,14 +301,26 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                 new Step("agent.uninstall.step3"),
                 new Step("agent.uninstall.step4"),
                 new Step("agent.uninstall.step5"));
-        // @formatter:on
-        var curr = 0;
+        initWsSessionStepTl(wsSession, steps);
+        uninstall(nodeId, rootPassword);
+        if (wsSessionStepTl.get() != null) {
+            wsSessionStepTl.remove();
+        }
+    }
+
+    /**
+     * Uninstall agent
+     *
+     * @param nodeId       Install node
+     * @param rootPassword Root password
+     */
+    public void uninstall(String nodeId, String rootPassword) {
         // step1
         try {
             var node = clusterManager.getOpsNodeById(nodeId);
             var env = envMapper.selectOne(
-                    Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.AGENT)
-                            .eq(NctigbaEnvDO::getNodeid, nodeId));
+                Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.AGENT)
+                    .eq(NctigbaEnvDO::getNodeid, nodeId));
             if (env == null) {
                 throw new CustomException("agent.uninstall.agent.tip");
             }
@@ -301,24 +333,28 @@ public class AgentServiceImpl extends AbstractInstaller implements AgentService 
                 oldVersionAdapter(env, rootPassword);
             }
             // step2
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             uninstallAgent(env, rootPassword);
             // step3
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             clearInstallFolder(env, rootPassword);
             // step4
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             envMapper.deleteById(env);
             // step5
-            sendMsg(wsSession, steps, curr, status.DONE);
+            sendMsg(status.DONE, "");
         } catch (Exception e) {
-            steps.get(curr).setState(status.ERROR).add(e.getMessage());
-            wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+            sendMsg(status.ERROR, e.getMessage());
             var sw = new StringWriter();
             try (var pw = new PrintWriter(sw)) {
                 e.printStackTrace(pw);
             }
-            wsUtil.sendText(wsSession, sw.toString());
+            sendMsg(null, sw.toString());
+            log.error("uninstall fail!", e);
+            WsSessionStep wsSessionStep = wsSessionStepTl.get();
+            if (wsSessionStep == null) {
+                throw new CustomException("uninstall fail! " + e.getMessage());
+            }
         }
     }
 

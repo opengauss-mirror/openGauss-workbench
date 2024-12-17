@@ -28,7 +28,6 @@ import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
@@ -135,8 +134,22 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                 new Step("filebeat.install.step5"),
                 new Step("filebeat.install.step6"),
                 new Step("filebeat.install.step7"));
+        initWsSessionStepTl(wsSession, steps);
+        install(path, nodeId, obj);
+        if (wsSessionStepTl.get() != null) {
+            wsSessionStepTl.remove();
+        }
+    }
+
+    /**
+     * install
+     *
+     * @param path Install path
+     * @param nodeId Install node
+     * @param obj Log info
+     */
+    public void install(String path, String nodeId, JSONObject obj) {
         // @formatter:on
-        int curr = 0;
         if (!path.endsWith(File.separator)) {
             path += File.separator;
         }
@@ -148,14 +161,14 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
             }
             var hostId = node.getHostId();
             var env = envMapper.selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getHostid, hostId)
-                    .eq(NctigbaEnvDO::getType, InstallType.FILEBEAT).eq(NctigbaEnvDO::getNodeid, nodeId));
+                .eq(NctigbaEnvDO::getType, InstallType.FILEBEAT).eq(NctigbaEnvDO::getNodeid, nodeId));
             if (env != null) {
                 throw new CustomException("filebeat.install.exists.tip");
             }
             env = new NctigbaEnvDO().setHostid(hostId).setType(InstallType.FILEBEAT).setNodeid(nodeId).setPath(path);
             var esEnv = envMapper
-                    .selectOne(
-                            Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, InstallType.ELASTICSEARCH));
+                .selectOne(
+                    Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, InstallType.ELASTICSEARCH));
             if (esEnv == null) {
                 throw new CustomException("filebeat.install.elastic.tip");
             }
@@ -174,7 +187,7 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                 throw new CustomException("filebeat.install.host.tip");
             }
             try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
-                    user.getUsername(), encryptionUtils.decrypt(user.getPassword()))) {
+                user.getUsername(), encryptionUtils.decrypt(user.getPassword()))) {
                 String installPath = session.execute(String.format(DIRECTORY_IS_EXIST, path));
                 if (installPath.contains("false")) {
                     session.execute(String.format(MKDIR_FILE, path));
@@ -185,10 +198,10 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                     }
                 }
             }
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             // step2
             try (var session = SshSession.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
-                    user.getUsername(), encryptionUtils.decrypt(user.getPassword()))) {
+                user.getUsername(), encryptionUtils.decrypt(user.getPassword()))) {
                 String logPath = obj.getStr("logPath");
                 if (!session.test(command.STAT.parse(logPath))) {
                     throw new CustomException("log path err:" + logPath);
@@ -209,7 +222,7 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                 env.setPath(path + name);
                 String tar = name + TAR;
                 var pkg = envMapper
-                        .selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().like(NctigbaEnvDO::getPath, tar));
+                    .selectOne(Wrappers.<NctigbaEnvDO>lambdaQuery().like(NctigbaEnvDO::getPath, tar));
                 boolean isDownload = false;
                 if (pkg == null) {
                     isDownload = true;
@@ -221,17 +234,17 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                     }
                 }
                 if (isDownload) {
-                    addMsg(wsSession, steps, curr, "filebeat.install.download.start");
+                    sendMsg(null, "filebeat.install.download.start");
                     var f = Download.download(PATH + tar, "pkg/" + tar);
                     pkg = new NctigbaEnvDO().setPath(f.getCanonicalPath()).setType(InstallType.FILEBEAT_PKG);
-                    addMsg(wsSession, steps, curr, "filebeat.install.download.success");
+                    sendMsg(null, "filebeat.install.download.success");
                     save(pkg);
                 }
-                curr = nextStep(wsSession, steps, curr);
+                nextStep();
                 // step3
                 session.upload(pkg.getPath(), path + tar);
                 session.execute("cd " + path + " && " + command.TAR.parse(tar));
-                curr = nextStep(wsSession, steps, curr);
+                nextStep();
                 // step4
                 // run shell
                 utils.uploadShellScript(session, path + name + "/", "run_filebeat.sh");
@@ -250,48 +263,51 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                 utils.uploadShellScript(session, path + "/" + CONF_FILE_NAME + "/", "conf.sh");
                 // @formatter:off
                 session.execute("cd " + path + CONF_FILE_NAME + " && sh conf.sh"
-                        + " --eshost " + esHost.getPublicIp() + ":" + esEnv.getPort()
-                        + " --nodeid " + opsClusterNodeEntity.getClusterNodeId()
-                        + " --clusterid " + cluster.getClusterId()
-                        + " --opengausslog " + StrUtil.removeSuffix(logPath, "/")
-                        + " --opengaussslowlog " + StrUtil.removeSuffix(obj.getStr("slowlogPath"), "/")
-                        + " --opengausserrorlog " + StrUtil.removeSuffix(obj.getStr("errorlogPath"), "/")
-                        + (StrUtil.isNotBlank(obj.getStr("gsCtlLogPath")) ? " --gsCtlLogPath "
-                        + StrUtil.removeSuffix(obj.getStr("gsCtlLogPath"), "/") : "")
-                        + (StrUtil.isNotBlank(obj.getStr("gsGucLogPath")) ? " --gsGucLogPath "
-                        + StrUtil.removeSuffix(obj.getStr("gsGucLogPath"), "/") : "")
-                        + (StrUtil.isNotBlank(obj.getStr("gsOmLogPath")) ? " --gsOmLogPath "
-                        + StrUtil.removeSuffix(obj.getStr("gsOmLogPath"), "/") : "")
-                        + (StrUtil.isNotBlank(obj.getStr("gsInstallLogPath")) ? " --gsInstallLogPath "
-                        + StrUtil.removeSuffix(obj.getStr("gsInstallLogPath"), "/") : "")
-                        + (StrUtil.isNotBlank(obj.getStr("gsLocalLogPath")) ? " --gsLocalLogPath "
-                        + StrUtil.removeSuffix(obj.getStr("gsLocalLogPath"), "/") : "")
-                        + (StrUtil.isNotBlank(obj.getStr("cmLogPath")) ? " --cmLogPath "
-                        + StrUtil.removeSuffix(obj.getStr("cmLogPath"), "/") : ""));
+                    + " --eshost " + esHost.getPublicIp() + ":" + esEnv.getPort()
+                    + " --nodeid " + opsClusterNodeEntity.getClusterNodeId()
+                    + " --clusterid " + cluster.getClusterId()
+                    + " --opengausslog " + StrUtil.removeSuffix(logPath, "/")
+                    + " --opengaussslowlog " + StrUtil.removeSuffix(obj.getStr("slowlogPath"), "/")
+                    + " --opengausserrorlog " + StrUtil.removeSuffix(obj.getStr("errorlogPath"), "/")
+                    + (StrUtil.isNotBlank(obj.getStr("gsCtlLogPath")) ? " --gsCtlLogPath "
+                    + StrUtil.removeSuffix(obj.getStr("gsCtlLogPath"), "/") : "")
+                    + (StrUtil.isNotBlank(obj.getStr("gsGucLogPath")) ? " --gsGucLogPath "
+                    + StrUtil.removeSuffix(obj.getStr("gsGucLogPath"), "/") : "")
+                    + (StrUtil.isNotBlank(obj.getStr("gsOmLogPath")) ? " --gsOmLogPath "
+                    + StrUtil.removeSuffix(obj.getStr("gsOmLogPath"), "/") : "")
+                    + (StrUtil.isNotBlank(obj.getStr("gsInstallLogPath")) ? " --gsInstallLogPath "
+                    + StrUtil.removeSuffix(obj.getStr("gsInstallLogPath"), "/") : "")
+                    + (StrUtil.isNotBlank(obj.getStr("gsLocalLogPath")) ? " --gsLocalLogPath "
+                    + StrUtil.removeSuffix(obj.getStr("gsLocalLogPath"), "/") : "")
+                    + (StrUtil.isNotBlank(obj.getStr("cmLogPath")) ? " --cmLogPath "
+                    + StrUtil.removeSuffix(obj.getStr("cmLogPath"), "/") : ""));
                 // @formatter:on
                 session.execute(String.format(CP_FILE, path + CONF_FILE_NAME + "/*", path + name + "/"));
                 session.execute(String.format(RM_FILE, path + CONF_FILE_NAME));
                 session.execute(String.format(RM_F_FILE, path + CONF_FILE_NAME + FILE_TYPE));
             }
             envMapper.insert(env);
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             // step5
             startFilebeat(env);
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             // step6
             checkHealthStatus(env);
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             // step7
-            sendMsg(wsSession, steps, curr, status.DONE);
+            sendMsg(status.DONE, "");
         } catch (Exception e) {
-            log.error("", e);
-            steps.get(curr).setState(status.ERROR).add(e.getMessage());
-            wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+            log.error("install fail!", e);
+            sendMsg(status.ERROR, e.getMessage());
             var sw = new StringWriter();
             try (var pw = new PrintWriter(sw)) {
                 e.printStackTrace(pw);
             }
-            wsUtil.sendText(wsSession, sw.toString());
+            sendMsg(null, sw.toString());
+            WsSessionStep wsSessionStep = wsSessionStepTl.get();
+            if (wsSessionStep == null) {
+                throw new CustomException("install fail! " + e.getMessage());
+            }
         }
     }
 
@@ -309,14 +325,25 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                 new Step("filebeat.uninstall.step3"),
                 new Step("filebeat.uninstall.step4"),
                 new Step("filebeat.uninstall.step5"));
-        // @formatter:on
-        var curr = 0;
+        initWsSessionStepTl(wsSession, steps);
+        uninstall(nodeId);
+        if (wsSessionStepTl.get() != null) {
+            wsSessionStepTl.remove();
+        }
+    }
+
+    /**
+     * uninstall
+     *
+     * @param nodeId String
+     */
+    public void uninstall(String nodeId) {
         // step1
         try {
             var node = clusterManager.getOpsNodeById(nodeId);
             var env = envMapper.selectOne(
-                    Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, InstallType.FILEBEAT)
-                            .eq(NctigbaEnvDO::getNodeid, node.getNodeId()));
+                Wrappers.<NctigbaEnvDO>lambdaQuery().eq(NctigbaEnvDO::getType, InstallType.FILEBEAT)
+                    .eq(NctigbaEnvDO::getNodeid, node.getNodeId()));
             if (env == null) {
                 throw new CustomException("filebeat.uninstall.id.tip");
             }
@@ -326,24 +353,28 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
             }
             env.setHost(hostEntity);
             // step2
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             uninstallFilebeat(env);
             // step3
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             clearInstallFolder(env);
             // step4
-            curr = nextStep(wsSession, steps, curr);
+            nextStep();
             envMapper.deleteById(env);
             // step5
-            sendMsg(wsSession, steps, curr, status.DONE);
+            sendMsg(status.DONE, "");
         } catch (Exception e) {
-            steps.get(curr).setState(status.ERROR).add(e.getMessage());
-            wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
+            sendMsg(status.ERROR, e.getMessage());
             var sw = new StringWriter();
             try (var pw = new PrintWriter(sw)) {
                 e.printStackTrace(pw);
             }
-            wsUtil.sendText(wsSession, sw.toString());
+            sendMsg(null, sw.toString());
+            log.error("uninstall fail!", e);
+            WsSessionStep wsSessionStep = wsSessionStepTl.get();
+            if (wsSessionStep == null) {
+                throw new CustomException("uninstall fail! " + e.getMessage());
+            }
         }
     }
 

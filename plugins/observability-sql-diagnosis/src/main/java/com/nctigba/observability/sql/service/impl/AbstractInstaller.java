@@ -50,6 +50,7 @@ import java.net.http.WebSocket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class AbstractInstaller {
     /**
@@ -61,6 +62,12 @@ public abstract class AbstractInstaller {
      * Zip name
      */
     protected static final String ZIP = ".zip";
+
+
+    /**
+     * record install or uninstall steps and send the steps info by websocket
+     */
+    protected ThreadLocal<WsSessionStep> wsSessionStepTl = new ThreadLocal<>();
 
     @Autowired
     @AutowiredType(Type.PLUGIN_MAIN)
@@ -76,6 +83,18 @@ public abstract class AbstractInstaller {
     @Autowired
     @AutowiredType(Type.PLUGIN_MAIN)
     protected WsUtil wsUtil;
+
+    /**
+     * initWsSessionStepTl
+     *
+     * @param wsSession WsSession
+     * @param steps List<Step>
+     */
+    protected void initWsSessionStepTl(WsSession wsSession, List<Step> steps) {
+        WsSessionStep wsSessionStep = new WsSessionStep();
+        wsSessionStep.setWsSession(wsSession).setSteps(steps);
+        wsSessionStepTl.set(wsSessionStep);
+    }
 
     /**
      * Get arch
@@ -121,17 +140,19 @@ public abstract class AbstractInstaller {
 
     /**
      * Skip step
-     *
-     * @param wsSession Websocket
-     * @param steps     Step
-     * @param curr      Curr
-     * @return int
      */
-    protected int skipStep(WsSession wsSession, List<Step> steps, int curr) {
-        steps.get(curr).setState(status.SKIP);
-        curr++;
-        sendMsg(wsSession, steps, curr, status.DOING);
-        return curr;
+    protected void skipStep() {
+        WsSessionStep wsSessionStep = wsSessionStepTl.get();
+        if (wsSessionStep == null) {
+            return;
+        }
+        WsSession wsSession = wsSessionStep.getWsSession();
+        List<Step> steps = wsSessionStep.getSteps();
+        AtomicInteger curr = wsSessionStep.getCurr();
+        steps.get(curr.get()).setState(status.SKIP);
+        int cur = wsSessionStep.getCurr().incrementAndGet();
+        steps.get(cur).setState(status.DOING);
+        wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
     }
 
     /**
@@ -150,31 +171,40 @@ public abstract class AbstractInstaller {
      * change current step to {@code DONE} and next step to {@code DOING}, send to
      * {@link WebSocket}
      */
-    protected int nextStep(WsSession wsSession, List<Step> steps, int curr) {
-        steps.get(curr).setState(status.DONE);
-        curr++;
-        sendMsg(wsSession, steps, curr, status.DOING);
-        return curr;
-    }
-
-    /**
-     * change current step to {@code DONE}, send to {@link WebSocket}
-     */
-    protected synchronized void sendMsg(WsSession wsSession, List<Step> steps, int curr, status state) {
-        steps.get(curr).setState(state);
+    protected void nextStep() {
+        WsSessionStep wsSessionStep = wsSessionStepTl.get();
+        if (wsSessionStep == null) {
+            return;
+        }
+        WsSession wsSession = wsSessionStep.getWsSession();
+        List<Step> steps = wsSessionStep.getSteps();
+        AtomicInteger curr = wsSessionStep.getCurr();
+        steps.get(curr.get()).setState(status.DONE);
+        int cur = wsSessionStep.getCurr().incrementAndGet();
+        steps.get(cur).setState(status.DOING);
         wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
     }
 
     /**
-     * Skip step
+     * change current step to {@code DONE}, send to {@link WebSocket}
      *
-     * @param wsSession Websocket
-     * @param steps     Step
-     * @param curr      Curr
-     * @param msg       Message
+     * @param state status
+     * @param msg String
+     * @param objs Object[]
      */
-    protected synchronized void addMsg(WsSession wsSession, List<Step> steps, int curr, String msg) {
-        steps.get(curr).add(msg);
+    protected synchronized void sendMsg(status state, String msg, Object... objs) {
+        WsSessionStep wsSessionStep = wsSessionStepTl.get();
+        if (wsSessionStep == null) {
+            return;
+        }
+        WsSession wsSession = wsSessionStep.getWsSession();
+        List<Step> steps = wsSessionStep.getSteps();
+        if (state != null) {
+            steps.get(wsSessionStep.getCurr().get()).setState(state);
+        }
+        if (StrUtil.isNotBlank(msg)) {
+            steps.get(wsSessionStep.getCurr().get()).add(msg, objs);
+        }
         wsUtil.sendText(wsSession, JSONUtil.toJsonStr(steps));
     }
 
@@ -234,5 +264,17 @@ public abstract class AbstractInstaller {
             SKIP,
             ERROR
         }
+    }
+
+    /**
+     * WsSessionStep
+     */
+    @Data
+    @Accessors(chain = true)
+    @NoArgsConstructor
+    public static class WsSessionStep {
+        private WsSession wsSession;
+        private List<Step> steps;
+        private AtomicInteger curr = new AtomicInteger(0);
     }
 }
