@@ -25,7 +25,6 @@ package org.opengauss.admin.plugin.service.ops.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import com.jcraft.jsch.Session;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,7 +35,6 @@ import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.plugin.domain.model.ops.EnterpriseInstallConfig;
 import org.opengauss.admin.plugin.domain.model.ops.ImportClusterBody;
-import org.opengauss.admin.plugin.domain.model.ops.JschResult;
 import org.opengauss.admin.plugin.domain.model.ops.LiteInstallConfig;
 import org.opengauss.admin.plugin.domain.model.ops.MinimalistInstallConfig;
 import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
@@ -47,14 +45,13 @@ import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.mapper.ops.OpsClusterMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.utils.DBUtil;
-import org.opengauss.admin.plugin.utils.JschUtil;
+import org.opengauss.admin.system.plugin.beans.SshLogin;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.plugin.facade.JschExecutorFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -88,8 +85,6 @@ public class ImportClusterService extends ServiceImpl<OpsClusterMapper, OpsClust
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private JschExecutorFacade jschExecutorFacade;
     @Resource
-    private JschUtil jschUtil;
-    @Resource
     private DBUtil dbUtil;
     @Resource
     private IOpsClusterNodeService opsClusterNodeService;
@@ -107,11 +102,12 @@ public class ImportClusterService extends ServiceImpl<OpsClusterMapper, OpsClust
         OpsHostEntity hostEntity = getHostEntity(clusterConfig.masterHostId);
         try (Connection connection = createConnection(hostEntity, clusterConfig.port, clusterConfig.databaseUsername,
             clusterConfig.databasePassword)) {
-            Session ommSession = createSession(hostEntity, masterNodeInstallUser);
-            String versionNum = getVersionNum(ommSession, importClusterBody.getEnvPath());
+            SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(),
+                masterNodeInstallUser.getUsername(), encryptionUtils.decrypt(masterNodeInstallUser.getPassword()));
+            String versionNum = getVersionNum(sshLogin, importClusterBody.getEnvPath());
             importClusterBody.setOpenGaussVersionNum(versionNum);
             Integer majorVersion = Integer.valueOf(versionNum.substring(0, 1));
-            OpenGaussVersionEnum actualVersion = judgeOpenGaussVersion(majorVersion, ommSession, connection,
+            OpenGaussVersionEnum actualVersion = judgeOpenGaussVersion(majorVersion, sshLogin, connection,
                 importClusterBody.getEnvPath());
             validateVersion(majorVersion, importClusterBody.getOpenGaussVersion(), actualVersion);
         } catch (OpsException e) {
@@ -142,27 +138,19 @@ public class ImportClusterService extends ServiceImpl<OpsClusterMapper, OpsClust
         return hostEntity;
     }
 
-    private Session createSession(OpsHostEntity hostEntity, OpsHostUserEntity masterNodeInstallUser)
-        throws OpsException {
-        return jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), masterNodeInstallUser.getUsername(),
-                encryptionUtils.decrypt(masterNodeInstallUser.getPassword()))
-            .orElseThrow(
-                () -> new OpsException("Failed to establish connection with host " + hostEntity.getPublicIp()));
-    }
-
     private Connection createConnection(OpsHostEntity hostEntity, Integer port, String databaseUsername,
         String databasePassword) throws OpsException, SQLException, ClassNotFoundException {
         return dbUtil.getSession(hostEntity.getPublicIp(), port, databaseUsername, databasePassword)
             .orElseThrow(() -> new OpsException("Connection failed"));
     }
 
-    private String getVersionNum(Session ommSession, String envPath) {
-        return jschExecutorFacade.getOpenGaussMainVersionNum(ommSession, envPath);
+    private String getVersionNum(SshLogin sshLogin, String envPath) {
+        return jschExecutorFacade.getOpenGaussMainVersionNum(sshLogin, envPath);
     }
 
-    private OpenGaussVersionEnum judgeOpenGaussVersion(Integer majorVersion, Session ommSession, Connection connection,
+    private OpenGaussVersionEnum judgeOpenGaussVersion(Integer majorVersion, SshLogin sshLogin, Connection connection,
         String envPath) {
-        boolean isEnterprise = enterpriseVersion(ommSession, envPath);
+        boolean isEnterprise = enterpriseVersion(sshLogin, envPath);
         if (isEnterprise) {
             return OpenGaussVersionEnum.ENTERPRISE;
         }
@@ -177,15 +165,16 @@ public class ImportClusterService extends ServiceImpl<OpsClusterMapper, OpsClust
         }
     }
 
-    private boolean enterpriseVersion(Session ommSession, String envPath) {
+    private boolean enterpriseVersion(SshLogin sshLogin, String envPath) {
         String command = "which gs_om";
-        JschResult jschResult = null;
+        boolean isEnterprise = false;
         try {
-            jschResult = jschUtil.executeCommand(command, ommSession, envPath);
-            return jschResult.getExitCode() == 0;
-        } catch (IOException | InterruptedException e) {
-            return false;
+            String jschResult = jschExecutorFacade.execCommand(sshLogin, command, envPath);
+            isEnterprise = !jschResult.isEmpty();
+        } catch (OpsException opsException) {
+            log.error("select enterprise version command error:", opsException);
         }
+        return isEnterprise;
     }
 
     private boolean liteVersion(Connection connection) {
