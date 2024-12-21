@@ -410,14 +410,14 @@ public class JschExecutorService {
     /**
      * 获取openGasuus版本号
      *
-     * @param session ssh会话
+     * @param sshLogin ssh会话
      * @param envPath 环境路径
      * @return openGauss版本号
      */
-    public String getOpenGaussMainVersionNum(Session session, String envPath) {
+    public String getOpenGaussMainVersionNum(SshLogin sshLogin, String envPath) {
         String command = SshCommandConstants.OPENGAUSS_MAIN_VERSION_NUM;
         String envCommand = StrUtil.isNotEmpty(envPath) ? "source " + envPath + " && " + command : command;
-        return new JschExecutor().execCommand(session, envCommand);
+        return new JschExecutor().execCommand(sshLogin, envCommand);
     }
 
     /**
@@ -696,6 +696,9 @@ public class JschExecutorService {
                         new InputStreamReader(err, StandardCharsets.UTF_8))) {
                     channel.connect();
                     String errorLine;
+                    while ((errorLine = reader.readLine()) != null) {
+                        result.append(errorLine.trim()).append("\n");
+                    }
                     while ((errorLine = errorReader.readLine()) != null) {
                         result.append(errorLine.trim()).append("\n");
                     }

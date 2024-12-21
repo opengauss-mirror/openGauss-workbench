@@ -24,8 +24,6 @@
 
 package org.opengauss.admin.system.plugin.facade;
 
-import com.jcraft.jsch.Session;
-
 import org.opengauss.admin.system.plugin.beans.SshLogin;
 import org.opengauss.admin.system.service.JschExecutorService;
 import org.springframework.stereotype.Service;
@@ -46,12 +44,12 @@ public class JschExecutorFacade {
     /**
      * 获取openGasuus版本号
      *
-     * @param session ssh会话
+     * @param sshLogin ssh会话
      * @param envPath 环境路径
      * @return openGasuus版本号
      */
-    public String getOpenGaussMainVersionNum(Session session, String envPath) {
-        return jschExecutorService.getOpenGaussMainVersionNum(session, envPath);
+    public String getOpenGaussMainVersionNum(SshLogin sshLogin, String envPath) {
+        return jschExecutorService.getOpenGaussMainVersionNum(sshLogin, envPath);
     }
 
     /**
