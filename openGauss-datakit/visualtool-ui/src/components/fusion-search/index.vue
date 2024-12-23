@@ -2,8 +2,8 @@
   <div class="fusionSelect" v-click-outside="handleClickOutside">
     <div id="mainContent" :class="{ focus: (focus || !outClick) }">
       <!-- display the tags and the outer input -->
-      <el-tooltip v-for="(val, key) in selectedData" :content="`${val.keyLabel}：${val.paramLabel}`" placement="top">
-        <el-tag :key="key" class="tag" closable @close="closeTag(key)">{{
+      <el-tooltip v-for="(val, key) in selectedData" :key="val.keyValue" :content="`${val.keyLabel}：${val.paramLabel}`" placement="top">
+        <el-tag  class="tag" closable @close="closeTag(key)">{{
           `${val.keyLabel}：${val.paramLabel}` }}</el-tag>
       </el-tooltip>
       <span class="prefixTip" v-if="currentKeyLabel">{{ `${currentKeyLabel}：` }}</span>
@@ -12,7 +12,7 @@
         <div id="mainInput">
           <el-input
             :placeholder="isLabelSelect ? $t('components.FusionSearch.addFilters') : labelOptions[currentKeyValue]?.placeholder"
-            @click.native="inputFocus" v-model="selectValue" @search="clickSearch" @keyup.enter.native="clickSearch">
+            @click="inputFocus" v-model="selectValue" @search="clickSearch" @keyup.enter="clickSearch">
             <template #suffix>
               <template v-if="clearAllVisible">
                 <el-icon :size="16">

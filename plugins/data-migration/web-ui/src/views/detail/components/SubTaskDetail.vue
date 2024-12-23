@@ -1,18 +1,11 @@
 <template>
-  <a-drawer
-    v-model:visible="visible"
-    width="60%"
-    :footer="false"
-    :unmount-on-close="true"
-  >
+  <a-drawer v-model:visible="visible" width="60%" :footer="false" :unmount-on-close="true">
     <template #title>
       <div class="title-con">
         <div class="tab-con">
-          <div></div>
           <span
             class="tab-item"
-            :class="tabActive === 1 && 'tab-item-active'"
-            @click="tabChange(1)"
+            :class="tab-item-active"          
             >{{
               $t('components.SubTaskDetail.5q09ruxan0s0', {
                 subTaskId: props.subTaskId
@@ -23,332 +16,262 @@
                 : $t('components.SubTaskDetail.5q09t2cudw80')
             }}）</span
           >
-          <span
-            class="tab-item"
-            :class="tabActive === 2 && 'tab-item-active'"
-            @click="tabChange(2)"
-            >{{ $t('components.SubTaskDetail.5q09prnzmfw0') }}</span
-          >
-          <a-button v-if="isRefresh.visible" @click="startGetSubTaskDetail" :loading="loading">{{
-              $t('detail.index.5q09asiwg4g0')
-            }}</a-button>
-          <a-button v-if="!isRefresh.visible" @click="stopGetSubTaskDetail" :loading="loading">{{
-              $t('detail.index.5q09asiwg4g1')
-            }}</a-button>
+          <span class="task-status">
+            {{ $t('components.SubTaskDetail.5q09prnzn6c0') }}
+            <b>{{ execSubStatusMap(subTaskInfo.execStatus) }}</b>
+          </span>
         </div>
-        <span class="task-status">
-          {{ $t('components.SubTaskDetail.5q09prnzn6c0') }}
-          <b>{{ execSubStatusMap(subTaskInfo.execStatus) }}</b>
-        </span>
+        <div>
+          <span style="font-size: 12px;">{{ $t('components.SubTaskDetail.autoRefresh') }}</span>
+          <el-switch v-model="isRefresh" @change="changeRefresh"></el-switch>
+        </div>
       </div>
     </template>
     <div class="task-detail-con">
       <div v-if="descData.length" class="task-desc-con">
-        <a-descriptions
-          :data="descData"
-          layout="inline-horizontal"
-          :column="5"
-          bordered
-        />
+        <a-descriptions :data="descData" layout="inline-horizontal" :column="5" bordered />
       </div>
-      <div
-        v-if="
-          tabActive === 1 &&
-          subTaskInfo.migrationModelId === MIGRATION_MODE.OFFLINE
-        "
-        class="progress-con"
-      >
-        <span class="progress-info">{{
-          $t('components.SubTaskDetail.5q09prnzne80')
-        }}</span>
-        <a-progress
-          :status="
-            subTaskInfo.execStatus === SUB_TASK_STATUS.MIGRATION_ERROR
-              ? 'danger'
-              : 'success'
-          "
-          size="large"
-          :percent="
-            subTaskInfo.execStatus === SUB_TASK_STATUS.MIGRATION_FINISH
-              ? 1
-              : Number(subTaskInfo.migrationProcess) || 0
-          "
-        />
-      </div>
-      <div
-        v-if="
-          tabActive === 1 &&
-          subTaskInfo.migrationModelId === MIGRATION_MODE.OFFLINE
-        "
-        class="table-con"
-      >
-        <big-data-list
-          :full-data="fullData"
-          :sub-task-info="subTaskInfo"
-          :record-counts="recordCounts"
-        />
-      </div>
-      <div
-        v-if="
-          tabActive === 1 &&
-          subTaskInfo.migrationModelId === MIGRATION_MODE.ONLINE
-        "
-        class="record-con"
-      >
-        <div class="record-title">
-          {{ $t('components.SubTaskDetail.5q09prnzngw0') }}
-        </div>
-        <div class="record-list">
-          <a-steps
-            :default-current="Object.keys(statusRecords).length + 1"
-            type="dot"
-            direction="vertical"
-          >
-            <a-step v-for="(value, key) in statusRecords" :key="key">
-              <div class="record-item-hd">
-                <span class="hd-info">{{ recordsMap(key) }}</span>
-                <span class="hd-time"
-                  >by {{ value[0].operateUser || '-' }},
-                  {{ value[0].operateTime || '-' }}</span
-                >
-              </div>
-              <a-card hoverable>
-                <div class="record-item-con">
-                  <div v-for="item in value" :key="item.id" class="record-item">
-                    <div class="record-item-info">
-                      <span class="info">
-                        <div class="info-title">
-                          {{ execSubStatusMap(item.statusId) }}
-                        </div>
-                        <div
-                          v-if="item.statusId === SUB_TASK_STATUS.FULL_RUNNING"
-                          class="info-row"
-                        >
-                          <i @click="globalVisible = !globalVisible">{{
-                            globalVisible
-                              ? $t('components.SubTaskDetail.5q09prnznk00')
-                              : $t('components.SubTaskDetail.5q09prnznms0')
-                          }}</i>
-                          <div
-                            v-if="
-                              item.statusId === SUB_TASK_STATUS.FULL_RUNNING
-                            "
-                            :class="{'status-text':true,'status-text-en':currentLocale==='en-US'}"
-                          >
-                            <span
-                              >{{ $t('components.SubTaskDetail.5q0a5opxm3c1')
-                              }}<strong
-                                >{{ fullData?.total.data || 0 }}MB</strong
-                              ></span
-                            >
-                            <span
-                              >{{ $t('components.SubTaskDetail.5q0a5opxm3c2')
-                              }}<strong
-                                >{{ fullData?.total.speed || 0 }}MB/s</strong
-                              ></span
-                            >
-                            <span
-                              >{{ $t('components.SubTaskDetail.5q0a5opxm3c3')
-                              }}<strong
-                                >{{ fullData?.total.time || 0 }}s</strong
-                              ></span
-                            >
-                          </div>
-                        </div>
-                        <div
-                          v-if="item.statusId === SUB_TASK_STATUS.FULL_CHECKING"
-                          class="info-row"
-                        >
-                          <div :class="{'status-text':true,'status-text-en':currentLocale==='en-US'}">
-                            <span
-                              >{{ $t('components.SubTaskDetail.5q0a5opxm3c4')
-                              }}<strong
-                                >{{ dataCheckData.total || 0 }}行</strong
-                              ></span
-                            >
-                            <span
-                              >{{ $t('components.SubTaskDetail.5q0a5opxm3c5')
-                              }}<strong
-                                >{{ dataCheckData.avgSpeed || 0 }}行/s</strong
-                              ></span
-                            >
-                            <span
-                              >{{ $t('components.SubTaskDetail.5q0a5opxm3c6')
-                              }}<strong
-                                >{{ dataCheckData.tableCount || 0 }}
-                                {{
-                                  $t('components.SubTaskDetail.5q0a5opxm3c8')
-                                }}</strong
-                              ></span
-                            >
-                            <span
-                              >{{ $t('components.SubTaskDetail.5q0a5opxm3c7')
-                              }}<strong
-                                >{{ dataCheckData.completeCount || 0 }}
-                                {{
-                                  $t('components.SubTaskDetail.5q0a5opxm3c8')
-                                }}</strong
-                              ></span
-                            >
-                          </div>
-                        </div>
-                      </span>
-                      <span class="time">{{ item.createTime }}</span>
-                    </div>
-                    <div
-                      v-if="
-                        item.statusId === SUB_TASK_STATUS.FULL_RUNNING &&
-                        globalVisible
-                      "
-                      class="table-con"
-                    >
-                      <big-data-list
-                        :full-data="fullData"
-                        :sub-task-info="subTaskInfo"
-                        :record-counts="recordCounts"
-                      />
-                    </div>
-                    <div
-                      v-if="
-                        item.statusId === SUB_TASK_STATUS.INCREMENTAL_RUNNING
-                      "
-                      class="list-con"
-                    >
-                      <div class="list-item-con">
-                        <div class="list-title">
-                          <div class="list-title-l">
-                            <icon-info-circle size="15" />
-                            <span
-                              >{{ $t('components.SubTaskDetail.5q09tn4uzy40')
-                              }}{{ increaseData.count }}
-                              {{
-                                $t('components.SubTaskDetail.5q09prnznpk0')
-                              }}</span
-                            >
-                          </div>
-                          <div class="list-title-r">
-                            <span>{{ increaseData.createTime }}</span>
-                          </div>
-                        </div>
-                        <div class="list-info-em">
-                          <span
-                            >{{ $t('components.SubTaskDetail.5q09urmrt580')
-                            }}{{ increaseData.sourceSpeed || 0 }}
-                            {{
-                              $t('components.SubTaskDetail.5q09prnzns40')
-                            }}</span
-                          >
-                        </div>
-                        <div class="list-info-em">
-                          <span
-                            >{{ $t('components.SubTaskDetail.5q09urmruc00')
-                            }}{{ increaseData.sinkSpeed || 0 }}
-                            {{
-                              $t('components.SubTaskDetail.5q09prnzns40')
-                            }}</span
-                          >
-                        </div>
-                        <div class="list-info">
-                          <span
-                            >{{ $t('components.SubTaskDetail.5q09urmruhc0')
-                            }}{{ increaseData.rest }}
-                            {{
-                              $t('components.SubTaskDetail.5q09prnznpk0')
-                            }}</span
-                          >
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      v-if="item.statusId === SUB_TASK_STATUS.REVERSE_RUNNING"
-                      class="list-con"
-                    >
-                      <div class="list-item-con">
-                        <div class="list-title">
-                          <div class="list-title-l">
-                            <icon-info-circle size="15" />
-                            <span
-                              >{{ $t('components.SubTaskDetail.5q09tn4uzy41')
-                              }}{{ reverseData.count }}
-                              {{
-                                $t('components.SubTaskDetail.5q09prnznpk0')
-                              }}</span
-                            >
-                          </div>
-                          <div class="list-title-r">
-                            <span>{{ reverseData.createTime }}</span>
-                          </div>
-                        </div>
-                        <div class="list-info-em">
-                          <span
-                            >{{ $t('components.SubTaskDetail.5q09urmrt580')
-                            }}{{ reverseData.sourceSpeed || 0 }}
-                            {{
-                              $t('components.SubTaskDetail.5q09prnzns40')
-                            }}</span
-                          >
-                        </div>
-                        <div class="list-info-em">
-                          <span
-                            >{{ $t('components.SubTaskDetail.5q09urmruc00')
-                            }}{{ reverseData.sinkSpeed || 0 }}
-                            {{
-                              $t('components.SubTaskDetail.5q09prnzns40')
-                            }}</span
-                          >
-                        </div>
-                        <div class="list-info">
-                          <span
-                            >{{ $t('components.SubTaskDetail.5q09urmruhc0')
-                            }}{{ reverseData.rest || 0 }}
-                            {{
-                              $t('components.SubTaskDetail.5q09prnznpk0')
-                            }}</span
-                          >
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </a-card>
-            </a-step>
-          </a-steps>
-        </div>
-      </div>
-      <div v-if="tabActive === 2" class="log-con">
-        <a-list>
-          <a-list-item v-for="item in logData" :key="item.url">
-            <div class="log-detail-info">
-              <span>{{ item.name }}</span>
-              <span class="desc">{{ logsMap(item.name) }}</span>
+      <el-tabs class="mainTabs" :stretch="true" v-model="tabActive" @tab-change="tabChange">
+        <el-tab-pane :label="$t('components.SubTaskDetail.migrationProgress')" :name="1">
+          <div v-if="tabActive === 1 &&
+            subTaskInfo.migrationModelId === MIGRATION_MODE.OFFLINE
+            " class="table-con">
+            <big-data-list :full-data="fullData" :sub-task-info="subTaskInfo" :record-counts="recordCounts" />
+          </div>
+          <div v-if="tabActive === 1 &&
+            subTaskInfo.migrationModelId === MIGRATION_MODE.ONLINE
+            " class="record-con">
+            <div class="record-title">
+              {{ $t('components.SubTaskDetail.5q09prnzngw0') }}
             </div>
-            <template #actions>
-              <a-button
-                type="text"
-                size="mini"
-                @click="handleDownloadLog(item.url)"
-              >
-                <template #icon>
-                  <icon-download />
+            <div class="record-list">
+              <a-steps :default-current="Object.keys(statusRecords).length + 1" type="dot" direction="vertical">
+                <a-step v-for="(value, key) in statusRecords" :key="key">
+                  <div class="record-item-hd">
+                    <span class="hd-info">{{ recordsMap(key) }}</span>
+                    <span class="hd-time">by {{ value[0].operateUser || '-' }},
+                      {{ value[0].operateTime || '-' }}</span>
+                  </div>
+                  <a-card hoverable>
+                    <div class="record-item-con">
+                      <div v-for="item in value" :key="item.id" class="record-item">
+                        <div class="record-item-info">
+                          <span class="info">
+                            <div class="info-title">
+                              {{ execSubStatusMap(item.statusId) }}
+                            </div>
+                            <div v-if="item.statusId === SUB_TASK_STATUS.FULL_RUNNING" class="info-row">
+                              <i @click="globalVisible = !globalVisible">{{
+                                globalVisible
+                                ? $t('components.SubTaskDetail.5q09prnznk00')
+                                : $t('components.SubTaskDetail.5q09prnznms0')
+                              }}</i>
+                              <div v-if="item.statusId === SUB_TASK_STATUS.FULL_RUNNING
+                                  " :class="{ 'status-text': true, 'status-text-en': currentLocale === 'en-US' }">
+                                <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c1')
+                                }}<strong>{{ fullData?.total.data || 0 }}MB</strong></span>
+                                <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c2')
+                                }}<strong>{{ fullData?.total.speed || 0 }}MB/s</strong></span>
+                                <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c3')
+                                }}<strong>{{ fullData?.total.time || 0 }}s</strong></span>
+                              </div>
+                            </div>
+                            <div v-if="item.statusId === SUB_TASK_STATUS.FULL_CHECKING" class="info-row">
+                              <div :class="{ 'status-text': true, 'status-text-en': currentLocale === 'en-US' }">
+                                <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c4')
+                                }}<strong>{{ dataCheckData.total || 0 }}行</strong></span>
+                                <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c5')
+                                }}<strong>{{ dataCheckData.avgSpeed || 0 }}行/s</strong></span>
+                                <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c6')
+                                }}<strong>{{ dataCheckData.tableCount || 0 }}
+                                    {{
+                                      $t('components.SubTaskDetail.5q0a5opxm3c8')
+                                    }}</strong></span>
+                                <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c7')
+                                }}<strong>{{ dataCheckData.completeCount || 0 }}
+                                    {{
+                                      $t('components.SubTaskDetail.5q0a5opxm3c8')
+                                    }}</strong></span>
+                              </div>
+                            </div>
+                          </span>
+                          <span class="time">{{ item.createTime }}</span>
+                        </div>
+                        <div v-if="item.statusId === SUB_TASK_STATUS.FULL_RUNNING &&
+                          globalVisible
+                          " class="table-con">
+                          <big-data-list :full-data="fullData" :sub-task-info="subTaskInfo"
+                            :record-counts="recordCounts" />
+                        </div>
+                        <div v-if="item.statusId === SUB_TASK_STATUS.INCREMENTAL_RUNNING
+                          " class="list-con">
+                          <div class="list-item-con">
+                            <div class="list-title">
+                              <div class="list-title-l">
+                                <icon-info-circle size="15" />
+                                <span>{{ $t('components.SubTaskDetail.5q09tn4uzy40')
+                                }}{{ increaseData.count }}
+                                  {{
+                                    $t('components.SubTaskDetail.5q09prnznpk0')
+                                  }}</span>
+                              </div>
+                              <div class="list-title-r">
+                                <span>{{ increaseData.createTime }}</span>
+                              </div>
+                            </div>
+                            <div class="list-info-em">
+                              <span>{{ $t('components.SubTaskDetail.5q09urmrt580')
+                              }}{{ increaseData.sourceSpeed || 0 }}
+                                {{
+                                  $t('components.SubTaskDetail.5q09prnzns40')
+                                }}</span>
+                            </div>
+                            <div class="list-info-em">
+                              <span>{{ $t('components.SubTaskDetail.5q09urmruc00')
+                              }}{{ increaseData.sinkSpeed || 0 }}
+                                {{
+                                  $t('components.SubTaskDetail.5q09prnzns40')
+                                }}</span>
+                            </div>
+                            <div class="list-info">
+                              <span>{{ $t('components.SubTaskDetail.5q09urmruhc0')
+                              }}{{ increaseData.rest }}
+                                {{
+                                  $t('components.SubTaskDetail.5q09prnznpk0')
+                                }}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div v-if="item.statusId === SUB_TASK_STATUS.REVERSE_RUNNING" class="list-con">
+                          <div class="list-item-con">
+                            <div class="list-title">
+                              <div class="list-title-l">
+                                <icon-info-circle size="15" />
+                                <span>{{ $t('components.SubTaskDetail.5q09tn4uzy41')
+                                }}{{ reverseData.count }}
+                                  {{
+                                    $t('components.SubTaskDetail.5q09prnznpk0')
+                                  }}</span>
+                              </div>
+                              <div class="list-title-r">
+                                <span>{{ reverseData.createTime }}</span>
+                              </div>
+                            </div>
+                            <div class="list-info-em">
+                              <span>{{ $t('components.SubTaskDetail.5q09urmrt580')
+                              }}{{ reverseData.sourceSpeed || 0 }}
+                                {{
+                                  $t('components.SubTaskDetail.5q09prnzns40')
+                                }}</span>
+                            </div>
+                            <div class="list-info-em">
+                              <span>{{ $t('components.SubTaskDetail.5q09urmruc00')
+                              }}{{ reverseData.sinkSpeed || 0 }}
+                                {{
+                                  $t('components.SubTaskDetail.5q09prnzns40')
+                                }}</span>
+                            </div>
+                            <div class="list-info">
+                              <span>{{ $t('components.SubTaskDetail.5q09urmruhc0')
+                              }}{{ reverseData.rest || 0 }}
+                                {{
+                                  $t('components.SubTaskDetail.5q09prnznpk0')
+                                }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </a-card>
+                </a-step>
+              </a-steps>
+            </div>
+          </div>
+        </el-tab-pane>
+        <el-tab-pane :name="2">
+          <template #label>
+            <div class="errorLabel" v-if="phaseNums.total && phaseNums.total > 0">
+              <el-badge :value="phaseNums.total">
+                {{ $t('components.SubTaskDetail.abnormalAlaram') }}
+              </el-badge>
+            </div>
+            <div class="errorLabel" v-else>{{ $t('components.SubTaskDetail.abnormalAlaram') }}</div>
+          </template>
+          <el-tabs type="card" style="padding-top: 16px;" @tab-change="alarmPhaseChange" v-model="phaseTab">
+            <el-tab-pane :label="$t('components.SubTaskDetail.fullMigration')" :name="item.key" v-for="item in phaseList">
+              <template #label>
+                <div v-if="phaseNums[item.key] && phaseNums[item.key] > 0">
+                  <el-badge :value="phaseNums[item.key]">{{ item.label }}</el-badge>
+                </div>
+                <span v-else>{{ item.label }}</span>
+              </template>
+            </el-tab-pane>
+          </el-tabs>
+          <div class="loading-area" v-loading="tableLoading">
+            <el-table :data="alarmPhaseList" style="padding-top: 16px;">
+              <el-table-column prop="sourceName" width="350" :label="$t('components.SubTaskDetail.alarmLocation')">
+                <template #default="{ row }">
+                  <span style="line-height: 1.3">
+                    {{ locationMap[row.logSource] }}
+                  </span>
                 </template>
-                {{ $t('components.SubTaskDetail.5q09prnznvg0') }}
-              </a-button>
-            </template>
-          </a-list-item>
-        </a-list>
-      </div>
+              </el-table-column>
+              <el-table-column prop="causeCn" :label="$t('components.SubTaskDetail.alarmReason')">
+                <template #default="{ row }">
+                  <div>
+                    {{ currentLocale === 'en-US' ? row.causeEn : row.causeCn }}
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="dateTime" :label="$t('components.SubTaskDetail.alarmTime')"></el-table-column>
+              <el-table-column prop="operation" :label="$t('components.SubTaskDetail.operate')">
+                <template #default="{ row }">
+                  <el-button text :icon="IconVisible" @click="showErrorDetail(row)">
+                    {{ $t('components.SubTaskDetail.showDetail') }}
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-pagination v-model:current-page="pageNum" v-model:pageSize="pageSize" :page-sizes="pageSizes"
+              :total="phaseTotal" :teleported="false" :layout="paginationLayout" @change="fetchPhaseAlarmList" ></el-pagination>
+          </div>
+        </el-tab-pane>
+        <el-tab-pane :label="$t('components.SubTaskDetail.5q09prnzmfw0')" :name="3">
+          <div class="log-con">
+            <a-list>
+              <a-list-item v-for="item in logData" :key="item.url">
+                <div class="log-detail-info">
+                  <span>{{ item.name }}</span>
+                  <span class="desc">{{ logsMap(item.name) }}</span>
+                </div>
+                <template #actions>
+                  <a-button type="text" size="mini" @click="handleDownloadLog(item.url)">
+                    <template #icon>
+                      <icon-download />
+                    </template>
+                    {{ $t('components.SubTaskDetail.5q09prnznvg0') }}
+                  </a-button>
+                </template>
+              </a-list-item>
+            </a-list>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
     </div>
   </a-drawer>
+  <error-detail v-model:error-visible="errorVisible" :detail-info="detailInfo" :area-loading="areaLoading"></error-detail>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount, h, reactive } from 'vue'
-import { subTaskDetail, downloadLog } from '@/api/detail'
+import { ref, watch, onMounted, onBeforeUnmount, h, reactive, computed } from 'vue'
+import { subTaskDetail, downloadLog, getAlarmDetail, getPhaseAlarmList, getTotalAlarmNum } from '@/api/detail'
 import BigDataList from './BigDataList.vue'
 import dayjs from 'dayjs'
 import { useI18n } from 'vue-i18n'
 import { MIGRATION_MODE, SUB_TASK_STATUS } from '@/utils/constants'
 import useLocale from '@/hooks/locale'
+import { IconVisible } from '@computing/opendesign-icons'
+import ErrorDetail from './ErrorDetail.vue'
 
 const { currentLocale } = useLocale()
 
@@ -362,8 +285,6 @@ const props = defineProps({
 })
 
 const emits = defineEmits(['update:open'])
-
-let timer = null
 
 const loading = ref(false)
 const visible = ref(false)
@@ -446,6 +367,10 @@ watch(visible, (v) => {
   emits('update:open', v)
 })
 
+let timer = null
+let alarmNumTimer = null
+let alarmPhaseListTimer = null
+
 watch(
   () => props.open,
   (v) => {
@@ -461,6 +386,12 @@ watch(
           getSubTaskDetail()
         }, 6000)
       }
+      fetchTotalAlarmNum()
+      if (!alarmNumTimer) {
+        alarmNumTimer = setInterval(() => {
+          fetchTotalAlarmNum()
+        }, 6000)
+      }
     } else {
       globalVisible.value = false
       increaseData.value = {}
@@ -469,13 +400,139 @@ watch(
       descData.value = []
       logData.value = []
       loading.value = false
+      clearInterval(alarmNumTimer)
+      clearInterval(timer)
+      clearInterval(alarmPhaseListTimer)
+      alarmNumTimer = null
+      timer = null
+      alarmPhaseListTimer = null
     }
     visible.value = v
   }
 )
 
+const phaseNums = ref({})
+const fetchTotalAlarmNum = async () => {
+  try {
+    const { data, code } = await getTotalAlarmNum(props.subTaskId)
+    if (code === 200) {
+      phaseNums.value = data ?? {}
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+const phaseList = computed(() => {
+  if (subTaskInfo.value.migrationModelId === MIGRATION_MODE.OFFLINE) {
+    return [{
+      key: '1',
+      label: t('components.SubTaskDetail.fullMigration')
+    },
+    {
+      key: '2',
+      label: t('components.SubTaskDetail.fullCheck'),
+    },]
+  } else {
+    return [
+      {
+        key: '1',
+        label: t('components.SubTaskDetail.fullMigration')
+      },
+      {
+        key: '2',
+        label: t('components.SubTaskDetail.fullCheck'),
+      },
+      {
+        key: '3',
+        label: t('components.SubTaskDetail.incrementMigration'),
+      },
+      {
+        key: '4',
+        label: t('components.SubTaskDetail.reverseMigration'),
+      }
+    ]
+  }
+
+})
+
+const locationMap = computed(() => {
+  return {
+    0: t('components.SubTaskDetail.portal', { id: props.subTaskId }),
+    10: t('components.SubTaskDetail.fullMigrationLog'),
+    20: t('components.SubTaskDetail.checkCheck'),
+    21: t('components.SubTaskDetail.checkSource'),
+    22: t('components.SubTaskDetail.checkSink'),
+    31: t('components.SubTaskDetail.connectSource'),
+    32: t('components.SubTaskDetail.connectSink'),
+    41: t('components.SubTaskDetail.reverseConnectSource'),
+    42: t('components.SubTaskDetail.reverseConnectSink'),
+  }
+})
+const pageSize = ref(10)
+const pageSizes = ref([10, 20, 30, 40])
+const paginationLayout = ref('total,sizes,prev,pager,next,jumper')
+const pageNum = ref(1)
+const alarmPhaseList = ref([])
+const phaseTotal = ref(0)
+const tableLoading = ref(false)
+const fetchPhaseAlarmList = async () => {
+  try {
+    tableLoading.value = true
+    const { code, rows, total } = await getPhaseAlarmList(props.subTaskId, phaseTab.value, pageSize.value, pageNum.value)
+    tableLoading.value = false
+    if (code === 200) {
+      alarmPhaseList.value = rows || []
+      phaseTotal.value = total
+    }
+  } catch (error) {
+    tableLoading.value = false
+    console.log(error)
+  }
+}
+
+const errorVisible = ref(false)
+const areaLoading = ref(false)
+const detailInfo = ref({})
+const showErrorDetail = async (rows) => {
+  try {
+    detailInfo.value = {}
+    areaLoading.value = true
+    errorVisible.value = true
+    const { dateTime, sourceName, logSource, id, taskId } = rows
+    const { code, data } = await getAlarmDetail(id)
+    areaLoading.value = false
+    detailInfo.value = {
+      dateTime, sourceName, logSource, taskId
+    }
+    if (code === 200) {
+      detailInfo.value.detail = data.detail
+    }
+  } catch (error) {
+    areaLoading.value = false
+  }
+}
+
 const tabChange = (tab) => {
   tabActive.value = tab
+  if (tab === 2) {
+    fetchPhaseAlarmList()
+    alarmPhaseListTimer = setInterval(() => {
+      fetchPhaseAlarmList()
+    }, 6000)
+  } else if (alarmPhaseListTimer) {
+    clearInterval(alarmPhaseListTimer)
+    alarmPhaseListTimer = null
+  } else {
+    // do nothing
+  }
+}
+
+const phaseTab = ref('1')
+const alarmPhaseChange = () => {
+  pageSize.value = 10
+  pageNum.value = 1
+  fetchPhaseAlarmList()
 }
 
 const fullData = ref({})
@@ -505,17 +562,31 @@ const handleDownloadLog = (url) => {
   })
 }
 
-const isRefresh = reactive({
-  visible: false,
-});
+const isRefresh = ref(true)
+const changeRefresh = (e) => {
+  if (e) {
+    startGetSubTaskDetail()
+  } else {
+    stopGetSubTaskDetail()
+  }
+}
 
 const stopGetSubTaskDetail = () => {
-  isRefresh.visible = !isRefresh.visible;
   clearInterval(timer)
+  clearInterval(alarmPhaseListTimer)
+  clearInterval(alarmNumTimer)
+  timer = null
+  alarmNumTimer = null
+  alarmPhaseListTimer = null
 }
 const startGetSubTaskDetail = () => {
-  isRefresh.visible = !isRefresh.visible;
-  timer = setInterval(() => {getSubTaskDetail()}, 6000)
+  timer = setInterval(() => { getSubTaskDetail() }, 6000)
+  alarmNumTimer = setInterval(() => {
+    fetchTotalAlarmNum()
+  }, 6000)
+  alarmPhaseListTimer = setInterval(() => {
+    fetchPhaseAlarmList()
+  }, 6000)
 }
 
 const getSubTaskDetail = () => {
@@ -526,12 +597,13 @@ const getSubTaskDetail = () => {
       subTaskInfo.value = res.data.task
       if (subTaskInfo.value.finishTime !== null) {
         clearInterval(timer)
+        timer = null
       }
       const seconds = subTaskInfo.value.finishTime
         ? dayjs(subTaskInfo.value.finishTime).diff(
-            dayjs(subTaskInfo.value.execTime),
-            'seconds'
-          )
+          dayjs(subTaskInfo.value.execTime),
+          'seconds'
+        )
         : dayjs(subTaskInfo.value.currentTime).diff(dayjs(subTaskInfo.value.execTime), 'seconds')
       const hour = parseInt(seconds / 3600)
       const minute = parseInt((seconds - hour * 3600) / 60)
@@ -613,52 +685,50 @@ const getSubTaskDetail = () => {
         },
         {
           label: t('components.SubTaskDetail.5q09prnzqnw0'),
-          value: `${
-            hour ? hour + t('components.SubTaskDetail.5q09prnzqpw0') : ''
-          } ${
-            minute ? minute + t('components.SubTaskDetail.5q09prnzqs00') : ''
-          }`,
+          value: `${hour ? hour + t('components.SubTaskDetail.5q09prnzqpw0') : ''
+            } ${minute ? minute + t('components.SubTaskDetail.5q09prnzqs00') : ''
+            }`,
           span: 2
         },
         {
           label: t('components.SubTaskDetail.5q09prnzqvk0'),
           value: fullProcessDetail
             ? h(
-                'div',
-                null,
-                h('div', { class: 'desc-value-row' }, [
-                  h(
-                    'div',
-                    null,
-                    t('components.SubTaskDetail.5q09xhsvcq40', {
-                      total:
-                        (res.data.totalWaitCount || 0) +
-                        (res.data.totalRunningCount || 0) +
-                        (res.data.totalSuccessCount || 0) +
-                        (res.data.totalErrorCount || 0),
-                      totalWaitCount: res.data.totalWaitCount || 0,
-                      totalRunningCount: res.data.totalRunningCount || 0,
-                      totalSuccessCount: res.data.totalSuccessCount || 0,
-                      totalErrorCount: res.data.totalErrorCount || 0
-                    })
-                  ),
-                  h(
-                    'div',
-                    { class: 'arco-tag arco-tag-checked speed-tag' },
-                    t('components.SubTaskDetail.5q09xhsvcq42', {
-                      speed: fullData.value?.total?.speed || 0
-                    })
-                  )
-                ]),
+              'div',
+              null,
+              h('div', { class: 'desc-value-row' }, [
                 h(
                   'div',
                   null,
-                  t('components.SubTaskDetail.5q09xhsvcq41', {
-                    totalDataSize: fullData.value?.total?.data || 0,
-                    cost: fullData.value?.total?.time || 0
+                  t('components.SubTaskDetail.5q09xhsvcq40', {
+                    total:
+                      (res.data.totalWaitCount || 0) +
+                      (res.data.totalRunningCount || 0) +
+                      (res.data.totalSuccessCount || 0) +
+                      (res.data.totalErrorCount || 0),
+                    totalWaitCount: res.data.totalWaitCount || 0,
+                    totalRunningCount: res.data.totalRunningCount || 0,
+                    totalSuccessCount: res.data.totalSuccessCount || 0,
+                    totalErrorCount: res.data.totalErrorCount || 0
+                  })
+                ),
+                h(
+                  'div',
+                  { class: 'arco-tag arco-tag-checked speed-tag' },
+                  t('components.SubTaskDetail.5q09xhsvcq42', {
+                    speed: fullData.value?.total?.speed || 0
                   })
                 )
+              ]),
+              h(
+                'div',
+                null,
+                t('components.SubTaskDetail.5q09xhsvcq41', {
+                  totalDataSize: fullData.value?.total?.data || 0,
+                  cost: fullData.value?.total?.time || 0
+                })
               )
+            )
             : t('components.SubTaskDetail.5q09prnznzg0'),
           span: 5
         },
@@ -666,29 +736,29 @@ const getSubTaskDetail = () => {
           label: t('components.SubTaskDetail.5q09prnzux41'),
           value: dataCheckDetail
             ? h(
-                'div',
-                null,
-                h('div', { class: 'desc-value-row' }, [
-                  // h('div', null, t('components.SubTaskDetail.5q09xhsvcq43', { total: (res.data.totalWaitCount || 0) + (res.data.dataCheck?.totalRunningCount || 0) + (res.data.dataCheck?.totalFinishCount || 0) + (res.data.dataCheck?.totalErrorCount || 0), totalWaitCount: res.data.dataCheck?.totalWaitCount || 0, totalRunningCount: res.data.dataCheck?.totalRunningCount || 0, totalFinishCount: res.data.dataCheck?.totalFinishCount || 0, totalErrorCount: res.data.dataCheck?.totalErrorCount || 0 })),
-                  h(
-                    'div',
-                    null,
-                    t('components.SubTaskDetail.5q09xhsvcq44', {
-                      totalRowCount: dataCheckData.value?.total || 0,
-                      totalTableCount: dataCheckData.value?.tableCount || 0,
-                      totalTableFinishCount:
-                        dataCheckData.value?.completeCount || 0
-                    })
-                  ),
-                  h(
-                    'div',
-                    { class: 'arco-tag arco-tag-checked speed-tag' },
-                    t('components.SubTaskDetail.5q09xhsvcq45', {
-                      avgSpeed: dataCheckData.value?.avgSpeed || 0
-                    })
-                  )
-                ])
-              )
+              'div',
+              null,
+              h('div', { class: 'desc-value-row' }, [
+                // h('div', null, t('components.SubTaskDetail.5q09xhsvcq43', { total: (res.data.totalWaitCount || 0) + (res.data.dataCheck?.totalRunningCount || 0) + (res.data.dataCheck?.totalFinishCount || 0) + (res.data.dataCheck?.totalErrorCount || 0), totalWaitCount: res.data.dataCheck?.totalWaitCount || 0, totalRunningCount: res.data.dataCheck?.totalRunningCount || 0, totalFinishCount: res.data.dataCheck?.totalFinishCount || 0, totalErrorCount: res.data.dataCheck?.totalErrorCount || 0 })),
+                h(
+                  'div',
+                  null,
+                  t('components.SubTaskDetail.5q09xhsvcq44', {
+                    totalRowCount: dataCheckData.value?.total || 0,
+                    totalTableCount: dataCheckData.value?.tableCount || 0,
+                    totalTableFinishCount:
+                      dataCheckData.value?.completeCount || 0
+                  })
+                ),
+                h(
+                  'div',
+                  { class: 'arco-tag arco-tag-checked speed-tag' },
+                  t('components.SubTaskDetail.5q09xhsvcq45', {
+                    avgSpeed: dataCheckData.value?.avgSpeed || 0
+                  })
+                )
+              ])
+            )
             : t('components.SubTaskDetail.5q09prnznzg0'),
           span: 5
         }
@@ -709,30 +779,30 @@ const getSubTaskDetail = () => {
           label: t('components.SubTaskDetail.5q09prnzqxs0'),
           value: fullProcessDetail
             ? h('div', null, [
-                h(
-                  'div',
-                  null,
-                  t('components.SubTaskDetail.5q09xhsvcq40', {
-                    total:
-                      (res.data.totalWaitCount || 0) +
-                      (res.data.totalRunningCount || 0) +
-                      (res.data.totalSuccessCount || 0) +
-                      (res.data.totalErrorCount || 0),
-                    totalWaitCount: res.data.totalWaitCount || 0,
-                    totalRunningCount: res.data.totalRunningCount || 0,
-                    totalSuccessCount: res.data.totalSuccessCount || 0,
-                    totalErrorCount: res.data.totalErrorCount || 0
-                  })
-                ),
-                h(
-                  'div',
-                  null,
-                  t('components.SubTaskDetail.5q09xhsvcq41', {
-                    totalDataSize: fullData.value?.total?.data || 0,
-                    cost: fullData.value?.total?.time || 0
-                  })
-                )
-              ])
+              h(
+                'div',
+                null,
+                t('components.SubTaskDetail.5q09xhsvcq40', {
+                  total:
+                    (res.data.totalWaitCount || 0) +
+                    (res.data.totalRunningCount || 0) +
+                    (res.data.totalSuccessCount || 0) +
+                    (res.data.totalErrorCount || 0),
+                  totalWaitCount: res.data.totalWaitCount || 0,
+                  totalRunningCount: res.data.totalRunningCount || 0,
+                  totalSuccessCount: res.data.totalSuccessCount || 0,
+                  totalErrorCount: res.data.totalErrorCount || 0
+                })
+              ),
+              h(
+                'div',
+                null,
+                t('components.SubTaskDetail.5q09xhsvcq41', {
+                  totalDataSize: fullData.value?.total?.data || 0,
+                  cost: fullData.value?.total?.time || 0
+                })
+              )
+            ])
             : t('components.SubTaskDetail.5q09prnznzg0'),
           span: 3
         },
@@ -745,16 +815,16 @@ const getSubTaskDetail = () => {
           label: t('components.SubTaskDetail.5q09prnzr2o0'),
           value: increaseProcessDetail
             ? t('components.SubTaskDetail.5q0a1jl7o9s1', {
-                total: increaseData.value?.count || 0,
-                totalWaitCount: increaseData.value?.rest || 0,
-                totalRunningCount:
-                  (increaseData.value?.count || 0) -
-                  (increaseData.value?.rest || 0) -
-                  (increaseData.value?.successCount || 0) -
-                  (increaseData.value?.failCount || 0),
-                totalFinishCount: increaseData.value?.successCount || 0,
-                totalErrorCount: increaseData.value?.failCount || 0
-              })
+              total: increaseData.value?.count || 0,
+              totalWaitCount: increaseData.value?.rest || 0,
+              totalRunningCount:
+                (increaseData.value?.count || 0) -
+                (increaseData.value?.rest || 0) -
+                (increaseData.value?.successCount || 0) -
+                (increaseData.value?.failCount || 0),
+              totalFinishCount: increaseData.value?.successCount || 0,
+              totalErrorCount: increaseData.value?.failCount || 0
+            })
             : t('components.SubTaskDetail.5q09prnznzg0'),
           span: 3
         },
@@ -769,43 +839,41 @@ const getSubTaskDetail = () => {
           label: t('components.SubTaskDetail.5q09prnzux40'),
           value: reverseDetail
             ? t('components.SubTaskDetail.5q0a1jl7o9s0', {
-                total: reverseData.value?.count || 0,
-                totalWaitCount: reverseData.value?.rest || 0,
-                totalRunningCount:
-                  (reverseData.value?.count || 0) -
-                  (reverseData.value?.rest || 0) -
-                  (reverseData.value?.successCount || 0) -
-                  (reverseData.value?.failCount || 0),
-                totalFinishCount: reverseData.value?.successCount || 0,
-                totalErrorCount: reverseData.value?.failCount || 0
-              })
+              total: reverseData.value?.count || 0,
+              totalWaitCount: reverseData.value?.rest || 0,
+              totalRunningCount:
+                (reverseData.value?.count || 0) -
+                (reverseData.value?.rest || 0) -
+                (reverseData.value?.successCount || 0) -
+                (reverseData.value?.failCount || 0),
+              totalFinishCount: reverseData.value?.successCount || 0,
+              totalErrorCount: reverseData.value?.failCount || 0
+            })
             : t('components.SubTaskDetail.5q09prnznzg0'),
           span: 3
         },
         {
           label: t('components.SubTaskDetail.5q09prnzqnw0'),
-          value: `${
-            hour ? hour + t('components.SubTaskDetail.5q09prnzqpw0') : ''
-          } ${
-            minute ? minute + t('components.SubTaskDetail.5q09prnzqs00') : ''
-          }`,
+          value: `${hour ? hour + t('components.SubTaskDetail.5q09prnzqpw0') : ''
+            } ${minute ? minute + t('components.SubTaskDetail.5q09prnzqs00') : ''
+            }`,
           span: 2
         },
         {
           label: t('components.SubTaskDetail.5q09prnzux41'),
           value: dataCheckDetail
             ? h('div', null, [
-                h(
-                  'div',
-                  null,
-                  t('components.SubTaskDetail.5q09xhsvcq44', {
-                    totalRowCount: dataCheckData.value?.total || 0,
-                    totalTableCount: dataCheckData.value?.tableCount || 0,
-                    totalTableFinishCount:
-                      dataCheckData.value?.completeCount || 0
-                  })
-                )
-              ])
+              h(
+                'div',
+                null,
+                t('components.SubTaskDetail.5q09xhsvcq44', {
+                  totalRowCount: dataCheckData.value?.total || 0,
+                  totalTableCount: dataCheckData.value?.tableCount || 0,
+                  totalTableFinishCount:
+                    dataCheckData.value?.completeCount || 0
+                })
+              )
+            ])
             : t('components.SubTaskDetail.5q09prnznzg0'),
           span: 5
         }
@@ -857,11 +925,71 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (timer) {
     clearInterval(timer)
+    timer = null
+  }
+  if (alarmNumTimer) {
+    clearInterval(alarmNumTimer)
+    alarmNumTimer = null
+  }
+  if (alarmPhaseListTimer) {
+    clearInterval(alarmPhaseListTimer)
+    alarmPhaseListTimer = null
   }
 })
 </script>
 
 <style lang="less" scoped>
+:deep(.el-loading-mask) {
+  --o-loading-mask-color: transparent;
+}
+
+:deep(.el-table thead) {
+  height: 40px
+}
+
+:deep(.el-tabs--card>.el-tabs__header .el-tabs__item) {
+  height: 38px;
+  width: 115px;
+  background-color: #fff;
+  border: 1px solid #dfe5ef;
+  margin: 0 -1px 0 0;
+
+  .is-active {
+    border: none
+  }
+}
+
+:deep(.el-tabs--card>.el-tabs__header .el-tabs__item.is-active) {
+  position: relative;
+  border-top: none;
+  border-bottom: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, #dfe5ef 8px, transparent 10px, transparent calc(100% - 8px), #dfe5ef calc(100% - 8px));
+  }
+}
+
+.mainTabs {
+
+  margin-top: 20px;
+
+  :deep(.el-table th.el-table__cell) {
+    background-color: #f2f3f5;
+  }
+
+  .errorLabel {
+    height: 24px;
+    display: flex;
+    align-items: center;
+  }
+}
+
 .title-con {
   width: calc(60vw - 60px);
   display: flex;
@@ -870,22 +998,10 @@ onBeforeUnmount(() => {
 
   .tab-con {
     .tab-item {
-      cursor: pointer;
-      color: var(--color-text-3);
-      font-weight: 400;
-      font-size: 15px;
       margin-right: 10px;
-      transition: all 0.1s linear;
-
-      &.tab-item-active {
-        color: var(--color-text-1);
-        font-weight: 500;
-        font-size: 16px;
-      }
-
-      &:hover {
-        color: var(--color-text-1);
-      }
+      font-weight: 500;
+      font-size: 16px;
+      color: var(--color-text-1);
     }
   }
 
@@ -918,6 +1034,8 @@ onBeforeUnmount(() => {
   }
 
   .table-con {
+    padding-top: 16px;
+
     .data-count {
       cursor: pointer;
       color: var(--color-text-3);
@@ -996,8 +1114,9 @@ onBeforeUnmount(() => {
                     margin-right: 10px;
                   }
                 }
-                .status-text-en{
-                  left:215px;
+
+                .status-text-en {
+                  left: 215px;
                 }
               }
 
@@ -1095,5 +1214,4 @@ onBeforeUnmount(() => {
   :deep(.speed-tag) {
     margin-left: 50px;
   }
-}
-</style>
+}</style>
