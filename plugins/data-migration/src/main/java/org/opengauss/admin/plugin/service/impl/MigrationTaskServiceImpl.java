@@ -28,6 +28,7 @@ import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.utils.SecurityUtils;
+import org.opengauss.admin.plugin.constants.TaskAlertConstants;
 import org.opengauss.admin.plugin.domain.*;
 import org.opengauss.admin.plugin.enums.FullMigrationDbObjEnum;
 import org.opengauss.admin.plugin.enums.MainTaskStatus;
@@ -120,6 +121,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
 
     @Autowired
     private MigrationMainTaskService migrationMainTaskService;
+
+    @Autowired
+    private MigrationMqInstanceService migrationMqInstanceService;
 
     /**
      * Query the sub task page list by mainTaskId
@@ -549,6 +553,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         setToolsParams(resultMap, task.getRunHostId());
 
         setOpengaussClusterParams(resultMap, task.getTargetNodeId());
+        setMigrationAlertParams(resultMap, installHost.getHost());
         return resultMap;
     }
 
@@ -608,6 +613,15 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         setNewAddParam(toolsParamsMap, runHostId);
         if (!toolsParamsMap.isEmpty()) {
             resultMap.putAll(toolsParamsMap);
+        }
+    }
+
+    private void setMigrationAlertParams(Map<String, String> resultMap, String runHostIp) {
+        MigrationThirdPartySoftwareConfig mqInstance = migrationMqInstanceService.getOneByKafkaIp(runHostIp);
+        if (mqInstance != null) {
+            resultMap.put(TaskAlertConstants.Params.ENABLE_ALERT_LOG_COLLECTION, "true");
+            resultMap.put(TaskAlertConstants.Params.KAFKA_SEVER,
+                    mqInstance.getKafkaIp() + ":" + mqInstance.getKafkaPort());
         }
     }
 

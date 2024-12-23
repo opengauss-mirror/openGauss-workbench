@@ -143,6 +143,16 @@ START 1
 CACHE 1;
 END IF;
 
+IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_tb_migration_task_alert_id'' )
+THEN
+CREATE SEQUENCE "public"."sq_tb_migration_task_alert_id"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+END IF;
+
 RETURN 0;
 END;'
 LANGUAGE plpgsql;
@@ -1054,3 +1064,51 @@ VALUES(24, 'openEuler', '22.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myh
 INSERT INTO "public"."tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
 VALUES(25, 'openEuler', '22.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler22.03/', 'latest_PortalControl-7.0.0rc1-aarch64.tar.gz', 'portalControl-7.0.0rc1-exec.jar');
+
+-- ----------------------------
+-- Table structure for tb_migration_task_alert
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_alert" (
+    "id" int8 NOT NULL DEFAULT nextval('sq_tb_migration_tool_portal_download_info_id'::regclass),
+    "task_id" int8 NOT NULL,
+    "migration_phase" int8 NOT NULL,
+    "date_time" varchar(24) NOT NULL,
+    "thread" varchar(255),
+    "class_name" varchar(255),
+    "method_name" varchar(255),
+    "line_number" int8,
+    "cause_cn" text NOT NULL,
+    "cause_en" text NOT NULL,
+    "log_level" varchar(10),
+    "log_code" varchar(4) NOT NULL,
+    "log_source" int8 NOT NULL,
+    CONSTRAINT "tb_migration_task_alert_pkey" PRIMARY KEY ("id")
+    );
+
+COMMENT ON COLUMN "public"."tb_migration_task_alert"."id" IS '告警信息主键ID';
+COMMENT ON COLUMN "public"."tb_migration_task_alert"."task_id" IS '迁移任务主键ID';
+COMMENT ON COLUMN "public"."tb_migration_task_alert"."migration_phase" IS '迁移阶段；1：全量迁移；2：全量校验；3：增量迁移；4：反向迁移';
+COMMENT ON COLUMN "public"."tb_migration_task_alert"."date_time" IS '告警时间，格式：yyyy-MM-dd HH:mm:ss.SSS';
+COMMENT ON COLUMN "public"."tb_migration_task_alert"."thread" IS '告警所在进程';
+COMMENT ON COLUMN "public"."tb_migration_task_alert"."class_name" IS '告警所在类名';
+COMMENT ON COLUMN "public"."tb_migration_task_alert"."method_name" IS '告警所在方法名';
+COMMENT ON COLUMN "public"."tb_migration_task_alert"."line_number" IS '告警所在代码行数';
+COMMENT ON COLUMN "public"."tb_migration_task_alert"."cause_cn" IS '告警中文原因';
+COMMENT ON COLUMN "public"."tb_migration_task_alert"."cause_en" IS '告警英文原因';
+COMMENT ON COLUMN "public"."tb_migration_task_alert"."log_level" IS '告警对应的日志级别';
+COMMENT ON COLUMN "public"."tb_migration_task_alert"."log_code" IS '告警对应的日志状态码';
+COMMENT ON COLUMN "public"."tb_migration_task_alert"."log_source" IS '告警对应的日志来源，0：portal_id.log；10：full_migration.log；20：check.log；21：source.log；22：sink.log；31：connect_source.log；32：connect_sink.log；41：reverse_connect_source.log；42：reverse_connect_sink.log';
+
+-- ----------------------------
+-- Table structure for tb_migration_task_alert_detail
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_alert_detail" (
+    "alert_id" int8 NOT NULL,
+    "detail" text NOT NULL,
+    CONSTRAINT "tb_migration_task_alert_detail_pkey" PRIMARY KEY ("alert_id")
+    );
+
+COMMENT ON COLUMN "public"."tb_migration_task_alert_detail"."alert_id" IS '告警信息主键ID';
+COMMENT ON COLUMN "public"."tb_migration_task_alert_detail"."detail" IS '告警对应的日志文本';

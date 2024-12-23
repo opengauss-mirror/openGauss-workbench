@@ -633,8 +633,18 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
 
     private void handleImportInstallation(MigrationHostPortalInstall physicalInstallParams) {
         physicalInstallParams.setInstallType(PortalInstallType.IMPORT_INSTALL.getCode());
-        boolean isInstallSuccess = PortalHandle.checkInstallStatusAndUpdate(physicalInstallParams,
-            encryptionUtils.decrypt(physicalInstallParams.getRunPassword()));
+        boolean isInstallSuccess = false;
+        Optional<MigrationThirdPartySoftwareConfig> checkMqInstance =
+                PortalHandle.checkInstallStatusAndUpdate(physicalInstallParams,
+                        encryptionUtils.decrypt(physicalInstallParams.getRunPassword()));
+        if (checkMqInstance.isPresent()) {
+            isInstallSuccess = true;
+            MigrationThirdPartySoftwareConfig mqInstance = checkMqInstance.get();
+            if (!mqInstance.isEmpty()) {
+                migrationThirdPartySoftwareInstanceService.saveRecord(mqInstance);
+            }
+        }
+
         migrationHostPortalInstallHostService.saveRecord(physicalInstallParams);
         if (isInstallSuccess) {
             threadPoolTaskExecutor.submit(() -> {
