@@ -47,7 +47,7 @@
                       <div style="min-width: 500px;" class="flex-row-start">
                         <div class="mr">
                           <icon-close-circle-fill v-if="item.status === hostEnvStatusEnum.ERROR" style="color: red"
-                              :size="20"></icon-close-circle-fill>
+                            :size="20"></icon-close-circle-fill>
                           <icon-check-circle-fill v-if="item.status === hostEnvStatusEnum.NORMAL" style="color: green"
                             :size="20"></icon-check-circle-fill>
                           <icon-exclamation-circle-fill v-if="item.status === hostEnvStatusEnum.WARMING"
@@ -116,7 +116,6 @@ import { KeyValue } from '@/types/global'
 import { ClusterRoleEnum } from '@/types/ops/install'
 import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
-import { encryptPassword } from '@/utils/jsencrypt'
 const { t } = useI18n()
 const installStore = useOpsStore()
 
@@ -157,17 +156,14 @@ let envData = reactive<KeyValue>({
   softwareEnv: {
     envProperties: []
   },
-  rootPassword: ''
 })
 
 onMounted(async () => {
   loadingFunc.toLoading()
   await getHostInfo()
   envData.loading = true
-  console.log(envData.rootPassword)
   const param = {
     expectedOs: installStore.getInstallConfig.installOs,
-    rootPassword: envData.rootPassword
   }
   getEnvMonitorData(envData.hostId, param).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
@@ -193,7 +189,6 @@ const envRetest = (envData: KeyValue) => {
   envData.loading = true
   const param = {
     expectedOs: installStore.getInstallConfig.installOs,
-    rootPassword: envData.rootPassword
   }
   getEnvMonitorData(envData.hostId, param).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
@@ -220,8 +215,7 @@ const getHostInfo = async () => {
     envData.hostId = item.hostId
     envData.privateIp = item.privateIp
     envData.publicIp = item.publicIp
-    envData.clusterRole = item.clusterRole,
-    envData.rootPassword = item.rootPassword ? await encryptPassword(item.rootPassword) : ''
+    envData.clusterRole = item.clusterRole
   }
 }
 
@@ -235,7 +229,7 @@ const getErrorNum = () => {
       envData.noPassNum = envData.noPassNum + 1
       envData.noPassNumHard = envData.noPassNumHard + 1
     }
-    if(item.status === hostEnvStatusEnum.ERROR){
+    if (item.status === hostEnvStatusEnum.ERROR) {
       envData.noPassNumError += 1
     }
   })
@@ -244,7 +238,7 @@ const getErrorNum = () => {
       envData.noPassNum = envData.noPassNum + 1
       envData.noPassNumSoft = envData.noPassNumSoft + 1
     }
-    if(item.status === hostEnvStatusEnum.ERROR){
+    if (item.status === hostEnvStatusEnum.ERROR) {
       envData.noPassNumError += 1
     }
   })
@@ -283,7 +277,7 @@ const beforeConfirm = () => {
     result = false
     Message.warning('If the host fails to be detected, configure the host and re-detect the host for installation')
   }
-  if(envData.noPassNumError>0){
+  if (envData.noPassNumError > 0) {
     result = false;
     Message.error(t('enterprise.EnvMonitor.5mpm5p9xg701'))
   }
