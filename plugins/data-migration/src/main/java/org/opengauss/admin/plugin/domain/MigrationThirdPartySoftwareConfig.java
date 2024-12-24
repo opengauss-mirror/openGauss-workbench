@@ -89,4 +89,13 @@ public class MigrationThirdPartySoftwareConfig {
             this.installDir = this.installDir.replace("~", "/home/" + userName);
         }
     }
+
+    /**
+     * checks if the kafkaIp or kafkaPort is null.
+     *
+     * @return true/false
+     */
+    public boolean isEmpty() {
+        return this.kafkaIp == null || this.kafkaPort == null;
+    }
 }

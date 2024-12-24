@@ -24,6 +24,9 @@
 
 package org.opengauss.admin.plugin.utils;
 
+import org.opengauss.admin.common.core.domain.model.ops.JschResult;
+import org.opengauss.admin.plugin.vo.ShellInfoVo;
+
 import javax.servlet.http.HttpServletResponse;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -53,5 +56,31 @@ public class FileUtils {
                 .append(percentEncodedFileName);
 
         response.setHeader("Content-disposition", contentDispositionValue.toString());
+    }
+
+    /**
+     * is remote file exists
+     *
+     * @param filePath file path
+     * @param shellInfo shell info
+     * @return true/false
+     */
+    public static boolean isRemoteFileExists(String filePath, ShellInfoVo shellInfo) {
+        String command = String.format("[ -e %s ] && echo 0 || echo 1", filePath);
+        JschResult jschResult = ShellUtil.execCommandGetResult(shellInfo, command);
+        return jschResult.isOk() && Integer.parseInt(jschResult.getResult().trim()) == 0;
+    }
+
+    /**
+     * cat remote file contents
+     *
+     * @param filePath file path
+     * @param shellInfo shell info
+     * @return file contents
+     */
+    public static String catRemoteFileContents(String filePath, ShellInfoVo shellInfo) {
+        String command = String.format("cat %s", filePath);
+        JschResult jschResult = ShellUtil.execCommandGetResult(shellInfo, command);
+        return jschResult.isOk() ? jschResult.getResult().trim() : "";
     }
 }

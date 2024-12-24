@@ -29,6 +29,7 @@ import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
+import org.opengauss.admin.plugin.constants.PortalConstants;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTask;
 import org.opengauss.admin.plugin.domain.MigrationThirdPartySoftwareConfig;
@@ -54,6 +55,11 @@ public class PortalHandle {
 
     private static final String REPLACE_BLANK_ENTER = "\\s{2,}|\t|\r|\n";
     private static final Pattern REPLACE_P = Pattern.compile(REPLACE_BLANK_ENTER);
+    private static final String IMPORT_INSTALL_MQ_REGEX = "KAFKA=(?<kafkaIp>[^:]+):(?<kafkaPort>\\d+),"
+            + "ZOOKEEPER=(?<zookeeperIp>[^:]+):(?<zookeeperPort>\\d+),"
+            + "SCHEMA_REGISTRY=(?<schemaIp>[^:]+):(?<schemaPort>\\d+),"
+            + "INSTALL_PATH=(?<installPath>[^\\n]+)";
+    private static final Pattern IMPORT_INSTALL_MQ_PATTERN = Pattern.compile(IMPORT_INSTALL_MQ_REGEX);
 
     public static boolean checkInstallPortal(String host, Integer port, String user, String pass, String installPath) {
         JschResult checkInstallPortalResult = ShellUtil.execCommandGetResult(host, port, user, pass,
@@ -63,18 +69,14 @@ public class PortalHandle {
     }
 
     /**
-     * checkInstallStatusAndUpdate
+     * check whether portal has been installed.
      *
      * @param installParams installParams
      * @param runPassword   runPassword
-     * @return boolean
-     * @author: www
-     * @date: 2023/11/28 15:21
-     * @description: msg
-     * @since: 1.1
-     * @version: 1.1
+     * @return Option of MigrationThirdPartySoftwareConfig
      */
-    public static boolean checkInstallStatusAndUpdate(MigrationHostPortalInstall installParams, String runPassword) {
+    public static Optional<MigrationThirdPartySoftwareConfig> checkInstallStatusAndUpdate(
+            MigrationHostPortalInstall installParams, String runPassword) {
         String portalHome = installParams.getInstallPath() + "portal/";
         JschResult getPortalInstallFileJarPath = ShellUtil.execCommandGetResult(installParams.getHost(),
                 installParams.getPort(), installParams.getRunUser(), runPassword,
@@ -99,7 +101,7 @@ public class PortalHandle {
             if (!result.isOk()) {
                 log.error("write install error message failed: " + result.getResult());
             }
-            return false;
+            return Optional.empty();
         }
         // Execute the portal check, determine whether the installation was successful based on the return value
         String checkInstallCommand = "java -Dpath=" + portalHome
@@ -113,7 +115,26 @@ public class PortalHandle {
             log.error("portal exec checkInstall command failed.");
         }
         log.info("portal exec checkInstall command result {}", installToolResult.getResult());
-        return installToolResult.getResult().contains("check portal status:ok");
+        return parseMqConfig(installToolResult.getResult());
+    }
+
+    private static Optional<MigrationThirdPartySoftwareConfig> parseMqConfig(String logContent) {
+        if (!logContent.contains(PortalConstants.IMPORT_INSTALL_SUCCESS_FLAG)) {
+            return Optional.empty();
+        }
+
+        Matcher matcher = IMPORT_INSTALL_MQ_PATTERN.matcher(logContent);
+        MigrationThirdPartySoftwareConfig mqInstance = new MigrationThirdPartySoftwareConfig();
+        if (matcher.find()) {
+            mqInstance.setKafkaIp(matcher.group("kafkaIp"));
+            mqInstance.setKafkaPort(matcher.group("kafkaPort"));
+            mqInstance.setZkIp(matcher.group("zookeeperIp"));
+            mqInstance.setZookeeperPort(matcher.group("zookeeperPort"));
+            mqInstance.setSchemaRegistryIp(matcher.group("schemaIp"));
+            mqInstance.setSchemaRegistryPort(matcher.group("schemaPort"));
+            mqInstance.setInstallDir(matcher.group("installPath"));
+        }
+        return Optional.of(mqInstance);
     }
 
     public static boolean installPortal(MigrationHostPortalInstall installParams) throws PortalInstallException {
@@ -532,5 +553,18 @@ public class PortalHandle {
             return Optional.of(pps);
         }
         return Optional.empty();
+    }
+
+    /**
+     * generate portal home path
+     *
+     * @param portalInstallPath portal install path
+     * @return portal home path
+     */
+    public static String generatePortalHome(String portalInstallPath) {
+        if (portalInstallPath.endsWith("/")) {
+            return portalInstallPath + "portal/";
+        }
+        return portalInstallPath + "/portal/";
     }
 }

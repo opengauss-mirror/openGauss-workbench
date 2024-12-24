@@ -152,7 +152,8 @@ public class MigrationMqInstanceServiceImpl extends ServiceImpl<MigrationThirdPa
     @Override
     public MigrationThirdPartySoftwareConfig getOneByKafkaIp(String kafkaIp) {
         LambdaQueryWrapper<MigrationThirdPartySoftwareConfig> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(MigrationThirdPartySoftwareConfig::getKafkaIp, kafkaIp).last("limit 1");
+        queryWrapper.eq(MigrationThirdPartySoftwareConfig::getKafkaIp, kafkaIp)
+                .orderByDesc(MigrationThirdPartySoftwareConfig::getId);
         return getOne(queryWrapper);
     }
 }

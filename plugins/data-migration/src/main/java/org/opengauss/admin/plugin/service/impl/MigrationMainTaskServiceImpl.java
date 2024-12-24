@@ -99,6 +99,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     private MainTaskEnvErrorHostService mainTaskEnvErrorHostService;
     @Autowired
     private MigrationHostPortalInstallHostService migrationHostPortalInstallHostService;
+    @Autowired
+    private MigrationTaskAlertService migrationTaskAlertService;
     @Value("${migration.taskRefreshIntervalsMillisecond}")
     private Long taskRefreshIntervalsMillisecond;
     @Value("${migration.mainTaskRefreshIntervalsMillisecond}")
@@ -345,6 +347,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     public void deleteTask(Integer[] ids) {
         Arrays.asList(ids).stream().forEach(i -> {
             removeById(i);
+            migrationTaskAlertService.deleteByMainTaskId(i);
             migrationTaskService.deleteByMainTaskId(i);
             migrationTaskParamService.deleteByMainTaskId(i);
             migrationTaskGlobalParamService.deleteByMainTaskId(i);
@@ -444,6 +447,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         migrationMainTaskMapper.updateById(mainTask);
         
         List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(id);
+        migrationTaskAlertService.deleteByMainTaskId(id);
         migrationTaskService.deleteByMainTaskId(id);
         tasks.forEach(task -> {
             task.setId(null);
@@ -653,6 +657,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         if (runningTasks.size() > 0) {
             taskRefreshRecord.put(mainTaskId, DateUtil.date().getTime());
             runningTasks.forEach(t -> {
+                migrationTaskAlertService.refreshAlertByPortal(t);
                 migrationTaskService.getSingleTaskStatusAndProcessByProtal(t);
             });
             //refresh mainTask
