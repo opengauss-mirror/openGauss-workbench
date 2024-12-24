@@ -102,7 +102,7 @@
             :virtual-list-props="
               tableListData[item.key] && tableListData[item.key].length > 50
                 ? { height: 300, threshold: 50 }
-                : false
+                : undefined
             "
           >
             <template #columns>

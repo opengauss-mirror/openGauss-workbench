@@ -47,3 +47,15 @@ export function getEntryKey () {
 export function getdataTbl (formData, dbName, pageSize, pageNum) {
   return axios.post(`/plugins/data-migration/resource/tables/${dbName}?pageSize=${pageSize}&pageNum=${pageNum}`, formData)
 }
+
+export function getTotalAlarmNum (taskId) {
+  return axios.get(`/plugins/data-migration/migration/alert/count/${taskId}`)
+}
+
+export function getPhaseAlarmList (taskId, migrationPhase, pageSize, pageNum) {
+  return axios.get(`/plugins/data-migration/migration/alert/list/${taskId}/${migrationPhase}?pageSize=${pageSize}&pageNum=${pageNum}`)
+}
+
+export function getAlarmDetail (taskId) {
+  return axios.get(`/plugins/data-migration/migration/alert/detail/${taskId}`)
+}
