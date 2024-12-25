@@ -47,6 +47,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -62,7 +63,7 @@ import javax.annotation.Resource;
 public class HostMonitorCacheService {
     // cacheMap  : hostId : item : value
     private final Map<String, Map<String, String>> cacheMap = new ConcurrentHashMap<>();
-
+    private volatile AtomicLong lastedFetch = new AtomicLong(0);
     @Resource
     private IHostService hostService;
     @Resource
@@ -79,8 +80,13 @@ public class HostMonitorCacheService {
      */
     @PostConstruct
     private void init() {
+        lastedFetch.set(System.currentTimeMillis() / 1000);
         // host static info, support refresh data per minute
         scheduledExecutorService.scheduleWithFixedDelay(() -> {
+            Thread.currentThread().setName("host-monitor");
+            if (noUsing()) {
+                return;
+            }
             List<OpsHostEntity> list = hostService.list();
             list.forEach(host -> {
                 try {
@@ -101,6 +107,10 @@ public class HostMonitorCacheService {
         }, 5, 5 * 60, TimeUnit.SECONDS);
         // host dynamic info,support seconds level data refresh
         scheduledExecutorService.scheduleWithFixedDelay(() -> {
+            Thread.currentThread().setName("host-realtime-monitor");
+            if (noUsing()) {
+                return;
+            }
             List<OpsHostEntity> list = hostService.list();
             list.forEach(host -> {
                 try {
@@ -123,6 +133,11 @@ public class HostMonitorCacheService {
                 }
             });
         }, 5, 6, TimeUnit.SECONDS);
+    }
+
+    private boolean noUsing() {
+        long currentSecond = System.currentTimeMillis() / 1000;
+        return (currentSecond - lastedFetch.get()) > 60;
     }
 
     private void cpuUsing(SshLogin sshLogin, Map<String, String> hostInfoMap) {
@@ -321,6 +336,7 @@ public class HostMonitorCacheService {
     }
 
     private String getCacheValue(String hostId, String key) {
+        lastedFetch.set(System.currentTimeMillis() / 1000);
         if (isNotCache(hostId)) {
             return CacheConstants.EMPTY;
         }
