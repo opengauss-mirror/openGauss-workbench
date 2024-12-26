@@ -642,18 +642,21 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                     .filter(hostUser -> hostUser.getHostId().equals(host.getHostId()))
                     .collect(Collectors.toList())))
                 .collect(Collectors.toList());
-            for (HostInfoHolder hostInfoHolder : hostInfoHolderList) {
-                List<OpsHostUserEntity> userEntities = hostInfoHolder.getHostUserEntities();
-                OpsHostUserEntity rootUserEntity = userEntities.stream()
-                    .filter(userEntity -> "root".equals(userEntity.getUsername()))
-                    .findFirst()
-                    .orElseThrow(() -> new OpsException(
-                        "Host not found[" + hostInfoHolder.getHostEntity().getPublicIp() + "]root user information"));
-                if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
-                    if (StrUtil.isNotEmpty(hostPasswdMap.get(rootUserEntity.getHostId()))) {
-                        rootUserEntity.setPassword(hostPasswdMap.get(rootUserEntity.getHostId()));
-                    } else {
-                        throw new OpsException("root password does not exist");
+            if (!Objects.equals(OpenGaussVersionEnum.MINIMAL_LIST, openGaussVersion)) {
+                for (HostInfoHolder hostInfoHolder : hostInfoHolderList) {
+                    List<OpsHostUserEntity> userEntities = hostInfoHolder.getHostUserEntities();
+                    OpsHostUserEntity rootUserEntity = userEntities.stream()
+                        .filter(userEntity -> "root".equals(userEntity.getUsername()))
+                        .findFirst()
+                        .orElseThrow(() -> new OpsException(
+                            "Host not found[" + hostInfoHolder.getHostEntity().getPublicIp()
+                                + "]root user information"));
+                    if (StrUtil.isEmpty(rootUserEntity.getPassword())) {
+                        if (StrUtil.isNotEmpty(hostPasswdMap.get(rootUserEntity.getHostId()))) {
+                            rootUserEntity.setPassword(hostPasswdMap.get(rootUserEntity.getHostId()));
+                        } else {
+                            throw new OpsException("root password does not exist");
+                        }
                     }
                 }
             }

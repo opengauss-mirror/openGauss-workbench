@@ -62,71 +62,77 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
     @Autowired
     private OpsClusterEnvService opsClusterEnvService;
 
-    protected Session beforeInstall(JschUtil jschUtil, EncryptionUtils encryptionUtils, InstallContext installContext, String installPath, String dataPath, String pkgPath, String hostId, String installUserId, String installUserName, String decompressArgs) {
+    /**
+     * Prepares a session before installation.
+     *
+     * @param jschUtil          The JSch utility for SSH connections.
+     * @param encryptionUtils   The utility for encryption and decryption.
+     * @param installContext    The context containing installation details.
+     * @param installPath       The path where the installation will occur.
+     * @param dataPath          The path where data will be stored.
+     * @param pkgPath           The path to the package to be installed.
+     * @param hostId            The ID of the host where the installation will occur.
+     * @param installUserId     The ID of the user performing the installation.
+     * @param installUserName   The name of the user performing the installation.
+     * @param decompressArgs    Arguments for decompressing the package.
+     * @return A session object representing the SSH session.
+     */
+    protected Session beforeInstall(JschUtil jschUtil, EncryptionUtils encryptionUtils, InstallContext installContext,
+        String installPath, String dataPath, String pkgPath, String hostId, String installUserId,
+        String installUserName, String decompressArgs) {
         WsSession retSession = installContext.getRetSession();
-
         log.info("The root user logs in to the host");
-        // root session
-        Session rootSession = loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), true, hostId, null);
+        Session rootSession = null;
         try {
-
+            if (Objects.equals(OpenGaussVersionEnum.MINIMAL_LIST, version())) {
+                rootSession = loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), false,
+                    hostId, installUserId);
+            } else {
+                rootSession = loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), true,
+                    hostId, null);
+            }
             installDependency(jschUtil, rootSession, retSession, installContext.getOs());
             ensureDirExist(jschUtil, rootSession, pkgPath, retSession);
-
             ensureDirExist(jschUtil, rootSession, installPath, retSession);
-
             ensureDirExist(jschUtil, rootSession, dataPath, retSession);
-
-
             ensureLimits(jschUtil, rootSession, retSession);
-
-            try {
-                retSession.getSession().getBasicRemote().sendText("START_SCP_INSTALL_PACKAGE");
-            } catch (IOException e) {
-                log.error("send websocket text fail", e);
-            }
-
+            wsRetSendText(retSession, "START_SCP_INSTALL_PACKAGE");
             log.info("Copy the installation package to the target host");
-            // scp
-            String installPackageFullPath = scpInstallPackageToMasterNode(jschUtil, rootSession, installContext.getInstallPackagePath(), pkgPath, retSession);
-
-            try {
-                retSession.getSession().getBasicRemote().sendText("END_SCP_INSTALL_PACKAGE");
-            } catch (IOException e) {
-                log.error("send websocket text fail", e);
-            }
-
-            log.info("set kernel.sem");
+            String installPackageFullPath = scpInstallPackageToMasterNode(jschUtil, rootSession,
+                installContext.getInstallPackagePath(), pkgPath, retSession);
+            wsRetSendText(retSession, "END_SCP_INSTALL_PACKAGE");
             // SEM
+            log.info("set kernel.sem");
             sem(jschUtil, rootSession, retSession);
-
-            log.info("Unzip the installation package");
-
             // unzip
-            try {
-                retSession.getSession().getBasicRemote().sendText("START_UNZIP_INSTALL_PACKAGE");
-            } catch (IOException e) {
-                log.error("send websocket text fail", e);
-            }
+            log.info("Unzip the installation package");
+            wsRetSendText(retSession, "START_UNZIP_INSTALL_PACKAGE");
             decompress(jschUtil, rootSession, installPath, installPackageFullPath, retSession, decompressArgs);
-            try {
-                retSession.getSession().getBasicRemote().sendText("END_UNZIP_INSTALL_PACKAGE");
-            } catch (IOException e) {
-                log.error("send websocket text fail", e);
-            }
-
+            wsRetSendText(retSession, "END_UNZIP_INSTALL_PACKAGE");
             ensureStrictPermission(jschUtil, rootSession, installUserName, pkgPath, retSession);
             ensureStrictPermission(jschUtil, rootSession, installUserName, installPath, retSession);
             ensureDataPathPermission(jschUtil, rootSession, installUserName, dataPath, retSession);
             ensureEnvPathPermission(jschUtil, rootSession, installContext.getEnvPath(), retSession);
             log.info("Login and install user");
         } finally {
-            if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
-                rootSession.disconnect();
-            }
+            closeSession(rootSession);
         }
+        return loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), false, hostId,
+            installUserId);
+    }
 
-        return loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), false, hostId, installUserId);
+    private void closeSession(Session session) {
+        if (Objects.nonNull(session) && session.isConnected()) {
+            session.disconnect();
+        }
+    }
+
+    private void wsRetSendText(WsSession retSession, String message) {
+        try {
+            retSession.getSession().getBasicRemote().sendText(message);
+        } catch (IOException e) {
+            log.error("send websocket text fail", e);
+        }
     }
 
     protected String wrapperEnvSep(String command, String envPath) {
