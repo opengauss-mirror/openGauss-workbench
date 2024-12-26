@@ -293,7 +293,7 @@ public interface SshCommandConstants {
     /**
      * check os openGauss Version
      */
-    String OPENGAUSS_MAIN_VERSION_NUM = "gsql -V|  grep -oP 'openGauss \\K[\\w.]+'";
+    String OPENGAUSS_MAIN_VERSION_NUM = "gsql -V| awk '{print $3}'";
     /**
      * check os user java version
      */
