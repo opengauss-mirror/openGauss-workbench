@@ -23,6 +23,9 @@
 
 package org.opengauss.admin.plugin.service.ops.impl;
 
+import static org.opengauss.admin.common.constant.ops.SshCommandConstants.CHECK_ENTERPRISE_VERSION;
+import static org.opengauss.admin.common.constant.ops.SshCommandConstants.CHECK_LITE_VERSION;
+import static org.opengauss.admin.common.constant.ops.SshCommandConstants.CHECK_MINILIST_VERSION;
 import static org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum.MASTER;
 import static org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum.SLAVE;
 import static org.opengauss.admin.plugin.enums.ops.DeployTypeEnum.CLUSTER;
@@ -443,11 +446,11 @@ public class BatchImportClusterService extends ServiceImpl<OpsClusterMapper, Ops
     }
 
     private String judgeVersionType(SshLogin sshLogin, OpsImportEntity opsImportEntity) {
-        String omCommand = String.format("source %s;gs_om -t view&&[ -f %s ]", opsImportEntity.getEnvPath(),
+        String omCommand = String.format(CHECK_ENTERPRISE_VERSION, opsImportEntity.getEnvPath(),
             opsImportEntity.getEnvPath());
-        String liteCommand = String.format("source %s;gsql -V|grep -i \"openGauss-lite\"&&[ -f %s ]",
-            opsImportEntity.getEnvPath(), opsImportEntity.getEnvPath());
-        String miniCommand = String.format("gsql -V&&[ -f %s ]", opsImportEntity.getEnvPath());
+        String liteCommand = String.format(CHECK_LITE_VERSION, opsImportEntity.getEnvPath(),
+            opsImportEntity.getEnvPath());
+        String miniCommand = String.format(CHECK_MINILIST_VERSION, opsImportEntity.getEnvPath());
         List<String> commandList = new ArrayList<>();
         commandList.add(omCommand);
         commandList.add(liteCommand);
@@ -457,30 +460,23 @@ public class BatchImportClusterService extends ServiceImpl<OpsClusterMapper, Ops
 
     private String getOpenGaussVersion(SshLogin sshLogin, List<String> commandList, OpsImportEntity opsImportEntity) {
         try {
-            try {
-                jschExecutorFacade.execCommand(sshLogin, commandList.get(0));
-                return ENTER_CONSTANT;
-            } catch (OpsException opsException) {
-                log.warn(opsException.getMessage());
+            for (String s : commandList) {
+                String result = jschExecutorFacade.execCommand(sshLogin, s);
+                if (result.contains("datanodeLocalDataPath")) {
+                    return ENTER_CONSTANT;
+                } else if (result.contains("openGauss-lite")) {
+                    return LITE_CONSTANT;
+                } else if (result.contains("openGauss")) {
+                    return MINI_CONSTANT;
+                } else {
+                    log.warn("{} could not find the corresponding result!", s);
+                }
             }
-            try {
-                jschExecutorFacade.execCommand(sshLogin, commandList.get(1));
-                return LITE_CONSTANT;
-            } catch (OpsException opsException) {
-                log.warn(opsException.getMessage());
-            }
-            try {
-                jschExecutorFacade.execCommand(sshLogin, commandList.get(2));
-                return MINI_CONSTANT;
-            } catch (OpsException opsException) {
-                log.warn(opsException.getMessage());
-            }
-            markErrorInfo(opsImportEntity);
-            opsImportEntity.setErrorInfo("please check the env path");
-            return OTHER_CONSTANT;
         } catch (OpsException e) {
-            log.error("getOpenGaussVersion error" + e);
+            log.error("get openGauss version command error:", e);
         }
+        markErrorInfo(opsImportEntity);
+        opsImportEntity.setErrorInfo("get OpenGauss Version error!");
         return OTHER_CONSTANT;
     }
 

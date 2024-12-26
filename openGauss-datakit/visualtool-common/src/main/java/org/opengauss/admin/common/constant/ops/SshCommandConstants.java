@@ -327,4 +327,19 @@ public interface SshCommandConstants {
      * get host cpu info
      */
     String CPU = "lscpu | grep \"CPU(s):\\|Architecture\\|MHz\"";
+    /**
+     * check openGauss version
+     * ENTERPRISE:
+     */
+    String CHECK_ENTERPRISE_VERSION = "source %s;gs_om -t view&&[ -f %s ]";
+    /**
+     * check openGauss version
+     * LITE:
+     */
+    String CHECK_LITE_VERSION = "source %s;gsql -V|grep -i \"openGauss-lite\"&&[ -f %s ]";
+    /**
+     * check openGauss version
+     * MINILIST:
+     */
+    String CHECK_MINILIST_VERSION = "gsql -V&&[ -f %s ]";
 }
