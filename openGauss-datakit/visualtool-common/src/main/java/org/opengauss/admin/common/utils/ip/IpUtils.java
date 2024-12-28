@@ -27,8 +27,12 @@ package org.opengauss.admin.common.utils.ip;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.html.EscapeUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -38,6 +42,57 @@ import java.net.UnknownHostException;
  * @author xielibo
  */
 public class IpUtils {
+    private static final String IPV4 = "ipv4";
+    private static final String IPV6 = "ipv6";
+
+    private static final Logger log = LoggerFactory.getLogger(IpUtils.class);
+
+    /**
+     * Format the IP string to ensure the correct format ipv4 or ipv6 used in ip:port.
+     *
+     * @param ip The IP character string
+     * @return The IP:port is formatted as [ip]:port for ipv6 and ip:port for ipv4
+     */
+    public static String formatIp(String ip) {
+        String ipType = getIpType(ip);
+
+        if (ipType.isEmpty()) {
+            return "";
+        }
+
+        if (IPV4.equals(ipType)) {
+            return ip;
+        } else if (IPV6.equals(ipType)) {
+            return "[" + ip + "]";
+        } else {
+            log.warn(ip + " is neither an IPv4 nor an IPv6 address.");
+            return "";
+        }
+    }
+
+    /**
+     * getIpType
+     *
+     * @param ip ip
+     * @return String
+     */
+    public static String getIpType(String ip) {
+        try {
+            InetAddress inetAddress = InetAddress.getByName(ip);
+            if (inetAddress instanceof Inet4Address) {
+                return IPV4;
+            } else if (inetAddress instanceof Inet6Address) {
+                return IPV6;
+            } else {
+                log.warn(ip + " is neither an IPv4 nor an IPv6 address.");
+            }
+        } catch (UnknownHostException e) {
+            log.warn(ip + " is not a valid IP address.");
+            return "";
+        }
+        return "";
+    }
+
     public static String getIpAddr(HttpServletRequest request) {
         if (request == null) {
             return "unknown";

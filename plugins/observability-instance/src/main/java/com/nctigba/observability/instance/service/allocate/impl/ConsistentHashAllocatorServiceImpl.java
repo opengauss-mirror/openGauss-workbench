@@ -28,6 +28,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.nctigba.observability.instance.model.dto.AllocateServerDTO;
 import com.nctigba.observability.instance.service.allocate.AllocatorService;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -54,7 +55,7 @@ public class ConsistentHashAllocatorServiceImpl implements AllocatorService {
         }
         SortedMap<Integer, AllocateServerDTO> map = new TreeMap<>();
         for (AllocateServerDTO allocator : allocators) {
-            String addr = allocator.getIp() + ":" + allocator.getPort();
+            String addr = IpUtils.formatIp(allocator.getIp()) + ":" + allocator.getPort();
             Integer hashcode = addr.hashCode();
             map.put(hashcode, allocator);
         }
@@ -67,7 +68,7 @@ public class ConsistentHashAllocatorServiceImpl implements AllocatorService {
         if (CollectionUtil.isEmpty(alloctorMap)) {
             return "";
         }
-        String addr = recipient.getIp() + ":" + recipient.getPort();
+        String addr = IpUtils.formatIp(recipient.getIp()) + ":" + recipient.getPort();
         SortedMap<Integer, AllocateServerDTO> subMap = alloctorMap.tailMap(addr.hashCode());
         if(subMap.isEmpty()) {
            return alloctorMap.get(alloctorMap.firstKey()).getId();

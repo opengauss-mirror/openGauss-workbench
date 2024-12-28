@@ -42,12 +42,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.system.service.ops.IOpsClusterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -114,7 +116,7 @@ public class AlertShieldingServiceImpl extends ServiceImpl<AlertShieldingMapper,
                 clusterNode.setClusterNodeId(node.getClusterNodeId());
                 String clusterName = StrUtil.isNotBlank(
                         clusterVo.getClusterName()) ? clusterVo.getClusterName() : clusterVo.getClusterId();
-                String nodeName = clusterName + "/" + host.getPublicIp() + ":"
+                String nodeName = clusterName + File.separator + IpUtils.formatIp(host.getPublicIp()) + ":"
                         + host.getPort() + "(" + node.getClusterRole() + ")";
                 clusterNode.setNodeName(nodeName).setClusterId(node.getClusterId());
                 list.add(clusterNode);

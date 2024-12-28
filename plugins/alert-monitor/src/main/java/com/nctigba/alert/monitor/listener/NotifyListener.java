@@ -52,6 +52,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.exception.ServiceException;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.system.service.ops.IOpsClusterService;
@@ -61,6 +62,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -276,9 +278,10 @@ public class NotifyListener implements ApplicationListener<NotifyEvent> {
         if (opsClusterEntity == null) {
             throw new ServiceException("cluster is not found");
         }
-        String nodeName = StrUtil.isNotBlank(detail.getNodeName()) ? detail.getNodeName()
-            : opsClusterEntity.getClusterId() + "/" + opsHost.getPublicIp() + ":" + opsClusterEntity.getPort()
-                + "(" + opsClusterNodeEntity.getClusterRole() + ")";
+        String nodeName = StrUtil.isNotBlank(detail.getNodeName())
+                ? detail.getNodeName()
+                : opsClusterEntity.getClusterId() + File.separator + IpUtils.formatIp(opsHost.getPublicIp()) + ":"
+                + opsClusterEntity.getPort() + "(" + opsClusterNodeEntity.getClusterRole() + ")";
         alertParams.put("nodeName", nodeName);
         alertParams.put("hostname", opsHost.getHostname());
         alertParams.put("port", opsClusterEntity.getPort() != null ? opsClusterEntity.getPort().toString() : "");

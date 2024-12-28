@@ -73,6 +73,8 @@ const columns = computed(() => [
   { title: t('components.JdbcInstance.5q0a8km74n80'), slotName: 'operation', width: 130 }
 ])
 
+import { IpRegex } from '../../../../../../../openGauss-datakit/visualtool-ui/src/types/global'
+
 const formRules = computed(() => {
   return {
     ip: [
@@ -80,9 +82,7 @@ const formRules = computed(() => {
       {
         validator: (value, cb) => {
           return new Promise(resolve => {
-            const reg = /^(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|[0-9])\.((1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)\.){2}(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)$/
-            const re = new RegExp(reg)
-            if (re.test(value)) {
+            if (IpRegex.ipv4Reg.test(value) || IpRegex.ipv6Reg.test(value)) {
               resolve(true)
             } else {
               cb(t('components.JdbcInstance.5q0a8km74s40'))

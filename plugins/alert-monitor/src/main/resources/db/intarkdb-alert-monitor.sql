@@ -184,7 +184,7 @@ ALTER TABLE "notify_way" ADD COLUMN "body" text;
 COMMENT ON COLUMN "notify_way"."body" IS '请求参数,json';
 ALTER TABLE "notify_way" ADD COLUMN "result_code" text;
 COMMENT ON COLUMN "notify_way"."result_code" IS '请求返回成功码,json，比如 {"errcode": 0}';
-ALTER TABLE "notify_way" ADD COLUMN "snmp_ip" varchar(20);
+ALTER TABLE "notify_way" ADD COLUMN "snmp_ip" varchar(130);
 COMMENT ON COLUMN "notify_way"."snmp_ip" IS 'ip地址';
 ALTER TABLE "notify_way" ADD COLUMN "snmp_port" varchar(10);
 COMMENT ON COLUMN "notify_way"."snmp_port" IS '端口';
@@ -495,7 +495,7 @@ COMMENT ON COLUMN "notify_message"."snmp_info" IS 'json格式，message_type为S
 
 CREATE TABLE IF NOT EXISTS "alert_config" (
 "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
-"alert_ip" varchar(20),
+"alert_ip" varchar(130),
 "alert_port" varchar(10)
 );
 

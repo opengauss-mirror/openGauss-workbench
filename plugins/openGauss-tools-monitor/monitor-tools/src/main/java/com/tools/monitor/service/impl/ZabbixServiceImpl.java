@@ -23,6 +23,7 @@ import com.tools.monitor.quartz.domain.SysJob;
 import com.tools.monitor.util.HandleUtils;
 import com.tools.monitor.util.StringUtils;
 import com.tools.monitor.util.jdbc.JdbcUtil;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -114,7 +115,7 @@ public class ZabbixServiceImpl {
         String interFaceSql = String.format(Locale.ROOT, INSERT_INTERFACE, interfaceid, hostid, ip, port);
         hostAndInterface.add(interFaceSql);
         // item
-        String url = "http://" + ip + ":" + port + "/prometheus";
+        String url = "http://" + IpUtils.formatIp(ip) + ":" + port + "/prometheus";
         String itemSql = String.format(Locale.ROOT, INSERT_ITEM, itemid, 19, hostid,
                 METRIC_NAME, METRIC_NAME, "10s", 4, interfaceid, null, "30m", url);
         String updateItemSql = String.format(Locale.ROOT, UPDATE_ID_ITEM, itemid);

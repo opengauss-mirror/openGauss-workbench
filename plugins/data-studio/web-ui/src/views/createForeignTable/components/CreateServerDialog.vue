@@ -133,11 +133,24 @@
         message: t('rules.empty', [t('foreignTable.createForeignServerDialog.remoteServerHost')]),
         trigger: 'blur',
       },
-      { min: 1, max: 30, message: t('rules.charLength', 30), trigger: 'blur' },
+      { min: 1, max: 130, message: t('rules.charLength', 130), trigger: 'blur' },
       {
         message: t('connection.rules.host[0]'),
         trigger: 'blur',
-        pattern: /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/,
+        pattern: new RegExp('^(?:' +
+            '(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|' +
+            '([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|' +
+            '([0-9a-fA-F]{1,4}:){1,7}:|' +
+            '::([0-9a-fA-F]{1,4}:){1,6}[0-9a-fA-F]{1,4}|' +
+            '([0-9a-fA-F]{1,4}:){1,6}:([0-9a-fA-F]{1,4})|' +
+            '([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|' +
+            '([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|' +
+            '([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|' +
+            '([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|' +
+            '[0-9a-fA-F]{1,4}(:[0-9a-fA-F]{1,4}){1,6}|' +
+            '::([0-9a-fA-F]{1,4}){1,7}|' +
+            '::ffff:(\\d{1,3}\\.){3}\\d{1,3}' +
+            ')$', 'g'),
       },
     ],
     remotePort: [

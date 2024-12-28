@@ -37,6 +37,7 @@ import com.nctigba.alert.monitor.model.entity.NctigbaEnvDO;
 import com.nctigba.alert.monitor.service.AlertAnalysisService;
 import com.nctigba.alert.monitor.util.MessageSourceUtils;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -121,7 +122,8 @@ public class DiskUsageAnalysisServiceImpl implements AlertAnalysisService {
         BigDecimal decimal = BigDecimal.valueOf(System.currentTimeMillis()).divide(new BigDecimal(1000))
             .setScale(3, BigDecimal.ROUND_HALF_UP);
         paramMap.put("time", decimal);
-        String httpUrl = "http://" + CommonConstants.LOCAL_IP + ":" + promEnv.getPort() + "/api/v1/query";
+        String httpUrl = "http://"
+            + IpUtils.formatIp(CommonConstants.LOCAL_IP) + ":" + promEnv.getPort() + "/api/v1/query";
         String response = HttpUtil.get(httpUrl, paramMap);
         if (StrUtil.isBlank(response)) {
             return new JSONArray();

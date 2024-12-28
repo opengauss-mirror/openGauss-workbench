@@ -49,6 +49,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
@@ -263,7 +264,7 @@ public class FilebeatService extends AbstractInstaller implements AgentService {
                 utils.uploadShellScript(session, path + "/" + CONF_FILE_NAME + "/", "conf.sh");
                 // @formatter:off
                 session.execute("cd " + path + CONF_FILE_NAME + " && sh conf.sh"
-                    + " --eshost " + esHost.getPublicIp() + ":" + esEnv.getPort()
+                    + " --eshost " + IpUtils.formatIp(esHost.getPublicIp()) + ":" + esEnv.getPort()
                     + " --nodeid " + opsClusterNodeEntity.getClusterNodeId()
                     + " --clusterid " + cluster.getClusterId()
                     + " --opengausslog " + StrUtil.removeSuffix(logPath, "/")

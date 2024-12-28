@@ -60,6 +60,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.common.exception.ServiceException;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.system.service.ops.IOpsClusterService;
@@ -67,6 +68,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -360,9 +362,9 @@ public class AlertApiServiceImpl implements AlertApiService {
             throw new ServiceException("cluster is not found");
         }
 
-        String nodeName =
-                opsClusterEntity.getClusterId() + "/" + opsHost.getPublicIp() + ":" + opsClusterEntity.getPort()
-                        + "(" + opsClusterNodeEntity.getClusterRole() + ")";
+        String nodeName = opsClusterEntity.getClusterId() + File.separator
+            + IpUtils.formatIp(opsHost.getPublicIp()) + ":" + opsClusterEntity.getPort()
+            + "(" + opsClusterNodeEntity.getClusterRole() + ")";
         alertParams.put("nodeName", nodeName);
         alertParams.put("hostname", opsHost.getHostname());
         alertParams.put("port", opsClusterEntity.getPort() != null ? opsClusterEntity.getPort().toString() : "");

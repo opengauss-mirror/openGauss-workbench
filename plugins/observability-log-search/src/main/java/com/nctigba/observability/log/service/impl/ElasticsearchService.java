@@ -49,6 +49,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -571,7 +572,7 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
 
     private boolean getHealthStatus(NctigbaEnvDO env) {
         try {
-            HttpUtil.get("http://" + env.getHost().getPublicIp() + ":" + env.getPort());
+            HttpUtil.get("http://" + IpUtils.formatIp(env.getHost().getPublicIp()) + ":" + env.getPort());
         } catch (Exception e) {
             return false;
         }
@@ -582,7 +583,7 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
         for (int i = 0; i < 60; i++) {
             ThreadUtil.sleep(3000L);
             try {
-                HttpUtil.get("http://" + env.getHost().getPublicIp() + ":" + env.getPort());
+                HttpUtil.get("http://" + IpUtils.formatIp(env.getHost().getPublicIp()) + ":" + env.getPort());
                 break;
             } catch (Exception e) {
                 if (i == 59) {
@@ -686,7 +687,10 @@ public class ElasticsearchService extends AbstractInstaller implements AgentServ
                     envDO.getUsername(), encryptionUtils.decrypt(opsHostUser.getPassword()))) {
                 String ipAddress = session.execute(String.format(AWK_FILE, envDO.getPath()));
                 session.execute(
-                        String.format(SED_FILE, ipAddress, publicId + ":" + port, envDO.getPath() + "/filebeat.yml"));
+                    String.format(
+                        SED_FILE,
+                        ipAddress,
+                        IpUtils.formatIp(publicId) + ":" + port, envDO.getPath() + "/filebeat.yml"));
                 session.execute(String.format(RESTART_FILEBEAT, envDO.getPath()));
             } catch (IOException e) {
                 throw new CustomException(e.getMessage());

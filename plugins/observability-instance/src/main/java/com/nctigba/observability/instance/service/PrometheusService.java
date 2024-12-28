@@ -79,6 +79,7 @@ import org.apache.commons.io.FileUtils;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -659,7 +660,7 @@ public class PrometheusService extends AbstractInstaller {
             session.upload(prom.getCanonicalPath(), envProm.getPath() + CommonConstants.PROMETHEUS_YML);
             Files.delete(prom.toPath());
             OpsHostEntity promeHost = hostFacade.getById(envProm.getHostid());
-            String url = "http://" + promeHost.getPublicIp() + ":" + envProm.getPort() + "/-/reload";
+            String url = "http://" + IpUtils.formatIp(promeHost.getPublicIp()) + ":" + envProm.getPort() + "/-/reload";
             HttpUtil.post(url, "");
         }
     }
@@ -808,7 +809,8 @@ public class PrometheusService extends AbstractInstaller {
             BeanUtil.copyProperties(map, prometheusConfig);
             List<prometheusConfig.remoteRead> remoteReadList = new ArrayList<>();
             for (NctigbaEnvDO env : secondEnvList) {
-                String url = "http://" + env.getHost().getPublicIp() + ":" + env.getPort() + "/api/v1/read";
+                String url = "http://" + IpUtils.formatIp(env.getHost().getPublicIp())
+                    + ":" + env.getPort() + "/api/v1/read";
                 prometheusConfig.remoteRead rr = new prometheusConfig.remoteRead();
                 rr.setUrl(url);
                 rr.setRead_recent(true);
@@ -822,7 +824,8 @@ public class PrometheusService extends AbstractInstaller {
                 Files.copy(inConfig, configPath, StandardCopyOption.REPLACE_EXISTING);
             }
             Integer port = mainProm.getPort();
-            String result = HttpUtil.post("http://" + LOCAL_IP + ":" + port + "/-/reload",
+            String result = HttpUtil.post(
+                "http://" + IpUtils.formatIp(LOCAL_IP) + ":" + port + "/-/reload",
                 new HashMap<>());
             if (StrUtil.isNotBlank(result)) {
                 throw new CustomException("The main Prometheus reload fail");
@@ -937,7 +940,7 @@ public class PrometheusService extends AbstractInstaller {
             } else {
                 publicIp = env.getHost().getPublicIp();
             }
-            String str = HttpUtil.get("http://" + publicIp + ":" + env.getPort()
+            String str = HttpUtil.get("http://" + IpUtils.formatIp(publicIp) + ":" + env.getPort()
                 + "/api/v1/query?query=time()", CommonConstants.HTTP_TIMEOUT);
             if (StrUtil.isBlank(str)) {
                 return true;
@@ -1176,7 +1179,7 @@ public class PrometheusService extends AbstractInstaller {
                 } else {
                     publicIp = env.getHost().getPublicIp();
                 }
-                String str = HttpUtil.get("http://" + publicIp + ":" + env.getPort()
+                String str = HttpUtil.get("http://" + IpUtils.formatIp(publicIp) + ":" + env.getPort()
                     + "/api/v1/status/runtimeinfo", CommonConstants.HTTP_TIMEOUT);
                 if (StrUtil.isBlank(str)) {
                     throw new CustomException("HealthStatus: result is null!");
@@ -1215,7 +1218,7 @@ public class PrometheusService extends AbstractInstaller {
             } else {
                 publicIp = env.getHost().getPublicIp();
             }
-            String str = HttpUtil.get("http://" + publicIp + ":" + env.getPort()
+            String str = HttpUtil.get("http://" + IpUtils.formatIp(publicIp) + ":" + env.getPort()
                 + "/api/v1/status/runtimeinfo", CommonConstants.HTTP_TIMEOUT);
             if (StrUtil.isBlank(str)) {
                 return false;

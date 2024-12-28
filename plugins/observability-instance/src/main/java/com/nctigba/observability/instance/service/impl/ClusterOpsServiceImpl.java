@@ -68,6 +68,7 @@ import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.enums.ops.DeployTypeEnum;
 import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
@@ -316,7 +317,7 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
                 dto.setNodeId(clusterNode.getNodeId());
                 dto.setHostIp(clusterNode.getPublicIp());
                 dto.setNodeName(stateCache.getNodeName().getOrDefault(clusterNode.getNodeId(),"Unknown"));
-                dto.setLocalAddr(clusterNode.getPublicIp() + ":" + clusterNode.getDbPort());
+                dto.setLocalAddr(IpUtils.formatIp(clusterNode.getPublicIp()) + ":" + clusterNode.getDbPort());
                 dto.setRole(stateCache.getNodeRole().getOrDefault(clusterNode.getNodeId(), "Unknown"));
                 dto.setNodeState(stateCache.getNodeState().getOrDefault(clusterNode.getNodeId(), "Unknown"));
                 retList.add(0, dto);
@@ -710,8 +711,8 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
                     standby.setNodeName(stateCache.getNodeName().get(standby.getNodeId()));
                     standby.setRole(stateCache.getNodeRole().get(standby.getNodeId()));
                     standby.setNodeState(stateCache.getNodeState().get(standby.getNodeId()));
-                    standby.setPrimaryAddr(clusterNode.getPublicIp() + ":" + clusterNode.getDbPort());
-                    standby.setLocalAddr(standby.getHostIp() + ":" + clusterNode.getDbPort());
+                    standby.setPrimaryAddr(IpUtils.formatIp(clusterNode.getPublicIp()) + ":" + clusterNode.getDbPort());
+                    standby.setLocalAddr(IpUtils.formatIp(standby.getHostIp()) + ":" + clusterNode.getDbPort());
                     standbyList.add(standby);
                 });
                 break;
@@ -737,7 +738,7 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
                 dto.setNodeId(clusterNode.getNodeId());
                 dto.setHostIp(clusterNode.getPublicIp());
                 dto.setNodeName(clusterNode.getHostname());
-                dto.setLocalAddr(clusterNode.getPublicIp() + ":" + clusterNode.getHostPort());
+                dto.setLocalAddr(IpUtils.formatIp(clusterNode.getPublicIp()) + ":" + clusterNode.getHostPort());
                 dto.setRole(stateCache.getNodeRole().getOrDefault(clusterNode.getNodeId(), "Unknown"));
                 dto.setNodeState("Unknown");
                 standbyList.add(dto);
@@ -753,13 +754,16 @@ public class ClusterOpsServiceImpl implements ClusterOpsService {
                 if (!standbyNodeId.contains(nodeId)) {
                     SyncSituationDTO dto = new SyncSituationDTO();
                     dto.setPrimaryAddr(primary.map(opsClusterNodeVO ->
-                            opsClusterNodeVO.getPublicIp() + ":" + opsClusterNodeVO.getDbPort()).orElse(null)
+                        IpUtils.formatIp(opsClusterNodeVO.getPublicIp())
+                        + ":" + opsClusterNodeVO.getDbPort())
+                        .orElse(null)
                     );
                     dto.setClusterId(cluster.getClusterId());
                     dto.setNodeId(nodeId);
                     dto.setNodeName(stateCache.getNodeName().get(nodeId));
-                    dto.setLocalAddr(cluster.getClusterNodes().stream().filter(n -> n.getNodeId().equals(nodeId))
-                            .findFirst().get().getPublicIp() + ":" + cluster.getClusterNodes().get(0).getDbPort());
+                    dto.setLocalAddr(IpUtils.formatIp(
+                        cluster.getClusterNodes().stream().filter(n -> n.getNodeId().equals(nodeId))
+                        .findFirst().get().getPublicIp()) + ":" + cluster.getClusterNodes().get(0).getDbPort());
                     dto.setRole(stateCache.getNodeRole().getOrDefault(nodeId, "Unknown"));
                     dto.setNodeState(stateCache.getNodeState().getOrDefault(nodeId, "Unknown"));
                     standbyList.add(dto);

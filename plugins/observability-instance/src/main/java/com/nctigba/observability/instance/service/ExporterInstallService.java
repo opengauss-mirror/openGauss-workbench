@@ -58,6 +58,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.system.service.ops.IOpsClusterService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -432,7 +433,7 @@ public class ExporterInstallService extends AbstractInstaller {
     private void initExporterParamsOnline(List<Map<String, Object>> param, String ip, int port) {
         for (int i = 0; i < 11; i++) {
             try {
-                String url = "http://" + ip + ":" + port + "/config/set";
+                String url = "http://" + IpUtils.formatIp(ip) + ":" + port + "/config/set";
                 log.info("agent set config URl:{}", url);
                 HttpUtil.post(url, JSONUtil.toJsonStr(param));
                 break;

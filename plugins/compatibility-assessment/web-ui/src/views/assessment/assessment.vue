@@ -813,6 +813,9 @@ const downloadStatus = reactive({
     })
     return formData
 }
+
+import { IpRegex } from '../../../../../../openGauss-datakit/visualtool-ui/src/types/global'
+
 const formRules = computed(() => {
   return {
     mysqlHost: [
@@ -820,10 +823,7 @@ const formRules = computed(() => {
       {
         validator: (value, cb) => {
           return new Promise((resolve) => {
-            const reg =
-              /^(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|[0-9])\.((1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)\.){2}(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)$/;
-            const re = new RegExp(reg);
-            if (re.test(value)) {
+            if (IpRegex.ipv4Reg.test(value) || IpRegex.ipv6Reg.test(value)) {
               resolve(true);
             } else {
               cb(t("home.index.5mq3d6o5zb01"));
@@ -901,10 +901,7 @@ const formRules = computed(() => {
       {
         validator: (value, cb) => {
           return new Promise((resolve) => {
-            const reg =
-              /^(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|[0-9])\.((1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)\.){2}(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)$/;
-            const re = new RegExp(reg);
-            if (re.test(value)) {
+            if (IpRegex.ipv4Reg.test(value) || IpRegex.ipv6Reg.test(value)) {
               resolve(true);
             } else {
               cb(t("home.index.5mq3d6o5zb01"));

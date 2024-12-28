@@ -59,6 +59,7 @@ import com.nctigba.observability.instance.util.SshSessionUtils;
 import com.nctigba.observability.instance.util.YamlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
@@ -341,7 +342,7 @@ public class CollectTemplateNodeServiceImpl
                     }
                     // new staticConfigs
                     String agentPort = evnNode.getPort().toString();
-                    targets.add(hostEntity.getPublicIp() + ":" + agentPort);
+                    targets.add(IpUtils.formatIp(hostEntity.getPublicIp()) + ":" + agentPort);
                 }
                 if (CollectionUtil.isEmpty(targets)) {
                     throw new TipsException("Agent node relation not found for node :" + nodeId);
@@ -390,7 +391,7 @@ public class CollectTemplateNodeServiceImpl
 
         // refresh Prometheus config
         // curl -X POST http://IP/-/reload
-        String url = "http://" + promeHost.getPublicIp() + ":" + promEnv.getPort() + "/-/reload";
+        String url = "http://" + IpUtils.formatIp(promeHost.getPublicIp()) + ":" + promEnv.getPort() + "/-/reload";
         String res = HttpUtil.post(url, "");
         log.debug("refresh prometheus url:{}", url);
         log.debug("refresh prometheus result:{}", StrUtil.isBlank(res) ? "Succeed!" : res);

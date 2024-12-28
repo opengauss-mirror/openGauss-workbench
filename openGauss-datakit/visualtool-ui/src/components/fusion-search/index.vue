@@ -46,7 +46,7 @@ import { ref, nextTick, computed } from 'vue'
 import fusionSelect from './fusionSelect.vue'
 import fusionMulti from './fusionMulti.vue'
 import { IconSearch, IconXSolid } from '@computing/opendesign-icons'
-import { ClickOutside as vClickOutside } from "element-plus";
+import { ClickOutside as vClickOutside } from 'element-plus'
 import { searchType } from '@/types/searchType'
 
 const { labelOptions } = defineProps({
@@ -56,10 +56,9 @@ const { labelOptions } = defineProps({
   }
 })
 
-
 const componentIds = {
   SELECT: fusionSelect,
-  MULTIPLESELECT: fusionMulti,
+  MULTIPLESELECT: fusionMulti
 }
 interface selectParams {
   keyLabel: string,
@@ -144,8 +143,7 @@ const clickSearch = () => {
   emit('clickSearch', outputData)
 }
 
-
-const focus = ref(false) //control the child component getting the focus
+const focus = ref(false) // control the child component getting the focus
 const mainSelectRef = ref(null)
 const inputFocus = (e) => {
   nextTick(() => {
