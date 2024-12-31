@@ -788,8 +788,7 @@
             "5mpm5p9xfv80": "Under test",
             "5mpm5p9xfzo0": "Master",
             "5mpm5p9xg3o0": "slave",
-            "5mpm5p9xg700": "Cascading",
-            "5mpm5p9xg701": "Please fix the environment checkerrors before continuing with installation"
+            "5mpm5p9xg700": "Cascading"
         },
         "ExeInstall": {
             "else1": "DataBaseUser",
@@ -988,7 +987,10 @@
             "5mpmqpcxmfs0": "Being detected",
             "5mpmqpcxmog0": "master",
             "5mpmqpcxmwg0": "slave",
-            "5mpmqpcxn5o0": "Cascading"
+            "5mpmqpcxn5o0": "Cascading",
+            "confirm": "Confirm",
+            "errorConfirm": "{noPassNum} environment test failed, it is recommended to process and try again. Click confirm button if you still want to continue.",
+            "failConfirm": "Failed to test environment, it is recommended to check and try again. Click confirm button if you still want to continue."
         },
         "ExeInstall": {
             "else1": "Environmental preparation",

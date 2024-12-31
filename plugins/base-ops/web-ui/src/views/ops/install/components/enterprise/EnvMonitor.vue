@@ -103,6 +103,13 @@
             </div>
           </div>
         </a-spin>
+        <a-modal :title="$t('simple.EnvMonitor.confirm')" @close="resolveAction(false)" type="warning"
+          @cancel="resolveAction(false)" @ok="resolveAction(true)" v-model:visible="nextConfirmVisible">
+          <div>
+            <icon-exclamation-circle-fill style="color: #ff7d00" />
+            {{ confirmMessage }}
+          </div>
+        </a-modal>
         <a-divider></a-divider>
       </div>
     </div>
@@ -115,9 +122,10 @@ import { getEnvMonitorData } from '@/api/ops'
 import { useOpsStore } from '@/store'
 import { KeyValue } from '@/types/global'
 import { ClusterRoleEnum } from '@/types/ops/install'
-import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
 import { encryptPassword } from '@/utils/jsencrypt'
+import useConfirm from '@/hooks/useConfirm'
+
 const { t } = useI18n()
 const installStore = useOpsStore()
 
@@ -289,21 +297,29 @@ const getRoleName = (type: ClusterRoleEnum) => {
   }
 }
 
-const beforeConfirm = () => {
+const {
+  nextConfirmVisible,
+  confirmMessage,
+  waitConfirm,
+  resolveAction
+} = useConfirm()
+
+const beforeConfirm = async () => {
   const unPass = data.nodeData.filter((item: KeyValue) => {
     return item.result !== 200
   })
-  const totoalError = data.nodeData.reduce((acc,cur) => acc + cur.noPassNum,0)
-  let result = true
+  const totalError = data.nodeData.reduce((acc, cur) => acc + cur.noPassNum, 0)
   if (unPass.length > 0) {
-    result = false
-    Message.warning('If the host fails to be detected, configure the host and re-detect the host for installation')
+    confirmMessage.value = t('simple.EnvMonitor.failConfirm')
+    nextConfirmVisible.value = true
+    return await waitConfirm()
   }
-  if(totoalError>0){
-    result = false;
-    Message.error(t('enterprise.EnvMonitor.5mpm5p9xg701'))
+  if (totalError > 0) {
+    confirmMessage.value = t('simple.EnvMonitor.errorConfirm', { noPassNum: totalError })
+    nextConfirmVisible.value = true
+    return await waitConfirm()
   }
-  return result
+  return true
 }
 
 defineExpose({
