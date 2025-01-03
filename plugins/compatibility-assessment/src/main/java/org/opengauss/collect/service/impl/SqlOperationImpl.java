@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -238,8 +239,9 @@ public class SqlOperationImpl implements SqlOperation {
         // 创建一个执行环境 data/gs_assessment/fileName  目前是这个
         String envPath = Constant.ENV_PATH;
         // 下载评估文件
-        String downCommand = String.format(Constant.DOWN_LOAD_PATH, Constant.ASSESS_VERSION, Constant.ASSESS_PATH,
-            Constant.ASSESS_VERSION);
+        String version = getVersion();
+        String downCommand = String.format(Constant.DOWN_LOAD_PATH, version, Constant.ASSESS_PATH,
+                version);
         boolean isSucc = CommandLineRunner.runCommand(downCommand, envPath, Constant.DOWN_TIME_OUT);
         log.info("Download evaluation files---->{}", isSucc);
         // 推送评估文件到envPath
@@ -279,6 +281,28 @@ public class SqlOperationImpl implements SqlOperation {
         return Optional.ofNullable(sysSettingFacade.getSysSetting(userId))
             .map(sysSetting -> sysSetting.getUploadPath() + Constant.ACT_PATH)
             .orElse("");
+    }
+
+    /**
+     * getVersion
+     *
+     * @return String
+     */
+    public String getVersion() {
+        Properties properties = new Properties();
+        String version = null;
+        try {
+            properties.load(getClass().getClassLoader().getResourceAsStream("app.properties"));
+            if (properties != null) {
+                version = properties.getProperty("app.version");
+            }
+        } catch (IOException exception) {
+            throw new ServiceException("Failed to retrieve version number");
+        }
+        if (version == null || version.isEmpty()) {
+            throw new ServiceException("Version number not found in the properties file.");
+        }
+        return version;
     }
 
     /**
