@@ -34,7 +34,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsEncryptionEntity;
 import org.opengauss.admin.system.mapper.ops.OpsEncryptionMapper;
 import org.opengauss.admin.system.service.ops.IEncryptionService;
-import org.opengauss.admin.system.service.ops.IHostUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -54,24 +53,17 @@ import java.util.Objects;
 @Slf4j
 @Component
 public class EncryptionUtils {
-
-    private static String gcm256algorithm = "AES/GCM/PKCS5Padding";
-
-    private static String rootKey = generateSecretKey(null);
-    private static String workKey;
-
-    public static final int AES_KEY_SIZE = 256;
-    public static final int GCM_IV_LENGTH = 12;
-    public static final int GCM_TAG_LENGTH = 16;
-    public static byte[] IV = new byte[GCM_IV_LENGTH];
+    private static final String GCM_ALGORITHM = "AES/GCM/NoPadding";
+    private static final int GCM_IV_LENGTH = 12;
+    private static final int GCM_TAG_LENGTH = 16;
+    private static final byte[] IV = new byte[GCM_IV_LENGTH];
 
     private static String publicKey;
     private static String privateKey;
 
     @Autowired
     private OpsEncryptionMapper encryptionMapper;
-    @Autowired
-    private IHostUserService hostUserService;
+
     @Autowired
     private IEncryptionService encryptionService;
 
@@ -101,7 +93,7 @@ public class EncryptionUtils {
         try {
             SecretKey key = new SecretKeySpec(Base64.decodeBase64(keyStr), "AES");
             // Get Cipher Instance
-            Cipher cipher = Cipher.getInstance(gcm256algorithm);
+            Cipher cipher = Cipher.getInstance(GCM_ALGORITHM);
 
             // Create SecretKeySpec
             SecretKeySpec keySpec = new SecretKeySpec(key.getEncoded(), "AES");
@@ -131,7 +123,7 @@ public class EncryptionUtils {
         try {
             SecretKey key = new SecretKeySpec(Base64.decodeBase64(keyStr), "AES");
             // Get Cipher Instance
-            Cipher cipher = Cipher.getInstance(gcm256algorithm);
+            Cipher cipher = Cipher.getInstance(GCM_ALGORITHM);
 
             // Create SecretKeySpec
             SecretKeySpec keySpec = new SecretKeySpec(key.getEncoded(), "AES");
