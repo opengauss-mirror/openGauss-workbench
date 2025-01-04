@@ -155,7 +155,7 @@ watch([() => data.form.cluster.databaseKernelArch, () => data.form.cluster.isIns
   }
 })
 
-watch(() => data.form.cluster.installPath, (newValue) => {
+watch(() => data.form.cluster.installPath, (newValue, oldValue) => {
   if (newValue) {
     if (newValue.endsWith('app') || newValue.endsWith('app/')) {
       newValue = newValue.replace(/app$/, '');
@@ -166,21 +166,26 @@ watch(() => data.form.cluster.installPath, (newValue) => {
     data.form.cluster.tmpPath = tempPath;
     const omToolsPath = newValue.endsWith('/') ? newValue + 'om' : newValue + '/om';
     data.form.cluster.omToolsPath = omToolsPath;
-
-    const dataPath = newValue.endsWith('/') ? newValue + 'data/dn' : newValue + '/data/dn';
+    const tempNewValue = newValue.endsWith('/app')? newValue.slice(0, -4): newValue
+    const tempOldValue = oldValue.endsWith('/app')? oldValue.slice(0, -4): oldValue
     data.form.nodes.forEach((node) => {
-      node.dataPath = dataPath;
+      if (node.dataPath.includes(tempOldValue)) {
+        let startIndex = node.dataPath.indexOf(tempOldValue)
+        let beforeMatch = node.dataPath.slice(0, startIndex)
+        let afterMatch = node.dataPath.slice(startIndex + tempOldValue.length + 1)
+        let newStr = beforeMatch + tempNewValue + afterMatch;
+        node.dataPath = newStr
+      }
       if (isInstallCM) {
         const cmDataPath = newValue.endsWith('/') ? newValue + 'cm' : newValue + '/cm';
         node.cmDataPath = cmDataPath;
       }
-    });
+    })
 
     const dssHome = newValue.endsWith('/') ? newValue + 'dss_home' : newValue + '/dss_home';
     data.form.cluster.sharingStorageInstallConfig.dssHome = dssHome;
   }
 });
-
 
 const initData = () => {
   if (Object.keys(installStore.getEnterpriseConfig).length) {
