@@ -59,8 +59,7 @@ public class DataSourceConfig {
     @Profile("!dev")
     DataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSourceProperties properties,
                                                                             DataSource dataSource) {
-        checkConnection(properties);
-        checkPermission(properties);
+        checkDatabaseAvailability(properties);
         String driverClassName = properties.getDriverClassName();
         Optional<DbDataLocationEnum> dbDataLocationEnum = DbDataLocationEnum.of(driverClassName);
         DatabaseInitializationSettings settings = new DatabaseInitializationSettings();
@@ -74,40 +73,56 @@ public class DataSourceConfig {
         return new DataSourceScriptDatabaseInitializer(dataSource, settings);
     }
 
-    private void checkConnection(DataSourceProperties properties) {
-        try (Connection connection = DriverManager.getConnection(
-                properties.getUrl(), properties.getUsername(), properties.getPassword())) {
-            if (connection == null) {
-                log.error("Failed to get connection to the database: connection is null.");
-                System.exit(SpringApplication.exit(applicationContext, () -> 1));
-            }
+    private void checkDatabaseAvailability(DataSourceProperties properties) {
+        try (Connection connection = createConnection(properties)) {
+            checkSqlCompatibility(connection);
+            checkPermission(connection, properties.getUsername());
         } catch (SQLException e) {
-            log.error("Failed to get connection to the database: ", e);
+            log.error("Failed to check the database availability.", e);
             System.exit(SpringApplication.exit(applicationContext, () -> 1));
         }
     }
 
-    private void checkPermission(DataSourceProperties properties) {
-        String permissionSql = String.format(
-                "select rolsystemadmin from pg_roles where rolname= '%s';", properties.getUsername());
-
-        try (Connection connection = DriverManager.getConnection(
+    private Connection createConnection(DataSourceProperties properties) throws SQLException {
+        Connection connection = DriverManager.getConnection(
                 properties.getUrl(), properties.getUsername(), properties.getPassword());
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(permissionSql)) {
-            String permissionResult = "f";
-            if (resultSet.next()) {
-                permissionResult = resultSet.getString(1);
-            }
-
-            if (permissionResult == null || !permissionResult.equals("t")) {
-                log.error("The database user permission does not meet requirements. "
-                        + "Please set the user as the sysadmin.");
-                System.exit(SpringApplication.exit(applicationContext, () -> 1));
-            }
-        } catch (SQLException e) {
-            log.error("Failed to check the permission of the database user: ", e);
+        if (connection == null) {
+            log.error("Failed to get connection to the database: connection is null.");
             System.exit(SpringApplication.exit(applicationContext, () -> 1));
+        }
+        return connection;
+    }
+
+    private void checkSqlCompatibility(Connection connection) throws SQLException {
+        String showCompatibilitySql = "show sql_compatibility;";
+
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(showCompatibilitySql)) {
+            if (resultSet.next()) {
+                String sqlCompatibility = resultSet.getString(1);
+                if (sqlCompatibility == null || !sqlCompatibility.equals("A")) {
+                    log.error("The sql_compatibility type of the database does not meet requirements. "
+                            + "The required type is 'A', and the current type is '{}'.", sqlCompatibility);
+                    System.exit(SpringApplication.exit(applicationContext, () -> 1));
+                }
+            }
+        }
+    }
+
+    private void checkPermission(Connection connection, String username) throws SQLException {
+        String permissionSql = String.format(
+                "select rolsystemadmin from pg_roles where rolname= '%s';", username);
+
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(permissionSql)) {
+            if (resultSet.next()) {
+                String permissionResult = resultSet.getString(1);
+                if (permissionResult == null || !permissionResult.equals("t")) {
+                    log.error("The database user permission does not meet requirements. "
+                            + "Please set the user as the sysadmin.");
+                    System.exit(SpringApplication.exit(applicationContext, () -> 1));
+                }
+            }
         }
     }
 }
