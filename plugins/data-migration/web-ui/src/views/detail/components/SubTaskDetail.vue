@@ -198,7 +198,7 @@
             <div class="errorLabel" v-else>{{ $t('components.SubTaskDetail.abnormalAlaram') }}</div>
           </template>
           <el-tabs type="card" style="padding-top: 16px;" @tab-change="alarmPhaseChange" v-model="phaseTab">
-            <el-tab-pane :label="$t('components.SubTaskDetail.fullMigration')" :name="item.key" v-for="item in phaseList">
+            <el-tab-pane :label="$t('components.SubTaskDetail.fullMigration')" :name="item.key" v-for="item in phaseList" :key="item.key">
               <template #label>
                 <div v-if="phaseNums[item.key] && phaseNums[item.key] > 0">
                   <el-badge :value="phaseNums[item.key]">{{ item.label }}</el-badge>
@@ -263,7 +263,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount, h, reactive, computed } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount, h, computed } from 'vue'
 import { subTaskDetail, downloadLog, getAlarmDetail, getPhaseAlarmList, getTotalAlarmNum } from '@/api/detail'
 import BigDataList from './BigDataList.vue'
 import dayjs from 'dayjs'

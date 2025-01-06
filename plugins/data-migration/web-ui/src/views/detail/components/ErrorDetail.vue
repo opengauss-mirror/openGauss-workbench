@@ -1,24 +1,29 @@
 <template>
-  <el-dialog v-model="props.errorVisible" draggable :close-on-click-modal="false" @close="closeModal" style="width:550px">
+  <el-dialog v-model="props.errorVisible" draggable :close-on-click-modal="false" @close="closeModal"
+    style="width: fit-content;max-width: 1550px;">
     <template #header>
       <div class="header">{{ $t('components.SubTaskDetail.showDetail') }}</div>
     </template>
     <div class="mainContent loading-area" v-loading="areaLoading">
       <el-row :gutter="20">
-        <el-col :span="6">{{ $t('components.SubTaskDetail.alarmLocation') }}</el-col>
-        <el-col :span="18" class="desc">{{ locationMap[detailInfo.logSource] }}</el-col>
+        <div class="detailRow">
+          <div class="detailLabel">{{ $t('components.SubTaskDetail.alarmLocation') }}</div>
+          <div class="desc">{{ locationMap[detailInfo.logSource] }}</div>
+        </div>
       </el-row>
       <el-row :gutter="20">
-        <el-col :span="6">{{ $t('components.SubTaskDetail.alarmTime') }}</el-col>
-        <el-col :span="18">
-          <div class="desc">{{ detailInfo.dateTime }}</div>
-        </el-col>
+        <div class="detailRow">
+          <div class="detailLabel">{{ $t('components.SubTaskDetail.alarmTime') }}</div>
+          <div>
+            <div class="desc">{{ detailInfo.dateTime }}</div>
+          </div>
+        </div>
       </el-row>
       <el-row :gutter="20">
-        <el-col :span="6">{{ $t('components.SubTaskDetail.alarmReason') }}</el-col>
-        <el-col :span="18">
+        <div class="detailRow">
+          <div class="detailLabel">{{ $t('components.SubTaskDetail.alarmReason') }}</div>
           <div :class="hasNewLine(detailInfo.detail) ? 'newLine' : 'desc'">{{ detailInfo.detail }}</div>
-        </el-col>
+        </div>
       </el-row>
     </div>
     <template #footer>
@@ -86,18 +91,30 @@ const closeModal = () => {
 }
 
 .mainContent {
-  width: 90%;
+  width: fit-content;
+  max-width: 1500px;
   height: 280px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 
-  .desc {
-    color: #1d2129;
+  .detailRow {
+    display: flex;
+
+    .detailLabel {
+      padding-right: 32px;
+    }
+
+    .desc {
+      color: #1d2129;
+      width: 400px;
+    }
+
+    .newLine {
+      white-space: pre;
+      color: #1d2129;
+      display: inline-block;
+    }
   }
 
-  .newLine {
-    white-space: pre;
-    color: #1d2129;
-  }
 }</style>
