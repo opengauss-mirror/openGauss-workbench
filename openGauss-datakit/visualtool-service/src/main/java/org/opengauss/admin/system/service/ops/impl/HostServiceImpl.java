@@ -435,20 +435,10 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         if (CollUtil.isEmpty(opsHostUserEntities)) {
             throw new OpsException("User information not found");
         }
-        OpsHostUserEntity root = opsHostUserEntities.stream()
-            .filter(opsHostUserEntity -> "root".equals(opsHostUserEntity.getUsername()))
-            .findFirst()
-            .orElseThrow(() -> new OpsException("root user information not found"));
-        if (StrUtil.isEmpty(root.getPassword())) {
-            if (StrUtil.isEmpty(rootPassword)) {
-                throw new OpsException("root password does not exist");
-            } else {
-                root.setPassword(rootPassword);
-            }
-        }
-        SshLogin rootLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), root.getUsername(),
-            encryptionUtils.decrypt(root.getPassword()));
-        return jschExecutorService.checkOsUserExist(rootLogin);
+        OpsHostUserEntity userEntity = opsHostUserEntities.stream().findAny().get();
+        SshLogin pingLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(),
+            encryptionUtils.decrypt(userEntity.getPassword()));
+        return jschExecutorService.checkOsUserExist(pingLogin);
     }
 
     @Override
@@ -604,12 +594,12 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
                 hostMonitorVO.setCpu(cpuMonitor(hostId));
                 hostMonitorVO.setMemory(memoryMonitor(hostId));
                 hostMonitorVO.setDisk(diskMonitor(hostId));
-            } catch (OpsException ex) {
+            } catch (OpsException | NullPointerException ex) {
                 log.error("doMonitor error", ex);
             }
             wsUtil.sendText(wsSession, JSON.toJSONString(hostMonitorVO));
             try {
-                TimeUnit.SECONDS.sleep(5L);
+                TimeUnit.SECONDS.sleep(1L);
             } catch (InterruptedException e) {
                 throw new OpsException("thread is interrupted");
             }

@@ -25,11 +25,15 @@
 package org.opengauss.admin.web.core.config;
 
 import lombok.extern.slf4j.Slf4j;
+
+import org.opengauss.admin.system.service.HostMonitorCacheService;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
 
 /**
  * @className: AdminApplicationRunner
@@ -42,9 +46,12 @@ import org.springframework.stereotype.Component;
 public class AdminApplicationRunner implements ApplicationRunner {
     @Autowired
     private EncryptionUtils encryptionUtils;
+    @Resource
+    private HostMonitorCacheService hostMonitorCacheService;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
         this.encryptionUtils.refreshKeyPair(false);
+        hostMonitorCacheService.initHostMonitorCacheService();
     }
 }

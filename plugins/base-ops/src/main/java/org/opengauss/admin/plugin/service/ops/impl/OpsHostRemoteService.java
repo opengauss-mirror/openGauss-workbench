@@ -521,4 +521,14 @@ public class OpsHostRemoteService {
                 sshLogin.getPassword())
             .orElseThrow(() -> new OpsException("create plugin session with root or normal user failed"));
     }
+
+    /**
+     * get host root or normal user
+     *
+     * @param hostId host id
+     * @return any user
+     */
+    public OpsHostUserEntity getAnyHostUser(String hostId) {
+        return hostUserFacade.listHostUserByHostId(hostId).stream().findAny().get();
+    }
 }
