@@ -164,36 +164,14 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         task.setCurrentTime(new Date());
         Map<String, Object> result = new HashMap<>();
         result.put("task", task);
-        MigrationTaskExecResultDetail fullProcess = null;
-        MigrationTaskExecResultDetail incrementalProcess = null;
-        MigrationTaskExecResultDetail reverseProcess = null;
-        MigrationTaskExecResultDetail dataCheckProcess = null;
+        setProcessExecDetails(task, result);
 
-        if (!task.getExecStatus().equals(TaskStatus.MIGRATION_FINISH.getCode())
-                && !task.getExecStatus().equals(TaskStatus.FULL_CHECK_FINISH.getCode())) {
-            Map<String, Object> getResult = getSingleTaskStatusAndProcessByProtal(task);
-            fullProcess = MigrationTaskExecResultDetail.builder().execResultDetail(MapUtil.getStr(getResult, "fullProcess")).build();
-            if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
-                incrementalProcess = MigrationTaskExecResultDetail.builder().execResultDetail(MapUtil.getStr(getResult, "incrementalProcess")).build();
-                reverseProcess = MigrationTaskExecResultDetail.builder().execResultDetail(MapUtil.getStr(getResult, "reverseProcess")).build();
-            }
-            dataCheckProcess = MigrationTaskExecResultDetail.builder().execResultDetail(MapUtil.getStr(getResult, "dataCheckProcess")).build();
-        } else {
-            fullProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, ProcessType.FULL.getCode());
-            if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
-                incrementalProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, ProcessType.INCREMENTAL.getCode());
-                reverseProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, ProcessType.REVERSE.getCode());
-            }
-            dataCheckProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(taskId, ProcessType.DATA_CHECK.getCode());
+        MigrationTaskExecResultDetail fullProcess = null;
+        Object fullProcessObj = result.get("fullProcess");
+        if (fullProcessObj instanceof MigrationTaskExecResultDetail) {
+            fullProcess = (MigrationTaskExecResultDetail) fullProcessObj;
         }
-        result.put("fullProcess", fullProcess);
-        if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
-            result.put("incrementalProcess", incrementalProcess);
-            result.put("reverseProcess", reverseProcess);
-            List<MigrationTaskStatusRecord> migrationTaskStatusRecords = migrationTaskStatusRecordService.selectByTaskId(taskId);
-            Map<Integer, List<MigrationTaskStatusRecord>> recordMap = migrationTaskStatusRecords.stream().collect(Collectors.groupingBy(MigrationTaskStatusRecord::getOperateType));
-            result.put("statusRecords", recordMap);
-        }
+
         if (fullProcess != null && StringUtils.isNotBlank(fullProcess.getExecResultDetail())) {
             Map<String, Object> processMap = JSON.parseObject(fullProcess.getExecResultDetail());
             result.put("tableCounts", new FullMigrationSubProcessCounter(
@@ -212,9 +190,6 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             result.put("totalSuccessCount", processCounter.getTotalSuccessCount());
             result.put("totalErrorCount", processCounter.getTotalErrorCount());
         }
-        if (dataCheckProcess != null && StringUtils.isNotBlank(dataCheckProcess.getExecResultDetail())) {
-            result.put("dataCheckProcess", dataCheckProcess);
-        }
         List<String> logPaths = new ArrayList<>();
         if (!task.getExecStatus().equals(TaskStatus.NOT_RUN.getCode())) {
             MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(task.getRunHostId());
@@ -224,6 +199,66 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         return result;
     }
 
+    private void setProcessExecDetails(MigrationTask task, Map<String, Object> result) {
+        MigrationTaskExecResultDetail fullProcess = null;
+        MigrationTaskExecResultDetail incrementalProcess = null;
+        MigrationTaskExecResultDetail reverseProcess = null;
+        MigrationTaskExecResultDetail dataCheckProcess = null;
+
+        if (!task.getExecStatus().equals(TaskStatus.MIGRATION_FINISH.getCode())
+                && !task.getExecStatus().equals(TaskStatus.FULL_CHECK_FINISH.getCode())) {
+            Map<String, Object> getResult = getSingleTaskStatusAndProcessByProtal(task);
+            fullProcess = generateProcessDetail(getResult, "fullProcess");
+            if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
+                incrementalProcess = generateProcessDetail(getResult, "incrementalProcess");
+                reverseProcess = generateProcessDetail(getResult, "reverseProcess");
+            }
+            dataCheckProcess = generateProcessDetail(getResult, "dataCheckProcess");
+        }
+
+        if (fullProcess == null || fullProcess.isEmpty()) {
+            migrationTaskExecResultDetailService.getByTaskIdAndProcessType(task.getId(), ProcessType.FULL.getCode());
+        }
+
+        if (dataCheckProcess == null || dataCheckProcess.isEmpty()) {
+            dataCheckProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(
+                    task.getId(), ProcessType.DATA_CHECK.getCode());
+        }
+
+        if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
+            if (incrementalProcess == null || incrementalProcess.isEmpty()) {
+                incrementalProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(
+                        task.getId(), ProcessType.INCREMENTAL.getCode());
+            }
+
+            if (reverseProcess == null || reverseProcess.isEmpty()) {
+                reverseProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(
+                        task.getId(), ProcessType.REVERSE.getCode());
+            }
+        }
+
+        result.put("fullProcess", fullProcess);
+        if (dataCheckProcess != null && StringUtils.isNotBlank(dataCheckProcess.getExecResultDetail())) {
+            result.put("dataCheckProcess", dataCheckProcess);
+        }
+
+        if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
+            result.put("incrementalProcess", incrementalProcess);
+            result.put("reverseProcess", reverseProcess);
+            List<MigrationTaskStatusRecord> migrationTaskStatusRecords =
+                    migrationTaskStatusRecordService.selectByTaskId(task.getId());
+            Map<Integer, List<MigrationTaskStatusRecord>> recordMap = migrationTaskStatusRecords
+                    .stream().collect(Collectors.groupingBy(MigrationTaskStatusRecord::getOperateType));
+            result.put("statusRecords", recordMap);
+        }
+    }
+
+    private MigrationTaskExecResultDetail generateProcessDetail(Map<String, Object> detailsMap, String processKey) {
+        return MigrationTaskExecResultDetail
+                .builder()
+                .execResultDetail(MapUtil.getStr(detailsMap, processKey))
+                .build();
+    }
 
     @Override
     public Map<String, Object> getSingleTaskStatusAndProcessByProtal(MigrationTask t) {

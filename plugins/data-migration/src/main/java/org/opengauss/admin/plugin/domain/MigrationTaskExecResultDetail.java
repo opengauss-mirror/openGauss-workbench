@@ -64,4 +64,12 @@ public class MigrationTaskExecResultDetail {
 
     }
 
+    /**
+     * is execute result detail empty
+     *
+     * @return is empty
+     */
+    public boolean isEmpty() {
+        return execResultDetail == null || execResultDetail.isBlank();
+    }
 }
