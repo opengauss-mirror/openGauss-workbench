@@ -160,9 +160,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
 
     @Override
     public Map<String, Object> getTaskDetailById(Integer taskId) {
-        MigrationTask task = getById(taskId);
-        task.setCurrentTime(new Date());
         Map<String, Object> result = new HashMap<>();
+
+        MigrationTask task = getTaskInfo(taskId);
         result.put("task", task);
         setProcessExecDetails(task, result);
 
@@ -197,6 +197,15 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         }
         result.put("logs", logPaths);
         return result;
+    }
+
+    private MigrationTask getTaskInfo(Integer taskId) {
+        MigrationTask task = getById(taskId);
+        task.setCurrentTime(new Date());
+        String maskedPass = "********";
+        task.setSourceDbPass(maskedPass);
+        task.setTargetDbPass(maskedPass);
+        return task;
     }
 
     private void setProcessExecDetails(MigrationTask task, Map<String, Object> result) {
