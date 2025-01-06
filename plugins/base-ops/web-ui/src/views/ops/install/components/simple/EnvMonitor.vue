@@ -5,10 +5,10 @@
         <a-spin class="label-color full-w" :loading="envData.loading" :tip="$t('simple.EnvMonitor.5mpmqpcxjpc0')">
           <div class="flex-col-start">
             <a-alert class="mb" style="width: fit-content;" type="warning"
-              v-if="envData.result !== -1 && envData.noPassNum > 0">
+              v-if="envData.result !== -1 && envData.noPassNumError > 0">
               <div class="flex-row">
                 {{ $t('simple.EnvMonitor.5mpmqpcxke40') }}
-                <a-badge :count="envData.noPassNum" />{{ $t('simple.EnvMonitor.else1') }}
+                <a-badge :count="envData.noPassNumError" />{{ $t('simple.EnvMonitor.else1') }}
               </div>
             </a-alert>
             <div class="env-item-c flex-between full-w mb">
@@ -102,6 +102,13 @@
               </div>
             </div>
           </div>
+          <a-modal :title="$t('simple.EnvMonitor.confirm')" @close="resolveAction(false)" type="warning"
+            @cancel="resolveAction(false)" @ok="resolveAction(true)" v-model:visible="nextConfirmVisible">
+            <div>
+              <icon-exclamation-circle-fill style="color: #ff7d00" />
+              {{ confirmMessage }}
+            </div>
+          </a-modal>
         </a-spin>
       </div>
     </div>
@@ -114,8 +121,9 @@ import { getEnvMonitorData } from '@/api/ops'
 import { useOpsStore } from '@/store'
 import { KeyValue } from '@/types/global'
 import { ClusterRoleEnum } from '@/types/ops/install'
-import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
+import useConfirm from '@/hooks/useConfirm'
+
 const { t } = useI18n()
 const installStore = useOpsStore()
 
@@ -134,8 +142,6 @@ type envProps = {
   status: hostEnvStatusEnum,
   statusMessage: string
 }
-
-const noPassNum = ref<number>(0)
 
 let envData = reactive<KeyValue>({
   loading: false,
@@ -271,17 +277,26 @@ const getRoleName = (type: ClusterRoleEnum) => {
       return t('simple.EnvMonitor.5mpmqpcxn5o0')
   }
 }
-const beforeConfirm = () => {
-  let result = true
+
+const {
+  nextConfirmVisible,
+  confirmMessage,
+  waitConfirm,
+  resolveAction
+} = useConfirm()
+
+const beforeConfirm = async () => {
   if (envData.result !== 200) {
-    result = false
-    Message.warning('If the host fails to be detected, configure the host and re-detect the host for installation')
+    confirmMessage.value = t('simple.EnvMonitor.failConfirm')
+    nextConfirmVisible.value = true
+    return await waitConfirm()
   }
   if (envData.noPassNumError > 0) {
-    result = false;
-    Message.error(t('enterprise.EnvMonitor.5mpm5p9xg701'))
+    confirmMessage.value = t('simple.EnvMonitor.errorConfirm', { noPassNum: envData.noPassNumError })
+    nextConfirmVisible.value = true
+    return await waitConfirm()
   }
-  return result
+  return true
 }
 
 defineExpose({

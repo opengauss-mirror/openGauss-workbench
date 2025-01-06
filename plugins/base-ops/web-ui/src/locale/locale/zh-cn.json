@@ -789,8 +789,7 @@
             "5mpm5p9xfv80": "正在检测中",
             "5mpm5p9xfzo0": "主",
             "5mpm5p9xg3o0": "备",
-            "5mpm5p9xg700": "级联",
-            "5mpm5p9xg701": "请先解决报错的环境监测项再进行安装"
+            "5mpm5p9xg700": "级联"
         },
         "ExeInstall": {
             "else1": "数据库用户",
@@ -989,7 +988,10 @@
             "5mpmqpcxmfs0": "正在检测中",
             "5mpmqpcxmog0": "主",
             "5mpmqpcxmwg0": "备",
-            "5mpmqpcxn5o0": "级联"
+            "5mpmqpcxn5o0": "级联",
+            "confirm": "确认",
+            "errorConfirm": "当前有{noPassNum}个环境检测不通过，建议处理后重试，仍需继续安装请点击确认",
+            "failConfirm": "环境检测失败，建议检查后重试，仍需继续安装请点击确认"
         },
         "ExeInstall": {
             "else1": "环境准备",
