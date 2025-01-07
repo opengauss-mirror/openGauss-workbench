@@ -53,6 +53,7 @@ module.exports = defineConfig({
         symbolId: 'icon-[name]'
       })
       .end()
+    config.resolve.alias.set('../../../hooks/use-draggable/index.mjs',path.resolve(__dirname,'src/hooks/useDraggable/index.mjs'))
   },
   devServer: {
     headers: {
