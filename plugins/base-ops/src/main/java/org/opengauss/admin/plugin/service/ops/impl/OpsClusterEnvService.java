@@ -42,6 +42,7 @@ import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;
 import org.opengauss.admin.plugin.domain.model.ops.env.SoftwareEnv;
 import org.opengauss.admin.plugin.enums.ops.HostEnvStatusEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
+import org.opengauss.admin.plugin.utils.OpsAssert;
 import org.opengauss.admin.system.plugin.facade.HostMonitorFacade;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -52,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
@@ -108,20 +110,23 @@ public class OpsClusterEnvService {
 
     private HostEnv env(OpsHostEntity hostEntity, OpenGaussSupportOSEnum expectedOs) {
         // use root check env
-        OpsHostUserEntity userEntity = opsHostRemoteService.getHostRootUser(hostEntity.getHostId());
         HostEnv hostEnv = new HostEnv();
         CountDownLatch countDownLatch = new CountDownLatch(2);
         threadPoolTaskExecutor.submit(() -> {
-            Session session = opsHostRemoteService.createHostUserSession(hostEntity, userEntity);
             hostEnv.setHardwareEnv(hardwareEnvDetect(hostEntity.getHostId(), expectedOs));
-            opsHostRemoteService.closeSession(session);
             countDownLatch.countDown();
         });
         threadPoolTaskExecutor.submit(() -> {
-            Session session = opsHostRemoteService.createHostUserSession(hostEntity, userEntity);
-            hostEnv.setSoftwareEnv(softwareEnvDetect(session, expectedOs));
-            opsHostRemoteService.closeSession(session);
-            countDownLatch.countDown();
+            OpsHostUserEntity userEntity = opsHostRemoteService.getAnyHostUser(hostEntity.getHostId());
+            if (Objects.nonNull(userEntity)) {
+                Session session = opsHostRemoteService.createHostUserSession(hostEntity, userEntity);
+                hostEnv.setSoftwareEnv(softwareEnvDetect(session, expectedOs));
+                opsHostRemoteService.closeSession(session);
+                countDownLatch.countDown();
+            } else {
+                countDownLatch.countDown();
+                log.error("cluster env software detect failed, host user not found {}", hostEntity.getPublicIp());
+            }
         });
         try {
             countDownLatch.await();
@@ -255,6 +260,7 @@ public class OpsClusterEnvService {
         freeHardDiskProperty.setSortNum(6);
         try {
             String freeHardDisk = hostMonitorFacade.getAvailableDiskSpace(hostId);
+            OpsAssert.isTrue(StrUtil.isNotEmpty(freeHardDisk), "free disk space is empty");
             int freeHardDiskGB = calcDisk(freeHardDisk);
             freeHardDiskProperty.setValue(freeHardDiskGB + "G");
             freeHardDiskProperty.setStatus(HostEnvStatusEnum.NORMAL);
@@ -282,6 +288,7 @@ public class OpsClusterEnvService {
         try {
             String cpuFrequency = hostMonitorFacade.getCpuFrequency(hostId);
             cpuFrequencyProperty.setValue(cpuFrequency);
+            OpsAssert.isTrue(StrUtil.isNotEmpty(cpuFrequency), "CPU frequency is empty");
             double cpuCoreNum = Double.parseDouble(cpuFrequency.substring(0, cpuFrequency.length() - 3));
             cpuFrequencyProperty.setStatus(HostEnvStatusEnum.NORMAL);
             int suggestedNum = 2;
@@ -303,6 +310,7 @@ public class OpsClusterEnvService {
         cpuCoreNumProperty.setSortNum(4);
         try {
             String cpuCore = hostMonitorFacade.getCpuCoreNum(hostId);
+            OpsAssert.isTrue(StrUtil.isNotEmpty(cpuCore), "Number of CPU cores is empty");
             cpuCoreNumProperty.setValue(cpuCore);
             int cpuCoreNum = Integer.parseInt(cpuCore);
             int suggestedNum = 8;
@@ -332,6 +340,7 @@ public class OpsClusterEnvService {
         freeMemoryProperty.setSortNum(3);
         try {
             String freeMemory = hostMonitorFacade.getRemainingMemory(hostId);
+            OpsAssert.isTrue(StrUtil.isNotEmpty(freeMemory), "available memory is empty");
             freeMemoryProperty.setValue(freeMemory + "GB");
             int freeMemoryGB = (int) Float.parseFloat(freeMemory);
             int suggestedGB = 32;

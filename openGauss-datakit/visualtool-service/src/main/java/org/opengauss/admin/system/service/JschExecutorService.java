@@ -286,19 +286,31 @@ public class JschExecutorService {
     /**
      * <pre>
      * Obtain the usage information of each partition of the server disk
-     * eg.
-     * /dev/vda1 ext4 79G 68G 7.7G 90% /"
-     * /dev/vdb1 ext4 197G 168G 20G 90% /data
-     * /dev/vdc1 xfs 50G 20G 31G 40% /data1
-     * /dev/vdc2 xfs 50G 22G 29G 44% /data2
-     * /dev/vdd1 ext4 99G 17G 78G 18% /219bak
+     * eg.  df -T --total | tail -n +2| tr -s " "
+     *
+     * devtmpfs devtmpfs 15893580 0 15893580 0% /dev
+     * tmpfs tmpfs 15904136 1396 15902740 1% /dev/shm
+     * tmpfs tmpfs 15904136 1583488 14320648 10% /run
+     * tmpfs tmpfs 15904136 0 15904136 0% /sys/fs/cgroup
+     * /dev/sda1 ext4 61795096 57479008 1363804 98% /
+     * /dev/sdb ext4 206292968 98393248 97397576 51% /data
+     * /dev/sdc ext4 103080888 35819960 62001664 37% /data2
+     * tmpfs tmpfs 3180828 0 3180828 0% /run/user/0
+     * tmpfs tmpfs 3180828 0 3180828 0% /run/user/54355
+     * tmpfs tmpfs 3180828 0 3180828 0% /run/user/54360
+     * tmpfs tmpfs 3180828 0 3180828 0% /run/user/54354
+     * total - 469764048 193277100 257773256 43% -
+     *
+     * eg.  df -T --total | tail -n +2| tr -s " " | grep -v total
+     *
+     * total - 469764048 193277100 257773256 43% -
      * </pre>
      *
      * @param sshLogin ssh login
      * @return base info
      */
     public String getDiskMonitor(SshLogin sshLogin) {
-        return new JschExecutor().execCommand(sshLogin, SshCommandConstants.DISK_MONITOR);
+        return new JschExecutor().execCommand(sshLogin, SshCommandConstants.DISK_TOTAL_MONITOR);
     }
 
     /**

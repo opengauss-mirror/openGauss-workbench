@@ -270,7 +270,7 @@ public interface SshCommandConstants {
     /**
      * check os disk info
      */
-    String DISK_MONITOR = "df -Th | egrep -v \"(tmpfs|sr0)\" | tail -n +2| tr -s \" \"";
+    String DISK_TOTAL_MONITOR = "df -T --total | tail -n +2| tr -s \" \" | grep total";
 
     /**
      * check os net card name

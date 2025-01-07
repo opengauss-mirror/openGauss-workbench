@@ -48,21 +48,13 @@ public class HostRealtimeStatistics {
      */
     public static HostRealtimeStatistics ofDisk(String diskMonitor) {
         HostRealtimeStatistics bean = new HostRealtimeStatistics();
-        String[] split = diskMonitor.split("\\n");
-        for (String line : split) {
-            if (line.contains("/boot/")) {
-                continue;
-            }
-            String[] dev = line.split(" ");
-            bean.total += Float.parseFloat(dev[2].replace("G", ""));
-            bean.used += Float.parseFloat(dev[3].replace("G", ""));
-            if (dev[4].contains("M")) {
-                bean.available += Float.parseFloat(dev[4].replace("M", "")) / 1024;
-            } else {
-                bean.available += Float.parseFloat(dev[4].replace("G", ""));
-            }
+        String[] dev = diskMonitor.split(" ");
+        if (dev.length == 7) {
+            bean.total += Math.round((float) Long.parseLong(dev[2]) / 1048576);
+            bean.used += Math.round((float) Long.parseLong(dev[3]) / 1048576);
+            bean.available += Math.round((float) Long.parseLong(dev[4]) / 1048576);
+            bean.use = dev[5].replace("%", "");
         }
-        bean.use = toString((bean.used / bean.total) * 100);
         return bean;
     }
 

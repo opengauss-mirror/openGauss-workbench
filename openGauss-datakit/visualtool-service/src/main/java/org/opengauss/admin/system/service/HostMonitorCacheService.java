@@ -49,7 +49,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 /**
@@ -63,6 +62,7 @@ import javax.annotation.Resource;
 public class HostMonitorCacheService {
     // cacheMap  : hostId : item : value
     private final Map<String, Map<String, String>> cacheMap = new ConcurrentHashMap<>();
+    private final Map<String, OpsHostEntity> cacheHostMap = new ConcurrentHashMap<>();
     private volatile AtomicLong lastedFetch = new AtomicLong(0);
     @Resource
     private IHostService hostService;
@@ -78,61 +78,135 @@ public class HostMonitorCacheService {
     /**
      * init host cache scheduled
      */
-    @PostConstruct
-    private void init() {
+    public void initHostMonitorCacheService() {
         lastedFetch.set(System.currentTimeMillis() / 1000);
+        List<OpsHostEntity> list = hostService.list();
+        for (OpsHostEntity host : list) {
+            cacheHostMap.put(host.getHostId(), host);
+        }
         // host static info, support refresh data per minute
         scheduledExecutorService.scheduleWithFixedDelay(() -> {
             Thread.currentThread().setName("host-monitor");
             if (noUsing()) {
                 return;
             }
-            List<OpsHostEntity> list = hostService.list();
-            list.forEach(host -> {
+            cacheHostMap.values().forEach(host -> {
                 try {
                     OpsHostUserEntity user = getHostUserRootOrNormal(host.getHostId());
                     SshLogin sshLogin = new SshLogin(host.getPublicIp(), host.getPort(), user.getUsername(),
                         encryptionUtils.decrypt(user.getPassword()));
-                    Map<String, String> hostInfoMap = cacheMap.getOrDefault(host.getHostId(), new HashMap<>());
-                    os(sshLogin, hostInfoMap);
-                    osVersion(sshLogin, hostInfoMap);
-                    cpu(sshLogin, hostInfoMap);
-                    disk(sshLogin, hostInfoMap);
-                    log.info("monitor host cache {} success {}", host.getPublicIp(), hostInfoMap);
-                    cacheMap.put(host.getHostId(), hostInfoMap);
-                } catch (Exception ex) {
+                    cacheHostFixedInfo(host.getHostId(), sshLogin);
+                } catch (OpsException ex) {
                     log.warn("monitor host cache {} error : ", host.getPublicIp(), ex);
                 }
             });
-        }, 5, 5 * 60, TimeUnit.SECONDS);
+        }, 0, 5 * 60, TimeUnit.SECONDS);
         // host dynamic info,support seconds level data refresh
         scheduledExecutorService.scheduleWithFixedDelay(() -> {
             Thread.currentThread().setName("host-realtime-monitor");
             if (noUsing()) {
                 return;
             }
-            List<OpsHostEntity> list = hostService.list();
-            list.forEach(host -> {
+            cacheHostMap.values().forEach(host -> {
                 try {
                     OpsHostUserEntity user = getHostUserRootOrNormal(host.getHostId());
                     SshLogin sshLogin = new SshLogin(host.getPublicIp(), host.getPort(), user.getUsername(),
                         encryptionUtils.decrypt(user.getPassword()));
-                    Map<String, String> hostInfoMap = cacheMap.getOrDefault(host.getHostId(), new HashMap<>());
-                    // cpu using
-                    cpuUsing(sshLogin, hostInfoMap);
-                    // memory using
-                    memory(sshLogin, hostInfoMap);
-                    // host base info for migration
-                    hostForMigration(sshLogin, hostInfoMap);
-                    // net monitor
-                    netMonitor(sshLogin, hostInfoMap);
-                    log.info("monitor host cache {} success {}", host.getPublicIp(), hostInfoMap);
-                    cacheMap.put(host.getHostId(), hostInfoMap);
-                } catch (Exception ex) {
+                    cacheHostRealtimeInfo(host.getHostId(), sshLogin);
+                } catch (OpsException ex) {
                     log.warn("monitor host cache {} error : {}", host.getPublicIp(), ex.getMessage());
                 }
             });
-        }, 5, 6, TimeUnit.SECONDS);
+        }, 2, 6, TimeUnit.SECONDS);
+    }
+
+    private synchronized String getCacheValue(String hostId, String key) {
+        lastedFetch.set(System.currentTimeMillis() / 1000);
+        OpsHostEntity host = getOpsHost(hostId);
+        if (Objects.isNull(host)) {
+            throw new OpsException("host not found,hostId:" + hostId);
+        }
+        if (isNotCache(hostId)) {
+            OpsHostUserEntity user = getHostUserRootOrNormal(host.getHostId());
+            SshLogin sshLogin = new SshLogin(host.getPublicIp(), host.getPort(), user.getUsername(),
+                encryptionUtils.decrypt(user.getPassword()));
+            cacheHostFixedInfo(hostId, sshLogin);
+            cacheHostRealtimeInfo(hostId, sshLogin);
+        }
+        Map<String, String> hostCache = cacheMap.getOrDefault(hostId, new HashMap<>());
+        if (!hostCache.containsKey(key)) {
+            cachingHostInfoByKey(host, key);
+        }
+        return hostCache.getOrDefault(key, CacheConstants.EMPTY);
+    }
+
+    private void cachingHostInfoByKey(OpsHostEntity host, String key) {
+        OpsHostUserEntity user = getHostUserRootOrNormal(host.getHostId());
+        SshLogin sshLogin = new SshLogin(host.getPublicIp(), host.getPort(), user.getUsername(),
+            encryptionUtils.decrypt(user.getPassword()));
+        Map<String, String> hostInfoMap = cacheMap.getOrDefault(host.getHostId(), new HashMap<>());
+        switch (key) {
+            case CacheConstants.DISK_MONITOR:
+                disk(sshLogin, hostInfoMap);
+                break;
+            case CacheConstants.CPU_ARCH:
+            case CacheConstants.CPU_FREQUENCY:
+            case CacheConstants.CPU_CORE_NUM:
+                cpu(sshLogin, hostInfoMap);
+                break;
+            case CacheConstants.CPU_USING:
+                cpuUsing(sshLogin, hostInfoMap);
+                break;
+            case CacheConstants.OS:
+                os(sshLogin, hostInfoMap);
+                break;
+            case CacheConstants.OS_VERSION:
+                osVersion(sshLogin, hostInfoMap);
+                break;
+            case CacheConstants.MEMORY:
+                memory(sshLogin, hostInfoMap);
+                break;
+            case CacheConstants.NET_MONITOR:
+                netMonitor(sshLogin, hostInfoMap);
+                break;
+            default:
+                ;
+        }
+    }
+
+    private OpsHostEntity getOpsHost(String hostId) {
+        OpsHostEntity host;
+        if (!cacheHostMap.containsKey(hostId)) {
+            host = hostService.getById(hostId);
+            if (Objects.nonNull(host)) {
+                cacheHostMap.put(hostId, host);
+            }
+        }
+        return cacheHostMap.get(hostId);
+    }
+
+    private void cacheHostFixedInfo(String hostId, SshLogin sshLogin) {
+        Map<String, String> hostInfoMap = cacheMap.getOrDefault(hostId, new HashMap<>());
+        os(sshLogin, hostInfoMap);
+        osVersion(sshLogin, hostInfoMap);
+        cpu(sshLogin, hostInfoMap);
+        disk(sshLogin, hostInfoMap);
+        log.info("monitor host cache {} success {}", sshLogin.getHost(), hostInfoMap);
+        cacheMap.put(hostId, hostInfoMap);
+    }
+
+    private void cacheHostRealtimeInfo(String hostId, SshLogin sshLogin) {
+        Map<String, String> hostInfoMap = cacheMap.getOrDefault(hostId, new HashMap<>());
+        // cpu using
+        cpuUsing(sshLogin, hostInfoMap);
+        // memory using
+        memory(sshLogin, hostInfoMap);
+        // host base info for migration
+        hostForMigration(sshLogin, hostInfoMap);
+        // net monitor
+        netMonitor(sshLogin, hostInfoMap);
+        log.info("monitor host cache {} success {}", sshLogin.getHost(), hostInfoMap);
+        cacheMap.put(hostId, hostInfoMap);
     }
 
     private boolean noUsing() {
@@ -157,7 +231,7 @@ public class HostMonitorCacheService {
     private void hostForMigration(SshLogin sshLogin, Map<String, String> hostInfoMap) {
         String baseInfo = jschExecutorService.getHostBaseInfo(sshLogin);
         if (StrUtil.isNotEmpty(baseInfo)) {
-            hostInfoMap.put(CacheConstants.MIGRATION_HOST, baseInfo);
+            hostInfoMap.put(CacheConstants.MIGRATION_HOST, baseInfo.replaceAll("\n", "##"));
         }
     }
 
@@ -188,7 +262,7 @@ public class HostMonitorCacheService {
             if (StrUtil.isEmpty(ofCpu)) {
                 return;
             }
-            String[] split = ofCpu.split("\n");
+            String[] split = ofCpu.replaceAll(" ", "").split("\n");
             for (String line : split) {
                 if (line.contains("Architecture")) {
                     String[] arch = line.split(":");
@@ -196,11 +270,11 @@ public class HostMonitorCacheService {
                 } else if (line.contains("CPU(s):") && !line.contains("node")) {
                     String[] arch = line.split(":");
                     hostInfoMap.put(CacheConstants.CPU_CORE_NUM, arch[1].trim());
-                } else if (line.contains("CPU max MHz:")) {
+                } else if (line.contains("CPUmaxMHz:")) {
                     // arm frequency
                     String[] arch = line.split(":");
                     hostInfoMap.put(CacheConstants.CPU_FREQUENCY, toCpuGHz(arch[1].trim()));
-                } else if (line.contains("CPU MHz:")) {
+                } else if (line.contains("CPUMHz:")) {
                     // x86 frequency
                     String[] arch = line.split(":");
                     hostInfoMap.put(CacheConstants.CPU_FREQUENCY, toCpuGHz(arch[1].trim()));
@@ -246,6 +320,7 @@ public class HostMonitorCacheService {
      */
     public void deleteHostCache(String hostId) {
         cacheMap.remove(hostId);
+        cacheHostMap.remove(hostId);
     }
 
     /**
@@ -335,15 +410,6 @@ public class HostMonitorCacheService {
         return getCacheValue(hostId, CacheConstants.CPU_FREQUENCY);
     }
 
-    private String getCacheValue(String hostId, String key) {
-        lastedFetch.set(System.currentTimeMillis() / 1000);
-        if (isNotCache(hostId)) {
-            return CacheConstants.EMPTY;
-        }
-        Map<String, String> hostCache = cacheMap.get(hostId);
-        return hostCache.getOrDefault(key, CacheConstants.EMPTY);
-    }
-
     /**
      * get host network information tx and rx
      *
@@ -415,7 +481,7 @@ public class HostMonitorCacheService {
      * @return migration host info
      */
     public String getMigrationHostInfo(String hostId) {
-        return getCacheValue(hostId, CacheConstants.MIGRATION_HOST);
+        return getCacheValue(hostId, CacheConstants.MIGRATION_HOST).replaceAll("##", "\n");
     }
 
     /**
