@@ -55,7 +55,7 @@
                           <icon-info-circle-fill v-if="item.status === hostEnvStatusEnum.INFO" style="color: gray"
                             :size="20" />
                         </div>
-                        <div :style="`color: ` + getMsgColor('hard', item)">{{ item.statusMessage }}</div>
+                        <div :style="`max-width: 400px; color: ${getMsgColor(item)}`">{{ item.statusMessage }}</div>
                       </div>
                     </div>
                   </div>
@@ -84,7 +84,7 @@
                           <icon-info-circle-fill v-if="item.status === hostEnvStatusEnum.INFO" style="color: gray"
                             :size="20" />
                         </div>
-                        <div :style="`max-width: 300px; color: ` + getMsgColor('soft', item)">{{ item.statusMessage }}
+                        <div :style="`max-width: 400px; color: ${getMsgColor(item)}`">{{ item.statusMessage }}
                         </div>
                       </div>
                     </div>
@@ -250,14 +250,10 @@ const getErrorNum = () => {
   })
 }
 
-const getMsgColor = (type: string, item: envProps) => {
+const getMsgColor = (item: envProps) => {
   switch (item.status) {
     case hostEnvStatusEnum.ERROR:
-      if (type === 'soft') {
-        return 'red'
-      } else {
-        return 'orange'
-      }
+      return 'red'
     case hostEnvStatusEnum.INFO:
       return 'gray'
     case hostEnvStatusEnum.NORMAL:

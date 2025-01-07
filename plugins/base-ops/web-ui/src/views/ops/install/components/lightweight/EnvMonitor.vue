@@ -55,7 +55,7 @@
                           <icon-info-circle-fill v-if="item.status === hostEnvStatusEnum.INFO" style="color: gray"
                             :size="20" />
                         </div>
-                        <div :style="`color: ` + getMsgColor(item)">{{ item.statusMessage }}</div>
+                        <div :style="`max-width: 400px; color: ${getMsgColor(item)}`">{{ item.statusMessage }}</div>
                       </div>
                     </div>
                   </div>
@@ -84,7 +84,7 @@
                           <icon-info-circle-fill v-if="item.status === hostEnvStatusEnum.INFO" style="color: gray"
                             :size="20" />
                         </div>
-                        <div :style="`max-width: 300px; color: ` + getMsgColor(item)">{{ item.statusMessage }}</div>
+                        <div :style="`max-width: 400px; color: ${getMsgColor(item)}`">{{ item.statusMessage }}</div>
                       </div>
                     </div>
                   </div>
