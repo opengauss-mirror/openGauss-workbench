@@ -226,7 +226,8 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         }
 
         if (fullProcess == null || fullProcess.isEmpty()) {
-            migrationTaskExecResultDetailService.getByTaskIdAndProcessType(task.getId(), ProcessType.FULL.getCode());
+            fullProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(
+                    task.getId(), ProcessType.FULL.getCode());
         }
 
         if (dataCheckProcess == null || dataCheckProcess.isEmpty()) {
