@@ -113,15 +113,15 @@
                       "
                       >{{ $t('install.reinstallBtn') }}
                     </el-link>
-                    <el-link type="primary" style="margin-right: 5px" @click="startProxy(data.id)" v-if="showStarting(data, proxyNodeStatusMap)"
+                    <el-link type="primary" style="margin-right: 5px" @click="startProxy(data.id)" v-if="showStarting(data, proxyNodeStatusMap)  && !data['isFake']"
                       :disabled="proxyNodeStatusMap[data.id].loading || !canStart(data, proxyNodeStatusMap)">{{
                       t('install.start')
                     }}</el-link>
-                    <el-link type="primary" style="margin-right: 5px" @click="stopProxy(data.id)" v-if="!showStarting(data, proxyNodeStatusMap)"
+                    <el-link type="primary" style="margin-right: 5px" @click="stopProxy(data.id)" v-if="!showStarting(data, proxyNodeStatusMap)  && !data['isFake']"
                       :disabled="proxyNodeStatusMap[data.id].loading || !canStop(data, proxyNodeStatusMap)">{{
                       t('install.stop')
                     }}</el-link>
-                    <el-link style="margin-right: 5px" type="primary" @click="showEditProxy(node)">
+                    <el-link style="margin-right: 5px" v-if="!data['isFake']" type="primary" @click="showEditProxy(node)">
                       {{ $t('app.edit') }}
                     </el-link>
                     <el-link
@@ -199,6 +199,7 @@ import UninstallAgent from '@/pages/dashboard/install/uninstallAgent.vue'
 import UninstallProxy from '@/pages/dashboard/install/uninstallProxy.vue'
 import { Loading, WarningFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { uuid } from "@/shared";
 
 const { t } = useI18n()
 
@@ -289,6 +290,15 @@ const showInstallProxy = () => {
   isReinstall.value = false
   installProxyShown.value = true
   isProxyEdit.value = false
+  proxyNode.value = {
+    'id': null,
+    'hostid': null,
+    'path': null,
+    'port': null,
+    'username': null,
+    'type': '',
+    'param': null
+  }
 }
 const showEditProxy = (node: any) => {
   isReinstall.value = false
@@ -436,10 +446,16 @@ const {
 watch(res, (res: any) => {
   if (res.length) {
     let idList = []
-    let promeMainList = res.filter((item) => item.type === 'PROMETHEUS_MAIN')
+    let promeMainList = res.filter((item) => item.type === 'PROMETHEUS_MAIN') || []
     if (promeMainList.length === 0) {
-      proxyList.value = []
-      return
+      let promeMain = {
+        "id": uuid(),
+        "type": "PROMETHEUS_MAIN",
+        "path": "",
+        "port": 9090,
+        "isFake": true
+      }
+      promeMainList.push(promeMain)
     }
     idList.push(promeMainList[0].id)
     promeMainList[0]['label'] = 'Prometheus'
@@ -453,7 +469,20 @@ watch(res, (res: any) => {
     proxyList.value = promeMainList
     initProxyNodeStatusMap(idList)
     updateProxyNodeStatusMapByInterval()
-  } else proxyList.value = []
+  } else {
+    proxyList.value = [{
+      "id": uuid(),
+      "type": "PROMETHEUS_MAIN",
+      "path": "",
+      "port": 9090,
+      'label': 'Prometheus',
+      'children': [],
+      'isFake': true
+    }]
+    let idList = []
+    idList.push(proxyList.value[0].id)
+    initProxyNodeStatusMap(idList)
+  }
 })
 
 const handleClick = (tab: any, event: Event) => {
