@@ -59,7 +59,7 @@
             </el-input-number>
           </el-form-item>
           <el-form-item :label="t('install.installPath')" prop="path">
-            <el-input v-model="formData.path" style="width: 300px; margin: 0 4px" :disabled="editing" />
+            <el-input v-model="formData.path" style="width: 300px; margin: 0 4px" :disabled="editing  && !isReinstall" />
           </el-form-item>
           <el-form-item :label="t('install.storageDays')" prop="storageDays" v-if="!editing || formData.type === 'PROMETHEUS'">
             <el-input
@@ -281,7 +281,7 @@ const getInstallPath = () => {
   restRequest.get(`/observability/v1/environment/basePath`).then((res) => {
     if (res) {
       let path = decodeURIComponent(res)
-      formData.path = path + (path.endsWith('/') ? 'data' : '/data') + '/prometheus'
+      formData.path = path + (path.endsWith('/') ? 'data' : '/data') + (props.node?.type == 'PROMETHEUS_MAIN' ? '/prometheus-main' : '/prometheus')
     }
   })
 }
@@ -576,9 +576,11 @@ onMounted(() => {
   if (!props.editing) {
     getInstallPath()
   } else {
-    formData.envId = props.node?.id
-    formData.nodeId = props.node?.hostid
-    formData.path = props.node?.path
+    if (props.isReinstall && !props.node?.path) {
+      getInstallPath()
+    } else {
+      formData.path = props.node?.path
+    }
     formData.port = props.node?.port
     formData.username = props.node?.username
     formData.type = props.node?.type
@@ -587,6 +589,8 @@ onMounted(() => {
       let paramJson = JSON.parse(param)
       formData.storageDays = paramJson.storageDays.substring(0, paramJson.storageDays.length - 1)
     }
+    formData.envId = props.node?.id
+    formData.nodeId = props.node?.hostid
   }
 })
 onBeforeUnmount(() => {

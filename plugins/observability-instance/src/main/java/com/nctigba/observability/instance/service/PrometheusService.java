@@ -124,10 +124,11 @@ public class PrometheusService extends AbstractInstaller {
         NctigbaEnvDO mainEnv = getMainPromEnv();
         try {
             // install the main Prometheus
-            Path path = Path.of(MAIN_INSTALL_PATH);
+            String pathStr = StrUtil.isBlank(mainEnv.getPath()) ? MAIN_INSTALL_PATH : mainEnv.getPath();
+            Path path = Path.of(pathStr);
             if (!Files.exists(path)) {
                 Files.createDirectories(path);
-                chmodFile(MAIN_INSTALL_PATH);
+                chmodFile(pathStr);
             }
             Resource resource = getMainInstallPkg();
             if (StrUtil.isBlank(mainEnv.getId())) {
@@ -137,8 +138,10 @@ public class PrometheusService extends AbstractInstaller {
                 mainEnv.setPort(port).setPath(promDir)
                     .setType(NctigbaEnvDO.envType.PROMETHEUS_MAIN);
             }
-            if (!Files.exists(Path.of(mainEnv.getPath()))) {
+            if (!Files.exists(Path.of(mainEnv.getPath())) || !Files.exists(Path.of(mainEnv.getPath()
+                + "/prometheus.yml")) || !Files.exists(Path.of(mainEnv.getPath() + "/prometheus"))) {
                 // install
+                rmPath(mainEnv.getPath());
                 uploadMainProm(resource, path);
                 uploadMainScript(mainEnv.getPath(), mainEnv.getPort(), false);
                 chmodFile(mainEnv.getPath());
@@ -156,6 +159,16 @@ public class PrometheusService extends AbstractInstaller {
             updateMainPromRemoteReadConfig();
         } catch (IOException | InterruptedException | RuntimeException e) {
             throw new CustomException(e.getMessage(),e);
+        }
+    }
+
+    private void rmPath(String path) throws IOException, InterruptedException {
+        ProcessBuilder processBuilder = new ProcessBuilder();
+        processBuilder.command("rm", "-rf", path);
+        Process process = processBuilder.start();
+        boolean isExit = process.waitFor(2L, TimeUnit.SECONDS);
+        if (!isExit) {
+            throw new CustomException("rm fail!");
         }
     }
 
@@ -245,9 +258,7 @@ public class PrometheusService extends AbstractInstaller {
         // Is the port in use
         boolean isUsed = true;
         while (port <= maxPort) {
-            String result = CommonUtils.processCommand("/bin/sh", "-c",
-                String.format(CommonConstants.PORT_IS_EXIST, port));
-            isUsed = result.contains("true");
+            isUsed = isPortUsed(port);
             if (isUsed) {
                 port++;
                 continue;
@@ -258,6 +269,12 @@ public class PrometheusService extends AbstractInstaller {
             port = formPort;
         }
         return port;
+    }
+
+    private boolean isPortUsed(Integer port) throws IOException, InterruptedException {
+        String result = CommonUtils.processCommand("/bin/sh", "-c",
+            String.format(CommonConstants.PORT_IS_EXIST, port));
+        return result.contains("true");
     }
 
     private Resource getMainInstallPkg() throws IOException {
@@ -1313,28 +1330,31 @@ public class PrometheusService extends AbstractInstaller {
             if (StrUtil.isBlank(promInstall.getEnvId())) {
                 throw new CustomException("The main Prometheus is not exist!");
             }
-            NctigbaEnvDO env = envMapper.selectById(promInstall.getEnvId());
-            if (env == null) {
-                throw new CustomException("The main Prometheus is not exist!");
-            }
             nextStep();
-            AgentExceptionVO agentExceptionVO = checkPidStatus(env);
-            if (agentExceptionVO.isUpStatus()) {
-                sendMsg(null, "prominstall.stopServer");
-                stopProm(env);
-            }
             prometheusConfig mainPromConf = null;
-            try {
-                mainPromConf = getMainPromConf(env.getPath());
-            } catch (Exception e) {
-                log.error("Get the main prometheus configuration is fail: {}", e.getMessage());
+            NctigbaEnvDO env = envMapper.selectById(promInstall.getEnvId());
+            if (env != null) {
+                AgentExceptionVO agentExceptionVO = checkPidStatus(env);
+                if (agentExceptionVO.isUpStatus()) {
+                    sendMsg(null, "prominstall.stopServer");
+                    stopProm(env);
+                }
+                try {
+                    mainPromConf = getMainPromConf(env.getPath());
+                } catch (Exception e) {
+                    log.error("Get the main prometheus configuration is fail: {}", e.getMessage());
+                }
+                transferRuleConfig(env.getPath() + CommonConstants.SLASH + RULE_PATH, RULE_PATH, false);
+                sendMsg(null, "prominstall.clearFolder");
+                clearInstallFolder(env);
+                envMapper.deleteById(env);
             }
-            transferRuleConfig(env.getPath() + CommonConstants.SLASH + RULE_PATH, RULE_PATH, false);
-            sendMsg(null, "prominstall.clearFolder");
-            clearInstallFolder(env);
-            envMapper.deleteById(env);
             nextStep();
-            Path path = Path.of(MAIN_INSTALL_PATH);
+            boolean isUsed = isPortUsed(promInstall.getPort());
+            if (isUsed) {
+                throw new CustomException("port(" + promInstall.getPort() + ") is used!");
+            }
+            Path path = Path.of(StrUtil.isNotBlank(promInstall.getPath()) ? promInstall.getPath() : MAIN_INSTALL_PATH);
             if (!Files.exists(path)) {
                 Files.createDirectories(path);
             }
@@ -1342,6 +1362,10 @@ public class PrometheusService extends AbstractInstaller {
             env = new NctigbaEnvDO().setPath(promDir).setPort(promInstall.getPort()).setType(envType.PROMETHEUS_MAIN);
             envMapper.insert(env);
             nextStep();
+            AgentExceptionVO agentExceptionVO = checkPidStatus(env);
+            if (agentExceptionVO.isUpStatus()) {
+                stopProm(env);
+            }
             startProm(env);
             sendMsg(null, "prominstall.startServer");
             nextStep(); // step6 check prom status
@@ -1413,7 +1437,7 @@ public class PrometheusService extends AbstractInstaller {
             promDir = promInstall.getPath() + "/" + filename;
         }
         uploadMainProm(resource, Path.of(installPath));
-        uploadMainScript(promDir, promInstall.getPort(), false);
+        uploadMainScript(promDir, promInstall.getPort(), true);
         if (promconfig != null) {
             String config = YamlUtils.dump(promconfig);
             try (InputStream inConfig = new ByteArrayInputStream(config.getBytes(Charset.defaultCharset()))) {
