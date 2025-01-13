@@ -23,16 +23,24 @@
 
 package org.opengauss.admin.plugin.utils;
 
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.model.ops.WsSession;
+
 import lombok.extern.slf4j.Slf4j;
+
+import org.opengauss.admin.system.plugin.facade.SysSettingFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
+import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Objects;
+
+import javax.annotation.Resource;
 
 /**
  * @author lhf
@@ -44,38 +52,42 @@ public class DownloadUtil {
     @Autowired
     private WsUtil wsUtil;
 
+    @Resource
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private SysSettingFacade sysSettingFacade;
+
+    /**
+     * download file to target path
+     *
+     * @param resourceUrl url
+     * @param targetPath target path
+     * @param fileName file name
+     * @param wsSession ws
+     */
     public void download(String resourceUrl, String targetPath, String fileName, WsSession wsSession) {
         DownloadMonitor downloadMonitor = new DownloadMonitor();
-
         InputStream inputStream = null;
         OutputStream outputStream = null;
         try {
             File existFile = new File(targetPath + "/" + fileName);
-            if (existFile.exists()){
+            if (existFile.exists()) {
                 wsUtil.sendText(wsSession, "1");
                 return;
             }
-
             File file = new File(targetPath);
             if (!file.exists()) {
                 if (!file.mkdirs()) {
                     throw new OpsException("Failed to create a directory");
                 }
             }
-
             URL url = new URL(resourceUrl);
-            URLConnection urlConnection = url.openConnection();
-
+            URLConnection urlConnection = openConnectionWithProxy(url);
             long max = urlConnection.getContentLengthLong();
             downloadMonitor.init(max, 0, wsSession);
-
             inputStream = urlConnection.getInputStream();
             byte[] bs = new byte[10240];
-
             int len;
-
             outputStream = new FileOutputStream(targetPath + "/" + fileName, false);
-
             while ((len = inputStream.read(bs)) != -1) {
                 outputStream.write(bs, 0, len);
                 downloadMonitor.count(len);
@@ -92,7 +104,6 @@ public class DownloadUtil {
                     log.error("Failed to close the output stream. Procedure");
                 }
             }
-
             if (Objects.nonNull(inputStream)) {
                 try {
                     inputStream.close();
@@ -100,6 +111,15 @@ public class DownloadUtil {
                     log.error("Failed to close the output stream. Procedure");
                 }
             }
+        }
+    }
+
+    private URLConnection openConnectionWithProxy(URL url) throws IOException {
+        Proxy proxy = sysSettingFacade.getSysNetProxy();
+        if (Objects.isNull(proxy)) {
+            return url.openConnection();
+        } else {
+            return url.openConnection(proxy);
         }
     }
 

@@ -27,6 +27,7 @@ package org.opengauss.admin.web.core.config;
 import lombok.extern.slf4j.Slf4j;
 
 import org.opengauss.admin.system.service.HostMonitorCacheService;
+import org.opengauss.admin.system.service.ISysSettingService;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -48,10 +49,13 @@ public class AdminApplicationRunner implements ApplicationRunner {
     private EncryptionUtils encryptionUtils;
     @Resource
     private HostMonitorCacheService hostMonitorCacheService;
+    @Resource
+    private ISysSettingService sysSettingService;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
         this.encryptionUtils.refreshKeyPair(false);
+        sysSettingService.initHttpProxy();
         hostMonitorCacheService.initHostMonitorCacheService();
     }
 }

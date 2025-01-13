@@ -27,6 +27,7 @@ package org.opengauss.admin.system.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
 
+import java.net.Proxy;
 
 /**
  * System Setting Interface
@@ -37,6 +38,18 @@ public interface ISysSettingService extends IService<SysSettingEntity> {
     boolean updateSetting(SysSettingEntity setting);
 
     SysSettingEntity getSetting(Integer userId);
+
+    /**
+     * init http proxy
+     */
+    void initHttpProxy();
+
+    /**
+     * create http proxy by system config: server.proxy.hostname server.proxy.port
+     *
+     * @return proxy
+     */
+    Proxy getSysNetProxy();
 
     boolean hasUploadPath(String path, Integer userId);
 }
