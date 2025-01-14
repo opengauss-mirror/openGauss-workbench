@@ -1,154 +1,61 @@
 <template>
   <div class="node-form-c">
-    <a-form
-      :model="form"
-      :rules="formRules"
-      auto-label-width
-      ref="formRef"
-    >
-      <a-form-item
-        field="hostId"
-        :label="$t('enterprise.NodeConfig.5mpme7w6azo0')"
-      >
-        <a-select
-          :loading="data.hostListLoading"
-          v-model="form.hostId"
-          @change="changeHostId"
-          :placeholder="$t('enterprise.NodeConfig.5mpme7w6b3k0')"
-          @popup-visible-change="hostPopupChange"
-          class="mr-s"
-        >
-          <a-option
-            v-for="item in data.hostList"
-            :key="item.hostId"
-            :value="item.hostId"
-          >{{
+    <a-form :model="form" :rules="formRules" auto-label-width ref="formRef">
+      <a-form-item field="hostId" :label="$t('enterprise.NodeConfig.5mpme7w6azo0')">
+        <a-select :loading="data.hostListLoading" v-model="form.hostId" @change="changeHostId"
+          :placeholder="$t('enterprise.NodeConfig.5mpme7w6b3k0')" @popup-visible-change="hostPopupChange" class="mr-s">
+          <a-option v-for="item in data.hostList" :key="item.hostId" :value="item.hostId">{{
             item.privateIp
             + '(' +
             (item.publicIp ? item.publicIp : '--') + ')'
           }}</a-option>
         </a-select>
-        <icon-code-square
-          :size="25"
-          class="label-color"
-          style="cursor: pointer;"
-          @click="showTerminal"
-        />
+        <icon-code-square :size="25" class="label-color" style="cursor: pointer;" @click="showTerminal" />
       </a-form-item>
-      <a-form-item
-        v-if="form.isNeedPwd"
-        field="rootPassword"
-        :label="$t('enterprise.NodeConfig.else2')"
-        validate-trigger="blur"
-      >
-        <a-input-password
-          v-model="form.rootPassword"
-          :placeholder="$t('enterprise.NodeConfig.5mpme7w6b700')"
-          allow-clear
-        />
+      <a-form-item v-if="form.isNeedPwd">
+        <a-alert type="warning">{{ $t('enterprise.NodeConfig.noRootTip') }}</a-alert>
       </a-form-item>
-      <a-form-item
-        field="installUserId"
-        :label="$t('enterprise.NodeConfig.5mpme7w6bak0')"
-      >
-        <a-select
-          :loading="data.installUserLoading"
-          v-model="form.installUserId"
-          @change="changeInstallUserId"
-          @popup-visible-change="hostUserPopupChange"
-        >
-          <a-option
-            v-for="item in data.userListByHost[form.hostId]"
-            :key="item.hostUserId"
-            :value="item.hostUserId"
-          >{{
+      <a-form-item field="installUserId" :label="$t('enterprise.NodeConfig.5mpme7w6bak0')">
+        <a-select :loading="data.installUserLoading" v-model="form.installUserId" @change="changeInstallUserId"
+          @popup-visible-change="hostUserPopupChange">
+          <a-option v-for="item in data.userListByHost[form.hostId]" :key="item.hostUserId" :value="item.hostUserId">{{
             item.username
           }}</a-option>
         </a-select>
       </a-form-item>
       <a-row :gutter="24">
         <a-col :span="12">
-          <a-form-item
-            v-if="clusterData.isInstallCM"
-            field="isCMMaster"
-            :label="$t('enterprise.NodeConfig.5mpme7w6be40')"
-          >
-            <a-switch
-              v-model="form.isCMMaster"
-              @change="handleNodeCMChange"
-            />
+          <a-form-item v-if="clusterData.isInstallCM" field="isCMMaster"
+            :label="$t('enterprise.NodeConfig.5mpme7w6be40')">
+            <a-switch v-model="form.isCMMaster" @change="handleNodeCMChange" />
           </a-form-item>
         </a-col>
       </a-row>
-      <a-form-item
-        v-if="clusterData.isInstallCM"
-        field="cmDataPath"
-        :label="$t('enterprise.NodeConfig.else4')"
-        validate-trigger="blur"
-      >
-        <a-input
-          v-model.trim="form.cmDataPath"
-          :placeholder="$t('enterprise.NodeConfig.5mpme7w6bhg0')"
-        />
+      <a-form-item v-if="clusterData.isInstallCM" field="cmDataPath" :label="$t('enterprise.NodeConfig.else4')"
+        validate-trigger="blur">
+        <a-input v-model.trim="form.cmDataPath" :placeholder="$t('enterprise.NodeConfig.5mpme7w6bhg0')" />
       </a-form-item>
-      <a-form-item
-        v-if="clusterData.isInstallCM"
-        field="cmPort"
-        :label="$t('enterprise.NodeConfig.else5')"
-        validate-trigger="blur"
-      >
-        <a-input-number
-          v-model="form.cmPort"
-          :placeholder="$t('enterprise.NodeConfig.5mpme7w6bko0')"
-          :min="0"
-          :max="65535"
-        />
+      <a-form-item v-if="clusterData.isInstallCM" field="cmPort" :label="$t('enterprise.NodeConfig.else5')"
+        validate-trigger="blur">
+        <a-input-number v-model="form.cmPort" :placeholder="$t('enterprise.NodeConfig.5mpme7w6bko0')" :min="0"
+          :max="65535" />
       </a-form-item>
       <div class="label-color ft-m ft-b mb">
         {{ $t('enterprise.NodeConfig.5mpme7w6boc0') }}
       </div>
-      <a-form-item
-        field="dataPath"
-        :label="$t('enterprise.NodeConfig.5mpme7w6brs0')"
-        validate-trigger="blur"
-      >
-        <a-input
-          v-model.trim="form.dataPath"
-          :placeholder="$t('enterprise.NodeConfig.5mpme7w6bv40')"
-        />
+      <a-form-item field="dataPath" :label="$t('enterprise.NodeConfig.5mpme7w6brs0')" validate-trigger="blur">
+        <a-input v-model.trim="form.dataPath" :placeholder="$t('enterprise.NodeConfig.5mpme7w6bv40')" />
       </a-form-item>
-      <a-form-item
-        field="azName"
-        :label="$t('enterprise.NodeConfig.5mpme7w6aj40')"
-        validate-trigger="change"
-      >
-        <a-select
-          :loading="azData.azListLoading"
-          v-model="form.azId"
-          :placeholder="$t('enterprise.NodeConfig.5mpme7w6ap00')"
-          @change="azChange"
-          @popup-visible-change="azPopChange"
-        >
-          <a-option
-            v-for="item in azData.azList"
-            :key="item.azId"
-            :value="item.azId"
-          >{{
-              item.name
-            }}</a-option>
+      <a-form-item field="azName" :label="$t('enterprise.NodeConfig.5mpme7w6aj40')" validate-trigger="change">
+        <a-select :loading="azData.azListLoading" v-model="form.azId"
+          :placeholder="$t('enterprise.NodeConfig.5mpme7w6ap00')" @change="azChange" @popup-visible-change="azPopChange">
+          <a-option v-for="item in azData.azList" :key="item.azId" :value="item.azId">{{
+            item.name
+          }}</a-option>
         </a-select>
       </a-form-item>
-      <a-form-item
-        field="azPriority"
-        :label="$t('enterprise.NodeConfig.else7')"
-        v-if="installType !== 'import'"
-      >
-        <a-input-number
-          :min="1"
-          :max="10"
-          v-model="form.azPriority"
-          :placeholder="$t('enterprise.NodeConfig.else6')"
-        />
+      <a-form-item field="azPriority" :label="$t('enterprise.NodeConfig.else7')" v-if="installType !== 'import'">
+        <a-input-number :min="1" :max="10" v-model="form.azPriority" :placeholder="$t('enterprise.NodeConfig.else6')" />
       </a-form-item>
     </a-form>
     <host-terminal ref="hostTerminalRef"></host-terminal>
@@ -161,9 +68,8 @@ import { useOpsStore } from '@/store'
 import { FormInstance } from '@arco-design/web-vue/es/form'
 import { PropType, ref, computed, defineProps, inject, reactive, onMounted } from 'vue'
 import { Message } from '@arco-design/web-vue'
-import { hostListAll, hostUserListWithoutRoot, portUsed, pathEmpty, fileExist, multiPathQuery, hostPingById,azListAll } from '@/api/ops'
+import { hostListAll, hostUserListWithoutRoot, portUsed, pathEmpty, fileExist, multiPathQuery, hostPingById, azListAll } from '@/api/ops'
 import HostTerminal from "@/views/ops/install/components/hostTerminal/HostTerminal.vue";
-import { encryptPassword } from '@/utils/jsencrypt'
 import { useI18n } from 'vue-i18n'
 import { ClusterRoleEnum, DatabaseKernelArch } from '@/types/ops/install'
 import { LINUX_PATH } from '../constant'
@@ -216,21 +122,6 @@ const data = reactive<KeyValue>({
 const formRules = computed(() => {
   return {
     hostId: [{ required: true, 'validate-trigger': 'change', message: t('enterprise.NodeConfig.5mpme7w6c1w0') }],
-    rootPassword: [
-      { required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6b700') },
-      {
-        validator: (value: any, cb: any) => {
-          return new Promise(resolve => {
-            if (!value.trim()) {
-              cb(t('enterprise.ClusterConfig.else2'))
-              resolve(false)
-            } else {
-              resolve(true)
-            }
-          })
-        }
-      }
-    ],
     installUserId: [{ required: true, 'validate-trigger': 'change', message: t('enterprise.NodeConfig.5mpme7w6c5g0') }],
     cmPort: [
       { required: true, 'validate-trigger': 'blur', message: t('enterprise.NodeConfig.5mpme7w6bko0') },
@@ -396,7 +287,7 @@ const changeInstallUserId = (installUserId: any) => {
 }
 
 
-const userDefineValidate = (fieldName:string, message: string) => {
+const userDefineValidate = (fieldName: string, message: string) => {
   formRef.value?.setFields({
     [fieldName]: {
       status: 'error',
@@ -413,18 +304,6 @@ const formRef = ref<null | FormInstance>(null)
 
 const hostTerminalRef = ref<null | InstanceType<typeof HostTerminal>>(null)
 const showTerminal = () => {
-  // isRemember password
-  if (form.value.isNeedPwd) {
-    if (!form.value.rootPassword) {
-      formRef.value?.setFields({
-        rootPassword: {
-          status: 'error',
-          message: t('simple.InstallConfig.5mpmu0laqwo0')
-        }
-      })
-      return
-    }
-  }
   if (!form.value.hostId) {
     formRef.value?.setFields({
       hostId: {
@@ -439,7 +318,6 @@ const showTerminal = () => {
     hostId: form.value.hostId,
     port: form.value.port,
     ip: form.value.publicIp,
-    password: form.value.rootPassword
   })
 }
 
@@ -447,10 +325,9 @@ const handleShowTerminal = (data: KeyValue) => {
   hostTerminalRef.value?.open(data)
 }
 
-const validatePort = async (port: number, password: string, hostId: string): Promise<any> => {
+const validatePort = async (port: number, hostId: string): Promise<any> => {
   const portParam = {
     port: port,
-    rootPassword: password
   }
   const portValid: KeyValue = await portUsed(hostId, portParam)
   if (Number(portValid.code) === 200) {
@@ -459,10 +336,9 @@ const validatePort = async (port: number, password: string, hostId: string): Pro
   return false
 }
 
-const validatePath = async (path: string, password: string, hostId: string) => {
+const validatePath = async (path: string, hostId: string) => {
   const pathParam = {
     path: path,
-    rootPassword: password
   }
   const pathValid: KeyValue = await pathEmpty(hostId, pathParam)
     .catch(() => {
@@ -474,10 +350,9 @@ const validatePath = async (path: string, password: string, hostId: string) => {
   return false
 }
 
-const validateFile = async (file: string, password: string, hostId: string) => {
+const validateFile = async (file: string, hostId: string) => {
   const pathParam = {
     file: file,
-    rootPassword: password
   }
   const pathValid: KeyValue = await fileExist(hostId, pathParam)
   if (Number(pathValid.code) === 200) {
@@ -494,52 +369,19 @@ const validateSpecialFields = async () => {
   formRef.value?.clearValidate()
 
   const validMethodArr = []
-  let isOkPwd = true
-  let encryptPwd = ''
-  if (form.value.rootPassword) {
-    encryptPwd = await encryptPassword(form.value.rootPassword)
-  }
-  // password validate
-  try {
-    const param = {
-      rootPassword: encryptPwd
-    }
-    const passwordValid: KeyValue = await hostPingById(form.value.hostId, param)
-    if (Number(passwordValid.code) !== 200) {
-      formRef.value?.setFields({
-        rootPassword: {
-          status: 'error',
-          message: t('enterprise.NodeConfig.else8')
-        }
-      })
-      result = false
-      isOkPwd = false
-    }
-  } catch (err: any) {
-    formRef.value?.setFields({
-      rootPassword: {
-        status: 'error',
-        message: t('enterprise.NodeConfig.else9')
-      }
-    })
-    result = false
-    isOkPwd = false
-  }
-  if (!isOkPwd) {
-    return result
-  }
+
   //  cluster port is used
-  validMethodArr.push(await validatePort(props.clusterData.port, encryptPwd, form.value.hostId))
-  validMethodArr.push(await validatePath(form.value.dataPath, encryptPwd, form.value.hostId))
-  validMethodArr.push(await validatePath(props.clusterData.installPackagePath, encryptPwd, form.value.hostId))
+  validMethodArr.push(await validatePort(props.clusterData.port, form.value.hostId))
+  validMethodArr.push(await validatePath(form.value.dataPath, form.value.hostId))
+  validMethodArr.push(await validatePath(props.clusterData.installPackagePath, form.value.hostId))
   if (props.clusterData.isInstallCM) {
-    validMethodArr.push(await validatePort(form.value.cmPort, encryptPwd, form.value.hostId))
+    validMethodArr.push(await validatePort(form.value.cmPort, form.value.hostId))
     if (props.clusterData.enableDcf) {
-      validMethodArr.push(await validatePort(props.clusterData.dcfPort, encryptPwd, form.value.hostId))
+      validMethodArr.push(await validatePort(props.clusterData.dcfPort, form.value.hostId))
     }
   }
   if (props.clusterData.envPath && installType.value === 'import') {
-    validMethodArr.push(await validateFile(props.clusterData.envPath, encryptPwd, form.value.hostId))
+    validMethodArr.push(await validateFile(props.clusterData.envPath, form.value.hostId))
   }
   if (validMethodArr.length) {
     const validResult = await Promise.all(validMethodArr)

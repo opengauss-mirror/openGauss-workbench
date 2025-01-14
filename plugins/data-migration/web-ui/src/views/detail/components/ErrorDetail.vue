@@ -103,6 +103,7 @@ const closeModal = () => {
 
     .detailLabel {
       padding-right: 32px;
+      min-width: 120px
     }
 
     .desc {
@@ -111,7 +112,7 @@ const closeModal = () => {
     }
 
     .newLine {
-      white-space: pre;
+      white-space: pre-wrap;
       color: #1d2129;
       display: inline-block;
     }

@@ -878,7 +878,8 @@
             "5mpme7w6cfw0": "Please fill in the xlog path",
             "5mpme7w6ckk0": "master",
             "5mpme7w6cng0": "standby",
-            "5mpme7w6cqk0": "cascade"
+            "5mpme7w6cqk0": "cascade",
+            "noRootTip": "The selected host needs to have a root user."
         }
     },
     "lightweight": {
