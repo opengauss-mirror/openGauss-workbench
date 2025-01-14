@@ -123,7 +123,6 @@ import { useOpsStore } from '@/store'
 import { KeyValue } from '@/types/global'
 import { ClusterRoleEnum } from '@/types/ops/install'
 import { useI18n } from 'vue-i18n'
-import { encryptPassword } from '@/utils/jsencrypt'
 import useConfirm from '@/hooks/useConfirm'
 
 const { t } = useI18n()
@@ -161,7 +160,6 @@ onMounted(async () => {
     item.loading = true
     const param = {
       expectedOs: installStore.getInstallConfig.installOs,
-      rootPassword: item.rootPassword
     }
     getEnvMonitorData(item.hostId, param).then((res: KeyValue) => {
       if (Number(res.code) === 200) {
@@ -201,7 +199,6 @@ const getHostInfo = async () => {
       tempData.privateIp = item.privateIp
       tempData.publicIp = item.publicIp
       tempData.clusterRole = item.clusterRole
-      tempData.rootPassword = item.rootPassword ? await encryptPassword(item.rootPassword) : ''
       data.nodeData.push(tempData)
     }
   }
@@ -226,7 +223,6 @@ const getHostEnvData = () => {
     softwareEnv: {
       envProperties: []
     },
-    rootPassword: ''
   }
 }
 

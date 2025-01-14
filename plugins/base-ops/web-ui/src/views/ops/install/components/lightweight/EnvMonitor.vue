@@ -160,7 +160,6 @@ onMounted(async () => {
     item.loading = true
     const param = {
       expectedOs: installStore.getInstallConfig.installOs,
-      rootPassword: item.rootPassword
     }
     getEnvMonitorData(item.hostId, param).then((res: KeyValue) => {
       if (Number(res.code) === 200) {
@@ -231,7 +230,6 @@ const getHostInfo = async () => {
       tempData.privateIp = item.privateIp
       tempData.publicIp = item.publicIp
       tempData.clusterRole = item.clusterRole
-      tempData.rootPassword = item.rootPassword ? await encryptPassword(item.rootPassword) : ''
       data.nodeData.push(tempData)
     }
   }
@@ -256,7 +254,6 @@ const getHostEnvData = () => {
     softwareEnv: {
       envProperties: []
     },
-    rootPassword: ''
   }
 }
 

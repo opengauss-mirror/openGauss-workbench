@@ -180,7 +180,6 @@ const inputFocus = (e) => {
     &:hover {
       box-shadow: 0 0 0 1px inset var(--o-color-primary);
       background-color: #fdfeff;
-
     }
 
     .prefixTip {

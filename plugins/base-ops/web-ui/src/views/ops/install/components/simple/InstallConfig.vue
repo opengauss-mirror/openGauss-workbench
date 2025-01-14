@@ -19,6 +19,9 @@
             </a-select>
             <icon-code-square :size="25" class="label-color" style="cursor: pointer;" @click="showTerminal" />
           </a-form-item>
+          <a-form-item v-if="data.isNeedPwd">
+              <a-alert type="warning">{{ $t('enterprise.NodeConfig.noRootTip') }}</a-alert>
+            </a-form-item>
           <a-form-item field="installUserId" :label="$t('simple.InstallConfig.5mpmu0lar0c0')">
             <a-select :loading="installUserLoading" v-model="data.form.installUserId" @change="hostUserChange"
               @popup-visible-change="hostUserPopupChange">

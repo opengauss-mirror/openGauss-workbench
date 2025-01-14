@@ -879,7 +879,8 @@
             "5mpme7w6cfw0": "请填写xlog路径",
             "5mpme7w6ckk0": "主",
             "5mpme7w6cng0": "备",
-            "5mpme7w6cqk0": "级联"
+            "5mpme7w6cqk0": "级联",
+            "noRootTip": "所选主机需要有root用户"
         }
     },
     "lightweight": {

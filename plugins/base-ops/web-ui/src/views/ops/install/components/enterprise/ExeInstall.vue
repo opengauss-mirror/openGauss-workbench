@@ -251,13 +251,8 @@ const openSocket = () => {
   terminalSocket.onopen(async () => {
     const param = {
       hostId: hostId.value,
-      rootPassword: '',
       wsConnectType: WsConnectType.SSH,
       businessId: `terminal_${socketKey}`
-    }
-    if (hostObj.value[hostId.value]) {
-      const encryptPwd = await encryptPassword(hostObj.value[hostId.value].rootPassword)
-      param.rootPassword = encryptPwd
     }
     openSSH(param).then(() => {
       initTerm(term, terminalSocket.ws)
@@ -274,13 +269,6 @@ const openLogSocket = () => {
   logSocket.onopen(async () => {
     loadingFunc.toLoading()
     const param = JSON.parse(JSON.stringify(installParam.value))
-    const nodeList = param.installContext.enterpriseInstallConfig.nodeConfigList
-    // root password encrypt
-    for (let i = 0; i < nodeList.length; i++) {
-      const nodeItemData = nodeList[i]
-      const encryptPwd = await encryptPassword(nodeItemData.rootPassword)
-      nodeItemData.rootPassword = encryptPwd
-    }
     param.businessId = `installLog_${socketKey}`
     installOpenGauss(param).then((res: KeyValue) => {
       if (Number(res.code) !== 200) {
