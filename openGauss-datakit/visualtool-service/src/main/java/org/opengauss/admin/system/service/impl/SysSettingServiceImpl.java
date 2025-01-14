@@ -26,16 +26,22 @@ package org.opengauss.admin.system.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
 import org.opengauss.admin.common.core.domain.entity.SysUser;
+import org.opengauss.admin.common.utils.http.HttpUtils;
 import org.opengauss.admin.system.mapper.SysSettingMapper;
 import org.opengauss.admin.system.service.ISysSettingService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.List;
 
 /**
@@ -45,6 +51,16 @@ import java.util.List;
  */
 @Service
 public class SysSettingServiceImpl extends ServiceImpl<SysSettingMapper, SysSettingEntity> implements ISysSettingService {
+    @Value("${server.proxy.hostname}")
+    private String proxyHostname;
+    @Value("${server.proxy.port}")
+    private Integer proxyPort;
+
+    @Override
+    public void initHttpProxy() {
+        HttpUtils.setProxy(getSysNetProxy());
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateSetting(SysSettingEntity setting) {
@@ -77,6 +93,21 @@ public class SysSettingServiceImpl extends ServiceImpl<SysSettingMapper, SysSett
             return adminResult;
         }
         return userResult;
+    }
+
+    @Override
+    public Proxy getSysNetProxy() {
+        Proxy proxy = null;
+        try {
+            if (StrUtil.isEmpty(proxyHostname) || StrUtil.equalsIgnoreCase(proxyHostname, "localhost")
+                || StrUtil.equalsIgnoreCase(proxyHostname, "127.0.0.1")) {
+                return proxy;
+            }
+            proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHostname, proxyPort));
+        } catch (IllegalArgumentException | SecurityException ex) {
+            log.error(String.format("Failed to create proxy: %s %s ", proxyHostname, proxyPort), ex);
+        }
+        return proxy;
     }
 
     @Override

@@ -342,4 +342,9 @@ public interface SshCommandConstants {
      * MINILIST:
      */
     String CHECK_MINILIST_VERSION = "gsql -V&&[ -f %s ]";
+
+    /**
+     * check environment is online by  curl -I https://opengauss.org/zh/
+     */
+    String ONLINE = "curl -I https://opengauss.org/zh/";
 }

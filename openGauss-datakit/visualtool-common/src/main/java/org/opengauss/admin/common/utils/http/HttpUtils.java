@@ -42,6 +42,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Http Tool
@@ -50,6 +51,17 @@ import java.util.Map;
  */
 public class HttpUtils {
     private static final Logger log = LoggerFactory.getLogger(HttpUtils.class);
+
+    private static Proxy httpProxy = null;
+
+    /**
+     * http proxy
+     *
+     * @param proxy proxy
+     */
+    public static void setProxy(Proxy proxy) {
+        httpProxy = proxy;
+    }
 
     /**
      * sendGet
@@ -245,19 +257,31 @@ public class HttpUtils {
                 return AjaxResult.error("The URL must not empty.");
             }
             URL url = new URL(urlAddr);
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.connect();
-
-            int responseCode = connection.getResponseCode();
-            if (responseCode == 200) {
-                return AjaxResult.success("The URL is connected successfully.");
+            URLConnection urlConnection = openConnectionWithProxy(url);
+            if (urlConnection instanceof HttpsURLConnection) {
+                HttpsURLConnection connection = (HttpsURLConnection) urlConnection;
+                connection.setRequestMethod("GET");
+                connection.connect();
+                int responseCode = connection.getResponseCode();
+                if (responseCode == 200) {
+                    return AjaxResult.success("The URL is connected successfully.");
+                } else {
+                    return AjaxResult.error("The URL is not connected.");
+                }
             } else {
-                return AjaxResult.error("The URL is not connected.");
+                return AjaxResult.error("The URL is not https connected.");
             }
         } catch (IOException e) {
             log.error("connected {} error ", urlAddr, e);
             return AjaxResult.error("The URL is not connected : " + e.getMessage());
+        }
+    }
+
+    private static URLConnection openConnectionWithProxy(URL url) throws IOException {
+        if (Objects.isNull(httpProxy)) {
+            return url.openConnection();
+        } else {
+            return url.openConnection(httpProxy);
         }
     }
 

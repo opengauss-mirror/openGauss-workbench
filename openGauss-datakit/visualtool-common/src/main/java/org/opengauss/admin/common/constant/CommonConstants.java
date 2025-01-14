@@ -36,4 +36,8 @@ public interface CommonConstants {
      */
     String ROOT_USER = "root";
 
+    /**
+     * line split \n
+     */
+    String LINE_SPLITTER = "\n";
 }

@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration>
-    <springProperty scope="context" name="logPath" source="logging.file.path"/>
-	<property name="log.pattern" value="%blue(%d{yyyy-MM-dd HH:mm:ss}) [%cyan(%t)] [%yellow(%c{32})]-[%highlight(%p)] %m%n" />
-</configuration> 
