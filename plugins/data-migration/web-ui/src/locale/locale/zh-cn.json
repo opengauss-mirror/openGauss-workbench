@@ -35,6 +35,11 @@
         }
     },
     "components": {
+        "FusionSearch": {
+            "addFilters": "请添加筛选条件",
+            "confirm": "确认",
+            "cancel": "取消"
+        },
         "MacTerminal": {
             "5q08wsv861k0": "执行机器"
         },

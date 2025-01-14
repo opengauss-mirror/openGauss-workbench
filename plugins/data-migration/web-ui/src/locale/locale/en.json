@@ -35,6 +35,11 @@
         }
     },
     "components": {
+        "FusionSearch": {
+            "addFilters": "Please add filters",
+            "confirm": "Confirm",
+            "cancel": "Cancel"
+        },
         "MacTerminal": {
             "5q08wsv861k0": "Execution Machine"
         },
