@@ -27,16 +27,17 @@ import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionUrlDO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.nctigba.datastudio.constants.SqlConstants.CONFIGURE_TIME;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_DATABASELINK_COUNT_SQL;
@@ -97,18 +98,52 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
      * @return List
      */
     public List<DatabaseConnectionDO> selectTable(String webUser) {
-        List<DatabaseConnectionDO> list = new ArrayList<>();
-        Map<String, Object> count = jdbcTemplate.queryForMap(
-                GET_DATABASELINK_COUNT_SQL + " webuser = '" + webUser + "';");
-        if (count.get("count") instanceof Integer) {
-            if ((Integer) count.get("count") == 0) {
-                return null;
-            } else {
-                list = jdbcTemplate.query(GET_DATA_CONNECTION_NOT_P_SQL + " webuser = '" + webUser + "';",
-                        new BeanPropertyRowMapper<>(DatabaseConnectionDO.class));
-            }
+        Long count = jdbcTemplate.queryForObject(
+                GET_DATABASELINK_COUNT_SQL + " webuser = '" + webUser + "';", Long.class);
+        if (count != 0) {
+            List<Map<String, Object>> dataList = jdbcTemplate.queryForList(
+                    GET_DATA_CONNECTION_NOT_P_SQL + " webuser = '" + webUser + "';");
+            return dataList.stream().map(DatabaseConnectionDAO::getDatabaseConnectionDO)
+                    .collect(Collectors.toList());
         }
-        return list;
+        return new ArrayList<>();
+    }
+
+    @NotNull
+    private static DatabaseConnectionDO getDatabaseConnectionDO(Map<String, Object> data) {
+        DatabaseConnectionDO databaseConnectionDO = new DatabaseConnectionDO();
+        databaseConnectionDO.setId(String.valueOf(data.get("id")));
+        if (data.get("type") instanceof String) {
+            databaseConnectionDO.setType((String) data.get("type"));
+        }
+        if (data.get("name") instanceof String) {
+            databaseConnectionDO.setName((String) data.get("name"));
+        }
+        if (data.get("driver") instanceof String) {
+            databaseConnectionDO.setDriver((String) data.get("driver"));
+        }
+        if (data.get("ip") instanceof String) {
+            databaseConnectionDO.setIp((String) data.get("ip"));
+        }
+        if (data.get("port") instanceof String) {
+            databaseConnectionDO.setPort((String) data.get("port"));
+        }
+        if (data.get("dataname") instanceof String) {
+            databaseConnectionDO.setDataName((String) data.get("dataname"));
+        }
+        if (data.get("username") instanceof String) {
+            databaseConnectionDO.setUserName((String) data.get("username"));
+        }
+        if (data.get("userpassword") instanceof String) {
+            databaseConnectionDO.setPassword((String) data.get("userpassword"));
+        }
+        if (data.get("edition") instanceof String) {
+            databaseConnectionDO.setEdition((String) data.get("edition"));
+        }
+        if (data.get("webuser") instanceof String) {
+            databaseConnectionDO.setWebUser((String) data.get("webuser"));
+        }
+        return databaseConnectionDO;
     }
 
     /**
@@ -146,10 +181,9 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
      * @param webUser webUser
      * @return Integer
      */
-    public Integer getJudgeName(String name, String webUser) {
-        Map<String, Object> count = jdbcTemplate.queryForMap(
-                GET_DATABASELINK_COUNT_SQL + " name ='" + name + "' and webUser = '" + webUser + "'");
-        return (Integer) count.get("count");
+    public Long getJudgeName(String name, String webUser) {
+        return jdbcTemplate.queryForObject(
+                GET_DATABASELINK_COUNT_SQL + " name ='" + name + "' and webUser = '" + webUser + "'", Long.class);
     }
 
     /**

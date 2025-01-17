@@ -23,9 +23,10 @@
 
 package com.nctigba.datastudio.base;
 
-import com.alibaba.druid.util.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.exception.CustomException;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.sql.Connection;
@@ -37,14 +38,15 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 /**
  * JdbcConnectionManager
  */
 @Component
-public class JdbcConnectionManager extends Thread {
-
-    private static final Logger log = LoggerFactory.getLogger(JdbcConnectionManager.class);
-    private static final long CONN_CHECK_TIME = 5 * 60 * 1000L;
+@Slf4j
+@EnableScheduling
+public class JdbcConnectionManager {
     public static final long CONN_TIMEOUT = 3 * 60 * 1000L;
     private static ConcurrentHashMap<String, LinkedBlockingQueue<ConnectionWrapper>> JDBC_POOL =
             new ConcurrentHashMap<>();
@@ -54,39 +56,31 @@ public class JdbcConnectionManager extends Thread {
     /**
      * A timed task to detect connections in the connection pool that have been unused for a long time
      */
-    @Override
+    @Scheduled(fixedRate = 5, timeUnit = MINUTES)
     public void run() {
-        while (true) {
-            try {
-                Thread.sleep(CONN_CHECK_TIME);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                log.error("sleep error", e);
-            }
-            int size = 0;
-            for (String key : JDBC_POOL.keySet()) {
-                LinkedBlockingQueue<ConnectionWrapper> queue = JDBC_POOL.get(key);
-                log.info("Start checking for expired connections in the connection pool, size:[{}] key:[{}]",
-                        queue.size(), key);
-                synchronized (JdbcConnectionManager.class) {
-                    Integer num = 0;
-                    while (queue.peek() != null && queue.peek().checkTimeOut()) {
-                        ConnectionWrapper ConnectionWrapper = queue.poll();
-                        try {
-                            log.info("Close idle JDBC connections :{}", key);
-                            ConnectionWrapper.closeConnection();
-                        } catch (SQLException e) {
-                            log.error("Failed to close the connection", e);
-                        }
-                        num--;
+        int size = 0;
+        for (String key : JDBC_POOL.keySet()) {
+            LinkedBlockingQueue<ConnectionWrapper> queue = JDBC_POOL.get(key);
+            log.info("Start checking for expired connections in the connection pool, size:[{}] key:[{}]",
+                    queue.size(), key);
+            synchronized (JdbcConnectionManager.class) {
+                Integer num = 0;
+                while (queue.peek() != null && queue.peek().checkTimeOut()) {
+                    ConnectionWrapper connectionWrapper = queue.poll();
+                    try {
+                        log.info("Close idle JDBC connections :{}", key);
+                        connectionWrapper.closeConnection();
+                    } catch (SQLException e) {
+                        log.error("Failed to close the connection", e);
                     }
-                    CONNECTION_NUMLIMIT.put(key, CONNECTION_NUMLIMIT.get(key) + num);
+                    num--;
                 }
-                size += queue.size();
+                CONNECTION_NUMLIMIT.put(key, CONNECTION_NUMLIMIT.get(key) + num);
             }
-            log.info("The current verification is complete, and the total number of connections in the connection "
-                    + "pool is [{}]", size);
+            size += queue.size();
         }
+        log.info("The current verification is complete, and the total number of connections in the connection "
+                + "pool is [{}]", size);
     }
 
     /**
@@ -126,8 +120,8 @@ public class JdbcConnectionManager extends Thread {
             return connectionWrapper;
         } catch (Exception e) {
             log.error("getConnection error", e);
+            throw new CustomException(e.getMessage(), e);
         }
-        return null;
     }
 
     /**

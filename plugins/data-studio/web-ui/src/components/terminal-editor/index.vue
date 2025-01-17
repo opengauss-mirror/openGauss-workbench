@@ -24,6 +24,7 @@
             @coverageRate="showCoverageRateDialog = true"
             @importFile="handleImportFile"
             @exportFile="handleExportFile"
+            @showHistory="handleShowHistory"
           />
           <div class="monaco-wrapper" ref="editorWrapper">
             <Splitpanes class="default-theme" :dbl-click-splitter="false">
@@ -57,10 +58,13 @@
       <Pane min-size="20" max-size="70" size="35" v-if="showResult">
         <div class="result">
           <ResultTabs
+            ref="resultTabRef"
             :msgData="msgData"
             v-model:tabList="tabList"
             v-model:tabValue="tabValue"
             :type="props.editorType == 'sql' ? 'sql' : 'debug'"
+            :uuid="ws.uuid"
+            @changResultPage="handleExecutePage"
           />
         </div>
       </Pane>
@@ -113,7 +117,6 @@
   import { changeRunningTagStatus } from '@/hooks/tagRunning';
   import { interceptHttpDisconnection } from '@/utils/activateDisconnection';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
-  import type { Platform } from '@/types/system';
 
   const route = useRoute();
   const router = useRouter();
@@ -182,7 +185,9 @@
   const editorWrapper = ref<HTMLElement>();
   const editorHeight = ref('calc(100% - 4px)');
   const editorRef = ref();
+  const resultTabRef = ref();
   const platform = ref(route.query.platform as Platform);
+  provide('platform', platform);
   const ws = reactive({
     name: '',
     webUser: '',
@@ -213,6 +218,7 @@
       isInPackage: ws.isInPackage,
     };
   });
+  provide('platform', platform);
   const isGlobalEnable = computed(() => {
     return AppStore.connectedDatabase.findIndex((item) => item.uuid == ws.uuid) > -1;
   });
@@ -248,11 +254,20 @@
 
   interface TabType {
     id: number;
+    resultId?: string;
     name: string; //tag's name
+    originColumn?: any[];
     columns?: any[];
     data: any[];
+    sql?: string;
+    page?: {
+      pageNum: number;
+      pageSize: number;
+      pageTotal: number;
+      dataSize?: number;
+    };
   }
-  const tabList = shallowRef<Array<TabType>>([]);
+  const tabList = ref<Array<TabType>>([]);
   const tabValue = ref('home');
 
   const buildConnection = () => {
@@ -453,13 +468,42 @@
       }
       if (res.type == 'TABLE') {
         const { columns, data } = formatTableV2Data(res.data.column, result);
-        const name = `${t('resultTab.result')}${tabList.value.length + 1}`;
-        tabList.value.push({
-          id: Date.now(),
-          name,
-          columns,
-          data,
-        });
+        const { resultId, pageNum, pageSize, pageTotal, dataSize, sql } = res.data;
+        const existIndex = tabList.value.findIndex((item) => item.resultId == resultId);
+        let name = '';
+        if (existIndex > -1) {
+          name = tabList.value[existIndex].name;
+          Object.assign(tabList.value[existIndex], {
+            originColumn: res.data.column,
+            columns,
+            data,
+            sql,
+            page: {
+              pageNum,
+              pageSize,
+              pageTotal,
+              dataSize,
+            },
+          });
+          setTimeout(() => resultTabRef.value.scrollToTableTop(existIndex), 200);
+        } else {
+          name = `${t('resultTab.result')}${tabList.value.length + 1}`;
+          tabList.value.push({
+            id: Date.now(),
+            resultId,
+            name,
+            originColumn: res.data.column,
+            columns,
+            data,
+            sql,
+            page: {
+              pageNum,
+              pageSize,
+              pageTotal,
+              dataSize,
+            },
+          });
+        }
         tabValue.value = name;
         showResult.value = true;
       }
@@ -654,6 +698,8 @@
         ...commonWsParams.value,
         webUser: UserStore.userId,
         sql: editorRef.value.getSelectionValue() || editorRef.value.getValue(),
+        pageNum: 1,
+        pageSize: UserStore.globalPageSize,
       });
     }
     if (props.editorType == 'debug' && route.query.type != 'anonymous') {
@@ -670,6 +716,19 @@
         operation: 'startRun',
         ...commonWsParams.value,
         sql: editorRef.value.getSelectionValue() || editorRef.value.getValue(),
+      });
+    }
+    insertBlankLine();
+  };
+
+  const handleExecutePage = (sqlPageParams) => {
+    if (props.editorType == 'sql') {
+      changeSqlBarStatus('running');
+      ws.instance.send({
+        operation: 'startRun',
+        ...commonWsParams.value,
+        webUser: UserStore.userId,
+        ...sqlPageParams,
       });
     }
     insertBlankLine();
@@ -805,6 +864,13 @@
   const handleExportFile = () => {
     const data = editorRef.value.getAllSelectionValue() || editorRef.value.getValue();
     downLoadMyBlobType(`${ws.connectionName}_${Date.now()}.sql`, data);
+  };
+
+  const handleShowHistory = () => {
+    showResult.value = true;
+    nextTick(() => {
+      tabValue.value = 'history';
+    })
   };
 
   type BreakOperation =

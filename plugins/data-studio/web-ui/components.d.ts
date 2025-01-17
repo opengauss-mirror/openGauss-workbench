@@ -19,5 +19,6 @@ declare module 'vue' {
     SwitchTheme: typeof import('./src/components/SwitchTheme.vue')['default']
     TerminalEditor: typeof import('./src/components/terminal-editor/index.vue')['default']
     UContainerLayout: typeof import('./src/components/u-container-layout/index.vue')['default']
+    EllipsisWithElTooltip: typeof import('./src/components/EllipsisWithElTooltip/index.vue')['default']
   }
 }

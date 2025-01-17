@@ -36,11 +36,7 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   (response: AxiosResponse) => {
     if (response.data?.code == 500) {
-      ElMessage({
-        message: response.data.msg,
-        type: 'error',
-        duration: 5000,
-      });
+      showErrMessage(response.data.msg);
       return Promise.reject(response.data.msg);
     }
     return {

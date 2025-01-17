@@ -94,7 +94,7 @@ public class DbConnectionServiceTest {
         staticUtilsMockedStatic.when(() -> ConnectionUtils.connectGet(anyString(), anyString(), anyString()))
                 .thenReturn(mockConnection);
         when(metaDataByJdbcService.versionSQL(anyString(), anyString(), anyString(), anyString())).thenReturn("0");
-        when(databaseConnectionDAO.getJudgeName(anyString(), anyString())).thenReturn(1);
+        when(databaseConnectionDAO.getJudgeName(anyString(), anyString())).thenReturn(1L);
         when(databaseConnectionDAO.getAttributeByName(anyString(), anyString())).thenReturn(new DatabaseConnectionDO());
         when(databaseConnectionDAO.getByName(anyString(), anyString())).thenReturn(new DatabaseConnectionUrlDO());
         List<GainObjectSQLService> serviceArrayList = new ArrayList<>();
@@ -122,7 +122,7 @@ public class DbConnectionServiceTest {
         staticUtilsMockedStatic.when(() -> ConnectionUtils.connectGet(anyString(), anyString(), anyString()))
                 .thenReturn(mockConnection);
         when(metaDataByJdbcService.versionSQL(anyString(), anyString(), anyString(), anyString())).thenReturn("1");
-        when(databaseConnectionDAO.getJudgeName(anyString(), anyString())).thenReturn(0);
+        when(databaseConnectionDAO.getJudgeName(anyString(), anyString())).thenReturn(0L);
         when(databaseConnectionDAO.getAttributeByName(anyString(), anyString())).thenReturn(new DatabaseConnectionDO());
         List<GainObjectSQLService> serviceArrayList = new ArrayList<>();
         serviceArrayList.add(new GainObjectSQLServiceImpl());

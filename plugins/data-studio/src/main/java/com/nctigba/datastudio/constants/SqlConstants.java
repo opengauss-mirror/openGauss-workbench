@@ -1448,6 +1448,11 @@ public class SqlConstants {
     public static final String COUNT_SQL = "select count(*) as count from %s.%s";
 
     /**
+     * count from sql
+     */
+    public static final String COUNT_FROM_SQL = "select count(*) as count from (%s)";
+
+    /**
      * course sql
      */
     public static final String COURSE_SQL = "CURSOR %s NO SCROLL FOR %s";
@@ -1628,4 +1633,29 @@ public class SqlConstants {
      * delete job sql
      */
     public static final String DISABLE_JOB_SQL = "select pkg_service.job_finish(%s, true, sysdate);";
+
+    /**
+     * select from query limit sql
+     */
+    public static final String SELECT_FROM_LIMIT = "select * from (%s) limit %s offset %s";
+
+    /**
+     * grant privilege
+     */
+    public static final String GRANT_PRIVILEGE = "GRANT %s ON %s TO %s;";
+
+    /**
+     * grant privilege with option
+     */
+    public static final String GRANT_PRIVILEGE_WITH_OPTION = "GRANT %s ON %s TO %s WITH GRANT OPTION;";
+
+    /**
+     * grant privilege with option
+     */
+    public static final String REVOKE_PRIVILEGE = "REVOKE %s ON %s FROM %s;";
+
+    /**
+     * grant privilege with option
+     */
+    public static final String REVOKE_PRIVILEGE_WITH_OPTION = "REVOKE GRANT OPTION FOR %s ON %s FROM %s CASCADE;";
 }

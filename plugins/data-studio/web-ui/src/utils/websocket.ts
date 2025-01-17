@@ -97,7 +97,7 @@ export default class WebSocketClass {
       } else {
         this.ws.send(JSON.stringify(message));
       }
-    }, 1000);
+    }, 100);
   }
 
   close() {

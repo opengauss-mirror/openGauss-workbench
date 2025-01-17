@@ -24,6 +24,7 @@
 package com.nctigba.datastudio.compatible;
 
 import com.nctigba.datastudio.model.query.ExportQuery;
+import com.nctigba.datastudio.model.query.ExportResultQuery;
 import com.nctigba.datastudio.utils.DebugUtils;
 import org.opengauss.admin.common.exception.CustomException;
 
@@ -125,6 +126,19 @@ public interface ExportServiceSqlService {
      * @throws SQLException SQLException
      */
     default void exportSchemaDdl(ExportQuery request, HttpServletResponse response) throws IOException, SQLException {
+        throw new CustomException(DebugUtils.getMessage());
+    }
+
+    /**
+     * export result
+     *
+     * @param request ExportResultQuery
+     * @param response HttpServletResponse
+     * @throws IOException IOException
+     * @throws SQLException SQLException
+     */
+    default void exportResult(ExportResultQuery request, HttpServletResponse response)
+            throws IOException, SQLException {
         throw new CustomException(DebugUtils.getMessage());
     }
 }

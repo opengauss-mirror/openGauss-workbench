@@ -1,1 +1,1 @@
-export type Platform = 'openGauss';
+declare type Platform = 'openGauss';

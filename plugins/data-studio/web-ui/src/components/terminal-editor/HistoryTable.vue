@@ -1,5 +1,5 @@
 <template>
-  <div class="history-table">
+  <div class="history-table-wrapper">
     <el-table
       :data="showList"
       border
@@ -204,6 +204,10 @@
 </script>
 
 <style lang="scss" scoped>
+  .history-table-wrapper{
+    height: 100%;
+    overflow: hidden
+  }
   .history-table {
     font-size: 12px;
     height: 100%;

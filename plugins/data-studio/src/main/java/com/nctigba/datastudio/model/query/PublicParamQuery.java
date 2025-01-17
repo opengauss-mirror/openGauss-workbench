@@ -75,6 +75,12 @@ public class PublicParamQuery {
 
     private boolean isPackage;
 
+    private Integer pageNum;
+
+    private Integer pageSize;
+
+    private String resultId;
+
     @Override
     public String toString() {
         return "PublicParamReq{"
@@ -96,6 +102,9 @@ public class PublicParamQuery {
                 + ", isCoverage='" + isCoverage + '\''
                 + ", isInPackage='" + isInPackage + '\''
                 + ", isPackage='" + isPackage + '\''
+                + ", pageNum='" + pageNum + '\''
+                + ", pageSize='" + pageSize + '\''
+                + ", resultId='" + resultId + '\''
                 + '}';
     }
 }

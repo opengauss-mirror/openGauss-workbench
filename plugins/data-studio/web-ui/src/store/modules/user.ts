@@ -5,6 +5,7 @@ export const useUserStore = defineStore({
   id: 'userState',
   state: () => ({
     userId: '',
+    globalPageSize: 500,
   }),
   getters: {},
   actions: {},

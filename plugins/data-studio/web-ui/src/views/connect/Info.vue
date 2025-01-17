@@ -42,7 +42,7 @@
   });
 
   const gridData = ref([]);
-  const infoObj = {
+  const info_remote = {
     name: t('connection.attribute_table.name'),
     host: t('connection.attribute_table.host'),
     port: t('connection.attribute_table.port'),
@@ -58,8 +58,8 @@
       webUser: UserStore.userId,
     });
     data.host = data.ip;
-    Object.keys(infoObj).forEach((item) => {
-      gridData.value.push({ attr: infoObj[item], value: data[item] || '-' });
+    Object.keys(info_remote).forEach((item) => {
+      gridData.value.push({ attr: info_remote[item], value: data[item] || '-' });
     });
   };
 </script>

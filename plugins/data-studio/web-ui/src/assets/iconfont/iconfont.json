@@ -6,6 +6,62 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "7239899",
+      "name": "snippets",
+      "font_class": "snippets",
+      "unicode": "e753",
+      "unicode_decimal": 59219
+    },
+    {
+      "icon_id": "11741015",
+      "name": "edit",
+      "font_class": "edit",
+      "unicode": "e684",
+      "unicode_decimal": 59012
+    },
+    {
+      "icon_id": "42064272",
+      "name": "snippets-red",
+      "font_class": "snippets-copy",
+      "unicode": "ec7e",
+      "unicode_decimal": 60542
+    },
+    {
+      "icon_id": "8477242",
+      "name": "云文件",
+      "font_class": "yunwenjian",
+      "unicode": "e61d",
+      "unicode_decimal": 58909
+    },
+    {
+      "icon_id": "593480",
+      "name": "transfer",
+      "font_class": "weibiaoti8",
+      "unicode": "e61c",
+      "unicode_decimal": 58908
+    },
+    {
+      "icon_id": "15801331",
+      "name": "migration",
+      "font_class": "migration",
+      "unicode": "e632",
+      "unicode_decimal": 58930
+    },
+    {
+      "icon_id": "38749495",
+      "name": "key",
+      "font_class": "key1",
+      "unicode": "e61a",
+      "unicode_decimal": 58906
+    },
+    {
+      "icon_id": "40261532",
+      "name": "backfill",
+      "font_class": "backfill",
+      "unicode": "ec7d",
+      "unicode_decimal": 60541
+    },
+    {
       "icon_id": "928115",
       "name": "refresh",
       "font_class": "refresh",
@@ -385,7 +441,7 @@
     },
     {
       "icon_id": "4736293",
-      "name": "导出",
+      "name": "daochu",
       "font_class": "daochu",
       "unicode": "e611",
       "unicode_decimal": 58897

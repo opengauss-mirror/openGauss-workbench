@@ -26,6 +26,7 @@ package com.nctigba.datastudio.service.impl.sql;
 import com.nctigba.datastudio.compatible.ExportServiceSqlService;
 import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.model.query.ExportQuery;
+import com.nctigba.datastudio.model.query.ExportResultQuery;
 import com.nctigba.datastudio.service.DatabaseFunctionSPService;
 import com.nctigba.datastudio.service.DatabaseSequenceService;
 import com.nctigba.datastudio.service.DatabaseViewService;
@@ -120,5 +121,10 @@ public class ExportServiceImpl implements ExportService {
     @Override
     public void exportSchemaDdl(ExportQuery request, HttpServletResponse response) throws IOException, SQLException {
         exportServiceSqlService.get(comGetUuidType(request.getUuid())).exportSchemaDdl(request, response);
+    }
+
+    @Override
+    public void exportResult(ExportResultQuery request, HttpServletResponse response) throws SQLException, IOException {
+        exportServiceSqlService.get(comGetUuidType(request.getUuid())).exportResult(request, response);
     }
 }

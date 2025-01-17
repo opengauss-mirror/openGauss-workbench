@@ -298,7 +298,6 @@
                   @click="
                     refresh('terminalCollect', {
                       rootId: currentContextNodeData.connectInfo.id,
-                      schemaContentCollectId: currentContextNodeData.id,
                     })
                   "
                 >
@@ -317,7 +316,6 @@
                   @click="
                     refresh('tableCollect', {
                       rootId: currentContextNodeData.connectInfo.id,
-                      schemaContentCollectId: currentContextNodeData.id,
                     })
                   "
                 >
@@ -330,7 +328,6 @@
                   @click="
                     refresh('foreignTableCollect', {
                       rootId: currentContextNodeData.connectInfo.id,
-                      schemaContentCollectId: currentContextNodeData.id,
                     })
                   "
                 >
@@ -343,7 +340,6 @@
                   @click="
                     refresh('triggerCollect', {
                       rootId: currentContextNodeData.connectInfo.id,
-                      schemaContentCollectId: currentContextNodeData.id,
                     })
                   "
                 >
@@ -359,7 +355,6 @@
                   @click="
                     refresh('viewCollect', {
                       rootId: currentContextNodeData.connectInfo.id,
-                      schemaContentCollectId: currentContextNodeData.id,
                     })
                   "
                 >
@@ -378,7 +373,6 @@
                   @click="
                     refresh('sequenceCollect', {
                       rootId: currentContextNodeData.connectInfo.id,
-                      schemaContentCollectId: currentContextNodeData.id,
                     })
                   "
                 >
@@ -391,7 +385,6 @@
                   @click="
                     refresh('synonymCollect', {
                       rootId: currentContextNodeData.connectInfo.id,
-                      schemaContentCollectId: currentContextNodeData.id,
                     })
                   "
                 >
@@ -1235,7 +1228,6 @@
       databaseName: '',
       schemaId: '',
       schema: '',
-      schemaContentCollectId: '',
       nodeId: '',
     },
   ) => {
@@ -1312,9 +1304,11 @@
       ].includes(mode)
     ) {
       const rootData = findNode({ rootId: options.rootId });
-      const collectNode = findNodeById(rootData, options.schemaContentCollectId, mode);
-      collectNode.children = [];
-      nodeId = options.schemaContentCollectId;
+      const collectNode = findNodesByType(rootData, mode)?.[0];
+      if (collectNode) {
+        collectNode.children = [];
+        nodeId = collectNode.id;
+      }
     }
     let node = treeRef.value.getNode(options.nodeId || nodeId);
     if (node) {
@@ -1395,12 +1389,12 @@
       query: {
         title: 'create_sequence',
         fileName: 'create_sequence',
+        platform: connectInfo.type,
         rootId: connectInfo.id,
         connectInfoName: connectInfo.name,
         connectInfoId: connectInfo.id,
         uuid: treeContextFindAvailableUuid.value,
         schema: currentContextNodeData.schemaName,
-        schemaContentCollectId: currentContextNodeData.id,
       },
     });
     treeContext.sequenceCollectVisible = false;
@@ -1414,12 +1408,12 @@
       query: {
         title: 'create_synonym',
         fileName: 'create_synonym',
+        platform: connectInfo.type,
         rootId: connectInfo.id,
         connectInfoName: connectInfo.name,
         connectInfoId: connectInfo.id,
         uuid: treeContextFindAvailableUuid.value,
         schema: currentContextNodeData.schemaName,
-        schemaContentCollectId: currentContextNodeData.id,
       },
     });
     treeContext.synonymCollectVisible = false;
@@ -1433,12 +1427,12 @@
       query: {
         title: 'create_view',
         fileName: 'create_view',
+        platform: connectInfo.type,
         rootId: connectInfo.id,
         connectInfoName: connectInfo.name,
         connectInfoId: connectInfo.id,
         uuid: treeContextFindAvailableUuid.value,
         schema: currentContextNodeData.schemaName,
-        schemaContentCollectId: currentContextNodeData.id,
       },
     });
     treeContext.viewCollectVisible = false;
@@ -1660,7 +1654,7 @@
       if (['functionSP', 'package', 'view', 'synonym', 'sequence'].includes(type)) {
         params = {
           connectionName: currentContextNodeData.connectInfo.name,
-          schema: currentContextNodeData.schemaName,
+          schema: currentContextNodeData.schemaName || undefined,
           [type + 'Name']: currentContextNodeData.label,
           webUser: UserStore.userId,
           uuid: currentContextNodeData.uuid,
@@ -2090,8 +2084,8 @@
     router.push({
       path: '/privilege/' + uuid,
       query: {
-        title: 'privilege',
-        fileName: 'privilege',
+        title: 'permission',
+        fileName: 'permission',
         rootId,
         connectInfoName,
         uuid,

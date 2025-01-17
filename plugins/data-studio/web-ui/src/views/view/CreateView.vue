@@ -73,9 +73,9 @@
   const editorPreRef = ref();
   const refreshParams = reactive({
     rootId: route.query.rootId as string,
-    schemaContentCollectId: route.query.schemaContentCollectId as string,
   });
 
+  const platform = ref(route.query.platform as Platform);
   const form = reactive({
     viewName: '',
     viewType: 'VIEW',
@@ -143,7 +143,7 @@
   };
 
   onMounted(() => {
-    form.schema = route.query.schema as string;
+    form.schema = (route.query.schema as string) || undefined;
     schemaList.value = [form.schema];
   });
 </script>

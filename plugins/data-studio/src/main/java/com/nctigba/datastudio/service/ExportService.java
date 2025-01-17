@@ -24,6 +24,7 @@
 package com.nctigba.datastudio.service;
 
 import com.nctigba.datastudio.model.query.ExportQuery;
+import com.nctigba.datastudio.model.query.ExportResultQuery;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -104,4 +105,14 @@ public interface ExportService {
      * @throws SQLException SQLException
      */
     void exportSchemaDdl(ExportQuery request, HttpServletResponse response) throws IOException, SQLException;
+
+    /**
+     * exportResult
+     *
+     * @param request ExportResultQuery
+     * @param response HttpServletResponse
+     * @throws SQLException SQLException
+     * @throws IOException IOException
+     */
+    void exportResult(ExportResultQuery request, HttpServletResponse response) throws SQLException, IOException;
 }

@@ -25,7 +25,7 @@
       </template>
       <HistoryTable ref="historyTableRef" />
     </el-tab-pane>
-    <el-tab-pane v-for="item in props.tabList" :name="item.name" :key="item.id">
+    <el-tab-pane v-for="(item, index) in props.tabList" :name="item.name" :key="item.id">
       <template #label>
         <el-dropdown
           trigger="contextmenu"
@@ -63,6 +63,7 @@
       <div class="my-el-table-v2">
         <vxe-table
           size="mini"
+          :ref="'myTable' + index"
           border
           :empty-text="$t('common.noData')"
           :show-overflow="isInFrame ? 'title' : 'tooltip'"
@@ -86,12 +87,31 @@
           ></vxe-column>
         </vxe-table>
       </div>
+      <ResultTableToolbar
+        v-model:page="item.page"
+        :sql="item.sql"
+        @exportCurrentPage="(params) => handleExport('current', index, params)"
+        @exportAllPage="(params) => handleExport('all', index, params)"
+        @getData="(params) => getPageData(index, params)"
+      />
     </el-tab-pane>
+    <ExportSimpleTableDataDialog
+      v-if="visibleExportDialog"
+      v-model="visibleExportDialog"
+      :type="exportType"
+      :platform="platform"
+      :params="exportParams"
+      :api="exportResultApi"
+    />
   </el-tabs>
 </template>
 <script lang="ts" setup>
   import HistoryTable from './HistoryTable.vue';
+  import ResultTableToolbar from './ResultTableToolbar.vue';
+  import ExportSimpleTableDataDialog from '@/components/ExportSimpleTableDataDialog.vue';
   import { watchThrottled } from '@vueuse/core';
+  import { getCurrentInstance } from 'vue';
+  import { exportResultApi } from '@/api/terminal';
 
   interface messageType {
     id: number | string;
@@ -103,18 +123,22 @@
     tabList: any[];
     tabValue: string;
     type: 'sql' | 'debug';
+    uuid: string;
   }
   const props = withDefaults(defineProps<Props>(), {
     msgData: () => [],
     tabList: () => [],
     tabValue: 'home',
     type: 'sql',
+    uuid: '',
   });
   const emit = defineEmits<{
     (e: 'update:tabList', tabList: any[]): void;
     (e: 'update:tabValue', tabValue: string): void;
+    (e: 'changResultPage', value: any): void;
   }>();
 
+  const platform = inject<Ref<Platform>>('platform'); 
   const historyTableRef = ref<InstanceType<typeof HistoryTable>>(null);
   const tabValue = computed({
     get: () => props.tabValue,
@@ -124,11 +148,13 @@
   const isInFrame = ref(self !== parent);
   const isNeedScrollMessage = ref(false);
 
+  const getHistoryData = () => historyTableRef.value.getData();
+
   watchThrottled(
     isInHistory,
     (value) => {
       if (value) {
-        nextTick(historyTableRef.value.getData);
+        nextTick(getHistoryData);
       }
     },
     { throttle: 3000 },
@@ -205,15 +231,44 @@
       qaScrollbarRef.value.scrollTo(0, element.querySelector('.el-scrollbar__view').scrollHeight);
     }, 200);
   };
+
+  const instance = getCurrentInstance();
+  const scrollToTableTop = (index) => {
+    instance.refs['myTable' + index][0]!.clearScroll();
+  };
+
+  const exportType = ref<'current' | 'all'>('current');
+  const exportParams = ref({});
+  const visibleExportDialog = ref(false);
+
+  const getPageData = (tabIndex, params) => {
+    const tab = props.tabList[tabIndex];
+    emit('changResultPage', {
+      resultId: tab.resultId,
+      ...params,
+    });
+  };
+  const handleExport = (type: 'current' | 'all', tabIndex: number, params: any) => {
+    const tab = props.tabList[tabIndex];
+    exportType.value = type;
+    exportParams.value = {
+      ...params,
+      columnList: tab.originColumn,
+      uuid: props.uuid,
+    };
+    visibleExportDialog.value = true;
+  };
   defineExpose({
+    getHistoryData,
     scrollToMessageBottom,
+    scrollToTableTop,
   });
 </script>
 <style lang="scss" scoped>
   .result-tabs {
     height: 100%;
     :deep(.el-tabs__content) {
-      height: calc(100% - 43px);
+      height: calc(100% - 37px);
     }
     :deep(.el-tabs__header) {
       background-color: var(--el-fill-color-light);
@@ -242,7 +297,7 @@
     }
     :deep(.el-tab-pane) {
       height: 100%;
-      padding: 10px;
+      padding: 5px;
       padding-left: 0;
       padding-bottom: 0;
     }
@@ -269,7 +324,7 @@
     }
   }
   .my-el-table-v2 {
-    height: 100%;
+    height: calc(100% - 35px);
   }
 
   :deep(.vxe-table--render-default.border--full .vxe-table--header-wrapper) {

@@ -24,6 +24,7 @@
 package com.nctigba.datastudio.controller;
 
 import com.nctigba.datastudio.model.query.ExportQuery;
+import com.nctigba.datastudio.model.query.ExportResultQuery;
 import com.nctigba.datastudio.service.ExportService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -141,5 +142,19 @@ public class ExportController {
     public void exportSchemaDdl(@RequestBody ExportQuery request, HttpServletResponse response)
             throws SQLException, IOException {
         exportService.exportSchemaDdl(request, response);
+    }
+
+    /**
+     * export schema ddl
+     *
+     * @param request request
+     * @param response response
+     * @throws SQLException SQLException
+     * @throws IOException IOException
+     */
+    @PostMapping(value = "/export/result", produces = MediaType.APPLICATION_JSON_VALUE)
+    public void exportResult(@RequestBody ExportResultQuery request, HttpServletResponse response)
+            throws SQLException, IOException {
+        exportService.exportResult(request, response);
     }
 }
