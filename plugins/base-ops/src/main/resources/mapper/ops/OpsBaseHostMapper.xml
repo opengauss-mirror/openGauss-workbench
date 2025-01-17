@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.plugin.mapper.ops.OpsBaseHostMapper">
+
+    <select id="queryPortByHostId" resultType="java.lang.Integer">
+        SELECT port FROM ops_host WHERE host_id = #{hostId};
+    </select>
+</mapper>
