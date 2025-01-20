@@ -97,6 +97,7 @@ p {
 /* Style of List Box */
 
 .keyInfoStyle {
+  background-color: #fff;
   position: absolute;
   z-index: 9999;
   display: none;

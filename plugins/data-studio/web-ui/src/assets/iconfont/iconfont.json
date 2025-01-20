@@ -6,6 +6,13 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "40068206",
+      "name": "copy",
+      "font_class": "copy",
+      "unicode": "ea45",
+      "unicode_decimal": 59973
+    },
+    {
       "icon_id": "7239899",
       "name": "snippets",
       "font_class": "snippets",
@@ -18,13 +25,6 @@
       "font_class": "edit",
       "unicode": "e684",
       "unicode_decimal": 59012
-    },
-    {
-      "icon_id": "42064272",
-      "name": "snippets-red",
-      "font_class": "snippets-copy",
-      "unicode": "ec7e",
-      "unicode_decimal": 60542
     },
     {
       "icon_id": "8477242",

@@ -26,11 +26,7 @@
         </div>
       </div>
       <div class="right">
-        <div class="operation-icon-wrapper" :title="t('terminal.SQLAssistant')">
-          <svg class="operation-icon" aria-hidden="true" @click="toggleSqlAssistant">
-            <use xlink:href="#icon-icon_SQL"></use>
-          </svg>
-        </div>
+        <SqlAssistant />
         <LangButton v-if="!isInFrame" />
         <SwitchDark v-if="!isInFrame" />
       </div>
@@ -108,6 +104,7 @@
   import LangButton from '@/components/LangButton.vue';
   import { useRoute, useRouter } from 'vue-router';
   import SwitchDark from '@/components/SwitchTheme.vue';
+  import SqlAssistant from './SqlAssistant.vue';
   import RenameTagsDialog from './RenameTagsDialog.vue';
   import WindowsManager from '@/components/WindowsManager.vue';
   import ContextMenu from '@/components/ContextMenu/index.vue';
@@ -401,10 +398,6 @@ ${curStr}`
     });
   }
 
-  const toggleSqlAssistant = () => {
-    AppStore.isOpenSqlAssistant = !AppStore.isOpenSqlAssistant;
-  };
-
   const openConnectDialog = () => {
     EventBus.notify(EventTypeName.OPEN_CONNECT_DIALOG, {
       dialogType: 'create',
@@ -603,16 +596,6 @@ ${curStr}`
       align-items: center;
       white-space: nowrap;
     }
-  }
-  .operation-icon-wrapper {
-    width: 23px;
-    height: 23px;
-    margin: 0 2px;
-  }
-  .operation-icon {
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
   }
   .context-menu {
     position: fixed;

@@ -76,6 +76,7 @@
     (e: 'importFile', value: string): void;
     (e: 'exportFile'): void;
     (e: 'showHistory'): void;
+    (e: 'snippets'): void;
   }>();
 
   const platform = inject<Ref<Platform>>('platform');  
@@ -263,6 +264,14 @@
         on: handleExportFile,
         icon: 'daochu',
         disabledIcon: 'daochu',
+      },
+      snippets: {
+        name: t('snippets.name'),
+        show: ['sql'].includes(props.type),
+        enabled: true,
+        on: () => emit('snippets'),
+        icon: 'snippets',
+        disabledIcon: 'snippets',
       },
     };
   });

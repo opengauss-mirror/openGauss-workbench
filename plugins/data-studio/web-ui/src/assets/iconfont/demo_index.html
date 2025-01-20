@@ -51,6 +51,12 @@
           <ul class="icon_lists dib-box">
           
             <li class="dib">
+              <span class="icon iconfont">&#xea45;</span>
+                <div class="name">copy</div>
+                <div class="code-name">&amp;#xea45;</div>
+              </li>
+          
+            <li class="dib">
               <span class="icon iconfont">&#xe753;</span>
                 <div class="name">snippets</div>
                 <div class="code-name">&amp;#xe753;</div>
@@ -60,12 +66,6 @@
               <span class="icon iconfont">&#xe684;</span>
                 <div class="name">edit</div>
                 <div class="code-name">&amp;#xe684;</div>
-              </li>
-          
-            <li class="dib">
-              <span class="icon iconfont">&#xec7e;</span>
-                <div class="name">snippets-red</div>
-                <div class="code-name">&amp;#xec7e;</div>
               </li>
           
             <li class="dib">
@@ -620,9 +620,9 @@
 <pre><code class="language-css"
 >@font-face {
   font-family: 'iconfont';
-  src: url('iconfont.woff2?t=1729755558972') format('woff2'),
-       url('iconfont.woff?t=1729755558972') format('woff'),
-       url('iconfont.ttf?t=1729755558972') format('truetype');
+  src: url('iconfont.woff2?t=1732175314133') format('woff2'),
+       url('iconfont.woff?t=1732175314133') format('woff'),
+       url('iconfont.ttf?t=1732175314133') format('truetype');
 }
 </code></pre>
           <h3 id="-iconfont-">第二步：定义使用 iconfont 的样式</h3>
@@ -646,6 +646,15 @@
         <ul class="icon_lists dib-box">
           
           <li class="dib">
+            <span class="icon iconfont icon-copy"></span>
+            <div class="name">
+              copy
+            </div>
+            <div class="code-name">.icon-copy
+            </div>
+          </li>
+          
+          <li class="dib">
             <span class="icon iconfont icon-snippets"></span>
             <div class="name">
               snippets
@@ -660,15 +669,6 @@
               edit
             </div>
             <div class="code-name">.icon-edit
-            </div>
-          </li>
-          
-          <li class="dib">
-            <span class="icon iconfont icon-snippets-copy"></span>
-            <div class="name">
-              snippets-red
-            </div>
-            <div class="code-name">.icon-snippets-copy
             </div>
           </li>
           
@@ -1490,6 +1490,14 @@
           
             <li class="dib">
                 <svg class="icon svg-icon" aria-hidden="true">
+                  <use xlink:href="#icon-copy"></use>
+                </svg>
+                <div class="name">copy</div>
+                <div class="code-name">#icon-copy</div>
+            </li>
+          
+            <li class="dib">
+                <svg class="icon svg-icon" aria-hidden="true">
                   <use xlink:href="#icon-snippets"></use>
                 </svg>
                 <div class="name">snippets</div>
@@ -1502,14 +1510,6 @@
                 </svg>
                 <div class="name">edit</div>
                 <div class="code-name">#icon-edit</div>
-            </li>
-          
-            <li class="dib">
-                <svg class="icon svg-icon" aria-hidden="true">
-                  <use xlink:href="#icon-snippets-copy"></use>
-                </svg>
-                <div class="name">snippets-red</div>
-                <div class="code-name">#icon-snippets-copy</div>
             </li>
           
             <li class="dib">
@@ -2231,7 +2231,7 @@
           <h3 id="-symbol-">Step 1: Import the symbol code generated under the project:</h3>
 <pre><code class="language-html">&lt;script src="./iconfont.js"&gt;&lt;/script&gt;
 </code></pre>
-          <h3 id="-css-">第二步：加入通用 CSS 代码（引入一次就行）：</h3>
+          <h3 id="-css-">Step 2: Add general CSS code (just import it once):</h3>
 <pre><code class="language-html">&lt;style&gt;
 .icon {
   width: 1em;

@@ -34,6 +34,7 @@ export default {
     colon: '：',
     noData: '暂无数据',
     donotAskAgain: '不再提示',
+    operation: '操作',
   },
   page: {
     page: '页',
@@ -62,12 +63,15 @@ export default {
     copy: '复制',
     advancedCopy: '高级复制',
     loadToTerminal: '加载至终端',
+    exportToTerminal: '导出到终端',
     saveChanges: '保存修改',
     refresh: '刷新',
     lock: '锁定',
     unlock: '解锁',
     unlock2: '取消锁定',
     executeUploadFile: '执行SQL文件',
+    search: '搜索',
+    advancedSearch: '高级搜索',
   },
   utils: {
     colorError: '输入错误的{name}颜色值',
@@ -112,6 +116,7 @@ export default {
     deleteMode: '您确定要删除{name}模式吗？',
     deleteRecord: '确定要删除当前记录吗？',
     backfillRecord: '确定要回填当前记录吗？',
+    deleteSnippet: '确定要删除此代码片段吗？',
     saveData: '{name}表存在未保存的数据，是否需要保存更改？',
     selectedData: '请选择数据',
     editTableGuide: '该表未定义唯一物理键：{name}，<br/>若要继续操作，请定义唯一键！',
@@ -436,7 +441,7 @@ export default {
   },
   terminal: {
     importSql: '导入SQL',
-    importSqlText: '请选择导入形式：',
+    importSqlText: '请选择形式：',
     SQLAssistant: 'SQL助手',
     uploadSqlFile: '上传SQL文件',
     resultOfExecution: '执行结果',
@@ -501,6 +506,10 @@ export default {
       variable: '请输入变量名称',
     },
   },
+  snippets: {
+    name: '代码片段',
+    create: '创建代码片段',
+  },
   mode: {
     schema: '模式',
     name: '模式名称',
@@ -552,7 +561,10 @@ export default {
       isUnique: '是否唯一',
       arrayDimensions: '阵列维度',
       precisionSize: '精度/大小',
+      bytes: '长度',
+      precision: '精度',
       range: '范围',
+      scale: '刻度',
     },
     constraint: {
       title: '约束',

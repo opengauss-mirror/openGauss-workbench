@@ -27,7 +27,7 @@ export default {
     save: 'Save',
     notSave: 'Not Save',
     page: 'Page',
-    serialNumber: 'Serial No',
+    serialNumber: 'No.',
     attribute: 'Attribute',
     value: 'Value',
     selectAll: 'Select All',
@@ -35,6 +35,7 @@ export default {
     colon: ':',
     noData: 'No Data',
     donotAskAgain: `Don't ask again`,
+    operation: 'Operation',
   },
   page: {
     page: 'Page',
@@ -63,12 +64,15 @@ export default {
     copy: 'Copy',
     advancedCopy: 'Advanced Copy',
     loadToTerminal: 'Load To Terminal',
+    exportToTerminal: 'Export To Terminal',
     saveChanges: 'Save Changes',
     refresh: 'Refresh',
     lock: 'Lock',
     unlock: 'Unlock',
     unlock2: 'Unlock',
     executeUploadFile: 'Execute SQL file',
+    search: 'Search',
+    advancedSearch: 'Advanced Search',
   },
   utils: {
     colorError: 'Wrong {name} color value',
@@ -116,6 +120,7 @@ export default {
     deleteMode: 'Are you sure you want to delete the {name} schema?',
     deleteRecord: 'Are you sure you want to delete the current record?',
     backfillRecord: 'Are you sure you want to backfill the current record?',
+    deleteSnippet: 'Are you sure you want to delete the current snippet?',
     saveData: 'There is unsaved data in table {name}. Do you need to save the changes?',
     selectedData: 'Please select data',
     editTableGuide:
@@ -443,7 +448,7 @@ export default {
   },
   terminal: {
     importSql: 'Import SQL',
-    importSqlText: 'Please choose the import format:',
+    importSqlText: 'Please choose the format:',
     SQLAssistant: 'SQL assistant',
     uploadSqlFile: 'Upload SQL File',
     resultOfExecution: 'Result Of Execution',
@@ -508,6 +513,10 @@ export default {
       variable: 'Please enter variable name',
     },
   },
+  snippets: {
+    name: 'Snippets',
+    create: 'Create Snippets',
+  },
   mode: {
     schema: 'Schema',
     name: 'Schema Name',
@@ -559,7 +568,10 @@ export default {
       isUnique: 'IsUnique',
       arrayDimensions: 'ArrayDimensions',
       precisionSize: 'Precision/Size',
+      bytes: 'Bytes',
+      precision: 'Precision',
       range: 'Range',
+      scale: 'Scale',
     },
     constraint: {
       title: 'Constraint',

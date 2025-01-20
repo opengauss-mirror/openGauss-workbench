@@ -33,6 +33,7 @@
             <el-form-item prop="sql" :label="$t('view.code')">
               <AceEditor
                 ref="editorRef"
+                type="form"
                 :readOnly="props.type === 'edit'"
                 width="100%"
                 height="400px"
@@ -41,7 +42,7 @@
           </el-form>
         </div>
         <div v-show="activeName == 'Sql'">
-          <AceEditor ref="editorPreRef" height="450px" />
+          <AceEditor ref="editorPreRef" type="form" height="450px" />
         </div>
       </div>
       <template #footer>

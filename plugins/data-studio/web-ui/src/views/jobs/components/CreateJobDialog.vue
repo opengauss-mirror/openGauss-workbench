@@ -28,6 +28,7 @@
           <el-form-item prop="jobContent" :label="$t('job.jobContent')">
             <AceEditor
               ref="editorRef"
+              type="form"
               :read-only="false"
               width="calc(100% - 20px)"
               height="150px"

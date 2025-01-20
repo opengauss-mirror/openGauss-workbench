@@ -22,7 +22,7 @@
               :style="{ paddingLeft: `${row.level * 25}px`, display: 'inline-block' }"
             >
               <div v-if="row.type == 'normal' && row.key" style="display: inline-block">
-                <el-dropdown trigger="click">
+                <el-dropdown trigger="click" max-height="300px">
                   <span class="text-link">
                     {{ row.key }}
                   </span>
@@ -38,7 +38,7 @@
                     </el-dropdown-menu>
                   </template>
                 </el-dropdown>
-                <el-dropdown trigger="click" max-height="200px">
+                <el-dropdown trigger="click" max-height="300px">
                   <span class="text-link">
                     {{ t(`conditionalSymbols.${row.connector}`) }}
                   </span>

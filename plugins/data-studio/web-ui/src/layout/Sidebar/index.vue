@@ -1076,9 +1076,6 @@
       ElMessage.success(t('message.deleteSuccess'));
       updateConnectListPersist();
       refreshConnectListMap();
-      if (connectionList.value.length == 0) {
-        router.push('/home');
-      }
     });
   };
   const handleDisAllconnection = () => {

@@ -7,7 +7,7 @@
         <el-table-column prop="name" :label="t('table.column.title')" min-width="100" />
         <el-table-column :label="t('table.sort.title')" width="70">
           <template #default="{ row }">
-            <el-dropdown trigger="click">
+            <el-dropdown trigger="click" max-height="300px">
               <span class="dropdown-link">
                 {{ row.multipleOrder || '-' }}
                 <el-icon class="el-icon--right"><arrow-down /></el-icon>

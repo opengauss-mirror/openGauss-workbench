@@ -1,7 +1,7 @@
 <template>
   <div class="table-page">
     <div class="wrapper" v-loading="loading">
-      <AceEditor ref="editorRef" />
+      <AceEditor ref="editorRef" type="form" />
     </div>
   </div>
 </template>

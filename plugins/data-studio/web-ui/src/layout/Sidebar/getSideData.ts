@@ -171,7 +171,12 @@ const generateRoot = async (connectInfo, uuid: string) => {
 };
 
 const generateUserRoleList = async (rootId, parentId, uuid, connectInfo) => {
-  const res = await getUserRoleList({ uuid });
+  let res: any = { user: [], role: [] };
+  try {
+    res = await getUserRoleList({ uuid });
+  } catch {
+    res = { user: [], role: [] };
+  }
   const data: { name: string; oid: string; type: 'user' | 'role' }[] = [].concat(
     res.user.map((item: { name: string; oid: string }) => ({ ...item, type: 'user' })),
     res.role.map((item: { name: string; oid: string }) => ({ ...item, type: 'role' })),
@@ -194,7 +199,12 @@ const generateTablespaceList = async (
   uuid: string,
   connectInfo,
 ) => {
-  const data = (await getTablespaceListApi({ uuid })) as unknown as { name: string; oid: string }[];
+  let data = [];
+  try {
+    data = (await getTablespaceListApi({ uuid })) as unknown as { name: string; oid: string }[];
+  } catch (error) {
+    data = [];
+  }
   return data.map((item) => ({
     id: `${parentId}_${item.oid}`,
     oid: item.oid,
