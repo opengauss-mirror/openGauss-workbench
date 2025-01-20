@@ -61,6 +61,7 @@ export const useAppStore = defineStore({
     isReloadRouter: true,
     isMainViewMounted: false,
     isOpenSqlAssistant: false,
+    SqlAssistantType: '' as '' | 'opengauss',
   }),
   getters: {
     connectedDatabase(state): ConnectedDatabase[] {

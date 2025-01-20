@@ -403,7 +403,7 @@ $(function () {
           topY +
           'px;left:' +
           leftX +
-          'px;padding:2px 2px 2px 2px;position:absolute;background-image:url(img/assistantCopy.png);border: 1px solid gray;font-size:10px;"></div>',
+          'px;padding:2px 2px 2px 2px;position:absolute;background-image:url(/img/assistantCopy.png);border: 1px solid gray;font-size:10px;"></div>',
       );
       var span1 = $(
         '<div style="padding-left:30px;margin:0 0 0 0;border:1px solid #F0F0F0;font-size:12px;line-height:22px;cursor:pointer;" onclick="javascript:processSelection1();" onmouseover="this.style.borderColor=\'#AECFF7\'" onmouseout="this.style.borderColor=\'#F0F0F0\'">拷贝</div>',

@@ -49,7 +49,7 @@ export const useTagsViewStore = defineStore({
     },
     setVisitedViewsStorage() {
       const visitedViews = this.visitedViews.map((item) => {
-        const { matched, ...others } = item;
+        const { matched, redirectedFrom, ...others } = item;
         return others;
       });
       storePersist.visitedViews.storage.setItem(

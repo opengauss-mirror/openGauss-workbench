@@ -51,9 +51,14 @@
 
   const baseURL = import.meta.env.BASE_URL;
   const iframeSrc = computed(() => {
-    return `${baseURL}statics/db_assistant/index_${
-      AppStore.language === 'zh-CN' ? 'zh' : 'en'
-    }.html`;
+    const path = '';
+    const language =
+      AppStore.SqlAssistantType == 'opengauss'
+        ? AppStore.language === 'zh-CN'
+          ? 'zh'
+          : 'en'
+        : 'zh';
+    return `${baseURL}statics/db_assistant${path}/index_${language}.html`;
   });
   const iframePointerEvents = ref<'auto' | 'none'>('auto');
   const cachedViewName = computed(() => {

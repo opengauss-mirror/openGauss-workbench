@@ -32,13 +32,13 @@
             </el-col>
             <el-col :span="24">
               <el-form-item prop="sql" :label="$t('view.code')">
-                <AceEditor ref="editorRef" :readOnly="false" width="100%" height="400px" />
+                <AceEditor ref="editorRef" type="form" :readOnly="false" width="100%" height="400px" />
               </el-form-item>
             </el-col>
           </el-row>
         </el-form>
       </div>
-      <AceEditor v-show="currentTabName == 'Sql'" ref="editorPreRef" style="width: 100%" />
+      <AceEditor v-show="currentTabName == 'Sql'" ref="editorPreRef" type="form" style="width: 100%" />
     </template>
     <template #page-bottom-button>
       <el-button type="primary" @click="handleSave('Base')">

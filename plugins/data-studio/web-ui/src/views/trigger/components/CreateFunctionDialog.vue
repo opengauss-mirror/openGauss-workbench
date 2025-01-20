@@ -16,7 +16,7 @@
           :label-suffix="$t('common.colon')"
         >
           <el-form-item prop="sql" :label="$t('trigger.createTriggerFunction.function')" required>
-            <AceEditor ref="editorPreRef" width="100%" height="400px" :readOnly="false" />
+            <AceEditor ref="editorPreRef" type="form" width="100%" height="400px" :readOnly="false" />
           </el-form-item>
         </el-form>
       </div>

@@ -290,7 +290,7 @@
 
 <style lang="scss" scoped>
   .id-text {
-    color: #0000ee;
+    color: var(--el-color-primary);
     text-decoration: underline;
     cursor: pointer;
   }

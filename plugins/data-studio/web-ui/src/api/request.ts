@@ -41,7 +41,8 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   async (response: AxiosResponse) => {
     if (response.data?.code == 401) {
-      !showExpired &&
+      if (!showExpired) {
+        showExpired = true;
         ElMessageBox({
           message: t('common.loginExpired'),
           title: t('common.systemPrompt'),
@@ -49,6 +50,7 @@ service.interceptors.response.use(
           showClose: false,
           closeOnClickModal: false,
         }).then(() => {
+          showExpired = false;
           if (parent !== self) {
             localStorage.removeItem('opengauss-token');
             sessionStorage.clear();
@@ -56,11 +58,11 @@ service.interceptors.response.use(
             userPersist.storage.removeItem(userPersist.key);
             parent.location.reload();
           }
-          return Promise.reject(response.data.msg);
         });
-      showExpired = true;
-    } else if (response.data?.code) {
-      // If has code, it has problem in backend.
+      }
+      return Promise.reject(response.data.msg);
+    } else if (typeof response.data?.code == 'number') {
+      // If has code, it has problem in backend.Maybe this code can be snippets
       if (response.data.code == 500 && response.data.msg === 'disconnection') {
         let uuid = '';
         if (response.config.method == 'get') {

@@ -1,6 +1,6 @@
 <template>
   <div class="ddl-wrapper" v-loading="props.loading">
-    <AceEditor ref="editorRef" readOnly />
+    <AceEditor ref="editorRef" type="form" readOnly />
   </div>
 </template>
 

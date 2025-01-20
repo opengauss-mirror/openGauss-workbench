@@ -36,6 +36,7 @@
   const props = withDefaults(
     defineProps<{
       modelValue?: string;
+      type?: 'form' | 'page'; // in form-item or page
       value?: string;
       width?: string;
       height?: string;
@@ -49,6 +50,7 @@
     }>(),
     {
       modelValue: '',
+      type: 'form',
       value: '',
       height: '100%',
       readOnly: true,
@@ -66,6 +68,7 @@
     (event: 'removeBreakPoint', line: number): void;
     (event: 'enableBreakPoint', line: number): void;
     (event: 'disableBreakPoint', line: number): void;
+    (event: 'snippet', text: string): void;
   }>();
 
   const id = 'monaco_' + uuid();
@@ -86,12 +89,22 @@
     left: 0,
     top: 0,
   });
-  const contextMenuList = ref([
-    {
-      label: computed(() => t('button.copy')),
-      click: () => handleCopy(),
-    },
-  ]);
+  const contextMenuList = ref([]);
+  const getContextMenuList = () => {
+    const list = [
+      {
+        label: computed(() => t('button.copy')),
+        click: () => handleCopy(),
+      },
+    ];
+    if (getAllSelectionValue() && props.type == 'page') {
+      list.push({
+        label: computed(() => t('snippets.create')),
+        click: () => myEmit('snippet', getAllSelectionValue()),
+      });
+    }
+    contextMenuList.value = list;
+  };
 
   const hideContextMenu = () => {
     contextMenuVisible.value = false;
@@ -106,6 +119,7 @@
         left: e.clientX,
         top: e.clientY,
       };
+      getContextMenuList();
       contextMenuVisible.value = true;
       setEditorBlur();
     }
@@ -413,9 +427,9 @@
 
   // Only fill in keywords, but the color will not change
   const setCompleteData = (data) => {
-    const languageTools = ace.require("ace/ext/language_tools");
+    const languageTools = ace.require('ace/ext/language_tools');
     languageTools.addCompleter({
-      getCompletions: function(editor, session, pos, prefix, callback) {
+      getCompletions: function (editor, session, pos, prefix, callback) {
         if (prefix.length == 0) {
           return callback(null, []);
         } else {

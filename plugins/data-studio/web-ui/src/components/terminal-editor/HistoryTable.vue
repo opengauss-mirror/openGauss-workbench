@@ -204,9 +204,9 @@
 </script>
 
 <style lang="scss" scoped>
-  .history-table-wrapper{
+  .history-table-wrapper {
     height: 100%;
-    overflow: hidden
+    overflow: hidden;
   }
   .history-table {
     font-size: 12px;

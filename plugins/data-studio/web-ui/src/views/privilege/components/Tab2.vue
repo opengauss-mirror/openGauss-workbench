@@ -45,7 +45,7 @@
                   <el-checkbox
                     v-model="isGrantAll"
                     :indeterminate="isIndeterminateGrant"
-                    :disabled="grantOrRevoke == 'GRANT' && !isFunctionAll"
+                    :disabled="!isFunctionAll"
                   ></el-checkbox>
                   <span
                     style="display: inline-block; margin-left: 12px; vertical-align: text-bottom"
@@ -56,7 +56,7 @@
                 <template #default="{ row }">
                   <el-checkbox
                     v-model="row.checkOption"
-                    :disabled="grantOrRevoke == 'GRANT' && !row.checkPrivilege"
+                    :disabled="!row.checkPrivilege"
                   ></el-checkbox>
                 </template>
               </el-table-column>

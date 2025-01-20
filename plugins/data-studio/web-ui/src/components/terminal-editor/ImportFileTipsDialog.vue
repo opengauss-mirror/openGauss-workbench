@@ -33,9 +33,11 @@
   const props = withDefaults(
     defineProps<{
       modelValue: boolean;
+      textType?: 'import' | 'export'; // you can choose the text in this dialog
     }>(),
     {
       modelValue: false,
+      textType: 'import',
     },
   );
   const myEmit = defineEmits<{
@@ -49,7 +51,7 @@
     set: (val) => myEmit('update:modelValue', val),
   });
   const title = computed(() => {
-    return t('terminal.importSql');
+    return props.textType == 'import' ? t('terminal.importSql') : t('button.exportToTerminal');
   });
   const ruleForm = reactive({
     radio: null as ImportSqlType,

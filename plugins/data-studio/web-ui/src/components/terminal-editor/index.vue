@@ -25,12 +25,14 @@
             @importFile="handleImportFile"
             @exportFile="handleExportFile"
             @showHistory="handleShowHistory"
+            @snippets="showSnippetsDialog = true"
           />
           <div class="monaco-wrapper" ref="editorWrapper">
             <Splitpanes class="default-theme" :dbl-click-splitter="false">
               <Pane>
                 <AceEditor
                   ref="editorRef"
+                  type="page"
                   :value="sqlData.sqlText"
                   :height="editorHeight"
                   :readOnly="!isGlobalEnable || sqlData.readOnly || ws.isInPackage"
@@ -39,6 +41,7 @@
                   @removeBreakPoint="(line) => handleBreakPoint([line + 1], 'deleteBreakPoint')"
                   @enableBreakPoint="(line) => handleBreakPoint([line + 1], 'enableBreakPoint')"
                   @disableBreakPoint="(line) => handleBreakPoint([line + 1], 'disableBreakPoint')"
+                  @snippet="handleFastCreateSnippet"
                   style="width: 100%; margin-top: 4px"
                 />
               </Pane>
@@ -87,6 +90,7 @@
       @operation="handleImportFileComfirm"
       @close="handleImportFileClose"
     />
+    <Snippets ref="snippetsRef" :uuid="ws.uuid" v-model="showSnippetsDialog" />
   </div>
 </template>
 
@@ -98,6 +102,7 @@
   import EnterParamsDialog from './EnterParamsDialog.vue';
   import CoverageRateDialog from './CoverageRateDialog.vue';
   import ImportFileTipsDialog from './ImportFileTipsDialog.vue';
+  import Snippets from '@/components/Snippets/index.vue';
   import { ElMessage, ElMessageBox, ElCheckbox } from 'element-plus';
   import createTemplate from './createTemplate';
   import { useRoute, useRouter } from 'vue-router';
@@ -235,6 +240,8 @@
   const alreadyCloseWindow = ref(false);
   const showCoverageRateDialog = ref(false);
   const showImportFileTipsDialog = ref(false);
+  const showSnippetsDialog = ref(false);
+  const snippetsRef = ref();
   let importFileData = '';
   const preInputParams = ref([]);
 
@@ -852,6 +859,7 @@
       editorRef.value.setValue(data);
     }
   };
+  provide('handleImportFile', handleImportFile);
   const handleImportFileComfirm = (type: 'append' | 'overwrite') => {
     if (type === 'overwrite') editorRef.value.setValue(importFileData);
     if (type === 'append')
@@ -870,7 +878,12 @@
     showResult.value = true;
     nextTick(() => {
       tabValue.value = 'history';
-    })
+    });
+  };
+
+  const handleFastCreateSnippet = (text) => {
+    showSnippetsDialog.value = true;
+    snippetsRef.value.handleFastCreate(text);
   };
 
   type BreakOperation =

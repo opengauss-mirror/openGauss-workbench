@@ -10,7 +10,7 @@
       @closed="resetForm"
     >
       <div class="dialog_body">
-        <AceEditor ref="editorPreRef" height="400px" />
+        <AceEditor ref="editorPreRef" type="form" height="400px" />
       </div>
       <template #footer>
         <el-button type="primary" @click="handleCopy">

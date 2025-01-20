@@ -90,7 +90,7 @@
           </el-row>
         </el-form>
       </div>
-      <AceEditor v-show="currentTabName == 'Sql'" ref="editorPreRef" style="width: 100%" />
+      <AceEditor v-show="currentTabName == 'Sql'" ref="editorPreRef" type="form" style="width: 100%" />
     </template>
     <template #page-bottom-button>
       <el-button type="primary" @click="handleSave('Base')">

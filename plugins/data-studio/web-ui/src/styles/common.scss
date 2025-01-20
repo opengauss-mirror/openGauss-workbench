@@ -149,3 +149,9 @@ html.dark {
 .form-item-tooltip {
   max-width: 350px;
 }
+
+.my-snippets-drawer {
+  .el-drawer__header {
+    margin-bottom: 0;
+  }
+}
