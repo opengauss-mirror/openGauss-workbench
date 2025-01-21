@@ -39,10 +39,10 @@ import org.opengauss.admin.plugin.domain.MigrationTask;
 import org.opengauss.admin.plugin.dto.MigrationMainTaskDto;
 import org.opengauss.admin.plugin.dto.MigrationTaskDto;
 import org.opengauss.admin.plugin.handler.PortalHandle;
-import org.opengauss.admin.plugin.service.MainTaskEnvErrorHostService;
 import org.opengauss.admin.plugin.service.MigrationMainTaskService;
 import org.opengauss.admin.plugin.service.MigrationTaskService;
 import org.opengauss.admin.plugin.utils.FileUtils;
+import org.opengauss.admin.plugin.vo.FullCheckParam;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -50,6 +50,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -68,9 +69,6 @@ public class MigrationTaskController extends BaseController {
 
     @Autowired
     private MigrationMainTaskService migrationMainTaskService;
-
-    @Autowired
-    private MainTaskEnvErrorHostService mainTaskEnvErrorHostService;
 
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
@@ -207,7 +205,7 @@ public class MigrationTaskController extends BaseController {
     /**
      * start subtask reverse
      */
-    @Log(title = "task", businessType = BusinessType.STOP)
+    @Log(title = "task", businessType = BusinessType.START)
     @PostMapping("/subTask/start/reverse/{id}")
     public AjaxResult startSubTaskReverse(@PathVariable Integer id ) {
         return migrationMainTaskService.startSubTaskReverse(id);
@@ -243,4 +241,73 @@ public class MigrationTaskController extends BaseController {
         output.close();
     }
 
+    /**
+     * Check status of incremental or reverse migration task
+     *
+     * @param id task id
+     * @return status
+     */
+    @GetMapping(value = "/check/incremental/reverse/status/{id}")
+    public AjaxResult checkStatusOfIncrementalOrReverseMigrationTask(@PathVariable("id") Integer id) {
+        return AjaxResult.success(migrationTaskService.checkStatusOfIncrementalOrReverseMigrationTask(id));
+    }
+
+    /**
+     * Start incremental or reverse migration task
+     *
+     * @param id task id
+     * @param name endpoint name
+     * @return result
+     */
+    @PostMapping(value = "/start/incremental/reverse/task/process/{id}")
+    public AjaxResult startTaskOfOnlineOrReverseMigrationProcess(@PathVariable("id") Integer id,
+        @RequestParam("name") String name) {
+        return AjaxResult.success(migrationTaskService.startTaskOfIncrementalOrReverseMigrationProcess(id, name));
+    }
+
+    /**
+     * Query full check summary of migration task
+     *
+     * @param id task
+     * @return summary
+     */
+    @GetMapping(value = "/query/full/check/summary/{id}")
+    public AjaxResult queryFullCheckSummary(@PathVariable("id") Integer id) {
+        return AjaxResult.success(migrationTaskService.queryFullCheckSummaryOfMigrationTask(id));
+    }
+
+    /**
+     * Query full check detail of migration task
+     *
+     * @param fullCheckParam fullCheckParam
+     * @return result
+     */
+    @PostMapping(value = "/query/full/check/detail")
+    public AjaxResult queryFullCheckDetail(@RequestBody FullCheckParam fullCheckParam) {
+        return AjaxResult.success(migrationTaskService.queryFullCheckDetailOfMigrationTask(fullCheckParam));
+    }
+
+    /**
+     * Download repair file
+     *
+     * @param id task id
+     * @param repairFileName repair file name
+     * @param response response
+     * @throws IOException IOException
+     */
+    @GetMapping(value = "/download/repair/file/{id}/{repairFileName}")
+    public void downloadRepairFile(@PathVariable Integer id, @PathVariable String repairFileName,
+        HttpServletResponse response) throws IOException {
+        String content = migrationTaskService.downloadRepairFile(id, repairFileName);
+        if (StringUtils.isBlank(content)) {
+            content = " ";
+        }
+        byte[] bytes = content.getBytes(StandardCharsets.UTF_8);
+        response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        FileUtils.setAttachmentResponseHeader(response, repairFileName);
+        try (OutputStream output = new BufferedOutputStream(response.getOutputStream())) {
+            output.write(bytes);
+            output.flush();
+        }
+    }
 }

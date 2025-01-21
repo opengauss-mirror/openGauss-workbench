@@ -123,4 +123,13 @@ public class MigrationHostPortalInstall {
             }
         }).map(mainVersion -> mainVersion > version).orElse(false);
     }
+
+    /**
+     * get portal install root path
+     *
+     * @return String
+     */
+    public String getInstallRootPath() {
+        return installPath + "portal/";
+    }
 }

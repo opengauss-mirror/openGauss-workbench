@@ -35,6 +35,7 @@ import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import org.opengauss.admin.common.constant.CommonConstants;
 import org.opengauss.admin.common.constant.ops.SshCommandConstants;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
@@ -655,13 +656,13 @@ public class JschExecutorService {
                     channel.connect();
                     String line;
                     while ((line = reader.readLine()) != null) {
-                        result.append(line.trim()).append("\n");
+                        result.append(line.trim()).append(CommonConstants.LINE_SPLITTER);
                     }
                     deleteCharAtEndOfStringBuffer(result);
                     StringBuilder errorResult = new StringBuilder();
                     String errorLine;
                     while ((errorLine = errorReader.readLine()) != null) {
-                        errorResult.append(errorLine.trim()).append("\n");
+                        errorResult.append(errorLine.trim()).append(CommonConstants.LINE_SPLITTER);
                     }
                     deleteCharAtEndOfStringBuffer(errorResult);
                     int exitStatus = channel.getExitStatus();
@@ -709,10 +710,10 @@ public class JschExecutorService {
                     channel.connect();
                     String errorLine;
                     while ((errorLine = reader.readLine()) != null) {
-                        result.append(errorLine.trim()).append("\n");
+                        result.append(errorLine.trim()).append(CommonConstants.LINE_SPLITTER);
                     }
                     while ((errorLine = errorReader.readLine()) != null) {
-                        result.append(errorLine.trim()).append("\n");
+                        result.append(errorLine.trim()).append(CommonConstants.LINE_SPLITTER);
                     }
                     deleteCharAtEndOfStringBuffer(result);
                     int exitStatus = channel.getExitStatus();

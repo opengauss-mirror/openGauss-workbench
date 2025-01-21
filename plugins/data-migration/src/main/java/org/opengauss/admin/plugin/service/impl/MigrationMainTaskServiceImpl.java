@@ -391,39 +391,45 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         long startTaskTimestamp = System.currentTimeMillis();
         MigrationMainTask mainTask = getById(id);
         if (mainTask == null) {
-            return AjaxResult.error(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
+            return AjaxResult.error(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getCode(),
+                MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
         }
-        if (mainTask.getExecStatus().equals(MainTaskStatus.RUNNING.getCode()) || mainTask.getExecStatus().equals(MainTaskStatus.FINISH.getCode())) {
-            return AjaxResult.error(MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getMsg());
+        if (mainTask.getExecStatus().equals(MainTaskStatus.RUNNING.getCode()) || mainTask.getExecStatus()
+            .equals(MainTaskStatus.FINISH.getCode())) {
+            return AjaxResult.error(MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getCode(),
+                MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getMsg());
         }
         updateStatus(id, MainTaskStatus.RUNNING);
         List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(id);
         List<MigrationTaskHostRef> hosts = migrationTaskHostRefService.listByMainTaskId(id);
         List<MigrationTaskGlobalParam> globalParams = migrationTaskGlobalParamService.selectByMainTaskId(id);
-        Integer totalRunnableCount = hosts.stream().mapToInt(MigrationTaskHostRef::getRunnableCount).sum();
-        if (totalRunnableCount > tasks.size()) { //The number of host executable tasks is greater than the total number of tasks
+        int totalRunnableCount = hosts.stream().mapToInt(MigrationTaskHostRef::getRunnableCount).sum();
+        String operateUsername = SecurityUtils.getUsername();
+        if (totalRunnableCount > tasks.size()) {
+            // The number of host executable tasks is greater than the total number of tasks
             for (int x = 0; x < tasks.size(); x++) {
-                int size = hosts.stream().filter(h -> h.getRunnableCount() > 0).collect(Collectors.toList()).size();
+                int size = (int) hosts.stream().filter(h -> h.getRunnableCount() > 0).count();
                 int curHostIndex = x % size;
                 MigrationTask t = tasks.get(x);
                 t.setOrderInvokedTimestamp(startTaskTimestamp);
                 MigrationTaskHostRef h = hosts.get(curHostIndex);
                 h.addPlaceHolderCount();
-                threadPoolTaskExecutor.submit(() -> migrationTaskService.runTask(h, t, globalParams));
+                threadPoolTaskExecutor.submit(() -> migrationTaskService.runTask(h, t, globalParams, operateUsername));
             }
         } else { //The number of tasks that the host can perform is less than the total number of tasks
-            hosts.stream().forEach(h -> {
+            hosts.forEach(h -> {
                 Integer runnableCount = h.getRunnableCount();
                 for (int i = tasks.size() - 1; i >= tasks.size() - runnableCount; i--) {
                     MigrationTask t = tasks.get(i);
                     t.setOrderInvokedTimestamp(startTaskTimestamp);
-                    threadPoolTaskExecutor.submit(() -> migrationTaskService.runTask(h, t, globalParams));
+                    threadPoolTaskExecutor.submit(
+                        () -> migrationTaskService.runTask(h, t, globalParams, operateUsername));
                     tasks.remove(i);
                 }
             });
             //For tasks that have not been assigned a host,
             // change the status to 1000 and be processed by the offline scheduler
-            tasks.stream().forEach(t -> {
+            tasks.forEach(t -> {
                 migrationTaskService.updateStatus(t.getId(), TaskStatus.WAIT_RESOURCE);
             });
         }

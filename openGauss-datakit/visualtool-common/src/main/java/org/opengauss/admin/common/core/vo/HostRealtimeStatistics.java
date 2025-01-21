@@ -35,6 +35,11 @@ import java.util.Locale;
  */
 @Data
 public class HostRealtimeStatistics {
+    /**
+     * disk unit size 1024*1024,to format disk GB unit
+     */
+    private static final long DISK_UNIT = 1024 * 1024;
+
     private float total;
     private float used;
     private float available;
@@ -50,9 +55,9 @@ public class HostRealtimeStatistics {
         HostRealtimeStatistics bean = new HostRealtimeStatistics();
         String[] dev = diskMonitor.split(" ");
         if (dev.length == 7) {
-            bean.total += Math.round((float) Long.parseLong(dev[2]) / 1048576);
-            bean.used += Math.round((float) Long.parseLong(dev[3]) / 1048576);
-            bean.available += Math.round((float) Long.parseLong(dev[4]) / 1048576);
+            bean.total += Math.round((float) Long.parseLong(dev[2]) / DISK_UNIT);
+            bean.used += Math.round((float) Long.parseLong(dev[3]) / DISK_UNIT);
+            bean.available += Math.round((float) Long.parseLong(dev[4]) / DISK_UNIT);
             bean.use = dev[5].replace("%", "");
         }
         return bean;
