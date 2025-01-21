@@ -170,16 +170,32 @@
             "showDetail": "Show detail",
             "confirm": "Confirm",
             "portal": "Portal log: portal_{id}.log",
-            "fullMigrationLog":"Full migration log: full_migration.log",
+            "fullMigrationLog": "Full migration log: full_migration.log",
             "checkCheck": "Data check log: check.log",
-            "checkSource":"Data check source log: source.log",
-            "checkSink":"Data check sink log: sink.log",
-            "connectSource":"Incremental migration source log: connect_source.log",
+            "checkSource": "Data check source log: source.log",
+            "checkSink": "Data check sink log: sink.log",
+            "connectSource": "Incremental migration source log: connect_source.log",
             "connectSink": "Incremental migration sink log: connect_sink.log",
             "reverseConnectSource": "Reverse migration source log: reverse_connect_source.log",
             "reverseConnectSink": "Reverse migration sink log: reverse_connect_sink.log",
             "migrationProgress": "Migration process record",
-            "autoRefresh": "Auto refresh"
+            "autoRefresh": "Auto refresh",
+            "fullMigrationDetail": "Full migration detail",
+            "fullCheckDetail": "Full check detail",
+            "sourceTable": "Source Table",
+            "targetTable": "Target table",
+            "checkStatus": "Check status",
+            "success": "Success",
+            "fail": "Fail",
+            "failedRows": "Failed rows",
+            "failReason": "Fail Reason",
+            "downloadFix": "Download the repair script file.",
+            "restart": "Restart",
+            "oneClickFix": "One-click repair",
+            "incrementError": "Incremental migration error",
+            "reverseError": "Reverse migration error",
+            "restartSuccessTip": "Restart the process successfully",
+            "restarting": "Restarting"
         },
         "AddJdbc": {
             "5q0a7i439cg0": "To be detected",
@@ -262,7 +278,7 @@
             "5q0aajl77lg29": "Please enter the directory where the third-party tool is installed",
             "5q0aajl77lg30": "schema_registry port",
             "5q0aajl77lg31": "8081",
-          "5q0aajl77lg33": "Installation method",
+            "5q0aajl77lg33": "Installation method",
             "5q0aajl77lg32": "Note: Third-party tools refer to the confluent tools (including the Kafka zookeeper schemaRegistry) in the portal, which can be bound to the confluent tools installed on other portals for data migration, and the current portal can be reinstalled to migrate data"
         },
         "ToolsParamsConfig": {
@@ -577,7 +593,7 @@
             "5qtkk97a2e28": "Log Parameters:  ",
             "5qtkk97a2e29": "MySQL parameters are correct;",
             "5qtkk97a2e30": "MySQL parameters are incorrect,including:",
-            "5qtkk97a2e31": "MySQ parameters:-;",
+            "5qtkk97a2e31": "MySQL parameters:-;",
             "5qtkk97a2e32": "openGauss parameters are correct;",
             "5qtkk97a2e33": "openGauss parameters are incorrect,including:",
             "5qtkk97a2e34": "openGauss parameters:-;",
@@ -617,22 +633,22 @@
         }
     },
     "third": {
-            "index": {
-                "5q08thptsw80": "Third party software name",
-                "5q08thptsw81": "ip Address",
-                "5q08thptsw82": "zookeeper ip Address",
-                "5q08thptsw83": "schema registry ip Address",
-                "5q08thptsw84": "kafka port",
-                "5q08thptsw85": "zookeeper port",
-                "5q08thptsw86": "schema registry port",
-                "5q08thptsw87": "The associated portal host",
-                "5q08thptsw88": "Please enter an iP address",
-                "5q08thptsw89": "installation path",
-                "5q08thptsw90": "Query",
-                "5q08thptsw91": "Reset",
-                "5q08thptsw92": "The install host",
-                "5q08thptsw93": "Flush",
-                "5q08thptsw94": "Batch delete"
-            }
+        "index": {
+            "5q08thptsw80": "Third party software name",
+            "5q08thptsw81": "ip Address",
+            "5q08thptsw82": "zookeeper ip Address",
+            "5q08thptsw83": "schema registry ip Address",
+            "5q08thptsw84": "kafka port",
+            "5q08thptsw85": "zookeeper port",
+            "5q08thptsw86": "schema registry port",
+            "5q08thptsw87": "The associated portal host",
+            "5q08thptsw88": "Please enter an iP address",
+            "5q08thptsw89": "installation path",
+            "5q08thptsw90": "Query",
+            "5q08thptsw91": "Reset",
+            "5q08thptsw92": "The install host",
+            "5q08thptsw93": "Flush",
+            "5q08thptsw94": "Batch delete"
+        }
     }
 }

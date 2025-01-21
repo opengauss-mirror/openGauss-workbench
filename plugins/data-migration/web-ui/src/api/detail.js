@@ -59,3 +59,27 @@ export function getPhaseAlarmList (taskId, migrationPhase, pageSize, pageNum) {
 export function getAlarmDetail (taskId) {
   return axios.get(`/plugins/data-migration/migration/alert/detail/${taskId}`)
 }
+
+export function queryFullCheckSummary (taskId) {
+  return axios.get(`/plugins/data-migration/migration/query/full/check/summary/${taskId}`)
+}
+
+export function queryFullCheckDetail (fullCheckParam) {
+  return axios.post(`/plugins/data-migration/migration/query/full/check/detail`, fullCheckParam)
+}
+
+export function getOnlineReverseStatus (taskId) {
+  return axios.get(`/plugins/data-migration/migration/check/incremental/reverse/status/${taskId}`)
+}
+
+export function stopOnlineReverseProcess (taskId, name) {
+  return axios.post(`/plugins/data-migration/migration/stop/online/reverse/task/process/${taskId}`, name)
+}
+
+export function startOnlineReverseProcess (taskId, name) {
+  return axios.post(`/plugins/data-migration/migration/start/incremental/reverse/task/process/${taskId}?name=${name}`, name)
+}
+
+export function downloadRepairFile (id, repairFileName) {
+  return axios.get(`/plugins/data-migration/migration/download/repair/file/${id}/${repairFileName}`)
+}

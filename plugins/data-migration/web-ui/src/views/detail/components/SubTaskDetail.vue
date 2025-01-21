@@ -3,26 +3,23 @@
     <template #title>
       <div class="title-con">
         <div class="tab-con">
-          <span
-            class="tab-item"
-            :class="tab-item-active"          
-            >{{
-              $t('components.SubTaskDetail.5q09ruxan0s0', {
-                subTaskId: props.subTaskId
-              })
-            }}{{
+          <span class="tab-item" :class="tab - item - active">{{
+            $t('components.SubTaskDetail.5q09ruxan0s0', {
+              subTaskId: props.subTaskId
+            })
+          }}
+            {{
               subTaskInfo.migrationModelId === MIGRATION_MODE.OFFLINE
-                ? $t('components.SubTaskDetail.5q09t2cud100')
-                : $t('components.SubTaskDetail.5q09t2cudw80')
-            }}）</span
-          >
+              ? $t('components.SubTaskDetail.5q09t2cud100')
+              : $t('components.SubTaskDetail.5q09t2cudw80')
+            }}）</span>
           <span class="task-status">
             {{ $t('components.SubTaskDetail.5q09prnzn6c0') }}
             <b>{{ execSubStatusMap(subTaskInfo.execStatus) }}</b>
           </span>
         </div>
         <div>
-          <span style="font-size: 12px;">{{ $t('components.SubTaskDetail.autoRefresh') }}</span>
+          <span class="refresh-txt">{{ $t('components.SubTaskDetail.autoRefresh') }}</span>
           <el-switch v-model="isRefresh" @change="changeRefresh"></el-switch>
         </div>
       </div>
@@ -35,8 +32,56 @@
         <el-tab-pane :label="$t('components.SubTaskDetail.migrationProgress')" :name="1">
           <div v-if="tabActive === 1 &&
             subTaskInfo.migrationModelId === MIGRATION_MODE.OFFLINE
-            " class="table-con">
-            <big-data-list :full-data="fullData" :sub-task-info="subTaskInfo" :record-counts="recordCounts" />
+            " class="record-con">
+            <div class="record-list">
+              <a-card>
+                <div class="record-item-offline">
+                  {{ $t('components.SubTaskDetail.fullMigrationDetail') }}
+                  <i class="visible-button" @click="offlineFullVisible = !offlineFullVisible">{{
+                    offlineFullVisible
+                    ? $t('components.SubTaskDetail.5q09prnznk00')
+                    : $t('components.SubTaskDetail.5q09prnznms0')
+                  }}</i>
+                </div>
+                <div v-if="offlineFullVisible">
+                  <big-data-list :full-data="fullData" :sub-task-info="subTaskInfo" :record-counts="recordCounts" />
+                </div>
+                <div class="record-item-con">
+                  <span class="info-offline">
+                    <span class="info-title">
+                      <span>{{ $t('components.SubTaskDetail.fullCheckDetail') }}</span>
+                      <i class="visible-button" @click="globalVisible = !globalVisible">{{
+                        globalVisible
+                        ? $t('components.SubTaskDetail.5q09prnznk00')
+                        : $t('components.SubTaskDetail.5q09prnznms0')
+                      }}</i>
+                    </span>
+                    <span class="info-row-offline">
+                      <div :class="{ 'status-text': true, 'status-text-en': currentLocale === 'en-US' }">
+                        <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c4')
+                        }} {{ dataCheckData.total || 0 }}行 </span>
+                        <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c5')
+                        }} {{ dataCheckData.avgSpeed || 0 }}行/s </span>
+                        <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c6')
+                        }} {{ dataCheckData.tableCount || 0 }}
+                          {{
+                            $t('components.SubTaskDetail.5q0a5opxm3c8')
+                          }} </span>
+                        <span>{{ $t('components.SubTaskDetail.5q0a5opxm3c7')
+                        }} {{ dataCheckData.completeCount || 0 }}
+                          {{
+                            $t('components.SubTaskDetail.5q0a5opxm3c8')
+                          }} </span>
+
+                      </div>
+                    </span>
+                  </span>
+                  <full-check-table :id="props.subTaskId" v-model:full-check-page="fullCheckPage"
+                    :full-check-table-data="fullCheckTableData" @refreshTableDate="getFullCheckData"
+                    v-if="globalVisible"></full-check-table>
+                </div>
+              </a-card>
+            </div>
           </div>
           <div v-if="tabActive === 1 &&
             subTaskInfo.migrationModelId === MIGRATION_MODE.ONLINE
@@ -92,10 +137,20 @@
                                     {{
                                       $t('components.SubTaskDetail.5q0a5opxm3c8')
                                     }}</strong></span>
+                                <el-button text class="" @click="showFullCheckDetail = !showFullCheckDetail">{{
+                                  showFullCheckDetail
+                                  ? $t('components.SubTaskDetail.5q09prnznk00')
+                                  : $t('components.SubTaskDetail.5q09prnznms0') }}</el-button>
                               </div>
                             </div>
                           </span>
                           <span class="time">{{ item.createTime }}</span>
+                        </div>
+                        <div v-show="item.statusId === SUB_TASK_STATUS.FULL_CHECKING && showFullCheckDetail"
+                          class="info-row">
+                          <full-check-table :id="props.subTaskId" v-model:full-check-page="fullCheckPage"
+                            :full-check-table-data="fullCheckTableData"
+                            @refreshTableDate="getFullCheckData"></full-check-table>
                         </div>
                         <div v-if="item.statusId === SUB_TASK_STATUS.FULL_RUNNING &&
                           globalVisible
@@ -103,83 +158,113 @@
                           <big-data-list :full-data="fullData" :sub-task-info="subTaskInfo"
                             :record-counts="recordCounts" />
                         </div>
-                        <div v-if="item.statusId === SUB_TASK_STATUS.INCREMENTAL_RUNNING
-                          " class="list-con">
-                          <div class="list-item-con">
-                            <div class="list-title">
-                              <div class="list-title-l">
-                                <icon-info-circle size="15" />
-                                <span>{{ $t('components.SubTaskDetail.5q09tn4uzy40')
-                                }}{{ increaseData.count }}
+                        <template v-if="item.statusId === SUB_TASK_STATUS.INCREMENTAL_RUNNING">
+                          <div class="fix-options list-con" v-if="isIncrement">
+                            <el-checkbox-group v-model="fixOptions">
+                              <el-checkbox value="source">
+                                <span :class="fixStatus.source ? 'success-color' : 'danger-color'">connect-source</span>
+                              </el-checkbox>
+                              <el-checkbox label="connect-sink" value="sink">
+                                <span :class="fixStatus.sink ? 'success-color' : 'danger-color'">connect-sink</span>
+                              </el-checkbox>
+                            </el-checkbox-group>
+                            <el-button text @click="handleFix" :loading="fixLoading" :disabled="!fixOptions.length"
+                              loading-text="重启中">
+                              {{ restartText }}
+                            </el-button>
+                          </div>
+                          <div class="list-con">
+                            <div class="list-item-con">
+                              <div class="list-title">
+                                <div class="list-title-l">
+                                  <icon-info-circle size="15" />
+                                  <span>{{ $t('components.SubTaskDetail.5q09tn4uzy40')
+                                  }}{{ increaseData.count }}
+                                    {{
+                                      $t('components.SubTaskDetail.5q09prnznpk0')
+                                    }}</span>
+                                </div>
+                                <div class="list-title-r">
+                                  <span>{{ increaseData.createTime }}</span>
+                                </div>
+                              </div>
+                              <div class="list-info-em">
+                                <span>{{ $t('components.SubTaskDetail.5q09urmrt580')
+                                }}{{ increaseData.sourceSpeed || 0 }}
+                                  {{
+                                    $t('components.SubTaskDetail.5q09prnzns40')
+                                  }}</span>
+                              </div>
+                              <div class="list-info-em">
+                                <span>{{ $t('components.SubTaskDetail.5q09urmruc00')
+                                }}{{ increaseData.sinkSpeed || 0 }}
+                                  {{
+                                    $t('components.SubTaskDetail.5q09prnzns40')
+                                  }}</span>
+                              </div>
+                              <div class="list-info">
+                                <span>{{ $t('components.SubTaskDetail.5q09urmruhc0')
+                                }}{{ increaseData.rest }}
                                   {{
                                     $t('components.SubTaskDetail.5q09prnznpk0')
                                   }}</span>
                               </div>
-                              <div class="list-title-r">
-                                <span>{{ increaseData.createTime }}</span>
-                              </div>
-                            </div>
-                            <div class="list-info-em">
-                              <span>{{ $t('components.SubTaskDetail.5q09urmrt580')
-                              }}{{ increaseData.sourceSpeed || 0 }}
-                                {{
-                                  $t('components.SubTaskDetail.5q09prnzns40')
-                                }}</span>
-                            </div>
-                            <div class="list-info-em">
-                              <span>{{ $t('components.SubTaskDetail.5q09urmruc00')
-                              }}{{ increaseData.sinkSpeed || 0 }}
-                                {{
-                                  $t('components.SubTaskDetail.5q09prnzns40')
-                                }}</span>
-                            </div>
-                            <div class="list-info">
-                              <span>{{ $t('components.SubTaskDetail.5q09urmruhc0')
-                              }}{{ increaseData.rest }}
-                                {{
-                                  $t('components.SubTaskDetail.5q09prnznpk0')
-                                }}</span>
                             </div>
                           </div>
-                        </div>
-                        <div v-if="item.statusId === SUB_TASK_STATUS.REVERSE_RUNNING" class="list-con">
-                          <div class="list-item-con">
-                            <div class="list-title">
-                              <div class="list-title-l">
-                                <icon-info-circle size="15" />
-                                <span>{{ $t('components.SubTaskDetail.5q09tn4uzy41')
-                                }}{{ reverseData.count }}
+                        </template>
+                        <template v-if="item.statusId === SUB_TASK_STATUS.REVERSE_RUNNING">
+                          <div class="fix-options list-con" v-if="isReverse">
+                            <el-checkbox-group v-model="fixOptions">
+                              <el-checkbox value="source">
+                                <span :class="fixStatus.source ? 'success-color' : 'danger-color'">connect-source</span>
+                              </el-checkbox>
+                              <el-checkbox label="connect-sink" value="sink">
+                                <span :class="fixStatus.source ? 'success-color' : 'danger-color'">connect-sink</span>
+                              </el-checkbox>
+                            </el-checkbox-group>
+                            <el-button text @click="handleFix" :loading="fixLoading" :disabled="!fixOptions.length">
+                              {{ restartText }}
+                            </el-button>
+                          </div>
+                          <div class="list-con">
+                            <div class="list-item-con">
+                              <div class="list-title">
+                                <div class="list-title-l">
+                                  <icon-info-circle size="15" />
+                                  <span>{{ $t('components.SubTaskDetail.5q09tn4uzy41')
+                                  }}{{ reverseData.count }}
+                                    {{
+                                      $t('components.SubTaskDetail.5q09prnznpk0')
+                                    }}</span>
+                                </div>
+                                <div class="list-title-r">
+                                  <span>{{ reverseData.createTime }}</span>
+                                </div>
+                              </div>
+                              <div class="list-info-em">
+                                <span>{{ $t('components.SubTaskDetail.5q09urmrt580')
+                                }}{{ reverseData.sourceSpeed || 0 }}
+                                  {{
+                                    $t('components.SubTaskDetail.5q09prnzns40')
+                                  }}</span>
+                              </div>
+                              <div class="list-info-em">
+                                <span>{{ $t('components.SubTaskDetail.5q09urmruc00')
+                                }}{{ reverseData.sinkSpeed || 0 }}
+                                  {{
+                                    $t('components.SubTaskDetail.5q09prnzns40')
+                                  }}</span>
+                              </div>
+                              <div class="list-info">
+                                <span>{{ $t('components.SubTaskDetail.5q09urmruhc0')
+                                }}{{ reverseData.rest || 0 }}
                                   {{
                                     $t('components.SubTaskDetail.5q09prnznpk0')
                                   }}</span>
                               </div>
-                              <div class="list-title-r">
-                                <span>{{ reverseData.createTime }}</span>
-                              </div>
-                            </div>
-                            <div class="list-info-em">
-                              <span>{{ $t('components.SubTaskDetail.5q09urmrt580')
-                              }}{{ reverseData.sourceSpeed || 0 }}
-                                {{
-                                  $t('components.SubTaskDetail.5q09prnzns40')
-                                }}</span>
-                            </div>
-                            <div class="list-info-em">
-                              <span>{{ $t('components.SubTaskDetail.5q09urmruc00')
-                              }}{{ reverseData.sinkSpeed || 0 }}
-                                {{
-                                  $t('components.SubTaskDetail.5q09prnzns40')
-                                }}</span>
-                            </div>
-                            <div class="list-info">
-                              <span>{{ $t('components.SubTaskDetail.5q09urmruhc0')
-                              }}{{ reverseData.rest || 0 }}
-                                {{
-                                  $t('components.SubTaskDetail.5q09prnznpk0')
-                                }}</span>
                             </div>
                           </div>
-                        </div>
+                        </template>
                       </div>
                     </div>
                   </a-card>
@@ -198,7 +283,8 @@
             <div class="errorLabel" v-else>{{ $t('components.SubTaskDetail.abnormalAlaram') }}</div>
           </template>
           <el-tabs type="card" style="padding-top: 16px;" @tab-change="alarmPhaseChange" v-model="phaseTab">
-            <el-tab-pane :label="$t('components.SubTaskDetail.fullMigration')" :name="item.key" v-for="item in phaseList" :key="item.key">
+            <el-tab-pane :label="$t('components.SubTaskDetail.fullMigration')" :name="item.key" v-for="item in phaseList"
+              :key="item.key">
               <template #label>
                 <div v-if="phaseNums[item.key] && phaseNums[item.key] > 0">
                   <el-badge :value="phaseNums[item.key]">{{ item.label }}</el-badge>
@@ -233,7 +319,8 @@
               </el-table-column>
             </el-table>
             <el-pagination v-model:current-page="pageNum" v-model:pageSize="pageSize" :page-sizes="pageSizes"
-              :total="phaseTotal" :teleported="false" :layout="paginationLayout" @change="fetchPhaseAlarmList" ></el-pagination>
+              :total="phaseTotal" :teleported="false" :layout="paginationLayout"
+              @change="fetchPhaseAlarmList"></el-pagination>
           </div>
         </el-tab-pane>
         <el-tab-pane :label="$t('components.SubTaskDetail.5q09prnzmfw0')" :name="3">
@@ -263,8 +350,19 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount, h, computed } from 'vue'
-import { subTaskDetail, downloadLog, getAlarmDetail, getPhaseAlarmList, getTotalAlarmNum } from '@/api/detail'
+import { ref, watch, onMounted, onBeforeUnmount, h, reactive, computed } from 'vue'
+import {
+  subTaskDetail,
+  downloadLog,
+  getAlarmDetail,
+  getPhaseAlarmList,
+  getTotalAlarmNum,
+  queryFullCheckSummary,
+  queryFullCheckDetail,
+  getOnlineReverseStatus,
+  startOnlineReverseProcess,
+} from '@/api/detail'
+import { Message } from '@arco-design/web-vue'
 import BigDataList from './BigDataList.vue'
 import dayjs from 'dayjs'
 import { useI18n } from 'vue-i18n'
@@ -272,6 +370,7 @@ import { MIGRATION_MODE, SUB_TASK_STATUS } from '@/utils/constants'
 import useLocale from '@/hooks/locale'
 import { IconVisible } from '@computing/opendesign-icons'
 import ErrorDetail from './ErrorDetail.vue'
+import FullCheckTable from './FullCheckTable.vue'
 
 const { currentLocale } = useLocale()
 
@@ -285,7 +384,6 @@ const props = defineProps({
 })
 
 const emits = defineEmits(['update:open'])
-
 const loading = ref(false)
 const visible = ref(false)
 const tabActive = ref(1)
@@ -313,9 +411,12 @@ const execSubStatusMap = (status) => {
     11: t('components.SubTaskDetail.5q09prnzoxc0'),
     12: t('components.SubTaskDetail.5q09prnzp000'),
     13: t('components.SubTaskDetail.5q09prnzp2k0'),
+    30: t('components.SubTaskDetail.incrementError'),
+    40: t('components.SubTaskDetail.reverseError'),
     100: t('components.SubTaskDetail.5q09prnzp540'),
     500: t('components.SubTaskDetail.5q09prnzp740'),
-    1000: t('components.SubTaskDetail.5q09prnzp980')
+    1000: t('components.SubTaskDetail.5q09prnzp980'),
+    3000: t('detail.index.5q09asiwlca0')
   }
   return maps[status]
 }
@@ -370,13 +471,188 @@ watch(visible, (v) => {
 let timer = null
 let alarmNumTimer = null
 let alarmPhaseListTimer = null
+let fullCheckTimer = null
+let onlineReverseStatusTimer = null
 
+watch(
+  () => subTaskInfo.value.execStatus,
+  (v) => {
+    if (v >= SUB_TASK_STATUS.FULL_CHECK_START && !fullCheckTimer) {
+      getFullCheckData()
+      fullCheckTimer = setInterval(() => {
+        getFullCheckData()
+      }, 6000)
+    }
+    if (v >= SUB_TASK_STATUS.INCREMENTAL_START && v <= SUB_TASK_STATUS.REVERSE_CONNECT_ERROR && !onlineReverseStatusTimer) {
+      getFixStatus()
+      onlineReverseStatusTimer = setInterval(() => {
+        getFixStatus()
+      }, 6000)
+    }
+  },
+  { immediate: true }
+)
+
+const fixStatus = ref({
+  source: true,
+  sink: true
+})
+const getFixStatus = async () => {
+  try {
+    const { data, code } = await getOnlineReverseStatus(props.subTaskId)
+    if (code === 200) {
+      fixStatus.value.source = data.source
+      fixStatus.value.sink = data.sink
+    }
+  } catch (error) {
+
+  }
+}
+
+const showFullCheckDetail = ref(false)
+const fullCheckTableData = ref([])
+const fullCheckPage = ref({
+  status: '',
+  pageSize: 10,
+  pageNum: 1,
+  loading: false,
+  total: 0,
+})
+const getFullCheckData = async () => {
+  fullCheckPage.value.loading = true
+  try {
+    const { pageNum, pageSize, status } = fullCheckPage.value
+    const res = await queryFullCheckDetail({
+      id: props.subTaskId,
+      status,
+      pageSize,
+      pageNum,
+    })
+    if (res.code === 200) {
+      fullCheckTableData.value = res.data.records
+      fullCheckPage.value.total = res.data.total
+    }
+    fullCheckPage.value.loading = false
+  } catch (error) {
+    fullCheckPage.value.loading = false
+
+  }
+}
+
+const initBasicData = () => {
+  if (subTaskInfo.value.migrationModelId === MIGRATION_MODE.ONLINE) {
+    descData.value = [
+      {
+        label: t('components.SubTaskDetail.5q09prnzqck0'),
+        value: '--',
+        span: 3
+      },
+      {
+        label: t('components.SubTaskDetail.5q09prnzqew0'),
+        value: '--',
+        span: 2
+      },
+      {
+        label: t('components.SubTaskDetail.5q09prnzqxs0'),
+        value: '--',
+        span: 3
+      },
+      {
+        label: t('components.SubTaskDetail.5q09prnzqzs0'),
+        value: '--',
+        span: 2
+      },
+      {
+        label: t('components.SubTaskDetail.5q09prnzr2o0'),
+        value: '--',
+        span: 3
+      },
+      {
+        label: t('components.SubTaskDetail.5q09prnzr4s0'),
+        value: `-- ${t(
+          'components.SubTaskDetail.5q0a5opxm3c0'
+        )} --`,
+        span: 2
+      },
+      {
+        label: t('components.SubTaskDetail.5q09prnzux40'),
+        value: '--',
+        span: 3
+      },
+      {
+        label: t('components.SubTaskDetail.5q09prnzqnw0'),
+        value: '--',
+        span: 2
+      },
+      {
+        label: t('components.SubTaskDetail.5q09prnzux41'),
+        value: '--',
+        span: 5
+      }
+    ]
+  } else {
+    descData.value = [
+      {
+        label: t('components.SubTaskDetail.5q09prnzqck0'),
+        value: '--',
+        span: 3
+      },
+      {
+        label: t('components.SubTaskDetail.5q09prnzqew0'),
+        value: '--',
+        span: 2
+      },
+      {
+        label: t('components.SubTaskDetail.5q09prnzqgw0'),
+        value: '--',
+        span: 3
+      },
+      {
+        label: t('components.SubTaskDetail.5q09prnzqk00'),
+        value: '--',
+        span: 2
+      },
+      {
+        label: t('components.SubTaskDetail.5q09prnzqlw0'),
+        value: '--',
+        span: 3
+      },
+      {
+        label: t('components.SubTaskDetail.5q09prnzqnw0'),
+        value: '--',
+        span: 2
+      },
+      {
+        label: t('components.SubTaskDetail.5q09prnzqvk0'),
+        value: '--',
+
+        span: 5
+      },
+      {
+        label: t('components.SubTaskDetail.5q09prnzux41'),
+        value: '--',
+        span: 5
+      }
+    ]
+  }
+}
+
+const offlineFullVisible = ref(true)
 watch(
   () => props.open,
   (v) => {
     if (v) {
+      initBasicData()
+      fullCheckPage.value = {
+        status: '',
+        pageSize: 10,
+        pageNum: 1,
+        loading: false,
+        total: 0,
+      }
       tabActive.value = props.tab
       globalVisible.value = false
+      offlineFullVisible.value = true
       increaseData.value = {}
       reverseData.value = {}
       logData.value = []
@@ -394,6 +670,7 @@ watch(
       }
     } else {
       globalVisible.value = false
+      offlineFullVisible.value = true
       increaseData.value = {}
       reverseData.value = {}
       subTaskInfo.value = {}
@@ -487,7 +764,6 @@ const fetchPhaseAlarmList = async () => {
     }
   } catch (error) {
     tableLoading.value = false
-    console.log(error)
   }
 }
 
@@ -562,6 +838,41 @@ const handleDownloadLog = (url) => {
   })
 }
 
+const restartText = computed(() => {
+  if (fixLoading.value) {
+    return t('components.SubTaskDetail.restarting')
+  } else {
+    return fixStatus.value.sink && fixStatus.value.source ? t('components.SubTaskDetail.restart') :
+      t('components.SubTaskDetail.oneClickFix')
+  }
+})
+const fixOptions = ref([])
+const fixLoading = ref(false)
+const isIncrement = computed(() => {
+  const incrementSet = new Set([SUB_TASK_STATUS.INCREMENTAL_START, SUB_TASK_STATUS.INCREMENTAL_RUNNING, SUB_TASK_STATUS.INCREMENTAL_FINISHED, SUB_TASK_STATUS.INCREMENTAL_STOPPED, SUB_TASK_STATUS.INCREMENTAL_CONNECT_ERROR])
+  return incrementSet.has(subTaskInfo.value.execStatus)
+})
+const isReverse = computed(() => {
+  const reverseSet = new Set([SUB_TASK_STATUS.REVERSE_START, SUB_TASK_STATUS.REVERSE_RUNNING, SUB_TASK_STATUS.REVERSE_STOP, SUB_TASK_STATUS.REVERSE_CONNECT_ERROR])
+  return reverseSet.has(subTaskInfo.value.execStatus)
+})
+const handleFix = async () => {
+  fixLoading.value = true
+  try {
+    let name = fixOptions.value.length === 2 ? 'reset' : fixOptions.value[0]
+    if (isReverse.value) {
+      name = `reverse-${name}`
+    }
+    const startRes = await startOnlineReverseProcess(props.subTaskId, name)
+    if (startRes.code === 200) {
+      Message.success(t('components.SubTaskDetail.restartSuccessTip'))
+    }
+    fixLoading.value = false
+  } catch (error) {
+    fixLoading.value = false
+  }
+}
+
 const isRefresh = ref(true)
 const changeRefresh = (e) => {
   if (e) {
@@ -572,12 +883,26 @@ const changeRefresh = (e) => {
 }
 
 const stopGetSubTaskDetail = () => {
-  clearInterval(timer)
-  clearInterval(alarmPhaseListTimer)
-  clearInterval(alarmNumTimer)
-  timer = null
-  alarmNumTimer = null
-  alarmPhaseListTimer = null
+  if (timer) {
+    clearInterval(timer)
+    timer = null
+  }
+  if (alarmNumTimer) {
+    clearInterval(alarmNumTimer)
+    alarmNumTimer = null
+  }
+  if (alarmPhaseListTimer) {
+    clearInterval(alarmPhaseListTimer)
+    alarmPhaseListTimer = null
+  }
+  if (fullCheckTimer) {
+    clearInterval(fullCheckTimer)
+    fullCheckTimer = null
+  }
+  if (onlineReverseStatusTimer) {
+    clearInterval(onlineReverseStatusTimer)
+    onlineReverseStatusTimer = null
+  }
 }
 const startGetSubTaskDetail = () => {
   timer = setInterval(() => { getSubTaskDetail() }, 6000)
@@ -587,6 +912,16 @@ const startGetSubTaskDetail = () => {
   alarmPhaseListTimer = setInterval(() => {
     fetchPhaseAlarmList()
   }, 6000)
+  if (subTaskInfo.value.execStatus >= SUB_TASK_STATUS.FULL_CHECK_START && !fullCheckTimer) {
+    fullCheckTimer = setInterval(() => {
+      getFullCheckData()
+    }, 6000)
+  }
+  if (subTaskInfo.value.execStatus >= SUB_TASK_STATUS.INCREMENTAL_START && subTaskInfo.value.execStatus <= SUB_TASK_STATUS.REVERSE_CONNECT_ERROR && !onlineReverseStatusTimer) {
+    onlineReverseStatusTimer = setInterval(() => {
+      getFixStatus()
+    }, 6000)
+  }
 }
 
 const getSubTaskDetail = () => {
@@ -880,7 +1215,7 @@ const getSubTaskDetail = () => {
       ]
 
       descData.value =
-        res.data.task.migrationModelId === 1 ? offlineDesc : onlineDesc
+        res.data.task.migrationModelId === MIGRATION_MODE.OFFLINE ? offlineDesc : onlineDesc
 
       // log
       logData.value = res.data.logs.map((item) => {
@@ -923,26 +1258,11 @@ onMounted(() => {
   visible.value = props.open
 })
 onBeforeUnmount(() => {
-  if (timer) {
-    clearInterval(timer)
-    timer = null
-  }
-  if (alarmNumTimer) {
-    clearInterval(alarmNumTimer)
-    alarmNumTimer = null
-  }
-  if (alarmPhaseListTimer) {
-    clearInterval(alarmPhaseListTimer)
-    alarmPhaseListTimer = null
-  }
+  stopGetSubTaskDetail()
 })
 </script>
 
 <style lang="less" scoped>
-:deep(.el-loading-mask) {
-  --o-loading-mask-color: transparent;
-}
-
 :deep(.el-table thead) {
   height: 40px
 }
@@ -976,11 +1296,31 @@ onBeforeUnmount(() => {
 }
 
 .mainTabs {
+  .danger {
+    color: var(--o-color-danger);
+  }
+
+  .success {
+    color: var(--o-color-success);
+  }
 
   margin-top: 20px;
 
+
+  :deep(.el-loading-mask) {
+    --o-loading-mask-color: transparent;
+  }
+
+  :deep(.el-popper) {
+    max-width: 800px;
+  }
+
   :deep(.el-table th.el-table__cell) {
     background-color: #f2f3f5;
+  }
+
+  :deep(.el-table+.el-loading-mask+.el-pagination, .el-table+.el-pagination) {
+    margin-top: 8px
   }
 
   .errorLabel {
@@ -995,6 +1335,11 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+
+  .refresh-txt {
+    font-size: 12px;
+    padding-right: 8px;
+  }
 
   .tab-con {
     .tab-item {
@@ -1045,12 +1390,41 @@ onBeforeUnmount(() => {
   .record-con {
     margin-top: 20px;
 
+    .status-icon {
+      display: flex;
+      align-items: center
+    }
+
     .record-title {
       font-weight: bold;
       margin-bottom: 10px;
     }
 
     .record-list {
+      .record-item-offline {
+        display: flex;
+        font-size: 13px
+      }
+
+      .visible-button {
+        cursor: pointer;
+        font-style: normal;
+        color: rgb(var(--primary-6));
+        margin-right: 4px;
+        margin-left: 4px
+      }
+
+      .info-row-offline {
+        color: var(--color-text-3)
+      }
+
+      .info-offline {
+        display: flex;
+        font-size: 13px;
+        justify-content: space-between;
+        padding-top: 8px
+      }
+
       :deep(.arco-steps-item) {
         &:last-child {
           margin-right: 16px;
@@ -1132,6 +1506,16 @@ onBeforeUnmount(() => {
               font-size: 12px;
               color: var(--color-text-3);
             }
+          }
+
+          .fix-options {
+            background-color: #f2f3f5;
+            width: 100%;
+            height: 40px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
           }
 
           .list-con {
