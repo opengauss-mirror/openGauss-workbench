@@ -153,6 +153,18 @@ START 1
 CACHE 1;
 END IF;
 
+
+IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_tb_migration_task_check_progress_summary_id'' )
+THEN
+CREATE SEQUENCE "public"."sq_tb_migration_task_check_progress_summary_id"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+END IF;
+
+
 RETURN 0;
 END;'
 LANGUAGE plpgsql;
@@ -1070,7 +1082,7 @@ VALUES(25, 'openEuler', '22.03', 'aarch64', 'https://opengauss.obs.cn-south-1.my
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_alert" (
-    "id" int8 NOT NULL DEFAULT nextval('sq_tb_migration_tool_portal_download_info_id'::regclass),
+    "id" int8 NOT NULL DEFAULT nextval('sq_tb_migration_task_alert_id'::regclass),
     "task_id" int8 NOT NULL,
     "migration_phase" int8 NOT NULL,
     "date_time" varchar(24) NOT NULL,
@@ -1112,3 +1124,65 @@ CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_alert_detail" (
 
 COMMENT ON COLUMN "public"."tb_migration_task_alert_detail"."alert_id" IS '告警信息主键ID';
 COMMENT ON COLUMN "public"."tb_migration_task_alert_detail"."detail" IS '告警对应的日志文本';
+
+
+-- ----------------------------
+-- Table structure for tb_migration_task_check_progress_detail
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_check_progress_detail" (
+        "id" varchar(255) NOT NULL,
+        "task_id" int8 NOT NULL,
+        "schema_name" varchar(255),
+        "source_name" varchar(255),
+        "sink_name" varchar(255),
+        "status" varchar(16),
+        "failed_rows" int8,
+        "repair_file_name" varchar(255),
+        "message" text,
+        "create_time" timestamp DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "tb_migration_task_check_progress_detail_pkey" PRIMARY KEY ("id")
+    );
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_detail"."id" IS 'ID';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_detail"."task_id" IS '迁移任务ID';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_detail"."schema_name" IS '迁移任务源端Schema名称';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_detail"."source_name" IS '迁移任务源端表名称';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_detail"."sink_name" IS '迁移任务目标端表名称';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_detail"."status" IS '迁移任务表校验结果';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_detail"."failed_rows" IS '迁移任务表校验失败行数';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_detail"."repair_file_name" IS '迁移任务表校验失败修复脚本名称';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_detail"."message" IS '迁移任务表校验信息';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_detail"."create_time" IS '迁移任务表记录创建时间';
+
+
+
+-- ----------------------------
+-- Table structure for tb_migration_task_check_progress_summary
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_check_progress_summary" (
+   "id" int8 NOT NULL DEFAULT nextval('sq_tb_migration_task_check_progress_summary_id'::regclass),
+    "task_id" int8 NOT NULL,
+    "source_db" varchar(255),
+    "sink_db" varchar(255),
+    "total" int8,
+    "avg_speed" int4,
+    "completed" int4,
+    "table_count" int4,
+    "start_time" timestamp,
+    "end_time" timestamp,
+    "status" varchar(16),
+    CONSTRAINT "tb_migration_task_check_progress_summary_pkey" PRIMARY KEY ("id")
+    );
+
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_summary"."id" IS '迁移全量校验进度表详情主键ID';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_summary"."task_id" IS '迁移任务ID';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_summary"."source_db" IS '迁移任务源端表名称';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_summary"."sink_db" IS '迁移任务目标端表名称';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_summary"."total" IS '迁移任务校验总记录数';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_summary"."avg_speed" IS '迁移任务平均校验速率';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_summary"."completed" IS '迁移任务完成表数量';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_summary"."table_count" IS '迁移任务校验表数量';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_summary"."start_time" IS '迁移任务开始时间';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_summary"."end_time" IS '迁移任务截止时间';
+COMMENT ON COLUMN "public"."tb_migration_task_check_progress_summary"."status" IS '迁移任务是否完成';

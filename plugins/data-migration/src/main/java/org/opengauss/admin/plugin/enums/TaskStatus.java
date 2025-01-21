@@ -42,6 +42,7 @@ public enum TaskStatus {
     FULL_CHECKING(5, "full_checking"),
     FULL_CHECK_FINISH(6, "full_check_finish"),
     INCREMENTAL_START(7, "incremental_start"),
+    INCREMENTAL_PAUSE(30, "incremental_pause"),
     INCREMENTAL_RUNNING(8, "incremental_run"),
     // when click stop incremental
     INCREMENTAL_FINISHED(9, "incremental_finished"),
@@ -50,6 +51,7 @@ public enum TaskStatus {
     REVERSE_START(11, "reverse_start"),
     REVERSE_RUNNING(12, "reverse_run"),
     REVERSE_STOP(13, "reverse_stop"),
+    REVERSE_PAUSE(40, "reverse_pause"),
     MIGRATION_FINISH(100, "migration_finish"),
     MIGRATION_ERROR(500, "error"),
     WAIT_RESOURCE(1000, "wait_resource"),
@@ -73,9 +75,16 @@ public enum TaskStatus {
         return command;
     }
 
-    public String getCommandByCode(Integer codeType) {
+    /**
+     * get command by code
+     *
+     * @param codeType command type
+     * @return command
+     */
+    public static String getCommandByCode(Integer codeType) {
         Optional<TaskStatus> first = Arrays.stream(TaskStatus.values())
-                .filter(x -> x.getCode().equals(codeType)).findFirst();
+            .filter(x -> x.getCode().equals(codeType))
+            .findFirst();
         if (first != null) {
             return first.get().getCommand();
         }

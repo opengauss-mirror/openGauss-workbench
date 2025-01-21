@@ -56,15 +56,21 @@ public class DataMigrationApplicationRunner implements ApplicationRunner {
             try {
                 migrationTaskService.doOfflineTaskRunScheduler();
             } catch (Exception e) {
-                log.error("OffLineTaskRunScheduler error", e.getMessage());
+                log.error("OffLineTaskRunScheduler error {}", e.getMessage());
             }
         });
-
         threadPoolTaskExecutor.submit(() -> {
             try {
                 migrationMainTaskService.doRefreshMainTaskStatus();
             } catch (Exception e) {
-                log.error("RefreshMainTaskStatus error", e.getMessage());
+                log.error("RefreshMainTaskStatus error {}", e.getMessage());
+            }
+        });
+        threadPoolTaskExecutor.submit(() -> {
+            try {
+                migrationTaskService.initMigrationTaskCheckProgressMonitor();
+            } catch (Exception e) {
+                log.error("init migration task check progress monitor error {}", e.getMessage());
             }
         });
     }

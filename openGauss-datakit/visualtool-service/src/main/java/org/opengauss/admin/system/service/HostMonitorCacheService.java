@@ -84,6 +84,7 @@ public class HostMonitorCacheService {
         for (OpsHostEntity host : list) {
             cacheHostMap.put(host.getHostId(), host);
         }
+        initCache();
         // host static info, support refresh data per minute
         scheduledExecutorService.scheduleWithFixedDelay(() -> {
             Thread.currentThread().setName("host-monitor");
@@ -100,7 +101,7 @@ public class HostMonitorCacheService {
                     log.warn("monitor host cache {} error : ", host.getPublicIp(), ex);
                 }
             });
-        }, 0, 5 * 60, TimeUnit.SECONDS);
+        }, 0, 10 * 60, TimeUnit.SECONDS);
         // host dynamic info,support seconds level data refresh
         scheduledExecutorService.scheduleWithFixedDelay(() -> {
             Thread.currentThread().setName("host-realtime-monitor");
@@ -117,7 +118,21 @@ public class HostMonitorCacheService {
                     log.warn("monitor host cache {} error : {}", host.getPublicIp(), ex.getMessage());
                 }
             });
-        }, 2, 6, TimeUnit.SECONDS);
+        }, 1, 30, TimeUnit.SECONDS);
+    }
+
+    private void initCache() {
+        cacheHostMap.values().forEach(host -> {
+            try {
+                OpsHostUserEntity user = getHostUserRootOrNormal(host.getHostId());
+                SshLogin sshLogin = new SshLogin(host.getPublicIp(), host.getPort(), user.getUsername(),
+                    encryptionUtils.decrypt(user.getPassword()));
+                cacheHostFixedInfo(host.getHostId(), sshLogin);
+                cacheHostRealtimeInfo(host.getHostId(), sshLogin);
+            } catch (OpsException ex) {
+                log.warn("monitor host cache {} error : ", host.getPublicIp(), ex);
+            }
+        });
     }
 
     private synchronized String getCacheValue(String hostId, String key) {
@@ -267,20 +282,21 @@ public class HostMonitorCacheService {
                 if (line.contains("Architecture")) {
                     String[] arch = line.split(":");
                     hostInfoMap.put(CacheConstants.CPU_ARCH, arch[1].trim());
-                } else if (line.contains("CPU(s):") && !line.contains("node")) {
+                    continue;
+                }
+                if (line.contains("CPU(s):") && !line.contains("node")) {
                     String[] arch = line.split(":");
                     hostInfoMap.put(CacheConstants.CPU_CORE_NUM, arch[1].trim());
-                } else if (line.contains("CPUmaxMHz:")) {
-                    // arm frequency
-                    String[] arch = line.split(":");
-                    hostInfoMap.put(CacheConstants.CPU_FREQUENCY, toCpuGHz(arch[1].trim()));
-                } else if (line.contains("CPUMHz:")) {
-                    // x86 frequency
-                    String[] arch = line.split(":");
-                    hostInfoMap.put(CacheConstants.CPU_FREQUENCY, toCpuGHz(arch[1].trim()));
-                } else {
-                    log.debug("Unknown cpu info: {}", line);
+                    continue;
                 }
+                // CPUmaxMHz arm frequency ;   CPUMHz x86 frequency
+                if (line.contains("CPUmaxMHz:") || line.contains("CPUMHz:")) {
+                    String[] arch = line.split(":");
+                    hostInfoMap.put(CacheConstants.CPU_FREQUENCY, toCpuGHz(arch[1].trim()));
+                }
+            }
+            if ((!ofCpu.contains("CPU max MHz:")) && (!ofCpu.contains("CPU MHz:"))) {
+                hostInfoMap.put(CacheConstants.CPU_FREQUENCY, "Unknown Frequency Of lscpu cmd");
             }
         } catch (OpsException ex) {
             log.error("error occurred while getting cpu monitor {}", ex.getMessage());

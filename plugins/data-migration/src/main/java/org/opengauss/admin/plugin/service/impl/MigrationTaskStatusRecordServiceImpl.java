@@ -24,7 +24,6 @@
 
 package org.opengauss.admin.plugin.service.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.map.MapUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -33,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.plugin.constants.TaskConstant;
 import org.opengauss.admin.plugin.domain.MigrationTaskOperateRecord;
 import org.opengauss.admin.plugin.domain.MigrationTaskStatusRecord;
+import org.opengauss.admin.plugin.enums.TaskStatus;
 import org.opengauss.admin.plugin.mapper.MigrationTaskStatusRecordMapper;
 import org.opengauss.admin.plugin.service.MigrationTaskOperateRecordService;
 import org.opengauss.admin.plugin.service.MigrationTaskStatusRecordService;
@@ -49,15 +49,13 @@ import java.util.stream.Collectors;
  **/
 @Service
 @Slf4j
-public class MigrationTaskStatusRecordServiceImpl extends ServiceImpl<MigrationTaskStatusRecordMapper, MigrationTaskStatusRecord> implements MigrationTaskStatusRecordService {
-
-
+public class MigrationTaskStatusRecordServiceImpl
+    extends ServiceImpl<MigrationTaskStatusRecordMapper, MigrationTaskStatusRecord>
+    implements MigrationTaskStatusRecordService {
     @Autowired
     private MigrationTaskOperateRecordService migrationTaskOperateRecordService;
-
     @Autowired
     private MigrationTaskStatusRecordMapper migrationTaskStatusRecordMapper;
-
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -65,31 +63,59 @@ public class MigrationTaskStatusRecordServiceImpl extends ServiceImpl<MigrationT
         LambdaQueryWrapper<MigrationTaskStatusRecord> query = new LambdaQueryWrapper<>();
         query.eq(MigrationTaskStatusRecord::getTaskId, taskId);
         this.remove(query);
-        Map<Integer, List<Map<String, Object>>> status = statusRecord.stream().collect(Collectors.groupingBy(r -> MapUtil.getInt(r, "status")));
-        List<MigrationTaskStatusRecord> recordList = new ArrayList<>();
-        status.entrySet().stream().forEach(m -> {
-            Integer operateType = TaskConstant.TASK_STATUS_OPERATE_MAPPING.get(m.getKey());
-            if (operateType != null) {
-                MigrationTaskStatusRecord record = new MigrationTaskStatusRecord();
-                MigrationTaskOperateRecord lastOperateRecord = migrationTaskOperateRecordService.getRecordByTaskIdAndOperType(taskId, operateType);
-                if (lastOperateRecord != null) {
-                    record.setOperateId(lastOperateRecord.getId());
-                }
-                record.setStatusId(m.getKey());
-                record.setTaskId(taskId);
-                if (m.getValue().size() > 0) {
-                    Long timestamp = MapUtil.getLong(m.getValue().get(0), "timestamp");
-                    record.setCreateTime(DateUtil.date(timestamp));
-                }
-                MigrationTaskStatusRecord sameStatusRecord = CollUtil.findOne(recordList, item -> item.getStatusId().equals(record.getStatusId()));
-                if (sameStatusRecord == null) {
-                    recordList.add(record);
-                }
+        LinkedList<MigrationTaskStatusRecord> recordList = new LinkedList<>();
+        for (Map<String, Object> statusMap : statusRecord) {
+            Integer status = MapUtil.getInt(statusMap, "status");
+            if (isEqualLastStatus(recordList, status) || Objects.equals(status, TaskStatus.MIGRATION_ERROR.getCode())) {
+                continue;
             }
-        });
-        if (recordList.size() > 0) {
+            deleteOlderRecordOfRepeatStatus(recordList, status);
+            if (isEqualLastStatus(recordList, TaskStatus.INCREMENTAL_PAUSE.getCode()) || isEqualLastStatus(recordList,
+                TaskStatus.REVERSE_PAUSE.getCode())) {
+                recordList.removeLast();
+                continue;
+            }
+            addMigrationTaskStatusRecord(recordList, taskId, status, statusMap);
+        }
+        if (!recordList.isEmpty()) {
             this.saveBatch(recordList);
         }
+    }
+
+    private void deleteOlderRecordOfRepeatStatus(LinkedList<MigrationTaskStatusRecord> recordList, Integer status) {
+        if (recordList.isEmpty()) {
+            return;
+        }
+        List<MigrationTaskStatusRecord> delRes = recordList.stream()
+            .filter(record -> Objects.equals(record.getStatusId(), status))
+            .collect(Collectors.toList());
+        if (!delRes.isEmpty()) {
+            recordList.removeAll(delRes);
+        }
+    }
+
+    private void addMigrationTaskStatusRecord(LinkedList<MigrationTaskStatusRecord> recordList, Integer taskId,
+        Integer status, Map<String, Object> statusMap) {
+        Integer operateType = TaskConstant.TASK_STATUS_OPERATE_MAPPING.get(status);
+        if (!TaskConstant.TASK_STATUS_OPERATE_MAPPING.containsKey(status)) {
+            log.warn("status record of operate type is invalid,taskId={} status={}", taskId, status);
+            return;
+        }
+        MigrationTaskStatusRecord record = new MigrationTaskStatusRecord();
+        MigrationTaskOperateRecord lastRecord = migrationTaskOperateRecordService.getRecordByTaskIdAndOperType(taskId,
+            operateType);
+        if (lastRecord != null) {
+            record.setOperateId(lastRecord.getId());
+        }
+        record.setStatusId(status);
+        record.setTaskId(taskId);
+        Long timestamp = MapUtil.getLong(statusMap, "timestamp");
+        record.setCreateTime(DateUtil.date(timestamp));
+        recordList.addLast(record);
+    }
+
+    private boolean isEqualLastStatus(LinkedList<MigrationTaskStatusRecord> recordList, Integer status) {
+        return !recordList.isEmpty() && Objects.equals(recordList.getLast().getStatusId(), status);
     }
 
     @Override

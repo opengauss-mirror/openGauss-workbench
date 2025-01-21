@@ -32,6 +32,7 @@ import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -51,11 +52,15 @@ public class AdminApplicationRunner implements ApplicationRunner {
     private HostMonitorCacheService hostMonitorCacheService;
     @Resource
     private ISysSettingService sysSettingService;
+    @Resource
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
         this.encryptionUtils.refreshKeyPair(false);
         sysSettingService.initHttpProxy();
-        hostMonitorCacheService.initHostMonitorCacheService();
+        threadPoolTaskExecutor.submit(() -> {
+            hostMonitorCacheService.initHostMonitorCacheService();
+        });
     }
 }

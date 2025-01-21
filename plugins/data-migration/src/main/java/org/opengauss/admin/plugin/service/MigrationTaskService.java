@@ -28,9 +28,13 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTask;
+import org.opengauss.admin.plugin.domain.MigrationTaskCheckProgressDetail;
+import org.opengauss.admin.plugin.domain.MigrationTaskCheckProgressSummary;
 import org.opengauss.admin.plugin.domain.MigrationTaskGlobalParam;
 import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
 import org.opengauss.admin.plugin.enums.TaskStatus;
+import org.opengauss.admin.plugin.vo.FullCheckParam;
+import org.opengauss.admin.plugin.vo.TaskProcessStatus;
 
 import java.util.List;
 import java.util.Map;
@@ -40,6 +44,10 @@ import java.util.Map;
  * @date 2023/01/14 09:01
  */
 public interface MigrationTaskService extends IService<MigrationTask> {
+    /**
+     * Initialize the migration task check progress monitor.
+     */
+    void initMigrationTaskCheckProgressMonitor();
 
     IPage<MigrationTask> selectList(IPage<MigrationTask> page, Integer mainTaskId);
 
@@ -120,10 +128,12 @@ public interface MigrationTaskService extends IService<MigrationTask> {
      * run task
      *
      * @param h MigrationTaskHostRef Object
-     * @param t  MigrationTask Object
-     * @param globalParams
+     * @param t MigrationTask Object
+     * @param globalParams globalParams
+     * @param operateUsername operateUsername
      */
-    void runTask(MigrationTaskHostRef h, MigrationTask t, List<MigrationTaskGlobalParam> globalParams);
+    void runTask(MigrationTaskHostRef h, MigrationTask t, List<MigrationTaskGlobalParam> globalParams,
+        String operateUsername);
 
     /**
      * subtask Execution Offline Scheduler
@@ -141,4 +151,46 @@ public interface MigrationTaskService extends IService<MigrationTask> {
      */
     boolean execMigrationCheck(MigrationHostPortalInstall installHost, MigrationTask t,
         List<MigrationTaskGlobalParam> globalParams, String command);
+
+    /**
+     * check status of incremental or reverse migration task
+     *
+     * @param id task id
+     * @return status
+     */
+    TaskProcessStatus checkStatusOfIncrementalOrReverseMigrationTask(Integer id);
+
+    /**
+     * start incremental or reverse migration task
+     *
+     * @param id id
+     * @param name name
+     * @return status
+     */
+    TaskProcessStatus startTaskOfIncrementalOrReverseMigrationProcess(Integer id, String name);
+
+    /**
+     * query full check summary of migration task
+     *
+     * @param id id
+     * @return summary
+     */
+    MigrationTaskCheckProgressSummary queryFullCheckSummaryOfMigrationTask(Integer id);
+
+    /**
+     * query full check detail of migration task
+     *
+     * @param fullCheckParam fullCheckParam
+     * @return detail
+     */
+    IPage<MigrationTaskCheckProgressDetail> queryFullCheckDetailOfMigrationTask(FullCheckParam fullCheckParam);
+
+    /**
+     * download repair file
+     *
+     * @param id id
+     * @param repairFileName repairFileName
+     * @return file context
+     */
+    String downloadRepairFile(Integer id, String repairFileName);
 }
