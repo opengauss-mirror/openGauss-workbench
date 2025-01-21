@@ -350,6 +350,8 @@ const execSubStatusMap = (status) => {
     11: t('detail.index.5q09asiwn4k0'),
     12: t('detail.index.5q09asiwna40'),
     13: t('detail.index.5q09asiwncc0'),
+    30: t('components.SubTaskDetail.incrementError'),
+    40: t('components.SubTaskDetail.reverseError'),
     100: t('detail.index.5q09asiwne80'),
     500: t('detail.index.5q09asiwngg0'),
     1000: t('detail.index.5q09asiwnik0'),

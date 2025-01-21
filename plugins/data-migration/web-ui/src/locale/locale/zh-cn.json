@@ -179,7 +179,23 @@
             "reverseConnectSource": "反向迁移source端日志reverse_connect_source.log",
             "reverseConnectSink": "反向迁移sink端日志reverse_connect_sink.log",
             "migrationProgress": "迁移过程记录",
-            "autoRefresh": "自动刷新"
+            "autoRefresh": "自动刷新",
+            "fullMigrationDetail": "全量迁移详情",
+            "fullCheckDetail": "全量校验详情",
+            "sourceTable": "源表",
+            "targetTable": "目的表",
+            "checkStatus": "校验状态",
+            "success": "成功",
+            "fail": "失败",
+            "failedRows": "失败记录数量",
+            "failReason": "失败原因",
+            "downloadFix": "下载修复脚本文件",
+            "restart": "重启",
+            "oneClickFix": "一键修复",
+            "incrementError": "增量迁移出错",
+            "reverseError": "反向迁移出错",
+            "restartSuccessTip": "重启进程成功",
+            "restarting": "重启中"
         },
         "AddJdbc": {
             "5q0a7i439cg0": "待检测",
@@ -262,7 +278,7 @@
             "5q0aajl77lg29": "请输入第三方工具安装目录",
             "5q0aajl77lg30": "schema_registry 端口",
             "5q0aajl77lg31": "8081",
-          "5q0aajl77lg33": "安装方式",
+            "5q0aajl77lg33": "安装方式",
             "5q0aajl77lg32": "说明：第三方工具指的是portal中的confluent工具(包含kafka zookeeper schemaRegistry), 支持绑定其他portal已安装的confluent工具进行数据迁移，支持当前portal重新安装confluent工具进行数据迁移"
         },
         "ParamsConfig": {
@@ -578,7 +594,7 @@
             "5qtkk97a2e28": "日志参数：  ",
             "5qtkk97a2e29": "MySQL参数正确；",
             "5qtkk97a2e30": "MySQL参数不正确，包括：",
-            "5qtkk97a2e31": "MySQ参数：-；",
+            "5qtkk97a2e31": "MySQL参数：-；",
             "5qtkk97a2e32": "openGauss参数正确；",
             "5qtkk97a2e33": "openGauss参数不正确，包括：",
             "5qtkk97a2e34": "openGauss参数：-；",

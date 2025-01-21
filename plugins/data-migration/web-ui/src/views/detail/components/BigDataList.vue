@@ -41,26 +41,6 @@
               </a-popover>
             </template>
           </a-table-column>
-          <a-table-column data-index="status" align="center">
-            <template #title>
-              <span>{{ $t('components.BigDataList.5q09jzwfq5g0') }}</span>
-              <a-popover content-class="pop-con">
-                <span style="margin-left: 5px; cursor: pointer"
-                  ><icon-filter
-                /></span>
-                <template #content>
-                  <div class="filter-con">
-                    <span>{{ $t('components.BigDataList.5q09jzwfppw0') }}</span>
-                    <a-switch
-                      v-model="onlyCheckError"
-                      size="small"
-                      @change="filterTableData(2)"
-                    />
-                  </div>
-                </template>
-              </a-popover>
-            </template>
-          </a-table-column>
         </template>
       </a-table>
     </div>
@@ -147,34 +127,6 @@
                   >
                     <icon-close-circle-fill
                       v-if="record.status === SUB_TASK_STATUS.FULL_CHECK_FINISH"
-                      size="16"
-                      style="color: #ff7d01"
-                    />
-                    <template #content>
-                      <p>{{ record.errorMsg }}</p>
-                    </template>
-                  </a-popover>
-                </template>
-              </a-table-column>
-              <a-table-column title="" data-index="status" align="center">
-                <template #cell="{ record }">
-                  <span
-                    v-if="record.status === SUB_TASK_STATUS.FULL_CHECK_START"
-                    >{{
-                      record.percent ? (record.percent * 100).toFixed(2) : '0'
-                    }}%</span
-                  >
-                  <icon-check-circle-fill
-                    v-if="record.status === SUB_TASK_STATUS.FULL_CHECKING"
-                    size="16"
-                    style="color: #00b429"
-                  />
-                  <a-popover
-                    :title="$t('components.BigDataList.5q09jzwfqa80')"
-                    position="tr"
-                  >
-                    <icon-close-circle-fill
-                      v-if="record.status === SUB_TASK_STATUS.INCREMENTAL_START"
                       size="16"
                       style="color: #ff7d01"
                     />
