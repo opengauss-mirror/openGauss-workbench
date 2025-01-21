@@ -35,6 +35,8 @@ import static org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum.LITE;
 import static org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum.MINIMAL_LIST;
 
 import com.alibaba.excel.EasyExcel;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.jcraft.jsch.Session;
@@ -117,6 +119,8 @@ public class BatchImportClusterService extends ServiceImpl<OpsClusterMapper, Ops
     private int importSuccessCount;
     private boolean isInfoAndConn;
     private boolean isMasterNormal;
+    @Resource
+    private OpsClusterMapper opsClusterMapper;
 
     /**
      * downloadImportFile
@@ -230,7 +234,7 @@ public class BatchImportClusterService extends ServiceImpl<OpsClusterMapper, Ops
                     closeSession(session);
                 }
             }
-            boolean isSameCluster = checkPortAndIp(hostIps, clusterInfo);
+            boolean isSameCluster = isClusterExist(hostIps, clusterInfo);
             saveCluster(isSameCluster, clusterInfo);
         }
         return list;
@@ -266,24 +270,26 @@ public class BatchImportClusterService extends ServiceImpl<OpsClusterMapper, Ops
         }
     }
 
-    private boolean checkPortAndIp(String[] hosts, OpsImportEntity opsImportEntity) {
-        boolean shouldImportCluster = false;
-        for (int j = 0; j < hosts.length; j++) {
-            try {
-                String host = hosts[j];
-                List<String> clusterId = opsImportSshMapper.checkPublicIpAndPort(host, opsImportEntity.getPort() + "");
-                if (clusterId.get(0) != null) {
-                    shouldImportCluster = true;
-                    opsImportEntity.setImportStatus("fail");
-                    opsImportEntity.setErrorInfo(
-                        "The public IP and port that are inputted already exist, " + "Similar to it are :" + clusterId);
-                }
-            } catch (IndexOutOfBoundsException | NullPointerException e) {
-                log.info("checkPublicIpAndPort, no same cluster");
+    private boolean isClusterExist(String[] hosts, OpsImportEntity opsImportEntity) {
+        LambdaQueryWrapper<OpsClusterEntity> queryWrapper = Wrappers.lambdaQuery(OpsClusterEntity.class)
+                .eq(OpsClusterEntity::getClusterId, opsImportEntity.getClusterName());
+        List<OpsClusterEntity> getSameNameCluster = opsClusterMapper.selectList(queryWrapper);
+        opsClusterEntity.setDeployType(hosts.length > 1 ? CLUSTER : SINGLE_NODE);
+        if (getSameNameCluster.size() > 0) {
+            opsImportEntity.setImportStatus("fail");
+            opsImportEntity.setErrorInfo("The clusterName is already exist.");
+            return true;
+        }
+        for (String host : hosts) {
+            List<String> clusterId = opsImportSshMapper.checkPublicIpAndPort(host, opsImportEntity.getPort() + "");
+            if (clusterId.size() > 0) {
+                opsImportEntity.setImportStatus("fail");
+                opsImportEntity.setErrorInfo("The public IP and port that are inputted already exist, "
+                    + "Similar to it are :" + clusterId);
+                return true;
             }
         }
-        opsClusterEntity.setDeployType(hosts.length > 1 ? CLUSTER : SINGLE_NODE);
-        return shouldImportCluster;
+        return false;
     }
 
     private void selectClusterInfo(OpsParseExcelEntity opsParseExcelEntity) {
