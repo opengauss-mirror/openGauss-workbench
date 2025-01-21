@@ -32,11 +32,13 @@ import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeCon
 import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
 import org.opengauss.admin.plugin.enums.ops.ConnectTypeEnum;
 import org.opengauss.admin.plugin.enums.ops.DatabaseKernelArch;
+import org.opengauss.admin.plugin.mapper.ops.OpsBaseHostMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import javax.annotation.Resource;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -63,6 +65,9 @@ import static java.lang.Math.min;
 @Slf4j
 @Service
 public class GenerateClusterConfigXmlInstance {
+    @Resource
+    private OpsBaseHostMapper opsBaseHostMapper;
+
     private final GenerateClusterConfigXml clusterConfigXml = (installContext) -> {
         String xmlString = "";
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
@@ -154,6 +159,12 @@ public class GenerateClusterConfigXmlInstance {
         backIp1.setAttribute("name", "backIp1");
         backIp1.setAttribute("value", enterpriseInstallNodeConfig.getPrivateIp());
         device.appendChild(backIp1);
+
+        Element sshPort = document.createElement("PARAM");
+        sshPort.setAttribute("name", "sshPort");
+        int port = opsBaseHostMapper.queryPortByHostId(enterpriseInstallNodeConfig.getHostId());
+        sshPort.setAttribute("value", String.valueOf(port));
+        device.appendChild(sshPort);
 
         if (enterpriseInstallConfig.getIsInstallCM()) {
             if (enterpriseInstallNodeConfig.getIsCMMaster()) {
