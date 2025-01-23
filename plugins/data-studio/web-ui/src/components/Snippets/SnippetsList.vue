@@ -5,10 +5,13 @@
         <el-form-item prop="name" :label="$t('common.name')" class="form-item-line1">
           <el-input
             v-model="form.name"
-            :suffix-icon="Search"
             style="width: calc(100% - 130px)"
             @keyup.enter="handleQuery"
-          />
+          >
+            <template #append>
+              <el-button :icon="Search" @click="handleQuery" />
+            </template>
+          </el-input>
           <el-button @click="resetQueryForm" style="margin-left: 5px">
             {{ $t('button.reset') }}
           </el-button>
@@ -141,9 +144,10 @@
     copyToClickBoard(row.code);
     ElMessage.success(t('message.copySuccess'));
   };
-  const handleImportFile = inject<(data: string) => void>('handleImportFile');
+  const handleImportFile =
+    inject<(data: string, textType?: 'import' | 'export') => void>('handleImportFile');
   const handleExport = (row) => {
-    handleImportFile(row.code);
+    handleImportFile(row.code, 'export');
   };
   const handleDelelte = (row) => {
     ElMessageBox.confirm(t('message.deleteSnippet'), t('common.warning'), {

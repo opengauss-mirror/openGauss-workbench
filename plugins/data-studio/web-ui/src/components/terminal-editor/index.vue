@@ -87,6 +87,7 @@
     />
     <ImportFileTipsDialog
       v-model="showImportFileTipsDialog"
+      :textType="importFileTipsDialogType"
       @operation="handleImportFileComfirm"
       @close="handleImportFileClose"
     />
@@ -240,6 +241,7 @@
   const alreadyCloseWindow = ref(false);
   const showCoverageRateDialog = ref(false);
   const showImportFileTipsDialog = ref(false);
+  const importFileTipsDialogType = ref<'import' | 'export'>('import');
   const showSnippetsDialog = ref(false);
   const snippetsRef = ref();
   let importFileData = '';
@@ -851,9 +853,10 @@
     editorRef.value.formatCode();
   };
 
-  const handleImportFile = (data: string) => {
+  const handleImportFile = (data: string, textType?: 'import' | 'export') => {
     if (editorRef.value.getValue().trim()) {
       importFileData = data;
+      importFileTipsDialogType.value = textType || 'import';
       showImportFileTipsDialog.value = true;
     } else {
       editorRef.value.setValue(data);

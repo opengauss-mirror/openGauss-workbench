@@ -440,7 +440,9 @@
     user?.forEach((item) => {
       const row = userRoleList.value.find((u) => u.name == item);
       multipleTableUserRef.value.toggleRowSelection(row, true);
-      selectionUserRoleRows.value.push(row);
+    });
+    nextTick(() => {
+      selectionUserRoleRows.value = multipleTableUserRef.value.getSelectionRows();
     });
   };
 
