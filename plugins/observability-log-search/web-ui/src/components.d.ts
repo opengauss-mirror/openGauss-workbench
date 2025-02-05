@@ -43,6 +43,7 @@ declare module '@vue/runtime-core' {
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
     ElTabPane: typeof import('element-plus/es')['ElTabPane']
     ElTabs: typeof import('element-plus/es')['ElTabs']
+    ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElTree: typeof import('element-plus/es')['ElTree']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     Machines: typeof import('./components/Machines.vue')['default']
@@ -61,6 +62,7 @@ declare module '@vue/runtime-core' {
     MyTable: typeof import('./components/MyTable.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ShowInfo: typeof import('./components/ShowInfo.vue')['default']
     SingleCollapse: typeof import('./components/SingleCollapse.vue')['default']
     SvgIcon: typeof import('./components/SvgIcon.vue')['default']
   }

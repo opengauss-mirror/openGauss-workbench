@@ -385,7 +385,7 @@ ALTER TABLE "public"."notify_way" ADD COLUMN "body" text;
 COMMENT ON COLUMN "public"."notify_way"."body" IS '请求参数,json';
 ALTER TABLE "public"."notify_way" ADD COLUMN "result_code" text;
 COMMENT ON COLUMN "public"."notify_way"."result_code" IS '请求返回成功码,json，比如 {"errcode": 0}';
-ALTER TABLE "public"."notify_way" ADD COLUMN "snmp_ip" varchar(20);
+ALTER TABLE "public"."notify_way" ADD COLUMN "snmp_ip" varchar(130);
 COMMENT ON COLUMN "public"."notify_way"."snmp_ip" IS 'ip地址';
 ALTER TABLE "public"."notify_way" ADD COLUMN "snmp_port" varchar(10);
 COMMENT ON COLUMN "public"."notify_way"."snmp_port" IS '端口';
@@ -698,7 +698,7 @@ COMMENT ON COLUMN "public"."notify_message"."snmp_info" IS 'json格式，message
 
 CREATE TABLE IF NOT EXISTS "public"."alert_config" (
 "id" int8 NOT NULL PRIMARY KEY DEFAULT nextval('sq_alert_config_id'::regclass),
-"alert_ip" varchar(20) COLLATE "pg_catalog"."default",
+"alert_ip" varchar(130) COLLATE "pg_catalog"."default",
 "alert_port" varchar(10) COLLATE "pg_catalog"."default"
 );
 

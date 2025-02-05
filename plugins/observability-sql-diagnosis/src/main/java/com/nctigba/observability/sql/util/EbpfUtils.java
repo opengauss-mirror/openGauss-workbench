@@ -31,6 +31,7 @@ import com.nctigba.observability.sql.mapper.NctigbaEnvMapper;
 import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
 import com.nctigba.observability.sql.model.entity.NctigbaEnvDO;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -63,7 +64,7 @@ public class EbpfUtils {
             throw new HisDiagnosisException("Agent not found");
         }
         var host = hostFacade.getById(env.getHostid());
-        return "http://" + host.getPublicIp() + ":" + env.getPort();
+        return "http://" + IpUtils.formatIp(host.getPublicIp()) + ":" + env.getPort();
     }
 
     /**

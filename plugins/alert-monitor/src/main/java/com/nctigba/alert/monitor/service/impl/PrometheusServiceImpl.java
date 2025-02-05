@@ -62,6 +62,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.opengauss.admin.common.exception.ServiceException;
 import org.opengauss.admin.common.exception.base.BaseException;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
@@ -145,7 +146,8 @@ public class PrometheusServiceImpl implements PrometheusService {
         if (StrUtil.isBlank(env.getPath())) {
             throw new ServiceException("uninstall the prometheus");
         }
-        String url = "http://" + CommonConstants.LOCAL_IP + ":" + env.getPort() + "/api/v1/status/runtimeinfo";
+        String url = "http://" + IpUtils.formatIp(CommonConstants.LOCAL_IP)
+            + ":" + env.getPort() + "/api/v1/status/runtimeinfo";
         try {
             String str = HttpUtil.get(url, CommonConstants.HTTP_TIMEOUT);
             if (StrUtil.isBlank(str)) {
@@ -163,7 +165,9 @@ public class PrometheusServiceImpl implements PrometheusService {
 
     private PrometheusConfigDTO getPromConfig() {
         String promYmlStr = "";
-        String url = "http://" + CommonConstants.LOCAL_IP + ":" + env.getPort() + "/api/v1/status/config";
+        String url = "http://"
+            + IpUtils.formatIp(CommonConstants.LOCAL_IP) + ":" + env.getPort()
+            + "/api/v1/status/config";
         String result = HttpUtil.get(url);
         if (StrUtil.isNotBlank(result)) {
             JSONObject resultJson = new JSONObject(result);
@@ -184,7 +188,7 @@ public class PrometheusServiceImpl implements PrometheusService {
         List<PrometheusConfigDTO.Alert.Alertmanager.Conf> staticConfigs = new ArrayList<>();
         PrometheusConfigDTO.Alert.Alertmanager.Conf conf = new PrometheusConfigDTO.Alert.Alertmanager.Conf();
         List<String> targets = alertConfigList.stream()
-            .map(item -> item.getAlertIp() + ":" + item.getAlertPort())
+            .map(item -> IpUtils.formatIp(item.getAlertIp()) + ":" + item.getAlertPort())
             .collect(Collectors.toList());
         conf.setTargets(targets);
         staticConfigs.add(conf);
@@ -238,7 +242,8 @@ public class PrometheusServiceImpl implements PrometheusService {
         FileUtil.appendUtf8String(YamlUtils.dump(config), configFile);
         Files.copy(configFile.toPath(), Paths.get(path).resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
         Files.delete(configFile.toPath());
-        String res = HttpUtil.post("http://" + CommonConstants.LOCAL_IP + ":" + env.getPort() + "/-/reload", "");
+        String res = HttpUtil.post("http://"
+            + IpUtils.formatIp(CommonConstants.LOCAL_IP) + ":" + env.getPort() + "/-/reload", "");
         log.info(res);
         if (StrUtil.isNotBlank(res)) {
             throw new ServiceException("reload prometheus fail!");
@@ -327,7 +332,7 @@ public class PrometheusServiceImpl implements PrometheusService {
         paramMap.put("start", start);
         paramMap.put("end", end);
         paramMap.put("step", step);
-        String httpUrl = "http://" + url + ":" + port + "/api/v1/query_range";
+        String httpUrl = "http://" + IpUtils.formatIp(url) + ":" + port + "/api/v1/query_range";
         String res = HttpUtil.get(httpUrl, paramMap);
         if (StrUtil.isBlank(res)) {
             return new JSONArray();
@@ -391,7 +396,8 @@ public class PrometheusServiceImpl implements PrometheusService {
                 return;
             }
             Files.delete(filePath);
-            String res = HttpUtil.post("http://" + CommonConstants.LOCAL_IP + ":" + env.getPort() + "/-/reload", "");
+            String res = HttpUtil.post("http://"
+                + IpUtils.formatIp(CommonConstants.LOCAL_IP) + ":" + env.getPort() + "/-/reload", "");
             if (StrUtil.isNotBlank(res)) {
                 throw new ServiceException("reload prometheus fail!");
             }

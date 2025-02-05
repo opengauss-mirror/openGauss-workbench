@@ -70,6 +70,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.exception.ServiceException;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.system.service.ops.IOpsClusterService;
@@ -78,6 +79,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -195,7 +197,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         AlertRecordDTO alertRecordDto = new AlertRecordDTO();
         BeanUtil.copyProperties(record, alertRecordDto);
         if (CommonConstants.PLUGIN.equals(record.getType())) {
-            alertRecordDto.setHostIpAndPort(record.getIp() + ":" + record.getPort());
+            alertRecordDto.setHostIpAndPort(IpUtils.formatIp(record.getIp()) + ":" + record.getPort());
             return alertRecordDto;
         }
         String clusterNodeId0 = record.getClusterNodeId();
@@ -209,10 +211,11 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             item -> item.getHostId().equals(opsClusterNodeEntity.getHostId())).findFirst().get();
         OpsClusterEntity opsClusterEntity = opsClusterEntities.stream().filter(
             item -> item.getClusterId().equals(opsClusterNodeEntity.getClusterId())).findFirst().get();
-        String nodeName = opsClusterEntity.getClusterId() + "/" + opsHostEntity.getPublicIp() + ":"
-            + opsClusterEntity.getPort() + "(" + opsClusterNodeEntity.getClusterRole() + ")";
+        String nodeName = opsClusterEntity.getClusterId() + File.separator
+            + IpUtils.formatIp(opsHostEntity.getPublicIp()) + ":" + opsClusterEntity.getPort()
+            + "(" + opsClusterNodeEntity.getClusterRole() + ")";
         alertRecordDto.setHostIpAndPort(
-            opsHostEntity.getPublicIp() + ":" + opsClusterEntity.getPort()).setNodeRole(
+            IpUtils.formatIp(opsHostEntity.getPublicIp()) + ":" + opsClusterEntity.getPort()).setNodeRole(
             opsClusterNodeEntity.getClusterRole().name()).setNodeName(nodeName);
         return alertRecordDto;
     }
@@ -356,7 +359,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         }
         BeanUtil.copyProperties(alertRecordDO, alertRecordDto);
         if (CommonConstants.PLUGIN.equals(alertRecordDO.getType())) {
-            alertRecordDto.setHostIpAndPort(alertRecordDO.getIp() + ":" + alertRecordDO.getPort());
+            alertRecordDto.setHostIpAndPort(IpUtils.formatIp(alertRecordDO.getIp()) + ":" + alertRecordDO.getPort());
             return alertRecordDto;
         }
         String clusterNodeId = alertRecordDto.getClusterNodeId();
@@ -372,11 +375,11 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         if (StrUtil.isNotBlank(opsClusterNodeEntity.getClusterId())) {
             opsClusterEntity = clusterService.getById(opsClusterNodeEntity.getClusterId());
         }
-        String nodeName =
-            opsClusterEntity.getClusterId() + "/" + opsHostEntity.getPublicIp() + ":" + opsClusterEntity.getPort()
-                + "(" + opsClusterNodeEntity.getClusterRole() + ")";
+        String nodeName = opsClusterEntity.getClusterId() + File.separator
+            + IpUtils.formatIp(opsHostEntity.getPublicIp()) + ":" + opsClusterEntity.getPort()
+            + "(" + opsClusterNodeEntity.getClusterRole() + ")";
         alertRecordDto.setHostIpAndPort(
-                opsHostEntity.getPublicIp() + ":" + opsClusterEntity.getPort())
+                IpUtils.formatIp(opsHostEntity.getPublicIp()) + ":" + opsClusterEntity.getPort())
             .setNodeRole(opsClusterNodeEntity.getClusterRole() != null
                 ? opsClusterNodeEntity.getClusterRole().name() : "").setNodeName(nodeName);
         return alertRecordDto;

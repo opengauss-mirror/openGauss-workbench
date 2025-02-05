@@ -38,6 +38,7 @@ import com.nctigba.observability.instance.service.AgentService;
 import com.nctigba.observability.instance.service.PrometheusService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.Wrapper;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
@@ -72,7 +73,9 @@ public class AgentServiceImpl implements AgentService {
 
     @Override
     public Boolean isAgentAlive(String ip, String port) {
-        String result = HttpUtil.get("http://" + ip + ":" + port + "/config/list", CommonConstants.HTTP_TIMEOUT);
+        String result = HttpUtil.get(
+            "http://" + IpUtils.formatIp(ip) + ":" + port + "/config/list",
+            CommonConstants.HTTP_TIMEOUT);
         if (result == null) {
             return false;
         } else {

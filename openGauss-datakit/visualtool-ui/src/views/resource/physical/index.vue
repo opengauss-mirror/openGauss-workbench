@@ -590,7 +590,7 @@ const chooseTerminalUserRef = ref<null | InstanceType<typeof ChooseTerminalUser>
 let currentTermData = {}
 const checkUser = async (hostData) => {
   currentTermData = hostData
-  const { code, rows } = await hostUserPage(hostData.hostId) 
+  const { code, rows } = await hostUserPage(hostData.hostId)
   if (Number(code) === 200) {
       if (rows?.length === 0) {
         Message.error(t('physical.index.noUserTip'))
@@ -605,7 +605,7 @@ const checkUser = async (hostData) => {
         showTerminal('root')
         return
       }
-      chooseTerminalUserRef.value?.openChooseUser(rows)  
+      chooseTerminalUserRef.value?.openChooseUser(rows)
   }
 }
 

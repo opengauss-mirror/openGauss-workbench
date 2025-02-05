@@ -22,7 +22,7 @@ const props = defineProps({
     required: true
   },
   elProps: {
-    type: Object 
+    type: Object
   },
   focus: {
     type: Boolean,

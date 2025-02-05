@@ -383,7 +383,7 @@ const columns: TableColumnData[] = [
 
 const formRules = computed(() => {
   return {
-    clusterId: [{ required: true, 'validate-trigger': 'change', message: t('components.OneCheck.5mpiji1q3wo0') }],
+    clusterId: [{ required: true, 'validate-trigger': 'change', message: t('components.OneCheck.5mpiji1q3wo0') }]
   }
 })
 
@@ -420,7 +420,7 @@ const handleCheck = () => {
       if (checkData.clusterId) {
         checkData.loading = true
           const param = {
-            clusterId: checkData.clusterId,
+            clusterId: checkData.clusterId
           }
           clusterCheck(param).then((res: KeyValue) => {
             if (Number(res.code) === 200) {

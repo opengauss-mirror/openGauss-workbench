@@ -41,6 +41,7 @@ import com.nctigba.observability.instance.service.MetricsService;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -136,7 +137,8 @@ public class ResourceCPUController extends ControllerConfig {
             param.put("sort", sort);
         }
         var host = hostFacade.getById(env.getHostid());
-        var str = HttpUtil.get("http://" + host.getPublicIp() + ":" + env.getPort() + "/cmd/top", param);
+        var str = HttpUtil.get("http://"
+            + IpUtils.formatIp(host.getPublicIp()) + ":" + env.getPort() + "/cmd/top", param);
         ArrayList<Object> result = new ArrayList<>();
         try {
             var top = JSONUtil.parseArray(str);

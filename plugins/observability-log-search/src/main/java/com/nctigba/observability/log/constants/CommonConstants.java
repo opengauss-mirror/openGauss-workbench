@@ -120,10 +120,13 @@ public class CommonConstants {
 
     /**
      * Check filebeat health status
+     * Connection to backoff(elasticsearch(http://[2407:c080:1200:22a0:fc6d:2a3c:e889:fbe9]:9200)) established
      */
-    public static final String FILEBEAT_HEALTH_STATUS = "grep -qE \"Connection to backoff\\(elasticsearch\\"
-            + "(http://[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+:[0-9]+\\)\\) established\" filebeat.log "
-            + "&& echo \"true\" || echo \"false\" ";
+    public static final String FILEBEAT_HEALTH_STATUS =
+            "grep -qE \"Connection to backoff\\(elasticsearch\\(http://"
+            + "(\\[([0-9a-fA-F]{1,4}:){1,7}[0-9a-fA-F]{1,4}\\]:[0-9]+)|"
+            + "([0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+:[0-9]+)\\)\\) established\" filebeat.log "
+            + "&& echo \"true\" || echo \"false\"";
 
     /**
      * Timed task cycle
