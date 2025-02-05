@@ -57,6 +57,10 @@
       } else if (route.fullPath == '/home' && route.fullPath == oldRoute?.fullPath) {
         EventBus.notify(EventTypeName.OPEN_CONNECT_DIALOG, 'create');
       }
+      const connectionList = (await sidebarForage.getItem(connectListPersist.key)) as any[];
+      if (!connectionList?.length) {
+        EventBus.notify(EventTypeName.CLEAR_CONNECTION_LIST);
+      }
     },
     {
       immediate: true,

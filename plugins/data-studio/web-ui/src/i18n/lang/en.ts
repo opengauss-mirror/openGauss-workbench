@@ -344,6 +344,7 @@ export default {
       create: 'Connection succeeded',
       edit: 'Modification succeeded',
     },
+    isCoverTips: 'The connection already exists, do you want to cover it?',
   },
   privilege: {
     name: 'Privilege',

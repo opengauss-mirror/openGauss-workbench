@@ -2256,6 +2256,10 @@
       await fetchRoot(connectInfo, connectionid);
       refreshConnectListMap();
     });
+    EventBus.listen(EventTypeName.CLEAR_CONNECTION_LIST, () => {
+      connectionList.value = [];
+      refreshConnectListMap();
+    });
     EventBus.listen(EventTypeName.REFRESH_ASIDER, async (mode, options) => {
       refresh(mode, options);
     });
@@ -2269,6 +2273,7 @@
   onUnmounted(() => {
     EventBus.unListen(EventTypeName.GET_CONNECTION_LIST);
     EventBus.unListen(EventTypeName.UPDATE_CONNECTION_LIST);
+    EventBus.unListen(EventTypeName.CLEAR_CONNECTION_LIST);
     EventBus.unListen(EventTypeName.REFRESH_ASIDER);
     EventBus.unListen(EventTypeName.UPDATE_CONNECTINFO);
   });
