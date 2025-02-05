@@ -26,7 +26,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.opengauss.admin.common.core.dto.OsSet;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * 将各类衍生os映射为centos或者openEuler
@@ -41,13 +43,17 @@ public enum OsSupportMap {
     OPENEULER_20_X86_64("openEuler", "x86_64", "20.03"),
     OPENEULER_20_AARCH64("openEuler", "aarch64", "20.03"),
     OPENEULER_22_X86_64("openEuler", "x86_64", "22.03"),
-    OPENEULER_22_AARCH64("openEuler", "aarch64", "22.03");
+    OPENEULER_22_AARCH64("openEuler", "aarch64", "22.03"),
+    OPENEULER_24_X86_64("openEuler", "x86_64", "24.03"),
+    OPENEULER_24_AARCH64("openEuler", "aarch64", "24.03");
 
     private final String os;
     private final String cpuArch;
     private final String osVersion;
 
     private static OsSet osBasedSet;
+    private static Map<String, OsSupportMap> openEulerX86Mapping = new HashMap<>();
+    private static Map<String, OsSupportMap> openEulerAarch64Mapping = new HashMap<>();
 
     static {
         HashSet<String> centosBasedSet = new HashSet<>();
@@ -56,6 +62,18 @@ public enum OsSupportMap {
         openEulerBasedSet.add("openeuler");
         openEulerBasedSet.add("kylin");
         osBasedSet = new OsSet(centosBasedSet, openEulerBasedSet);
+
+        initializeOpenEulerMapping();
+    }
+
+    private static void initializeOpenEulerMapping() {
+        openEulerX86Mapping.put("20.03", OPENEULER_20_X86_64);
+        openEulerX86Mapping.put("22.03", OPENEULER_22_X86_64);
+        openEulerX86Mapping.put("24.03", OPENEULER_24_X86_64);
+
+        openEulerAarch64Mapping.put("20.03", OPENEULER_20_AARCH64);
+        openEulerAarch64Mapping.put("22.03", OPENEULER_22_AARCH64);
+        openEulerAarch64Mapping.put("24.03", OPENEULER_24_AARCH64);
     }
 
     public static OsSupportMap of(String osInfo, String osVersionInfo, String cpuArchInfo) {
@@ -66,10 +84,10 @@ public enum OsSupportMap {
         if (osBasedSet.isOpenEuler(osInfo.toLowerCase())) {
             // openEuler系os默认映射成openEuler20
             if ("x86_64".equalsIgnoreCase(cpuArchInfo)) {
-                return OPENEULER_20_X86_64;
+                return openEulerX86Mapping.getOrDefault(osVersionInfo, OPENEULER_20_X86_64);
             }
             if ("aarch64".equalsIgnoreCase(cpuArchInfo)) {
-                return OPENEULER_20_AARCH64;
+                return openEulerAarch64Mapping.getOrDefault(osVersionInfo, OPENEULER_20_AARCH64);
             }
         }
 
