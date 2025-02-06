@@ -317,18 +317,6 @@ public class MigrationRecoveryHandler {
 }
 
 class MigrationCommand {
-    private static final String INCREMENTAL_MIGRATION_STOP = "stop_incremental_migration";
-    private static final String INCREMENTAL_MIGRATION_RUN = "run_incremental_migration";
-    private static final String INCREMENTAL_MIGRATION_SOURCE = "run_incremental_migration_source";
-    private static final String INCREMENTAL_MIGRATION_SINK = "run_incremental_migration_sink";
-    private static final String REVERSE_MIGRATION_STOP = "stop_reverse_migration";
-    private static final String REVERSE_MIGRATION_RUN = "run_reverse_migration";
-    private static final String REVERSE_MIGRATION_SOURCE = "run_reverse_migration_source";
-    private static final String REVERSE_MIGRATION_SINK = "run_reverse_migration_sink";
-    private static final String CMD_PORTAL_TEMP = "java -Dpath=%s -Dorder=%s -Dskip=true -Dworkspace.id=%s -jar %s";
-
-    private static final Map<String, String> MIGRATION_PROPERTIES = new HashMap<>();
-
     /**
      * incremental process command RUN_INCREMENTAL_SOURCE
      */
@@ -390,6 +378,17 @@ class MigrationCommand {
      */
     public static final List<String> INCREMENTAL_COMMANDS = Arrays.asList(RUN_INCREMENTAL_SOURCE, RUN_INCREMENTAL_SINK,
         RUN_INCREMENTAL, STOP_INCREMENTAL, RESET_INCREMENTAL);
+
+    private static final String INCREMENTAL_MIGRATION_STOP = "stop_incremental_migration";
+    private static final String INCREMENTAL_MIGRATION_RUN = "run_incremental_migration";
+    private static final String INCREMENTAL_MIGRATION_SOURCE = "run_incremental_migration_source";
+    private static final String INCREMENTAL_MIGRATION_SINK = "run_incremental_migration_sink";
+    private static final String REVERSE_MIGRATION_STOP = "stop_reverse_migration";
+    private static final String REVERSE_MIGRATION_RUN = "run_reverse_migration";
+    private static final String REVERSE_MIGRATION_SOURCE = "run_reverse_migration_source";
+    private static final String REVERSE_MIGRATION_SINK = "run_reverse_migration_sink";
+    private static final String CMD_PORTAL_TEMP = "java -Dpath=%s -Dorder=%s -Dskip=true -Dworkspace.id=%s -jar %s";
+    private static final Map<String, String> MIGRATION_PROPERTIES = new HashMap<>();
 
     static {
         MIGRATION_PROPERTIES.put(STOP_INCREMENTAL, INCREMENTAL_MIGRATION_STOP);

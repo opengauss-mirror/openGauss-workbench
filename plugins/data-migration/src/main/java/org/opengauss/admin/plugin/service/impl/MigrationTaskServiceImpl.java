@@ -706,7 +706,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(
             task.getRunHostId());
         String catFailedRepairFile = "cat " + installHost.getInstallPath() + "portal/workspace/" + id
-            + "/checkResult/result/" + repairFileName;
+            + "/check_result/result/" + repairFileName;
         JschResult result = ShellUtil.execCommandGetResult(task.getRunHost(), task.getRunPort(), task.getRunUser(),
             encryptionUtils.decrypt(task.getRunPass()), catFailedRepairFile);
         return result.isOk() ? result.getResult() : "";
