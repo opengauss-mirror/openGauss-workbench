@@ -337,6 +337,7 @@ export default {
       create: '连接成功',
       edit: '修改成功',
     },
+    isCoverTips: '该连接已存在，是否进行覆盖？',
   },
   privilege: {
     name: '权限',

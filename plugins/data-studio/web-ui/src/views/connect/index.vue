@@ -184,6 +184,7 @@
   import { ArrowDown, View, Hide } from '@element-plus/icons-vue';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
   import { useI18n } from 'vue-i18n';
+  import { useAppStore } from '@/store/modules/app';
   import { useUserStore } from '@/store/modules/user';
   import Crypto from '@/utils/crypto';
   import { connectListPersist } from '@/config';
@@ -191,6 +192,7 @@
   import { getSystemUserProfile } from '@/api/connect';
 
   const { t } = useI18n();
+  const AppStore = useAppStore();
   const UserStore = useUserStore();
   const props = withDefaults(
     defineProps<{
@@ -468,6 +470,20 @@
   };
   const requestConnect = async () => {
     const params = getConnectionParams();
+    if (props.type === 'create') {
+      const isCover = AppStore.connectListMap.some(
+        (item) => item.id === params.id && item.connectInfo.name === params.name,
+      );
+      if (isCover) {
+        try {
+          await ElMessageBox.confirm(t('connection.isCoverTips'), t('common.warning'), {
+            type: 'warning',
+          });
+        } catch {
+          return;
+        }
+      }
+    }
     const data =
       props.type === 'create' ? await createConnect(params) : await updateConnect(params);
     EventBus.notify(EventTypeName.GET_CONNECTION_LIST, data);
