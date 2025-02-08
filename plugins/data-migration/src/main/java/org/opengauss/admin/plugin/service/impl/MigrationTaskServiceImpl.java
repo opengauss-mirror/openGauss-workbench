@@ -592,9 +592,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             update.setExecStatus(TaskStatus.CHECK_ERROR.getCode());
             String result = PortalHandle.getPortalCheckResult(installHost, t.getId());
             update.setStatusDesc(result);
+            migrationMainTaskService.updateStatus(t.getMainTaskId(), MainTaskStatus.CHECK_MIGRATION);
         }
         updateById(update);
-        migrationMainTaskService.updateStatus(t.getMainTaskId(), MainTaskStatus.CHECK_MIGRATION);
         return false;
     }
 
