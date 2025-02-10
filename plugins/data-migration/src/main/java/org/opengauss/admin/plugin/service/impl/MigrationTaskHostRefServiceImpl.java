@@ -558,6 +558,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         if (!install.getInstallType().equals(PortalInstallType.IMPORT_INSTALL.getCode())) {
             preinstall(opsHost, install);
         }
+        formatInstallPath(install);
         OpsHostUserEntity hostUser = hostUserFacade.getById(install.getHostUserId());
         String realInstallPath = getInstallPath(install.getInstallPath(), hostUser.getUsername());
         AjaxResult result = checkPermission(opsHost, hostUser, realInstallPath);
@@ -1002,6 +1003,17 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             return isCreateSuccess
                 ? AjaxResult.success()
                 : AjaxResult.error(MigrationErrorCode.PORTAL_CREATE_INSTALL_PATH_FAILED.getMsg());
+        }
+    }
+
+    private void formatInstallPath(MigrationHostPortalInstall install) {
+        String installPath = install.getInstallPath();
+        String mqInstallDir = install.getThirdPartySoftwareConfig().getInstallDir();
+        if (installPath != null) {
+            install.setInstallPath(installPath.replaceAll("\\s", ""));
+        }
+        if (mqInstallDir != null) {
+            install.getThirdPartySoftwareConfig().setInstallDir(mqInstallDir.replaceAll("\\s", ""));
         }
     }
 
