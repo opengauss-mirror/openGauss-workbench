@@ -1186,3 +1186,122 @@ COMMENT ON COLUMN "public"."tb_migration_task_check_progress_summary"."table_cou
 COMMENT ON COLUMN "public"."tb_migration_task_check_progress_summary"."start_time" IS '迁移任务开始时间';
 COMMENT ON COLUMN "public"."tb_migration_task_check_progress_summary"."end_time" IS '迁移任务截止时间';
 COMMENT ON COLUMN "public"."tb_migration_task_check_progress_summary"."status" IS '迁移任务是否完成';
+
+
+CREATE TABLE IF NOT EXISTS "public"."tb_transcribe_replay_task"
+(
+    id                SERIAL PRIMARY KEY,
+    task_name          VARCHAR(255) NOT NULL,
+    task_type          VARCHAR(255) NOT NULL,
+    db_name            text NOT NULL,
+    source_db_type        VARCHAR(50)  NOT NULL,
+    source_install_path VARCHAR(500),
+    target_install_path VARCHAR(500),
+    tool_version       VARCHAR(50)  NOT NULL,
+    execution_status   INTEGER      NOT NULL,
+    slow_sql_count      INTEGER      NOT NULL DEFAULT 0,
+    failed_sql_count    INTEGER      NOT NULL DEFAULT 0,
+    task_duration      BIGINT       NOT NULL DEFAULT 0,
+    source_duration      BIGINT       NOT NULL DEFAULT 0,
+    target_duration      BIGINT       NOT NULL DEFAULT 0,
+    total_num          BIGINT       NOT NULL,
+    parse_num          BIGINT       NOT NULL DEFAULT 0,
+    replay_num         BIGINT       NOT NULL DEFAULT 0,
+    source_node_id         VARCHAR(50),
+    target_node_id         VARCHAR(50),
+    error_msg         text,
+    task_start_time     TIMESTAMP    ,
+    task_end_time       TIMESTAMP
+    );
+
+COMMENT ON TABLE "public"."tb_transcribe_replay_task" IS '录制回放任务表';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."id" IS '录制回放表详情主键ID';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."task_name" IS '任务名称';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."task_type" IS '任务类型';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."db_name" IS '数据库名称';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."source_db_type" IS '源数据库类型';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."source_install_path" IS '源数据库安装路径';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."target_install_path" IS '目标数据库安装路径';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."tool_version" IS '工具版本';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."execution_status" IS '执行状态';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."slow_sql_count" IS '慢SQL数量';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."failed_sql_count" IS '失败SQL数量';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."task_duration" IS '任务总时长（毫秒）';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."source_duration" IS '源数据库操作时长（毫秒）';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."target_duration" IS '目标数据库操作时长（毫秒）';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."total_num" IS '总任务数量';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."parse_num" IS '解析数量';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."replay_num" IS '回放数量';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."source_node_id" IS '源节点ID';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."target_node_id" IS '目标节点ID';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."error_msg" IS '错误信息';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."task_start_time" IS '任务开始时间';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_task"."task_end_time" IS '任务结束时间';
+
+CREATE TABLE IF NOT EXISTS "public"."tb_transcribe_replay_host"
+(
+    id     INTEGER PRIMARY KEY,
+    task_id INTEGER      NOT NULL,
+    ip   VARCHAR(255) NOT NULL,
+    port   INTEGER      NOT NULL,
+    user_name   VARCHAR(255) NOT NULL,
+    passwd VARCHAR(255) NOT NULL,
+    db_type VARCHAR(50)  NOT NULL
+    );
+
+COMMENT ON TABLE "public"."tb_transcribe_replay_host" IS '录制回放主机信息表';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_host"."id" IS '录制回放主机信息ID';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_host"."task_id" IS '关联的任务ID';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_host"."ip" IS '主机IP地址';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_host"."port" IS '主机端口号';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_host"."user_name" IS '主机用户名';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_host"."passwd" IS '主机密码';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_host"."db_type" IS '数据库类型';
+
+CREATE TABLE IF NOT EXISTS "public"."tb_transcribe_replay_slow_sql"
+(
+    unique_code BIGINT PRIMARY KEY,
+    task_id INT NOT NULL,
+    sql_str TEXT,
+    source_duration BIGINT,
+    target_duration BIGINT,
+    explain_str TEXT,
+    count_str BIGINT
+);
+
+COMMENT ON TABLE "public"."tb_transcribe_replay_slow_sql" IS '录制回放慢SQL记录表';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_slow_sql"."unique_code" IS '唯一标识码，主键';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_slow_sql"."task_id" IS '关联的任务ID';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_slow_sql"."sql_str" IS '慢SQL语句';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_slow_sql"."source_duration" IS '源端执行该SQL的时长（微妙）';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_slow_sql"."target_duration" IS '目的端执行该SQL的时长（微妙）';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_slow_sql"."explain_str" IS 'SQL执行计划';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_slow_sql"."count_str" IS '该SQL的执行次数';
+
+CREATE TABLE IF NOT EXISTS "public". "tb_transcribe_replay_fail_sql"
+(
+    id       SERIAL PRIMARY KEY,
+    task_id  INT  NOT NULL,
+    sql TEXT NOT NULL,
+    message  TEXT
+);
+
+COMMENT ON TABLE tb_transcribe_replay_fail_sql IS '记录失败 SQL 的表';
+COMMENT ON COLUMN tb_transcribe_replay_fail_sql.id IS '主键';
+COMMENT ON COLUMN tb_transcribe_replay_fail_sql.task_id IS '任务 ID';
+COMMENT ON COLUMN tb_transcribe_replay_fail_sql.sql_text IS '失败的 SQL 语句';
+COMMENT ON COLUMN tb_transcribe_replay_fail_sql.message IS '错误消息或日志';
+
+CREATE TABLE IF NOT EXISTS "public". "tb_transcribe_replay_param"
+(
+    id SERIAL PRIMARY KEY,
+    fail_sql_id INT NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    value TEXT
+    );
+
+COMMENT ON TABLE "public"."tb_transcribe_replay_param" IS '录制回放参数表';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_param"."id" IS '参数表主键ID';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_param"."fail_sql_id" IS '关联的失败SQL记录ID';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_param"."type" IS '参数类型';
+COMMENT ON COLUMN "public"."tb_transcribe_replay_param"."value" IS '参数值';
