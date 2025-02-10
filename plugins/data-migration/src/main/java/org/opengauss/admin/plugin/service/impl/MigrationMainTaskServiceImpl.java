@@ -456,6 +456,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         migrationTaskAlertService.deleteByMainTaskId(id);
         migrationTaskService.deleteByMainTaskId(id);
         tasks.forEach(task -> {
+            Integer subTaskId = task.getId();
             task.setId(null);
             task.setExecTime(null);
             task.setFinishTime(null);
@@ -463,6 +464,15 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             task.setTaskLog("");
             task.setStatusDesc("");
             migrationTaskService.save(task);
+            Integer newSubTaskId = task.getId();
+            List<MigrationTaskParam> taskParams = migrationTaskParamService.selectByTaskId(subTaskId);
+            if (Objects.nonNull(taskParams)) {
+                taskParams.forEach(taskParam -> {
+                    taskParam.setId(null);
+                    taskParam.setTaskId(newSubTaskId);
+                    migrationTaskParamService.save(taskParam);
+                });
+            }
         });
         return AjaxResult.success();
     }
