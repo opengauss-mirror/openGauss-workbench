@@ -63,8 +63,13 @@ public class DataMigrationPluginListener implements ApplicationListener<Applicat
                 menuFacade.savePluginMenu(pluginId, "消息队列配置中心",
                         "Message Queue Software config center", 2, "thirdPartySoftwareConfig",
                         parentMenu.getMenuId());
+                menuFacade.savePluginMenu(pluginId, "录制回放",
+                        "Transcribe Replay Service", 3, "transcribe",
+                        parentMenu.getMenuId());
                 menuFacade.savePluginRoute(pluginId, "创建迁移任务", "taskConfig", parentMenu.getMenuId());
                 menuFacade.savePluginRoute(pluginId, "任务详情", "taskDetail", parentMenu.getMenuId());
+                menuFacade.savePluginRoute(pluginId, "录制回放详情", "transcribetaskDetail", parentMenu.getMenuId());
+                menuFacade.savePluginRoute(pluginId, "创建录制回放", "createtranscribetask", parentMenu.getMenuId());
             }
             log.info("DataMigration start complete");
         } else if (event instanceof ContextClosedEvent) {
