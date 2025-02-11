@@ -32,7 +32,6 @@ import org.opengauss.admin.plugin.domain.TranscribeReplayTask;
 import org.opengauss.admin.plugin.utils.ShellUtil;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
@@ -94,6 +93,7 @@ public class TranscribeReplayHandle {
         commandSb.append(" && java -Xms256m -Xmx521m -jar ").append(jarPath);
         commandSb.append(" -t ").append(taskType);
         commandSb.append(" -f ").append(configFilePath);
+        commandSb.append(" 2>&1 | tee ").append(String.format("%s_result.log", taskType));
         log.info("Start task {}, host: {}, command: {}", taskType, shellInfoVo.getIp(), commandSb.toString());
         return ShellUtil.execCommandGetResult(shellInfoVo, commandSb.toString());
     }
@@ -157,7 +157,7 @@ public class TranscribeReplayHandle {
         Path fullPath = Paths.get(path);
         Path parentPath = fullPath.getParent();
         if (parentPath != null) {
-            return parentPath.toString().replace("\\", File.separator);
+            return parentPath.toString().replace("\\", "/");
         } else {
             return path;
         }
