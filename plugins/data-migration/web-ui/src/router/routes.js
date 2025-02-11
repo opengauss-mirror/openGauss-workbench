@@ -38,7 +38,34 @@ const routes = [
       title: '第三方软件配置中心',
       keepAlive: false
     }
-  }
+  },
+  {
+    path: '/createtranscribetask',
+    name: 'CreateTask',
+    component: () => import('@/views/transcribe/task/index'),
+    meta: {
+      title: '创建录制回放任务',
+      keepAlive: false
+    }
+  },
+  {
+    path: '/transcribe',
+    name: 'Transcribe',
+    component: () => import('@/views/transcribe/index'),
+    meta: {
+      title: '录制回放',
+      keepAlive: false
+    }
+  },
+  {
+    path: '/transcribetaskDetail',
+    name: 'TranscribeTaskDetail',
+    component: () => import('@/views/transcribe/detail/index'),
+    meta: {
+      title: '录制回放任务详情',
+      keepAlive: false
+    }
+  },
 ]
 
 export default routes
