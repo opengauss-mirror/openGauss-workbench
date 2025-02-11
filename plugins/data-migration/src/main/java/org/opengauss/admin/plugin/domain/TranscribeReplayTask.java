@@ -43,8 +43,8 @@ public class TranscribeReplayTask {
     private String toolVersion;
     private String taskType;
     private Integer executionStatus;
-    private int slowSqlCount;
-    private int failedSqlCount;
+    private Integer slowSqlCount;
+    private Integer failedSqlCount;
     private long taskDuration;
     private long sourceDuration;
     private long targetDuration;

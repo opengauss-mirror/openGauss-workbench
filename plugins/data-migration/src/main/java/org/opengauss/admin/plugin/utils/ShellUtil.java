@@ -37,9 +37,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Map;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringJoiner;
@@ -353,6 +355,47 @@ public class ShellUtil {
         } else {
             throw new ShellException(String.format(
                     "Failed to install dependencies. Command: {%s}, Result: {%s}", command, jschResult.getResult()));
+        }
+    }
+
+    /**
+     * update File Content
+     *
+     * @param shellInfo shell information
+     * @param configMap configMap
+     * @param remotePath remotePath
+     */
+    public static void updateFileContent(ShellInfoVo shellInfo, Map<String, Object> configMap, String remotePath) {
+        Session session = null;
+        Channel channel = null;
+        ChannelSftp channelSftp = null;
+        try {
+            JSch jsch = new JSch();
+            session = jsch.getSession(shellInfo.getUsername(), shellInfo.getIp(), shellInfo.getPort());
+            session.setPassword(shellInfo.getPassword());
+            session.setConfig("StrictHostKeyChecking", "no");
+            session.connect();
+            channel = session.openChannel("sftp");
+            channel.connect();
+            if (channel instanceof ChannelSftp) {
+                channelSftp = (ChannelSftp) channel;
+            } else {
+                throw new ClassCastException("Channel is not an instance of ChannelSftp");
+            }
+            StringBuilder content = new StringBuilder();
+            for (Map.Entry<String, Object> entry : configMap.entrySet()) {
+                content.append(entry.getKey()).append("=").append(entry.getValue()).append("\n");
+            }
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(
+                content.toString().getBytes(StandardCharsets.UTF_8));
+            channelSftp.put(inputStream, remotePath);
+        } catch (JSchException | SftpException e) {
+            log.error("update file content error.", e);
+        } finally {
+            assert channelSftp != null;
+            channelSftp.exit();
+            channel.disconnect();
+            session.disconnect();
         }
     }
 }

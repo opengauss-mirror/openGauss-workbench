@@ -42,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -54,6 +55,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -67,6 +69,7 @@ import javax.servlet.http.HttpServletResponse;
 @RequestMapping("/transcribeReplay")
 @Slf4j
 public class TranscribeReplayController extends BaseController {
+    private TranscribeReplayTaskDto transcribeReplayTaskDto;
     @Autowired
     private TranscribeReplayService transcribeReplayService;
     @Autowired
@@ -80,6 +83,31 @@ public class TranscribeReplayController extends BaseController {
     private EncryptionUtils encryptionUtils;
 
     /**
+     * transcribeReplay tools version
+     *
+     * @return AjaxResult
+     */
+    @GetMapping("/toolsVersion")
+    public AjaxResult transcribeReplayToolsVersion() {
+        List<String> toolsVersion = transcribeReplayService.getToolsVersion();
+        return AjaxResult.success(toolsVersion);
+    }
+
+    /**
+     * transcribeReplay tools download
+     *
+     * @param id id
+     * @param config config
+     * @return AjaxResult
+     */
+    @PostMapping("/downloadAndConfig")
+    public AjaxResult transcribeReplayToolsDownLoadAndConfig(@RequestParam Integer id,
+                                                             @RequestBody Map<String, Object> config) {
+        transcribeReplayService.downloadAndConfig(transcribeReplayTaskDto, id, config);
+        return AjaxResult.success();
+    }
+
+    /**
      * save task
      *
      * @param taskDto taskDto
@@ -87,6 +115,7 @@ public class TranscribeReplayController extends BaseController {
      */
     @PostMapping("/save")
     public AjaxResult save(@RequestBody TranscribeReplayTaskDto taskDto) {
+        this.transcribeReplayTaskDto = taskDto;
         return AjaxResult.success(transcribeReplayService.saveTask(taskDto));
     }
 

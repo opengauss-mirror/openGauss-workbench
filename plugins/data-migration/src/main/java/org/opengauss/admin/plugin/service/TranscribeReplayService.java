@@ -30,6 +30,7 @@ import org.opengauss.admin.plugin.dto.TranscribeReplayTaskQueryDto;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * TranscribeReplayService
@@ -38,6 +39,22 @@ import java.util.List;
  */
 
 public interface TranscribeReplayService extends IService<TranscribeReplayTask> {
+    /**
+     * getToolsVersion
+     *
+     * @return List<String>
+     */
+    List<String> getToolsVersion();
+
+    /**
+     * downloadAndConfig
+     *
+     * @param transcribeReplayTaskDto transcribeReplayTaskDto
+     * @param id id
+     * @param config config
+     */
+    void downloadAndConfig(TranscribeReplayTaskDto transcribeReplayTaskDto, Integer id, Map<String, Object> config);
+
     /**
      * saveTask
      *
