@@ -25,14 +25,14 @@
                     {{ row.failedRows ?? 0 }}
                 </template>
             </el-table-column>
-            <el-table-column prop="message" :label="$t('components.SubTaskDetail.failReason')" :show-overflow-tooltip="{'appned-to':'#fullCheckTable'}">
+            <el-table-column prop="message" :label="$t('components.SubTaskDetail.failReason')" :show-overflow-tooltip="{'append-to':'#detailDrawer',trigger:'hover'}">
                 <template #default="{ row }">
                     {{ row.status === 'failed' ? row.message : '--' }}
                 </template>
             </el-table-column>
             <el-table-column prop="operations" :label="$t('components.SubTaskDetail.operate')">
                 <template #default="{ row }">
-                    <el-button text @click="downloadFixShell(row)" :disabled="row.status === 'success'">
+                    <el-button text @click="downloadFixShell(row)" :disabled="!(row.status === 'failed' && row.failedRows > 0)">
                         {{ $t('components.SubTaskDetail.downloadFix') }}
                     </el-button>
                 </template>
@@ -106,6 +106,9 @@ const getFullCheckData = () => {
 }
 </script>
 <style lang="less">
+.el-table .cell{
+    line-height: 18px;
+}
 .fullCheckTable {
     margin-top: 16px;
     .table-page {
