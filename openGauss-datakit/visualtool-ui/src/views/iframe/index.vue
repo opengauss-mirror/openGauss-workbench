@@ -13,6 +13,7 @@
   import { createPluginApp } from '@/utils/pluginApp'
   import { useRouter, useRoute } from 'vue-router'
   import { useAppStore } from '@/store'
+  import { DocElementRectPlugin } from "wujie-polyfill";
 
   const appStore = useAppStore()
   const router = useRouter()
@@ -29,6 +30,7 @@
   watch(() => appStore.menuCollapse, (val) => {
     if (val) {
       plugins.value = [
+      DocElementRectPlugin(),
         {
           cssBeforeLoaders: [
             { content: 'html{padding-top: 113px !important;padding-left: 64px !important;height: 100%;view-transition-name: none;}' }
@@ -37,6 +39,7 @@
       ]
     } else {
       plugins.value = [
+      DocElementRectPlugin(),
         {
           cssBeforeLoaders: [
             { content: 'html{padding-top: 113px !important;padding-left: 228px !important;height: 100%;view-transition-name: none;}' }

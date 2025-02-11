@@ -24,7 +24,7 @@
         </div>
       </div>
     </template>
-    <div class="task-detail-con">
+    <div class="task-detail-con" id="detailDrawer">
       <div v-if="descData.length" class="task-desc-con">
         <a-descriptions :data="descData" layout="inline-horizontal" :column="5" bordered />
       </div>
