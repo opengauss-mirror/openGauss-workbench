@@ -95,7 +95,7 @@
                     </template>
                     <template v-else-if="row.type === 'date'">
                       <el-date-picker v-model="formDataModel[row.name]" type="date" style="text-align: left; width: 90%"
-                                      placeholder="选择日期"/>
+                                      placeholder="选择日期" append-to="#mainForm" />
                     </template>
                     <template v-else>
                       <el-input v-model="formDataModel[row.name]" :placeholder="'请输入' + row.name"
@@ -257,7 +257,7 @@ const formData = reactive({
     {
       index: 1,
       name: 'general.start.time',
-      default: new Date('1970-01-01').toISOString().replace('T', ' ').substring(0, 19),
+      default: new Date('1970-01-01'),
       value: '',
       prop: 'general.start.time',
       type: 'date',
