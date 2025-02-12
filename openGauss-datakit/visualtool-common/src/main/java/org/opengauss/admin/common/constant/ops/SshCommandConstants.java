@@ -275,7 +275,7 @@ public interface SshCommandConstants {
     /**
      * check os net card name
      */
-    String NET_CARD_NAME = "export PATH=$PATH:/sbin:/usr/sbin && ip -o -4 addr show | grep %s | awk '{print $2}'";
+    String NET_CARD_NAME = "export PATH=$PATH:/sbin:/usr/sbin && ip -o addr show | grep %s | awk '{print $2}'";
     /**
      * check os net card rx tx
      */
