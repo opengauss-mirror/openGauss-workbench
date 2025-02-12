@@ -425,6 +425,7 @@ const handleAddHost = (type) => {
 }
 
 const backToIndex = () => {
+  init()
   window.$wujie?.bus.$emit('opengauss-close-tab', {
     name: 'Static-pluginData-migrationCreatetranscribetask',
     fullPath: '/static-plugin/data-migration//createtranscribetask'
@@ -689,7 +690,7 @@ const defaultDataGen = ref({
   'general.database.username': '',
   'general.database.password': '',
   'general.sql.batch': 1000,
-  'general.start.time': new Date('1970-01-01').toISOString().replace('T', ' ').substring(0, 19),
+  'general.start.time': new Date('1970-01-01'),
   'result.file.size': 10,
   'parse.select.result': false,
 })
@@ -1087,6 +1088,9 @@ const saveParams = async () => {
     retMessageMap[pagethiKey] = taskRetInfo.value.pagethi[pagethiKey]
   }
   retMessageMap['tcpdump.file.id'] = taskBasicInfo.value.replayTaskId
+  if (retMessageMap['general.start.time']) {
+    retMessageMap['general.start.time'] = retMessageMap['general.start.time'].toISOString().replace('T', ' ').substring(0, 19)
+  }
   let validRes = true
   await taskAdvancedFormRef.value.validate((valid, errors) => {
     if (valid) {
@@ -1191,12 +1195,22 @@ const init = () => {
   inittaskBasicInfo()
   changeTranscribeMode(taskRetInfo.value['sql.transcribe.mode'])
   choosePlaybackMethod.value = false
+  if (taskNameFormRef.value) {
+    taskNameFormRef.value.resetFields()
+  }
+  if (taskDataFormRef.value) {
+    taskDataFormRef.value.resetFields()
+  }
+  if (taskAdvancedFormRef.value) {
+    taskAdvancedFormRef.value.resetFields()
+  }
 }
 
+init()
 defineExpose({
   init
 })
-init()
+
 </script>
 
 <style scoped lang="less">
