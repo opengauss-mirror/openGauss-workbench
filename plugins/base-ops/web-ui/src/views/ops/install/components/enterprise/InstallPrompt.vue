@@ -44,7 +44,7 @@
           </div>
           <a-divider></a-divider>
           <div class="flex-row">
-            <div class="lable-w">{{ $t('simple.InstallConfig.else11') }} CM</div>
+            <div class="lable-w">{{ $t('simple.InstallConfig.else11') }} </div>
             <div>{{
               data.clusterInfo.isEnvSeparate ? $t('enterprise.InstallPrompt.5mpmb9e6r4g0') :
               $t('enterprise.InstallPrompt.5mpmb9e6r800')

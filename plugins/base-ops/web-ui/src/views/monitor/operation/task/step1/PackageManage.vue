@@ -36,6 +36,7 @@
           :loading="list.loading"
           @selection-change="handleSelected"
           :scroll="{ y: autoplay }"
+          v-model:selected-keys="selectedRowKeys"
           @submit="submit"
         >
           <template #columns>
@@ -130,7 +131,7 @@ const data = reactive({
 const searchFormData = new FormData
 
 const handleSelected = (keys: (string | number)[]) => {
-  selectedRowKeys.value = keys
+  selectedRowKeys.value = [keys]
   list.selectedpackageIds = keys
   const findOne = list.data.find((item: KeyValue) => {
     return item.packageId === keys
@@ -226,7 +227,8 @@ const submit = () => {
   if (data.selectedData.length < 1) {
     Message.error('请选择安装包后再确认')
   } else {
-    emits('packageIDSelected', selectedRowKeys.value)
+    const tempselectedRowKeys = selectedRowKeys.value[0]? selectedRowKeys.value[0]:'1'
+    emits('packageIDSelected', tempselectedRowKeys)
     data.show = false
   }
 
