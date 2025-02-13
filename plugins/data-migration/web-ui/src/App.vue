@@ -88,3 +88,7 @@ const elLocale = computed(() => {
   return currentLocale.value === 'zh-CN' ? zhCn : en
 })
 </script>
+
+<style lang="less">
+@import '@/assets/style/openGlobal.less';
+</style>
