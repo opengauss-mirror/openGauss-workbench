@@ -40,7 +40,21 @@ public interface ISysWhiteListService extends IService<SysWhiteList> {
 
     List<SysWhiteList> selectListAll(SysWhiteList whiteList);
 
-    boolean checkIpExistsInWhiteList(String ip);
+    /**
+     * check single ip exists in whiteList
+     *
+     * @param ip ip
+     * @return is single ip exists
+     */
+    boolean checkSingleIpExistsInWhiteList(String ip);
+
+    /**
+     * check ips exists in white list
+     *
+     * @param whiteList whitelist
+     * @return exists ip list
+     */
+    List<String> checkIpsExistsInWhiteList(SysWhiteList whiteList);
 
     public boolean checkTitleExists(SysWhiteList whiteList);
 }

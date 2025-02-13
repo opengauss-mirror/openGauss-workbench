@@ -46,13 +46,11 @@ import java.io.PrintWriter;
 @Component
 @ConditionalOnProperty(value = "system.whitelist.enabled", havingValue = "true")
 public class WhiteListFilter implements Filter {
-
-
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         String ip = IpUtils.getIpAddr((HttpServletRequest) servletRequest);
-        boolean exists = SpringUtils.getBean(ISysWhiteListService.class).checkIpExistsInWhiteList(ip);
-        if (exists) {
+        boolean isExists = SpringUtils.getBean(ISysWhiteListService.class).checkSingleIpExistsInWhiteList(ip);
+        if (isExists) {
             filterChain.doFilter(servletRequest, servletResponse);
         } else {
             try {

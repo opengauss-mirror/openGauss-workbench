@@ -24,6 +24,7 @@
 
 package org.opengauss.admin.system.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.opengauss.admin.system.domain.SysWhiteList;
@@ -32,7 +33,11 @@ import org.opengauss.admin.system.service.ISysWhiteListService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * White List Service
@@ -71,9 +76,25 @@ public class SysWhiteListServiceImpl extends ServiceImpl<SysWhiteListMapper, Sys
      * Check whether the ip exists in the whitelist
      */
     @Override
-    public boolean checkIpExistsInWhiteList(String ip) {
+    public boolean checkSingleIpExistsInWhiteList(String ip) {
         Integer count = sysWhiteListMapper.countByIp(ip);
         return count > 0;
+    }
+
+    @Override
+    public List<String> checkIpsExistsInWhiteList(SysWhiteList whiteList) {
+        List<SysWhiteList> sysWhiteLists = (whiteList.getId() != null)
+                ? list(new LambdaQueryWrapper<SysWhiteList>().ne(SysWhiteList::getId, whiteList.getId()))
+                : list();
+
+        Set<String> whiteListIps = new HashSet<>();
+        for (SysWhiteList sysWhiteList : sysWhiteLists) {
+            whiteListIps.addAll(Arrays.asList(sysWhiteList.getIpList().split(",")));
+        }
+
+        return Arrays.stream(whiteList.getIpList().split(","))
+                .filter(whiteListIps::contains)
+                .collect(Collectors.toList());
     }
 
     /**

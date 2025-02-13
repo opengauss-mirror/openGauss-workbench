@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.HashSet;
 
 /**
  * White List Model
@@ -60,4 +61,20 @@ public class SysWhiteList {
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
+
+    /**
+     * check whether duplicate ip exist in the ipList
+     *
+     * @return result of has duplicate ip
+     */
+    public boolean hasDuplicateIp() {
+        String[] ips = ipList.split(",");
+        HashSet<String> set = new HashSet<>();
+        for (String ip : ips) {
+            if (!set.add(ip)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

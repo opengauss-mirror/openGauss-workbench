@@ -101,17 +101,7 @@ public class SysWhiteListController extends BaseController {
     @PostMapping
     public AjaxResult add(@RequestBody SysWhiteList whiteList) {
         whiteList.setCreateTime(new Date());
-        if (whiteList.getTitle().length() > 100) {
-            return AjaxResult.error(ResponseCode.WHITELIST_TITLE_MAX_LENGTH_ERROR.code());
-        }
-        if (iSysWhiteListService.checkTitleExists(whiteList)) {
-            return AjaxResult.error(ResponseCode.WHITELIST_TITLE_EXISTS_ERROR.code());
-        }
-        if (StringUtil.isNotEmpty(whiteList.getIpList()) && whiteList.getIpList().length() > 200) {
-            return AjaxResult.error(ResponseCode.WHITELIST_IPS_MAX_LENGTH_ERROR.code());
-        }
-
-        return toAjax(iSysWhiteListService.save(whiteList));
+        return processWhiteList(whiteList, true);
     }
 
     /**
@@ -122,6 +112,10 @@ public class SysWhiteListController extends BaseController {
     @PreAuthorize("@ss.hasPermi('system:whiteList:edit')")
     @PutMapping
     public AjaxResult edit(@RequestBody SysWhiteList whiteList) {
+        return processWhiteList(whiteList, false);
+    }
+
+    private AjaxResult processWhiteList(SysWhiteList whiteList, boolean isAdd) {
         if (whiteList.getTitle().length() > 100) {
             return AjaxResult.error(ResponseCode.WHITELIST_TITLE_MAX_LENGTH_ERROR.code());
         }
@@ -131,7 +125,17 @@ public class SysWhiteListController extends BaseController {
         if (StringUtil.isNotEmpty(whiteList.getIpList()) && whiteList.getIpList().length() > 200) {
             return AjaxResult.error(ResponseCode.WHITELIST_IPS_MAX_LENGTH_ERROR.code());
         }
-        return toAjax(iSysWhiteListService.updateById(whiteList));
+        if (whiteList.hasDuplicateIp()) {
+            return AjaxResult.error(ResponseCode.WHITELIST_HAS_DUPLICATE_IP_ERROR.code());
+        }
+        List<String> existsIps = iSysWhiteListService.checkIpsExistsInWhiteList(whiteList);
+        if (!existsIps.isEmpty()) {
+            return AjaxResult.error(ResponseCode.WHITELIST_IPS_EXISTS_ERROR.code(),
+                    ResponseCode.WHITELIST_IPS_EXISTS_ERROR.msg() + ". Ip addresses: " + String.join(",", existsIps));
+        }
+
+        return isAdd ? toAjax(iSysWhiteListService.save(whiteList))
+                : toAjax(iSysWhiteListService.updateById(whiteList));
     }
 
     /**

@@ -78,7 +78,9 @@ public enum ResponseCode {
     WHITELIST_TITLE_MAX_LENGTH_ERROR(50124, "Whitelist title length cannot exceed 100 characters"),
     WHITELIST_IPS_MAX_LENGTH_ERROR(50125, "Whitelist IP list length cannot exceed 200 characters"),
 
-    WHITELIST_TITLE_EXISTS_ERROR(50126, "Whitelist title already exists")
+    WHITELIST_TITLE_EXISTS_ERROR(50126, "Whitelist title already exists"),
+    WHITELIST_HAS_DUPLICATE_IP_ERROR(50127, "Duplicate IP addresses exist in the whitelist"),
+    WHITELIST_IPS_EXISTS_ERROR(50128, "Some IP addresses in current whitelist already exists in the existing whitelist")
     ;
 
 
