@@ -168,8 +168,7 @@
                                 <span :class="fixStatus.sink ? 'success-color' : 'danger-color'">connect-sink</span>
                               </el-checkbox>
                             </el-checkbox-group>
-                            <el-button text @click="handleFix" :loading="fixLoading" :disabled="!fixOptions.length"
-                              loading-text="重启中">
+                            <el-button text @click="handleFix" :loading="fixLoading" :disabled="!fixOptions.length">
                               {{ restartText }}
                             </el-button>
                           </div>
@@ -219,7 +218,7 @@
                                 <span :class="fixStatus.source ? 'success-color' : 'danger-color'">connect-source</span>
                               </el-checkbox>
                               <el-checkbox label="connect-sink" value="sink">
-                                <span :class="fixStatus.source ? 'success-color' : 'danger-color'">connect-sink</span>
+                                <span :class="fixStatus.sink ? 'success-color' : 'danger-color'">connect-sink</span>
                               </el-checkbox>
                             </el-checkbox-group>
                             <el-button text @click="handleFix" :loading="fixLoading" :disabled="!fixOptions.length">
@@ -540,7 +539,7 @@ const getFullCheckData = async () => {
 }
 
 const initBasicData = () => {
-  if (subTaskInfo.value.migrationModelId === MIGRATION_MODE.ONLINE) {
+  if (subTaskInfo.value.migrationModelId !== MIGRATION_MODE.OFFLINE) {
     descData.value = [
       {
         label: t('components.SubTaskDetail.5q09prnzqck0'),
@@ -563,10 +562,11 @@ const initBasicData = () => {
         span: 2
       },
       {
-        label: t('components.SubTaskDetail.5q09prnzr2o0'),
+        label: t('components.SubTaskDetail.5q09prnzux41'),
         value: '--',
         span: 3
       },
+
       {
         label: t('components.SubTaskDetail.5q09prnzr4s0'),
         value: `-- ${t(
@@ -575,20 +575,21 @@ const initBasicData = () => {
         span: 2
       },
       {
-        label: t('components.SubTaskDetail.5q09prnzux40'),
+        label: t('components.SubTaskDetail.5q09prnzr2o0'),
         value: '--',
         span: 3
       },
+
       {
         label: t('components.SubTaskDetail.5q09prnzqnw0'),
         value: '--',
         span: 2
       },
       {
-        label: t('components.SubTaskDetail.5q09prnzux41'),
+        label: t('components.SubTaskDetail.5q09prnzux40'),
         value: '--',
         span: 5
-      }
+      },
     ]
   } else {
     descData.value = [
@@ -1141,9 +1142,36 @@ const getSubTaskDetail = () => {
             : t('components.SubTaskDetail.5q09prnznzg0'),
           span: 3
         },
+
         {
           label: t('components.SubTaskDetail.5q09prnzqzs0'),
           value: subTaskInfo.value.execTime,
+          span: 2
+        },
+        {
+          label: t('components.SubTaskDetail.5q09prnzux41'),
+          value: dataCheckDetail
+            ? h('div', null, [
+              h(
+                'div',
+                null,
+                t('components.SubTaskDetail.5q09xhsvcq44', {
+                  totalRowCount: dataCheckData.value?.total || 0,
+                  totalTableCount: dataCheckData.value?.tableCount || 0,
+                  totalTableFinishCount:
+                    dataCheckData.value?.completeCount || 0
+                })
+              )
+            ])
+            : t('components.SubTaskDetail.5q09prnznzg0'),
+          span: 3
+        },
+
+        {
+          label: t('components.SubTaskDetail.5q09prnzr4s0'),
+          value: `${subTaskInfo.value.sourceDb} ${t(
+            'components.SubTaskDetail.5q0a5opxm3c0'
+          )} ${subTaskInfo.value.targetDb}`,
           span: 2
         },
         {
@@ -1163,11 +1191,12 @@ const getSubTaskDetail = () => {
             : t('components.SubTaskDetail.5q09prnznzg0'),
           span: 3
         },
+
         {
-          label: t('components.SubTaskDetail.5q09prnzr4s0'),
-          value: `${subTaskInfo.value.sourceDb} ${t(
-            'components.SubTaskDetail.5q0a5opxm3c0'
-          )} ${subTaskInfo.value.targetDb}`,
+          label: t('components.SubTaskDetail.5q09prnzqnw0'),
+          value: `${hour ? hour + t('components.SubTaskDetail.5q09prnzqpw0') : ''
+            } ${minute ? minute + t('components.SubTaskDetail.5q09prnzqs00') : ''
+            }`,
           span: 2
         },
         {
@@ -1185,33 +1214,8 @@ const getSubTaskDetail = () => {
               totalErrorCount: reverseData.value?.failCount || 0
             })
             : t('components.SubTaskDetail.5q09prnznzg0'),
-          span: 3
-        },
-        {
-          label: t('components.SubTaskDetail.5q09prnzqnw0'),
-          value: `${hour ? hour + t('components.SubTaskDetail.5q09prnzqpw0') : ''
-            } ${minute ? minute + t('components.SubTaskDetail.5q09prnzqs00') : ''
-            }`,
-          span: 2
-        },
-        {
-          label: t('components.SubTaskDetail.5q09prnzux41'),
-          value: dataCheckDetail
-            ? h('div', null, [
-              h(
-                'div',
-                null,
-                t('components.SubTaskDetail.5q09xhsvcq44', {
-                  totalRowCount: dataCheckData.value?.total || 0,
-                  totalTableCount: dataCheckData.value?.tableCount || 0,
-                  totalTableFinishCount:
-                    dataCheckData.value?.completeCount || 0
-                })
-              )
-            ])
-            : t('components.SubTaskDetail.5q09prnznzg0'),
           span: 5
-        }
+        },
       ]
 
       descData.value =
