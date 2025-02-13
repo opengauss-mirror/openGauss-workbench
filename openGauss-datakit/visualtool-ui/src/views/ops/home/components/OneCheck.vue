@@ -388,6 +388,7 @@ const formRules = computed(() => {
 })
 
 const getClusterList = () => new Promise(resolve => {
+  checkData.clusterList = []
   checkData.clusterListLoading = true
   clusterList().then((res: KeyValue) => {
     if (Number(res.code) === 200) {
@@ -424,12 +425,16 @@ const handleCheck = () => {
           }
           clusterCheck(param).then((res: KeyValue) => {
             if (Number(res.code) === 200) {
-              checkData.warningData = res.data.summary.WARNING
-              checkData.passData = res.data.summary.OK
-              checkData.errorData = res.data.summary.ERROR
-              checkData.ngData = res.data.summary.NG
+              checkData.warningData = res.data.summary.WARNING ? res.data.summary.WARNING : []
+              checkData.passData = res.data.summary.OK ? res.data.summary.OK : []
+              checkData.errorData = res.data.summary.ERROR ? res.data.summary.ERROR : []
+              checkData.ngData = res.data.summary.NG ? res.data.summary.NG : []
               checkData.finishTime = getCurrentTime()
-              checkData.checkNum = res.data.summary.WARNING.length + res.data.summary.OK.length + res.data.summary.ERROR.length + res.data.summary.NG.length
+              const warningLength = checkData.warningData.length;
+              const okLength = checkData.passData.length;
+              const errorLength = checkData.errorData.length;
+              const ngLength = checkData.ngData.length;
+              checkData.checkNum = warningLength + okLength + errorLength + ngLength
               checkData.checkResult = true
             }
           }).finally(() => {
@@ -475,7 +480,6 @@ const open = (clusterId?: string) => {
     checkData.isChoose = false
   } else {
     checkData.isChoose = true
-    checkData.clusterList = []
   }
   getClusterList()
   checkData.checkVisible = true
