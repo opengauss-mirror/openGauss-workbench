@@ -73,6 +73,7 @@ public class MigrationTaskStatusRecordServiceImpl
             if (isEqualLastStatus(recordList, TaskStatus.INCREMENTAL_PAUSE.getCode()) || isEqualLastStatus(recordList,
                 TaskStatus.REVERSE_PAUSE.getCode())) {
                 recordList.removeLast();
+                addMigrationTaskStatusRecord(recordList, taskId, status, statusMap);
                 continue;
             }
             addMigrationTaskStatusRecord(recordList, taskId, status, statusMap);
