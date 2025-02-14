@@ -27,6 +27,7 @@ package org.opengauss.admin.plugin.constants;
 import org.opengauss.admin.plugin.enums.TaskOperate;
 import org.opengauss.admin.plugin.enums.TaskStatus;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,8 +38,12 @@ import java.util.Map;
  * @date: 2023-02-24 00:04
  **/
 public class TaskConstant {
-
     public static Map<Integer, Integer> TASK_STATUS_OPERATE_MAPPING = new HashMap<>();
+
+    /**
+     * path separator
+     */
+    public static final String PATH_SEPARATOR = File.separator;
 
     /**
      * default openGauss db version

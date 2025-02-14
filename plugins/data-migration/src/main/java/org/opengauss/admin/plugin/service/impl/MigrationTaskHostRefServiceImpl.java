@@ -930,6 +930,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             return AjaxResult.error(MigrationErrorCode.STOP_KAFKA_ERROR.getCode(),
                 MigrationErrorCode.STOP_KAFKA_ERROR.getMsg());
         }
+        clearChameleonEnvData(portalHome, install.getJarName(), opsHost, hostUser, password);
         // if delete file failed, do nothing
         if (onlyPkg != null && !onlyPkg) {
             removeKafkaTools(install, portalHome, opsHost, hostUser, password);
@@ -944,6 +945,25 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             install.getDatakitLogPath());
         toolsParamService.removeByHostId(install.getRunHostId());
         return AjaxResult.success();
+    }
+
+    private void clearChameleonEnvData(String portalHome, String jarName, OpsHostEntity opsHost,
+                                       OpsHostUserEntity hostUser, String password) {
+        String chameleonHome = portalHome + "tools" + TaskConstant.PATH_SEPARATOR + "chameleon"
+                + TaskConstant.PATH_SEPARATOR;
+        String[] splitName = jarName.split("-");
+        if (splitName.length < 2) {
+            // if jarName is not valid, do nothing
+            return;
+        }
+        String version = splitName[1];
+        String chameleonVersionHome = chameleonHome + "chameleon" + "-" + version + TaskConstant.PATH_SEPARATOR;
+        String command = "sh clear_env_var.sh";
+        command = "cd " + chameleonVersionHome + " && " + command;
+        log.info("chameleon home: {}", chameleonVersionHome);
+        ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(),
+                hostUser.getUsername(), password, command);
+        log.info("clear chameleon env data success");
     }
 
     private void removeKafkaTools(MigrationHostPortalInstall install, String portalHome, OpsHostEntity opsHost,
