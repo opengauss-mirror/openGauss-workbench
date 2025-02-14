@@ -235,7 +235,8 @@ public interface SshCommandConstants {
     /**
      * Modify hba.conf
      */
-    String HBA = "gs_guc set -D {0} -h \"host all all 0.0.0.0/0 sha256\"";
+    String HBA = "gs_guc set -D {0} -h \"host all all 0.0.0.0/0 sha256\" "
+            + "&& gs_guc set -D {0} -h \"host all all ::/0 sha256\"";
     /**
      * Login to openGauss
      */
