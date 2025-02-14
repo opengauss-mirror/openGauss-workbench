@@ -6,9 +6,10 @@ const { setupApp, destroyApp } = WujieVue
 const degrade = window.localStorage.getItem('degrade') === 'true' || !window.Proxy || !window.CustomElementRegistry
 
 export function createPluginApp (name: string, url = '/') {
+  const actualUrl = process.env.NODE_ENV === 'development' ? `//localhost:8081${url}` : url
   setupApp({
     name,
-    url,
+    url: actualUrl,
     attrs: {},
     exec: true,
     fetch: credentialsFetch,
