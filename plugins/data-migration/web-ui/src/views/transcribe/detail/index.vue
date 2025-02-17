@@ -8,15 +8,13 @@
             <img src="@/assets/images/list.png" width="70" alt="">
           </div>
           <div class="text-label-container">
-            <div class="text-content">
-              <span class="text">{{ list.name }}</span>
-            </div>
+            <el-tooltip :content="list.name" placement="top">
+              <div class="text-content">
+                {{ list.name }}
+              </div>
+            </el-tooltip>
             <div class="tag-container">
-              <el-tag
-                :type="getTagType(list.status)"
-                effect="dark"
-                size="large"
-               >
+              <el-tag :type="getTagType(list.status)" effect="dark" size="large">
                 {{ getStatusText(list.status) }}
               </el-tag>
             </div>
@@ -41,18 +39,24 @@
     <div class="bottom-left">
       <div class="grid-content">
         <div class="icon-text-container" style=" min-width: 250px;max-width: 300px;">
-          <div class="text-label-container">
-            <div style=" margin-bottom: 40px; font-weight: bold;">
+          <div class="text-label-container basic-info">
+            <div class="info-title">
               <span>基本信息</span>
             </div>
-            <el-form :data="list" label-position="left" label-width="120">
+            <el-form :data="list" label-position="left" label-width="110">
               <el-form-item label="任务名称"><span>{{ list.name }}</span></el-form-item>
               <el-form-item label="任务ID"><span>{{ pageId }}</span></el-form-item>
-              <el-form-item label="源端数据库"><span>{{ list.sourceDB }}</span></el-form-item>
+
               <el-form-item label="任务类型"><span>{{ getTypeText(list.taskType) }}</span></el-form-item>
               <el-form-item label="任务耗时"><span>{{ formattedTime(list.taskDuration) }}</span></el-form-item>
-              <el-form-item label="任务开始时间"><span>{{ list.starttime }}</span></el-form-item>
-              <el-form-item label="任务结束时间"><span>{{ list.endtime }}</span></el-form-item>
+              <el-form-item label="任务开始时间"><span>{{ list.startTime }}</span></el-form-item>
+              <el-form-item label="任务结束时间"><span>{{ list.endTime }}</span></el-form-item>
+              <el-table :data="dbMapData" border class="dbMapTable">
+                <el-table-column label="数据库映射关系" align="center">
+                  <el-table-column prop="source" label="源端"></el-table-column>
+                  <el-table-column prop="target" label="目的端"></el-table-column>
+                </el-table-column>
+              </el-table>
             </el-form>
           </div>
         </div>
@@ -72,10 +76,11 @@
         <div class=" table-container">
           <div class="control-wrap">
             <div class="search-wrap">
-            <el-input type="text" prefix-icon="el-icon-search" v-model="searchText" :placeholder=defaulttext
-              style="width: 270px; cursor: pointer;padding-right: 20px" class="search-box" clearable @enter="handleSearch" />
-            <el-button :icon="IconSearch" type="primary" @click="handleSearch">搜索</el-button>
-          </div>
+              <el-input type="text" prefix-icon="el-icon-search" v-model="searchText" :placeholder=defaulttext
+                style="width: 270px; cursor: pointer;padding-right: 20px" class="search-box" clearable
+                @enter="handleSearch" />
+              <el-button :icon="IconSearch" type="primary" @click="handleSearch">搜索</el-button>
+            </div>
             <div class="switchside">
               <el-switch v-model="autoRefreshFlag" class="ml-2" inline-prompt
                 style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;" size="large" width="auto"
@@ -86,7 +91,7 @@
           <el-table row-key="sqlId" :data="list.data" :style="{ width: tableWidth }">
             <template v-for="(item, index) in tableHead">
               <el-table-column v-if="item.columnname === 'sqlStr'" :prop="item.columnname" :label="item.columncomment"
-                :style="div1Width" :show-overflow-tooltip="{'popper-class': 'sql-tooltip'}">
+                :style="div1Width" :show-overflow-tooltip="{ 'popper-class': 'sql-tooltip' }">
               </el-table-column>
               <el-table-column v-else :prop="item.columnname" :label="item.columncomment" :style="div1Width" />
             </template>
@@ -153,6 +158,7 @@ const getStatusText = (executionStatus) => {
   }
 }
 
+const dbMapData = ref([])
 const getTypeText = (executionStatus) => {
   switch (executionStatus) {
     case 'transcribe_replay':
@@ -182,7 +188,7 @@ const handleClick = async (tab, event) => {
 const list = ref({
   id: 0,
   name: '',
-  sourceDB: '',
+  dbMap: '',
   targetDB: '',
   status: '',
   taskType: '',
@@ -191,8 +197,8 @@ const list = ref({
   taskDuration: 0,
   sourceDuration: 0,
   targetDuration: 0,
-  starttime: '',
-  endtime: '',
+  startTime: '',
+  endTime: '',
   anynum: '',
   playbacknum: '',
   data: [],
@@ -300,20 +306,29 @@ const getHostInfo = () => {
   transcribeReplayList(tempFilter).then(res => {
     if (Number(res.code) === 200 && res.total === 1) {
       list.value.name = res.rows[0].taskName
-
-      list.value.sourceDB = res.rows[0].dbMap
       list.value.status = res.rows[0].executionStatus
       list.value.slowsqlQuery = res.rows[0].slowSqlCount
       list.value.failingsqlQuery = res.rows[0].failedSqlCount
       list.value.taskDuration = res.rows[0].taskDuration
       list.value.sourceDuration = res.rows[0].sourceDuration
       list.value.targetDuration = res.rows[0].targetDuration
-      list.value.starttime = res.rows[0].taskStartTime
-      list.value.endtime = res.rows[0].taskEndTime
+      list.value.startTime = res.rows[0].taskStartTime?.replaceAll('-', '/')
+      list.value.endTime = res.rows[0].taskEndTime?.replaceAll('-', '/')
       list.value.anynum = res.rows[0].parseNum
       list.value.playbacknum = res.rows[0].replayNum
-      list.value.taskType =res.rows[0].taskType
+      list.value.taskType = res.rows[0].taskType
+      dbMapData.value = res.rows[0].dbMap?.map(e => {
+        const mapItem = e.split(':')
+        return {
+          source: mapItem[0],
+          target: mapItem[1]
+        }
+      })
+      if (list.value.status === TASKSTATE.FINISH_NUMERIC || list.value.status === TASKSTATE.RUNNING_NUMERIC) {
+        getListData()
+      }
     }
+
   }).catch(error => {
   })
 }
@@ -339,7 +354,6 @@ const init = () => {
   pageId.value = window.$wujie?.props.data.id ?? queryId
   list.value.id = pageId
   getHostInfo()
-  getListData()
 }
 init()
 </script>
@@ -354,9 +368,10 @@ body {
 }
 
 .common-layout {
-  ::v-deep(.el-form-item__content){
+  ::v-deep(.el-form-item__content) {
     word-break: break-word;
   }
+
   display: grid;
   grid-template-columns: 300px 1fr;
   grid-template-rows: 120px 1fr;
@@ -365,9 +380,8 @@ body {
   overflow: auto;
   gap: 25px;
   padding: 10px;
-  grid-template-areas:
-    "top-left top-right"
-    "bottom-left bottom-right";
+  grid-template-areas: "top-left top-right"
+  "bottom-left bottom-right";
   background-color: #F4F6FA
 }
 
@@ -383,6 +397,21 @@ body {
 .text-label-container {
   display: flex;
   flex-direction: column;
+}
+
+.basic-info {
+  .el-form-item {
+    margin-bottom: 0px;
+  }
+
+  .info-title {
+    margin-bottom: 14px;
+    font-weight: bold;
+  }
+
+  .dbMapTable {
+    margin-top: 8px;
+  }
 }
 
 .text-same-line {
@@ -402,11 +431,12 @@ body {
 
 .text-content {
   margin-bottom: 20px;
-}
-
-.text {
   font-size: 20px;
   font-weight: bold;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  width: 150px;
+  white-space: nowrap;
 }
 
 .tag-container {
@@ -415,9 +445,7 @@ body {
   width: auto;
 }
 
-.grid-content {
-  margin: 10px;
-}
+
 
 .top-left,
 .top-right,
@@ -439,7 +467,7 @@ body {
   grid-area: bottom-left;
   background-color: white;
   align-items: flex-start;
-  padding: 20px;
+  padding: 22px;
 }
 
 .top-right {
@@ -496,23 +524,26 @@ body {
   max-width: 100%;
   /* Ensure it doesn't overflow the container */
 }
+
 :deep(.sql-tooltip) {
   max-width: 1500px;
 }
+
 .tab-content {
   padding: 22px;
 }
+
 .control-wrap {
   margin-bottom: 16px;
   display: flex;
   justify-content: space-between;
-  .switchside{
+
+  .switchside {
     display: flex;
   }
+
   .search-wrap {
     display: flex;
 
   }
-}
-
-</style>
+}</style>
