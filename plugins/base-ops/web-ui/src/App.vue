@@ -1,5 +1,5 @@
 <template>
-  <a-config-provider :locale="locale">
+  <a-config-provider :locale="locale" :updateAtScroll="true">
     <router-view v-slot="{ Component, route }">
       <keep-alive>
         <div class="app-container" v-if="route.meta && route.meta.keepAlive">
