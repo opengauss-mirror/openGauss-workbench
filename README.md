@@ -138,7 +138,7 @@ https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-
    source ~/.bashrc
    ```
 3. 参数配置\
-   修改并执行如下命令，设置配置文件`pg_hba.conf`相关参数
+   修改并执行如下命令，设置配置文件`pg_hba.conf`相关参数（如果是ipv6地址，则将以下“0.0.0.0/0”换成“::/0”）
    ```shell
    gs_guc set -D /opt/software/openGauss/data/single_node -h "host all all 0.0.0.0/0 sha256"
    ```

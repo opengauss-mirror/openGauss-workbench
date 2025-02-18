@@ -237,6 +237,7 @@
                   {{ $t('detail.index.5qofnua4a4g0') }}
                 </template>
                 host replication {{ reverseConfig.dbUser }} 0.0.0.0/0 sha256
+                host replication {{ reverseConfig.dbUser }} ::/0 sha256
               </a-alert>
               <a-alert class="config-item" type="success">
                 <template #title>

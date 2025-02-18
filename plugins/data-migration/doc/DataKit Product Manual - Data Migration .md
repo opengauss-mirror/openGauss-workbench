@@ -237,8 +237,10 @@ SHOW VARIABLES LIKE 'binlog_row_image';
 > ```sql
 > -- 根据连接用户和实际网络配置命令
 > gs_guc set -D /opt/datakit/opengauss/datanode/dn1 -h "host replication {connected username} {ip/port} sha256"
-> -- 直接允许所有用户和网络配置命令
+> -- 允许ipv4所有用户和网络配置命令
 > gs_guc set -D /opt/datakit/opengauss/datanode/dn1 -h "host replication all 0.0.0.0/0 sha256"
+> -- 允许ipv6所有用户和网络配置命令
+> gs_guc set -D /opt/datakit/opengauss/datanode/dn1 -h "host replication all ::/0 sha256"
 > ```
 >
 > 调整wal_level参数命令：
