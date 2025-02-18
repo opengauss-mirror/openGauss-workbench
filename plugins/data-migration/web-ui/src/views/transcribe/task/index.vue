@@ -175,7 +175,7 @@
                     </el-form-item>
                     <el-form-item>
                       <el-link v-if="!(replayTaskVersion && taskBasicInfo.replayTaskId != '')"
-                               @click.prevent="removeSetting(item)" @blur="validateRemoveDb">
+                               @click.prevent="removeSetting(index)" @blur="validateRemoveDb">
                         删除
                       </el-link>
                     </el-form-item>
