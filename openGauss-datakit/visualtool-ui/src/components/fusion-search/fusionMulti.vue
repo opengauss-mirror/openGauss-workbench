@@ -1,6 +1,6 @@
 <template>
   <el-select v-model="selectValue" multiple collapse ref="mainMultiRef" v-bind="props.elProps || {}" @blur="handleBlur"
-    @visible-change="handleVisibleChange" collapse-tags automatic-dropdown value-key="value">
+             @visible-change="handleVisibleChange" collapse-tags automatic-dropdown value-key="value">
     <el-option v-for="item in options" :key="item.value" :value="item" :disabled="item.disabled">
       {{ item.label }}
     </el-option>
@@ -14,9 +14,7 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick } from 'vue'
-import { watch } from 'vue'
-import { ref, PropType } from 'vue'
+import { nextTick, ref, PropType, watch } from 'vue'
 
 interface option {
   label: string,
@@ -64,14 +62,13 @@ const handleVisibleChange = () => {
 
 const mainMultiRef = ref(null)
 watch(() => props.focus, () => {
-  console.log(props.focus)
-  if (props.focus) {
-    nextTick(() => {
-      mainMultiRef.value?.toggleMenu()
-    })
-  }
+    if (props.focus) {
+      nextTick(() => {
+        mainMultiRef.value?.toggleMenu()
+      })
+    }
 
-},
+  },
   { immediate: true }
 )
 </script>

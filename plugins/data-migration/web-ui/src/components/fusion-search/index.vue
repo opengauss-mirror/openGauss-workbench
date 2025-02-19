@@ -2,8 +2,9 @@
   <div class="fusionSelect" v-click-outside="handleClickOutside">
     <div id="mainContent" :class="{ focus: (focus || !outClick) }">
       <!-- display the tags and the outer input -->
-      <el-tooltip v-for="(val, key) in selectedData" :key="val.keyValue" :content="`${val.keyLabel}：${val.paramLabel}`" placement="top">
-        <el-tag  class="tag" closable @close="closeTag(key)" :style="`max-width: ${tagMaxWidth}px;`">{{
+      <el-tooltip v-for="(val, key) in selectedData" :key="val.keyValue" :content="`${val.keyLabel}：${val.paramLabel}`"
+        placement="top">
+        <el-tag class="tag" closable @close="closeTag(key)" :style="`max-width: ${tagMaxWidth}px;`">{{
           `${val.keyLabel}：${val.paramLabel}` }}</el-tag>
       </el-tooltip>
       <span class="prefixTip" v-if="currentKeyLabel">{{ `${currentKeyLabel}：` }}</span>
@@ -128,10 +129,13 @@ const handleCancel = () => {
   focus.value = false
 }
 const getParam = (paramLabel: string, paramValue: any): void => {
+  if (isLabelSelect.value) {
+    // if the user is choosing label, the input value should be considered as invalid input and discarded.
+    return
+  }
   focus.value = false
   isLabelSelect.value = true
   selectedData.value[currentKeyValue.value] = { keyLabel: currentKeyLabel.value, keyValue: currentKeyValue.value, paramLabel, paramValue }
-  selectValue.value = ''
   currentKeyValue.value = ''
   currentKeyLabel.value = ''
 }
@@ -142,6 +146,7 @@ const clickSearch = () => {
     // handle no option situation, get params from input
     getParam(selectValue.value, selectValue.value)
   }
+  selectValue.value = ''
   const outputData = Object.keys(selectedData.value).reduce((acc, key) => {
     acc[key] = selectedData.value[key]?.paramValue
     return acc
