@@ -96,4 +96,14 @@ public interface TranscribeReplayConstants {
      * SQL_TRANSCRIBE_MODE
      */
     String SQL_TRANSCRIBE_MODE = "sql.transcribe.mode";
+
+    /**
+     * PCAP_FILE_PATH
+     */
+    String PCAP_FILE_PATH = "tcpdump-files";
+
+    /**
+     * JSON_PATH
+     */
+    String JSON_PATH = "sql-files";
 }
