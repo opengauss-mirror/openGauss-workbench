@@ -24,9 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.opengauss.collect.config.common.Constant;
 import org.opengauss.collect.domain.CollectPeriod;
 import org.opengauss.collect.domain.LinuxConfig;
-import org.opengauss.collect.service.impl.SqlOperationImpl;
 import org.opengauss.collect.utils.JschUtil;
-import org.opengauss.collect.utils.MonitSpringUtils;
 import org.opengauss.collect.utils.StringUtil;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
@@ -61,12 +59,9 @@ public class PileInsertionJob implements Job {
         String command = getCommand(pid, task) + "neverStop=false executionTime=" + executeTime + " " + "unit=minutes "
                 + "writePath=" + task.getFilePath() + " threshold=10";
         log.info(command);
-        String res = JschUtil.executeTask(command, session, task.getFilePath());
-        if (res.contains(Constant.PILE_SUCCESS)) {
-            // Successfully inserted the stake, modify the task status to running
-            task.setCurrentStatus(Constant.TASK_RUN);
-            MonitSpringUtils.getClass(SqlOperationImpl.class).updateCurrentStatus(task);
-        } else {
+        String res = JschUtil.executeTask(task, command, session);
+        if (!res.contains(Constant.PILE_SUCCESS)) {
+            JschUtil.updateStatus(task);
             log.error("The insertion of the target process failed for an unknown reason. Please try again");
         }
     }

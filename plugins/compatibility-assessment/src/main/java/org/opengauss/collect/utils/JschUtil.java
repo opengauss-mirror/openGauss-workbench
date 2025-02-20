@@ -30,6 +30,7 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -42,10 +43,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.collect.config.common.Constant;
+import org.opengauss.collect.domain.CollectPeriod;
 import org.opengauss.collect.domain.LinuxConfig;
 import org.opengauss.admin.common.exception.ServiceException;
+import org.opengauss.collect.service.impl.SqlOperationImpl;
 
 /**
  * JschUtil
@@ -79,13 +83,16 @@ public class JschUtil {
     /**
      * upload
      *
+     * @param task    task
      * @param session session
+     * @param map     map
      */
-    public static void upload(Session session, String uploadPath, Map<String, InputStream> map) {
+    public static void upload(CollectPeriod task, Session session, Map<String, InputStream> map) {
         AssertUtil.isTrue(CollectionUtil.isEmpty(map), "upload file can not is empty");
         AssertUtil.isTrue(ObjectUtil.isEmpty(session), "JschUtil upload occur error session is null,"
                 + "Failed to start uploading the instrumentation file");
         // Open the sftp channel
+        String uploadPath = task.getFilePath();
         ChannelSftp channelTrans = new ChannelSftp();
         try {
             if (session.openChannel("sftp") instanceof ChannelSftp) {
@@ -123,6 +130,7 @@ public class JschUtil {
             }
         } catch (JSchException | SftpException e) {
             channelTrans.disconnect();
+            updateStatus(task);
             throw new ServiceException(e.getMessage());
         }
         channelTrans.disconnect();
@@ -311,9 +319,12 @@ public class JschUtil {
     /**
      * executeTask
      *
+     * @param task    task
      * @param command command
+     * @param session session
+     * @return String
      */
-    public static String executeTask(String command, Session session, String path) {
+    public static String executeTask(CollectPeriod task, String command, Session session) {
         if (session == null) {
             throw new ServiceException("Connection to Linux failed to obtain session");
         }
@@ -324,12 +335,22 @@ public class JschUtil {
         InputStream attachStream = JschUtil.class.getClassLoader()
                 .getResourceAsStream(Constant.INSERTION_ATTACHNAME_PATH);
         map.put(Constant.INSERTION_ATTACHNAME, attachStream);
-        upload(session, path, map);
+        upload(task, session, map);
         log.info("<------------------------------------------------------------->");
         log.info("Start executing the pile insertion start command--->{}", command);
         String res = executeCommand(session, command);
         log.info("Close session");
         closeSession(session);
         return res;
+    }
+
+    /**
+     * updateStatus
+     *
+     * @param task task
+     */
+    public static void updateStatus(CollectPeriod task) {
+        task.setCurrentStatus(Constant.TASK_STOP);
+        MonitSpringUtils.getClass(SqlOperationImpl.class).updateCurrentStatus(task);
     }
 }

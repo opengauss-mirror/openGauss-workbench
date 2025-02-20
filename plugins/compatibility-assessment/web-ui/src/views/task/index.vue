@@ -29,7 +29,7 @@
           </a-select>
         </div>
         <a-input-search
-          v-model="filter.taskName"          
+          v-model="filter.taskName"
           allowClear
           @search="isFilter"
           @press-enter="isFilter"
@@ -353,7 +353,7 @@ const handleSwitchChange = (record) => {
     .then((res) => {
       if (Number(res.code) === 200) {
         Message.success({
-          content: "start success",
+          content: res.msg,
         });
         getListData();
       } else {

@@ -70,6 +70,7 @@ import org.opengauss.collect.enums.AssessEnum;
 import org.opengauss.collect.manager.MonitorManager;
 import org.opengauss.collect.mapper.AssessmentMapper;
 import org.opengauss.collect.mapper.CollectPeriodMapper;
+import org.opengauss.collect.proloading.SchedulerService;
 import org.opengauss.collect.quartz.HeartbeatJob;
 import org.opengauss.collect.quartz.ModifyStateJob;
 import org.opengauss.collect.quartz.PileInsertionJob;
@@ -83,18 +84,13 @@ import org.opengauss.collect.utils.IdUtils;
 import org.opengauss.collect.utils.JschUtil;
 import org.opengauss.collect.utils.StringUtil;
 import org.opengauss.collect.utils.response.RespBean;
-import org.opengauss.collect.utils.scheduler.SchedulerUtil;
 import org.quartz.JobDetail;
-import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
-import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PreDestroy;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -111,8 +107,6 @@ public class SqlOperationImpl implements SqlOperation {
 
     @Autowired
     private CollectPeriodMapper periodMapper;
-
-    private Scheduler scheduler;
 
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
@@ -132,6 +126,9 @@ public class SqlOperationImpl implements SqlOperation {
 
     @Autowired
     private AssessmentMapper assessmentMapper;
+
+    @Autowired
+    private SchedulerService schedulerService;
 
     @Override
     public RespBean getAllPids(String host, String hostUser) {
@@ -210,7 +207,7 @@ public class SqlOperationImpl implements SqlOperation {
     /**
      * getLinuxConfig
      *
-     * @param host host
+     * @param host     host
      * @param hostUser hostUser
      * @return Optional<LinuxConfig>  Optional
      */
@@ -218,8 +215,8 @@ public class SqlOperationImpl implements SqlOperation {
         List<OpsHostEntity> entities = hostService.list();
         List<OpsHostUserEntity> userEntities = hostUserService.list();
         Map<String, OpsHostUserEntity> userMap = userEntities.stream()
-            .filter(item -> item.getUsername().equals(hostUser))
-            .collect(Collectors.toMap(OpsHostUserEntity::getHostId, Function.identity()));
+                .filter(item -> item.getUsername().equals(hostUser))
+                .collect(Collectors.toMap(OpsHostUserEntity::getHostId, Function.identity()));
         return entities.stream().filter(entity -> entity.getPublicIp().equals(host)).findFirst().flatMap(entity -> {
             LinuxConfig config = new LinuxConfig();
             config.setHost(host);
@@ -279,8 +276,8 @@ public class SqlOperationImpl implements SqlOperation {
 
     private String getSystemPath(Integer userId) {
         return Optional.ofNullable(sysSettingFacade.getSysSetting(userId))
-            .map(sysSetting -> sysSetting.getUploadPath() + Constant.ACT_PATH)
-            .orElse("");
+                .map(sysSetting -> sysSetting.getUploadPath() + Constant.ACT_PATH)
+                .orElse("");
     }
 
     /**
@@ -322,16 +319,16 @@ public class SqlOperationImpl implements SqlOperation {
     private void checkAssessment(Assessment assessment, String sqlInputType) {
         // 校验opengauss数据库
         String gaussUrl = "jdbc:opengauss://" + assessment.getOpengaussHost() + ":" + assessment.getOpengaussPort()
-            + "/" + assessment.getOpengaussDbname() + "?batchMode=off";
+                + "/" + assessment.getOpengaussDbname() + "?batchMode=off";
         ConnectionUtils.getConnection(DbTypeEnum.OPENGAUSS.getDriverClass(), gaussUrl, assessment.getOpengaussUser(),
-            assessment.getOpengaussPassword());
+                assessment.getOpengaussPassword());
         if (sqlInputType.equals(Constant.ASSESS_COLLECT)) {
             // 校验mysql数据库
             String mysqlUrl = "jdbc:mysql://" + assessment.getMysqlHost() + ":" + assessment.getMysqlPort() + "/"
-                + assessment.getMysqlDbname() + "?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/"
-                + "Shanghai&useSSL=false&allowPublicKeyRetrieval=true";
+                    + assessment.getMysqlDbname() + "?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/"
+                    + "Shanghai&useSSL=false&allowPublicKeyRetrieval=true";
             ConnectionUtils.getConnection(DbTypeEnum.MYSQL.getDriverClass(), mysqlUrl, assessment.getMysqlUser(),
-                assessment.getMysqlPassword());
+                    assessment.getMysqlPassword());
         }
     }
 
@@ -351,20 +348,20 @@ public class SqlOperationImpl implements SqlOperation {
         try (PrintWriter writer = new PrintWriter(filePath)) {
             AssessmentBuilder builder = new AssessmentBuilder();
             builder.appendProperty("assessmenttype", assessment.getAssessmenttype())
-                .appendProperty("filedir", assessment.getFiledir())
-                .appendProperty("sqltype", assessment.getSqltype())
-                .appendSectionBreak()
-                .appendProperty("mysql.password", assessment.getMysqlPassword())
-                .appendProperty("mysql.user", assessment.getMysqlUser())
-                .appendProperty("mysql.port", assessment.getMysqlPort())
-                .appendProperty("mysql.host", assessment.getMysqlHost())
-                .appendProperty("mysql.dbname", assessment.getMysqlDbname())
-                .appendSectionBreak()
-                .appendProperty("opengauss.user", assessment.getOpengaussUser())
-                .appendProperty("opengauss.password", assessment.getOpengaussPassword())
-                .appendProperty("opengauss.port", assessment.getOpengaussPort())
-                .appendProperty("opengauss.host", assessment.getOpengaussHost())
-                .appendProperty("opengauss.dbname", assessment.getOpengaussDbname());
+                    .appendProperty("filedir", assessment.getFiledir())
+                    .appendProperty("sqltype", assessment.getSqltype())
+                    .appendSectionBreak()
+                    .appendProperty("mysql.password", assessment.getMysqlPassword())
+                    .appendProperty("mysql.user", assessment.getMysqlUser())
+                    .appendProperty("mysql.port", assessment.getMysqlPort())
+                    .appendProperty("mysql.host", assessment.getMysqlHost())
+                    .appendProperty("mysql.dbname", assessment.getMysqlDbname())
+                    .appendSectionBreak()
+                    .appendProperty("opengauss.user", assessment.getOpengaussUser())
+                    .appendProperty("opengauss.password", assessment.getOpengaussPassword())
+                    .appendProperty("opengauss.port", assessment.getOpengaussPort())
+                    .appendProperty("opengauss.host", assessment.getOpengaussHost())
+                    .appendProperty("opengauss.dbname", assessment.getOpengaussDbname());
             writer.write(builder.build());
         } catch (IOException e) {
             throw new ServiceException(e.getMessage());
@@ -394,7 +391,7 @@ public class SqlOperationImpl implements SqlOperation {
     @Override
     public RespBean sqlAssessInit() {
         Optional<Assessment> optionalAssessment = Optional.ofNullable(
-            assessmentCache.getIfPresent(Constant.ASSESS_PATH));
+                assessmentCache.getIfPresent(Constant.ASSESS_PATH));
         optionalAssessment.ifPresent(assessment -> {
             assessment.setMysqlPassword("");
             assessment.setOpengaussPassword("");
@@ -402,36 +399,54 @@ public class SqlOperationImpl implements SqlOperation {
             assessment.setSqltype("");
         });
         return optionalAssessment.map(assessment -> RespBean.success("success", assessment))
-            .orElse(RespBean.success("success"));
+                .orElse(RespBean.success("success"));
     }
 
     @Override
     public RespBean startCollectingSql(CollectPeriod task) {
         CollectPeriod period = periodMapper.selectById(task.getTaskId());
-        AssertUtil.isTrue(Constant.TASK_RUN.equals(period.getCurrentStatus()),
-            "The task is running, you cannot do this");
+        // Stop the task if it is already runnin
+        if (!task.isSwitchStatus()) {
+            stopCollectingSql(task);
+            return RespBean.success("Stop success");
+        }
+        // Ensure the task is completed before starting it
         AssertUtil.isTrue(Constant.TASK_COMPLETED.equals(period.getCurrentStatus()),
-            "The task is completed, you cannot do this");
+                "Task is completed, cannot start");
         String host = task.getHost();
-        Optional<LinuxConfig> config = getLinuxConfig(host, task.getHostUser());
-        AssertUtil.isTrue(!config.isPresent(), "host is not exists");
+        LinuxConfig config = getLinuxConfig(host,
+                task.getHostUser()).orElseThrow(() -> new ServiceException("Host not found"));
         try {
-            createAndStartScheduler(task, config.get());
-        } catch (SchedulerException exception) {
-            return RespBean.error("createAndStartScheduler occus error");
+            createAndStartScheduler(task, config);
+        } catch (SchedulerException e) {
+            log.error("Error creating or starting scheduler: {}", e.getMessage());
+            return RespBean.error("Error creating or starting scheduler");
         }
         task.setSwitchStatus(true);
+        task.setCurrentStatus(Constant.TASK_RUN);
         updateCurrentStatus(task);
-        return RespBean.success("start collect sql");
+        return RespBean.success("Start collecting SQL");
     }
 
-    private Scheduler createAndStartScheduler(CollectPeriod task, LinuxConfig config) throws SchedulerException {
-        SchedulerFactory schedulerFactory = new StdSchedulerFactory();
-        scheduler = schedulerFactory.getScheduler();
-        // 获得时间的map 然后遍历
+    private void stopCollectingSql(CollectPeriod task) {
         Map<String, String> timeMap = StringUtil.handleString(task.getTimeInterval());
-        // 校验时间
-        AssertUtil.isTrue(checkaaTime(timeMap), "The start time cannot be less than the current server's time");
+        timeMap.forEach((key, value) -> {
+            removeSchedulerJobs(key);
+        });
+        task.setCurrentStatus(Constant.TASK_STOP);
+        task.setSwitchStatus(false);
+        updateCurrentStatus(task);
+    }
+
+    private void removeSchedulerJobs(String key) {
+        schedulerService.removeJob(key);
+        schedulerService.removeJob(key + "Heartbeat");
+        schedulerService.removeJob(key + "status");
+    }
+
+    private void createAndStartScheduler(CollectPeriod task, LinuxConfig config) throws SchedulerException {
+        Map<String, String> timeMap = StringUtil.handleString(task.getTimeInterval());
+        AssertUtil.isTrue(checkStartTime(timeMap), "Start time cannot be earlier than current server time");
         for (Map.Entry<String, String> entry : timeMap.entrySet()) {
             String startTime = entry.getKey();
             String endTime = entry.getValue();
@@ -440,46 +455,42 @@ public class SqlOperationImpl implements SqlOperation {
             jobDataMap.put(Constant.EXECUTE_TIME, executionTime);
             jobDataMap.put(Constant.TASK, task);
             jobDataMap.put(Constant.CONFIG, config);
-            JobDetail detail = SchedulerUtil.getJobDetail(startTime, Constant.SCHEDULER_GROUP, jobDataMap,
-                PileInsertionJob.class);
-            Trigger trigger = SchedulerUtil.getTrigger(startTime, Constant.SCHEDULER_GROUP, startTime, "", 0);
-            checkDetail(detail);
-            scheduler.scheduleJob(detail, trigger);
-            // Heartbeat detection scheduler
-            JobDetail beatDetail = SchedulerUtil.getJobDetail(startTime + "Heartbeat", Constant.SCHEDULER_GROUP,
-                jobDataMap, HeartbeatJob.class);
-            Trigger beatTrigger = SchedulerUtil.getTrigger(startTime + "Heartbeat", Constant.SCHEDULER_GROUP, startTime,
-                endTime, DateUtil.getInterval(executionTime));
-            checkDetail(beatDetail);
-            scheduler.scheduleJob(beatDetail, beatTrigger);
-            // Task completion change status
-            JobDetail statusDetail = SchedulerUtil.getJobDetail(startTime + "status", Constant.SCHEDULER_GROUP,
-                jobDataMap, ModifyStateJob.class);
-            Trigger statustrigger = SchedulerUtil.getTrigger(startTime + "status", Constant.SCHEDULER_GROUP, endTime,
-                "", 0);
-            checkDetail(statusDetail);
-            scheduler.scheduleJob(statusDetail, statustrigger);
+            scheduleJob(startTime, jobDataMap, executionTime, startTime, endTime);
         }
-        scheduler.start();
-        return scheduler;
     }
 
-    private boolean checkaaTime(Map<String, String> timeMap) {
+    private void scheduleJob(String startTime, Map<String, Object> jobDataMap, String executionTime,
+                             String start, String end) {
+        // Schedule main job
+        JobDetail jobDetail = schedulerService.getJobDetail(startTime, jobDataMap, PileInsertionJob.class);
+        Trigger trigger = schedulerService.getTrigger(startTime, start, "", 0);
+        schedulerService.checkDetail(jobDetail);
+        schedulerService.startJob(jobDetail, trigger);
+        // Schedule heartbeat job
+        JobDetail heartbeatJob = schedulerService.getJobDetail(startTime + "Heartbeat",
+                jobDataMap, HeartbeatJob.class);
+        Trigger heartbeatTrigger = schedulerService.getTrigger(startTime + "Heartbeat", start, end,
+                DateUtil.getInterval(executionTime));
+        schedulerService.checkDetail(heartbeatJob);
+        schedulerService.startJob(heartbeatJob, heartbeatTrigger);
+        // Schedule status job
+        JobDetail statusJob = schedulerService.getJobDetail(startTime + "status", jobDataMap,
+                ModifyStateJob.class);
+        Trigger statusTrigger = schedulerService.getTrigger(startTime + "status", end, "", 0);
+        schedulerService.checkDetail(statusJob);
+        schedulerService.startJob(statusJob, statusTrigger);
+    }
+
+    private boolean checkStartTime(Map<String, String> timeMap) {
         // 创建DateTimeFormatter用于解析时间字符串
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Constant.TIME_FORMAT);
         // 获取当前时间
         LocalDateTime now = LocalDateTime.now();
         // 检查timeMap中是否有值小于当前时间的情况
         return timeMap.keySet().stream().anyMatch(key -> {
-            LocalDateTime time = LocalDateTime.parse(timeMap.get(key), formatter);
+            LocalDateTime time = LocalDateTime.parse(key, formatter);
             return time.isBefore(now);
         });
-    }
-
-    private void checkDetail(JobDetail detail) throws SchedulerException {
-        if (scheduler.checkExists(detail.getKey())) {
-            scheduler.deleteJob(detail.getKey());
-        }
     }
 
     /**
@@ -489,17 +500,5 @@ public class SqlOperationImpl implements SqlOperation {
      */
     public void updateCurrentStatus(CollectPeriod period) {
         periodMapper.updateById(period);
-    }
-
-    /**
-     * stopScheduler
-     *
-     * @throws SchedulerException SchedulerException
-     */
-    @PreDestroy
-    public void stopScheduler() throws SchedulerException {
-        if (scheduler != null) {
-            scheduler.shutdown();
-        }
     }
 }
