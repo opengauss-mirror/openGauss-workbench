@@ -139,12 +139,14 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     public Integer countByProcessing() {
         LambdaQueryWrapper<MigrationMainTask> query = new LambdaQueryWrapper<>();
         query.eq(MigrationMainTask::getExecStatus, MainTaskStatus.RUNNING.getCode());
+        query.or().eq(MigrationMainTask::getExecStatus, MainTaskStatus.CHECK_MIGRATION.getCode());
         return Math.toIntExact(count(query));
     }
 
     public List<MigrationMainTask> listByProcessing() {
         LambdaQueryWrapper<MigrationMainTask> query = new LambdaQueryWrapper<>();
         query.eq(MigrationMainTask::getExecStatus, MainTaskStatus.RUNNING.getCode());
+        query.or().eq(MigrationMainTask::getExecStatus, MainTaskStatus.CHECK_MIGRATION.getCode());
         return list(query);
     }
 
@@ -498,6 +500,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         }
         subTask.setOrderInvokedTimestamp(finishTaskTimestamp);
         doFinishTask(subTask);
+        MigrationMainTask mainTask = getById(subTask.getMainTaskId());
+        doRefreshSingleMainTask(mainTask);
         return AjaxResult.success();
     }
 
