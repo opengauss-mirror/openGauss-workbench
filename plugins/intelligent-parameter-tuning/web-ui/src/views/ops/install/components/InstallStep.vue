@@ -69,8 +69,8 @@ const getAlldbName = (id) => {
   }).finally(() => {
   })
 }
-const getAllschemaName = (id) => {
-  getSchemaNameList({clusterName:id}).then((res: KeyValue) => {
+const getAllschemaName = (name,id) => {
+  getSchemaNameList({clusterName:id,dbName:name}).then((res: KeyValue) => {
     let data = []
     if (Number(res.code) === 200) {
       res.obj.forEach((item: KeyValue) => {

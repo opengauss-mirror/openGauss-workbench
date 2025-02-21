@@ -31,7 +31,7 @@
     <a-select
       v-model="formSysbench.db"
       :placeholder="$t('install.Offline.7mpn60ejri13')"
-      @change=""
+      @change="selectdbChange"
     >
       <a-option
         v-for="option in dbList"
@@ -406,7 +406,7 @@ onMounted(() => {
   if(storeData.value.isCopy){
     Object.assign(formSysbench, storeData.value.copyData)
     emits('selectdbList', formSysbench.clusterName)
-    emits('selectschemaNameList', formSysbench.clusterName)
+    emits('selectschemaNameList', formSysbench.db, formSysbench.clusterName)
   }
 })
 const props = defineProps({
@@ -426,8 +426,9 @@ const props = defineProps({
 const emits = defineEmits(['selectdbList','selectschemaNameList'])
 const selectChange = (e) => {
   emits('selectdbList', e);
-  emits('selectschemaNameList', e);
-  formSysbench.schemaName = 'public';
+}
+const selectdbChange = (e) => {
+  emits('selectschemaNameList', e, formSysbench.clusterName);
 }
 const getFormData = (object) => {
     const formData = new FormData()

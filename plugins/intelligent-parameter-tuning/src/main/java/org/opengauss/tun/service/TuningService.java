@@ -226,7 +226,8 @@ public interface TuningService {
      * getSchema
      *
      * @param clusterName clusterName
+     * @param dbName dbName
      * @return RespBean
      */
-    RespBean getSchema(String clusterName);
+    RespBean getSchema(String clusterName, String dbName);
 }

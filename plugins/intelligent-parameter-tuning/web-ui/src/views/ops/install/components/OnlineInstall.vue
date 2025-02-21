@@ -31,7 +31,7 @@
     <a-select
       v-model="formDwg.db"
       :placeholder="$t('install.Offline.7mpn60ejri13')"
-      @change=""
+      @change="selectdbChange"
     >
       <a-option
         v-for="option in dbList"
@@ -695,8 +695,9 @@ const props = defineProps({
 const emits = defineEmits(['selectdbList','selectschemaNameList'])
 const selectChange = (e) => {
   emits('selectdbList', e);
-  emits('selectschemaNameList', e);
-  formDwg.schemaName = 'public';
+}
+const selectdbChange = (e) => {
+  emits('selectschemaNameList', e, formDwg.clusterName);
 }
 const handleUpload = (fileList) => {
   formDwg.customLoad = []
@@ -755,7 +756,7 @@ onMounted(() => {
   if(storeData.value.isCopy){
     Object.assign(formDwg, storeData.value.copyData)
     emits('selectdbList', formDwg.clusterName)
-    emits('selectschemaNameList', formDwg.clusterName)
+    emits('selectschemaNameList', formDwg.db, formDwg.clusterName )
     getFile(formDwg.trainingId)
   }
 })

@@ -348,8 +348,8 @@ public class TuningServiceImpl implements TuningService {
     }
 
     @Override
-    public RespBean getSchema(String clusterName) {
-        try (Connection connection = getConnection(clusterName, "")) {
+    public RespBean getSchema(String clusterName, String dbName) {
+        try (Connection connection = getConnection(clusterName, dbName)) {
             List<String> schema = retrieveDatabases(connection, FixedTuning.SEARCH, FixedTuning.RES);
             return RespBean.success("success", schema);
         } catch (SQLException e) {
