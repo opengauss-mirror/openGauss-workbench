@@ -53,7 +53,7 @@ public interface TranscribeReplayService extends IService<TranscribeReplayTask> 
      * @param id id
      * @param config config
      */
-    void downloadAndConfig(TranscribeReplayTaskDto transcribeReplayTaskDto, Integer id, Map<String, Object> config);
+    void downloadAndConfig(TranscribeReplayTaskDto transcribeReplayTaskDto, Integer id, Map<String, String> config);
 
     /**
      * saveTask

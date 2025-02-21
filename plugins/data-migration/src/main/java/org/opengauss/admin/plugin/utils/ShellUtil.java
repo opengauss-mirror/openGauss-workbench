@@ -41,7 +41,6 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringJoiner;
@@ -362,10 +361,10 @@ public class ShellUtil {
      * update File Content
      *
      * @param shellInfo shell information
-     * @param configMap configMap
+     * @param content content
      * @param remotePath remotePath
      */
-    public static void updateFileContent(ShellInfoVo shellInfo, Map<String, Object> configMap, String remotePath) {
+    public static void updateFileContent(ShellInfoVo shellInfo, String content, String remotePath) {
         Session session = null;
         Channel channel = null;
         ChannelSftp channelSftp = null;
@@ -382,12 +381,7 @@ public class ShellUtil {
             } else {
                 throw new ClassCastException("Channel is not an instance of ChannelSftp");
             }
-            StringBuilder content = new StringBuilder();
-            for (Map.Entry<String, Object> entry : configMap.entrySet()) {
-                content.append(entry.getKey()).append("=").append(entry.getValue()).append("\n");
-            }
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(
-                content.toString().getBytes(StandardCharsets.UTF_8));
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
             channelSftp.put(inputStream, remotePath);
         } catch (JSchException | SftpException e) {
             log.error("update file content error.", e);
