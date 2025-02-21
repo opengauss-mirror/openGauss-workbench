@@ -48,9 +48,7 @@
               </el-table-column>
               <el-table-column :label="$t('transcribe.config.parades')" prop="intro">
                 <template #default="{ row }">
-                  <el-tooltip class="item" effect="dark" :content="row.intro" placement="top">
                     <span class="single-line-text" :title="row.intro">{{ row.intro }}</span>
-                  </el-tooltip>
                 </template>
               </el-table-column>
             </el-table>
@@ -106,9 +104,7 @@
               </el-table-column>
               <el-table-column :label="$t('transcribe.config.parades')" prop="intro">
                 <template #default="{ row }">
-                  <el-tooltip class="item" effect="dark" :content="row.intro" placement="top">
                     <span class="single-line-text" :title="row.intro">{{ row.intro }}</span>
-                  </el-tooltip>
                 </template>
               </el-table-column>
             </el-table>

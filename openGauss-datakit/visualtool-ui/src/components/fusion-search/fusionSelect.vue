@@ -7,9 +7,7 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick } from 'vue'
-import { watch } from 'vue'
-import { ref, PropType } from 'vue'
+import { nextTick, ref, PropType, watch } from 'vue'
 
 interface option {
   label: string,
@@ -34,22 +32,23 @@ const selectValue = ref<string | number | boolean>('')
 // this component should get options and return param
 const emit = defineEmits(['blur', 'cancel'])
 const handleBlur = () => {
-    const paramLabel = props.options.find(e => e.value === selectValue.value)?.label
-    emit('blur', paramLabel, selectValue.value)
+  const paramLabel = props.options.find(e => e.value === selectValue.value)?.label
+  emit('blur', paramLabel, selectValue.value)
 }
 const visibleChange = () => {
+    // when you choose nothing, emit cancel, so you can trigger panel again
   if (!selectValue.value) {
     emit('cancel')
   }
 }
 const mainSelectRef = ref(null)
 watch(() => props.focus, () => {
-  if (props.focus) {
-    nextTick(() => {
-      mainSelectRef.value?.toggleMenu()
-    })
-  }
-},
+    if (props.focus) {
+      nextTick(() => {
+        mainSelectRef.value?.toggleMenu()
+      })
+    }
+  },
   { immediate: true }
 )
 </script>
