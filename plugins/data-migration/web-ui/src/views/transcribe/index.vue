@@ -5,19 +5,19 @@
         <div class="flex-between mb-s">
           <div class="operate-button">
             <div>
-              <el-button type="primary" class="mr" @click="addRecordPlayBack('create')">创建录制回放</el-button>
-              <el-popconfirm title="是否确认批量删除?" @confirm="deleteSelectedHosts">
+              <el-button type="primary" class="mr" @click="addRecordPlayBack('create')">{{ $t('transcribe.index.createtask') }}</el-button>
+              <el-popconfirm :title="t('transcribe.index.bulkdelete')" @confirm="deleteSelectedHosts">
                 <template #reference>
-                  <el-button type="primary" class="mr">批量删除</el-button>
+                  <el-button type="primary" class="mr">{{ $t('transcribe.index.bulkdeletebtn') }}</el-button>
                 </template>
               </el-popconfirm>
-              <el-button class="mr" @click="getListData">刷新</el-button>
+              <el-button class="mr" @click="getListData">{{ $t('detail.index.5q09asiwg4g0') }}</el-button>
             </div>
             <div class="switchside">
               <el-switch v-model="autoRefreshFlag" class="ml-2" inline-prompt
                          style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;" size="large"
                          width="auto"
-                         active-text="自动刷新" inactive-text="停止刷新" @change="autoRefreshList"/>
+                         :active-text="t('transcribe.index.autorefresh')" :inactive-text="t('transcribe.index.stoprefresh')" @change="autoRefreshList"/>
             </div>
           </div>
         </div>
@@ -29,14 +29,14 @@
     <div class="packageList">
       <el-table :row-key="(row) => row.id" :data="list.data" @selection-change="handleSelected" style="width: 100vw">
         <el-table-column type="selection" width="40"/>
-        <el-table-column :label="$t('id')" prop="id" :width="50" sortable/>
-        <el-table-column :label="$t('任务名称')" prop="taskName" sortable>
+        <el-table-column :label="id" prop="id" :width="50" sortable/>
+        <el-table-column :label="t('transcribe.index.taskname') " prop="taskName" sortable>
           <template #default="{ row }">
             <el-button link type="primary" @click.prevent="goDetail(row)">{{ row.taskName }}</el-button>
           </template>
         </el-table-column>
-        <el-table-column :label="$t('数据库')" prop="dbName"/>
-        <el-table-column :label="$t('执行状态')" prop="executionStatus" :width="100" sortable>
+        <el-table-column :label="t('transcribe.index.dbname') " prop="dbName"/>
+        <el-table-column :label="t('transcribe.index.executionstatus')" prop="executionStatus" :width="100" sortable>
           <template #default="{ row }">
             <el-popover
               placement="top-start" :width="400" trigger="hover"
@@ -56,24 +56,24 @@
             </el-popover>
           </template>
         </el-table-column>
-        <el-table-column :label="$t('任务类型')" prop="taskType" :width="100">
+        <el-table-column :label="t('transcribe.index.tasktype')" prop="taskType" :width="100">
           <template #default="{ row }">
             {{ getTypeText(row.taskType) }}
           </template>
         </el-table-column>
-        <el-table-column :label="$t('慢sql')" prop="slowSqlCount" :width="70">
+        <el-table-column :label="t('transcribe.index.slowsql')" prop="slowSqlCount" :width="70">
         </el-table-column>
-        <el-table-column :label="$t('失败sql')" prop="failedSqlCount" :width="70">
+        <el-table-column :label="t('transcribe.index.failingSQL')" prop="failedSqlCount" :width="70">
         </el-table-column>
-        <el-table-column :label="$t('任务耗时')" prop="taskDuration" sortable>
+        <el-table-column :label="t('transcribe.index.taskDuration')" prop="taskDuration" sortable>
           <template #default="{ row }">
             <div v-if="row.taskDuration === 0">--</div>
             <div v-else> {{ formattedTime(row.taskDuration) }}</div>
           </template>
         </el-table-column>
-        <el-table-column :label="$t('任务开始时间')" prop="taskStartTime" sortable/>
-        <el-table-column :label="$t('任务完成时间')" prop="taskEndTime" sortable/>
-        <el-table-column label="操作">
+        <el-table-column :label="t('transcribe.index.taskStartTime') " prop="taskStartTime" sortable/>
+        <el-table-column :label="t('transcribe.index.taskEndTime')" prop="taskEndTime" sortable/>
+        <el-table-column :label="t('transcribe.index.action') ">
           <template #default="scope">
             <el-button
               link
@@ -84,17 +84,17 @@
               {{ getButtonText(scope.row.executionStatus) }}
             </el-button>
             <el-popconfirm
-              title="是否确认停止执行?"
+              :title="t('transcribe.index.confirmstop')"
               @confirm="finishRows(scope.row)"
               v-else>
               <template #reference>
-                <el-button link type="primary">停止执行</el-button>
+                <el-button link type="primary">{{ $t('transcribe.index.stop') }}</el-button>
               </template>
             </el-popconfirm>
-            <el-popconfirm title="是否确认删除?" @confirm="deleteRows(scope.row)">
+            <el-popconfirm :title="t('transcribe.index.confirmdelete')" @confirm="deleteRows(scope.row)">
               <template #reference>
                 <el-button link type="danger" :disabled="scope.row.executionStatus === TASKSTATE.RUNNING_NUMERIC">
-                  删除
+                  {{ $t('transcribe.index.delete') }}
                 </el-button>
               </template>
             </el-popconfirm>
@@ -160,28 +160,28 @@ const getTagType = (executionStatus) => {
 const getStatusText = (executionStatus) => {
   switch (executionStatus) {
     case TASKSTATE.DOWNLOADING_NUMERIC:
-      return '正在下载'
+      return t('transcribe.index.downloading')
     case TASKSTATE.DOWNLOADINGFAIL_NUMERIC:
-      return '下载失败'
+      return t('transcribe.index.downloadfailed')
     case TASKSTATE.RUNNINGFAIL_NUMERIC:
-      return '执行失败'
+      return t('transcribe.index.executionfailed')
     case TASKSTATE.RUNNING_NUMERIC:
-      return '执行中';
+      return t('transcribe.index.executing')
     case TASKSTATE.FINISH_NUMERIC:
-      return '已完成'
+      return t('transcribe.index.complete')
     default:
-      return '未执行'
+      return t('transcribe.index.noexecuted')
   }
 }
 
 const getTypeText = (executionStatus) => {
   switch (executionStatus) {
     case 'transcribe_replay':
-      return '录制回放'
+      return t('transcribe.index.transcribeandreplay')
     case 'transcribe':
-      return '仅录制'
+      return t('transcribe.index.transcribe')
     default:
-      return '仅回放'
+      return t('transcribe.index.replay')
   }
 }
 
@@ -192,12 +192,12 @@ const isButtonDisabled = (row) => {
 const getButtonText = (executionStatus) => {
   switch (executionStatus) {
     case TASKSTATE.NOSTARTED_NUMERIC:
-      return '执行任务'
+      return t('transcribe.index.executetask')
     case TASKSTATE.DOWNLOADINGFAIL_NUMERIC:
     case TASKSTATE.DOWNLOADING_NUMERIC:
-      return '无法执行'
+      return t('transcribe.index.unabletoexecute')
     default:
-      return '重新执行'
+      return t('transcribe.index.reexecute')
   }
 }
 
@@ -250,9 +250,7 @@ const finishRows = (record) => {
   templist.push(record.id)
   transcribeReplayFinish(templist).then((res) => {
     if (Number(res.code) === 200) {
-      Message.success({
-        content: t('中止成功')
-      })
+      showMessage('success', t('transcribe.index.abortsuc'))
     }
   }).catch(error => {
     console.log(error)
@@ -266,7 +264,7 @@ const deleteRows = (record) => {
   templist.push(record.id)
   transcribeReplayDelete(templist).then((res) => {
     if (Number(res.code) === 200) {
-      showMessage('success', '删除成功')
+      showMessage('success', t('transcribe.index.deletesuc'))
     }
   }).catch(error => {
     console.error(error)
@@ -283,16 +281,16 @@ const deleteSelectedHosts = () => {
   if (selectedRecord.length > 0) {
     deleteMultipleRows(selectedRecord)
   } else {
-    showMessage('warning', '请至少选择一个任务')
+    showMessage('warning', t('transcribe.index.seletionatleast'))
   }
 }
 
 const deleteMultipleRows = (records) => {
   transcribeReplayDelete(records).then((res) => {
     if (Number(res.code) === 200) {
-      showMessage('success', '删除成功')
+      showMessage('success', t('transcribe.index.deletesuc'))
     } else {
-      showMessage('error', '删除失败')
+      showMessage('error', t('transcribe.index.deletefai'))
     }
     list.selectedpackageIds = []
     data.value.selectedData = {}
@@ -312,53 +310,52 @@ const formattedTime = (taskDuration) => {
   const minutes = Math.floor(time / 60)
   time %= 60
   const seconds = Math.floor(time)
-  return `${days}天${hours}小时${minutes}分${seconds}秒`
+  return t('transcribe.index.daytime', [days, hours, minutes, seconds])
 }
-
 
 const labelOptions = ref({
   executionStatus: {
-    label: '执行状态',
+    label: t('transcribe.index.executionstatus'),
     value: 'executionStatus',
-    placeholder: '请选择执行状态',
+    placeholder: t('transcribe.index.seletionexecutionstatus'),
     selectType: searchType.SELECT,
     options: [
       {
         value: TASKSTATE.DOWNLOADING_NUMERIC,
-        label: '下载中'
+        label: t('transcribe.index.downloading')
       },
       {
         value: TASKSTATE.DOWNLOADINGFAIL_NUMERIC,
-        label: '下载失败'
+        label: t('transcribe.index.downloadfailed')
       },
       {
         value: TASKSTATE.FINISH_NUMERIC,
-        label: '已完成'
+        label: t('transcribe.index.complete')
       },
       {
         value: TASKSTATE.NOSTARTED_NUMERIC,
-        label: '未执行'
+        label: t('transcribe.index.noexecuted')
       },
       {
         value: TASKSTATE.RUNNINGFAIL_NUMERIC,
-        label: '执行失败'
+        label: t('transcribe.index.executionfailed')
       },
       {
         value: TASKSTATE.RUNNING_NUMERIC,
-        label: '执行中'
+        label: t('transcribe.index.executing')
       }
     ]
   },
   taskName: {
-    label: '任务名称',
+    label: t('transcribe.index.taskname'),
     value: 'taskName',
-    placeholder: '请输入任务名称',
+    placeholder: t('transcribe.index.inputtaskname'),
     selectType: searchType.INPUT
   },
   taskDateRange: {
-    label: '任务时间范围',
+    label: t('transcribe.index.tasktime'),
     value: 'taskDateRange',
-    placeholder: '请选择日期范围',
+    placeholder: t('transcribe.index.tasktimerange'),
     selectType: searchType.DATERANGE
   },
 })

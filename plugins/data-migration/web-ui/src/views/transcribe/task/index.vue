@@ -4,7 +4,7 @@
       <el-container>
         <el-page-header :icon="le" class="backgroundform" @click="backToIndex">
           <template #content>
-            <span class="text-large font-600 mr-3"> 创建录制回放任务 </span>
+            <span class="text-large font-600 mr-3"> {{ $t('transcribe.index.createtask') }} </span>
           </template>
         </el-page-header>
         <el-header style="height: 0"/>
@@ -14,11 +14,11 @@
               <el-card class="backgroundcard">
                 <el-form :model="taskBasicInfo" :rules="taskBasicRules" validateTrigger="onBlur" labelAlign="left"
                          label-width="300px" ref="taskNameFormRef">
-                  <h3>任务配置</h3>
-                  <el-form-item label="任务名称" prop="taskName">
+                  <h3>{{ $t('transcribe.create.taskconfig') }}</h3>
+                  <el-form-item :label="t('transcribe.index.taskname')" prop="taskName">
                     <el-input v-model="taskBasicInfo.taskName" style="width: 30vw"></el-input>
                   </el-form-item>
-                  <el-form-item label="安装版本" prop="taskVersion">
+                  <el-form-item :label="t('transcribe.create.version')" prop="taskVersion">
                     <el-select v-model="taskBasicInfo.taskVersion" :loading="loadingSource" style="width: 30vw"
                                :teleported="false">
                       <el-option v-for="item in taskVersionOptions" :key="item.key" :label="item.value"
@@ -30,25 +30,25 @@
               <el-card class="backgroundcard">
                 <el-form :model="taskBasicInfo" :rules="taskBasicRules" validateTrigger="onBlur" labelAlign="left"
                          label-width="300px" ref="taskDataFormRef">
-                  <h3>数据配置</h3>
-                  <h4>源端数据</h4>
-                  <el-form-item label="数据库类型" label-position="right" prop="sourceDbType">
+                  <h3>{{ $t('transcribe.create.dataconfig') }}</h3>
+                  <h4>{{ $t('transcribe.create.sourceconfig') }}</h4>
+                  <el-form-item :label="t('transcribe.create.dbtype')" label-position="right" prop="sourceDbType">
                     <el-radio-group v-model="taskBasicInfo.sourceDbType">
                       <el-radio-button value="MySQL">MySQL</el-radio-button>
                       <el-radio-button value="PostgreSQL" disabled>PostgreSQL</el-radio-button>
                       <el-radio-button value="openGauss" disabled>openGauss</el-radio-button>
                     </el-radio-group>
                   </el-form-item>
-                  <el-form-item label="回放类型" label-position="right" prop="taskType">
+                  <el-form-item :label="t('transcribe.create.tasktype')" label-position="right" prop="taskType">
                     <el-radio-group v-model="taskBasicInfo.taskType" @change="changeReplayVersion">
-                      <el-radio-button value="transcribe">仅录制</el-radio-button>
-                      <el-radio-button value="replay">仅回放</el-radio-button>
-                      <el-radio-button value="transcribe_replay">录制回放</el-radio-button>
+                      <el-radio-button value="transcribe">{{ $t('transcribe.index.transcribe') }}</el-radio-button>
+                      <el-radio-button value="replay">{{ $t('transcribe.index.replay') }}</el-radio-button>
+                      <el-radio-button value="transcribe_replay">{{ $t('transcribe.index.transcribeandreplay') }}</el-radio-button>
                     </el-radio-group>
                   </el-form-item>
-                  <el-form-item v-if="replayTaskVersion" label="对应录制端任务名称" prop="replayTaskId">
-                    <el-select v-model="taskBasicInfo.replayTaskId" placeholder="请选择对应任务" :teleported="false"
-                               filterable style="width: 30vw" @change="backTaskBasicinfo">
+                  <el-form-item v-if="replayTaskVersion" :label="t('transcribe.create.recordtaskname')" prop="replayTaskId">
+                    <el-select v-model="taskBasicInfo.replayTaskId" :placeholder="t('transcribe.create.selectaskname')"
+                               :teleported="false" filterable style="width: 30vw" @change="backTaskBasicinfo">
                       <el-option v-for="item in replayTaskOptions" :key="item.key" :label="item.label"
                                  :value="item.value" :data-extra="item.extra"/>
                     </el-select>
@@ -58,10 +58,10 @@
                       </el-icon>
                     </div>
                   </el-form-item>
-                  <el-form-item label="源IP和端口" prop="sourceIp">
-                    <el-select v-model="taskBasicInfo.sourceIp" placeholder="源IP和端口" filterable :teleported="false"
-                               :loading="loadingSource" @change="getSourceClusterDB" style="width: 30vw"
-                               @blur="validateSourcehostip"
+                  <el-form-item :label="t('transcribe.create.sourceip')" prop="sourceIp">
+                    <el-select v-model="taskBasicInfo.sourceIp" :placeholder="t('transcribe.create.sourceip')"
+                               filterable :teleported="false" :loading="loadingSource" style="width: 30vw"
+                               @change="getSourceClusterDB" @blur="validateSourcehostip"
                                :disabled="replayTaskVersion && taskBasicInfo.replayTaskId != ''">
                       <el-option v-for="item in sourceClusterOptions" :key="item.key" :label="item.value"
                                  :value="item.value"/>
@@ -71,18 +71,18 @@
                         <IconRefresh @click="getSourceClustersData"/>
                       </el-icon>
                       <el-link @click="handleAddSql(taskBasicInfo.sourceDbType.toUpperCase())">
-                        {{ $t('新增数据源') }}
+                        {{ $t('transcribe.create.newsource') }}
                       </el-link>
                     </div>
                   </el-form-item>
                   <div v-if="addHostVisible === true" style="margin-left: 170px; margin-bottom: 30px">
                     <span>
-                      当前数据库未添加到服务器中，无法选择安装用户，请
-                      <el-button text @click="handleAddHost('create')">新增服务器</el-button>
+                      {{ $t('transcribe.create.addsourcemsg') }}
+                      <el-button text @click="handleAddHost('create')">{{ $t('transcribe.create.createserver') }}</el-button>
                     </span>
                   </div>
-                  <el-form-item label="服务器对应用户" prop="sourceHostUser" :error="sourceDbError">
-                    <el-select v-model="taskBasicInfo.sourceHostUser" placeholder="待选择用户" filterable
+                  <el-form-item :label="t('transcribe.create.serveruser')" prop="sourceHostUser" :error="sourceDbError">
+                    <el-select v-model="taskBasicInfo.sourceHostUser" :placeholder="t('transcribe.create.pendinguser')" filterable
                                :teleported="false" style="width: 30vw"
                                :disabled="replayTaskVersion && taskBasicInfo.replayTaskId != ''">
                       <el-option v-for="item in sourcehostUserList" :key="item.key" :label="item.value"
@@ -92,7 +92,7 @@
                       <el-icon>
                         <IconRefresh @click="getHostUserPage('source')"/>
                       </el-icon>
-                      <el-link @click="handleAddUser('source')">{{ $t('新增源端用户') }}</el-link>
+                      <el-link @click="handleAddUser('source')">{{ $t('transcribe.create.adduser') }}</el-link>
                     </div>
                   </el-form-item>
                   <div
@@ -100,17 +100,17 @@
                     && !(replayTaskVersion && taskBasicInfo.replayTaskId != '') && taskBasicInfo.sourceHostUser === ''"
                     style="margin-left: 170px; margin-bottom: 30px">
                     <span>
-                      安装需要用户sudo权限,请新增有sudo权限用户
-                      <el-link @click="handleAddUser('source')">{{ $t('新增源端用户') }}</el-link>
+                      {{ $t('transcribe.create.addusermsg') }}
+                      <el-link @click="handleAddUser('source')">{{ $t('transcribe.create.adduser') }}</el-link>
                     </span>
                   </div>
-                  <el-form-item label="源端安装路径" prop="sourceInstallPath" :error="sourceDbError">
+                  <el-form-item :label="t('transcribe.create.sourcepath')" prop="sourceInstallPath" :error="sourceDbError">
                     <el-input v-model="taskBasicInfo.sourceInstallPath" style="width: 30vw"
                               :disabled="replayTaskVersion && taskBasicInfo.replayTaskId != ''"/>
                   </el-form-item>
-                  <h4>目的端数据</h4>
-                  <el-form-item label="目的IP和端口" prop="targetIp">
-                    <el-select v-model="taskBasicInfo.targetIp" placeholder="目的IP和端口" filterable
+                  <h4>{{ $t('transcribe.create.targetconfig') }}</h4>
+                  <el-form-item :label="t('transcribe.create.targetip')" prop="targetIp">
+                    <el-select v-model="taskBasicInfo.targetIp" :placeholder="t('transcribe.create.targetip')" filterable
                                :loading="loadingTarget" @change="getTargetClusterDB" style="width: 30vw"
                                :teleported="false"
                                :disabled="replayTaskVersion && taskBasicInfo.replayTaskId != ''">
@@ -121,11 +121,11 @@
                       <el-icon>
                         <IconRefresh @click="getTargetClustersData"/>
                       </el-icon>
-                      <el-link @click="handleAddSql('OPENGAUSS')">{{ $t('新增数据源') }}</el-link>
+                      <el-link @click="handleAddSql('OPENGAUSS')">{{ $t('transcribe.create.newsource') }}</el-link>
                     </div>
                   </el-form-item>
-                  <el-form-item label="服务器对应用户" prop="targetHostUser">
-                    <el-select v-model="taskBasicInfo.targetHostUser" placeholder="待选择用户" filterable
+                  <el-form-item :label="t('transcribe.create.serveruser')" prop="targetHostUser">
+                    <el-select v-model="taskBasicInfo.targetHostUser" :placeholder="t('transcribe.create.pendinguser')" filterable
                                :teleported="false"
                                style="width: 30vw" :disabled="replayTaskVersion && taskBasicInfo.replayTaskId != ''">
                       <el-option v-for="item in targethostUserList" :key="item.key" :label="item.value"
@@ -135,7 +135,7 @@
                       <el-icon>
                         <IconRefresh @click="getHostUserPage('target')"/>
                       </el-icon>
-                      <el-link @click="handleAddUser('target')">{{ $t('新增目的端用户') }}</el-link>
+                      <el-link @click="handleAddUser('target')">{{ $t('transcribe.create.adduser') }}</el-link>
                     </div>
                   </el-form-item>
                   <div
@@ -143,32 +143,32 @@
                     && !(replayTaskVersion && taskBasicInfo.replayTaskId != '') && taskBasicInfo.targetHostUser === ''"
                     style="margin-left: 170px; margin-bottom: 30px">
                     <span>
-                      安装需要用户sudo权限,请新增有sudo权限用户
-                      <el-link @click="handleAddUser('target')">{{ $t('新增目的端用户') }}</el-link>
+                      {{ $t('transcribe.create.addusermsg') }}
+                      <el-link @click="handleAddUser('target')">{{ $t('transcribe.create.adduser') }}</el-link>
                     </span>
                   </div>
-                  <el-form-item label="目标端安装路径" prop="targetInstallPath">
+                  <el-form-item :label="t('transcribe.create.targetinstall')" prop="targetInstallPath">
                     <el-input v-model="taskBasicInfo.targetInstallPath" style="width: 30vw"
                               :disabled="replayTaskVersion && taskBasicInfo.replayTaskId != ''"></el-input>
                   </el-form-item>
-                  <h4>数据库映射关系</h4>
-                  <el-form-item v-for="(item, index) in taskBasicInfo.settings" :key="index" label="映射关系">
-                    <el-form-item label="源端数据库" :prop="'settings[' + index + '].sourceDB'"
-                                  :rules="[{ required: true, message: '必填项', trigger: ['blur', 'change'] }]"
+                  <h4>{{ $t('transcribe.create.dbrelationship') }}</h4>
+                  <el-form-item v-for="(item, index) in taskBasicInfo.settings" :key="index" :label="t('transcribe.create.relation')">
+                    <el-form-item :label="t('transcribe.create.sourcedb')" :prop="'settings[' + index + '].sourceDB'"
+                                  :rules="[{ required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change'] }]"
                                   label-width="10vw" style="margin-right: 30px" :error="removeDbError">
-                      <el-select v-model.trim="item.sourceDB" placeholder="源库名" filterable style="width: 15vw"
+                      <el-select v-model.trim="item.sourceDB" :placeholder="t('transcribe.create.sourcedb')" filterable style="width: 15vw"
                                  :disabled="replayTaskVersion && taskBasicInfo.replayTaskId != ''" :teleported="false"
-                                 :rules="[{ required: true, message: '必填项', trigger: ['blur', 'change'] }]">
+                                 :rules="[{ required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change'] }]">
                         <el-option v-for="option in sourceDBOptions" :key="option.key" :label="option.value"
                                    :value="option.value"/>
                       </el-select>
                     </el-form-item>
-                    <el-form-item label="目的端数据库" :prop="'settings[' + index + '].targetDB'"
-                                  :rules="[{ required: true, message: '必填项', trigger: ['blur', 'change'] }]"
+                    <el-form-item :label="t('transcribe.create.targetdb')" :prop="'settings[' + index + '].targetDB'"
+                                  :rules="[{ required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change'] }]"
                                   label-width="10vw" style="margin-right: 30px">
-                      <el-select v-model="item.targetDB" placeholder="目的库名" filterable style="width: 15vw"
+                      <el-select v-model="item.targetDB" :placeholder="t('transcribe.create.targetdb')" filterable style="width: 15vw"
                                  :disabled="replayTaskVersion && taskBasicInfo.replayTaskId != ''" :teleported="false"
-                                 :rules="[{ required: true, message: '必填项', trigger: ['blur', 'change'] }]">
+                                 :rules="[{ required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change'] }]">
                         <el-option v-for="option in targetDBOptions" :key="option.key" :label="option.value"
                                    :value="option.value"/>
                       </el-select>
@@ -176,13 +176,13 @@
                     <el-form-item>
                       <el-link v-if="!(replayTaskVersion && taskBasicInfo.replayTaskId != '')"
                                @click.prevent="removeSetting(index)" @blur="validateRemoveDb">
-                        删除
+                        {{ $t('transcribe.index.delete') }}
                       </el-link>
                     </el-form-item>
                   </el-form-item>
                   <el-form-item label=" ">
                     <el-button v-if="!(replayTaskVersion && taskBasicInfo.replayTaskId != '')" @click="addSetting()">
-                      新增设置
+                      {{ $t('transcribe.create.addsettings') }}
                     </el-button>
                   </el-form-item>
                 </el-form>
@@ -190,25 +190,25 @@
               <el-card class="backgroundcard">
                 <el-form :model="taskAdvancedInfo" :rules="taskAdvancedRules" validateTrigger="onBlur" labelAlign="left"
                          label-width="300px" ref="taskAdvancedFormRef">
-                  <h4>高级配置</h4>
-                  <el-form-item label="参数配置" label-position="right" prop="isDefaultRecordConfig">
-                    <el-radio-group v-model="taskAdvancedInfo.isDefaultRecordConfig" @change="handleParamsConfig">
-                      <el-radio-button value=true>默认参数</el-radio-button>
-                      <el-radio-button value=false>自定义配置</el-radio-button>
+                  <h4>{{ $t('transcribe.create.advconfig') }}</h4>
+                  <el-form-item :label="t('transcribe.create.paraconfig')" label-position="right" prop="isDefaultRecordConfig">
+                    <el-radio-group v-model="taskAdvancedInfo.isDefaultRecordConfig" @change="handleParamsConfig('once')">
+                      <el-radio-button value=true>{{ $t('transcribe.create.defaultpara') }}</el-radio-button>
+                      <el-radio-button value=false>{{ $t('transcribe.create.custompara') }}</el-radio-button>
                     </el-radio-group>
                     <div v-if="taskAdvancedInfo.isDefaultRecordConfig === 'false'">
                       <div v-if="choosePlaybackMethod === true">
-                        <span>您尚未进行自定义参数配置</span>
+                        <span>{{ $t('transcribe.create.customparayet') }}</span>
                       </div>
                       <div v-else>
-                        <span>您已进行自定义参数配置 <el-link type="primary"
-                                                              @click="handleParamsconfigAgain">修改</el-link>
-                          <el-link type="error" @click="defaultParamsConfig">重置</el-link></span>
+                        <span>{{ $t('transcribe.create.customparaalready') }} <el-link type="primary"
+                                                                                       @click="handleParamsconfigAgain">{{ $t('transcribe.create.modify') }}</el-link>
+                          <el-link type="error" @click="defaultParamsConfig">{{ $t('transcribe.create.reset') }}</el-link></span>
                       </div>
                     </div>
                   </el-form-item>
                   <div v-if="!replayTaskVersion">
-                    <el-form-item label="录制解析" label-position="right" prop="transcribemode">
+                    <el-form-item :label="t('transcribe.create.transcribemode')" label-position="right" prop="transcribemode">
                       <el-select v-model="taskAdvancedInfo.transcribemode" @change="changeTranscribeMode(val)"
                                  :teleported="false" filterable style="width: 30vw">
                         <el-option label="tcpdump" value="tcpdump"/>
@@ -216,7 +216,7 @@
                         <el-option label="general" value="general"/>
                       </el-select>
                       <el-tooltip class="item" effect="light"
-                                  content="可选tcpdump/attach/general，分别表示流量采集，动态插桩与查询系统表的录制方式"
+                                  :content="t('transcribe.create.transcribemodemsg')"
                                   :teleported="false" placement="right">
                         <i class="el-icon icon">
                           <el-icon>
@@ -226,12 +226,12 @@
                       </el-tooltip>
                     </el-form-item>
                     <div v-if="taskAdvancedInfo.transcribemode === 'tcpdump' && taskAdvancedInfo.isDefaultRecordConfig">
-                      <el-form-item label="网口名称" label-position="right" prop="tcpdump.network.interface"
-                                    :rules="[{ required: true, message: '没有填写tcpdump工具监听的业务网口名称', trigger: ['blur', 'change'] }]">
+                      <el-form-item :label="t('transcribe.create.interface')" label-position="right" prop="tcpdump.network.interface"
+                                    :rules="[{ required: true, message: t('transcribe.create.interfacemsg'), trigger: ['blur', 'change'] }]">
                         <el-input v-model="taskAdvancedInfo['tcpdump.network.interface']"
                                   @change="changeTcpdumpInterface"
                                   style="width: 30vw"></el-input>
-                        <el-tooltip class="item" effect="light" content="tcpdump工具监听的业务网口名称"
+                        <el-tooltip class="item" effect="light" :content="t('transcribe.create.interface')"
                                     placement="right"
                                     :teleported="false">
                           <i class="el-icon icon">
@@ -241,17 +241,17 @@
                           </i>
                         </el-tooltip>
                       </el-form-item>
-                      <el-form-item label="录制时长" label-position="right" prop="tcpdump.capture.duration"
-                                    :rules="[{ required: true, message: '没有填写录制时长', trigger: ['blur', 'change'] }]">
+                      <el-form-item :label="t('transcribe.create.recordingduration')" label-position="right" prop="tcpdump.capture.duration"
+                                    :rules="[{ required: true, message: t('transcribe.create.recordingdurationmsg'), trigger: ['blur', 'change'] }]">
                         <el-input-number v-model="taskAdvancedInfo['tcpdump.capture.duration']"
                                          @change="changeTcpdumpDuration" style="width: 30vw" :min="0" :max="2147483647"
                                          :step="1"
                                          :precision="0" :controls="false">
                           <template #suffix>
-                            <span>分钟</span>
+                            <span>{{ $t('transcribe.create.min') }}</span>
                           </template>
                         </el-input-number>
-                        <el-tooltip class="item" effect="light" content="录制时长，单位: 分钟" placement="right"
+                        <el-tooltip class="item" effect="light" :content="t('transcribe.create.recordingdurationcon')" placement="right"
                                     :teleported="false">
                           <i class="el-icon icon">
                             <el-icon>
@@ -264,33 +264,51 @@
                     <div
                       v-else-if="taskAdvancedInfo.transcribemode === 'attach' && taskAdvancedInfo.isDefaultRecordConfig">
                       <el-form-item label="pid" label-position="right" prop="attach.process.pid"
-                                    :rules="[{ required: true, message: '没有填写attach工具监控的java应用程序的pid', trigger: ['blur', 'change'] },
-                                    { pattern: /^[0-9]*$/, message: '应用程序的pid必须是数字', trigger: ['blur', 'change'] },
-                                    { type: 'number', min: 0, max: 32768, message: '超出应用程序的pid范围', trigger: ['blur', 'change'] }]">
-                        <el-input v-model="taskAdvancedInfo['attach.process.pid']" @change="changeAttachPid"
-                                  style="width: 30vw"/>
+                                    :rules="[{ required: true, message: t('transcribe.create.pidmsg'), trigger: ['blur', 'change'] },
+                                    { type: 'number', min: 0, max: 4294967295, message: t('transcribe.create.pidrange'), trigger: ['blur', 'change'] }]">
+                        <el-input-number v-model="taskAdvancedInfo['attach.process.pid']"
+                                         @change="changeAttachPid" style="width: 30vw" :step="1" :precision="0"
+                                         :controls="false"
+                                         :min="0">
+                        </el-input-number>
+                        <el-tooltip class="item" effect="light" :content="t('transcribe.create.pidcon')" placement="right"
+                                    :teleported="false">
+                          <i class="el-icon icon">
+                            <el-icon>
+                              <IconHelpCircle/>
+                            </el-icon>
+                          </i>
+                        </el-tooltip>
                       </el-form-item>
-                      <el-form-item label="录制时长" label-position="right" prop="attach.capture.duration"
-                                    :rules="[{ required: true, message: '没有填写attach工具采集sql的时长', trigger: ['blur', 'change'] },]">
+                      <el-form-item :label="t('transcribe.create.recordingduration')" label-position="right" prop="attach.capture.duration"
+                                    :rules="[{ required: true, message: t('transcribe.create.recordingdurationmsg'), trigger: ['blur', 'change'] },]">
                         <el-input-number v-model="taskAdvancedInfo['attach.capture.duration']"
                                          @change="changeAttachDuration" style="width: 30vw" :step="1" :precision="0"
                                          :controls="false"
                                          :min="0">
                           <template #suffix>
-                            <span>分钟</span>
+                            <span>{{ $t('transcribe.create.min') }}</span>
                           </template>
                         </el-input-number>
+                        <el-tooltip class="item" effect="light" :content="t('transcribe.create.recordingdurationcon')" placement="right"
+                                    :teleported="false">
+                          <i class="el-icon icon">
+                            <el-icon>
+                              <IconHelpCircle/>
+                            </el-icon>
+                          </i>
+                        </el-tooltip>
                       </el-form-item>
-                      <el-form-item label="最大回放时长" label-position="right" prop="replay.max.time"
-                                    :rules="[{ required: true, message: '最大回放时长', trigger: ['blur', 'change'] }]">
+                      <el-form-item :label="t('transcribe.create.replaytime')" label-position="right" prop="replay.max.time"
+                                    :rules="[{ required: true, message: t('transcribe.create.replaytimemsg'), trigger: ['blur', 'change'] }]">
                         <el-input-number v-model="taskAdvancedInfo['replay.max.time']" style="width: 30vw"
                                          :min="0" :max="2147483647" :step="1" :precision="0" :controls="false">
                           <template #suffix>
-                            <span>分钟</span>
+                            <span>{{ $t('transcribe.create.min') }}</span>
                           </template>
                         </el-input-number>
                         <el-tooltip class="item" effect="light" placement="right" :teleported="false"
-                                    content="回放进程的总执行时间，从进程启动开始计算，为0表示进程一直持续直到收到结束标识，单位: 分钟">
+                                    :content="t('transcribe.create.replaytimecon')">
                           <i class="el-icon icon">
                             <el-icon>
                               <IconHelpCircle/>
@@ -300,16 +318,16 @@
                       </el-form-item>
                     </div>
                     <div v-else>
-                      <el-form-item label="最大回放时长" label-position="right" prop="replay.max.time"
-                                    :rules="[{ required: true, message: '最大回放时长', trigger: ['blur', 'change'] }]">
+                      <el-form-item :label="t('transcribe.create.replaytime')" label-position="right" prop="replay.max.time"
+                                    :rules="[{ required: true, message: t('transcribe.create.replaytimemsg'), trigger: ['blur', 'change'] }]">
                         <el-input-number v-model="taskAdvancedInfo['replay.max.time']" style="width: 30vw"
                                          :min="0" :max="2147483647" :step="1" :precision="0" :controls="false">
                           <template #suffix>
-                            <span>分钟</span>
+                            <span>{{ $t('transcribe.create.min') }}</span>
                           </template>
                         </el-input-number>
                         <el-tooltip class="item" effect="light" placement="right" :teleported="false"
-                                    content="回放进程的总执行时间，从进程启动开始计算，为0表示进程一直持续直到收到结束标识，单位: 分钟">
+                                    :content="t('transcribe.create.replaytimecon')">
                           <i class="el-icon icon">
                             <el-icon>
                               <IconHelpCircle/>
@@ -320,16 +338,16 @@
                     </div>
                   </div>
                   <div v-else>
-                    <el-form-item label="最大回放时长" label-position="right" prop="replay.max.time"
-                                  :rules="[{ required: true, message: '最大回放时长', trigger: ['blur', 'change'] }]">
+                    <el-form-item :label="t('transcribe.create.replaytime')" label-position="right" prop="replay.max.time"
+                                  :rules="[{ required: true, message: t('transcribe.create.replaytimemsg'), trigger: ['blur', 'change'] }]">
                       <el-input-number v-model="taskAdvancedInfo['replay.max.time']" style="width: 30vw"
                                        :min="0" :max="2147483647" :step="1" :precision="0" :controls="false">
                         <template #suffix>
-                          <span>分钟</span>
+                          <span>{{ $t('transcribe.create.min') }}</span>
                         </template>
                       </el-input-number>
                       <el-tooltip class="item" effect="light" placement="right" :teleported="false"
-                                  content="回放进程的总执行时间，从进程启动开始计算，为0表示进程一直持续直到收到结束标识，单位: 分钟">
+                                  content="{{ $t('transcribe.create.replaytimecon') }}">
                         <i class="el-icon icon">
                           <el-icon>
                             <IconHelpCircle/>
@@ -343,8 +361,8 @@
             </el-main>
             <el-footer>
               <div class="footer-con" style="">
-                <el-button @click="backToIndex">取消</el-button>
-                <el-button @click="saveParams">提交</el-button>
+                <el-button @click="backToIndex">{{ $t('transcribe.create.cancel') }}</el-button>
+                <el-button @click="saveParams">{{ $t('transcribe.create.submit') }}</el-button>
               </div>
             </el-footer>
           </el-container>
@@ -361,19 +379,21 @@
 </template>
 
 <script setup>
-import {reactive, ref, toRaw} from "vue";
+import {computed, reactive, ref, toRaw} from "vue"
 import {
   getHostInfo, hostListAll, hostUsers, sourceClusterDbsData, sourceClusters, targetClusterDbsData, targetClusters,
   transcribeReplaydownloadAndConfig, transcribeReplayList, transcribeReplaySave, transcribeReplaytoolsVersion
 }
-  from "@/api/playback";
+  from "@/api/playback"
 import ParamsConfig from './components/RecordPlaybackData.vue'
 import AddJdbc from './components/AddJdbc.vue'
 import AddHost from './components/AddHost.vue'
 import AddHostUser from './components/AddHostUser.vue'
-import {IconHelpCircle} from "@computing/opendesign-icons";
-import showMessage from "@/utils/showMessage";
+import {IconHelpCircle} from "@computing/opendesign-icons"
+import showMessage from "@/utils/showMessage"
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const addPlaybackRef = ref()
 const editPlayBackId = ref('')
 const handlePlayBack = () => {
@@ -446,7 +466,7 @@ const finishAddJdbc = (type) => {
 const sourceDbError = ref('')
 const validateSourcehostip = () => {
   if (addHostVisible.value === true) {
-    sourceDbError.value = '数据库IP无对应的服务器，无法安装。请新建对应服务器后再进行操作'
+    sourceDbError.value = t('transcribe.create.withoutserver')
   } else {
     sourceDbError.value = ''
   }
@@ -458,7 +478,7 @@ const addSetting = () => {
 const removeDbError = ref('')
 const validateRemoveDb = () => {
   if (taskBasicInfo.value.settings.length === 1) {
-    removeDbError.value = '至少保留一个设置项'
+    removeDbError.value = t('transcribe.create.withoutsettings')
   } else {
     removeDbError.value = ''
   }
@@ -467,7 +487,7 @@ const removeSetting = (index) => {
   if (taskBasicInfo.value.settings.length > 1) {
     taskBasicInfo.value.settings.splice(index, 1)
   } else {
-    showMessage('error', '至少保留一个设置项')
+    showMessage('error', t('transcribe.create.withoutsettings'))
   }
 }
 
@@ -483,7 +503,7 @@ const defaultParamsConfig = async () => {
   await inittaskPlayBack()
 }
 
-const handleParamsConfig = async () => {
+const handleParamsConfig = async (type) => {
   taskBasicInfo.value.isDefaultRecordConfig = taskAdvancedInfo.value.isDefaultRecordConfig
   let validRes = true
   await taskAdvancedFormRef.value.validate((valid, errors) => {
@@ -508,13 +528,15 @@ const handleParamsConfig = async () => {
     }
   })
   if (taskBasicInfo.value.isDefaultRecordConfig === 'false' && validRes === true) {
-    await changeTranscribeMode(taskRetInfo.value["sql.transcribe.mode"])
-    await inittaskPlayBack()
+    if (type === 'once') {
+      await changeTranscribeMode(taskRetInfo.value["sql.transcribe.mode"])
+      await inittaskPlayBack()
+    }
     taskBasicInfo.value.isDefaultRecordConfig = false
     handlePlayBack()
   } else {
     if (taskBasicInfo.value.isDefaultRecordConfig === 'false' || taskBasicInfo.value.isDefaultRecordConfig === false) {
-      showMessage('error', '当前页面有未填写项，无法进行配置修改')
+      showMessage('error', t('transcribe.create.withoutsave'))
     }
     taskBasicInfo.value.isDefaultRecordConfig = true
     taskAdvancedInfo.value.isDefaultRecordConfig = true
@@ -526,7 +548,7 @@ const handleParamsConfig = async () => {
 const handleParamsconfigAgain = () => {
   taskAdvancedInfo.value.isDefaultRecordConfig = 'false'
   taskBasicInfo.value.isDefaultRecordConfig = taskAdvancedInfo.value.isDefaultRecordConfig
-  handleParamsConfig()
+  handleParamsConfig('again')
 }
 
 const playbackTnfoSave = (recordPlaybackData) => {
@@ -700,6 +722,7 @@ const defaultDataJson = ref({
   'sql.file.size': 10,
   'result.file.name': 'select-result',
   'parse.max.time': 0,
+  'file.count.limit': 100
 })
 
 const defaultDataPlayback = ref({
@@ -726,48 +749,52 @@ const defaultDataPlayback = ref({
 
 const replayTaskVersion = ref(false)
 
-const taskBasicRules = reactive({
-  taskName: [
-    {required: true, trigger: ['blur', 'change'], message: ('任务名称不可为空')},
-    {max: 255, message: '任务名称不能超过 255 个字符', trigger: ['blur', 'change']}
-  ],
-  taskType: [
-    {required: true, trigger: ['blur', 'change'], message: ('录制回放类型不可为空')}
-  ],
-  taskVersion: [
-    {required: true, trigger: ['blur', 'change'], message: ('安装包版本不可为空')},
-  ],
-  replayTaskId: [
-    {required: replayTaskVersion.value, trigger: ['blur', 'change'], message: ('对应录制端任务名称不可为空')}
-  ],
-  sourceIp: [
-    {required: true, trigger: ['blur', 'change'], message: ('源端IP不可为空')}
-  ],
-  sourceHostUser: [
-    {required: true, trigger: ['blur', 'change'], message: ('源端用户不可为空')},
-  ],
-  sourceInstallPath: [
-    {required: true, trigger: ['blur', 'change'], message: ('源端安装路径不可为空')},
-    {pattern: /^([\/~])(?!\/)(?!.*\/\/).*$/, message: '地址格式错误', trigger: ['blur', 'change']},
-    {max: 255, message: '源端安装路径不能超过 255 个字符', trigger: ['blur', 'change']},
-  ],
-  targetIp: [
-    {required: true, trigger: ['blur', 'change'], message: ('目的端IP不可为空')},
-  ],
-  targetHostUser: [
-    {required: true, trigger: ['blur', 'change'], message: ('目的端用户不可为空')},
-  ],
-  targetInstallPath: [
-    {required: true, trigger: ['blur', 'change'], message: ('目的端安装路径不可为空')},
-    {pattern: /^([\/~])(?!\/)(?!.*\/\/).*$/, message: '地址格式错误', trigger: ['blur', 'change']},
-    {max: 255, message: '目的端安装路径不能超过 255 个字符', trigger: ['blur', 'change']},
-  ],
+const taskBasicRules = computed(() => {
+  return {
+    taskName: [
+      {required: true, trigger: ['blur', 'change'], message: t('transcribe.create.withouttaskname')},
+      {max: 255, message: t('transcribe.create.tasknamemsg'), trigger: ['blur', 'change']}
+    ],
+    taskType: [
+      {required: true, trigger: ['blur', 'change'], message: t('transcribe.create.withoutrecordingtype')}
+    ],
+    taskVersion: [
+      {required: true, trigger: ['blur', 'change'], message: t('transcribe.create.withoutversion')},
+    ],
+    replayTaskId: [
+      {required: replayTaskVersion.value, trigger: ['blur', 'change'], message: t('transcribe.create.withoutreplaytaskname')}
+    ],
+    sourceIp: [
+      {required: true, trigger: ['blur', 'change'], message: t('transcribe.create.withoutsourceip')}
+    ],
+    sourceHostUser: [
+      {required: true, trigger: ['blur', 'change'], message: t('transcribe.create.withoutsourceuser')},
+    ],
+    sourceInstallPath: [
+      {required: true, trigger: ['blur', 'change'], message: t('transcribe.create.withoutsourcepath')},
+      {pattern: /^([\/~])(?!\/)(?!.*\/\/).*$/, message: t('transcribe.create.formaterror'), trigger: ['blur', 'change']},
+      {max: 255, message: t('transcribe.create.sourcepathmsg'), trigger: ['blur', 'change']},
+    ],
+    targetIp: [
+      {required: true, trigger: ['blur', 'change'], message: t('transcribe.create.withouytargetip')},
+    ],
+    targetHostUser: [
+      {required: true, trigger: ['blur', 'change'], message: t('transcribe.create.withouytargetuser')},
+    ],
+    targetInstallPath: [
+      {required: true, trigger: ['blur', 'change'], message: t('transcribe.create.withouytargetpath')},
+      {pattern: /^([\/~])(?!\/)(?!.*\/\/).*$/, message: t('transcribe.create.formaterror'), trigger: ['blur', 'change']},
+      {max: 255, message: t('transcribe.create.targetpathmsg'), trigger: ['blur', 'change']},
+    ],
+  }
 })
 
-const taskAdvancedRules = reactive({
-  transcribemode: [
-    {required: true, trigger: ['blur', 'change'], message: ('录制解析选项为必选项')},
-  ],
+const taskAdvancedRules = computed(() => {
+  return {
+    transcribemode: [
+      {required: true, trigger: ['blur', 'change'], message: t('transcribe.create.withoutreplaytype')},
+    ],
+  }
 })
 
 const taskAdvancedFormRef = ref(null)
@@ -1089,7 +1116,15 @@ const saveParams = async () => {
   }
   retMessageMap['tcpdump.file.id'] = taskBasicInfo.value.replayTaskId
   if (retMessageMap['general.start.time']) {
-    retMessageMap['general.start.time'] = retMessageMap['general.start.time'].toISOString().replace('T', ' ').substring(0, 19)
+    const localTimeForm = retMessageMap['general.start.time'].toLocaleString().replace('T', ' ').replace(/\//g, '-').substring(0, 19)
+    const formattedDate = localTimeForm.replace(
+      /(\d{4})-(\d{1,2})-(\d{1,2}) (\d{2}:\d{2}:\d{2})/,
+      (match, year, month, day, time) => {
+        const formattedMonth = month.padStart(2, '0')
+        const formattedDay = day.padStart(2, '0')
+        return `${year}-${formattedMonth}-${formattedDay} ${time}`
+      })
+    retMessageMap['general.start.time'] = formattedDate
   }
   let validRes = true
   await taskAdvancedFormRef.value.validate((valid, errors) => {
@@ -1135,7 +1170,7 @@ const saveParams = async () => {
         let taskid = res.data
         transcribeReplaydownloadAndConfig(taskid, retMessageMap).then((res) => {
           if (Number(res.code) === 200) {
-            showMessage('success', '创建成功')
+            showMessage('success', t('transcribe.create.savesuc'))
             backToIndex()
           }
         }).catch(error => {
@@ -1146,7 +1181,7 @@ const saveParams = async () => {
       console.log('get ip error:', error)
     })
   } else {
-    showMessage('error', '当前页面有未填写项')
+    showMessage('error', t('transcribe.create.saveerr'))
   }
 }
 
