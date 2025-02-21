@@ -65,6 +65,8 @@ import static java.lang.Math.min;
 @Slf4j
 @Service
 public class GenerateClusterConfigXmlInstance {
+    private static final int DEFAULT_SSH_PORT = 22;
+
     @Resource
     private OpsBaseHostMapper opsBaseHostMapper;
 
@@ -135,11 +137,34 @@ public class GenerateClusterConfigXmlInstance {
             deviceList.appendChild(device);
 
             appendDeviceParam(document, device, enterpriseInstallNodeConfig,
-                    nodeConfigList, installContext.getEnterpriseInstallConfig());
+                    nodeConfigList, installContext);
         }
     }
 
-    private void appendDeviceParam(Document document, Element device, EnterpriseInstallNodeConfig enterpriseInstallNodeConfig, List<EnterpriseInstallNodeConfig> nodeConfigList, EnterpriseInstallConfig enterpriseInstallConfig) {
+    private void appendSshPortParam(Document document, Element device,
+                                    EnterpriseInstallNodeConfig enterpriseInstallNodeConfig,
+                                    InstallContext installContext) {
+        int port = opsBaseHostMapper.queryPortByHostId(enterpriseInstallNodeConfig.getHostId());
+        String opengaussVersion = installContext.getOpenGaussVersionNum();
+        if (opengaussVersion != null && !opengaussVersion.isEmpty()) {
+            String versionNum = opengaussVersion.split("\\.")[0];
+            if (Integer.parseInt(versionNum) >= 7) {
+                Element sshPort = document.createElement("PARAM");
+                sshPort.setAttribute("name", "sshPort");
+                sshPort.setAttribute("value", String.valueOf(port));
+                device.appendChild(sshPort);
+            } else {
+                if (port != DEFAULT_SSH_PORT) {
+                    throw new OpsException("invalid ssh port, expected is: 22, actual is: " + port);
+                }
+            }
+        }
+    }
+
+    private void appendDeviceParam(Document document, Element device,
+                                   EnterpriseInstallNodeConfig enterpriseInstallNodeConfig,
+                                   List<EnterpriseInstallNodeConfig> nodeConfigList,
+                                   InstallContext installContext) {
         Element name = document.createElement("PARAM");
         name.setAttribute("name", "name");
         name.setAttribute("value", enterpriseInstallNodeConfig.getHostname());
@@ -160,12 +185,8 @@ public class GenerateClusterConfigXmlInstance {
         backIp1.setAttribute("value", enterpriseInstallNodeConfig.getPrivateIp());
         device.appendChild(backIp1);
 
-        Element sshPort = document.createElement("PARAM");
-        sshPort.setAttribute("name", "sshPort");
-        int port = opsBaseHostMapper.queryPortByHostId(enterpriseInstallNodeConfig.getHostId());
-        sshPort.setAttribute("value", String.valueOf(port));
-        device.appendChild(sshPort);
-
+        appendSshPortParam(document, device, enterpriseInstallNodeConfig, installContext);
+        EnterpriseInstallConfig enterpriseInstallConfig = installContext.getEnterpriseInstallConfig();
         if (enterpriseInstallConfig.getIsInstallCM()) {
             if (enterpriseInstallNodeConfig.getIsCMMaster()) {
                 Element cmsNum = document.createElement("PARAM");
