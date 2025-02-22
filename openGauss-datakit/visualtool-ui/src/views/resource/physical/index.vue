@@ -126,14 +126,13 @@
                 <div class="flex-col-start">
                   <div class="host-name">{{ record.name ? record.name : '--' }}</div>
                   <div class="flex-row">
-                    <div class="mr-s">{{ $t('physical.index.privateIp') }}:</div>
-                    <div>{{ record.privateIp }}</div>
+                    <div class="mr-s oneline">{{ $t('physical.index.privateIp') }}:</div>
+                    <div class="maxlength">{{ record.privateIp }}</div>
                   </div>
                   <div class="flex-row">
-                    <div class="mr-s">{{ $t('physical.index.publicIp') }}:</div>
+                    <div class="mr-s  oneline">{{ $t('physical.index.publicIp') }}:</div>
                     <div
-                      style="max-width: 140px;"
-                      class="mr-s"
+                      class="mr-s maxlength"
                     >{{ record.publicIp }}</div>
                     <icon-code-square
                       :size="25"
@@ -797,5 +796,11 @@ const showHostUserMng = (record: KeyValue) => {
       }
     }
   }
+}
+.oneline {
+  white-space: nowrap;
+}
+.maxlength {
+  max-width: 180px;
 }
 </style>

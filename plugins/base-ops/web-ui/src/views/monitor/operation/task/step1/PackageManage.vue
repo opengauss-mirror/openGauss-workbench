@@ -227,7 +227,7 @@ const submit = () => {
   if (data.selectedData.length < 1) {
     Message.error('请选择安装包后再确认')
   } else {
-    const tempselectedRowKeys = selectedRowKeys.value[0]? selectedRowKeys.value[0]:'1'
+    const tempselectedRowKeys = selectedRowKeys.value? selectedRowKeys.value: '1'
     emits('packageIDSelected', tempselectedRowKeys)
     data.show = false
   }
