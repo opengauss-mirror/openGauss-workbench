@@ -129,11 +129,12 @@ public class TuningController {
      * getDatabase
      *
      * @param clusterName clusterName
+     * @param dbName dbName
      * @return RespBean
      */
     @GetMapping("/obtain/schema")
-    public RespBean getSchema(@RequestParam String clusterName) {
-        return tuningService.getSchema(clusterName);
+    public RespBean getSchema(@RequestParam String clusterName, @RequestParam String dbName) {
+        return tuningService.getSchema(clusterName, dbName);
     }
 
     /**
