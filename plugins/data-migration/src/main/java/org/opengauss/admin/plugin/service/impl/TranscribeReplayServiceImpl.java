@@ -32,6 +32,8 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsJdbcDbClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.constants.TranscribeReplayConstants;
 import org.opengauss.admin.plugin.domain.FailSqlModel;
@@ -39,6 +41,7 @@ import org.opengauss.admin.plugin.domain.Process;
 import org.opengauss.admin.plugin.domain.SlowSqlModel;
 import org.opengauss.admin.plugin.domain.SqlDuration;
 import org.opengauss.admin.plugin.domain.TranscribeReplayHost;
+import org.opengauss.admin.plugin.domain.TranscribeReplayNodeInfo;
 import org.opengauss.admin.plugin.domain.TranscribeReplaySlowSql;
 import org.opengauss.admin.plugin.domain.TranscribeReplayTask;
 import org.opengauss.admin.plugin.dto.TranscribeReplayTaskDto;
@@ -56,6 +59,7 @@ import org.opengauss.admin.plugin.utils.FileUtils;
 import org.opengauss.admin.plugin.utils.JDBCUtils;
 import org.opengauss.admin.plugin.utils.ShellUtil;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
+import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.opengauss.admin.system.service.ops.IHostService;
 import org.opengauss.admin.system.service.ops.IHostUserService;
 import org.opengauss.admin.system.service.ops.IOpsJdbcDbClusterNodeService;
@@ -131,6 +135,9 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private EncryptionUtils encryptionUtils;
+    @Resource
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private OpsFacade opsFacade;
 
     @Override
     public List<String> getToolsVersion() {
@@ -534,19 +541,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         TranscribeReplayTask transcribeReplayTask = getById(id);
         log.info("Finish task info: {}, type: {}", transcribeReplayTask.getTaskName(),
             transcribeReplayTask.getTaskType());
-        String jarName = String.format(JAR_NAME, transcribeReplayTask.getToolVersion());
-        String sourceJarPath = transcribeReplayTask.getSourceInstallPath() + jarName;
-        String targetJarPath = transcribeReplayTask.getTargetInstallPath() + jarName;
-        ShellInfoVo shellInfo1 = getShellInfo(id, transcribeReplayTask.getSourceDbType());
-        ShellInfoVo shellInfo2 = getShellInfo(id, TARGET_DB);
-        String killSourceProcess = String.format("kill -9 $(ps -ef|grep %s|awk '{print $2}')", sourceJarPath);
-        String killTargetProcess = String.format("kill -9 $(ps -ef|grep %s|awk '{print $2}')", targetJarPath);
-        if (REPLAY.equalsIgnoreCase(transcribeReplayTask.getTaskType())) {
-            ShellUtil.execCommand(shellInfo2, killTargetProcess);
-        } else {
-            ShellUtil.execCommand(shellInfo1, killSourceProcess);
-            ShellUtil.execCommand(shellInfo2, killTargetProcess);
-        }
+        killTask(id);
         updateStatus(transcribeReplayTask, TranscribeReplayStatus.FINISH);
         log.info("Success to finish task info: {}, type: {}", transcribeReplayTask.getTaskName(),
             transcribeReplayTask.getTaskType());
@@ -576,6 +571,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             }
             removeById(id);
             transcribeReplayHostService.deleteByTaskId(id);
+            killTask(id);
         });
     }
 
@@ -667,6 +663,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         if (!result.isOk() || checkResult(result.getResult())) {
             transcribeReplayTask.setErrorMsg(result.getResult());
             updateStatus(transcribeReplayTask, TranscribeReplayStatus.RUN_FAIL);
+            killTask(transcribeReplayTask.getId());
             log.error("Failed to tun transcribe, error is {}", result.getResult());
             throw new OpsException(result.getResult());
         }
@@ -680,6 +677,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             if (!parse.isOk()) {
                 transcribeReplayTask.setErrorMsg(parse.getResult());
                 updateStatus(transcribeReplayTask, TranscribeReplayStatus.RUN_FAIL);
+                killTask(transcribeReplayTask.getId());
                 log.error("Failed to tun parse, error is {}", parse.getResult());
                 throw new OpsException(parse.getResult());
             }
@@ -711,6 +709,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         if (!result.isOk()) {
             transcribeReplayTask.setErrorMsg(result.getResult());
             updateStatus(transcribeReplayTask, TranscribeReplayStatus.RUN_FAIL);
+            killTask(transcribeReplayTask.getId());
             log.error("Failed to tun replay, error is {}", result.getResult());
             throw new OpsException(result.getResult());
         }
@@ -730,6 +729,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         if (!result.isOk() || checkResult(result.getResult())) {
             transcribeReplayTask.setErrorMsg(result.getResult());
             updateStatus(transcribeReplayTask, TranscribeReplayStatus.RUN_FAIL);
+            killTask(transcribeReplayTask.getId());
             log.error("Failed to tun transcribe, error is {}", result.getResult());
             throw new OpsException(result.getResult());
         }
@@ -742,6 +742,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             if (!result2.isOk()) {
                 transcribeReplayTask.setErrorMsg(result2.getResult());
                 updateStatus(transcribeReplayTask, TranscribeReplayStatus.RUN_FAIL);
+                killTask(transcribeReplayTask.getId());
                 log.error("Failed to tun parse, error is {}", result2.getResult());
                 throw new OpsException(result2.getResult());
             }
@@ -849,10 +850,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
     }
 
     private synchronized void syncRefreshSlowSql(TranscribeReplayTask transcribeReplayTask) {
-        String nodeId = transcribeReplayTask.getTargetNodeId();
-        OpsJdbcDbClusterNodeEntity opsJdbcDbClusterNodeEntity = opsJdbcDbClusterNodeService.getById(nodeId);
-        opsJdbcDbClusterNodeEntity.setPassword(encryptionUtils.decrypt(opsJdbcDbClusterNodeEntity.getPassword()));
-        Connection conn = JDBCUtils.getConnection(transcribeReplayTask, opsJdbcDbClusterNodeEntity);
+        Connection conn = JDBCUtils.getConnection(transcribeReplayTask, getNodeInfo(transcribeReplayTask));
         List<TranscribeReplaySlowSql> slowSqls = new ArrayList<>();
         PreparedStatement pre = null;
         ResultSet res = null;
@@ -885,6 +883,60 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             }
         }
         transcribeReplaySlowSqlService.saveOrUpdateBatch(slowSqls);
+    }
+
+    private TranscribeReplayNodeInfo getNodeInfo(TranscribeReplayTask transcribeReplayTask) {
+        String nodeId = transcribeReplayTask.getTargetNodeId();
+        log.debug("Fetching node info for nodeId: {}", nodeId);
+        OpsJdbcDbClusterNodeEntity opsJdbcDbClusterNodeEntity = opsJdbcDbClusterNodeService.getById(nodeId);
+        if (opsJdbcDbClusterNodeEntity != null) {
+            log.debug("Node info found in OpsJdbcDbClusterNodeEntity for nodeId: {}", nodeId);
+            return new TranscribeReplayNodeInfo(opsJdbcDbClusterNodeEntity.getIp(),
+                opsJdbcDbClusterNodeEntity.getPort(), opsJdbcDbClusterNodeEntity.getUsername(),
+                encryptionUtils.decrypt(opsJdbcDbClusterNodeEntity.getPassword()));
+        }
+        log.debug("Node info not found in OpsJdbcDbClusterNodeEntity, trying OpsClusterVO for nodeId: {}", nodeId);
+        OpsClusterVO opsClusterVO = opsFacade.getOpsClusterVOByNodeId(nodeId);
+        if (opsClusterVO == null) {
+            log.error("OpsClusterVO not found for nodeId: {}", nodeId);
+            terminateTaskWithError(transcribeReplayTask, nodeId);
+        }
+        Optional<OpsClusterNodeVO> nodeOptional = opsClusterVO.getClusterNodes()
+            .stream()
+            .filter(node -> nodeId.equals(node.getNodeId()))
+            .findFirst();
+        if (!nodeOptional.isPresent()) {
+            terminateTaskWithError(transcribeReplayTask, nodeId);
+        }
+        OpsClusterNodeVO clusterNodeVO = nodeOptional.get();
+        log.debug("Node info found in OpsClusterVO for nodeId: {}", nodeId);
+        return new TranscribeReplayNodeInfo(clusterNodeVO.getPublicIp(), clusterNodeVO.getDbPort().toString(),
+            clusterNodeVO.getDbUser(), encryptionUtils.decrypt(clusterNodeVO.getDbUserPassword()));
+    }
+
+    private void terminateTaskWithError(TranscribeReplayTask task, String nodeId) {
+        String errorMsg = "No corresponding instance exists. nodeId:" + nodeId;
+        task.setErrorMsg(errorMsg);
+        updateStatus(task, TranscribeReplayStatus.RUN_FAIL);
+        killTask(task.getId());
+        throw new OpsException(errorMsg);
+    }
+
+    private void killTask(Integer id) {
+        TranscribeReplayTask transcribeReplayTask = getById(id);
+        String jarName = String.format(JAR_NAME, transcribeReplayTask.getToolVersion());
+        String sourceJarPath = transcribeReplayTask.getSourceInstallPath() + jarName;
+        String targetJarPath = transcribeReplayTask.getTargetInstallPath() + jarName;
+        ShellInfoVo sourceShellInfo = getShellInfo(id, transcribeReplayTask.getSourceDbType());
+        ShellInfoVo targetShellInfo = getShellInfo(id, TARGET_DB);
+        String killSourceProcess = String.format("kill -9 $(ps -ef|grep %s|awk '{print $2}')", sourceJarPath);
+        String killTargetProcess = String.format("kill -9 $(ps -ef|grep %s|awk '{print $2}')", targetJarPath);
+        if (REPLAY.equalsIgnoreCase(transcribeReplayTask.getTaskType())) {
+            ShellUtil.execCommand(targetShellInfo, killTargetProcess);
+        } else {
+            ShellUtil.execCommand(sourceShellInfo, killSourceProcess);
+            ShellUtil.execCommand(targetShellInfo, killTargetProcess);
+        }
     }
 
     private void setResult(TranscribeReplayTask transcribeReplayTask) {
