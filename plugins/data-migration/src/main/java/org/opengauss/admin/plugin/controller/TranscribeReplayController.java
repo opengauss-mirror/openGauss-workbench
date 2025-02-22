@@ -54,6 +54,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -103,7 +104,11 @@ public class TranscribeReplayController extends BaseController {
     @PostMapping("/downloadAndConfig")
     public AjaxResult transcribeReplayToolsDownLoadAndConfig(@RequestParam Integer id,
                                                              @RequestBody Map<String, Object> config) {
-        transcribeReplayService.downloadAndConfig(transcribeReplayTaskDto, id, config);
+        Map<String, String> configMap = new HashMap<>();
+        for (Map.Entry<String, Object> entry : config.entrySet()) {
+            configMap.put(entry.getKey(), entry.getValue().toString());
+        }
+        transcribeReplayService.downloadAndConfig(transcribeReplayTaskDto, id, configMap);
         return AjaxResult.success();
     }
 

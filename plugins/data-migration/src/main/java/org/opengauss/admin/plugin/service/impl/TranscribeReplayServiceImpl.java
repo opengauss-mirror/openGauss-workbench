@@ -25,6 +25,7 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import com.github.pagehelper.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import org.opengauss.admin.common.core.domain.AjaxResult;
@@ -34,6 +35,13 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsJdbcDbClusterNodeEnt
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.constants.TranscribeReplayConstants;
+import org.opengauss.admin.plugin.config.ConfigTranscribeTcpdumpParams;
+import org.opengauss.admin.plugin.config.ConfigTranscribeAttachParams;
+import org.opengauss.admin.plugin.config.ConfigTranscribeGeneralParams;
+import org.opengauss.admin.plugin.config.ConfigParseParams;
+import org.opengauss.admin.plugin.config.ConfigReplayParams;
+import org.opengauss.admin.plugin.config.ConfigTcpdumpAndAttachSameParams;
+import org.opengauss.admin.plugin.config.ConfigDbStorageParams;
 import org.opengauss.admin.plugin.domain.FailSqlModel;
 import org.opengauss.admin.plugin.domain.Process;
 import org.opengauss.admin.plugin.domain.SlowSqlModel;
@@ -64,14 +72,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ListIterator;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -109,6 +115,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
     final String transcribeConfigFile = "transcribe.properties";
     final String parseConfigFile = "parse.properties";
     final String replayConfigFile = "replay.properties";
+    final String formatString = "%s=%s" + System.lineSeparator();
     private Integer downloadId;
     @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
@@ -141,22 +148,28 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
     }
 
     @Override
-    public void downloadAndConfig(TranscribeReplayTaskDto tp, Integer id, Map<String, Object> config) {
+    public void downloadAndConfig(TranscribeReplayTaskDto tp, Integer id, Map<String, String> config) {
         this.downloadId = id;
         String url = lastedVersionUrl;
         String taskType = tp.getTaskType();
         boolean isTranscribe = taskType.contains("transcribe");
         boolean isReplay = taskType.contains("replay");
+        boolean isGeneral = GENERAL.getMode().equals(config.get(SQL_TRANSCRIBE_MODE));
         if (!isTranscribe && !isReplay) {
             throw new OpsException("An unknown error occurred while recording playback.");
         }
         threadPoolTaskExecutor.submit(() -> {
-            if (isTranscribe) {
+            // In the general mode of transcribe and replay,
+            // both the recording and playback processes occur on the source end,
+            // thus special handling is required for the following conditions.
+            if (isGeneral || isTranscribe) {
                 download(tp, createSourceShellInfo(tp), id, url, tp.getSourceInstallPath());
                 addSourceConfigList(tp, id, config);
             }
-            download(tp, createTargetShellInfo(tp), id, url, tp.getTargetInstallPath());
-            addTargetConfigList(tp, id, config);
+            if (!isGeneral) {
+                download(tp, createTargetShellInfo(tp), id, url, tp.getTargetInstallPath());
+                addTargetConfigList(tp, id, config);
+            }
         });
     }
 
@@ -251,8 +264,8 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             encryptionUtils.decrypt(targetOpsHostUserEntity.getPassword()));
     }
 
-    private void addSourceConfigList(TranscribeReplayTaskDto tp, Integer id, Map<String, Object> config) {
-        String configPath = tp.getSourceInstallPath() + File.separator + downloadId + configFilePath;
+    private void addSourceConfigList(TranscribeReplayTaskDto tp, Integer id, Map<String, String> config) {
+        String configPath = tp.getSourceInstallPath() + "/" + downloadId + configFilePath;
         String transcribeRemotePath = configPath + transcribeConfigFile;
         String generalReplayRemotePath = configPath + replayConfigFile;
         String fileExistCommand = String.format("[ -e %s ]", transcribeRemotePath);
@@ -264,7 +277,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             throw new OpsException("The addSourceConfigList fail!" + fileExist.getResult());
         } else {
             ShellUtil.updateFileContent(sourceShellInfo(tp), getTranscribeConfig(tp, config), transcribeRemotePath);
-            if (GENERAL.getMode().equals(config.get("sql.transcribe.mode"))) {
+            if (GENERAL.getMode().equals(config.get(SQL_TRANSCRIBE_MODE))) {
                 ShellUtil.updateFileContent(sourceShellInfo(tp), getReplayConfig(tp, config), generalReplayRemotePath);
             }
             updateStatus(transcribeReplayTask, TranscribeReplayStatus.NOT_RUN);
@@ -272,20 +285,20 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         }
     }
 
-    private void addTargetConfigList(TranscribeReplayTaskDto tp, Integer id, Map<String, Object> config) {
-        String configPath = tp.getTargetInstallPath() + File.separator + downloadId + configFilePath;
-        if (TCPDUMP.getMode().equals(config.get("sql.transcribe.mode"))) {
+    private void addTargetConfigList(TranscribeReplayTaskDto tp, Integer id, Map<String, String> config) {
+        String configPath = tp.getTargetInstallPath() + "/" + downloadId + configFilePath;
+        if (TCPDUMP.getMode().equals(config.get(SQL_TRANSCRIBE_MODE))) {
             String parseRemotePath = configPath + parseConfigFile;
             writeTargetFile(parseRemotePath, tp, id, parseConfigFile, getParseConfig(tp, config));
         }
-        if (!GENERAL.getMode().equals(config.get("sql.transcribe.mode"))) {
+        if (!GENERAL.getMode().equals(config.get(SQL_TRANSCRIBE_MODE))) {
             String replayRemotePath = configPath + replayConfigFile;
             writeTargetFile(replayRemotePath, tp, id, replayConfigFile, getReplayConfig(tp, config));
         }
     }
 
     private void writeTargetFile(String remotePath, TranscribeReplayTaskDto tp, Integer id, String fileName,
-                           Map<String, Object> context) {
+                           String context) {
         TranscribeReplayTask transcribeReplayTask = getById(id);
         String fileExistCommand = String.format("[ -e %s ]", remotePath);
         JschResult fileExist = ShellUtil.execCommandGetResult(targetShellInfo(tp), fileExistCommand);
@@ -300,202 +313,191 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         }
     }
 
-    private Map<String, Object> getTranscribeConfig(TranscribeReplayTaskDto tp, Map<String, Object> config) {
-        if (TCPDUMP.getMode().equals(config.get("sql.transcribe.mode"))) {
+    private String getTranscribeConfig(TranscribeReplayTaskDto tp, Map<String, String> config) {
+        if (TCPDUMP.getMode().equals(config.get(SQL_TRANSCRIBE_MODE))) {
             return getTcpDumpConfig(tp, config);
-        } else if (ATTACH.getMode().equals(config.get("sql.transcribe.mode"))) {
+        } else if (ATTACH.getMode().equals(config.get(SQL_TRANSCRIBE_MODE))) {
             return getAttachConfig(tp, config);
-        } else if (GENERAL.getMode().equals(config.get("sql.transcribe.mode"))) {
+        } else if (GENERAL.getMode().equals(config.get(SQL_TRANSCRIBE_MODE))) {
             return getGeneralLog(tp, config);
         } else {
             throw new OpsException("sql.transcribe.mode does not match.");
         }
     }
 
-    private Map<String, Object> getTcpDumpConfig(TranscribeReplayTaskDto tp, Map<String, Object> config) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("sql.transcribe.mode", config.get("sql.transcribe.mode"));
-        result.put("tcpdump.network.interface", config.get("tcpdump.network.interface"));
-        result.put("tcpdump.capture.duration", config.get("tcpdump.capture.duration"));
-        result.put("tcpdump.file.name", config.get("tcpdump.file.name"));
-        result.put("tcpdump.file.size", config.get("tcpdump.file.size"));
-        getTcpdumpAndAttachSameConfig(config, result, tp);
+    private String getTcpDumpConfig(TranscribeReplayTaskDto tp, Map<String, String> config) {
         JschResult jschResult = ShellUtil.execCommandGetResult(sourceShellInfo(tp), "which tcpdump");
         String plugPath;
         OpsHostEntity sourceOpsHostEntity = hostService.getByPublicIp(tp.getSourceIp());
-        String taskPath = tp.getSourceInstallPath() + File.separator + downloadId;
+        String taskPath = tp.getSourceInstallPath() + "/" + downloadId;
         if (jschResult.getExitCode() == 0) {
             plugPath = jschResult.getResult();
             int lastIndex = plugPath.lastIndexOf('/');
-            plugPath = plugPath.substring(0, lastIndex).replaceAll(System.lineSeparator(), "");
+            plugPath = plugPath.substring(0, lastIndex).replaceAll("[\\r\\n]+", "");
         } else {
-            plugPath = taskPath + pluginPath + File.separator + sourceOpsHostEntity.getCpuArch();
+            plugPath = taskPath + pluginPath + "/" + sourceOpsHostEntity.getCpuArch();
         }
-        result.put("tcpdump.plugin.path", plugPath);
-        result.put("tcpdump.database.port", tp.getSourcePort());
-        result.put("tcpdump.file.path", taskPath + File.separator + PCAP_FILE_PATH);
-        return result;
+        ConfigTranscribeTcpdumpParams params = new ConfigTranscribeTcpdumpParams();
+        params.setTcpDumpConfig(tp, config, plugPath, downloadId);
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format(formatString, SQL_TRANSCRIBE_MODE, params.getSqlTranscribeMode()));
+        sb.append(String.format(formatString, TCPDUMP_NETWORK_INTERFACE, params.getTcpdumpNetworkInterface()));
+        sb.append(String.format(formatString, TCPDUMP_CAPTURE_DURATION, params.getTcpdumpCaptureDuration()));
+        sb.append(String.format(formatString, TCPDUMP_FILE_NAME, params.getTcpdumpFileName()));
+        sb.append(String.format(formatString, TCPDUMP_FILE_SIZE, params.getTcpdumpFileSize()));
+        sb.append(String.format(formatString, TCPDUMP_FILE_PATH, params.getTcpdumpFilePath()));
+        sb.append(String.format(formatString, FILE_COUNT_LIMIT, params.getFileCountLimit()));
+        sb.append(String.format(formatString, TCPDUMP_PLUGIN_PATH, params.getTcpdumpPluginPath()));
+        sb.append(String.format(formatString, TCPDUMP_DATABASE_PORT, params.getTcpdumpDatabasePort()));
+        sb.append(getTcpdumpAndAttachSameConfig(config, tp));
+        return String.valueOf(sb);
     }
 
-    private Map<String, Object> getAttachConfig(TranscribeReplayTaskDto tp, Map<String, Object> config) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("sql.transcribe.mode", config.get("sql.transcribe.mode"));
-        result.put("attach.process.pid", config.get("attach.process.pid"));
-        result.put("attach.target.schema", config.get("attach.target.schema"));
-        result.put("attach.capture.duration", config.get("attach.capture.duration"));
-        result.put("file.count.limit", config.get("file.count.limit"));
-        result.put("sql.file.name", config.get("sql.file.name"));
-        result.put("sql.file.size", config.get("sql.file.size"));
-        getTcpdumpAndAttachSameConfig(config, result, tp);
-        String taskPath = tp.getSourceInstallPath() + File.separator + downloadId;
-        result.put("attach.plugin.path", taskPath + pluginPath);
-        result.put("sql.file.path", taskPath + File.separator + JSON_PATH);
-        return result;
+    private String getAttachConfig(TranscribeReplayTaskDto tp, Map<String, String> config) {
+        StringBuilder sb = new StringBuilder();
+        ConfigTranscribeAttachParams params = new ConfigTranscribeAttachParams();
+        params.setAttachConfig(tp, config, downloadId);
+        sb.append(String.format(formatString, SQL_TRANSCRIBE_MODE, params.getSqlTranscribeMode()));
+        sb.append(String.format(formatString, ATTACH_PROCESS_PID, params.getAttachProcessPid()));
+        sb.append(String.format(formatString, ATTACH_TARGET_SCHEMA, params.getAttachTargetSchema()));
+        sb.append(String.format(formatString, ATTACH_CAPTURE_DURATION, params.getAttachCaptureDuration()));
+        sb.append(String.format(formatString, FILE_COUNT_LIMIT, params.getFileCountLimit()));
+        sb.append(String.format(formatString, SQL_FILE_NAME, params.getSqlFileName()));
+        sb.append(String.format(formatString, SQL_FILE_SIZE, params.getSqlFileSize()));
+        sb.append(String.format(formatString, ATTACH_PLUGIN_PATH, params.getAttachPluginPath()));
+        sb.append(String.format(formatString, SQL_FILE_PATH, params.getSqlFilePath()));
+        sb.append(getTcpdumpAndAttachSameConfig(config, tp));
+        return String.valueOf(sb);
     }
 
-    private void getTcpdumpAndAttachSameConfig(Map<String, Object> config, Map<String, Object> result,
-                                               TranscribeReplayTaskDto tp) {
+    private String getTcpdumpAndAttachSameConfig(Map<String, String> config, TranscribeReplayTaskDto tp) {
+        StringBuilder sb = new StringBuilder();
         OpsHostEntity targetOpsHostEntity = hostService.getByPublicIp(tp.getTargetIp());
         OpsHostUserEntity targetOpsHostUserEntity = hostUserService.getHostUserByUsername(
             targetOpsHostEntity.getHostId(), tp.getTargetUser());
-        result.put("should.check.system", config.get("should.check.system"));
-        result.put("max.cpu.threshold", config.get("max.cpu.threshold"));
-        result.put("max.memory.threshold", config.get("max.memory.threshold"));
-        result.put("max.disk.threshold", config.get("max.disk.threshold"));
-        result.put("should.send.file", config.get("should.send.file"));
-        result.put("remote.retry.count", config.get("remote.retry.count"));
-        result.put("remote.receiver.password", encryptionUtils.decrypt(targetOpsHostUserEntity.getPassword()));
-        String taskPath = tp.getTargetInstallPath() + File.separator + downloadId + File.separator;
-        if (TCPDUMP.getMode().equals(config.get("sql.transcribe.mode"))) {
-            result.put("remote.file.path", taskPath + PCAP_FILE_PATH);
+        ConfigTcpdumpAndAttachSameParams params = new ConfigTcpdumpAndAttachSameParams();
+        params.setTcpAndAttachSameConfig(tp, config, downloadId, targetOpsHostEntity, targetOpsHostUserEntity);
+        String remotePassword = encryptionUtils.decrypt(params.getRemoteReceiverPassword());
+        sb.append(String.format(formatString, SHOULD_CHECK_SYSTEM, params.getShouldCheckSystem()));
+        sb.append(String.format(formatString, MAX_CPU_THRESHOLD, params.getMaxCpuThreshold()));
+        sb.append(String.format(formatString, MAX_MEMORY_THRESHOLD, params.getMaxMemoryThreshold()));
+        sb.append(String.format(formatString, MAX_DISK_THRESHOLD, params.getMaxDiskThreshold()));
+        sb.append(String.format(formatString, SHOULD_SEND_FILE, params.getShouldSendFile()));
+        sb.append(String.format(formatString, REMOTE_RETRY_COUNT, params.getRemoteRetryCount()));
+        sb.append(String.format(formatString, REMOTE_RECEIVER_NAME, params.getRemoteReceiverName()));
+        sb.append(String.format(formatString, REMOTE_RECEIVER_PASSWORD, remotePassword));
+        sb.append(String.format(formatString, REMOTE_FILE_PATH, params.getRemoteFilePath()));
+        sb.append(String.format(formatString, REMOTE_NODE_IP, params.getRemoteNodeIp()));
+        sb.append(String.format(formatString, REMOTE_NODE_PORT, params.getRemoteNodePort()));
+        return String.valueOf(sb);
+    }
+
+    private String getGeneralLog(TranscribeReplayTaskDto tp, Map<String, String> config) {
+        StringBuilder sb = new StringBuilder();
+        ConfigTranscribeGeneralParams params = new ConfigTranscribeGeneralParams();
+        params.setGeneralConfig(tp, config, downloadId);
+        sb.append(String.format(formatString, SQL_TRANSCRIBE_MODE, params.getSqlTranscribeMode()));
+        sb.append(String.format(formatString, FILE_COUNT_LIMIT, params.getFileCountLimit()));
+        sb.append(String.format(formatString, GENERAL_SQL_BATCH, params.getSqlBatch()));
+        sb.append(String.format(formatString, GENERAL_START_TIME, params.getStartTime()));
+        if (TranscribeReplaySqlStorageMode.DB.getMode().equals(params.getSqlStorageMode())) {
+            sb.append(String.format(formatString, SQL_TABLE_DROP, params.getSqlTableDrop()));
+            sb.append(getDbStorageConfig(config));
         } else {
-            result.put("remote.file.path", taskPath + JSON_PATH);
+            sb.append(String.format(formatString, SQL_FILE_PATH, params.getSqlFilePath()));
         }
-        result.put("remote.receiver.name", tp.getTargetUser());
-        result.put("remote.node.ip", tp.getTargetIp());
-        result.put("remote.node.port", targetOpsHostEntity.getPort());
+        sb.append(String.format(formatString, GENERAL_DATABASE_IP, params.getDatabaseIp()));
+        sb.append(String.format(formatString, GENERAL_DATABASE_PORT, params.getDatabasePort()));
+        sb.append(String.format(formatString, GENERAL_DATABASE_USERNAME, params.getDatabaseUsername()));
+        String databasePassword = encryptionUtils.decrypt(params.getDatabasePassword());
+        sb.append(String.format(formatString, GENERAL_DATABASE_PASSWORD, databasePassword));
+        return String.valueOf(sb);
     }
 
-    private Map<String, Object> getGeneralLog(TranscribeReplayTaskDto tp, Map<String, Object> config) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("sql.transcribe.mode", config.get("sql.transcribe.mode"));
-        result.put("general.database.username", config.get("general.database.username"));
-        Object passwordObj = config.get("general.database.password");
-        result.put("general.database.password", encryptionUtils.decrypt(passwordObj instanceof String
-            ? (String) passwordObj : ""));
-        result.put("general.sql.batch", config.get("general.sql.batch"));
-        result.put("general.start.time", config.get("general.start.time"));
-        result.put("sql.storage.mode", config.get("sql.storage.mode"));
-        String taskPath = tp.getSourceInstallPath() + File.separator + downloadId + File.separator;
-        if (TranscribeReplaySqlStorageMode.DB.getMode().equals(config.get("sql.storage.mode"))) {
-            result.put("sql.table.drop", config.get("sql.table.drop"));
-            getDbStorageConfig(config, result);
-        } else {
-            result.put("sql.file.path", taskPath + JSON_PATH);
-        }
-        result.put("general.database.ip", tp.getSourceIp());
-        result.put("general.database.port", tp.getSourcePort());
-        return result;
+    private String getDbStorageConfig(Map<String, String> config) {
+        ConfigDbStorageParams params = new ConfigDbStorageParams();
+        params.setDbStorConfig(config);
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format(formatString, SQL_DATABASE_IP, params.getSqlDatabaseIp()));
+        sb.append(String.format(formatString, SQL_DATABASE_PORT, params.getSqlDatabasePort()));
+        sb.append(String.format(formatString, SQL_DATABASE_USERNAME, params.getSqlDatabaseUsername()));
+        String databasePassword = params.getSqlDatabasePassword();
+        sb.append(String.format(formatString, SQL_DATABASE_PASSWORD, databasePassword));
+        sb.append(String.format(formatString, SQL_DATABASE_NAME, params.getSqlDatabaseName()));
+        sb.append(String.format(formatString, SQL_TABLE_NAME, params.getSqlTableName()));
+        return String.valueOf(sb);
     }
 
-    private void getDbStorageConfig(Map<String, Object> config, Map<String, Object> result) {
-        result.put("sql.database.ip", config.get("sql.database.ip"));
-        result.put("sql.database.port", config.get("sql.database.port"));
-        result.put("sql.database.username", config.get("sql.database.username"));
-        result.put("sql.database.name", config.get("sql.database.name"));
-        Object passwordObj = config.get("sql.database.password");
-        result.put("sql.database.password", encryptionUtils.decrypt(passwordObj instanceof String
-            ? (String) passwordObj : ""));
-        result.put("sql.table.name", config.get("sql.table.name"));
-    }
-
-    private String getTaskPathById(TranscribeReplayTaskDto tp, Map<String, Object> config) {
+    private String getTaskPathById(TranscribeReplayTaskDto tp, Map<String, String> config) {
         String taskPath;
-        if (config.get("tcpdump.file.id") != null && !"".equals(config.get("tcpdump.file.id"))) {
-            Object passwordObj = config.get("tcpdump.file.id");
-            TranscribeReplayTask byId = getById(Integer.valueOf(passwordObj instanceof String
-                ? (String) passwordObj : ""));
+        if (!StringUtil.isEmpty(config.get(TCPDUMP_FILE_ID))) {
+            String passwordObj = config.get(TCPDUMP_FILE_ID);
+            TranscribeReplayTask byId = getById(Integer.valueOf(passwordObj));
             int lastIndex = byId.getTargetInstallPath().lastIndexOf('/');
             taskPath = byId.getTargetInstallPath().substring(0, lastIndex);
         } else {
-            taskPath = tp.getTargetInstallPath() + File.separator + downloadId;
+            taskPath = tp.getTargetInstallPath() + "/" + downloadId;
         }
         return taskPath;
     }
 
-    private Map<String, Object> getParseConfig(TranscribeReplayTaskDto tp, Map<String, Object> config) {
-        Map<String, Object> result = new HashMap<>();
-        String taskPath = tp.getTargetInstallPath() + File.separator + downloadId;
-        result.put("parse.select.result", config.get("parse.select.result"));
-        result.put("select.result.path", taskPath);
-        result.put("result.file.name", config.get("result.file.name"));
-        result.put("result.file.size", config.get("result.file.size"));
-        result.put("sql.storage.mode", config.get("sql.storage.mode"));
-        result.put("tcpdump.database.type", tp.getSourceDbType().toLowerCase());
-        result.put("queue.size.limit", config.get("queue.size.limit"));
-        result.put("packet.batch.size", config.get("packet.batch.size"));
-        result.put("tcpdump.file.path", getTaskPathById(tp, config) + File.separator + PCAP_FILE_PATH);
-        result.put("tcpdump.database.ip", tp.getSourceIp());
-        result.put("tcpdump.database.port", tp.getSourcePort());
-        if (TranscribeReplaySqlStorageMode.JSON.getMode().equals(config.get("sql.storage.mode"))) {
-            result.put("sql.file.path", taskPath + File.separator + JSON_PATH);
-            result.put("sql.file.size", config.get("sql.file.size"));
-            result.put("sql.file.name", config.get("sql.file.name"));
-        } else if (TranscribeReplaySqlStorageMode.DB.getMode().equals(config.get("sql.storage.mode"))) {
-            result.put("sql.table.drop", config.get("sql.table.drop"));
-            getDbStorageConfig(config, result);
+    private String getParseConfig(TranscribeReplayTaskDto tp, Map<String, String> config) {
+        StringBuilder sb = new StringBuilder();
+        ConfigParseParams params = new ConfigParseParams();
+        params.setParseConfig(tp, config, downloadId, getTaskPathById(tp, config));
+        sb.append(String.format(formatString, PARSE_SELECT_RESULT, params.getParseSelectResult()));
+        sb.append(String.format(formatString, SELECT_RESULT_PATH, params.getSelectResultPath()));
+        sb.append(String.format(formatString, RESULT_FILE_NAME, params.getResultFileName()));
+        sb.append(String.format(formatString, RESULT_FILE_SIZE, params.getResultFileSize()));
+        sb.append(String.format(formatString, SQL_STORAGE_MODE, params.getSqlStorageMode()));
+        sb.append(String.format(formatString, TCPDUMP_DATABASE_TYPE, params.getTcpdumpDatabaseType()));
+        sb.append(String.format(formatString, QUEUE_SIZE_LIMIT, params.getQueueSizeLimit()));
+        sb.append(String.format(formatString, PACKET_BATCH_SIZE, params.getPacketBatchSize()));
+        sb.append(String.format(formatString, TCPDUMP_FILE_PATH, params.getTcpdumpFilePath()));
+        sb.append(String.format(formatString, TCPDUMP_DATABASE_IP, params.getTcpdumpDatabaseIp()));
+        sb.append(String.format(formatString, TCPDUMP_DATABASE_PORT, params.getTcpdumpDatabasePort()));
+        if (TranscribeReplaySqlStorageMode.JSON.getMode().equals(params.getSqlStorageMode())) {
+            sb.append(String.format(formatString, SQL_FILE_PATH, params.getSqlFilePath()));
+            sb.append(String.format(formatString, SQL_FILE_SIZE, params.getSqlFileSize()));
+            sb.append(String.format(formatString, SQL_FILE_NAME, params.getSqlFileName()));
         } else {
-            throw new OpsException("Parse sql.storage.mode does not match.");
+            sb.append(String.format(formatString, SQL_TABLE_DROP, params.getSqlTableDrop()));
+            sb.append(getDbStorageConfig(config));
         }
-        return result;
+        return String.valueOf(sb);
     }
 
-    private Map<String, Object> getReplayConfig(TranscribeReplayTaskDto tp, Map<String, Object> config) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("sql.storage.mode", config.get("sql.storage.mode"));
-        result.put("sql.replay.multiple", config.get("sql.replay.multiple"));
-        result.put("sql.replay.only.query", config.get("sql.replay.only.query"));
-        if (TCPDUMP.getMode().equals(config.get("sql.transcribe.mode"))) {
-            result.put("sql.replay.strategy", config.get("sql.replay.strategy"));
-            result.put("sql.replay.parallel.max.pool.size", config.get("sql.replay.parallel.max.pool.size"));
-        } else {
-            result.put("sql.replay.strategy", "serial");
-            result.put("sql.replay.parallel.max.pool.size", 1);
-        }
-        result.put("replay.max.time", config.get("replay.max.time"));
-        result.put("sql.replay.slow.sql.rule", config.get("sql.replay.slow.sql.rule"));
-        result.put("sql.replay.slow.time.difference.threshold",
-            config.get("sql.replay.slow.time.difference.threshold"));
-        result.put("sql.replay.slow.sql.duration.threshold", config.get("sql.replay.slow.sql.duration.threshold"));
-        result.put("sql.replay.slow.top.number", config.get("sql.replay.slow.top.number"));
-        result.put("sql.replay.draw.interval", config.get("sql.replay.draw.interval"));
-        result.put("sql.replay.session.white.list", config.get("sql.replay.session.white.list"));
-        result.put("sql.replay.session.black.list", config.get("sql.replay.session.black.list"));
-        result.put("sql.replay.database.username", config.get("sql.replay.database.username"));
-        Object passwordObj = config.get("sql.replay.database.password");
-        result.put("sql.replay.database.password",
-                encryptionUtils.decrypt(passwordObj instanceof String ? (String) passwordObj : ""));
-        String sourceTaskPath = tp.getSourceInstallPath() + File.separator + downloadId;
-        String targetTaskPath = tp.getTargetInstallPath() + File.separator + downloadId;
-        if (GENERAL.getMode().equals(config.get("sql.transcribe.mode"))) {
-            result.put("sql.replay.slow.sql.csv.dir", sourceTaskPath);
-        } else {
-            result.put("sql.replay.slow.sql.csv.dir", targetTaskPath);
-        }
-        result.put("sql.replay.database.ip", tp.getTargetIp());
-        result.put("sql.replay.database.port", tp.getTargetPort());
-        result.put("sql.replay.database.schema.map", addDbMapSchema(tp.getDbMap()));
-        if (TranscribeReplaySqlStorageMode.DB.getMode().equals(config.get("sql.storage.mode"))) {
-            getDbStorageConfig(config, result);
-        } else {
-            if (GENERAL.getMode().equals(config.get("sql.transcribe.mode"))) {
-                result.put("sql.file.path", sourceTaskPath + File.separator + JSON_PATH);
-            } else {
-                result.put("sql.file.path", getTaskPathById(tp, config) + File.separator + JSON_PATH);
-            }
-            result.put("sql.file.name", config.get("sql.file.name"));
-        }
-        return result;
+    private String getReplayConfig(TranscribeReplayTaskDto tp, Map<String, String> config) {
+        ConfigReplayParams params = new ConfigReplayParams();
+        params.setRepConfig(tp, config, addDbMapSchema(tp.getDbMap()), downloadId);
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format(formatString, SQL_STORAGE_MODE, params.getSqlStorageMode()));
+        sb.append(String.format(formatString, SQL_REPLAY_MULTIPLE, params.getSqlReplayMultiple()));
+        sb.append(String.format(formatString, SQL_REPLAY_ONLY_QUERY, params.getSqlReplayOnlyQuery()));
+        sb.append(String.format(formatString, SQL_REPLAY_STRATEGY, params.getSqlReplayStrategy()));
+        sb.append(String.format(formatString, SQL_REPLAY_PARALLEL_MAX_POOL_SIZE,
+            params.getSqlReplayParallelMaxPoolSize()));
+        sb.append(String.format(formatString, REPLAY_MAX_TIME, params.getReplayMaxTime()));
+        sb.append(String.format(formatString, SQL_REPLAY_SLOW_SQL_RULE, params.getSqlReplaySlowSqlRule()));
+        sb.append(String.format(formatString, SQL_REPLAY_SLOW_TIME_DIFFERENCE_THRESHOLD,
+            params.getSqlReplaySlowTimeDifferenceThreshold()));
+        sb.append(String.format(formatString, SQL_REPLAY_SLOW_SQL_DURATION_THRESHOLD,
+            params.getSqlReplaySlowSqlDurationThreshold()));
+        sb.append(String.format(formatString, SQL_REPLAY_SLOW_TOP_NUMBER, params.getSqlReplaySlowTopNumber()));
+        sb.append(String.format(formatString, SQL_REPLAY_DRAW_INTERVAL, params.getSqlReplayDrawInterval()));
+        sb.append(String.format(formatString, SQL_REPLAY_SESSION_WHITE_LIST, params.getSqlReplaySessionWhiteList()));
+        sb.append(String.format(formatString, SQL_REPLAY_SESSION_BLACK_LIST, params.getSqlReplaySessionBlackList()));
+        sb.append(String.format(formatString, SQL_REPLAY_DATABASE_USERNAME, params.getSqlReplayDatabaseUsername()));
+        String databasePassword = encryptionUtils.decrypt(params.getSqlReplayDatabasePassword());
+        sb.append(String.format(formatString, SQL_REPLAY_DATABASE_PASSWORD, databasePassword));
+        sb.append(String.format(formatString, SQL_REPLAY_SLOW_SQL_CSV_DIR, params.getSqlReplaySlowSqlCsvDir()));
+        sb.append(String.format(formatString, SQL_REPLAY_DATABASE_IP, params.getSqlReplayDatabaseIp()));
+        sb.append(String.format(formatString, SQL_REPLAY_DATABASE_PORT, params.getSqlReplayDatabasePort()));
+        sb.append(String.format(formatString, SQL_REPLAY_DATABASE_SCHEMA_MAP,
+            params.getSqlReplayDatabaseSchemaMap()));
+        sb.append(String.format(formatString, SQL_FILE_PATH, params.getSqlFilePath()));
+        sb.append(String.format(formatString, SQL_FILE_NAME, params.getSqlFileName()));
+        return String.valueOf(sb);
     }
 
     private String addDbMapSchema(List<String> list) {
