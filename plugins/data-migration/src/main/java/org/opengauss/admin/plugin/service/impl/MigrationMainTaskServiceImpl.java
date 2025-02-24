@@ -696,6 +696,11 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             if (countByProcessing() > 0) {
                 List<MigrationMainTask> migrationMainTasks = listByProcessing();
                 migrationMainTasks.stream().forEach(mt -> {
+                    Long time = taskRefreshRecord.get(mt.getId());
+                    Long curTime = DateUtil.date().getTime();
+                    if (time == null || curTime > (time + taskRefreshIntervalsMillisecond)) {
+                        syncRefreshTaskStatusByPortal(mt.getId());
+                    }
                     doRefreshSingleMainTask(mt);
                 });
             }
