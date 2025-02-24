@@ -17,8 +17,8 @@ package org.opengauss.admin.plugin.utils;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.opengauss.admin.common.core.domain.entity.ops.OpsJdbcDbClusterNodeEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.plugin.domain.TranscribeReplayNodeInfo;
 import org.opengauss.admin.plugin.domain.TranscribeReplayTask;
 
 import java.lang.reflect.Field;
@@ -48,25 +48,22 @@ public class JDBCUtils {
      * Connect to the database.
      *
      * @param transcribeReplayTask transcribeReplayTask
-     * @param opsJdbcDbClusterNodeEntity opsJdbcDbClusterNodeEntity
+     * @param nodeInfo nodeInfo
      * @return Connection
      */
     public static Connection getConnection(TranscribeReplayTask transcribeReplayTask,
-        OpsJdbcDbClusterNodeEntity opsJdbcDbClusterNodeEntity) {
+        TranscribeReplayNodeInfo nodeInfo) {
         List<String> dbName = Arrays.stream(transcribeReplayTask.getDbName().split(";")).collect(Collectors.toList());
         if (dbName.isEmpty()) {
             throw new OpsException("Database name is empty.");
         }
         String[] schemas = dbName.get(0).split(":");
-        StringBuilder url = new StringBuilder();
-        url.append("jdbc:opengauss://").append(opsJdbcDbClusterNodeEntity.getIp());
-        url.append(":").append(opsJdbcDbClusterNodeEntity.getPort());
-        url.append("/").append(schemas[1]);
-        url.append("?currentSchema=").append(schemas[0]);
+        String url = String.format("jdbc:opengauss://%s:%s/%s?currentSchema=%s", nodeInfo.getIp(), nodeInfo.getPort(),
+            schemas[1], schemas[0]);
         try {
             Class.forName("org.opengauss.Driver");
-            connection = DriverManager.getConnection(url.toString(), opsJdbcDbClusterNodeEntity.getUsername(),
-                opsJdbcDbClusterNodeEntity.getPassword());
+            connection = DriverManager.getConnection(url, nodeInfo.getUsername(),
+                nodeInfo.getPassword());
         } catch (ClassNotFoundException | SQLException e) {
             log.error("Get JDBC connection is failed, {}", e.getMessage());
         }
