@@ -46,10 +46,12 @@
           </a-select>
         </a-form-item>
         <a-form-item field="installPath" :label="$t('simple.InstallConfig.5mpmu0lar480')" validate-trigger="blur">
-          <label class="label-color">{{ data.form.installPath }}</label>
+          <a-input class="label-color" v-model.trim="data.form.installPath"
+              :placeholder="$t('simple.InstallConfig.5mpmu0lar800')"></a-input>
         </a-form-item>
         <a-form-item field="port" :label="$t('simple.InstallConfig.5mpmu0larj40')" validate-trigger="blur">
-          <label class="label-color">{{ data.form.port }}</label>
+          <a-input-number class="label-color" v-model="data.form.port" max="65535" min="0"
+              :placeholder="$t('simple.InstallConfig.5mpmu0larmo0')"></a-input-number>
         </a-form-item>
       </a-form>
       <a-button type="primary" size="large" :loading="data.loading" @click="handleInstall">{{
@@ -159,6 +161,7 @@ import { encryptPassword } from '@/utils/jsencrypt'
 import { useI18n } from 'vue-i18n'
 import dayjs from "dayjs";
 import HostTerminal from "@/views/ops/install/components/hostTerminal/HostTerminal.vue";
+import {LINUX_PATH} from "@/views/ops/install/components/enterprise/constant";
 
 const { t } = useI18n()
 const data = reactive<KeyValue>({
@@ -215,6 +218,38 @@ const formRules = computed(() => {
     hostId: [{ required: true, 'validate-trigger': 'change', message: t('simpleInstall.index.5mpn813gwbk0') }],
     hostUser: [{ required: true, 'validate-trigger': 'change', message: '请选择用户' }],
     rootPassword: [{ required: true, 'validate-trigger': 'blur', message: t('simpleInstall.index.5mpn813gupc0') }],
+    installPath: [{ required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0lar800') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            if (!value.trim()) {
+              cb(t('enterprise.ClusterConfig.else2'))
+              resolve(false)
+            } else if (!LINUX_PATH.test(value)) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jvx0'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
+    port: [{ required: true, 'validate-trigger': 'blur', message: t('simple.InstallConfig.5mpmu0larmo0') },
+      {
+        validator: (value: any, cb: any) => {
+          return new Promise(resolve => {
+            // 校验数据库端口
+            if (value < 1024 || value > 65529) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jux0'))
+              resolve(false)
+            } else {
+              resolve(true)
+            }
+          })
+        }
+      }
+    ],
     install: [{
       validator: (value: any, cb: any) => {
         return new Promise(resolve => {
@@ -284,7 +319,6 @@ const handleInstall = async () => {
       const portValid: KeyValue = await portUsed(data.form.hostId, portParam)
       if (Number(portValid.code) === 200) {
         if (portValid.data) {
-          data.validVisible = true
           data.loading = false
           Message.error('Port check exception')
           return
@@ -461,7 +495,7 @@ const exeInstall = async (socket: Socket<any, any>, businessId: string, term: Te
       clusterId: 'MINI_' + new Date().getTime(),
       clusterName: '',
       minimalistInstallConfig: {
-        port: Number(5432),
+        port: data.form.port,
         installPackagePath: '/opt/software/openGauss',
         databaseUsername: '',
         databasePassword: '1qaz2wsx#EDC',
@@ -469,7 +503,7 @@ const exeInstall = async (socket: Socket<any, any>, businessId: string, term: Te
           clusterRole: ClusterRoleEnum.MASTER,
           hostId: data.form.hostId,
           installUserId: data.installUserId,
-          installPath: '/opt/openGauss',
+          installPath: data.form.installPath,
           isInstallDemoDatabase: true
         }]
       }
