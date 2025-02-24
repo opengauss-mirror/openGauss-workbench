@@ -5,7 +5,8 @@
         <div class="flex-between mb-s">
           <div class="operate-button">
             <div>
-              <el-button type="primary" class="mr" @click="addRecordPlayBack('create')">{{ $t('transcribe.index.createtask') }}</el-button>
+              <el-button type="primary" class="mr" @click="addRecordPlayBack('create')">{{
+                $t('transcribe.index.createtask') }}</el-button>
               <el-popconfirm :title="t('transcribe.index.bulkdelete')" @confirm="deleteSelectedHosts">
                 <template #reference>
                   <el-button type="primary" class="mr">{{ $t('transcribe.index.bulkdeletebtn') }}</el-button>
@@ -14,41 +15,35 @@
               <el-button class="mr" @click="getListData">{{ $t('detail.index.5q09asiwg4g0') }}</el-button>
             </div>
             <div class="switchside">
-              <el-switch v-model="autoRefreshFlag" class="ml-2" inline-prompt
-                         style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;" size="large"
-                         width="auto"
-                         :active-text="t('transcribe.index.autorefresh')" :inactive-text="t('transcribe.index.stoprefresh')" @change="autoRefreshList"/>
+              <el-switch v-model="autoRefreshFlag" inline-prompt size="large"
+                :active-text="t('transcribe.index.autorefresh')" :inactive-text="t('transcribe.index.stoprefresh')"
+                @change="autoRefreshList" />
             </div>
           </div>
         </div>
       </div>
     </div>
     <div>
-      <fusion-search :label-options="labelOptions" @click-search="clickSearch"/>
+      <fusion-search :label-options="labelOptions" @click-search="clickSearch" />
     </div>
     <div class="packageList">
       <el-table :row-key="(row) => row.id" :data="list.data" @selection-change="handleSelected" style="width: 100vw">
-        <el-table-column type="selection" width="40"/>
-        <el-table-column :label="id" prop="id" :width="50" sortable/>
-        <el-table-column :label="t('transcribe.index.taskname') " prop="taskName" sortable>
+        <el-table-column type="selection" width="40" />
+        <el-table-column label="id" prop="id" :width="50" sortable />
+        <el-table-column :label="t('transcribe.index.taskname')" prop="taskName" sortable>
           <template #default="{ row }">
             <el-button link type="primary" @click.prevent="goDetail(row)">{{ row.taskName }}</el-button>
           </template>
         </el-table-column>
-        <el-table-column :label="t('transcribe.index.dbname') " prop="dbName"/>
+        <el-table-column :label="t('transcribe.index.dbname')" prop="dbName" />
         <el-table-column :label="t('transcribe.index.executionstatus')" prop="executionStatus" :width="100" sortable>
           <template #default="{ row }">
-            <el-popover
-              placement="top-start" :width="400" trigger="hover"
+            <el-popover placement="top-start" :width="400" trigger="hover"
               :disabled="![TASKSTATE.DOWNLOADINGFAIL_NUMERIC, TASKSTATE.RUNNINGFAIL_NUMERIC].includes(row.executionStatus)"
-              :content="row.errorMsg"
-              append-to="#replayList"
+              :content="row.errorMsg" append-to="#replayList"
               style="max-height: 30vh; max-width: 50vw; width: auto; overflow: auto;">
               <template #reference>
-                <el-tag
-                  :type="getTagType(row.executionStatus)"
-                  effect="dark"
-                  size="large"
+                <el-tag :type="getTagType(row.executionStatus)" effect="dark" size="large"
                   style="width: 90%; font-size: 12px">
                   {{ getStatusText(row.executionStatus) }}
                 </el-tag>
@@ -71,22 +66,15 @@
             <div v-else> {{ formattedTime(row.taskDuration) }}</div>
           </template>
         </el-table-column>
-        <el-table-column :label="t('transcribe.index.taskStartTime') " prop="taskStartTime" sortable/>
-        <el-table-column :label="t('transcribe.index.taskEndTime')" prop="taskEndTime" sortable/>
-        <el-table-column :label="t('transcribe.index.action') ">
+        <el-table-column :label="t('transcribe.index.taskStartTime')" prop="taskStartTime" sortable />
+        <el-table-column :label="t('transcribe.index.taskEndTime')" prop="taskEndTime" sortable />
+        <el-table-column :label="t('transcribe.index.action')">
           <template #default="scope">
-            <el-button
-              link
-              type="primary"
-              @click.prevent="startRows(scope.row)"
-              v-if="scope.row.executionStatus !== TASKSTATE.RUNNING_NUMERIC"
-              :disabled="isButtonDisabled(scope.row)">
+            <el-button link type="primary" @click.prevent="startRows(scope.row)"
+              v-if="scope.row.executionStatus !== TASKSTATE.RUNNING_NUMERIC" :disabled="isButtonDisabled(scope.row)">
               {{ getButtonText(scope.row.executionStatus) }}
             </el-button>
-            <el-popconfirm
-              :title="t('transcribe.index.confirmstop')"
-              @confirm="finishRows(scope.row)"
-              v-else>
+            <el-popconfirm :title="t('transcribe.index.confirmstop')" @confirm="finishRows(scope.row)" v-else>
               <template #reference>
                 <el-button link type="primary">{{ $t('transcribe.index.stop') }}</el-button>
               </template>
@@ -102,19 +90,17 @@
         </el-table-column>
       </el-table>
       <el-pagination @size-change="pageSizeChange" @current-change="currentPage" :current-page="filter.pageNum"
-                     :page-sizes="[10, 15, 20, 25]" :pager-count="11" :page-size="filter.pageSize"
-                     layout="total, sizes, prev, pager, next, jumper" :total="list.total">
+        :page-sizes="[10, 15, 20, 25]" :pager-count="11" :page-size="filter.pageSize"
+        layout="total, sizes, prev, pager, next, jumper" :total="list.total">
       </el-pagination>
     </div>
   </div>
 </template>
 
 <script setup>
-import {Message} from '@arco-design/web-vue/es/index'
-import {onMounted, reactive, ref, onUnmounted, watch, toRaw, defineProps, onBeforeUnmount} from 'vue'
+import { onMounted, reactive, ref, toRaw, onBeforeUnmount,computed } from 'vue'
 import WujieVue from 'wujie-vue3'
-import {useI18n} from 'vue-i18n'
-import router from "@/router";
+import { useI18n } from 'vue-i18n'
 import {
   transcribeReplayDelete,
   transcribeReplayFinish,
@@ -123,11 +109,11 @@ import {
 } from "@/api/playback";
 import showMessage from "@/utils/showMessage";
 import FusionSearch from '@/components/fusion-search'
-import {searchType} from '@/types/searchType'
+import { searchType } from '@/types/searchType'
 import dayjs from 'dayjs'
 
-const {t} = useI18n()
-const {bus} = WujieVue
+const { t } = useI18n()
+const { bus } = WujieVue
 
 const TASKSTATE = {
   DOWNLOADINGFAIL: 'downloading_fail',
@@ -313,55 +299,57 @@ const formattedTime = (taskDuration) => {
   return t('transcribe.index.daytime', [days, hours, minutes, seconds])
 }
 
-const labelOptions = ref({
-  executionStatus: {
-    label: t('transcribe.index.executionstatus'),
-    value: 'executionStatus',
-    placeholder: t('transcribe.index.seletionexecutionstatus'),
-    selectType: searchType.SELECT,
-    options: [
-      {
-        value: TASKSTATE.DOWNLOADING_NUMERIC,
-        label: t('transcribe.index.downloading')
-      },
-      {
-        value: TASKSTATE.DOWNLOADINGFAIL_NUMERIC,
-        label: t('transcribe.index.downloadfailed')
-      },
-      {
-        value: TASKSTATE.FINISH_NUMERIC,
-        label: t('transcribe.index.complete')
-      },
-      {
-        value: TASKSTATE.NOSTARTED_NUMERIC,
-        label: t('transcribe.index.noexecuted')
-      },
-      {
-        value: TASKSTATE.RUNNINGFAIL_NUMERIC,
-        label: t('transcribe.index.executionfailed')
-      },
-      {
-        value: TASKSTATE.RUNNING_NUMERIC,
-        label: t('transcribe.index.executing')
-      }
-    ]
-  },
-  taskName: {
-    label: t('transcribe.index.taskname'),
-    value: 'taskName',
-    placeholder: t('transcribe.index.inputtaskname'),
-    selectType: searchType.INPUT
-  },
-  taskDateRange: {
-    label: t('transcribe.index.tasktime'),
-    value: 'taskDateRange',
-    placeholder: t('transcribe.index.tasktimerange'),
-    selectType: searchType.DATERANGE
-  },
+const labelOptions = computed(() => {
+  return {
+    executionStatus: {
+      label: t('transcribe.index.executionstatus'),
+      value: 'executionStatus',
+      placeholder: t('transcribe.index.seletionexecutionstatus'),
+      selectType: searchType.SELECT,
+      options: [
+        {
+          value: TASKSTATE.DOWNLOADING_NUMERIC,
+          label: t('transcribe.index.downloading')
+        },
+        {
+          value: TASKSTATE.DOWNLOADINGFAIL_NUMERIC,
+          label: t('transcribe.index.downloadfailed')
+        },
+        {
+          value: TASKSTATE.FINISH_NUMERIC,
+          label: t('transcribe.index.complete')
+        },
+        {
+          value: TASKSTATE.NOSTARTED_NUMERIC,
+          label: t('transcribe.index.noexecuted')
+        },
+        {
+          value: TASKSTATE.RUNNINGFAIL_NUMERIC,
+          label: t('transcribe.index.executionfailed')
+        },
+        {
+          value: TASKSTATE.RUNNING_NUMERIC,
+          label: t('transcribe.index.executing')
+        }
+      ]
+    },
+    taskName: {
+      label: t('transcribe.index.taskname'),
+      value: 'taskName',
+      placeholder: t('transcribe.index.inputtaskname'),
+      selectType: searchType.INPUT
+    },
+    taskDateRange: {
+      label: t('transcribe.index.tasktime'),
+      value: 'taskDateRange',
+      placeholder: t('transcribe.index.tasktimerange'),
+      selectType: searchType.DATERANGE
+    },
+  }
 })
 
 const clickSearch = (params) => {
-  const {taskDateRange, executionStatus, taskName} = params;
+  const { taskDateRange, executionStatus, taskName } = params;
   filter.executionStatus = executionStatus;
   filter.taskName = taskName;
   filter.taskStartTime = taskDateRange?.length ? dayjs(taskDateRange[0]).format("YYYY-MM-DD HH:MM:ss") : undefined;
@@ -454,7 +442,7 @@ const getListData = () => {
         tempTask.taskStartTime = item.taskStartTime
         tempTask.taskEndTime = item.taskEndTime
         tempTask.errorMsg = item.errorMsg
-        list.data.push({...tempTask})
+        list.data.push({ ...tempTask })
       })
       list.total = res.total
     }
@@ -523,6 +511,14 @@ const changeEchartsColor = (type) => {
       display: flex;
       justify-content: flex-end;
       align-items: center;
+
+      .el-switch {
+        --o-switch-width: auto;
+      }
+
+      :deep(.el-switch.is-checked .el-switch__core .el-switch__action) {
+        left: calc(100% - 21px);
+      }
     }
   }
 }

@@ -4,11 +4,13 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import * as echarts from 'echarts';
 import VChart from 'vue-echarts'
 import { getSqlDuration } from '@/api/playback.js'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 
 const props = defineProps({
   id: {
@@ -30,6 +32,14 @@ onMounted(async () => {
     'sqlName'
   ], ...source, ...target]
   initOptions(demoData)
+})
+
+const title = computed(() => {
+  return t('transcribe.detail.compareTitle')
+})
+
+const yAxis = computed(()=>{
+  return t('transcribe.detail.duration')
 })
 
 const initOptions = (demoData) => {
@@ -72,7 +82,7 @@ const initOptions = (demoData) => {
       data: ['target', 'source'],
     },
     title: {
-      text: 'source段和target端执行耗时',
+      text: title,
       left: '45%'
     },
     tooltip: {
@@ -91,7 +101,7 @@ const initOptions = (demoData) => {
       }
     },
     yAxis: {
-      name: '耗时（微秒）',
+      name: yAxis,
       type: 'value',
       show: true,
       nameLocation: 'end',

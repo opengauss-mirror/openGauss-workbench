@@ -26,12 +26,12 @@
       <div>
         <div class="icon-text-container" style="height: 100%; margin-right: 10px">
           <div class="text-label-container text-same-line">
-            <span class="list-title">{{ list.anynum }}</span>
-            <span style="font-size: 16px;"> 已解析数据</span>
+            <span class="list-title">{{ list.parsedNum }}</span>
+            <span style="font-size: 16px;"> {{ $t('transcribe.detail.parsedData') }}</span>
           </div>
           <div class="text-label-container text-same-line">
-            <span class="list-title">{{ list.playbacknum }}</span>
-            <span style="font-size: 16px;"> 已回放数据</span>
+            <span class="list-title">{{ list.replayedNum }}</span>
+            <span style="font-size: 16px;"> {{ $t('transcribe.detail.replayedData') }}</span>
           </div>
         </div>
       </div>
@@ -41,20 +41,27 @@
         <div class="icon-text-container" style=" min-width: 250px;max-width: 300px;">
           <div class="text-label-container basic-info">
             <div class="info-title">
-              <span>基本信息</span>
+              <span>{{ $t('transcribe.detail.baskInfo') }}</span>
             </div>
             <el-form :data="list" label-position="left" label-width="110">
-              <el-form-item label="任务名称"><span>{{ list.name }}</span></el-form-item>
-              <el-form-item label="任务ID"><span>{{ pageId }}</span></el-form-item>
-
-              <el-form-item label="任务类型"><span>{{ getTypeText(list.taskType) }}</span></el-form-item>
-              <el-form-item label="任务耗时"><span>{{ formattedTime(list.taskDuration) }}</span></el-form-item>
-              <el-form-item label="任务开始时间"><span>{{ list.startTime }}</span></el-form-item>
-              <el-form-item label="任务结束时间"><span>{{ list.endTime }}</span></el-form-item>
+              <el-form-item :label="$t('transcribe.index.taskname')"><span>{{ list.name || '--' }}</span></el-form-item>
+              <el-form-item :label="$t('transcribe.detail.taskId')"><span>{{ pageId || '--' }}</span></el-form-item>
+              <el-form-item :label="$t('transcribe.index.tasktype')"><span>{{ getTypeText(list.taskType)
+              }}</span></el-form-item>
+              <el-form-item :label="$t('transcribe.index.taskDuration')"><span>{{ formattedTime(list.taskDuration)
+              }}</span></el-form-item>
+              <el-form-item :label="$t('transcribe.index.taskStartTime')"><span>{{ list.startTime || '--'
+              }}</span></el-form-item>
+              <el-form-item :label="$t('transcribe.detail.taskEndTime')"><span>{{ list.endTime || '--'
+              }}</span></el-form-item>
+              <el-form-item :label="t('transcribe.detail.sourceIp')"><span>{{ list.sourceIp || '--'
+              }}</span></el-form-item>
+              <el-form-item :label="t('transcribe.detail.targetIp')"><span>{{ list.targetIp || '--'
+              }}</span></el-form-item>
               <el-table :data="dbMapData" border class="dbMapTable">
-                <el-table-column label="数据库映射关系" align="center">
-                  <el-table-column prop="source" label="源端"></el-table-column>
-                  <el-table-column prop="target" label="目的端"></el-table-column>
+                <el-table-column :label="$t('transcribe.create.dbrelationship')" align="center">
+                  <el-table-column prop="source" :label="$t('transcribe.detail.source')"></el-table-column>
+                  <el-table-column prop="target" :label="$t('transcribe.detail.target')"></el-table-column>
                 </el-table-column>
               </el-table>
             </el-form>
@@ -63,11 +70,12 @@
       </div>
     </div>
     <div class="bottom-right">
-      <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick"
+      <el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick" :stretch="true"
         style="background-color: #F4F6FA; padding-bottom: 20px">
-        <el-tab-pane label="慢SQL" name="slowquery" />
-        <el-tab-pane label="失败SQL" name="failingquery" />
-        <el-tab-pane label="耗时对比" name="durationCompare" v-if="list.status === TASKSTATE.FINISH_NUMERIC" />
+        <el-tab-pane :label="$t('transcribe.index.slowsql')" name="slowquery" />
+        <el-tab-pane :label="$t('transcribe.detail.failSql')" name="failingquery" />
+        <el-tab-pane :label="$t('transcribe.detail.durationComparison')" name="durationCompare"
+          v-if="list.status === TASKSTATE.FINISH_NUMERIC" />
       </el-tabs>
       <div class="tab-content" v-if="activeName === 'durationCompare'">
         <sql-compare :id="pageId"></sql-compare>
@@ -76,15 +84,15 @@
         <div class=" table-container">
           <div class="control-wrap">
             <div class="search-wrap">
-              <el-input type="text" prefix-icon="el-icon-search" v-model="searchText" :placeholder=defaulttext
-                style="width: 270px; cursor: pointer;padding-right: 20px" class="search-box" clearable
-                @enter="handleSearch" />
-              <el-button :icon="IconSearch" type="primary" @click="handleSearch">搜索</el-button>
+              <el-input type="text" prefix-icon="el-icon-search" v-model="searchText" :placeholder=defaultPlaceholder
+                class="search-box" clearable @enter="handleSearch" />
+              <el-button :icon="IconSearch" type="primary" @click="handleSearch">{{ $t('transcribe.detail.search')
+              }}</el-button>
             </div>
             <div class="switchside">
-              <el-switch v-model="autoRefreshFlag" class="ml-2" inline-prompt
-                style="--el-switch-on-color: #13ce66; --el-switch-off-color: #ff4949;" size="large" width="auto"
-                active-text="自动刷新" inactive-text="停止刷新" @change="autoRefreshList" />
+              <el-switch v-model="autoRefreshFlag" class="ml-2" inline-prompt size="large"
+                :active-text="$t('transcribe.index.autorefresh')" :inactive-text="$t('transcribe.index.stoprefresh')"
+                @change="autoRefreshList" />
             </div>
           </div>
 
@@ -107,10 +115,13 @@
   </div>
 </template>
 <script setup>
-import { computed, nextTick, ref } from "vue";
-import { getFailSql, getSlowSql, transcribeReplayList } from "@/api/playback";
+import { computed, nextTick, ref, onBeforeUnmount } from "vue";
+import { getFailSql, getSlowSql, transcribeReplayList, getHostInfo } from "@/api/playback";
 import SqlCompare from "./sqlCompare.vue"
 import { IconSearch } from '@computing/opendesign-icons'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const TASKSTATE = {
   DOWNLOADINGFAIL: 'downloading_fail',
@@ -144,17 +155,17 @@ const getTagType = (executionStatus) => {
 const getStatusText = (executionStatus) => {
   switch (executionStatus) {
     case TASKSTATE.DOWNLOADING_NUMERIC:
-      return '正在下载'
+      return t('transcribe.index.downloading')
     case TASKSTATE.DOWNLOADINGFAIL_NUMERIC:
-      return '下载失败'
+      return t('transcribe.index.downloadfailed')
     case TASKSTATE.RUNNINGFAIL_NUMERIC:
-      return '执行失败'
+      return t('transcribe.index.executionfailed')
     case TASKSTATE.RUNNING_NUMERIC:
-      return '执行中';
+      return t('transcribe.index.executing')
     case TASKSTATE.FINISH_NUMERIC:
-      return '已完成'
+      return t('transcribe.index.complete')
     default:
-      return '未执行'
+      return t('transcribe.index.noexecuted')
   }
 }
 
@@ -162,24 +173,42 @@ const dbMapData = ref([])
 const getTypeText = (executionStatus) => {
   switch (executionStatus) {
     case 'transcribe_replay':
-      return '录制回放'
+      return t('components.SubTaskDetail.recordPlayback')
     case 'transcribe':
-      return '仅录制'
+      return t('transcribe.index.transcribe')
     default:
-      return '仅回放'
+      return t('transcribe.index.replay')
   }
 }
 
 const activeName = ref('slowquery')
 const searchText = ref()
-const defaulttext = ref()
-const tableHead = ref([])
+const defaultPlaceholder = computed(() => {
+  if (activeName.value === 'slowquery') {
+    return t('transcribe.detail.slowSqlPlaceholder')
+  } else {
+    return t('transcribe.detail.failSqlPlaceholder')
+  }
+})
+const tableHead = computed(() => {
+  if (activeName.value === 'slowquery') {
+    return [
+      { columnname: 'sqlStr', columncomment: 'SQL' },
+      { columnname: 'sourceDuration', columncomment: t('transcribe.detail.sourceDuration') },
+      { columnname: 'targetDuration', columncomment: t('transcribe.detail.targetDuration') },
+      { columnname: 'countStr', columncomment: t('transcribe.detail.count') }
+    ]
+  } else {
+    return [
+      { columnname: 'sql', columncomment: 'SQL' },
+      { columnname: 'replayedNum', columncomment: t('components.SubTaskDetail.failReason') }
+    ]
+  }
+})
 const tableWidth = ref('100%')
 const tableRef = ref(null)
-defineExpose({
-  tableRef
-})
-const handleClick = async (tab, event) => {
+
+const handleClick = async () => {
   await nextTick(() => {
     getListData()
   })
@@ -199,10 +228,12 @@ const list = ref({
   targetDuration: 0,
   startTime: '',
   endTime: '',
-  anynum: '',
-  playbacknum: '',
+  parsedNum: '',
+  replayedNum: '',
   data: [],
   totalNum: 0,
+  sourceIp: '',
+  targetIp: '',
 })
 const filter = {
   pageNum: 1,
@@ -230,15 +261,9 @@ const getListData = async () => {
     tempFilter['sql'] = searchText.value
   }
   if (activeName.value === 'slowquery') {
-    defaulttext.value = '请输入慢SQL字段进行搜索'
-    tableHead.value = []
-    tableHead.value.push({ columnname: 'sqlStr', columncomment: 'SQL' })
-    tableHead.value.push({ columnname: 'sourceDuration', columncomment: '源端耗时（微秒）' })
-    tableHead.value.push({ columnname: 'targetDuration', columncomment: '目的端耗时（微秒）' })
-    tableHead.value.push({ columnname: 'countStr', columncomment: '出现次数' })
-    list.value.data = []
     getSlowSql(list.value.id, tempFilter).then(res => {
       if (Number(res.code) === 200) {
+        list.value.data = []
         res.rows.forEach(item => {
           const tempPackage = {
             sqlStr: item.sqlStr,
@@ -254,17 +279,13 @@ const getListData = async () => {
     }).catch(error => {
     })
   } else {
-    defaulttext.value = '请输入失败SQL字段进行搜索'
-    tableHead.value = []
-    tableHead.value.push({ columnname: 'sql', columncomment: 'SQL' })
-    tableHead.value.push({ columnname: 'failreason', columncomment: '失败原因' })
-    list.value.data = []
     getFailSql(list.value.id, filter).then(res => {
       if (Number(res.code) === 200) {
+        list.value.data = []
         res.rows.forEach(item => {
           const tempPackage = {
             sql: item.sql,
-            failreason: item.message,
+            replayedNum: item.message,
           }
           list.value.data.push({ ...tempPackage })
         })
@@ -290,7 +311,9 @@ let intervalId = null
 const autoRefreshList = (value) => {
   if (value) {
     if (intervalId === null) {
-      intervalId = setInterval(getListData, 6000)
+      intervalId = setInterval(() => {
+        getTaskInfo();
+      }, 6000)
     }
   } else {
     if (intervalId !== null) {
@@ -300,7 +323,14 @@ const autoRefreshList = (value) => {
   }
 }
 
-const getHostInfo = () => {
+onBeforeUnmount(() => {
+  if (intervalId !== null) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+})
+
+const getTaskInfo = () => {
   let tempFilter = { ...filter }
   tempFilter['taskId'] = list.value.id
   transcribeReplayList(tempFilter).then(res => {
@@ -314,8 +344,8 @@ const getHostInfo = () => {
       list.value.targetDuration = res.rows[0].targetDuration
       list.value.startTime = res.rows[0].taskStartTime?.replaceAll('-', '/')
       list.value.endTime = res.rows[0].taskEndTime?.replaceAll('-', '/')
-      list.value.anynum = res.rows[0].parseNum
-      list.value.playbacknum = res.rows[0].replayNum
+      list.value.parsedNum = res.rows[0].parseNum
+      list.value.replayedNum = res.rows[0].replayNum
       list.value.taskType = res.rows[0].taskType
       dbMapData.value = res.rows[0].dbMap?.map(e => {
         const mapItem = e.split(':')
@@ -342,9 +372,25 @@ const formattedTime = (taskDuration) => {
   const minutes = Math.floor(time / 60)
   time %= 60
   const seconds = Math.floor(time)
-  return `${days}天${hours}小时${minutes}分${seconds}秒`
+  return t('transcribe.index.daytime', [days, hours, minutes, seconds])
 }
 
+const getHostIp = async () => {
+  try {
+    const res = await getHostInfo(pageId.value);
+    if (res.code === 200) {
+      res.data?.forEach(e => {
+        if (e.dbType === 'MySQL') {
+          list.value.sourceIp = e.ip
+        } else {
+          list.value.targetIp = e.ip
+        }
+      })
+    }
+  } catch (error) {
+
+  }
+}
 const pageId = ref()
 let queryId = 0
 const init = () => {
@@ -353,7 +399,8 @@ const init = () => {
   queryId = params.get('id')
   pageId.value = window.$wujie?.props.data.id ?? queryId
   list.value.id = pageId
-  getHostInfo()
+  getTaskInfo()
+  getHostIp()
 }
 init()
 </script>
@@ -366,6 +413,7 @@ body {
   margin: 0;
   padding: 0;
 }
+
 
 .common-layout {
   ::v-deep(.el-form-item__content) {
@@ -489,6 +537,9 @@ body {
 
 .search-box {
   grid-row: 1;
+  width: 270px;
+  // cursor: pointer;
+  padding-right: 20px
 }
 
 .table-container {
@@ -537,9 +588,18 @@ body {
   margin-bottom: 16px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
 
   .switchside {
     display: flex;
+
+    .el-switch {
+      --o-switch-width: auto;
+    }
+
+    :deep(.el-switch.is-checked .el-switch__core .el-switch__action) {
+      left: calc(100% - 21px);
+    }
   }
 
   .search-wrap {
