@@ -16,20 +16,20 @@
             class="label-color mr"
             v-if="data.status !== hostStatusEnum.unTest"
           >{{
-              $t('当前状态')
+              $t('transcribe.create.addHost.currentStatus')
           }}
           </div>
           <a-tag
             v-if="data.status === hostStatusEnum.success"
             color="green"
           >{{
-              $t('可用')
+              $t('components.AddHost.5q0a7i43aeg0')
           }}</a-tag>
           <a-tag
             v-if="data.status === hostStatusEnum.fail"
             color="red"
           >{{
-              $t('不可用')
+              $t('components.AddHost.5q0a7i43ajk0')
           }}</a-tag>
         </div>
         <div>
@@ -37,7 +37,7 @@
             class="mr"
             @click="close"
           >{{
-              $t('取消')
+              $t('transcribe.create.addHost.5mphy3snwxs0')
           }}</a-button>
           <a-button
             v-if="isAdd"
@@ -45,14 +45,14 @@
             class="mr"
             @click="handleTestHost"
           >{{
-              $t('连通性测试')
+              $t('components.AddHost.5q0a7i43ap40')
           }}</a-button>
           <a-button
             :loading="data.loading"
             type="primary"
             @click="submit"
           >{{
-              $t('确定')
+              $t('transcribe.create.addHost.5mphy3snx7c0')
           }}</a-button>
         </div>
       </div>
@@ -66,12 +66,12 @@
     >
       <a-form-item
         field="name"
-        :label="$t('名称')"
+        :label="$t('transcribe.create.addHost.name')"
         validate-trigger="blur"
       >
         <a-input
           v-model.trim="data.formData.name"
-          :placeholder="$t('请输入物理机名称')"
+          :placeholder="$t('step3.index.5q093f8y8fs0')"
         ></a-input>
       </a-form-item>
       <a-form-item
@@ -82,53 +82,53 @@
         <a-input
           v-model.trim="data.formData.privateIp"
           :disabled="!isAdd"
-          :placeholder="$t('请输入内网IP')"
+          :placeholder="$t('transcribe.create.addHost.5mphy3snxdo0')"
         ></a-input>
       </a-form-item>
       <a-form-item
         field="publicIp"
-        :label="$t('外网IP')"
+        :label="$t('transcribe.create.addHost.5mphy3snxis0')"
         validate-trigger="blur"
       >
         <a-input
           v-model.trim="data.formData.publicIp"
           disabled
-          :placeholder="$t('请输入外网IP')"
+          :placeholder="$t('transcribe.create.addHost.5mphy3snxmw0')"
           @blur="handleBlur"
         ></a-input>
       </a-form-item>
       <a-form-item
         field="port"
-        :label="$t('端口号')"
+        :label="$t('components.JdbcInstance.5q0a8km736s0')"
         validate-trigger="blur"
       >
         <a-input-number
           v-model="data.formData.port"
-          :placeholder="$t('请输入端口号')"
+          :placeholder="$t('components.JdbcInstance.5q0a8km73bo0')"
           :min="0"
           :max="65535"
         />
       </a-form-item>
       <a-form-item
         field="username"
-        :label="$t('用户名')"
+        :label="$t('components.JdbcInstance.5q0a8km73f00')"
         validate-trigger="blur"
         v-if="isAdd"
       >
         <a-input
           v-model.trim="data.formData.username"
-          :placeholder="$t('请输入用户名称')"
+          :placeholder="$t('components.JdbcInstance.5q0a8km73hs0')"
         ></a-input>
       </a-form-item>
       <a-form-item
         v-if="isAdd"
         field="password"
-        :label="$t('密码')"
+        :label="$t('components.JdbcInstance.5q0a8km73ko0')"
         validate-trigger="blur"
       >
         <a-input-password
           v-model="data.formData.password"
-          :placeholder="$t('请输入密码')"
+          :placeholder="$t('components.JdbcInstance.5q0a8km73n80')"
           @focus="passwordFocus"
           @blur="passwordBlur"
           :invisible-button="data.formData.password !== data.emptyPwd"
@@ -138,12 +138,12 @@
       </a-form-item>
       <a-form-item
         field="tags"
-        :label="$t('标签')"
+        :label="$t('transcribe.create.addHost.tags')"
       >
         <a-select
           :loading="data.tagsLoading"
           v-model="data.formData.tags"
-          :placeholder="$t('请输入或者选择标签')"
+          :placeholder="$t('transcribe.create.addHost.tagsPlaceholder')"
           allow-create
           multiple
           allow-clear
@@ -158,10 +158,10 @@
           }}</a-option>
         </a-select>
       </a-form-item>
-      <a-form-item :label="$t('备注')">
+      <a-form-item :label="$t('transcribe.create.addHost.5mphy3snysg0')">
         <a-textarea
           v-model.trim="data.formData.remark"
-          :placeholder="$t('请输入备注')"
+          :placeholder="$t('transcribe.create.addHost.5mphy3snyxc0')"
         ></a-textarea>
       </a-form-item>
     </a-form>
@@ -185,7 +185,7 @@ const hostStatusEnum = {
 
 const data = reactive({
   show: false,
-  title: t('新增物理机'),
+  title: t('transcribe.create.addHost.5mphy3snz5k0'),
   loading: false,
   testLoading: false,
   status: hostStatusEnum.unTest,
@@ -209,12 +209,12 @@ const data = reactive({
 const formRules = computed(() => {
   return {
     name: [
-      { required: true, 'validate-trigger': 'blur', message: t('components.AddHost.namePlaceholder') },
+      { required: true, 'validate-trigger': 'blur', message: t('transcribe.create.addHost.namePlaceholder') },
       {
         validator: (value, cb) => {
           return new Promise(resolve => {
             if (!value.trim()) {
-              cb(t('database.JdbcInstance.5oxhtcbobtc0'))
+              cb(t('transcribe.create.addHost.spacemsg'))
               resolve(false)
             } else {
               resolve(true)
@@ -224,7 +224,7 @@ const formRules = computed(() => {
       }
     ],
     privateIp: [
-      { required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxdo0') },
+      { required: true, 'validate-trigger': 'blur', message: t('transcribe.create.addHost.5mphy3snxdo0') },
       {
         validator: (value, cb) => {
           return new Promise(resolve => {
@@ -233,7 +233,7 @@ const formRules = computed(() => {
             if (re.test(value)) {
               resolve(true)
             } else {
-              cb(t('database.JdbcInstance.5oxhtcboblw0'))
+              cb(t('transcribe.create.addHost.ipaddmsg'))
               resolve(false)
             }
           })
@@ -241,7 +241,7 @@ const formRules = computed(() => {
       }
     ],
     publicIp: [
-      { required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxmw0') },
+      { required: true, 'validate-trigger': 'blur', message: t('transcribe.create.addHost.5mphy3snxmw0') },
       {
         validator: (value, cb) => {
           return new Promise(resolve => {
@@ -250,7 +250,7 @@ const formRules = computed(() => {
             if (re.test(value)) {
               resolve(true)
             } else {
-              cb(t('database.JdbcInstance.5oxhtcboblw0'))
+              cb(t('transcribe.create.addHost.ipaddmsg'))
               resolve(false)
             }
           })
@@ -258,15 +258,15 @@ const formRules = computed(() => {
       }
     ],
     port: [
-      { required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxzk0') }
+      { required: true, 'validate-trigger': 'blur', message: t('transcribe.create.addHost.5mphy3snxzk0') }
     ],
     username: [
-      { required: true, 'validate-trigger': 'blur', message: t('components.AddHost.usernamePlaceholder') },
+      { required: true, 'validate-trigger': 'blur', message: t('transcribe.create.addHost.usernamePlaceholder') },
       {
         validator: (value, cb) => {
           return new Promise(resolve => {
             if (!value.trim()) {
-              cb(t('database.JdbcInstance.5oxhtcbobtc0'))
+              cb(t('transcribe.create.addHost.spacemsg'))
               resolve(false)
             } else {
               resolve(true)
@@ -275,7 +275,7 @@ const formRules = computed(() => {
         }
       }
     ],
-    password: [{ required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snyao0') }]
+    password: [{ required: true, 'validate-trigger': 'blur', message: t('transcribe.create.addHost.5mphy3snyao0') }]
   }
 })
 
