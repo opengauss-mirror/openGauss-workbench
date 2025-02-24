@@ -22,10 +22,10 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.github.pagehelper.util.StringUtil;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-import com.github.pagehelper.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import org.opengauss.admin.common.core.domain.AjaxResult;
@@ -45,7 +45,6 @@ import org.opengauss.admin.plugin.config.ConfigReplayParams;
 import org.opengauss.admin.plugin.config.ConfigTcpdumpAndAttachSameParams;
 import org.opengauss.admin.plugin.config.ConfigDbStorageParams;
 import org.opengauss.admin.plugin.domain.FailSqlModel;
-import org.opengauss.admin.plugin.domain.Process;
 import org.opengauss.admin.plugin.domain.SlowSqlModel;
 import org.opengauss.admin.plugin.domain.SqlDuration;
 import org.opengauss.admin.plugin.domain.TranscribeReplayHost;
@@ -548,8 +547,10 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
 
     @Override
     public AjaxResult startTask(Integer id) {
+        updateCorePoolSize(10);
         TranscribeReplayTask transcribeReplayTask = getById(id);
         updateStatus(transcribeReplayTask, TranscribeReplayStatus.RUNNING);
+        threadPoolTaskExecutor.submit(() -> refreshSqlNum(transcribeReplayTask));
         if (TRANSCRIBE.equalsIgnoreCase(transcribeReplayTask.getTaskType())) {
             threadPoolTaskExecutor.submit(() -> startTranscribe(id, transcribeReplayTask));
         } else if (REPLAY.equalsIgnoreCase(transcribeReplayTask.getTaskType())) {
@@ -558,6 +559,11 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             runTask(id, transcribeReplayTask);
         }
         return AjaxResult.success();
+    }
+
+    private void updateCorePoolSize(int newCorePoolSize) {
+        threadPoolTaskExecutor.setCorePoolSize(newCorePoolSize);
+        log.info("Core pool size updated to: {}", newCorePoolSize);
     }
 
     @Override
@@ -593,9 +599,9 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
                     throw new OpsException(result2.getResult());
                 }
             }
+            killTask(id);
             removeById(id);
             transcribeReplayHostService.deleteByTaskId(id);
-            killTask(id);
         });
     }
 
@@ -628,7 +634,6 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
     public IPage<TranscribeReplaySlowSql> getSlowSql(Page startPage, Integer id, String sql) {
         TranscribeReplayTask transcribeReplayTask = getById(id);
         threadPoolTaskExecutor.submit(() -> syncRefreshSlowSql(transcribeReplayTask));
-        threadPoolTaskExecutor.submit(() -> refreshSqlNum(transcribeReplayTask));
         return transcribeReplaySlowSqlService.selectList(startPage, id, sql);
     }
 
@@ -636,7 +641,6 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
     public IPage<FailSqlModel> getFailSql(Page startPage, Integer id, String sql) {
         TranscribeReplayTask transcribeReplayTask = getById(id);
         transcribeReplayFailSqlService.syncRefreshFailSql(transcribeReplayTask);
-        threadPoolTaskExecutor.submit(() -> refreshSqlNum(transcribeReplayTask));
         return transcribeReplayFailSqlService.selectList(startPage, id, sql);
     }
 
@@ -697,6 +701,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         String transcribeFile = String.format("%s/config/transcribe.properties",
             transcribeReplayTask.getSourceInstallPath());
         if ("tcpdump".equals(getTranscribeMode(FileUtils.catRemoteFileContents(transcribeFile, shellInfo1)))) {
+            threadPoolTaskExecutor.submit(() -> checkTaskStatus(id, PARSE_RESULT_FILE));
             JschResult parse = TranscribeReplayHandle.startParse(shellInfo2, transcribeReplayTask, targetJarPath);
             if (!parse.isOk()) {
                 transcribeReplayTask.setErrorMsg(parse.getResult());
@@ -729,6 +734,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         }
         String jarName = String.format(JAR_NAME, transcribeReplayTask.getToolVersion());
         String jarPath = transcribeReplayTask.getTargetInstallPath() + jarName;
+        threadPoolTaskExecutor.submit(() -> checkTaskStatus(id, REPLAY_RESULT_FILE));
         JschResult result = TranscribeReplayHandle.startReplay(targetShell, transcribeReplayTask, jarPath);
         if (!result.isOk()) {
             transcribeReplayTask.setErrorMsg(result.getResult());
@@ -762,6 +768,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         String transcribeFile = String.format("%s/config/transcribe.properties",
             transcribeReplayTask.getSourceInstallPath());
         if ("tcpdump".equals(getTranscribeMode(FileUtils.catRemoteFileContents(transcribeFile, sourceShell)))) {
+            threadPoolTaskExecutor.submit(() -> checkTaskStatus(id, PARSE_RESULT_FILE));
             JschResult result2 = TranscribeReplayHandle.startParse(targetShell, transcribeReplayTask, targetJarPath);
             if (!result2.isOk()) {
                 transcribeReplayTask.setErrorMsg(result2.getResult());
@@ -775,18 +782,68 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         log.info("End task info: {}", JSON.toJSONString(transcribeReplayTask.getTaskName()));
     }
 
+    private synchronized void checkTaskStatus(Integer id, String resultFileName) {
+        try {
+            log.info("Starting to check task status for task ID: {}, result file: {}", id, resultFileName);
+            Thread.sleep(10 * 1000);
+            TranscribeReplayTask task = getById(id);
+            ShellInfoVo shellInfo = getShellInfo(task.getId(), TARGET_DB);
+            String resultFilePath = String.format("%s/%s", task.getTargetInstallPath(), resultFileName);
+            log.debug("Waiting for result file to exist: {}", resultFilePath);
+            while (!FileUtils.isRemoteFileExists(resultFilePath, shellInfo) || TranscribeReplayStatus.RUNNING.getCode()
+                .equals(task.getExecutionStatus())) {
+                Thread.sleep(10 * 1000);
+                task = refreshTaskStatus(id);
+            }
+            log.debug("Result file exists: {}", resultFilePath);
+            String resultStr = FileUtils.catRemoteFileContents(resultFilePath, shellInfo);
+            while (resultStr.isEmpty() || TranscribeReplayStatus.RUNNING.getCode().equals(task.getExecutionStatus())) {
+                Thread.sleep(10 * 1000);
+                resultStr = FileUtils.catRemoteFileContents(resultFilePath, shellInfo);
+                task = refreshTaskStatus(id);
+                if (!resultStr.isEmpty() && resultStr.contains("java.lang.OutOfMemoryError")) {
+                    log.error("Out of memory error detected in result file: {}", resultFilePath);
+                    handleOutOfMemoryError(task, resultStr);
+                }
+            }
+            log.info("Task status check completed successfully for task ID: {}", id);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Thread interrupted while checking task status for task ID: {}", id, e);
+            throw new OpsException("Thread interrupted while checking task status: " + e.getMessage());
+        }
+    }
+
+    private TranscribeReplayTask refreshTaskStatus(Integer id) {
+        return getById(id);
+    }
+
+    private void handleOutOfMemoryError(TranscribeReplayTask task, String errorStr) {
+        task.setErrorMsg(errorStr);
+        updateStatus(task, TranscribeReplayStatus.RUN_FAIL);
+        killTask(task.getId());
+        log.error("Task failed due to out of memory error. Task ID: {}, Error: {}", task.getId(), errorStr);
+        throw new OpsException("Out of memory error detected: " + errorStr);
+    }
+
     private void updateStatus(TranscribeReplayTask task, TranscribeReplayStatus taskStatus) {
         task.setExecutionStatus(taskStatus.getCode());
         if (TranscribeReplayStatus.RUNNING.getCode().equals(taskStatus.getCode())) {
+            task.setParseNum(0L);
+            task.setReplayNum(0L);
             task.setTaskStartTime(new Date());
         }
         if (TranscribeReplayStatus.FINISH.getCode().equals(taskStatus.getCode())) {
             Date end = new Date();
+            task.setParseNum(null);
+            task.setReplayNum(null);
             task.setTaskEndTime(end);
             long duration = end.getTime() - task.getTaskStartTime().getTime();
             task.setTaskDuration(duration);
         }
         if (TranscribeReplayStatus.RUN_FAIL.getCode().equals(taskStatus.getCode())) {
+            task.setParseNum(null);
+            task.setReplayNum(null);
             task.setTaskEndTime(new Date());
         }
         updateById(task);
@@ -821,19 +878,80 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
 
     private synchronized void refreshSqlNum(TranscribeReplayTask transcribeReplayTask) {
         ShellInfoVo shellInfo = getShellInfo(transcribeReplayTask.getId(), TARGET_DB);
-        String filePath = String.format("%s/%s", transcribeReplayTask.getTargetInstallPath(), PROCESS_FILE);
-        boolean isFileExists = FileUtils.isRemoteFileExists(filePath, shellInfo);
-        if (!isFileExists) {
+        Long replayOldNum = getOrDefault(transcribeReplayTask.getReplayNum(), 0L);
+        Long parseOldNum = getOrDefault(transcribeReplayTask.getParseNum(), 0L);
+        Long replayNewNum;
+        Long parseNewNum;
+        while (TranscribeReplayStatus.RUNNING.getCode()
+            .equals(refreshTaskStatus(transcribeReplayTask.getId()).getExecutionStatus())) {
+            try {
+                Thread.sleep(1500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new OpsException(e.getMessage());
+            }
+            do {
+                updateReplaySqlNum(transcribeReplayTask, shellInfo);
+                updateParseSqlNum(transcribeReplayTask, shellInfo);
+                replayNewNum = getOrDefault(transcribeReplayTask.getReplayNum(), 0L);
+                parseNewNum = getOrDefault(transcribeReplayTask.getParseNum(), 0L);
+            } while (replayNewNum < replayOldNum || parseNewNum < parseOldNum || parseNewNum < replayNewNum);
+            TranscribeReplayTask task = new TranscribeReplayTask();
+            task.setParseNum(parseNewNum);
+            task.setReplayNum(replayNewNum);
+            task.setId(transcribeReplayTask.getId());
+            updateById(task);
+        }
+    }
+
+    private Long getOrDefault(Long value, Long defaultValue) {
+        return value == null ? defaultValue : value;
+    }
+
+    private void updateReplaySqlNum(TranscribeReplayTask task, ShellInfoVo shellInfo) {
+        String replayFilePath = String.format("%s/%s", task.getTargetInstallPath(), REPLAY_PROCESS_FILE);
+        log.debug("Checking replay file existence: {}", replayFilePath);
+        if (!FileUtils.isRemoteFileExists(replayFilePath, shellInfo)) {
+            log.warn("Replay file does not exist, skipping update: {}", replayFilePath);
             return;
         }
-        String processStr = FileUtils.catRemoteFileContents(filePath, shellInfo);
-        if (processStr.isEmpty()) {
+        log.debug("Replay file exists, reading contents: {}", replayFilePath);
+        String replayStr = FileUtils.catRemoteFileContents(replayFilePath, shellInfo);
+        while (replayStr.isEmpty()) {
+            try {
+                log.debug("Replay file content is empty, retrying in 1 second...");
+                Thread.sleep(500);
+                replayStr = FileUtils.catRemoteFileContents(replayFilePath, shellInfo);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("Thread interrupted while reading replay file contents: {}", replayFilePath, e);
+                throw new OpsException("Failed to read replay file contents: " + e.getMessage());
+            }
+        }
+        task.setReplayNum(Long.valueOf(replayStr));
+    }
+
+    private void updateParseSqlNum(TranscribeReplayTask task, ShellInfoVo shellInfo) {
+        String parseFilePath = String.format("%s/%s", task.getTargetInstallPath(), PARSE_PROCESS_FILE);
+        log.debug("Checking parse file existence: {}", parseFilePath);
+        if (!FileUtils.isRemoteFileExists(parseFilePath, shellInfo)) {
+            log.warn("Parse file does not exist, skipping update: {}", parseFilePath);
             return;
         }
-        Process process = JSON.parseObject(processStr, Process.class);
-        transcribeReplayTask.setParseNum(process.getParseCount());
-        transcribeReplayTask.setReplayNum(process.getReplayCount());
-        updateById(transcribeReplayTask);
+        log.debug("Parse file exists, reading contents: {}", parseFilePath);
+        String parseStr = FileUtils.catRemoteFileContents(parseFilePath, shellInfo);
+        while (parseStr.isEmpty()) {
+            try {
+                log.debug("Parse file content is empty, retrying in 1 second...");
+                Thread.sleep(500);
+                parseStr = FileUtils.catRemoteFileContents(parseFilePath, shellInfo);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("Thread interrupted while reading parse file contents: {}", parseFilePath, e);
+                throw new OpsException("Failed to read parse file contents: " + e.getMessage());
+            }
+        }
+        task.setParseNum(Long.valueOf(parseStr));
     }
 
     private void saveTranscribeHost(TranscribeReplayTask transcribeReplayTask, String ip, String username) {

@@ -49,8 +49,8 @@ public class TranscribeReplayTask {
     private long sourceDuration;
     private long targetDuration;
     private long totalNum;
-    private long parseNum;
-    private long replayNum;
+    private Long parseNum;
+    private Long replayNum;
     private String sourceNodeId;
     private String targetNodeId;
     private String errorMsg;
