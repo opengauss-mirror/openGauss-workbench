@@ -213,16 +213,24 @@ public class JschExecutorService {
     }
 
     /**
-     * 检查用户是否具有sudo权限
+     * check user has sudo no password permission
      *
-     * @param rootLogin root登录信息
-     * @param username 用户名
-     * @return true 具有，false 不具有
+     * @param sshLogin ssh login info
+     * @return has permission or not
      */
-    public Boolean checkOsUserSudo(SshLogin rootLogin, String username) {
-        String command = String.format(SshCommandConstants.CREATE_OS_USER_SUDO, username);
-        String result = execCommand(rootLogin, command);
-        return StrUtil.isNotEmpty(result) && !result.contains("not allowed to run");
+    public Boolean checkOsUserSudo(SshLogin sshLogin) {
+        String hasSudoResult = "true";
+        String withoutSudoResult = "false";
+        String command = String.format(SshCommandConstants.CREATE_OS_USER_SUDO, hasSudoResult, withoutSudoResult);
+        String result = execCommand(sshLogin, command);
+
+        if (result.contains(withoutSudoResult)
+                || result.contains("a password is required")
+                || result.contains("must be owned")
+                || result.contains("command not found")) {
+            return false;
+        }
+        return result.contains(hasSudoResult);
     }
 
     /**
@@ -324,7 +332,7 @@ public class JschExecutorService {
     public boolean checkOsUserExist(SshLogin sshLogin, String username) {
         String command = String.format(SshCommandConstants.CHECK_OS_USER_EXIST, username);
         String result = execCommand(sshLogin, command);
-        return !result.contains(SshCommandConstants.NO_SUCH_USER);
+        return !result.isEmpty() && !result.contains(SshCommandConstants.NO_SUCH_USER);
     }
 
     /**

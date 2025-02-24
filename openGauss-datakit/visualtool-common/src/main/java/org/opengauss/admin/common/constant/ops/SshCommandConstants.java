@@ -263,10 +263,11 @@ public interface SshCommandConstants {
      * create os user
      */
     String CREATE_OS_USER = "useradd %s";
+
     /**
-     * check os user sudo permission
+     * check os user sudo no password permission
      */
-    String CREATE_OS_USER_SUDO = "sudo -l -U %s";
+    String CREATE_OS_USER_SUDO = "sudo -n true && echo \"%s\" || echo \"%s\"";
 
     /**
      * check os disk info

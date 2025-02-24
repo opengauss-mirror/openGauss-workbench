@@ -43,7 +43,6 @@ import org.opengauss.admin.common.core.domain.model.ops.HostUserBody;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.exception.ops.UserAlreadyExistsException;
-import org.opengauss.admin.common.utils.OpsAssert;
 import org.opengauss.admin.common.utils.ops.JschUtil;
 import org.opengauss.admin.system.mapper.ops.OpsHostUserMapper;
 import org.opengauss.admin.system.plugin.beans.SshLogin;
@@ -113,45 +112,18 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean add(HostUserBody hostUserBody) {
-        String hostId = hostUserBody.getHostId();
-        OpsHostEntity hostEntity = hostService.getById(hostId);
-        if (Objects.isNull(hostEntity)) {
-            throw new OpsException("host information does not exist");
-        }
+        // check user exists
         String username = hostUserBody.getUsername();
         LambdaQueryWrapper<OpsHostUserEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostUserEntity.class)
-            .eq(OpsHostUserEntity::getHostId, hostId)
+            .eq(OpsHostUserEntity::getHostId, hostUserBody.getHostId())
             .eq(OpsHostUserEntity::getUsername, username);
         long count = count(queryWrapper);
         if (count > 0) {
             throw new UserAlreadyExistsException("User information already exists");
         }
-        OpsHostUserEntity rootUser = getRootUserByHostId(hostId);
-        SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), username,
-            encryptionUtils.decrypt(hostUserBody.getPassword()));
-        OpsHostUserEntity opsHostUserEntity;
-        if (Objects.isNull(rootUser)) {
-            if (jschExecutorService.checkOsUserExist(sshLogin)) {
-                opsHostUserEntity = hostUserBody.toEntity(false);
-                opsHostUserEntity.setSudo(opsHostUserEntity.isRootUser());
-            } else {
-                throw new OpsException("User does not exist and no permission to create os user");
-            }
-        } else {
-            SshLogin rootLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), rootUser.getUsername(),
-                encryptionUtils.decrypt(rootUser.getPassword()));
-            OpsAssert.isTrue(StrUtil.isNotEmpty(rootUser.getPassword()),
-                "Incorrect password, not have permission to create os user");
-            Boolean isSudo = jschExecutorService.checkOsUserSudo(rootLogin, username);
-            if (jschExecutorService.checkOsUserExist(rootLogin, username)) {
-                OpsAssert.isTrue(jschExecutorService.checkOsUserExist(sshLogin),
-                    "Incorrect password, please enter correct password");
-            } else {
-                createPhysicalUser(rootLogin, hostUserBody.getUsername(), hostUserBody.getPassword());
-            }
-            opsHostUserEntity = hostUserBody.toEntity(isSudo);
-        }
-        return save(opsHostUserEntity);
+
+        OpsHostUserEntity opsHostUserEntity = hostUserBody.toEntity(false);
+        return doAddOrEdit(opsHostUserEntity, true);
     }
 
     private void createPhysicalUser(SshLogin rootLogin, String username, String password) {
@@ -206,24 +178,71 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean edit(String hostUserId, HostUserBody hostUserBody) {
+        // check user exists and username is not changed
         OpsHostUserEntity hostUserEntity = getById(hostUserId);
         if (Objects.isNull(hostUserEntity)) {
             throw new OpsException("User information does not exist");
         }
-        String hostId = hostUserEntity.getHostId();
+        if (!hostUserEntity.getUsername().equals(hostUserBody.getUsername())) {
+            throw new OpsException("The username cannot be modified");
+        }
+
+        OpsHostUserEntity newEntity = hostUserBody.toEntity(false);
+        newEntity.setHostId(hostUserEntity.getHostId());
+        newEntity.setHostUserId(hostUserEntity.getHostUserId());
+
+        return doAddOrEdit(newEntity, false);
+    }
+
+    private boolean doAddOrEdit(OpsHostUserEntity userEntity, boolean isAdd) {
+        String hostId = userEntity.getHostId();
+        OpsHostEntity hostEntity = checkHostExists(hostId);
+        SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(),
+                encryptionUtils.decrypt(userEntity.getPassword()));
+
+        if (userEntity.isRootUser()) {
+            if (!jschExecutorService.checkOsUserExist(sshLogin)) {
+                throw new OpsException("Incorrect password, please enter correct password");
+            }
+            userEntity.setSudo(true);
+            return isAdd ? save(userEntity) : updateById(userEntity);
+        }
+
+        if (jschExecutorService.checkOsUserExist(sshLogin)) {
+            userEntity.setSudo(false);
+            if (jschExecutorService.checkOsUserSudo(sshLogin)) {
+                userEntity.setSudo(true);
+            }
+            return isAdd ? save(userEntity) : updateById(userEntity);
+        }
+
+        // if user cannot connect, use root user to check user exists, if not exists, create user or throw error
+        OpsHostUserEntity rootUser = getRootUserByHostId(hostId);
+        if (Objects.isNull(rootUser)) {
+            throw new OpsException("User does not exist or the password is incorrect");
+        }
+
+        SshLogin rootLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), rootUser.getUsername(),
+                encryptionUtils.decrypt(rootUser.getPassword()));
+        if (jschExecutorService.checkOsUserExist(rootLogin, userEntity.getUsername())) {
+            throw new OpsException("Incorrect password, please enter correct password");
+        }
+
+        if (isAdd) {
+            createPhysicalUser(rootLogin, userEntity.getUsername(), userEntity.getPassword());
+            userEntity.setSudo(false);
+            return save(userEntity);
+        } else {
+            throw new OpsException("User does not exist");
+        }
+    }
+
+    private OpsHostEntity checkHostExists(String hostId) {
         OpsHostEntity hostEntity = hostService.getById(hostId);
         if (Objects.isNull(hostEntity)) {
             throw new OpsException("host information does not exist");
         }
-        // no root user, or directly modify the root user,
-        // detect the current modification user information and build the user information entity object
-        SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserBody.getUsername(),
-            encryptionUtils.decrypt(hostUserBody.getPassword()));
-        OpsAssert.isTrue(jschExecutorService.checkOsUserExist(sshLogin), "The user does not exist or password error");
-        OpsHostUserEntity newEntity = hostUserBody.toEntity(false);
-        newEntity.setHostId(hostUserEntity.getHostId());
-        newEntity.setHostUserId(hostUserEntity.getHostUserId());
-        return updateById(newEntity);
+        return hostEntity;
     }
 
     @Override
