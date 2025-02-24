@@ -62,7 +62,7 @@ public class CommandLineRunner {
         String content = String.join(StrUtil.LF, timeNow, execute, filePath);
         appendToFile(content, writePath);
         try {
-            ProcessBuilder builder = new ProcessBuilder("bash", "-c", command);
+            ProcessBuilder builder = new ProcessBuilder("bash", "-c", "source /etc/profile && " + command);
             builder.directory(new File(filePath));
             Process process = builder.start();
             String output = readFromStream(process.getInputStream());
