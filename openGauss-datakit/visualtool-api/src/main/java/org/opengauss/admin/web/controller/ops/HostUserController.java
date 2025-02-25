@@ -89,4 +89,16 @@ public class HostUserController extends BaseController {
         hostUserService.del(hostUserId);
         return AjaxResult.success();
     }
+
+    /**
+     * check if the user has root permission
+     *
+     * @param userId user ID
+     * @return has root permission or not
+     */
+    @GetMapping("/hasRootPermission/{userId}")
+    public AjaxResult hasRootPermission(@PathVariable("userId") String userId) {
+        boolean hasPermission = hostUserService.hasRootPermission(userId);
+        return AjaxResult.success(hasPermission);
+    }
 }

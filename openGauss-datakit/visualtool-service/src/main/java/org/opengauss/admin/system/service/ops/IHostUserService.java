@@ -63,4 +63,12 @@ public interface IHostUserService extends IService<OpsHostUserEntity> {
     void cleanPassword(String hostUserId);
 
     OpsHostUserEntity getHostUserByUsername(String hostId, String sshUsername);
+
+    /**
+     * check if the user has root permission
+     *
+     * @param userId user ID
+     * @return has root permission or not
+     */
+    boolean hasRootPermission(String userId);
 }
