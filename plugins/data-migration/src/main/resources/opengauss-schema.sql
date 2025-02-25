@@ -307,6 +307,30 @@ SELECT add_migration_task_is_adjust_kernel_param_field_func();
 
 DROP FUNCTION add_migration_task_is_adjust_kernel_param_field_func;
 
+CREATE OR REPLACE FUNCTION add_migration_task_create_transcribe_playback_task_and_details_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) FROM sys_menu WHERE menu_name = ''创建录制回放'' AND (menu_en_name IS NULL OR menu_en_name = '''')) > 0
+THEN
+UPDATE sys_menu SET menu_en_name = 'Create Transcribe Replay Task' WHERE menu_name = ''创建录制回放'';
+END IF;
+IF
+( SELECT COUNT ( * ) FROM sys_menu WHERE menu_name = ''录制回放详情'' AND (menu_en_name IS NULL OR menu_en_name = '''''''')) > 0
+THEN
+UPDATE sys_menu SET menu_en_name = ''Transcribe Replay Task Detail'' WHERE menu_name = ''录制回放详情'';
+END IF;
+IF
+( SELECT COUNT ( * ) FROM sys_menu WHERE menu_name = ''创建迁移任务'' AND (menu_en_name IS NULL OR menu_en_name = '''')) > 0
+THEN
+UPDATE sys_menu SET menu_en_name = ''Create Data Migration Task'' WHERE menu_name = ''创建迁移任务'';
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_migration_task_create_transcribe_playback_task_and_details_func();
+
+DROP FUNCTION add_migration_task_create_transcribe_playback_task_and_details_func();
+
 CREATE OR REPLACE FUNCTION add_migration_task_source_tables_field_func() RETURNS integer AS 'BEGIN
 IF
 ( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''tb_migration_task'' AND COLUMN_NAME = ''source_tables'' ) = 0

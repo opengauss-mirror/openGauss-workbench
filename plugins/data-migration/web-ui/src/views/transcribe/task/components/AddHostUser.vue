@@ -5,47 +5,47 @@
             <div class="flex-between">
                 <div class="flex-row">
                     <div class="label-color mr" v-if="status !== hostStatusEnum.unTest">{{
-                        $t('当前状态')
+                        $t('detail.index.5q09asiwjvg0')
                     }}
                     </div>
                     <a-tag v-if="status === hostStatusEnum.success" color="green">{{
-                        $t('可用')
+                        $t('transcribe.create.addHost.5mphy3snvg80')
                     }}</a-tag>
                     <a-tag v-if="status === hostStatusEnum.fail" color="red">{{
-                        $t('不可用')
+                        $t('transcribe.create.addHost.5mphy3snwq40')
                     }}</a-tag>
                 </div>
                 <div>
-                    <a-button @click="close" class="mr">{{ $t('取消') }}</a-button>
+                    <a-button @click="close" class="mr">{{ $t('transcribe.create.addHost.5mphy3snwxs0') }}</a-button>
                     <a-button :loading="testLoading" class="mr" @click="handleTestHost">{{
-                        $t('连通性测试')
+                        $t('transcribe.create.addHost.5mphy3snx3o0')
                     }}</a-button>
                     <a-button @click="handleBeforeOk" :loading="submitLoading" type="primary">{{
-                        $t('确定') }}</a-button>
+                        $t('transcribe.create.addHost.5mphy3snx7c0') }}</a-button>
                 </div>
             </div>
         </template>
         <a-form :model="userData.formData" ref="formRef" :label-col="{ style: { width: '90px' } }" auto-label-width>
-            <a-form-item :label="$t('主机信息')">
+            <a-form-item :label="$t('transcribe.create.addHost.host')">
                 {{ userData.formData.privateIp }}({{ userData.formData.publicIp }})
             </a-form-item>
-            <a-form-item field="username" :label="$t('用户名')" validate-trigger="blur"
-                :rules="[{ required: true, message: t('请输入用户名') }]">
+            <a-form-item field="username" :label="$t('transcribe.create.addHost.username')" validate-trigger="blur"
+                :rules="[{ required: true, message: t('transcribe.create.addHost.usernamePlaceholder') }]">
                 <a-input v-model="userData.formData.username"
-                    :placeholder="$t('请输入用户名')"></a-input>
+                    :placeholder="$t('transcribe.create.addHost.usernamePlaceholder')"></a-input>
             </a-form-item>
-            <a-form-item field="password" :label="$t('密码')" validate-trigger="blur"
-                :rules="[{ required: true, message: t('请输入密码') }]">
+            <a-form-item field="password" :label="$t('transcribe.create.addHost.5mphy3sny4w0')" validate-trigger="blur"
+                :rules="[{ required: true, message: t('transcribe.create.addHost.5mphy3snyao0') }]">
                 <a-input-password v-model="userData.formData.password"
-                    :placeholder="$t('请输入密码')" allow-clear />
+                    :placeholder="$t('transcribe.create.addHost.5mphy3snyao0')" allow-clear />
             </a-form-item>
         </a-form>
     </a-modal>
     <a-modal width="auto" v-model:visible="userData.confirmVisible" @ok="handleConfirm" @cancel="handleCancel">
         <template #title>
-            {{ $t('确认') }}
+            {{ $t('transcribe.create.addHost.confirm') }}
         </template>
-        <div>{{ $t('系统将会保存该用户的密码，是否继续保存？') }}</div>
+        <div>{{ $t('transcribe.create.addHost.pwdsavmsg') }}</div>
     </a-modal>
 </template>
 <script setup>
@@ -64,7 +64,7 @@ const hostStatusEnum  = {
 
 const userData = reactive({
     show: false,
-    title: t('新增用户'),
+    title: t('transcribe.create.adduser'),
     isNeedPwd: true,
     formData: {
         id: '',
@@ -172,7 +172,7 @@ const open = (type, hostData) => {
   userData.show = true
   userData.isNeedPwd = !hostData.isRemember
   const { hostId, privateIp, publicIp, port } = hostData
-  userData.title = t('新增用户')
+  userData.title = t('transcribe.create.adduser')
   Object.assign(userData.formData, {
     id: '',
     hostId,

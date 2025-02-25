@@ -492,15 +492,15 @@ const formRulesTcp =computed(()=>{
     ],
     'max.cpu.threshold': [
       {required: true, message: t('transcribe.config.tcp.withoutcpu'), trigger: ['blur', 'change']},
-      {type: 'number', min: 0, max: 1, message: t('transcribe.config.tcp.cpumsg'), trigger: ['blur', 'change']},
+      {type: 'number', min: 0.01, max: 1, message: t('transcribe.config.tcp.cpumsg'), trigger: ['blur', 'change']},
     ],
     'max.memory.threshold': [
       {required: true, message: t('transcribe.config.tcp.withoutmemory'), trigger: ['blur', 'change']},
-      {type: 'number', min: 0, max: 1, message: t('transcribe.config.tcp.memorymsg'), trigger: ['blur', 'change']},
+      {type: 'number', min: 0.01, max: 1, message: t('transcribe.config.tcp.memorymsg'), trigger: ['blur', 'change']},
     ],
     'max.disk.threshold': [
       {required: true, message: t('transcribe.config.tcp.withoutdisk'), trigger: ['blur', 'change']},
-      {type: 'number', min: 0, max: 1, message: t('transcribe.config.tcp.diskmsg'), trigger: ['blur', 'change']},
+      {type: 'number', min: 0.01, max: 1, message: t('transcribe.config.tcp.diskmsg'), trigger: ['blur', 'change']},
     ],
     'result.file.size': [
       {required: isVersionNeed, message: t('transcribe.config.tcp.withoutresfilesize'), trigger: ['blur', 'change']},
@@ -529,15 +529,15 @@ const formRulesAtt = computed(() => {
   return {
     'max.cpu.threshold': [
       {required: true, message:  t('transcribe.config.tcp.withoutcpu') , trigger: ['blur', 'change']},
-      {type: 'number', min: 0, max: 1, message:  t('transcribe.config.tcp.cpumsg') , trigger: ['blur', 'change']},
+      {type: 'number', min: 0.01, max: 1, message:  t('transcribe.config.tcp.cpumsg') , trigger: ['blur', 'change']},
     ],
     'max.memory.threshold': [
       {required: true, message:  t('transcribe.config.tcp.withoutmemory') , trigger: ['blur', 'change']},
-      {type: 'number', min: 0, max: 1, message:  t('transcribe.config.tcp.memorymsg') , trigger: ['blur', 'change']},
+      {type: 'number', min: 0.01, max: 1, message:  t('transcribe.config.tcp.memorymsg') , trigger: ['blur', 'change']},
     ],
     'max.disk.threshold': [
       {required: true, message: t('transcribe.config.tcp.withoutdisk') , trigger: ['blur', 'change']},
-      {type: 'number', min: 0, max: 1, message: t('transcribe.config.tcp.diskmsg') , trigger: ['blur', 'change']},
+      {type: 'number', min: 0.01, max: 1, message: t('transcribe.config.tcp.diskmsg') , trigger: ['blur', 'change']},
     ],
     'remote.retry.count': [
       {required: true, message: t('transcribe.config.att.withoutretrycount') , trigger: ['blur', 'change']},
@@ -981,78 +981,14 @@ const editChooseMode = (mode) => {
 
 const taskTypeNum = ref(0)
 
-const isVersionSet = ref(["result.file.size", "parse.select.result", "result.file.name", "replay.max.time",
-  "source.time.interval.replay", "compare.select.result", "parse.max.time"])
-const deleteVersionOption = () => {
-  if (isVersionNeed.value === false) {
-    isVersionSet.value.forEach(item => {
-      if (item === "result.file.size" || item === "parse.select.result") {
-        delete retPlaybackData.value.pagefir[item]
-        formData.tableDataTcp = formData.tableDataTcp.filter(key => key.name !== item)
-        formData.tableDataAtt = formData.tableDataAtt.filter(key => key.name !== item)
-        formData.tableDataGen = formData.tableDataGen.filter(key => key.name !== item)
-        delete formDataTcp.value[item]
-        delete formDataAtt.value[item]
-        delete formDataGen.value[item]
-      } else if (item === "result.file.name") {
-        delete retPlaybackData.value.pagesec[item]
-        formData.tableDataJson = formData.tableDataJson.filter(key => key.name !== item)
-        formData.tableDataDb = formData.tableDataDb.filter(key => key.name !== item)
-        delete formDataJson.value[item]
-        delete formDataDb.value[item]
-      } else {
-        delete retPlaybackData.value.pagethi[item]
-        formData.tableDataPlayback = formData.tableDataPlayback.filter(key => key.name !== item)
-        delete formDataPlayback.value[item]
-      }
-    })
+const deleteVersionOption = (taskType) => {
+  if (taskType === 2) {
+    formData.tableDataJson = formData.tableDataJson.filter(key => key.name !== "parse.max.time")
+    formData.tableDataDb = formData.tableDataDb.filter(key => key.name !== "parse.max.time")
   } else {
-    const indexExists = formData.tableDataTcp.some(item => item.index === 17)
+    const indexExists = formData.tableDataJson.some(item => item.index === 5)
     if (!indexExists) {
-      formData.tableDataTcp.push(
-        {
-          index: 17, name: 'result.file.size', default: 10, value: '', prop: 'result.file.size', type: 'int',
-          intro: t('transcribe.config.tcp.selefilesizeintro')
-        },
-        {
-          index: 18, name: 'parse.select.result', default: false, value: '', prop: 'parse.select.result',
-          type: 'select', intro: t('transcribe.config.tcp.selecresintro'),
-          options: [
-            {index: 0, label: 'true', value: true},
-            {index: 1, label: 'false', value: false},]
-        },
-      )
-      formData.tableDataAtt.push(
-        {
-          index: 17, name: 'result.file.size', default: 10, value: '', prop: 'result.file.size', type: 'int',
-          intro: t('transcribe.config.tcp.selefilesizeintro')
-        },
-        {
-          index: 18, name: 'parse.select.result', default: false, value: '', prop: 'parse.select.result',
-          type: 'select', intro: t('transcribe.config.tcp.selecresintro'),
-          options: [
-            {index: 0, label: 'true', value: true},
-            {index: 1, label: 'false', value: false},]
-        },
-      )
-      formData.tableDataGen.push(
-        {
-          index: 17, name: 'result.file.size', default: 10, value: '', prop: 'result.file.size', type: 'int',
-          intro: t('transcribe.config.tcp.selefilesizeintro')
-        },
-        {
-          index: 18, name: 'parse.select.result', default: false, value: '', prop: 'parse.select.result',
-          type: 'select', intro: t('transcribe.config.tcp.selecresintro'),
-          options: [
-            {index: 0, label: 'true', value: true},
-            {index: 1, label: 'false', value: false},]
-        },
-      )
       formData.tableDataJson.push(
-        {
-          index: 4, name: 'result.file.name', default: 'select-result', value: '', prop: 'result.file.name',
-          type: 'input', intro: t('transcribe.config.json.resnameintro')
-        },
         {
           index: 5, name: 'parse.max.time', default: 0, value: '', prop: 'parse.max.time', type: 'int',
           intro: t('transcribe.config.json.parsetimeintro')
@@ -1060,76 +996,32 @@ const deleteVersionOption = () => {
       )
       formData.tableDataDb.push(
         {
-          index: 4, name: 'result.file.name', default: 'select-result', value: '', prop: 'result.file.name',
-          type: 'input', intro: t('transcribe.config.json.resnameintro')
-        },
-        {
           index: 5, name: 'parse.max.time', default: 0, value: '', prop: 'parse.max.time', type: 'int',
           intro: t('transcribe.config.json.parsetimeintro')
         },
       )
-      if (taskRetInfo["sql.transcribe.mode"] === 'tcpdump') {
-        formData.tableDataPlayback.push(
-          {
-            index: 12, name: 'replay.max.time', default: 0, value: '', prop: 'replay.max.time', type: 'int',
-            intro: t('transcribe.create.replaytimecon'),
-          })
+      if (retPlaybackData.value.pagesec["parse.max.time"] === undefined) {
+        let tempdefault = formData.tableDataJson.find(key => key.name === "parse.max.time")
+        retPlaybackData.value.pagesec["parse.max.time"] = tempdefault ? tempdefault.default : null
+        formDataJson.value["parse.max.time"] = tempdefault ? tempdefault.default : null
+        formDataDb.value["parse.max.time"] = tempdefault ? tempdefault.default : null
+      } else {
+        formDataJson.value["parse.max.time"] = retPlaybackData.value.pagesec["parse.max.time"]
+        formDataDb.value["parse.max.time"] = retPlaybackData.value.pagesec["parse.max.time"]
       }
+    }
+  }
+  const indexExists = formData.tableDataPlayback.some(item => item.index === 12)
+  if (retPlaybackData.value["sql.transcribe.mode"] === 'tcpdump') {
+    if (!indexExists) {
       formData.tableDataPlayback.push(
         {
-          index: 13,
-          name: 'source.time.interval.replay',
-          default: false,
-          value: '',
-          prop: 'source.time.interval.replay',
-          type: 'select',
-          intro: t('transcribe.config.back.intervalreplayintro'),
-          options: [
-            {index: 0, label: 'true', value: true},
-            {index: 1, label: 'false', value: false},]
-        },
-        {
-          index: 14, name: 'compare.select.result', default: false, value: '', prop: 'compare.select.result',
-          type: 'select', intro: t('transcribe.config.back.selectresultintro') ,
-          options: [
-            {index: 0, label: 'true', value: true},
-            {index: 1, label: 'false', value: false},]
-        },
-      )
-      isVersionSet.value.forEach(item => {
-        if (item === "result.file.size" || item === "parse.select.result") {
-          if (retPlaybackData.value.pagefir[item] === undefined) {
-            let tempdefault = formData.tableDataTcp.find(key => key.name === item)
-            retPlaybackData.value.pagefir[item] = tempdefault ? tempdefault.default : null
-            formDataTcp.value[item] = tempdefault ? tempdefault.default : null
-            formDataAtt.value[item] = tempdefault ? tempdefault.default : null
-            formDataGen.value[item] = tempdefault ? tempdefault.default : null
-          } else {
-            formDataTcp.value[item] = null
-            formDataAtt.value[item] = null
-            formDataGen.value[item] = null
-          }
-        } else if (item === "result.file.name") {
-          if (retPlaybackData.value.pagefir[item] === undefined) {
-            let tempdefault = formData.tableDataJson.find(key => key.name === item)
-            retPlaybackData.value.pagesec[item] = tempdefault ? tempdefault.default : null
-            formDataJson.value[item] = tempdefault ? tempdefault.default : null
-            formDataDb.value[item] = tempdefault ? tempdefault.default : null
-          } else {
-            formDataJson.value[item] = null
-            formDataDb.value[item] = null
-          }
-        } else {
-          if (retPlaybackData.value.pagefir[item] === undefined) {
-            let tempdefault = formData.tableDataPlayback.find(key => key.name === item)
-            retPlaybackData.value.pagethi[item] = tempdefault ? tempdefault.default : null
-            formDataPlayback.value[item] = tempdefault ? tempdefault.default : null
-          } else {
-            formDataPlayback.value[item] = null
-          }
-        }
-      })
+          index: 12, name: 'replay.max.time', default: 0, value: '', prop: 'replay.max.time', type: 'int',
+          intro: t('transcribe.create.replaytimecon'),
+        })
     }
+  } else {
+    formData.tableDataPlayback = formData.tableDataPlayback.filter(key => key.name !== "replay.max.time")
   }
 }
 
@@ -1141,8 +1033,7 @@ const open = async (taskRetInfo, taskType, taskVersion) => {
   retPlaybackData.value.pagethi = taskRetInfo.pagethi
   retPlaybackData.value["sql.transcribe.mode"] = taskRetInfo["sql.transcribe.mode"]
   retPlaybackData.value["sql.storage.mode"] = taskRetInfo["sql.storage.mode"]
-  await deleteVersionOption()
-  visible.value = true
+  await deleteVersionOption(taskType)
   try {
     const res = await targetClusters()
     let clusterOptions = formData.tableDataDb.find(e => e.name === 'sql.database.db').options;
@@ -1166,6 +1057,7 @@ const open = async (taskRetInfo, taskType, taskVersion) => {
       formData.mode = retPlaybackData.value['sql.storage.mode']
       editChooseMode(retPlaybackData.value['sql.storage.mode'])
     }
+    visible.value = true
   }
 }
 

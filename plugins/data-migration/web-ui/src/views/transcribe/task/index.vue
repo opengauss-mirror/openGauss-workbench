@@ -1230,6 +1230,7 @@ const init = () => {
   inittaskBasicInfo()
   changeTranscribeMode(taskRetInfo.value['sql.transcribe.mode'])
   choosePlaybackMethod.value = false
+  replayTaskVersion.value = false
   if (taskNameFormRef.value) {
     taskNameFormRef.value.resetFields()
   }
