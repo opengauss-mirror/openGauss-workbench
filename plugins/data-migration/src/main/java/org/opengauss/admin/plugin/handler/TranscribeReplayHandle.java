@@ -90,10 +90,11 @@ public class TranscribeReplayHandle {
         String installPath = getInstallPath(transcribeReplayTask, taskType);
         String configFilePath = installPath + "/config/" + taskType + ".properties";
         commandSb.append("cd ").append(installPath);
-        commandSb.append(" && java -Xms256m -Xmx2g -jar ").append(jarPath);
+        commandSb.append(" && (java -Xms256m -Xmx2g -jar ").append(jarPath);
         commandSb.append(" -t ").append(taskType);
         commandSb.append(" -f ").append(configFilePath);
         commandSb.append(" 2>&1 | tee ").append(String.format("%s_result.log", taskType));
+        commandSb.append("; exit ${PIPESTATUS[0]})");
         log.info("Start task {}, host: {}, command: {}", taskType, shellInfoVo.getIp(), commandSb.toString());
         return ShellUtil.execCommandGetResult(shellInfoVo, commandSb.toString());
     }

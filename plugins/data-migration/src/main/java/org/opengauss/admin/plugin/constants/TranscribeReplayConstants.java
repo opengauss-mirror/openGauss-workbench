@@ -78,14 +78,24 @@ public interface TranscribeReplayConstants {
     String FAIL_SQL_NUM = "Fail Number: (\\d+)";
 
     /**
-     * SKIP_NUM
+     * PARSE_FILE
      */
-    String SKIP_NUM = "Skip Number: (\\d+)";
+    String PARSE_RESULT_FILE = "parse_result.log";
 
     /**
-     * PROCESS_FILE
+     * REPLAY_FILE
      */
-    String PROCESS_FILE = "process.json";
+    String REPLAY_RESULT_FILE = "replay_result.log";
+
+    /**
+     * PARSE_FILE
+     */
+    String PARSE_PROCESS_FILE = "parse-process.txt";
+
+    /**
+     * REPLAY_FILE
+     */
+    String REPLAY_PROCESS_FILE = "replay-process.txt";
 
     /**
      * DURATION_FILE
