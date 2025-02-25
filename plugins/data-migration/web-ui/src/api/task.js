@@ -100,3 +100,7 @@ export function isAdmin (data) {
   return axios.post('/plugins/data-migration/resource/isAdmin', data)
 }
 
+export function hasRootPermission (hostUserId) {
+  return axios.get(`/hostUser/hasRootPermission/${hostUserId}`)
+}
+

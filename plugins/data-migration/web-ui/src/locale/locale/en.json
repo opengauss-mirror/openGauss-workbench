@@ -279,7 +279,24 @@
             "5q0aajl77lg30": "schema_registry port",
             "5q0aajl77lg31": "8081",
             "5q0aajl77lg33": "Installation method",
-            "5q0aajl77lg32": "Note: Third-party tools refer to the confluent tools (including the Kafka zookeeper schemaRegistry) in the portal, which can be bound to the confluent tools installed on other portals for data migration, and the current portal can be reinstalled to migrate data"
+            "5q0aajl77lg32": "Note: Third-party tools refer to the confluent tools (including the Kafka zookeeper schemaRegistry) in the portal, which can be bound to the confluent tools installed on other portals for data migration, and the current portal can be reinstalled to migrate data",
+            "installDesc": "Installtion description",
+            "suiteInfoTitle": "1. Introduction to the Migration Suite: ",
+            "suiteInfoContent": "To use the data migration feature, you need to install the migration suite portal. The portal is the execution program for migrations. A server that successfully installs the portal becomes a migration executor, responsible for executing migration tasks.",
+            "systemInfoTitle": "2. System and Architecture Requirements: ",
+            "systemInfoContent": "Currently, the portal only supports installation on specific systems and architectures. Supported system architectures include: CentOS 7 x86_64, openEuler 2003 x86_64/aarch64, openEuler 2203 x86_64/aarch64.",
+            "softwareTitle": "3. Required Software Dependencies: ",
+            "softwareContent": "For the portal to run, it requires certain software packages on the server, including: python-devel, python3-devel, mariadb-devel (or mysql-devel or mysql5-devel). It is recommended to refer to the following \"Dependency Installation Instructions\" for installation.",
+            "dependenceTitle": "4. Dependency Installation Instructions: ",
+            "dependenceContent": "To ensure installation stability, the required dependencies are already packaged within the portal installation package. When installing the portal, simply grant the portal installation user sudo passwordless permissions, and the dependencies will be installed along with the portal.",
+            "sudoTitle": "5. Sudo Permissions Explanation: ",
+            "sudoContent": "Sudo permissions are only needed for installing the portal dependencies. If the portal dependencies have already been installed on the server, the installation user does not need sudo permissions to directly install the portal. Additionally, the portal does not require sudo permissions during operation. Therefore, please manage sudo permissions properly.",
+            "sudoRemind": "Non-essential permissions. Please manage these permissions appropriately.",
+            "permissionCheck": "Check Permerssion",
+            "checkResult": "Check result: ",
+            "pass": "Pass",
+            "fail": "Fail",
+            "tempSudoRemind": "To install portal dependencies, temporarily enable sudo passwordless permissions for the user."
         },
         "ToolsParamsConfig": {
             "5q0toolspar0": "configure parameters",
@@ -357,7 +374,8 @@
             "5q08xss4l2w0": "Confirm",
             "5q08zucvfwc0": "One subtask is from one source database to one destination database",
             "5q090g6io340": "Determine the execution parameters for each migration process",
-            "5q090g6iouw0": "Choose the right machine to perform the migration process"
+            "5q090g6iouw0": "Choose the right machine to perform the migration process",
+            "portalInstallDesc": "Migration Suite Installtion Description"
         }
     },
     "step1": {

@@ -279,7 +279,24 @@
             "5q0aajl77lg30": "schema_registry 端口",
             "5q0aajl77lg31": "8081",
             "5q0aajl77lg33": "安装方式",
-            "5q0aajl77lg32": "说明：第三方工具指的是portal中的confluent工具(包含kafka zookeeper schemaRegistry), 支持绑定其他portal已安装的confluent工具进行数据迁移，支持当前portal重新安装confluent工具进行数据迁移"
+            "5q0aajl77lg32": "说明：第三方工具指的是portal中的confluent工具(包含kafka zookeeper schemaRegistry), 支持绑定其他portal已安装的confluent工具进行数据迁移，支持当前portal重新安装confluent工具进行数据迁移",
+            "installDesc": "安装说明",
+            "suiteInfoTitle": "1. 迁移套件简介：",
+            "suiteInfoContent": "使用数据迁移功能，需要安装迁移套件portal，portal为迁移的执行程序。成功安装portal的服务器为迁移执行机，负责执行迁移任务。",
+            "systemInfoTitle": "2. 系统及架构要求：",
+            "systemInfoContent": "portal当前仅支持在固定的系统及架构上安装，支持的系统架构有：CentOS7 x86_64，openEuler2003 x86_64/aarch64，openEuler2203 x86_64/aarch64。",
+            "softwareTitle": "3. 所需软件依赖：",
+            "softwareContent": "portal运行，需要依赖服务器上的一些软件包，软件包有：python-devel，python3-devel，mariadb-devel（或mysql-devel，或mysql5-devel），建议参考如下“依赖安装说明”进行安装。",
+            "dependenceTitle": "4. 依赖安装说明：",
+            "dependenceContent": "为保证安装稳定性，portal安装包中已打包所需依赖，安装portal时，只需要赋予portal安装用户sudo免密权限，依赖就会随portal一同完成安装。",
+            "sudoTitle": "5. sudo权限说明：",
+            "sudoContent": "sudo权限仅为安装portal依赖需要，如果服务器上已经安装过portal依赖，则不需要安装用户拥有sudo权限，就可以直接安装portal。且portal运行也无需sudo权限，因此请妥善管理sudo权限。",
+            "sudoRemind": "非必须权限，请妥善管理",
+            "permissionCheck": "权限检测",
+            "checkResult": "检测结果：",
+            "pass": "通过",
+            "fail": "不通过",
+            "tempSudoRemind": "安装portal依赖时，需要临时开通用户sudo免密权限"
         },
         "ParamsConfig": {
             "5q0aazspots0": "默认参数配置（全局配置）",
@@ -358,7 +375,8 @@
             "5q08xss4l2w0": "完成",
             "5q08zucvfwc0": "1个子任务是1个源库到1个目的库的迁移过程",
             "5q090g6io340": "确定每一个迁移过程的执行参数",
-            "5q090g6iouw0": "选择合适的机器执行迁移过程"
+            "5q090g6iouw0": "选择合适的机器执行迁移过程",
+            "portalInstallDesc": "迁移套件安装说明"
         }
     },
     "step1": {
