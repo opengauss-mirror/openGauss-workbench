@@ -88,7 +88,9 @@ const pathValidator = (value: any, cb: any) => {
   return new Promise(resolve => {
     const reg = /^(\/[\u4e00-\u9fa5\w-\\.]+)*\/$/
     const re = new RegExp(reg)
-    if (re.test(value)) {
+    const regWin = /[a-zA-Z]:\\(?:[^\\/:*?\"<>|\r\n]+\\)*[^\\/:*?\"<>|\r\n]*\\$/
+    const reWin = new RegExp(regWin)
+    if (re.test(value) || reWin.test(value)) {
       checkUploadPath(value).then(res => {
         if (res.data) {
           resolve(true)
