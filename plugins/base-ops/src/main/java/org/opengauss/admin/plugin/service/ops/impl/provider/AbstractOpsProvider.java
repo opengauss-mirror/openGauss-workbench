@@ -84,13 +84,8 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         log.info("The root user logs in to the host");
         Session rootSession = null;
         try {
-            if (Objects.equals(OpenGaussVersionEnum.MINIMAL_LIST, version())) {
-                rootSession = loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), false,
-                    hostId, installUserId);
-            } else {
-                rootSession = loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), true,
-                    hostId, null);
-            }
+            rootSession = getRootOrInstallUserSession(jschUtil, encryptionUtils, installContext, hostId,
+                installUserId);
             installDependency(jschUtil, rootSession, retSession, installContext.getOs());
             ensureDirExist(jschUtil, rootSession, pkgPath, retSession);
             ensureDirExist(jschUtil, rootSession, installPath, retSession);
@@ -119,6 +114,22 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         }
         return loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), false, hostId,
             installUserId);
+    }
+
+    private Session getRootOrInstallUserSession(JschUtil jschUtil, EncryptionUtils encryptionUtils,
+                                                InstallContext installContext, String hostId, String installUserId) {
+        Session rootSession = null;
+        try {
+            rootSession = loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), true, hostId,
+                null);
+            if (Objects.isNull(rootSession)) {
+                rootSession = loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), false,
+                    hostId, installUserId);
+            }
+        } catch (OpsException ex) {
+            log.warn("Failed to login with root user, try to login with install user: {}", ex.getMessage());
+        }
+        return rootSession;
     }
 
     private void closeSession(Session session) {
