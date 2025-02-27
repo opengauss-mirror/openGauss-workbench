@@ -25,6 +25,20 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 
 https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-7.0.0-RC1.tar.gz
 
+## 正式发布版下载
+
+https://opengauss.obs.cn-south-1.myhuaweicloud.com/6.0.0/tools/Datakit/Datakit-6.0.0.tar.gz
+
+为确认软件包在传输过程中由于网络原因或存储介质原因是否出现下载不完整的情况，需对软件包的完整性进行校验，通过校验的软件包才能部署，完整性校验步骤如下：
+
+1. 计算下载包的sha256值（以Datakit_6.0.0为例，其他版本操作相同）
+
+~~~
+sha256sum Datakit-6.0.0.tar.gz
+~~~
+
+2. 在[官网下载页面](https://opengauss.org/zh/download/)的openGauss Tools部分中复制对应软件包的sha256值，与步骤1计算出的sha256值做对比，如果一致则可以确认下载下来的包是完整的，否则需要重新下载。
+
 ## 说明
 1. 插件需要安装在平台上运行，因此需要先将平台项目安装部署后，再将其他插件项目打包安装使用。
 
