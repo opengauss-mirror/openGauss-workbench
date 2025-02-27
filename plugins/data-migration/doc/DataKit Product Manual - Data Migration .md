@@ -459,7 +459,47 @@ CPU核数：筛选配置信息中CPU核数等于输入核数的机器。
 
 注3：在两次迁移任务中，如果分别选择了相同的源端库和目的端库，则后一次迁移的schema会覆盖前一次的迁移。例如，第一次迁移将mysql源端库test中的表tab1迁移到目的端的target_db下，第二次迁移将mysql源端库test中的表tab1迁移到目的端的target_db下，第二次迁移将mysql源端库test中的表tab2迁移到目的端的target_db下，则最终target_db库下的test中只有表tab2，不包含tab1，即第二次迁移覆盖第一次迁移结果。原因：datakit每次迁移会将目的端中同名的schema删除，重新创建schema进行迁移。
 
+## **录制回放**
+> 前提条件：
+>
+> 1.建议：录制回放时需要源端和目标端的数据一致，所以需要先使用迁移工具同步源端数据到目标端。
+> 
+> 2.使用“实例管理”导入数据库实例或者集群管理导入集群实例作为源端和目标端数据库。
+> 
+
+#### **1.创建录制回放任务**
+点击创建录制回放任务进入创建页面。
+![录制回放1.png](_resources/录制回放1.png)
+填写源端和目标端数据库信息和配置项信息（配置项信息如果没有特别大的数据量，无需进行配置，使用默认值就好。）
+![录制回放2.png](_resources/录制回放2.png)
+![录制回放3.png](_resources/录制回放3.png)
+配置完成后点击保存即可。
+![录制回放4.png](_resources/录制回放4.png)
+记得配置ip地址对应的网卡名，之后点击提交，即可创建任务成功。
+![录制回放5.png](_resources/录制回放5.png)
+如图是创建的任务，状态是”未执行“。
+![录制回放6.png](_resources/录制回放6.png)
+点击“执行任务”，任务状态变为“执行中”，此时在源端执行的SQL都会被录制到并在目标端进行回放。
+
+录制回放的三种模式的全部介绍参考以下链接：
+
+https://gitee.com/opengauss/compatibility-assessment/tree/master/dynamic_sql_collection/transcribe-replay-tool
+
+具体录制操作和设置的参数有关，参数含义请参考上面的链接。
+![录制回放7.png](_resources/录制回放7.png)
+![录制回放8.png](_resources/录制回放8.png)
+
+点击任务名称可以查看录制回放结果，即“录制回放详情页面”。（慢SQL、失败SQL、慢SQL在源端和目标端的耗时对比）。
+![录制回放9.png](_resources/录制回放9.png)
+#### **2.录制回放详情**
+如果插入数据，详情页面会显示相应的数据详情，如下示例：
+![录制回放12.png](_resources/录制回放10.png)
+![录制回放13.png](_resources/录制回放11.png)
+![录制回放14.png](_resources/录制回放12.png)
+
 ## 相关文档
 [chameleon说明文档]( https://gitee.com/opengauss/openGauss-tools-chameleon/blob/master/chameleon%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97.md )
 
 [debezium说明文档]( https://gitee.com/opengauss/debezium/blob/master/README.md )
+
+[录制回放工具说明文档]( https://gitee.com/opengauss/compatibility-assessment/tree/master/dynamic_sql_collection/transcribe-replay-tool )
