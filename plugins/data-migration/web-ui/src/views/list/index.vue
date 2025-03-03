@@ -3,39 +3,46 @@
     <div class="search-con">
       <a-form :model="form" layout="inline">
         <a-form-item field="taskName" style="margin-left: -17px;">
-          <a-input v-model="form.taskName" allow-clear :placeholder="$t('list.index.5q08sf2dez80')" style="width: 200px;" @change="getList"></a-input>
+          <a-input v-model="form.taskName" allow-clear :placeholder="$t('list.index.5q08sf2dez80')" style="width: 200px;"
+            @change="getList"></a-input>
         </a-form-item>
         <a-form-item field="createUser" style="margin-left: -17px;">
-          <a-select v-model="form.createUser" :placeholder="$t('list.index.5q08sf2dgxo0')" allow-clear style="width: 150px;" @change="getList">
+          <a-select v-model="form.createUser" :placeholder="$t('list.index.5q08sf2dgxo0')" allow-clear
+            style="width: 150px;" @change="getList">
             <a-option v-for="item in userData" :key="item" :value="item">{{ item }}</a-option>
           </a-select>
         </a-form-item>
         <a-form-item field="execStatus" style="margin-left: -17px;">
-          <a-select v-model="form.execStatus" :placeholder="$t('list.index.5q08sf2dh5g0')" allow-clear style="width: 150px;" @change="getList">
-            <a-option :value="3000">{{$t('list.index.5q08sf2dha81')}}</a-option>
-            <a-option :value="0">{{$t('list.index.5q08sf2dha80')}}</a-option>
-            <a-option :value="1">{{$t('list.index.5q08sf2dhek0')}}</a-option>
-            <a-option :value="2">{{$t('list.index.5q08sf2dhj00')}}</a-option>
+          <a-select v-model="form.execStatus" :placeholder="$t('list.index.5q08sf2dh5g0')" allow-clear
+            style="width: 150px;" @change="getList">
+            <a-option :value="3000">{{ $t('list.index.5q08sf2dha81') }}</a-option>
+            <a-option :value="0">{{ $t('list.index.5q08sf2dha80') }}</a-option>
+            <a-option :value="1">{{ $t('list.index.5q08sf2dhek0') }}</a-option>
+            <a-option :value="2">{{ $t('list.index.5q08sf2dhj00') }}</a-option>
           </a-select>
         </a-form-item>
         <a-form-item field="execTime" style="margin-left: -17px;">
-          <a-range-picker v-model="form.execTime" :placeholder="[$t('list.index.5q08sf2dhng0'), $t('list.index.5q08sf2dhrk0')]" style="width: 250px;" @change="getList" />
+          <a-range-picker v-model="form.execTime"
+            :placeholder="[$t('list.index.5q08sf2dhng0'), $t('list.index.5q08sf2dhrk0')]" style="width: 250px;"
+            @change="getList" />
         </a-form-item>
         <a-form-item field="finishTime" style="margin-left: -17px;">
-          <a-range-picker v-model="form.finishTime" :placeholder="[$t('list.index.5q08sf2dhvs0'), $t('list.index.5q08sf2di4w0')]" style="width: 250px;" @change="getList" />
+          <a-range-picker v-model="form.finishTime"
+            :placeholder="[$t('list.index.5q08sf2dhvs0'), $t('list.index.5q08sf2di4w0')]" style="width: 250px;"
+            @change="getList" />
         </a-form-item>
         <a-form-item>
           <a-button type="outline" @click="getList">
             <template #icon>
               <icon-search />
             </template>
-            <template #default>{{$t('list.index.5q08sf2dikw0')}}</template>
+            <template #default>{{ $t('list.index.5q08sf2dikw0') }}</template>
           </a-button>
           <a-button style="margin-left: 10px;" @click="resetQuery">
             <template #icon>
               <icon-sync />
             </template>
-            <template #default>{{$t('list.index.5q08sf2diqs0')}}</template>
+            <template #default>{{ $t('list.index.5q08sf2diqs0') }}</template>
           </a-button>
         </a-form-item>
       </a-form>
@@ -46,26 +53,29 @@
           <template #icon>
             <icon-plus />
           </template>
-          <template #default>{{$t('list.index.5q08sf2diwc0')}}</template>
+          <template #default>{{ $t('list.index.5q08sf2diwc0') }}</template>
         </a-button>
         <a-button status="success" @click="getList">
           <template #icon>
             <icon-sync />
           </template>
-          <template #default>{{$t('list.index.5q08sf2dj240')}}</template>
+          <template #default>{{ $t('list.index.5q08sf2dj240') }}</template>
         </a-button>
         <a-button status="warning" @click="deleteMore">
           <template #icon>
             <icon-delete />
           </template>
-          <template #default>{{$t('list.index.5q08sf2dj5g0')}}</template>
+          <template #default>{{ $t('list.index.5q08sf2dj5g0') }}</template>
         </a-button>
       </a-space>
     </div>
     <div class="table-con">
-      <a-table :loading="loading" row-key="id" :data="tableData" :row-selection="rowSelection" v-model:selectedKeys="selectedKeys" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange">
+      <a-table :loading="loading" row-key="id" :data="tableData" :row-selection="rowSelection"
+        v-model:selectedKeys="selectedKeys" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme"
+        :pagination="pagination" @page-change="pageChange">
         <template #columns>
-          <a-table-column :title="$t('list.index.5q08sf2dj8k0')" data-index="taskName" :width="220" fixed="left" ellipsis tooltip></a-table-column>
+          <a-table-column :title="$t('list.index.5q08sf2dj8k0')" data-index="taskName" :width="220" fixed="left" ellipsis
+            tooltip></a-table-column>
           <a-table-column :title="$t('list.index.5q08sf2djbk0')" data-index="createUser" :width="100"></a-table-column>
           <a-table-column :title="$t('list.index.5q08sf2djew0')" data-index="execStatus" :width="120">
             <template #cell="{ record }">
@@ -87,62 +97,45 @@
           <a-table-column :title="$t('list.index.5q08sf2djvk0')" data-index="finishTime" :width="200"></a-table-column>
           <a-table-column :title="$t('list.index.5q08sf2djyc0')" align="center" :width="300" fixed="right">
             <template #cell="{ record }">
-              <a-button
-                size="mini"
-                type="text"
-                @click="goDetail(record)"
-              >
+              <a-button size="mini" type="text" @click="goDetail(record)">
                 <template #icon>
                   <icon-edit />
                 </template>
-                <template #default>{{$t('list.index.5q08sf2dk0o0')}}</template>
+                <template #default>{{ $t('list.index.5q08sf2dk0o0') }}</template>
               </a-button>
-              <a-button
-                v-if="record.execStatus === 1 || record.execStatus === 3000"
-                size="mini"
-                type="text"
-                @click="stopTask(record)"
-              >
-                <template #icon>
-                  <icon-pause />
-                </template>
-                <template #default>{{$t('list.index.5q08sf2dk3c0')}}</template>
-              </a-button>
-              <a-button
-                v-if="record.execStatus === 0"
-                :loading="record.startLoading"
-                size="mini"
-                type="text"
-                @click="startTask(record)"
-              >
+              <a-popconfirm v-if="record.execStatus === 1 || record.execStatus === 3000"
+                :content="$t('list.index.endMigration')" @ok="stopTask(record)">
+                <a-button size="mini" type="text">
+                  <template #icon>
+                    <icon-pause />
+                  </template>
+                  <template #default>{{ $t('list.index.5q08sf2dk3c0') }}</template>
+                </a-button>
+              </a-popconfirm>
+              <a-button v-if="record.execStatus === 0" :loading="record.startLoading" size="mini" type="text"
+                @click="startTask(record)">
                 <template #icon>
                   <icon-play-arrow />
                 </template>
-                <template #default>{{$t('list.index.5q08sf2dk5s0')}}</template>
+                <template #default>{{ $t('list.index.5q08sf2dk5s0') }}</template>
               </a-button>
-              <a-popconfirm v-if="record.execStatus === 0 || record.execStatus === 2" :content="$t('list.index.5q08sf2dk800')" @ok="deleteTheTask(record)">
-                <a-button
-                  size="mini"
-                  type="text"
-                >
+              <a-popconfirm v-if="record.execStatus === 0 || record.execStatus === 2"
+                :content="$t('list.index.5q08sf2dk800')" @ok="deleteTheTask(record)">
+                <a-button size="mini" type="text">
                   <template #icon>
                     <icon-delete />
                   </template>
-                  <template #default>{{$t('list.index.5q08sf2dka40')}}</template>
+                  <template #default>{{ $t('list.index.5q08sf2dka40') }}</template>
                 </a-button>
               </a-popconfirm>
-              <a-button
-                v-if="record.execStatus === 2"
-                :loading="record.startLoading"
-                size="mini"
-                type="text"
-                @click="resetTask(record)"
-              >
-                <template #icon>
-                  <icon-refresh />
-                </template>
-                <template #default>{{$t('list.index.5q08sf2diqs0')}}</template>
-              </a-button>
+              <a-popconfirm v-if="record.execStatus === 2" :content="$t('list.index.resetConfirm')" @ok="resetTask(record)">
+                <a-button :loading="record.startLoading" size="mini" type="text">
+                  <template #icon>
+                    <icon-refresh />
+                  </template>
+                  <template #default>{{ $t('list.index.5q08sf2diqs0') }}</template>
+                </a-button>
+              </a-popconfirm>
             </template>
           </a-table-column>
         </template>
@@ -365,14 +358,17 @@ onMounted(() => {
 .list-container {
   position: relative;
   min-height: calc(100vh - 114px);
+
   .search-con {
     padding: 16px 20px 10px;
     display: flex;
     justify-content: space-between;
   }
+
   .btn-con {
     padding: 0 20px;
   }
+
   .table-con {
     margin-top: 20px;
     padding: 0 20px 30px;
