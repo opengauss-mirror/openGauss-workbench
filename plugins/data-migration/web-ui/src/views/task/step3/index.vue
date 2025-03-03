@@ -6,47 +6,24 @@
     <div class="search-con">
       <a-form :model="form" layout="inline">
         <a-form-item field="ip" style="margin-left: -17px">
-          <a-input
-            v-model.trim="form.ip"
-            allow-clear
-            :placeholder="$t('step3.index.5q093f8y8b40')"
-            style="width: 160px"
-          ></a-input>
+          <a-input v-model.trim="form.ip" allow-clear :placeholder="$t('step3.index.5q093f8y8b40')"
+            style="width: 160px"></a-input>
         </a-form-item>
         <a-form-item field="hostname" style="margin-left: -17px">
-          <a-input
-            v-model.trim="form.hostname"
-            allow-clear
-            :placeholder="$t('step3.index.5q093f8y8fs0')"
-            style="width: 160px"
-          ></a-input>
+          <a-input v-model.trim="form.hostname" allow-clear :placeholder="$t('step3.index.5q093f8y8fs0')"
+            style="width: 160px"></a-input>
         </a-form-item>
         <a-form-item field="cpu" style="margin-left: -17px">
-          <a-input
-            v-model.number="form.cpu"
-            max-length="5"
-            allow-clear
-            :placeholder="$t('step3.index.5q093f8y8j40')"
-            style="width: 160px"
-          ></a-input>
+          <a-input v-model.number="form.cpu" max-length="5" allow-clear :placeholder="$t('step3.index.5q093f8y8j40')"
+            style="width: 160px"></a-input>
         </a-form-item>
         <a-form-item field="memory" style="margin-left: -17px">
-          <a-input
-            v-model.number="form.memory"
-            max-length="10"
-            allow-clear
-            :placeholder="$t('step3.index.5q093f8y8lw0')"
-            style="width: 160px"
-          ></a-input>
+          <a-input v-model.number="form.memory" max-length="10" allow-clear :placeholder="$t('step3.index.5q093f8y8lw0')"
+            style="width: 160px"></a-input>
         </a-form-item>
         <a-form-item field="disk" style="margin-left: -17px">
-          <a-input
-            v-model.number="form.disk"
-            max-length="10"
-            allow-clear
-            :placeholder="$t('step3.index.5q093f8y8p40')"
-            style="width: 160px"
-          ></a-input>
+          <a-input v-model.number="form.disk" max-length="10" allow-clear :placeholder="$t('step3.index.5q093f8y8p40')"
+            style="width: 160px"></a-input>
         </a-form-item>
         <a-form-item style="margin-left: -17px">
           <a-button type="outline" @click="getFilterData">
@@ -67,26 +44,15 @@
     <div class="table-con">
       <div class="select-info-con">
         <div class="select-tips">
-          <span class="tips-item"
-            >{{ $t('step3.index.5q093f8y8y80')
-            }}<b>{{ props.subTaskConfig.length }}</b
-            >{{ $t('step3.index.5q093f8y91s0') }}</span
-          >
-          <span class="tips-item"
-            >{{ $t('step3.index.5q093f8y94c0') }}<b>{{ selectedKeys.length }}</b
-            >{{ $t('step3.index.5q093f8y9740') }}</span
-          >
+          <span class="tips-item">{{ $t('step3.index.5q093f8y8y80')
+          }}<b>{{ props.subTaskConfig.length }}</b>{{ $t('step3.index.5q093f8y91s0') }}</span>
+          <span class="tips-item">{{ $t('step3.index.5q093f8y94c0') }}<b>{{ selectedKeys.length }}</b>{{
+            $t('step3.index.5q093f8y9740') }}</span>
           <a-button type="outline" @click="handleBatchInstall" class="mr-s">{{
             $t('step3.index.5q096184bp83')
           }}</a-button>
-          <a-popconfirm
-            :content="$t('step3.index.5q096184bp84')"
-            type="warning"
-            :ok-text="$t('step3.index.5q096184bp85')"
-            :cancel-text="$t('step3.index.5q096184bp86')"
-            @ok="handleBatchRemove"
-            :ok-loading="removeLoading"
-          >
+          <a-popconfirm :content="$t('step3.index.5q096184bp84')" type="warning" :ok-text="$t('step3.index.5q096184bp85')"
+            :cancel-text="$t('step3.index.5q096184bp86')" @ok="handleBatchRemove" :ok-loading="removeLoading">
             <a-button type="outline" class="mr-s">{{
               $t('step3.index.5q096184bp87')
             }}</a-button>
@@ -103,80 +69,45 @@
           </a-link>
         </div>
       </div>
-      <a-table
-        row-key="hostId"
-        :loading="tableLoading"
-        :data="tableData"
-        :row-selection="rowSelection"
-        v-model:selectedKeys="selectedKeys"
-        :bordered="false"
-        :stripe="!currentTheme"
-        :hoverable="!currentTheme"
-        :pagination="pagination"
-        @page-change="pageChange"
-        @selection-change="selectionChange"
-      >
+      <a-table row-key="hostId" :loading="tableLoading" :data="tableData" :row-selection="rowSelection"
+        v-model:selectedKeys="selectedKeys" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme"
+        :pagination="pagination" @page-change="pageChange" @selection-change="selectionChange">
         <template #columns>
-          <a-table-column
-            :title="$t('step3.index.5q093f8y9ck0')"
-            data-index="hostInfo.publicIp"
-            fixed="left"
-            :width="150"
-          ></a-table-column>
-          <a-table-column
-            :title="$t('step3.index.5q093f8y9fg0')"
-            data-index="hostInfo.hostname"
-            :width="200"
-            ellipsis
-            tooltip
-          ></a-table-column>
-          <a-table-column
-            :title="$t('step3.index.5q093f8y9i40')"
-            :width="300"
-            ellipsis
-            tooltip
-          >
+          <a-table-column :title="$t('step3.index.5q093f8y9ck0')" data-index="hostInfo.publicIp" fixed="left"
+            :width="150"></a-table-column>
+          <a-table-column :title="$t('step3.index.5q093f8y9fg0')" data-index="hostInfo.hostname" :width="200" ellipsis
+            tooltip></a-table-column>
+          <a-table-column :title="$t('step3.index.5q093f8y9i40')" :width="300" ellipsis tooltip>
             <template #cell="{ record }">
               {{
                 record.hostInfo.os
-                  ? $t('step3.index.5q093f8y9m80') + record.hostInfo.os
-                  : ''
+                ? $t('step3.index.5q093f8y9m80') + record.hostInfo.os
+                : ''
               }}
               {{
                 record.hostInfo.os
-                  ? $t('step3.index.5q096184bp80') + record.hostInfo.cpuArch
-                  : ''
+                ? $t('step3.index.5q096184bp80') + record.hostInfo.cpuArch
+                : ''
               }}
               {{
                 record.baseInfos
-                  ? $t('step3.index.5q097pi0m540', {
-                      a: record.baseInfos[0],
-                      b: record.baseInfos[1],
-                      c: record.baseInfos[2]
-                    })
-                  : ''
+                ? $t('step3.index.5q097pi0m540', {
+                  a: record.baseInfos[0],
+                  b: record.baseInfos[1],
+                  c: record.baseInfos[2]
+                })
+                : ''
               }}
             </template>
           </a-table-column>
-          <a-table-column
-            :title="$t('step3.index.5q093f8y9p40')"
-            data-index="installPortalStatus"
-            align="center"
-            :width="300"
-          >
+          <a-table-column :title="$t('step3.index.5q093f8y9p40')" data-index="installPortalStatus" align="center"
+            :width="300">
             <template #cell="{ record }">
-              <span
-                v-if="
-                  record.installPortalStatus !==
-                  PORTAL_INSTALL_STATUS.NOT_INSTALL
-                "
-                >{{ statusMap(record.installPortalStatus) }}</span
-              >
-              <a-popover
-                v-if="
-                  record.installPortalStatus === PORTAL_INSTALL_STATUS.INSTALLED
-                "
-              >
+              <span v-if="record.installPortalStatus !==
+                PORTAL_INSTALL_STATUS.NOT_INSTALL
+                ">{{ statusMap(record.installPortalStatus) }}</span>
+              <a-popover v-if="record.installPortalStatus === PORTAL_INSTALL_STATUS.INSTALLED
+                ">
                 <span class="tips"><icon-info-circle size="15" /></span>
                 <template #content>
                   <p>
@@ -187,26 +118,16 @@
                     {{ $t('step3.index.5q094raosqg0') }}:
                     {{ record.installInfo.installPath || '-' }}
                   </p>
-                  <p
-                    v-if="
-                      record.installInfo.installType === INSTALL_TYPE.OFFLINE
-                    "
-                  >
+                  <p v-if="record.installInfo.installType === INSTALL_TYPE.OFFLINE
+                    ">
                     {{ $t('step3.index.5q097pi0m541') }}:
                     {{ record.installInfo.pkgName || '-' }}
                   </p>
                 </template>
               </a-popover>
-              <a-popconfirm
-                v-if="
-                  record.installPortalStatus === PORTAL_INSTALL_STATUS.INSTALLED
-                "
-                :content="$t('step3.index.5q093f8y9zg3')"
-                type="warning"
-                :ok-text="$t('step3.index.5q093f8y9zg4')"
-                :cancel-text="$t('step3.index.5q093f8y9zg5')"
-                @ok="handleDelete(record)"
-              >
+              <a-popconfirm v-if="record.installPortalStatus === PORTAL_INSTALL_STATUS.INSTALLED
+                " :content="$t('step3.index.5q093f8y9zg3')" type="warning" :ok-text="$t('step3.index.5q093f8y9zg4')"
+                :cancel-text="$t('step3.index.5q093f8y9zg5')" @ok="handleDelete(record)">
                 <a-button size="mini" type="text">
                   <template #icon>
                     <icon-delete />
@@ -216,38 +137,29 @@
                   }}</template>
                 </a-button>
                 <a-button size="mini" type="text" @click="handleToolsParams(record)">
-                <template #icon>
-                  <icon-edit />
-                </template>
-                <template #default>{{$t('components.ToolsParamsConfig.5q0toolspar0')}}</template>
-              </a-button>
+                  <template #icon>
+                    <icon-edit />
+                  </template>
+                  <template #default>{{ $t('components.ToolsParamsConfig.5q0toolspar0') }}</template>
+                </a-button>
               </a-popconfirm>
-              <a-button
-                v-if="
-                  record.installPortalStatus ===
-                  PORTAL_INSTALL_STATUS.NOT_INSTALL
-                "
-                size="mini"
-                type="text"
-                @click="handleInstall(record)"
-              >
+              <a-button v-if="record.installPortalStatus ===
+                PORTAL_INSTALL_STATUS.NOT_INSTALL
+                " size="mini" type="text" @click="handleInstall(record)">
                 <template #icon>
                   <icon-play-arrow />
                 </template>
-                <template #default>{{
-                  $t('step3.index.5q093f8y9rs0')
-                }}</template>
+                <template #default>
+                  <div class="startInstall">
+                    {{
+                      $t('step3.index.5q093f8y9rs0')
+                    }}
+                  </div>
+                </template>
               </a-button>
-              <template
-                v-else-if="
-                  record.installPortalStatus === PORTAL_INSTALL_STATUS.FAILED
-                "
-              >
-                <a-button
-                  size="mini"
-                  type="text"
-                  @click="handleDownloadLog(record)"
-                >
+              <template v-else-if="record.installPortalStatus === PORTAL_INSTALL_STATUS.FAILED
+                ">
+                <a-button size="mini" type="text" @click="handleDownloadLog(record)">
                   <template #icon>
                     <icon-download />
                   </template>
@@ -255,11 +167,7 @@
                     $t('step3.index.5q093f8y9us0')
                   }}</template>
                 </a-button>
-                <a-button
-                  size="mini"
-                  type="text"
-                  @click="handleReInstall(record)"
-                >
+                <a-button size="mini" type="text" @click="handleReInstall(record)">
                   <template #icon>
                     <icon-play-arrow />
                   </template>
@@ -278,52 +186,27 @@
               </template>
             </template>
           </a-table-column>
-          <a-table-column
-            :title="$t('step3.index.5q093f8ya2c0')"
-            data-index="tasks"
-            align="center"
-            :width="150"
-          >
+          <a-table-column :title="$t('step3.index.5q093f8ya2c0')" data-index="tasks" align="center" :width="150">
             <template #cell="{ record }">
               {{ record.tasks.length }}
             </template>
           </a-table-column>
-          <a-table-column
-            :title="$t('step3.index.5q093f8ya4w0')"
-            data-index="tasks"
-            :width="150"
-          >
+          <a-table-column :title="$t('step3.index.5q093f8ya4w0')" data-index="tasks" :width="150">
             <template #cell="{ record }">
               {{ record.tasks.map((item) => `#${item.id}`).join(', ') }}
             </template>
           </a-table-column>
-          <a-table-column
-            :title="$t('step3.index.5q093f8yabs0')"
-            data-index="d"
-            :width="150"
-          ></a-table-column>
+          <a-table-column :title="$t('step3.index.5q093f8yabs0')" data-index="d" :width="150"></a-table-column>
         </template>
       </a-table>
     </div>
     <!-- portal install -->
-    <portal-install
-      v-model:open="portalDlg.visible"
-      :mode="portalDlg.installMode"
-      :host-id="portalDlg.curHostId"
-      :install-info="portalDlg.installInfo"
-      @startInstall="refreshInstallStatus"
-      @pkgDeleted="handlePkgDelete"
-    />
+    <portal-install v-model:open="portalDlg.visible" :mode="portalDlg.installMode" :host-id="portalDlg.curHostId"
+      :install-info="portalDlg.installInfo" @startInstall="refreshInstallStatus" @pkgDeleted="handlePkgDelete" />
     <upload-portal-dlg v-model:open="uploadDlg.visible" />
-    <batch-install-dlg
-      @startInstall="refreshInstallStatus"
-      v-model:open="installBatchDlg.visible"
-      :host-list="installBatchDlg.hostList"
-    />
-    <tools-params-config
-      v-model:open="toolsParamsDlg.visible"
-      :host-id="toolsParamsDlg.curHostId"
-    />
+    <batch-install-dlg @startInstall="refreshInstallStatus" v-model:open="installBatchDlg.visible"
+      :host-list="installBatchDlg.hostList" />
+    <tools-params-config v-model:open="toolsParamsDlg.visible" :host-id="toolsParamsDlg.curHostId" />
   </div>
 </template>
 
@@ -685,6 +568,10 @@ onBeforeUnmount(() => {
 
 <style lang="less" scoped>
 .step3-container {
+  .startInstall {
+    padding-right: 3px;
+  }
+
   .warn-con {
     width: 70%;
     margin: 0 auto;
@@ -707,6 +594,7 @@ onBeforeUnmount(() => {
       .select-tips {
         display: flex;
         align-items: center;
+
         .tips-item {
           color: var(--color-text-1);
           margin-right: 10px;
