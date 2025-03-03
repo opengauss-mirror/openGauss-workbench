@@ -304,4 +304,22 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
             .eq(OpsHostUserEntity::getUsername, username);
         return getOne(queryWrapper, false);
     }
+
+    @Override
+    public boolean hasRootPermission(String userId) {
+        OpsHostUserEntity userEntity = getById(userId);
+        if (Objects.isNull(userEntity)) {
+            log.error("Cannot get user information by user id: {}", userId);
+            throw new OpsException("User information does not exist");
+        }
+
+        if (userEntity.isRootUser()) {
+            return true;
+        }
+
+        OpsHostEntity hostEntity = checkHostExists(userEntity.getHostId());
+        SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(),
+                encryptionUtils.decrypt(userEntity.getPassword()));
+        return jschExecutorService.checkOsUserSudo(sshLogin);
+    }
 }
