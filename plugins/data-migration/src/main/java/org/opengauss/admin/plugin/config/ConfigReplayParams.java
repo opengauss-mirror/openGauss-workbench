@@ -61,9 +61,10 @@ public class ConfigReplayParams implements TranscribeReplayConstants {
      * @param config configParams
      * @param schemaMap schemaMap
      * @param downloadId downloadId
+     * @param taskPath taskPath
      */
     public void setRepConfig(TranscribeReplayTaskDto tp, Map<String, String> config, String schemaMap,
-                             Integer downloadId) {
+                             Integer downloadId, String taskPath) {
         this.sqlStorageMode = config.get(SQL_STORAGE_MODE);
         this.sqlReplayMultiple = config.get(SQL_REPLAY_MULTIPLE);
         this.sqlReplayOnlyQuery = config.get(SQL_REPLAY_ONLY_QUERY);
@@ -90,7 +91,7 @@ public class ConfigReplayParams implements TranscribeReplayConstants {
             this.sqlFilePath = tp.getSourceInstallPath() + "/" + downloadId + "/" + JSON_PATH;
         } else {
             this.sqlReplaySlowSqlCsvDir = tp.getTargetInstallPath() + "/" + downloadId;
-            this.sqlFilePath = tp.getTargetInstallPath() + "/" + downloadId + "/" + JSON_PATH;
+            this.sqlFilePath = taskPath + "/" + JSON_PATH;
         }
         this.sqlReplayDatabaseIp = tp.getTargetIp();
         this.sqlReplayDatabasePort = tp.getTargetPort();

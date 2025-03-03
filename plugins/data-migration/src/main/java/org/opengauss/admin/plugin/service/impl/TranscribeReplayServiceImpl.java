@@ -161,6 +161,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         boolean isTranscribe = taskType.contains("transcribe");
         boolean isReplay = taskType.contains("replay");
         boolean isGeneral = GENERAL.getMode().equals(config.get(SQL_TRANSCRIBE_MODE));
+        TranscribeReplayTask transcribeReplayTask = getById(id);
         if (!isTranscribe && !isReplay) {
             throw new OpsException("An unknown error occurred while recording playback.");
         }
@@ -176,6 +177,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
                 download(tp, createTargetShellInfo(tp), id, url, tp.getTargetInstallPath());
                 addTargetConfigList(tp, id, config);
             }
+            updateStatus(transcribeReplayTask, TranscribeReplayStatus.NOT_RUN);
         });
     }
 
@@ -220,7 +222,6 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             updateStatus(transcribeReplayTask, TranscribeReplayStatus.DOWNLOAD_FAIL);
             throw new OpsException("Download fail." + download.getResult());
         }
-        updateStatus(transcribeReplayTask, TranscribeReplayStatus.NOT_RUN);
         log.info("Download success!");
         unZip(installPath, shellInfo, tp.getToolVersion(), id);
         createDictory(installPath, shellInfo, id);
@@ -235,7 +236,6 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             updateStatus(transcribeReplayTask, TranscribeReplayStatus.DOWNLOAD_FAIL);
             throw new OpsException("create sql-files tcpdump-files fail!" + createDir.getResult());
         }
-        updateStatus(transcribeReplayTask, TranscribeReplayStatus.NOT_RUN);
         log.info("create sql-files tcpdump-files success");
     }
 
@@ -250,7 +250,6 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             updateStatus(transcribeReplayTask, TranscribeReplayStatus.DOWNLOAD_FAIL);
             throw new OpsException("Unzip fail!" + unzip.getResult());
         }
-        updateStatus(transcribeReplayTask, TranscribeReplayStatus.NOT_RUN);
         log.info("UnZip success");
     }
 
@@ -286,7 +285,6 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             if (GENERAL.getMode().equals(config.get(SQL_TRANSCRIBE_MODE))) {
                 ShellUtil.updateFileContent(sourceShellInfo(tp), getReplayConfig(tp, config), generalReplayRemotePath);
             }
-            updateStatus(transcribeReplayTask, TranscribeReplayStatus.NOT_RUN);
             log.info("The addSourceConfigList success!");
         }
     }
@@ -309,12 +307,11 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         String fileExistCommand = String.format("[ -e %s ]", remotePath);
         JschResult fileExist = ShellUtil.execCommandGetResult(targetShellInfo(tp), fileExistCommand);
         if (!fileExist.isOk()) {
-            transcribeReplayTask.setErrorMsg("The replay.properties is not exist!" + fileExist.getResult());
+            transcribeReplayTask.setErrorMsg("The " + fileName + " is not exist!" + fileExist.getResult());
             updateStatus(transcribeReplayTask, TranscribeReplayStatus.DOWNLOAD_FAIL);
             throw new OpsException("The " + fileName + " is not exist!" + fileExist.getResult());
         } else {
             ShellUtil.updateFileContent(targetShellInfo(tp), context, remotePath);
-            updateStatus(transcribeReplayTask, TranscribeReplayStatus.NOT_RUN);
             log.info("The " + fileName + " file has been successfully processed.");
         }
     }
@@ -450,7 +447,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
     private String getParseConfig(TranscribeReplayTaskDto tp, Map<String, String> config) {
         StringBuilder sb = new StringBuilder();
         ConfigParseParams params = new ConfigParseParams();
-        params.setParseConfig(tp, config, downloadId, getTaskPathById(tp, config));
+        params.setParseConfig(tp, config, getTaskPathById(tp, config));
         sb.append(String.format(formatString, PARSE_SELECT_RESULT, params.getParseSelectResult()));
         sb.append(String.format(formatString, SELECT_RESULT_PATH, params.getSelectResultPath()));
         sb.append(String.format(formatString, RESULT_FILE_NAME, params.getResultFileName()));
@@ -475,7 +472,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
 
     private String getReplayConfig(TranscribeReplayTaskDto tp, Map<String, String> config) {
         ConfigReplayParams params = new ConfigReplayParams();
-        params.setRepConfig(tp, config, addDbMapSchema(tp.getDbMap()), downloadId);
+        params.setRepConfig(tp, config, addDbMapSchema(tp.getDbMap()), downloadId, getTaskPathById(tp, config));
         StringBuilder sb = new StringBuilder();
         sb.append(String.format(formatString, SQL_STORAGE_MODE, params.getSqlStorageMode()));
         sb.append(String.format(formatString, SQL_REPLAY_MULTIPLE, params.getSqlReplayMultiple()));

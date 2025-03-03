@@ -50,13 +50,11 @@ public class ConfigParseParams implements TranscribeReplayConstants {
      *
      * @param tp TranscribeReplayTaskDto
      * @param config configParams
-     * @param downloadId downloadId
      * @param taskPath taskPath
      */
-    public void setParseConfig(TranscribeReplayTaskDto tp, Map<String, String> config, Integer downloadId,
-                               String taskPath) {
+    public void setParseConfig(TranscribeReplayTaskDto tp, Map<String, String> config, String taskPath) {
         this.parseSelectResult = config.get(PARSE_SELECT_RESULT);
-        this.selectResultPath = tp.getTargetInstallPath() + "/" + downloadId;
+        this.selectResultPath = taskPath;
         this.resultFileName = config.get(RESULT_FILE_NAME);
         this.resultFileSize = config.get(RESULT_FILE_SIZE);
         this.sqlStorageMode = config.get(SQL_STORAGE_MODE);
@@ -66,7 +64,7 @@ public class ConfigParseParams implements TranscribeReplayConstants {
         this.tcpdumpFilePath = taskPath + "/" + PCAP_FILE_PATH;
         this.tcpdumpDatabaseIp = tp.getSourceIp();
         this.tcpdumpDatabasePort = tp.getSourcePort();
-        this.sqlFilePath = tp.getTargetInstallPath() + "/" + downloadId + "/" + JSON_PATH;
+        this.sqlFilePath = taskPath + "/" + JSON_PATH;
         this.sqlFileSize = config.get(SQL_FILE_SIZE);
         this.sqlFileName = config.get(SQL_FILE_NAME);
         this.sqlTableDrop = config.get(SQL_TABLE_DROP);
