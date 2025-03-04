@@ -24,8 +24,8 @@
     <div class="progress-con">
       <span class="progress-info">{{ $t('detail.index.5q09asiwg0g0') }}</span>
       <a-progress size="large" :percent="task.execStatus === TaskStatus.Completed
-          ? 1
-          : Number(task.execProgress) || 0
+        ? 1
+        : Number(task.execProgress) || 0
         " />
       <a-button type="text" @click="loopSubTaskStatus">
         <template #icon>
@@ -120,8 +120,8 @@
               <a-popconfirm :content="tooltipMap(record.checkDataLevelingAndIncrementFinish)"
                 @ok="stopSubIncrease(record)">
                 <a-button v-if="(record.migrationModelId === TaskMode.Online &&
-                    record.execStatus ===
-                    SUB_TASK_STATUS.INCREMENTAL_RUNNING) ||
+                  record.execStatus ===
+                  SUB_TASK_STATUS.INCREMENTAL_RUNNING) ||
                   record.execStatus === SUB_TASK_STATUS.INCREMENTAL_FINISHED
                   " size="mini" type="text" :loading="record.execStatus === SUB_TASK_STATUS.INCREMENTAL_FINISHED
     ">
@@ -135,7 +135,7 @@
               </a-popconfirm>
               <a-button v-if="record.migrationModelId === TaskMode.Online &&
                   record.execStatus === SUB_TASK_STATUS.INCREMENTAL_STOPPED
-                  " size="mini" type="text" @click="startSubReverse(record)">
+                  " size="mini" type="text" @click="startSubReverse(record)" :loading="startReverseLoading">
                 <template #icon>
                   <icon-play-arrow />
                 </template>
@@ -143,15 +143,17 @@
                   $t('detail.index.5q09asiwkq40')
                 }}</template>
               </a-button>
-              <a-button v-if="record.execStatus !== SUB_TASK_STATUS.MIGRATION_FINISH" size="mini" type="text"
-                @click="stopSubTask(record)">
-                <template #icon>
-                  <icon-stop />
-                </template>
-                <template #default>{{
-                  $t('detail.index.5q09asiwl5g0')
-                }}</template>
-              </a-button>
+              <a-popconfirm v-if="record.execStatus !== SUB_TASK_STATUS.MIGRATION_FINISH"
+                :content="$t('list.index.endMigration')" @ok="stopSubTask(record)">
+                <a-button size="mini" type="text">
+                  <template #icon>
+                    <icon-stop />
+                  </template>
+                  <template #default>{{
+                    $t('detail.index.5q09asiwl5g0')
+                  }}</template>
+                </a-button>
+              </a-popconfirm>
               <a-button size="mini" type="text" @click="handleLog(record)">
                 <template #icon>
                   <icon-file />
@@ -674,14 +676,18 @@ const stopSubIncrease = (row) => {
 }
 
 // start sub task reverse
+const startReverseLoading = ref(false)
 const startSubReverse = (row) => {
+  startReverseLoading.value = true
   subTaskStartReverse(row.id)
     .then(() => {
       Message.success('Start success')
+      startReverseLoading.value = false
       loopSubTaskStatus()
       getSubTaskList()
     })
     .catch((e) => {
+      startReverseLoading.value = false
       if (e.code === 50154) {
         reverseConfig.value = e.data
         replicationData.value = [
