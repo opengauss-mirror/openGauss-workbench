@@ -31,6 +31,7 @@ import org.opengauss.admin.plugin.constants.TranscribeReplayConstants;
 import org.opengauss.admin.plugin.domain.FailSqlModel;
 import org.opengauss.admin.plugin.domain.ParamModel;
 import org.opengauss.admin.plugin.domain.TranscribeReplayTask;
+import org.opengauss.admin.plugin.enums.TranscribeReplayStatus;
 import org.opengauss.admin.plugin.mapper.TranscribeReplayFailSqlMapper;
 import org.opengauss.admin.plugin.mapper.TranscribeReplayParamMapper;
 import org.opengauss.admin.plugin.service.TranscribeReplayFailSqlService;
@@ -46,6 +47,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -72,14 +76,21 @@ public class TranscribeReplayFailSqlServiceImpl extends ServiceImpl<TranscribeRe
     @Override
     public void syncRefreshFailSql(TranscribeReplayTask task) {
         Integer taskId = task.getId();
-        threadPoolTaskExecutor.submit(() -> {
-            try {
-                log.info("Sync refresh task alert, taskId:{}", taskId);
-                refreshFailSql(task);
-            } catch (IOException e) {
-                log.error("Sync refresh task status error. message: {}", e.getMessage());
+        ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+        Runnable syncTask = () -> {
+            if (TranscribeReplayStatus.RUNNING.getCode()
+                .equals(transcribeReplayService.getById(task.getId()).getExecutionStatus())) {
+                try {
+                    log.debug("Sync refresh task for get fail sql , taskId:{}", taskId);
+                    refreshFailSql(task);
+                } catch (IOException e) {
+                    log.error("Sync refresh task status error. message: {}", e.getMessage());
+                }
+            } else {
+                scheduledExecutor.shutdown();
             }
-        });
+        };
+        scheduledExecutor.scheduleAtFixedRate(syncTask, 0, 5, TimeUnit.SECONDS);
     }
 
     @Override
@@ -116,13 +127,23 @@ public class TranscribeReplayFailSqlServiceImpl extends ServiceImpl<TranscribeRe
         return transcribeReplayFailSqlMapper.selectList(queryWrapper);
     }
 
+    @Override
+    public void deleteByTaskId(Integer taskId) {
+        LambdaQueryWrapper<FailSqlModel> queryWrapper = Wrappers.lambdaQuery(FailSqlModel.class);
+        queryWrapper.eq(Objects.nonNull(taskId), FailSqlModel::getTaskId, taskId);
+        List<FailSqlModel> failSqlModels = transcribeReplayFailSqlMapper.selectList(queryWrapper);
+        if (failSqlModels.size() > 0) {
+            transcribeReplayFailSqlMapper.deleteBatchIds(failSqlModels);
+        }
+    }
+
     /**
      * refreshFailSql
      *
      * @param task task
      * @throws IOException IOException
      */
-    public synchronized void refreshFailSql(TranscribeReplayTask task) throws IOException {
+    public void refreshFailSql(TranscribeReplayTask task) throws IOException {
         Integer taskId = task.getId();
         Integer cacheNumber = resolvedObjectsNumberCache.asMap().get(taskId);
         int resolvedNumber = cacheNumber == null ? -1 : cacheNumber;

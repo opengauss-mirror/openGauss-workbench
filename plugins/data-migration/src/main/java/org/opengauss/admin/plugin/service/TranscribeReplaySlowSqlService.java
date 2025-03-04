@@ -47,4 +47,11 @@ public interface TranscribeReplaySlowSqlService extends IService<TranscribeRepla
      * @return List<TranscribeReplaySlowSql>
      */
     List<TranscribeReplaySlowSql> getListByTaskId(Integer taskId);
+
+    /**
+     * deleteByTaskId
+     *
+     * @param taskId taskId
+     */
+    void deleteByTaskId(Integer taskId);
 }

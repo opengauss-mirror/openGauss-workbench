@@ -28,6 +28,7 @@ import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
+import org.opengauss.admin.plugin.constants.TranscribeReplayConstants;
 import org.opengauss.admin.plugin.domain.TranscribeReplayTask;
 import org.opengauss.admin.plugin.utils.ShellUtil;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
@@ -131,6 +132,25 @@ public class TranscribeReplayHandle {
      */
     public static JschResult removeTargetPath(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask) {
         return removePath(shellInfoVo, transcribeReplayTask, "target");
+    }
+
+    /**
+     * removeData
+     *
+     * @param shellInfoVo shellInfoVo
+     * @param transcribeReplayTask transcribeReplayTask
+     */
+    public static void removeData(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask) {
+        String removeProcess = String.format("rm -rf %s/%s %s/%s", transcribeReplayTask.getTargetInstallPath(),
+            TranscribeReplayConstants.PARSE_PROCESS_FILE, transcribeReplayTask.getTargetInstallPath(),
+            TranscribeReplayConstants.REPLAY_PROCESS_FILE);
+        String failSqlFile = String.format(TranscribeReplayConstants.FAIL_SQL_FILE_NAME, "*");
+        String removeFailSql = String.format("rm -rf %s/%s", transcribeReplayTask.getTargetInstallPath(), failSqlFile);
+        String tcpDumpFile = String.format("%s/tcpdump-files/*", getPath(transcribeReplayTask, "target"));
+        String removeTcpDumpFile = String.format("rm -rf %s", tcpDumpFile);
+        ShellUtil.execCommand(shellInfoVo, removeProcess);
+        ShellUtil.execCommand(shellInfoVo, removeFailSql);
+        ShellUtil.execCommand(shellInfoVo, removeTcpDumpFile);
     }
 
     private static JschResult removePath(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask,
