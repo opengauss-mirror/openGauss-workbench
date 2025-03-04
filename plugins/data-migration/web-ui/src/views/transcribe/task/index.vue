@@ -43,10 +43,14 @@
                     <el-radio-group v-model="taskBasicInfo.taskType" @change="changeReplayVersion">
                       <el-radio-button value="transcribe">{{ $t('transcribe.index.transcribe') }}</el-radio-button>
                       <el-radio-button value="replay">{{ $t('transcribe.index.replay') }}</el-radio-button>
-                      <el-radio-button value="transcribe_replay">{{ $t('transcribe.index.transcribeandreplay') }}</el-radio-button>
+                      <el-radio-button value="transcribe_replay">{{
+                          $t('transcribe.index.transcribeandreplay')
+                        }}
+                      </el-radio-button>
                     </el-radio-group>
                   </el-form-item>
-                  <el-form-item v-if="replayTaskVersion" :label="t('transcribe.create.recordtaskname')" prop="replayTaskId">
+                  <el-form-item v-if="replayTaskVersion" :label="t('transcribe.create.recordtaskname')"
+                                prop="replayTaskId">
                     <el-select v-model="taskBasicInfo.replayTaskId" :placeholder="t('transcribe.create.selectaskname')"
                                :teleported="false" filterable style="width: 30vw" @change="backTaskBasicinfo">
                       <el-option v-for="item in replayTaskOptions" :key="item.key" :label="item.label"
@@ -78,11 +82,14 @@
                   <div v-if="addHostVisible === true" style="margin-left: 170px; margin-bottom: 30px">
                     <span>
                       {{ $t('transcribe.create.addsourcemsg') }}
-                      <el-button text @click="handleAddHost('create')">{{ $t('transcribe.create.createserver') }}</el-button>
+                      <el-button text @click="handleAddSql(taskBasicInfo.sourceDbType.toUpperCase())">{{
+                          $t('transcribe.create.createserver')
+                        }}</el-button>
                     </span>
                   </div>
                   <el-form-item :label="t('transcribe.create.serveruser')" prop="sourceHostUser" :error="sourceDbError">
-                    <el-select v-model="taskBasicInfo.sourceHostUser" :placeholder="t('transcribe.create.pendinguser')" filterable
+                    <el-select v-model="taskBasicInfo.sourceHostUser" :placeholder="t('transcribe.create.pendinguser')"
+                               filterable
                                :teleported="false" style="width: 30vw"
                                :disabled="replayTaskVersion && taskBasicInfo.replayTaskId != ''">
                       <el-option v-for="item in sourcehostUserList" :key="item.key" :label="item.value"
@@ -104,13 +111,15 @@
                       <el-link @click="handleAddUser('source')">{{ $t('transcribe.create.adduser') }}</el-link>
                     </span>
                   </div>
-                  <el-form-item :label="t('transcribe.create.sourcepath')" prop="sourceInstallPath" :error="sourceDbError">
+                  <el-form-item :label="t('transcribe.create.sourcepath')" prop="sourceInstallPath"
+                                :error="sourceDbError">
                     <el-input v-model="taskBasicInfo.sourceInstallPath" style="width: 30vw"
                               :disabled="replayTaskVersion && taskBasicInfo.replayTaskId != ''"/>
                   </el-form-item>
                   <h4>{{ $t('transcribe.create.targetconfig') }}</h4>
                   <el-form-item :label="t('transcribe.create.targetip')" prop="targetIp">
-                    <el-select v-model="taskBasicInfo.targetIp" :placeholder="t('transcribe.create.targetip')" filterable
+                    <el-select v-model="taskBasicInfo.targetIp" :placeholder="t('transcribe.create.targetip')"
+                               filterable
                                :loading="loadingTarget" @change="getTargetClusterDB" style="width: 30vw"
                                :teleported="false"
                                :disabled="replayTaskVersion && taskBasicInfo.replayTaskId != ''">
@@ -125,7 +134,8 @@
                     </div>
                   </el-form-item>
                   <el-form-item :label="t('transcribe.create.serveruser')" prop="targetHostUser">
-                    <el-select v-model="taskBasicInfo.targetHostUser" :placeholder="t('transcribe.create.pendinguser')" filterable
+                    <el-select v-model="taskBasicInfo.targetHostUser" :placeholder="t('transcribe.create.pendinguser')"
+                               filterable
                                :teleported="false"
                                style="width: 30vw" :disabled="replayTaskVersion && taskBasicInfo.replayTaskId != ''">
                       <el-option v-for="item in targethostUserList" :key="item.key" :label="item.value"
@@ -152,11 +162,13 @@
                               :disabled="replayTaskVersion && taskBasicInfo.replayTaskId != ''"></el-input>
                   </el-form-item>
                   <h4>{{ $t('transcribe.create.dbrelationship') }}</h4>
-                  <el-form-item v-for="(item, index) in taskBasicInfo.settings" :key="index" :label="t('transcribe.create.relation')">
+                  <el-form-item v-for="(item, index) in taskBasicInfo.settings" :key="index"
+                                :label="t('transcribe.create.relation')">
                     <el-form-item :label="t('transcribe.create.sourcedb')" :prop="'settings[' + index + '].sourceDB'"
                                   :rules="[{ required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change'] }]"
                                   label-width="10vw" style="margin-right: 30px" :error="removeDbError">
-                      <el-select v-model.trim="item.sourceDB" :placeholder="t('transcribe.create.sourcedb')" filterable style="width: 15vw"
+                      <el-select v-model.trim="item.sourceDB" :placeholder="t('transcribe.create.sourcedb')" filterable
+                                 style="width: 15vw"
                                  :disabled="replayTaskVersion && taskBasicInfo.replayTaskId != ''" :teleported="false"
                                  :rules="[{ required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change'] }]">
                         <el-option v-for="option in sourceDBOptions" :key="option.key" :label="option.value"
@@ -166,7 +178,8 @@
                     <el-form-item :label="t('transcribe.create.targetdb')" :prop="'settings[' + index + '].targetDB'"
                                   :rules="[{ required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change'] }]"
                                   label-width="10vw" style="margin-right: 30px">
-                      <el-select v-model="item.targetDB" :placeholder="t('transcribe.create.targetdb')" filterable style="width: 15vw"
+                      <el-select v-model="item.targetDB" :placeholder="t('transcribe.create.targetdb')" filterable
+                                 style="width: 15vw"
                                  :disabled="replayTaskVersion && taskBasicInfo.replayTaskId != ''" :teleported="false"
                                  :rules="[{ required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change'] }]">
                         <el-option v-for="option in targetDBOptions" :key="option.key" :label="option.value"
@@ -191,8 +204,10 @@
                 <el-form :model="taskAdvancedInfo" :rules="taskAdvancedRules" validateTrigger="onBlur" labelAlign="left"
                          label-width="300px" ref="taskAdvancedFormRef">
                   <h4>{{ $t('transcribe.create.advconfig') }}</h4>
-                  <el-form-item :label="t('transcribe.create.paraconfig')" label-position="right" prop="isDefaultRecordConfig">
-                    <el-radio-group v-model="taskAdvancedInfo.isDefaultRecordConfig" @change="handleParamsConfig('once')">
+                  <el-form-item :label="t('transcribe.create.paraconfig')" label-position="right"
+                                prop="isDefaultRecordConfig">
+                    <el-radio-group v-model="taskAdvancedInfo.isDefaultRecordConfig"
+                                    @change="handleParamsConfig('once')">
                       <el-radio-button value=true>{{ $t('transcribe.create.defaultpara') }}</el-radio-button>
                       <el-radio-button value=false>{{ $t('transcribe.create.custompara') }}</el-radio-button>
                     </el-radio-group>
@@ -202,13 +217,18 @@
                       </div>
                       <div v-else>
                         <span>{{ $t('transcribe.create.customparaalready') }} <el-link type="primary"
-                                                                                       @click="handleParamsconfigAgain">{{ $t('transcribe.create.modify') }}</el-link>
-                          <el-link type="error" @click="defaultParamsConfig">{{ $t('transcribe.create.reset') }}</el-link></span>
+                                                                                       @click="handleParamsconfigAgain">{{
+                            $t('transcribe.create.modify')
+                          }}</el-link>
+                          <el-link type="error" @click="defaultParamsConfig">{{
+                              $t('transcribe.create.reset')
+                            }}</el-link></span>
                       </div>
                     </div>
                   </el-form-item>
                   <div v-if="!replayTaskVersion">
-                    <el-form-item :label="t('transcribe.create.transcribemode')" label-position="right" prop="transcribemode">
+                    <el-form-item :label="t('transcribe.create.transcribemode')" label-position="right"
+                                  prop="transcribemode">
                       <el-select v-model="taskAdvancedInfo.transcribemode" @change="changeTranscribeMode(val)"
                                  :teleported="false" filterable style="width: 30vw">
                         <el-option label="tcpdump" value="tcpdump"/>
@@ -226,7 +246,8 @@
                       </el-tooltip>
                     </el-form-item>
                     <div v-if="taskAdvancedInfo.transcribemode === 'tcpdump' && taskAdvancedInfo.isDefaultRecordConfig">
-                      <el-form-item :label="t('transcribe.create.interface')" label-position="right" prop="tcpdump.network.interface"
+                      <el-form-item :label="t('transcribe.create.interface')" label-position="right"
+                                    prop="tcpdump.network.interface"
                                     :rules="[{ required: true, message: t('transcribe.create.interfacemsg'), trigger: ['blur', 'change'] }]">
                         <el-input v-model="taskAdvancedInfo['tcpdump.network.interface']"
                                   @change="changeTcpdumpInterface"
@@ -241,7 +262,8 @@
                           </i>
                         </el-tooltip>
                       </el-form-item>
-                      <el-form-item :label="t('transcribe.create.recordingduration')" label-position="right" prop="tcpdump.capture.duration"
+                      <el-form-item :label="t('transcribe.create.recordingduration')" label-position="right"
+                                    prop="tcpdump.capture.duration"
                                     :rules="[{ required: true, message: t('transcribe.create.recordingdurationmsg'), trigger: ['blur', 'change'] }]">
                         <el-input-number v-model="taskAdvancedInfo['tcpdump.capture.duration']"
                                          @change="changeTcpdumpDuration" style="width: 30vw" :min="0" :max="2147483647"
@@ -251,7 +273,8 @@
                             <span>{{ $t('transcribe.create.min') }}</span>
                           </template>
                         </el-input-number>
-                        <el-tooltip class="item" effect="light" :content="t('transcribe.create.recordingdurationcon')" placement="right"
+                        <el-tooltip class="item" effect="light" :content="t('transcribe.create.recordingdurationcon')"
+                                    placement="right"
                                     :teleported="false">
                           <i class="el-icon icon">
                             <el-icon>
@@ -271,7 +294,8 @@
                                          :controls="false"
                                          :min="0">
                         </el-input-number>
-                        <el-tooltip class="item" effect="light" :content="t('transcribe.create.pidcon')" placement="right"
+                        <el-tooltip class="item" effect="light" :content="t('transcribe.create.pidcon')"
+                                    placement="right"
                                     :teleported="false">
                           <i class="el-icon icon">
                             <el-icon>
@@ -280,7 +304,8 @@
                           </i>
                         </el-tooltip>
                       </el-form-item>
-                      <el-form-item :label="t('transcribe.create.recordingduration')" label-position="right" prop="attach.capture.duration"
+                      <el-form-item :label="t('transcribe.create.recordingduration')" label-position="right"
+                                    prop="attach.capture.duration"
                                     :rules="[{ required: true, message: t('transcribe.create.recordingdurationmsg'), trigger: ['blur', 'change'] },]">
                         <el-input-number v-model="taskAdvancedInfo['attach.capture.duration']"
                                          @change="changeAttachDuration" style="width: 30vw" :step="1" :precision="0"
@@ -290,7 +315,8 @@
                             <span>{{ $t('transcribe.create.min') }}</span>
                           </template>
                         </el-input-number>
-                        <el-tooltip class="item" effect="light" :content="t('transcribe.create.recordingdurationcon')" placement="right"
+                        <el-tooltip class="item" effect="light" :content="t('transcribe.create.recordingdurationcon')"
+                                    placement="right"
                                     :teleported="false">
                           <i class="el-icon icon">
                             <el-icon>
@@ -299,7 +325,8 @@
                           </i>
                         </el-tooltip>
                       </el-form-item>
-                      <el-form-item :label="t('transcribe.create.replaytime')" label-position="right" prop="replay.max.time"
+                      <el-form-item :label="t('transcribe.create.replaytime')" label-position="right"
+                                    prop="replay.max.time"
                                     :rules="[{ required: true, message: t('transcribe.create.replaytimemsg'), trigger: ['blur', 'change'] }]">
                         <el-input-number v-model="taskAdvancedInfo['replay.max.time']" style="width: 30vw"
                                          :min="0" :max="2147483647" :step="1" :precision="0" :controls="false">
@@ -318,7 +345,8 @@
                       </el-form-item>
                     </div>
                     <div v-else>
-                      <el-form-item :label="t('transcribe.create.replaytime')" label-position="right" prop="replay.max.time"
+                      <el-form-item :label="t('transcribe.create.replaytime')" label-position="right"
+                                    prop="replay.max.time"
                                     :rules="[{ required: true, message: t('transcribe.create.replaytimemsg'), trigger: ['blur', 'change'] }]">
                         <el-input-number v-model="taskAdvancedInfo['replay.max.time']" style="width: 30vw"
                                          :min="0" :max="2147483647" :step="1" :precision="0" :controls="false">
@@ -338,7 +366,8 @@
                     </div>
                   </div>
                   <div v-else>
-                    <el-form-item :label="t('transcribe.create.replaytime')" label-position="right" prop="replay.max.time"
+                    <el-form-item :label="t('transcribe.create.replaytime')" label-position="right"
+                                  prop="replay.max.time"
                                   :rules="[{ required: true, message: t('transcribe.create.replaytimemsg'), trigger: ['blur', 'change'] }]">
                       <el-input-number v-model="taskAdvancedInfo['replay.max.time']" style="width: 30vw"
                                        :min="0" :max="2147483647" :step="1" :precision="0" :controls="false">
@@ -391,9 +420,9 @@ import AddHost from './components/AddHost.vue'
 import AddHostUser from './components/AddHostUser.vue'
 import {IconHelpCircle} from "@computing/opendesign-icons"
 import showMessage from "@/utils/showMessage"
-import { useI18n } from 'vue-i18n'
+import {useI18n} from 'vue-i18n'
 
-const { t } = useI18n()
+const {t} = useI18n()
 const addPlaybackRef = ref()
 const editPlayBackId = ref('')
 const handlePlayBack = () => {
@@ -439,10 +468,6 @@ const getHostUserPage = (type) => {
 
 const addHostVisible = ref(false)
 const addHostRef = ref()
-const handleAddHost = (type) => {
-  let tempIp = taskBasicInfo.value.sourceIp.split(':')[0]
-  addHostRef.value?.open(type, tempIp)
-}
 
 const backToIndex = () => {
   init()
@@ -573,17 +598,17 @@ const changeTranscribeMode = (val) => {
   taskRetInfo.value["sql.transcribe.mode"] = taskAdvancedInfo.value.transcribemode
   if (taskAdvancedInfo.value.transcribemode === 'tcpdump') {
     taskRetInfo.value.pagefir = {...defaultDataTcp.value}
-    taskRetInfo.value.pagefir['tcpdump.database.ip'] = taskBasicInfo.value.sourceIp.split(':')[0]
-    taskRetInfo.value.pagefir['tcpdump.database.port'] = taskBasicInfo.value.sourceIp.split(':')[1]
+    taskRetInfo.value.pagefir['tcpdump.database.ip'] = sourceHostInfo.value.publicIp
+    taskRetInfo.value.pagefir['tcpdump.database.port'] = sourceDbPort.value
     taskRetInfo.value.pagefir['remote.receiver.name'] = taskBasicInfo.value.targetHostUser
-    taskRetInfo.value.pagefir['remote.node.ip'] = taskBasicInfo.value.targetIp.split(':')[0]
+    taskRetInfo.value.pagefir['remote.node.ip'] = targetHostInfo.value.publicIp
     taskRetInfo.value.pagefir['tcpdump.node.port'] = targetHostInfo.value.port
     taskRetInfo.value.pagefir['tcpdump.network.interface'] = taskAdvancedInfo.value['tcpdump.network.interface']
     taskRetInfo.value.pagefir['tcpdump.capture.duration'] = taskAdvancedInfo.value['tcpdump.capture.duration']
   } else if (taskAdvancedInfo.value.transcribemode === 'attach') {
     taskRetInfo.value.pagefir = {...defaultDataAtt.value}
     taskRetInfo.value.pagefir['remote.receiver.name'] = taskBasicInfo.value.targetHostUser
-    taskRetInfo.value.pagefir['remote.node.ip'] = taskBasicInfo.value.targetIp.split(':')[0]
+    taskRetInfo.value.pagefir['remote.node.ip'] = targetHostInfo.value.publicIp
     taskRetInfo.value.pagefir['remote.node.port'] = targetHostInfo.value.port
     taskRetInfo.value.pagefir['attach.process.pid'] = taskAdvancedInfo.value['attach.process.pid']
     taskRetInfo.value.pagefir['attach.target.schema'] = taskAdvancedInfo.value['attach.target.schema']
@@ -593,10 +618,10 @@ const changeTranscribeMode = (val) => {
     taskRetInfo.value.pagefir['attach.target.schema'] = taskBasicInfo.value.settings[0].sourceDB
   } else {
     taskRetInfo.value.pagefir = {...defaultDataGen.value}
-    taskRetInfo.value.pagefir['general.database.ip'] = taskBasicInfo.value.sourceIp.split(':')[0]
-    taskRetInfo.value.pagefir['general.database.port'] = taskBasicInfo.value.sourceIp.split(':')[1]
-    taskRetInfo.value.pagefir['general.database.username'] = sourceDBUserPwd.get(taskBasicInfo.value.sourceIp.split(':')[0]).split(',')[0]
-    taskRetInfo.value.pagefir['general.database.password'] = sourceDBUserPwd.get(taskBasicInfo.value.sourceIp.split(':')[0]).split(',')[1]
+    taskRetInfo.value.pagefir['general.database.ip'] = sourceHostInfo.value.publicIp
+    taskRetInfo.value.pagefir['general.database.port'] = sourceDbPort.value
+    taskRetInfo.value.pagefir['general.database.username'] = sourceDBUserPwd.get(sourceHostInfo.value.publicIp).split(',')[0]
+    taskRetInfo.value.pagefir['general.database.password'] = sourceDBUserPwd.get(sourceHostInfo.value.publicIp).split(',')[1]
     taskRetInfo.value.pagethi['sql.replay.strategy'] = 'serial'
     taskRetInfo.value.pagethi['sql.replay.parallel.max.pool.size'] = 1
   }
@@ -694,7 +719,7 @@ const defaultDataAtt = ref({
   'attach.target.schema': '',
   'attach.capture.duration': 1,
   'should.send.file': true,
-  'should.check.system': true,
+  'should.check.system': false,
   'max.cpu.threshold': 0.85,
   'max.memory.threshold': 0.85,
   'max.disk.threshold': 0.85,
@@ -762,7 +787,11 @@ const taskBasicRules = computed(() => {
       {required: true, trigger: ['blur', 'change'], message: t('transcribe.create.withoutversion')},
     ],
     replayTaskId: [
-      {required: replayTaskVersion.value, trigger: ['blur', 'change'], message: t('transcribe.create.withoutreplaytaskname')}
+      {
+        required: replayTaskVersion.value,
+        trigger: ['blur', 'change'],
+        message: t('transcribe.create.withoutreplaytaskname')
+      }
     ],
     sourceIp: [
       {required: true, trigger: ['blur', 'change'], message: t('transcribe.create.withoutsourceip')}
@@ -772,7 +801,11 @@ const taskBasicRules = computed(() => {
     ],
     sourceInstallPath: [
       {required: true, trigger: ['blur', 'change'], message: t('transcribe.create.withoutsourcepath')},
-      {pattern: /^([\/~])(?!\/)(?!.*\/\/).*$/, message: t('transcribe.create.formaterror'), trigger: ['blur', 'change']},
+      {
+        pattern: /^([\/~])(?!\/)(?!.*\/\/).*$/,
+        message: t('transcribe.create.formaterror'),
+        trigger: ['blur', 'change']
+      },
       {max: 255, message: t('transcribe.create.sourcepathmsg'), trigger: ['blur', 'change']},
     ],
     targetIp: [
@@ -783,7 +816,11 @@ const taskBasicRules = computed(() => {
     ],
     targetInstallPath: [
       {required: true, trigger: ['blur', 'change'], message: t('transcribe.create.withouytargetpath')},
-      {pattern: /^([\/~])(?!\/)(?!.*\/\/).*$/, message: t('transcribe.create.formaterror'), trigger: ['blur', 'change']},
+      {
+        pattern: /^([\/~])(?!\/)(?!.*\/\/).*$/,
+        message: t('transcribe.create.formaterror'),
+        trigger: ['blur', 'change']
+      },
       {max: 255, message: t('transcribe.create.targetpathmsg'), trigger: ['blur', 'change']},
     ],
   }
@@ -903,9 +940,25 @@ const backTaskBasicinfo = (value) => {
         taskBasicInfo.value.settings.push({sourceDB: sourceDb, targetDB: targetDb, key: tempKey})
         tempKey = tempKey + 1
       })
-      let tempIp = taskBasicInfo.value.targetIp.split(':')[0]
-      taskBasicInfo.value.targetDBuser = targetDBUserPwd.get(tempIp).split(',')[0]
-      taskBasicInfo.value.targetDBpwd = targetDBUserPwd.get(tempIp).split(',')[1]
+      let lastColonIndex = taskBasicInfo.value.sourceIp.lastIndexOf(':')
+      let tempIp = ''
+      if (lastColonIndex !== -1) {
+        tempIp = taskBasicInfo.value.sourceIp.slice(0, lastColonIndex)
+        sourceHostInfo.value.hostId = hostIpId.get([tempIp]).split(',')[0]
+        sourceHostInfo.value.publicIp = hostIpId.get([tempIp]).split(',')[1]
+        sourceHostInfo.value.privateIp = hostIpId.get([tempIp]).split(',')[2]
+        sourceHostInfo.value.port = hostIpId.get([tempIp]).split(',')[3]
+      }
+      lastColonIndex = taskBasicInfo.value.targetIp.lastIndexOf(':')
+      if (lastColonIndex !== -1) {
+        tempIp = taskBasicInfo.value.targetIp.slice(0, lastColonIndex)
+        targetHostInfo.value.hostId = hostIpId.get([tempIp]).split(',')[0]
+        targetHostInfo.value.publicIp = hostIpId.get([tempIp]).split(',')[1]
+        targetHostInfo.value.privateIp = hostIpId.get([tempIp]).split(',')[2]
+        targetHostInfo.value.port = hostIpId.get([tempIp]).split(',')[3]
+      }
+      taskBasicInfo.value.targetDBuser = targetDBUserPwd.get(targetHostInfo.value.publicIp).split(',')[0]
+      taskBasicInfo.value.targetDBpwd = targetDBUserPwd.get(targetHostInfo.value.publicIp).split(',')[1]
     }
   })
 }
@@ -993,10 +1046,24 @@ const getUserList = (hostId, type) => {
   })
 }
 
+const sourceDbPort = computed(() => {
+  const lastColonIndex = taskBasicInfo.value.sourceIp.lastIndexOf(':')
+  if (lastColonIndex !== -1) {
+    return Number(taskBasicInfo.value.sourceIp.slice(lastColonIndex + 1))
+  } else {
+    return 0
+  }
+})
 const getSourceClusterDB = () => {
   sourceDBOptions.value = []
   const tempformdata = new FormData()
-  let tempIp = taskBasicInfo.value.sourceIp.split(':')[0]
+  const lastColonIndex = taskBasicInfo.value.sourceIp.lastIndexOf(':')
+  let tempIp = ''
+  if (lastColonIndex !== -1) {
+    tempIp = taskBasicInfo.value.sourceIp.slice(0, lastColonIndex)
+  } else {
+    addHostVisible.value = true
+  }
   if (!hostIpId.get([tempIp])) {
     addHostVisible.value = true
   } else {
@@ -1023,9 +1090,21 @@ const getSourceClusterDB = () => {
   }
 }
 
+const targetDbPort = computed(() => {
+  const lastColonIndex = taskBasicInfo.value.targetIp.lastIndexOf(':')
+  if (lastColonIndex !== -1) {
+    return Number(taskBasicInfo.value.targetIp.slice(lastColonIndex + 1))
+  } else {
+    return 0
+  }
+})
 const getTargetClusterDB = () => {
   targetDBOptions.value = []
-  let tempIp = taskBasicInfo.value.targetIp.split(':')[0]
+  const lastColonIndex = taskBasicInfo.value.targetIp.lastIndexOf(':')
+  let tempIp = ''
+  if (lastColonIndex !== -1) {
+    tempIp = taskBasicInfo.value.targetIp.slice(0, lastColonIndex)
+  }
   targetHostInfo.value.hostId = hostIpId.get([tempIp]).split(',')[0]
   targetHostInfo.value.publicIp = hostIpId.get([tempIp]).split(',')[1]
   targetHostInfo.value.privateIp = hostIpId.get([tempIp]).split(',')[2]
@@ -1072,8 +1151,8 @@ const inittaskRetInfo = () => {
 }
 
 const inittaskPlayBack = () => {
-  taskRetInfo.value.pagethi['sql.replay.database.ip'] = taskBasicInfo.value.targetIp.split(':')[0]
-  taskRetInfo.value.pagethi['sql.replay.database.port'] = taskBasicInfo.value.targetIp.split(':')[1]
+  taskRetInfo.value.pagethi['sql.replay.database.ip'] = targetHostInfo.value.publicIp
+  taskRetInfo.value.pagethi['sql.replay.database.port'] = targetDbPort.value
   taskRetInfo.value.pagethi['sql.replay.database.schema.map'] = []
   taskBasicInfo.value.settings.forEach((item) => {
     taskRetInfo.value.pagethi['sql.replay.database.schema.map'].push(item.sourceDB + ':' + item.targetDB)
@@ -1152,11 +1231,11 @@ const saveParams = async () => {
     transcribeReplaySave({
       "taskName": taskBasicInfo.value.taskName,
       "sourceDbType": taskBasicInfo.value.sourceDbType,
-      "sourceIp": taskBasicInfo.value.sourceIp.split(':')[0],
-      "sourcePort": taskBasicInfo.value.sourceIp.split(':')[1],
+      "sourceIp": sourceHostInfo.value.publicIp,
+      "sourcePort": sourceDbPort.value,
       "sourceInstallPath": taskBasicInfo.value.sourceInstallPath,
-      "targetIp": taskBasicInfo.value.targetIp.split(':')[0],
-      "targetPort": taskBasicInfo.value.targetIp.split(':')[1],
+      "targetIp": targetHostInfo.value.publicIp,
+      "targetPort": targetDbPort.value,
       "targetInstallPath": taskBasicInfo.value.targetInstallPath,
       "sourceUser": taskBasicInfo.value.sourceHostUser,
       "targetUser": taskBasicInfo.value.targetHostUser,
