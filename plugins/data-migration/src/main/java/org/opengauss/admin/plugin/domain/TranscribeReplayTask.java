@@ -45,10 +45,10 @@ public class TranscribeReplayTask {
     private Integer executionStatus;
     private Integer slowSqlCount;
     private Integer failedSqlCount;
-    private long taskDuration;
-    private long sourceDuration;
-    private long targetDuration;
-    private long totalNum;
+    private Long taskDuration;
+    private Long sourceDuration;
+    private Long targetDuration;
+    private Long totalNum;
     private Long parseNum;
     private Long replayNum;
     private String sourceNodeId;

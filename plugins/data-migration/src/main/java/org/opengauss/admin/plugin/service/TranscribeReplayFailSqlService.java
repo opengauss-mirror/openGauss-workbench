@@ -55,4 +55,11 @@ public interface TranscribeReplayFailSqlService extends IService<FailSqlModel> {
      * @return List<FailSqlModel>
      */
     List<FailSqlModel> getListByTaskId(Integer taskId);
+
+    /**
+     * deleteByTaskId
+     *
+     * @param taskId taskId
+     */
+    void deleteByTaskId(Integer taskId);
 }

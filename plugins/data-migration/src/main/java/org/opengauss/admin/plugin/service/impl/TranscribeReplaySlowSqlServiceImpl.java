@@ -59,4 +59,14 @@ public class TranscribeReplaySlowSqlServiceImpl
         lambdaQuery.eq(Objects.nonNull(taskId), TranscribeReplaySlowSql::getTaskId, taskId);
         return transcribeReplaySlowSqlMapper.selectList(lambdaQuery);
     }
+
+    @Override
+    public void deleteByTaskId(Integer taskId) {
+        LambdaQueryWrapper<TranscribeReplaySlowSql> lambdaQuery = Wrappers.lambdaQuery(TranscribeReplaySlowSql.class);
+        lambdaQuery.eq(Objects.nonNull(taskId), TranscribeReplaySlowSql::getTaskId, taskId);
+        List<TranscribeReplaySlowSql> slowSqlList = transcribeReplaySlowSqlMapper.selectList(lambdaQuery);
+        if (slowSqlList.size() > 0) {
+            transcribeReplaySlowSqlMapper.deleteBatchIds(slowSqlList);
+        }
+    }
 }

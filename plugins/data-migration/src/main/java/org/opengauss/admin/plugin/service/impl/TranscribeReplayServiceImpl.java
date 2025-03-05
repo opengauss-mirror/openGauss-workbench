@@ -22,6 +22,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.github.benmanes.caffeine.cache.Cache;
 import com.github.pagehelper.util.StringUtil;
 
 import cn.hutool.core.bean.BeanUtil;
@@ -89,6 +90,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -145,6 +149,8 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private OpsFacade opsFacade;
+    @Autowired
+    private Cache<Integer, Integer> resolvedObjectsNumberCache;
 
     @Override
     public List<String> getToolsVersion() {
@@ -533,6 +539,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         transcribeReplayTask.setExecutionStatus(TranscribeReplayStatus.DOWNLOADING.getCode());
         String join = String.join(";", taskDto.getDbMap());
         transcribeReplayTask.setDbName(join);
+        transcribeReplayTask.setTotalNum(0L);
         save(transcribeReplayTask);
         updateInstallPath(transcribeReplayTask);
         saveTranscribeHost(transcribeReplayTask, taskDto.getSourceIp(), taskDto.getSourceUser());
@@ -547,11 +554,14 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         updateCorePoolSize(10);
         TranscribeReplayTask transcribeReplayTask = getById(id);
         updateStatus(transcribeReplayTask, TranscribeReplayStatus.RUNNING);
+        clearTaskData(id);
         threadPoolTaskExecutor.submit(() -> refreshSqlNum(transcribeReplayTask));
+        startSyncSlowSql(transcribeReplayTask);
+        transcribeReplayFailSqlService.syncRefreshFailSql(transcribeReplayTask);
         if (TRANSCRIBE.equalsIgnoreCase(transcribeReplayTask.getTaskType())) {
             threadPoolTaskExecutor.submit(() -> startTranscribe(id, transcribeReplayTask));
         } else if (REPLAY.equalsIgnoreCase(transcribeReplayTask.getTaskType())) {
-            threadPoolTaskExecutor.submit(() -> startReplay(id, transcribeReplayTask));
+            threadPoolTaskExecutor.submit(() -> startReplay(id));
         } else {
             runTask(id, transcribeReplayTask);
         }
@@ -629,15 +639,11 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
 
     @Override
     public IPage<TranscribeReplaySlowSql> getSlowSql(Page startPage, Integer id, String sql) {
-        TranscribeReplayTask transcribeReplayTask = getById(id);
-        threadPoolTaskExecutor.submit(() -> syncRefreshSlowSql(transcribeReplayTask));
         return transcribeReplaySlowSqlService.selectList(startPage, id, sql);
     }
 
     @Override
     public IPage<FailSqlModel> getFailSql(Page startPage, Integer id, String sql) {
-        TranscribeReplayTask transcribeReplayTask = getById(id);
-        transcribeReplayFailSqlService.syncRefreshFailSql(transcribeReplayTask);
         return transcribeReplayFailSqlService.selectList(startPage, id, sql);
     }
 
@@ -714,11 +720,28 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             transcribeReplayTask.getTaskType());
     }
 
+    private void startSyncSlowSql(TranscribeReplayTask transcribeReplayTask) {
+        ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+        Runnable syncTask = () -> {
+            if (TranscribeReplayStatus.RUNNING.getCode()
+                .equals(refreshTaskStatus(transcribeReplayTask.getId()).getExecutionStatus())) {
+                log.debug("Task ID {} is still running. Syncing slow SQL...", transcribeReplayTask.getId());
+                syncRefreshSlowSql(transcribeReplayTask);
+            } else {
+                log.debug("Task ID {} is no longer running. Shutting down the scheduled executor.",
+                    transcribeReplayTask.getId());
+                scheduledExecutor.shutdown();
+            }
+        };
+        scheduledExecutor.scheduleAtFixedRate(syncTask, 0, 5, TimeUnit.SECONDS);
+    }
+
     private boolean checkResult(String result) {
         return result.contains("Transcribe will be stopped.");
     }
 
-    private void startReplay(Integer id, TranscribeReplayTask transcribeReplayTask) {
+    private void startReplay(Integer id) {
+        TranscribeReplayTask transcribeReplayTask = getById(id);
         log.info("Start task info: {}, type: {}", transcribeReplayTask.getTaskName(),
             transcribeReplayTask.getTaskType());
         ShellInfoVo sourceShell = getShellInfo(id, transcribeReplayTask.getSourceDbType());
@@ -775,8 +798,30 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
                 throw new OpsException(result2.getResult());
             }
         }
-        startReplay(id, transcribeReplayTask);
+        startReplay(id);
         log.info("End task info: {}", JSON.toJSONString(transcribeReplayTask.getTaskName()));
+    }
+
+    private void clearTaskData(Integer id) {
+        TranscribeReplayTask transcribeReplayTask = getById(id);
+        ShellInfoVo targetShellInfo = getShellInfo(id, TARGET_DB);
+        TranscribeReplayHandle.removeData(targetShellInfo, transcribeReplayTask);
+        deleteSlowTable(transcribeReplayTask);
+        resolvedObjectsNumberCache.asMap().remove(id);
+        transcribeReplayFailSqlService.deleteByTaskId(id);
+        transcribeReplaySlowSqlService.deleteByTaskId(id);
+    }
+
+    private void deleteSlowTable(TranscribeReplayTask transcribeReplayTask) {
+        String sql = "DELETE FROM slow_table;";
+        try (Connection conn = JDBCUtils.getConnection(transcribeReplayTask, getNodeInfo(transcribeReplayTask));
+            PreparedStatement pre = conn.prepareStatement(sql)) {
+            int affectedRows = pre.executeUpdate();
+            log.info("Deleted {} rows from slow_table for task ID: {}", affectedRows, transcribeReplayTask.getId());
+        } catch (SQLException e) {
+            log.warn("Error occurred while deleting data from slow_table for task ID {}: {}",
+                transcribeReplayTask.getId(), e.getMessage(), e);
+        }
     }
 
     private synchronized void checkTaskStatus(Integer id, String resultFileName) {
@@ -825,6 +870,11 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
 
     private void updateStatus(TranscribeReplayTask task, TranscribeReplayStatus taskStatus) {
         task.setExecutionStatus(taskStatus.getCode());
+        task.setParseNum(null);
+        task.setReplayNum(null);
+        task.setTotalNum(null);
+        task.setFailedSqlCount(null);
+        task.setSlowSqlCount(null);
         if (TranscribeReplayStatus.RUNNING.getCode().equals(taskStatus.getCode())) {
             task.setParseNum(0L);
             task.setReplayNum(0L);
@@ -832,15 +882,11 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         }
         if (TranscribeReplayStatus.FINISH.getCode().equals(taskStatus.getCode())) {
             Date end = new Date();
-            task.setParseNum(null);
-            task.setReplayNum(null);
             task.setTaskEndTime(end);
             long duration = end.getTime() - task.getTaskStartTime().getTime();
             task.setTaskDuration(duration);
         }
         if (TranscribeReplayStatus.RUN_FAIL.getCode().equals(taskStatus.getCode())) {
-            task.setParseNum(null);
-            task.setReplayNum(null);
             task.setTaskEndTime(new Date());
         }
         updateById(task);
@@ -892,6 +938,10 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
                 updateParseSqlNum(transcribeReplayTask, shellInfo);
                 replayNewNum = getOrDefault(transcribeReplayTask.getReplayNum(), 0L);
                 parseNewNum = getOrDefault(transcribeReplayTask.getParseNum(), 0L);
+                if (REPLAY.equalsIgnoreCase(transcribeReplayTask.getTaskType()) || !checkTaskStatus(
+                    transcribeReplayTask.getId())) {
+                    break;
+                }
             } while (replayNewNum < replayOldNum || parseNewNum < parseOldNum || parseNewNum < replayNewNum);
             TranscribeReplayTask task = new TranscribeReplayTask();
             task.setParseNum(parseNewNum);
@@ -915,6 +965,9 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         log.debug("Replay file exists, reading contents: {}", replayFilePath);
         String replayStr = FileUtils.catRemoteFileContents(replayFilePath, shellInfo);
         while (replayStr.isEmpty()) {
+            if (!checkTaskStatus(task.getId())) {
+                break;
+            }
             try {
                 log.debug("Replay file content is empty, retrying in 1 second...");
                 Thread.sleep(500);
@@ -938,6 +991,9 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         log.debug("Parse file exists, reading contents: {}", parseFilePath);
         String parseStr = FileUtils.catRemoteFileContents(parseFilePath, shellInfo);
         while (parseStr.isEmpty()) {
+            if (!checkTaskStatus(task.getId())) {
+                break;
+            }
             try {
                 log.debug("Parse file content is empty, retrying in 1 second...");
                 Thread.sleep(500);
@@ -949,6 +1005,13 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             }
         }
         task.setParseNum(Long.valueOf(parseStr));
+    }
+
+    private boolean checkTaskStatus(Integer id) {
+        if (TranscribeReplayStatus.RUNNING.getCode().equals(refreshTaskStatus(id).getExecutionStatus())) {
+            return true;
+        }
+        return false;
     }
 
     private void saveTranscribeHost(TranscribeReplayTask transcribeReplayTask, String ip, String username) {
@@ -988,15 +1051,12 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         transcribeReplayHostService.save(transcribeReplayHost);
     }
 
-    private synchronized void syncRefreshSlowSql(TranscribeReplayTask transcribeReplayTask) {
-        Connection conn = JDBCUtils.getConnection(transcribeReplayTask, getNodeInfo(transcribeReplayTask));
+    private void syncRefreshSlowSql(TranscribeReplayTask transcribeReplayTask) {
+        String sql = "SELECT * FROM slow_table;";
         List<TranscribeReplaySlowSql> slowSqls = new ArrayList<>();
-        PreparedStatement pre = null;
-        ResultSet res = null;
-        String sql = "select * from slow_table;";
-        try {
-            pre = conn.prepareStatement(sql);
-            res = pre.executeQuery();
+        try (Connection conn = JDBCUtils.getConnection(transcribeReplayTask, getNodeInfo(transcribeReplayTask));
+            PreparedStatement pre = conn.prepareStatement(sql);
+            ResultSet res = pre.executeQuery();) {
             List<SlowSqlModel> list = JDBCUtils.populate(res, SlowSqlModel.class);
             for (SlowSqlModel slowSql : list) {
                 TranscribeReplaySlowSql replaySlowSql = new TranscribeReplaySlowSql();
@@ -1010,16 +1070,8 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
                 slowSqls.add(replaySlowSql);
             }
         } catch (SQLException | InstantiationException | IllegalAccessException e) {
-            throw new OpsException(e.getMessage());
-        } finally {
-            if (conn != null && pre != null) {
-                try {
-                    conn.close();
-                    pre.close();
-                } catch (SQLException e) {
-                    log.error("Failed to close database connection: {}", e.getMessage(), e);
-                }
-            }
+            log.warn("Error occurred while refreshing slow SQL data for task ID {}: {}", transcribeReplayTask.getId(),
+                e.getMessage(), e);
         }
         transcribeReplaySlowSqlService.saveOrUpdateBatch(slowSqls);
     }
@@ -1092,10 +1144,12 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         int total = extractValue(contents, TOTAL_NUM);
         int slowSql = extractValue(contents, SLOW_SQL_NUM);
         int failSql = extractValue(contents, FAIL_SQL_NUM);
-        transcribeReplayTask.setTotalNum(total);
-        transcribeReplayTask.setSlowSqlCount(slowSql);
-        transcribeReplayTask.setFailedSqlCount(failSql);
-        updateById(transcribeReplayTask);
+        TranscribeReplayTask task = new TranscribeReplayTask();
+        task.setId(transcribeReplayTask.getId());
+        task.setTotalNum(Long.valueOf(total));
+        task.setSlowSqlCount(slowSql);
+        task.setFailedSqlCount(failSql);
+        updateById(task);
     }
 
     private static int extractValue(String contents, String key) {
