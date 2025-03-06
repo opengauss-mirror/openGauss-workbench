@@ -40,6 +40,7 @@ import org.opengauss.admin.plugin.vo.ShellInfoVo;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -292,6 +293,7 @@ public class PortalHandle {
         commandSb.append(" -Dworkspace.id=").append(task.getId());
         commandSb.append(params);
         commandSb.append(" -Dorder.invoked.timestamp=").append(task.getOrderInvokedTimestamp());
+        commandSb.append(" -Ddatakit.timezone=").append(ZoneId.systemDefault().toString());
         commandSb.append(" -Dorder=").append(task.getMigrationOperations());
         commandSb.append(" -Dskip=true -jar ").append(portalHome).append(portalJarName);
         log.info("start portal,host: {}, command: {}", host.getHost(), commandSb.toString());
