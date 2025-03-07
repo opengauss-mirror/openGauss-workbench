@@ -263,9 +263,10 @@
             "5mphy3snyxc0": "Please enter a remark",
             "5mphy3snz5k0": "Adding a Dedicated Server",
             "5mphy3snzb80": "The current server is unavailable",
-            "5mphy3snzrk0": "Edit Host"
+            "5mphy3snzrk0": "Edit Host",
+            "noPasswordTip": "User password was not saved. Please add the user again."
         },
-        "HostUserChoose":{
+        "HostUserChoose": {
             "title": "Choose user",
             "tip": "There are currently multiple users, and there is no root user. Please select the user you want to log in to the terminal.",
             "userChoosePlaceholder": "Please choose a user"

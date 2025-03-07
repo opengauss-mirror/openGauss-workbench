@@ -101,6 +101,7 @@ const data = reactive<KeyValue>({
     publicIp: '',
     port: 22,
     password: '',
+    username: '',
     isRemember: true,
     tags: [],
     remark: ''
@@ -184,9 +185,9 @@ const submit = () => {
   formRef.value?.validate().then(result => {
     if (!result) {
       data.loading = true
-      if (data.formData.hostId && data.formData.password === data.emptyPwd) {
-        const param = Object.assign({}, data.formData)
-        param.password = data.oldPwd
+      if (data.formData.hostId) {
+        const { privateIp, publicIp, port, remark, username, hostId, password, tags, name } = data.formData
+        const param = { privateIp, publicIp, port, remark, hostId, tags, name, password, username }
         editHost(data.formData.hostId, param).then((res: KeyValue) => {
           data.loading = false
           if (Number(res.code) === 200) {
@@ -201,29 +202,16 @@ const submit = () => {
         encryptPassword(data.formData.password).then((res) => {
           const param = Object.assign({}, data.formData)
           param.password = res
-          if (data.formData.hostId) {
-            editHost(data.formData.hostId, param).then((res: KeyValue) => {
-              data.loading = false
-              if (Number(res.code) === 200) {
-                Message.success({ content: `Modified success` })
-                emits(`finish`)
-              }
-              close()
-            }).finally(() => {
-              data.loading = false
-            })
-          } else {
-            addHost(param).then((res: KeyValue) => {
-              data.loading = false
-              if (Number(res.code) === 200) {
-                Message.success({ content: `Create success` })
-                emits(`finish`)
-              }
-              close()
-            }).finally(() => {
-              data.loading = false
-            })
-          }
+          addHost(param).then((res: KeyValue) => {
+            data.loading = false
+            if (Number(res.code) === 200) {
+              Message.success({ content: `Create success` })
+              emits(`finish`)
+            }
+            close()
+          }).finally(() => {
+            data.loading = false
+          })
         })
       }
     }
@@ -232,6 +220,8 @@ const submit = () => {
 const close = () => {
   data.show = false
   data.oldPwd = ''
+  data.formData.password = '';
+  data.formData.username = '';
   nextTick(() => {
     formRef.value?.clearValidate()
     formRef.value?.resetFields()
@@ -312,17 +302,21 @@ const getAllTag = () => {
   })
 }
 
-const getHostPassword = (hostId: string) => {
-  hostUserListAll(hostId).then((res: KeyValue) => {
+const getHostPassword = async (hostId: string) => {
+  try {
+    const res: KeyValue = await hostUserListAll(hostId)
     if (Number(res.code) === 200) {
-      const rootObj = res.data.find((item: KeyValue) => {
-        return item.username === 'root'
-      })
-      if (rootObj) {
-        data.oldPwd = rootObj.password
-      }
-    }
-  })
+      const userEntity = res.data.find((e: any) => e && e.password);
+      if (userEntity) {
+        data.formData.username = userEntity.username;
+        data.formData.password = userEntity.password;
+      } else {
+        Message.error(t('components.AddHost.noPasswordTip'));
+      };
+    };
+  } catch (error) {
+
+  }
 }
 
 const isAdd = ref(true)
@@ -336,11 +330,7 @@ const open = (type: string, editData?: KeyValue) => {
     isAdd.value = false
     data.title = t('components.AddHost.5mphy3snzrk0')
     Object.assign(data.formData, editData)
-    if (data.formData.isRemember) {
-      data.formData.password = data.emptyPwd
-      // get password
-      getHostPassword(data.formData.hostId)
-    }
+    getHostPassword(data.formData.hostId)
   } else {
     data.title = t('components.AddHost.5mphy3snz5k0')
     Object.assign(data.formData, {
