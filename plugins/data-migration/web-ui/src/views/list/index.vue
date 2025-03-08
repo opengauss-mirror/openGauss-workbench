@@ -268,8 +268,12 @@ const startTask = async row => {
 
 // stop task
 const stopTask = async row => {
-  await stop(row.id)
-  Message.success('Stop success')
+  try {
+    await stop(row.id)
+    Message.success('Stop success')
+  } catch (e) {
+    Message.warning('Abnormal stop')
+  }
   getList()
 }
 // reset task

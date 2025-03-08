@@ -34,6 +34,7 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.LoginUser;
 import org.opengauss.admin.common.core.dto.ops.ClusterNodeDto;
 import org.opengauss.admin.common.utils.SecurityUtils;
@@ -46,6 +47,7 @@ import org.opengauss.admin.plugin.enums.MigrationErrorCode;
 import org.opengauss.admin.plugin.enums.ProcessType;
 import org.opengauss.admin.plugin.enums.TaskOperate;
 import org.opengauss.admin.plugin.enums.TaskStatus;
+import org.opengauss.admin.plugin.exception.MigrationTaskException;
 import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationMainTaskMapper;
 import org.opengauss.admin.plugin.service.*;
@@ -57,6 +59,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -282,10 +285,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             tp.setId(null);
             migrationTaskParamService.save(tp);
         });
-        taskDto.getHostIds().stream().forEach(h -> {
-            MigrationTaskHostRef hostRef = MigrationTaskHostRef.builder().runHostId(h).mainTaskId(mainTask.getId()).createTime(new Date()).build();
-            migrationTaskHostRefService.save(hostRef);
-        });
+        saveRunHosts(taskDto.getHostIds(), mainTask.getId());
         taskDto.getGlobalParams().stream().forEach(param -> {
             param.setId(null);
             param.setMainTaskId(mainTask.getId());
@@ -331,10 +331,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             migrationTaskParamService.save(tp);
         });
         migrationTaskHostRefService.deleteByMainTaskId(taskDto.getTaskId());
-        taskDto.getHostIds().stream().forEach(h -> {
-            MigrationTaskHostRef hostRef = MigrationTaskHostRef.builder().runHostId(h).mainTaskId(mainTask.getId()).createTime(new Date()).build();
-            migrationTaskHostRefService.save(hostRef);
-        });
+        saveRunHosts(taskDto.getHostIds(), mainTask.getId());
 
         migrationTaskGlobalParamService.deleteByMainTaskId(taskDto.getTaskId());
         taskDto.getGlobalParams().stream().forEach(param -> {
@@ -343,6 +340,20 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             migrationTaskGlobalParamService.save(param);
         });
         return AjaxResult.success();
+    }
+
+    private void saveRunHosts(List<String> hostIds, Integer mainTaskId) {
+        hostIds.forEach(hostId -> {
+            OpsHostEntity opsHost = hostFacade.getById(hostId);
+            if (ObjectUtils.isEmpty(opsHost)) {
+                log.error("Cannot get host information by host id: {}", hostId);
+                throw new MigrationTaskException("The portal host does not exist.");
+            }
+
+            MigrationTaskHostRef hostRef = MigrationTaskHostRef.builder()
+                    .runHostId(hostId).mainTaskId(mainTaskId).createTime(new Date()).build();
+            migrationTaskHostRefService.save(hostRef);
+        });
     }
 
     @Override
@@ -389,6 +400,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
      * @param id
      */
     @Override
+    @Transactional
     public AjaxResult startTask(Integer id) {
         long startTaskTimestamp = System.currentTimeMillis();
         MigrationMainTask mainTask = getById(id);
@@ -481,13 +493,13 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
 
     @Override
     public void finishTask(Integer id) {
+        updateStatus(id, MainTaskStatus.FINISH);
         long finishTaskTimestamp = System.currentTimeMillis();
         List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(id);
         tasks.forEach(task -> {
             task.setOrderInvokedTimestamp(finishTaskTimestamp);
             doFinishTask(task);
         });
-        updateStatus(id, MainTaskStatus.FINISH);
     }
 
     @Override
@@ -506,18 +518,23 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     }
 
     private void doFinishTask(MigrationTask task) {
-        MigrationHostPortalInstall portalHost =
-                migrationHostPortalInstallHostService.getOneByHostId(task.getRunHostId());
-        ShellInfoVo shellInfo = new ShellInfoVo(
-                task.getRunHost(), task.getRunPort(), task.getRunUser(), encryptionUtils.decrypt(task.getRunPass()));
-        PortalHandle.finishPortal(shellInfo, portalHost.getInstallPath(), portalHost.getJarName(), task);
-
         MigrationTask update = MigrationTask.builder().id(task.getId())
                 .execStatus(TaskStatus.MIGRATION_FINISH.getCode()).finishTime(new Date()).build();
         migrationTaskService.updateById(update);
+
         LoginUser loginUser = SecurityUtils.getLoginUser();
         migrationTaskOperateRecordService.saveRecord(
                 task.getId(), TaskOperate.FINISH_MIGRATION, loginUser.getUsername());
+
+        MigrationHostPortalInstall portalHost =
+                migrationHostPortalInstallHostService.getOneByHostId(task.getRunHostId());
+        if (ObjectUtils.isEmpty(portalHost)) {
+            log.error("Cannot get portal host information by host id: {}", task.getRunHostId());
+            throw new MigrationTaskException("The portal host does not exist.");
+        }
+        ShellInfoVo shellInfo = new ShellInfoVo(
+                task.getRunHost(), task.getRunPort(), task.getRunUser(), encryptionUtils.decrypt(task.getRunPass()));
+        PortalHandle.finishPortal(shellInfo, portalHost.getInstallPath(), portalHost.getJarName(), task);
     }
 
     @Override
