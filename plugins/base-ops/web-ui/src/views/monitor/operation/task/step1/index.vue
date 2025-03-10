@@ -440,7 +440,7 @@ const fetchUserList = (value: any) => {
   getHostUser(data.hostId).then((res) => {
     hostUserList.value = []
     res.data.forEach(item => {
-      if (item.sudo === false) {
+      if (item.username !== 'root') {
         hostUserList.value.push(item.username)
         hostUserId.set(item.username, item.hostUserId)
       }
