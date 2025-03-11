@@ -134,6 +134,7 @@ public class MigrationTaskAlertServiceImpl extends ServiceImpl<MigrationTaskAler
         LambdaQueryWrapper<MigrationTaskAlert> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(MigrationTaskAlert::getTaskId, taskId);
         queryWrapper.eq(MigrationTaskAlert::getMigrationPhase, migrationPhase);
+        queryWrapper.orderByAsc(MigrationTaskAlert::getId);
 
         IPage<MigrationTaskAlert> alertIPage = alertMapper.selectPage(page, queryWrapper);
         List<MigrationTaskAlert> taskAlerts = alertIPage.getRecords();
