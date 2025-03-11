@@ -387,7 +387,8 @@ class MigrationCommand {
     private static final String REVERSE_MIGRATION_RUN = "run_reverse_migration";
     private static final String REVERSE_MIGRATION_SOURCE = "run_reverse_migration_source";
     private static final String REVERSE_MIGRATION_SINK = "run_reverse_migration_sink";
-    private static final String CMD_PORTAL_TEMP = "java -Dpath=%s -Dorder=%s -Dskip=true -Dworkspace.id=%s -jar %s";
+    private static final String CMD_PORTAL_TEMP = "java -Dpath=%s -Dorder=%s -Dorder.invoked.timestamp=%s"
+            + " -Dskip=true -Dworkspace.id=%s -jar %s";
     private static final Map<String, String> MIGRATION_PROPERTIES = new HashMap<>();
 
     static {
@@ -447,6 +448,8 @@ class MigrationCommand {
     public String builder(String name) {
         OpsAssert.isTrue(MIGRATION_PROPERTIES.containsKey(name), "unknown migration command");
         String order = MIGRATION_PROPERTIES.get(name);
-        return String.format(CMD_PORTAL_TEMP, installPath, order, workspaceId, installPath + jarName);
+        long orderInvokedTimestamp = System.currentTimeMillis();
+        return String.format(CMD_PORTAL_TEMP, installPath, order, orderInvokedTimestamp,
+                workspaceId, installPath + jarName);
     }
 }

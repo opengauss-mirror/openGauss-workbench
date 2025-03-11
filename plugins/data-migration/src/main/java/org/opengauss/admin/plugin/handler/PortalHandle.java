@@ -318,12 +318,16 @@ public class PortalHandle {
 
     public static void stopIncrementalPortal(String host, Integer port, String user, String pass, String installPath, String portalJarName, MigrationTask task) {
         String portalHome = installPath + "portal/";
-        ShellUtil.execCommand(host, port, user, pass, "java -Dpath=" + portalHome + " -Dworkspace.id=" + task.getId() + " -Dorder=stop_incremental_migration -Dskip=true -jar " + portalHome + portalJarName);
+        ShellUtil.execCommand(host, port, user, pass, "java -Dpath=" + portalHome
+                + " -Dworkspace.id=" + task.getId() + " -Dorder.invoked.timestamp=" + task.getOrderInvokedTimestamp()
+                + " -Dorder=stop_incremental_migration -Dskip=true -jar " + portalHome + portalJarName);
     }
 
     public static void startReversePortal(String host, Integer port, String user, String pass, String installPath, String portalJarName, MigrationTask task) {
         String portalHome = installPath + "portal/";
-        ShellUtil.execCommand(host, port, user, pass, "java -Dpath=" + portalHome + " -Dworkspace.id=" + task.getId() + " -Dorder=run_reverse_migration -Dskip=true -jar " + portalHome + portalJarName);
+        ShellUtil.execCommand(host, port, user, pass, "java -Dpath=" + portalHome
+                + " -Dworkspace.id=" + task.getId() + " -Dorder.invoked.timestamp=" + task.getOrderInvokedTimestamp()
+                + " -Dorder=run_reverse_migration -Dskip=true -jar " + portalHome + portalJarName);
     }
 
     public static String getPortalStatus(String host, Integer port, String user, String pass, String installPath, MigrationTask task) {

@@ -531,6 +531,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_ERROR.getCode(), MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_ERROR.getMsg());
         }
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(subTask.getRunHostId());
+        long stopIncrementalTimestamp = System.currentTimeMillis();
+        subTask.setOrderInvokedTimestamp(stopIncrementalTimestamp);
         PortalHandle.stopIncrementalPortal(subTask.getRunHost(), subTask.getRunPort(),
                 subTask.getRunUser(), encryptionUtils.decrypt(subTask.getRunPass()), installHost.getInstallPath(), installHost.getJarName(), subTask);
         MigrationTask update = MigrationTask.builder().id(subTask.getId()).execStatus(TaskStatus.INCREMENTAL_FINISHED.getCode()).execTime(new Date()).build();
@@ -616,6 +618,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         if (!migrationTaskService.execMigrationCheck(installHost, subTask, globalParams, "verify_reverse_migration")) {
             return AjaxResult.success();
         }
+        long startReverseTimestamp = System.currentTimeMillis();
+        subTask.setOrderInvokedTimestamp(startReverseTimestamp);
         PortalHandle.startReversePortal(subTask.getRunHost(), subTask.getRunPort(), subTask.getRunUser(),
             encryptionUtils.decrypt(subTask.getRunPass()), installHost.getInstallPath(), installHost.getJarName(),
             subTask);
