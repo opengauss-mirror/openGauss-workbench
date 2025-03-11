@@ -63,7 +63,7 @@ public class DataSourceConfig {
         String driverClassName = properties.getDriverClassName();
         Optional<DbDataLocationEnum> dbDataLocationEnum = DbDataLocationEnum.of(driverClassName);
         DatabaseInitializationSettings settings = new DatabaseInitializationSettings();
-        settings.setContinueOnError(true);
+        settings.setContinueOnError(false);
         settings.setSeparator(";");
         settings.setMode(DatabaseInitializationMode.ALWAYS);
         if (dbDataLocationEnum.isEmpty()) {

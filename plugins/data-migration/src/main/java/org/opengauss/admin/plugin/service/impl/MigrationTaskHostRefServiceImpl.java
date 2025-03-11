@@ -66,6 +66,7 @@ import org.opengauss.admin.plugin.enums.PortalInstallStatus;
 import org.opengauss.admin.plugin.enums.PortalInstallType;
 import org.opengauss.admin.plugin.enums.ThirdPartySoftwareConfigType;
 import org.opengauss.admin.plugin.enums.ToolsConfigEnum;
+import org.opengauss.admin.plugin.exception.MigrationTaskException;
 import org.opengauss.admin.plugin.exception.PortalInstallException;
 import org.opengauss.admin.plugin.exception.ShellException;
 import org.opengauss.admin.plugin.handler.PortalHandle;
@@ -92,6 +93,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -187,6 +189,10 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         List<MigrationTaskHostRef> hosts = migrationTaskHostRefMapper.selectByMainTaskId(mainTaskId);
         hosts.forEach(h -> {
             OpsHostEntity opsHost = hostFacade.getById(h.getRunHostId());
+            if (ObjectUtils.isEmpty(opsHost)) {
+                log.error("Cannot get host information by host id: {}", h.getRunHostId());
+                throw new MigrationTaskException("The portal host does not exist.");
+            }
             h.setHostName(opsHost.getHostname());
             h.setHost(opsHost.getPublicIp());
             h.setPort(opsHost.getPort());
