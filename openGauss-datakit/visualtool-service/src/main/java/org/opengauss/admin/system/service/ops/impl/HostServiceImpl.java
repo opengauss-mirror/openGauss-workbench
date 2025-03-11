@@ -57,6 +57,7 @@ import org.opengauss.admin.common.core.vo.HostInfoVo;
 import org.opengauss.admin.common.enums.OsSupportMap;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.OpsAssert;
+import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.excel.ImportAsynInfoUtils;
 import org.opengauss.admin.common.utils.ops.JschUtil;
 import org.opengauss.admin.common.utils.ops.WsUtil;
@@ -71,6 +72,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -444,33 +446,35 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean edit(String hostId, HostBody hostBody) {
-        OpsHostEntity hostEntity = getById(hostId);
-        if (Objects.isNull(hostEntity)) {
-            throw new OpsException("host information does not exist");
+        OpsHostEntity hostEntity = checkHostExist(hostId);
+
+        if (StringUtils.isBlank(hostBody.getName())) {
+            throw new OpsException("Host name cannot be empty");
         }
-        List<OpsHostUserEntity> opsHostUserEntities = hostUserService.listHostUserByHostId(hostId);
-        OpsHostUserEntity root = null;
-        if (CollUtil.isNotEmpty(opsHostUserEntities)) {
-            root = opsHostUserEntities.stream().filter(OpsHostUserEntity::isRootUser).findFirst().orElse(null);
+        if (ObjectUtils.isEmpty(hostBody.getPort())) {
+            throw new OpsException("Host port cannot be empty");
         }
-        if (Objects.isNull(root)) {
-            root = hostBody.toUser(hostId);
-            hostUserService.save(root);
-        } else {
-            if (Objects.nonNull(hostBody.getIsRemember()) && hostBody.getIsRemember()) {
-                root.setPassword(hostBody.getPassword());
-                root.setSudo(Boolean.TRUE);
-                hostUserService.updateById(root);
-            } else {
-                hostUserService.cleanPassword(root.getHostUserId());
-            }
+        if (!hostEntity.getPrivateIp().equals(hostBody.getPrivateIp())
+                || !hostEntity.getPublicIp().equals(hostBody.getPublicIp())) {
+            throw new OpsException("Host public and private IP cannot be modified");
         }
+        if (StringUtils.isAnyBlank(hostBody.getUsername(), hostBody.getPassword())) {
+            throw new OpsException("Host username and password cannot be empty");
+        }
+
         SshLogin sshLogin = new SshLogin(hostBody.getPublicIp(), hostBody.getPort(), hostBody.getUsername(),
-            encryptionUtils.decrypt(hostBody.getPassword()));
-        Session session = jschExecutorService.createSession(sshLogin);
-        OpsHostEntity newHostEntity = hostBody.toHostEntity(getHostInfoVo(session));
-        newHostEntity.setHostId(hostId);
-        updateById(newHostEntity);
+                encryptionUtils.decrypt(hostBody.getPassword()));
+        HostInfoVo hostInfoVo = getHostInfoVo(jschExecutorService.createSession(sshLogin));
+
+        hostEntity.setName(hostBody.getName());
+        hostEntity.setPort(hostBody.getPort());
+        hostEntity.setRemark(hostBody.getRemark());
+        hostEntity.setOs(hostInfoVo.getOs());
+        hostEntity.setOsVersion(hostInfoVo.getOsVersion());
+        hostEntity.setCpuArch(hostInfoVo.getCpuArch());
+        hostEntity.setHostname(hostInfoVo.getHostname());
+        updateById(hostEntity);
+
         opsHostTagRelService.cleanHostTag(hostId);
         opsHostTagService.addTag(HostTagInputDto.of(hostBody.getTags(), hostId));
         return true;
@@ -689,5 +693,14 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         opsHostEntity.setOs(osMapEnum.getOs());
         opsHostEntity.setOsVersion(osMapEnum.getOsVersion());
         return opsHostEntity;
+    }
+
+    private OpsHostEntity checkHostExist(String hostId) {
+        OpsHostEntity hostEntity = getById(hostId);
+        if (Objects.isNull(hostEntity)) {
+            log.error("Cannot get host information by host id: {}", hostId);
+            throw new OpsException("host information does not exist");
+        }
+        return hostEntity;
     }
 }
