@@ -403,13 +403,8 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             } else {
                 log.debug("task status {} : {}", t.getId(), state);
             }
-            if (state > t.getExecStatus()) {
+            if (t.getExecStatus() < TaskStatus.MIGRATION_FINISH.getCode()) {
                 update.setExecStatus(state);
-            } else if (Objects.equals(t.getExecStatus(), TaskStatus.INCREMENTAL_PAUSE.getCode()) || Objects.equals(
-                t.getExecStatus(), TaskStatus.REVERSE_PAUSE.getCode())) {
-                update.setExecStatus(state);
-            } else {
-                log.debug("task status {} : {} no update", t.getId(), state);
             }
 
             if (TaskStatus.FULL_CHECK_FINISH.getCode().equals(state) && t.getMigrationModelId().equals(1)) {
