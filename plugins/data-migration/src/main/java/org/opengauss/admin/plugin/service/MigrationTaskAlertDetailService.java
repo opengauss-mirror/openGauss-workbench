@@ -13,4 +13,11 @@ import org.opengauss.admin.plugin.domain.MigrationTaskAlertDetail;
  * @since 2024/12/17
  */
 public interface MigrationTaskAlertDetailService extends IService<MigrationTaskAlertDetail> {
+    /**
+     * get group alert detail
+     *
+     * @param alertId alert id
+     * @return migration alert details
+     */
+    MigrationTaskAlertDetail getGroupDetailByAlertId(int alertId);
 }

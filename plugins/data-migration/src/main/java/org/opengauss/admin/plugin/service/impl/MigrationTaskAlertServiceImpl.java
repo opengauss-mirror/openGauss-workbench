@@ -8,6 +8,7 @@ import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.github.benmanes.caffeine.cache.Cache;
@@ -18,6 +19,7 @@ import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTask;
 import org.opengauss.admin.plugin.domain.MigrationTaskAlert;
 import org.opengauss.admin.plugin.domain.MigrationTaskAlertDetail;
+import org.opengauss.admin.plugin.dto.MigrationTaskAlertDto;
 import org.opengauss.admin.plugin.enums.AlertMigrationPhaseEnum;
 import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationTaskAlertMapper;
@@ -33,6 +35,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,22 +131,38 @@ public class MigrationTaskAlertServiceImpl extends ServiceImpl<MigrationTaskAler
     }
 
     @Override
-    public IPage<MigrationTaskAlert> selectPage(IPage<MigrationTaskAlert> page, int taskId, int migrationPhase) {
+    public IPage<MigrationTaskAlertDto> selectGroupPage(
+            IPage<MigrationTaskAlertDto> page, int taskId, int migrationPhase) {
         syncRefreshAlertByPortal(migrationTaskService.getById(taskId));
 
-        LambdaQueryWrapper<MigrationTaskAlert> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(MigrationTaskAlert::getTaskId, taskId);
-        queryWrapper.eq(MigrationTaskAlert::getMigrationPhase, migrationPhase);
-        queryWrapper.orderByAsc(MigrationTaskAlert::getId);
-
-        IPage<MigrationTaskAlert> alertIPage = alertMapper.selectPage(page, queryWrapper);
-        List<MigrationTaskAlert> taskAlerts = alertIPage.getRecords();
-        if (taskAlerts != null) {
-            taskAlerts.forEach(MigrationTaskAlert::formatDateTime);
+        List<MigrationTaskAlertDto> alertDtoList = getGroupAlertDto(taskId, migrationPhase);
+        if (alertDtoList == null || alertDtoList.isEmpty()) {
+            return page;
+        }
+        for (MigrationTaskAlertDto taskAlertDto : alertDtoList) {
+            taskAlertDto.setMigrationPhase(migrationPhase);
+            taskAlertDto.setTaskId(taskId);
+            taskAlertDto.setId(taskAlertDto.getMinId());
+            MigrationTaskAlert firstTaskAlert = getById(taskAlertDto.getMinId());
+            MigrationTaskAlert latestTaskAlert = getById(taskAlertDto.getMaxId());
+            taskAlertDto.setFirstDateTime(firstTaskAlert.getDateTime());
+            taskAlertDto.setLatestDateTime(latestTaskAlert.getDateTime());
+            taskAlertDto.formatDateTime();
+            taskAlertDto.setCauseCn(firstTaskAlert.getCauseCn());
+            taskAlertDto.setCauseEn(firstTaskAlert.getCauseEn());
         }
 
-        alertIPage.setRecords(taskAlerts);
-        return alertIPage;
+        long startIndex = (page.getCurrent() - 1) * page.getSize();
+        long endIndex = Math.min(page.getCurrent() * page.getSize(), alertDtoList.size());
+        if (startIndex >= alertDtoList.size()) {
+            return page;
+        }
+        alertDtoList.sort(Comparator.comparing(MigrationTaskAlertDto::getId));
+        alertDtoList = alertDtoList.subList((int) startIndex, (int) endIndex);
+
+        Page<MigrationTaskAlertDto> alertDtoPage = new Page<>(page.getCurrent(), page.getSize(), alertDtoList.size());
+        alertDtoPage.setRecords(alertDtoList);
+        return alertDtoPage;
     }
 
     @Override
@@ -154,17 +173,17 @@ public class MigrationTaskAlertServiceImpl extends ServiceImpl<MigrationTaskAler
     }
 
     @Override
-    public AjaxResult countAlertNumber(int taskId) {
-        HashMap<String, Integer> countMap = new HashMap<>();
-        countMap.put("total", countAlertByTaskId(taskId));
+    public AjaxResult countGroupAlertNumber(int taskId) {
+        HashMap<String, Long> countMap = new HashMap<>();
+        countMap.put("total", countGroupAlertByTaskId(taskId));
         countMap.put(AlertMigrationPhaseEnum.FULL_MIGRATION.getPhaseId().toString(),
-                countAlertInPhase(taskId, AlertMigrationPhaseEnum.FULL_MIGRATION.getPhaseId()));
+                countGroupAlertInPhase(taskId, AlertMigrationPhaseEnum.FULL_MIGRATION.getPhaseId()));
         countMap.put(AlertMigrationPhaseEnum.FULL_MIGRATION_CHECK.getPhaseId().toString(),
-                countAlertInPhase(taskId, AlertMigrationPhaseEnum.FULL_MIGRATION_CHECK.getPhaseId()));
+                countGroupAlertInPhase(taskId, AlertMigrationPhaseEnum.FULL_MIGRATION_CHECK.getPhaseId()));
         countMap.put(AlertMigrationPhaseEnum.INCREMENTAL_MIGRATION.getPhaseId().toString(),
-                countAlertInPhase(taskId, AlertMigrationPhaseEnum.INCREMENTAL_MIGRATION.getPhaseId()));
+                countGroupAlertInPhase(taskId, AlertMigrationPhaseEnum.INCREMENTAL_MIGRATION.getPhaseId()));
         countMap.put(AlertMigrationPhaseEnum.REVERSE_MIGRATION.getPhaseId().toString(),
-                countAlertInPhase(taskId, AlertMigrationPhaseEnum.REVERSE_MIGRATION.getPhaseId()));
+                countGroupAlertInPhase(taskId, AlertMigrationPhaseEnum.REVERSE_MIGRATION.getPhaseId()));
         return AjaxResult.success(countMap);
     }
 
@@ -204,6 +223,11 @@ public class MigrationTaskAlertServiceImpl extends ServiceImpl<MigrationTaskAler
         alertDetailService.removeBatchByIds(alertIds);
     }
 
+    @Override
+    public List<Integer> getGroupAlertIds(MigrationTaskAlert alert) {
+        return alertMapper.getGroupAlertIds(alert);
+    }
+
     private void syncRefreshAlertByPortal(MigrationTask task) {
         Integer taskId = task.getId();
         Long time = ALERT_REFRESH_RECORD.get(taskId);
@@ -221,10 +245,15 @@ public class MigrationTaskAlertServiceImpl extends ServiceImpl<MigrationTaskAler
         }
     }
 
-    private int countAlertInPhase(int taskId, int phaseId) {
-        LambdaQueryWrapper<MigrationTaskAlert> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(MigrationTaskAlert::getTaskId, taskId);
-        queryWrapper.eq(MigrationTaskAlert::getMigrationPhase, phaseId);
-        return (int) count(queryWrapper);
+    private Long countGroupAlertInPhase(int taskId, int phaseId) {
+        return alertMapper.countGroupAlertInPhase(taskId, phaseId);
+    }
+
+    private Long countGroupAlertByTaskId(int taskId) {
+        return alertMapper.countGroupAlertByTaskId(taskId);
+    }
+
+    private List<MigrationTaskAlertDto> getGroupAlertDto(int taskId, int phaseId) {
+        return alertMapper.getGroupAlertDto(taskId, phaseId);
     }
 }

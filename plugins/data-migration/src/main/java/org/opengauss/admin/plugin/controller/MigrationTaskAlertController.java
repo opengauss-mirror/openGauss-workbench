@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.plugin.base.BaseController;
-import org.opengauss.admin.plugin.domain.MigrationTaskAlert;
+import org.opengauss.admin.plugin.dto.MigrationTaskAlertDto;
 import org.opengauss.admin.plugin.service.MigrationTaskAlertDetailService;
 import org.opengauss.admin.plugin.service.MigrationTaskAlertService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +41,7 @@ public class MigrationTaskAlertController extends BaseController {
      */
     @GetMapping("/list/{taskId}/{migrationPhase}")
     public TableDataInfo getList(@PathVariable int taskId, @PathVariable int migrationPhase) {
-        IPage<MigrationTaskAlert> iPage = alertService.selectPage(startPage(), taskId, migrationPhase);
+        IPage<MigrationTaskAlertDto> iPage = alertService.selectGroupPage(startPage(), taskId, migrationPhase);
         return getDataTable(iPage);
     }
 
@@ -53,7 +53,7 @@ public class MigrationTaskAlertController extends BaseController {
      */
     @GetMapping("/count/{taskId}")
     public AjaxResult countAlertNumber(@PathVariable int taskId) {
-        return alertService.countAlertNumber(taskId);
+        return alertService.countGroupAlertNumber(taskId);
     }
 
     /**
@@ -64,6 +64,6 @@ public class MigrationTaskAlertController extends BaseController {
      */
     @GetMapping("/detail/{id}")
     public AjaxResult getDetail(@PathVariable int id) {
-        return AjaxResult.success(alertDetailService.getById(id));
+        return AjaxResult.success(alertDetailService.getGroupDetailByAlertId(id));
     }
 }

@@ -308,7 +308,8 @@
                   </div>
                 </template>
               </el-table-column>
-              <el-table-column prop="dateTime" :label="$t('components.SubTaskDetail.alarmTime')"></el-table-column>
+              <el-table-column prop="firstDateTime" :label="$t('components.SubTaskDetail.firstAlarmTime')"></el-table-column>
+              <el-table-column prop="latestDateTime" :label="$t('components.SubTaskDetail.latestAlarmTime')"></el-table-column>
               <el-table-column prop="operation" :label="$t('components.SubTaskDetail.operate')">
                 <template #default="{ row }">
                   <el-button text :icon="IconVisible" @click="showErrorDetail(row)">
@@ -776,11 +777,11 @@ const showErrorDetail = async (rows) => {
     detailInfo.value = {}
     areaLoading.value = true
     errorVisible.value = true
-    const { dateTime, sourceName, logSource, id, taskId } = rows
+    const { firstDateTime, latestDateTime, sourceName, logSource, id, taskId } = rows
     const { code, data } = await getAlarmDetail(id)
     areaLoading.value = false
     detailInfo.value = {
-      dateTime, sourceName, logSource, taskId
+      firstDateTime, latestDateTime, sourceName, logSource, taskId
     }
     if (code === 200) {
       detailInfo.value.detail = data.detail
