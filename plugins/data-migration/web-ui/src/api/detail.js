@@ -36,8 +36,8 @@ export function taskEditInfo (id) {
   return axios.get(`/plugins/data-migration/migration/editInfo/${id}`)
 }
 
-export function openSSH (data) {
-  return axios.post('/host/ssh', data)
+export function openSSH (hostId, data) {
+  return axios.post(`/host/ssh/${hostId}`, data)
 }
 
 export function getEntryKey () {

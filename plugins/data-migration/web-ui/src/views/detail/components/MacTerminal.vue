@@ -69,7 +69,8 @@ const handleConnect = async () => {
       sshUsername: props.host.runUser
     }
     initTerm(term, terminalSocket.ws)
-    openSSH(param)
+
+    openSSH(props.host?.runHostId, param)
       .then((res) => {
         if (res.code !== 200) {
           term.writeln(res.msg)
