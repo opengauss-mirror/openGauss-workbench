@@ -1329,3 +1329,35 @@ COMMENT ON COLUMN "public"."tb_transcribe_replay_param"."id" IS '参数表主键
 COMMENT ON COLUMN "public"."tb_transcribe_replay_param"."fail_sql_id" IS '关联的失败SQL记录ID';
 COMMENT ON COLUMN "public"."tb_transcribe_replay_param"."type" IS '参数类型';
 COMMENT ON COLUMN "public"."tb_transcribe_replay_param"."value" IS '参数值';
+
+-- ----------------------------
+-- Update tb_migration_task_init_global_param
+-- ----------------------------
+
+UPDATE "public"."tb_migration_task_init_global_param"
+SET "param_value" = '20',
+    "param_rules" = '[5,100]'
+WHERE "id" = 2;
+
+UPDATE "public"."tb_migration_task_init_global_param"
+SET "param_value" = '100'
+WHERE "id" = 3;
+
+UPDATE "public"."tb_migration_task_init_global_param"
+SET "param_value" = '20',
+    "param_rules" = '[5,100]'
+WHERE "id" = 4;
+
+UPDATE "public"."tb_migration_task_init_global_param"
+SET "param_value" = '20',
+    "param_rules" = '[5,100]'
+WHERE "id" = 8;
+
+UPDATE "public"."tb_migration_task_init_global_param"
+SET "param_value" = '100'
+WHERE "id" = 9;
+
+UPDATE "public"."tb_migration_task_init_global_param"
+SET "param_value" = '20',
+    "param_rules" = '[5,100]'
+WHERE "id" = 10;
