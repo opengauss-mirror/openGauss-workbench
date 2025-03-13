@@ -28,6 +28,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.system.domain.SysPlugin;
 
+import java.util.List;
+
 /**
  * @author xielibo
  */
@@ -41,4 +43,11 @@ public interface ISysPluginService extends IService<SysPlugin> {
     void uninstallPluginByPluginId(String pluginId);
 
     SysPlugin getByPluginId(String pluginId);
+
+    /**
+     * getPluginIds
+     *
+     * @return pluginIds
+     */
+    List<String> getPluginList();
 }

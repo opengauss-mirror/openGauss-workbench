@@ -30,6 +30,8 @@ import org.opengauss.admin.system.domain.SysPlugin;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 
 /**
  * SysPluginMapper
@@ -44,4 +46,11 @@ public interface SysPluginMapper extends BaseMapper<SysPlugin> {
      *
      */
     public IPage<SysPlugin> selectSysPluginListPage(IPage<SysPlugin> page, @Param("entity") SysPlugin sysPlugin);
+
+    /**
+     * getPluginIds
+     *
+     * @return pluginIds
+     */
+    List<String> getPluginIds();
 }

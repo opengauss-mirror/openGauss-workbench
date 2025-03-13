@@ -24,6 +24,7 @@
 
 package org.opengauss.admin.common.core.handler.ops.cache;
 
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2022/8/11 20:37
  **/
 @Component
+@Slf4j
 public class WsConnectorManager {
     private static final ConcurrentHashMap<String, WsSession> CONNECTOR_CONTEXT = new ConcurrentHashMap<>();
 
@@ -45,6 +47,7 @@ public class WsConnectorManager {
      * @param wsSession  websocket session
      */
     public void register(String businessId, WsSession wsSession) {
+        log.info("register-WsConnectorManager.java businessId: {}", businessId);
         CONNECTOR_CONTEXT.put(businessId, wsSession);
     }
 
@@ -54,6 +57,7 @@ public class WsConnectorManager {
      * @param businessId business ID
      */
     public void remove(String businessId) {
+        log.info("remove1-WsConnectorManager.java businessId: {}", businessId);
         CONNECTOR_CONTEXT.remove(businessId);
     }
 
@@ -70,6 +74,7 @@ public class WsConnectorManager {
     public void removeByVal(WsSession wsSession) {
         CONNECTOR_CONTEXT.forEach((k, v) -> {
             if (v.equals(wsSession)) {
+                log.info("remove2-WsConnectorManager.java key {}", k);
                 CONNECTOR_CONTEXT.remove(k);
             }
         });

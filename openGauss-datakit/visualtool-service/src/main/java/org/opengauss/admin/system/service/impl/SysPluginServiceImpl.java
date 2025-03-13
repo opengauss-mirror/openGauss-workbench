@@ -37,6 +37,8 @@ import org.opengauss.admin.system.service.ISysPluginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * @author xielibo
  */
@@ -114,5 +116,8 @@ public class SysPluginServiceImpl extends ServiceImpl<SysPluginMapper, SysPlugin
         return sysPluginMapper.selectOne(queryWrapper);
     }
 
-
+    @Override
+    public List<String> getPluginList() {
+        return sysPluginMapper.getPluginIds();
+    }
 }

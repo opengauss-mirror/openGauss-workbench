@@ -454,6 +454,73 @@ COMMENT ON COLUMN "sys_plugins"."theme" IS '主题';
 COMMENT ON COLUMN "sys_plugins"."plugin_desc_en" IS '插件英文描述';
 
 -- ----------------------------
+-- Table structure for sys_plugins_repository
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS sys_plugins_repository (
+    "id" BIGSERIAL NOT NULL PRIMARY KEY,
+    "plugin_id" character varying(100),
+    "is_downloaded" bigint DEFAULT 0,
+    "plugin_version" varchar(50),
+    "download_url" character varying(255) UNIQUE,
+    "plugin_desc" text,
+    "plugin_desc_en" text
+)
+;
+COMMENT ON COLUMN "sys_plugins_repository"."id" IS '主键ID';
+COMMENT ON COLUMN "sys_plugins_repository"."plugin_id" IS '插件ID';
+COMMENT ON COLUMN "sys_plugins_repository"."is_downloaded" IS '插件是否已下载：0：未下载；1：已下载';
+COMMENT ON COLUMN "sys_plugins_repository"."plugin_version" IS '插件版本';
+COMMENT ON COLUMN "sys_plugins_repository"."download_url" IS '插件下载地址';
+COMMENT ON COLUMN "sys_plugins_repository"."plugin_desc" IS '插件描述';
+COMMENT ON COLUMN "sys_plugins_repository"."plugin_desc_en" IS '插件英文描述';
+
+--pluginsURL-(7.0.0-RC2)
+INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
+VALUES ('alert-monitor', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/alert-monitor-7.0.0-RC2-repackage.jar', '告警插件', 'Alarm Plugin') ON DUPLICATE KEY
+UPDATE NOTHING;
+
+INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
+VALUES ('container-management', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/container-management-plugin-7.0.0-RC2-repackage.jar', '容器管理插件', 'Container management Plugin') ON DUPLICATE KEY
+UPDATE NOTHING;
+
+INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
+VALUES ('webds-plugin', 1, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/webds-plugin-7.0.0-RC2-repackage.jar', '业务开发', 'Data Studio Plugin') ON DUPLICATE KEY
+UPDATE NOTHING;
+
+INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
+VALUES ('oauth-login', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/oauth-login-7.0.0-RC2-repackage.jar', '统一登录插件', 'Oauth Login Plugin') ON DUPLICATE KEY
+UPDATE NOTHING;
+
+INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
+VALUES ('observability-log-search', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-log-search-7.0.0-RC2-repackage.jar', '日志检索插件', 'Log Retrieval Plugin') ON DUPLICATE KEY
+UPDATE NOTHING;
+
+INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
+VALUES ('MetaTune', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/MetaTune-7.0.0-RC2-repackage.jar', '数据库智能参数调优', 'The database intelligent parameter tuning tool') ON DUPLICATE KEY
+UPDATE NOTHING;
+
+INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
+VALUES ('observability-instance', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-instance-7.0.0-RC2-repackage.jar', '实例监控插件', 'Instance Monitoring Plugin') ON DUPLICATE KEY
+UPDATE NOTHING;
+
+INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
+VALUES ('data-migration', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/data-migration-7.0.0-RC2-repackage.jar', '数据迁移插件', 'Data Migration Plugin') ON DUPLICATE KEY
+UPDATE NOTHING;
+
+INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
+VALUES ('base-ops', 1, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/base-ops-7.0.0-RC2-repackage.jar', '基础运维插件', 'Basic Operation Plugin') ON DUPLICATE KEY
+UPDATE NOTHING;
+
+INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
+VALUES ('observability-sql-diagnosis', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-sql-diagnosis-7.0.0-RC2-repackage.jar', '智能诊断插件', 'Intelligent Diagnosis Plugin') ON DUPLICATE KEY
+UPDATE NOTHING;
+
+INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
+VALUES ('monitor-tools', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/monitor-tools-7.0.0-RC2-repackage.jar', '数据库监控插件生成工具', 'Database monitoring plugin generation tool') ON DUPLICATE KEY
+UPDATE NOTHING;
+
+-- ----------------------------
 -- Table structure for sys_role
 -- ----------------------------
 

@@ -71,7 +71,6 @@ public class BaseOpsPluginListener implements ApplicationListener<ApplicationEve
                 menuFacade.savePluginMenu(pluginId, "日志分析", "log analysis", 2, "monitor/logCenter", monitorParent.getMenuId());
                 menuFacade.savePluginMenu(pluginId, "WDR报告", "WDR report", 3, "monitor/wdr", monitorParent.getMenuId());
                 menuFacade.savePluginMenu(pluginId, "SQL诊断", "sql analysis", 4, "monitor/slowSql", monitorParent.getMenuId());
-                menuFacade.savePluginMenu(pluginId, "安装包管理", "package manage", 5, "monitor/packageManage", monitorParent.getMenuId());
                 menuFacade.savePluginMenu(pluginId, "自定义控制台", "custom control", 6, "monitor/customControl", monitorParent.getMenuId());
                 menuFacade.savePluginMenu(pluginId, "备份恢复", "backup recovery", 7, "ops/backup", monitorParent.getMenuId());
 
