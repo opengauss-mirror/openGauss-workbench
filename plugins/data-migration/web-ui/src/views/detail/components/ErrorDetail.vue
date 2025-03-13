@@ -13,9 +13,17 @@
       </el-row>
       <el-row :gutter="20">
         <div class="detailRow">
-          <div class="detailLabel">{{ $t('components.SubTaskDetail.alarmTime') }}</div>
+          <div class="detailLabel">{{ $t('components.SubTaskDetail.firstAlarmTime') }}</div>
           <div>
-            <div class="desc">{{ detailInfo.dateTime }}</div>
+            <div class="desc">{{ detailInfo.firstDateTime }}</div>
+          </div>
+        </div>
+      </el-row>
+      <el-row :gutter="20">
+        <div class="detailRow">
+          <div class="detailLabel">{{ $t('components.SubTaskDetail.latestAlarmTime') }}</div>
+          <div>
+            <div class="desc">{{ detailInfo.latestDateTime }}</div>
           </div>
         </div>
       </el-row>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.plugin.mapper.MigrationTaskAlertMapper">
+    <select id="countGroupAlertByTaskId" resultType="long">
+        SELECT COUNT(1)
+            FROM (
+                SELECT DISTINCT migration_phase, log_source, log_code
+                    FROM tb_migration_task_alert
+                    WHERE task_id = #{taskId}
+            )
+    </select>
+
+    <select id="countGroupAlertInPhase" resultType="long">
+        SELECT COUNT(1)
+            FROM (
+                SELECT DISTINCT migration_phase, log_source, log_code
+                    FROM tb_migration_task_alert
+                    WHERE task_id = #{taskId} AND migration_phase = #{phaseId}
+            )
+    </select>
+
+    <select id="getGroupAlertDto" resultType="org.opengauss.admin.plugin.dto.MigrationTaskAlertDto">
+        SELECT
+            log_source,
+            log_code,
+            MIN(id) AS min_id,
+            MAX(id) AS max_id,
+            COUNT(1) AS group_num
+        FROM
+            tb_migration_task_alert
+        WHERE
+            task_id = #{taskId} AND migration_phase = #{phaseId}
+        GROUP BY
+            log_source,
+            log_code
+    </select>
+
+    <select id="getGroupAlertIds" resultType="Integer">
+        SELECT id
+        FROM tb_migration_task_alert
+        WHERE migration_phase = #{migrationPhase}
+            AND log_code = #{logCode}
+            AND log_source = #{logSource}
+            AND task_id = #{taskId}
+    </select>
+</mapper>

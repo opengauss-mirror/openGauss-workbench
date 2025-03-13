@@ -62,12 +62,4 @@ public class MigrationTaskAlert {
         return String.format(Locale.ROOT, "[%s] %s <CODE:%s> %s (%s:%d)",
                 dateTime, logLevel, logCode, message, className, lineNumber);
     }
-
-    /**
-     * format date time
-     */
-    public void formatDateTime() {
-        String dataTimeModel = "yyyy-MM-dd HH:mm:ss";
-        this.dateTime = this.dateTime.substring(0, dataTimeModel.length());
-    }
 }
