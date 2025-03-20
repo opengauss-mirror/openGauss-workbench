@@ -109,7 +109,7 @@ sha256sum Datakit-6.0.0.tar.gz
    使用轻量嵌入式数据库`Intarkdb`作为后台数据库时，只需注释`openGauss`的配置内容，并解开对`Intarkdb`配置内容的注释，即可完成配置。目前`datakit`、`base-ops`和`alert-monitor`在启动时会在数据库初始化数据。配置内容如下： 
    ```yaml
    # For Intarkdb
-   driver-class-name: org.intarkdb.IntarkdbJDBC
+   driver-class-name: org.intarkdb.Driver
    url: jdbc:intarkdb:data/datakit
    ```
    配置文件更改完成后，保存并退出文件编辑，然后执行如下命令，将`application-temp.yml`文件移动到第二步创建的`config`目录下
@@ -180,6 +180,27 @@ sha256sum Datakit-6.0.0.tar.gz
    ```
    由于`openGauss`数据库不支持通过初始用户进行远程连接，因此此处创建新的用户供`datakit`远程连接时使用。同时，由于`datakit`需要拥有管理员权限对数据库进行操作，因此需要赋予连接用户管理员权限。此处新建`db_datakit`数据库作为`datakit`平台的底层数据库使用，不用做任何操作，`datakit`成功连接后会自动初始化数据。
 7. 所有配置完成，保持`openGauss`数据库服务启动
+
+## 补充：IntarkDB使用说明
+### 1.使用源码编译运行`IntarkDB`  
+   `IntarkDB`数据库的编译与运行可参考[openGauss-embedded](https://gitee.com/opengauss/openGauss-embedded/tree/master)
+### 2.使用`IntarkDB-JDBC`本地连接或创建`IntarkDB`  
+   在Java项目中，可使用`IntarkDB-JDBC`，直接创建和连接`IntarkDB`，相应的jar包放置在 `lib` 目录下。  
+#### 连接 URL 格式
+   ```jdbc:intarkdb:{数据库所在路径}```  
+   例如，连接`data/datakit`目录下的数据库：```jdbc:intarkdb:data/datakit```  
+   当目标路径数据库不存在时，`IntarkDB-JDBC`会自动创建数据库后再连接
+### 3.使用`IntarkDB-JDBC`开启`IntarkDB`的网络服务  
+   连接或创建`IntarkDB`，同时开启网络服务，以便其他程序通过网络连接 `IntarkDB` 数据库    
+#### 连接 URL 格式   
+   ```jdbc:intarkdb:{数据库所在路径}?open_remote=true&port={}&dbname={}```  
+   例如，开启9000端口、数据库名称为intarkdb：```jdbc:intarkdb:data/datakit?open_remote=true&port=9000&dbname=intarkdb```  
+### 4.使用`IntarkDB-JDBC`通过网络连接至`IntarkDB`  
+   当`IntarkDB`开启网络服务时，可通过网络连接至远程的`IntarkDB`实例。目前，连接时使用默认的登录凭证，用户名为`SYS`，密码为`IntarkDB`，且这些凭证不可修改。
+#### 连接 URL 格式
+   ```jdbc:intarkdb:tcp://{ip:port}?dbname={dbname}```  
+   例如，连接到127.0.0.1:9000的intarkdb数据库：```jdbc:intarkdb:tcp://127.0.0.1:9000?dbname=intarkdb```
+   
 
 ## 参与开发
 开发环境搭建参考 [开发环境搭建](https://gitee.com/opengauss/openGauss-workbench/tree/master/openGauss-datakit/doc/DataKit%20Dev%20Setup.md)

@@ -16,7 +16,7 @@ spring:
           password: Test@1234
         embedded:
 #          url: jdbc:intarkdb:data/observability-instance-data
-#          driverClassName: org.intarkdb.IntarkDBJDBC
+#          driverClassName: org.intarkdb.Driver
           url: jdbc:sqlite:data/observability-instance-data.db
           driverClassName: org.sqlite.JDBC
           init:

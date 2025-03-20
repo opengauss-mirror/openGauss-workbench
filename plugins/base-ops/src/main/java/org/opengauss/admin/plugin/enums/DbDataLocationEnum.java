@@ -39,7 +39,7 @@ import java.util.Optional;
 @AllArgsConstructor
 @Getter
 public enum DbDataLocationEnum {
-    INTARKDB("org.intarkdb.IntarkdbJDBC", Arrays.asList("classpath:intarkdb-schema.sql")),
+    INTARKDB("org.intarkdb.Driver", Arrays.asList("classpath:intarkdb-schema.sql")),
     OPENGAUSS("org.opengauss.Driver", Arrays.asList("classpath:opengauss-schema.sql"));
 
     private String driverClass;
