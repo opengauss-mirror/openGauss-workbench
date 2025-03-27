@@ -224,8 +224,6 @@ COMMENT ON COLUMN "public"."ops_cluster"."om_tools_path" IS '企业版om路径';
 COMMENT ON COLUMN "public"."ops_cluster"."core_path" IS '企业版核心路径';
 COMMENT ON COLUMN "public"."ops_cluster"."port" IS '企业版端口';
 COMMENT ON COLUMN "public"."ops_cluster"."enable_dcf" IS '是否开启DCF  0否1是';
-COMMENT ON COLUMN "public"."ops_cluster"."dcf_port" IS 'DCF端口';
-
 
 CREATE OR REPLACE FUNCTION add_dcf_port() RETURNS integer AS '
 BEGIN
@@ -234,6 +232,7 @@ IF
 ''dcf_port'' ) = 0
 THEN
 ALTER TABLE ops_cluster ADD COLUMN dcf_port varchar(255);
+COMMENT ON COLUMN "public"."ops_cluster"."dcf_port" IS ''DCF端口'';
 END IF;
 RETURN 0;
 END;'
