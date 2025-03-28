@@ -149,7 +149,6 @@ public class ImportClusterBody {
         } else {
             opsClusterEntity.setEnvPath(envPath);
         }
-
         if (openGaussVersion == OpenGaussVersionEnum.ENTERPRISE) {
             opsClusterEntity.setDatabaseUsername(enterpriseInstallConfig.getDatabaseUsername());
             opsClusterEntity.setDatabasePassword(enterpriseInstallConfig.getDatabasePassword());

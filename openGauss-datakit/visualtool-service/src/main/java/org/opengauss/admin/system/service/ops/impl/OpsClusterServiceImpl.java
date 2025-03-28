@@ -41,7 +41,6 @@ import org.opengauss.admin.common.core.domain.model.ops.check.*;
 import org.opengauss.admin.common.core.handler.ops.cache.TaskManager;
 import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
 import org.opengauss.admin.common.enums.ops.ClusterRoleEnum;
-import org.opengauss.admin.common.enums.ops.DeployTypeEnum;
 import org.opengauss.admin.common.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.ops.WsUtil;
@@ -220,19 +219,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         if (Objects.isNull(hostUserEntity)) {
             throw new OpsException("Node installation user information does not exist");
         }
-        String dataPath = nodeEntity.getDataPath();
-        if (OpenGaussVersionEnum.MINIMAL_LIST == clusterEntity.getVersion()) {
-            if (clusterEntity.getDeployType() == DeployTypeEnum.CLUSTER) {
-                if (nodeEntity.getClusterRole() == ClusterRoleEnum.MASTER) {
-                    dataPath = dataPath + "/master";
-                } else {
-                    dataPath = dataPath + "/slave";
-                }
-            } else {
-                dataPath = dataPath + "/single_node";
-            }
-        }
-        final String realDataPath = dataPath;
+        final String realDataPath = nodeEntity.getDataPath();
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             Connection connection = null;
             WsSession wsSession = wsConnectorManager.getSession(businessId)

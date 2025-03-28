@@ -343,7 +343,7 @@ public interface SshCommandConstants {
      * check openGauss version
      * MINILIST:
      */
-    String CHECK_MINILIST_VERSION = "gsql -V&&[ -f %s ]";
+    String CHECK_MINILIST_VERSION = "source %s;gsql -V&&[ -f %s ]";
 
     /**
      * check environment is online by  curl -I https://opengauss.org/zh/

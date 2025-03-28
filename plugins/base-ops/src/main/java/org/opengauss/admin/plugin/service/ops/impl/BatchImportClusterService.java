@@ -309,10 +309,11 @@ public class BatchImportClusterService extends ServiceImpl<OpsClusterMapper, Ops
             command = enterAndLiteGaussHome + ";" + liteGaussData + ";" + versionNum;
         } else if (opsParseExcelEntity.getVersionType().equals(MINI_CONSTANT)) {
             versionNum = "gsql -V|awk '{print $3}'";
-            String miniGaussHome = "source ~/.bashrc;echo $GAUSSHOME";
-            command = miniGaussHome + ";" + versionNum;
+            String miniGaussHome = String.format("source %s;echo $GAUSSHOME", envpath);
+            String miniPgData = String.format("source %s;echo $PGDATA", envpath);
+            command = miniGaussHome + ";" + miniPgData + ";" + versionNum;
         } else {
-            throw new OpsException("please check the env path is or not correct.");
+            throw new OpsException("It is not any of the openGauss versions.");
         }
         List<String> resultList = new ArrayList<>();
         try {
@@ -358,16 +359,16 @@ public class BatchImportClusterService extends ServiceImpl<OpsClusterMapper, Ops
         opsClusterEntity.setVersion(opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT)
             ? ENTERPRISE
             : opsParseExcelEntity.getVersionType().equals(LITE_CONSTANT) ? LITE : MINIMAL_LIST);
-        opsClusterEntity.setVersionNum(
-            opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT) | opsParseExcelEntity.getVersionType()
-                .equals(LITE_CONSTANT) ? resultList.get(2) : resultList.get(1));
+        if (opsParseExcelEntity.getVersionType().equals(MINI_CONSTANT) && resultList.size() < 3) {
+            opsClusterEntity.setVersionNum(resultList.get(1));
+        } else {
+            opsClusterEntity.setVersionNum(resultList.get(2));
+        }
         opsClusterEntity.setDatabasePassword(
             encryptionUtils.encrypt(opsParseExcelEntity.getOpsImportEntity().getDatabasePassword()));
         opsClusterEntity.setDatabaseUsername(opsParseExcelEntity.getOpsImportEntity().getDatabaseUsername());
         opsClusterEntity.setPort(opsParseExcelEntity.getOpsImportEntity().getPort());
-        opsClusterEntity.setEnvPath(
-            opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT) | opsParseExcelEntity.getVersionType()
-                .equals(LITE_CONSTANT) ? opsParseExcelEntity.getOpsImportEntity().getEnvPath() : "~/.bashrc");
+        opsClusterEntity.setEnvPath(opsParseExcelEntity.getOpsImportEntity().getEnvPath());
         opsClusterEntity.setInstallPath(resultList.get(0));
         OpsClusterNodeEntity opsClusterNodeEntity = new OpsClusterNodeEntity();
         opsClusterNodeEntity.setClusterNodeId(StrUtil.uuid());
@@ -382,11 +383,28 @@ public class BatchImportClusterService extends ServiceImpl<OpsClusterMapper, Ops
         opsClusterNodeEntity.setHostId(opsParseExcelEntity.getHostAndUserId().getHostId() + "");
         opsClusterNodeEntity.setInstallUserId(opsParseExcelEntity.getHostAndUserId().getHostUserId() + "");
         opsClusterNodeEntity.setInstallPath(resultList.get(0));
-        opsClusterNodeEntity.setDataPath(
-            opsParseExcelEntity.getVersionType().equals(ENTER_CONSTANT) | opsParseExcelEntity.getVersionType()
-                .equals(LITE_CONSTANT) ? resultList.get(1) : resultList.get(0) + "/data");
+        opsClusterNodeEntity.setDataPath(getDataPath(opsParseExcelEntity, resultList));
         opsClusterNodeEntity.setClusterId(opsParseExcelEntity.getOpsImportEntity().getClusterName());
         opsClusterNodeEntityList.add(opsClusterNodeEntity);
+    }
+
+    private String getDataPath(OpsParseExcelEntity opsParseExcelEntity, List<String> resultList) {
+        if (resultList.size() > 2) {
+            return resultList.get(1);
+        }
+        String dataPath = resultList.get(0) + "/data";
+        if (opsParseExcelEntity.getVersionType().equals(MINI_CONSTANT)) {
+            if (opsParseExcelEntity.getIpNum() > 1) {
+                if (opsParseExcelEntity.getIpSequence() == 0) {
+                    dataPath = dataPath + "/master";
+                } else {
+                    dataPath = dataPath + "/slave";
+                }
+            } else {
+                dataPath = dataPath + "/single_node";
+            }
+        }
+        return dataPath;
     }
 
     private void judgeNodeConnSuccess(String publicIp, OpsImportEntity opsImportEntity, String localRole) {
@@ -456,7 +474,8 @@ public class BatchImportClusterService extends ServiceImpl<OpsClusterMapper, Ops
             opsImportEntity.getEnvPath());
         String liteCommand = String.format(CHECK_LITE_VERSION, opsImportEntity.getEnvPath(),
             opsImportEntity.getEnvPath());
-        String miniCommand = String.format(CHECK_MINILIST_VERSION, opsImportEntity.getEnvPath());
+        String miniCommand = String.format(CHECK_MINILIST_VERSION, opsImportEntity.getEnvPath(),
+            opsImportEntity.getEnvPath());
         List<String> commandList = new ArrayList<>();
         commandList.add(omCommand);
         commandList.add(liteCommand);

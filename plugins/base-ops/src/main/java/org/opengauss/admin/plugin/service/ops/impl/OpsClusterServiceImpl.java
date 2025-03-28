@@ -1422,7 +1422,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         }
         WsSession wsSession = wsConnectorManager.getSession(businessId)
             .orElseThrow(() -> new OpsException("response session does not exist"));
-        String dataPath = getDataPath(role, nodeEntity, clusterEntity);
+        String dataPath = nodeEntity.getDataPath();
         SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserEntity.getUsername(),
             encryptionUtils.decrypt(hostUserEntity.getPassword()));
         Future<?> future = getMonitorFuture(hostEntity, clusterEntity, wsSession, sshLogin, dataPath);
@@ -1470,22 +1470,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         private String dataPath;
         private OpenGaussVersionEnum version;
         private String envPath;
-    }
-
-    private String getDataPath(ClusterRoleEnum role, OpsClusterNodeEntity nodeEntity, OpsClusterEntity clusterEntity) {
-        String dataPath = nodeEntity.getDataPath();
-        if (OpenGaussVersionEnum.MINIMAL_LIST == clusterEntity.getVersion()) {
-            if (clusterEntity.getDeployType() == DeployTypeEnum.CLUSTER) {
-                if (role == ClusterRoleEnum.MASTER) {
-                    dataPath = dataPath + "/master";
-                } else {
-                    dataPath = dataPath + "/slave";
-                }
-            } else {
-                dataPath = dataPath + "/single_node";
-            }
-        }
-        return dataPath;
     }
 
     @Override

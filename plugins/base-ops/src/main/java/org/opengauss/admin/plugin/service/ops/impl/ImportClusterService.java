@@ -230,18 +230,20 @@ public class ImportClusterService extends ServiceImpl<OpsClusterMapper, OpsClust
     }
 
     private void saveClusterNodes(ImportClusterBody importClusterBody, OpsClusterEntity opsClusterEntity) {
-        List<OpsClusterNodeEntity> opsClusterNodeEntities = toOpsClusterNodeEntityList(importClusterBody);
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = toOpsClusterNodeEntityList(importClusterBody,
+            opsClusterEntity);
         for (OpsClusterNodeEntity opsClusterNodeEntity : opsClusterNodeEntities) {
             opsClusterNodeEntity.setClusterId(opsClusterEntity.getClusterId());
         }
         opsClusterNodeService.saveBatch(opsClusterNodeEntities);
     }
 
-    private List<OpsClusterNodeEntity> toOpsClusterNodeEntityList(ImportClusterBody importClusterBody) {
+    private List<OpsClusterNodeEntity> toOpsClusterNodeEntityList(ImportClusterBody importClusterBody,
+                                                                  OpsClusterEntity opsClusterEntity) {
         if (Objects.equals(OpenGaussVersionEnum.LITE, importClusterBody.getOpenGaussVersion())) {
             return importClusterBody.getLiteInstallConfig().toOpsClusterNodeEntityList();
         } else if (Objects.equals(OpenGaussVersionEnum.MINIMAL_LIST, importClusterBody.getOpenGaussVersion())) {
-            return importClusterBody.getMinimalistInstallConfig().toOpsClusterNodeEntityList();
+            return importClusterBody.getMinimalistInstallConfig().toOpsClusterNodeEntityList(opsClusterEntity);
         } else if (Objects.equals(OpenGaussVersionEnum.ENTERPRISE, importClusterBody.getOpenGaussVersion())) {
             return importClusterBody.getEnterpriseInstallConfig().toOpsClusterNodeEntityList();
         } else {

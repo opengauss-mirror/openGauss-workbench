@@ -132,7 +132,8 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
 
             OpsClusterContext opsClusterContext = new OpsClusterContext();
             OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
-            List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext.getMinimalistInstallConfig().toOpsClusterNodeEntityList();
+            List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext.getMinimalistInstallConfig()
+                    .toOpsClusterNodeEntityList(opsClusterEntity);
 
             opsClusterContext.setOpsClusterEntity(opsClusterEntity);
             opsClusterContext.setOpsClusterNodeEntityList(opsClusterNodeEntities);
@@ -143,7 +144,7 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
 
             wsUtil.sendText(installContext.getRetSession(), "SAVE CONTEXT");
             wsUtil.sendText(installContext.getRetSession(),"SAVE_INSTALL_CONTEXT");
-            saveContext(installContext);
+            saveContext(opsClusterEntity, opsClusterNodeEntities);
             wsUtil.sendText(installContext.getRetSession(),"FINISH");
             log.info("The installation is complete");
         }finally {
@@ -445,23 +446,13 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
 
     private void doStart(Session startUserSession, WsSession retSession, OpsClusterContext opsClusterContext) {
         OpsClusterEntity opsClusterEntity = opsClusterContext.getOpsClusterEntity();
-        DeployTypeEnum deployType = opsClusterEntity.getDeployType();
-        OpsClusterNodeEntity opsClusterNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
-
-        String dataPath = opsClusterNodeEntity.getDataPath();
-        if (DeployTypeEnum.CLUSTER == deployType) {
-            if (ClusterRoleEnum.MASTER == opsClusterContext.getRole()) {
-                startMaster(dataPath, opsClusterEntity, startUserSession, retSession);
-            }else if (ClusterRoleEnum.SLAVE == opsClusterContext.getRole()) {
-                startSlave(dataPath, opsClusterEntity, startUserSession, retSession);
-            }else {
-                startMaster(dataPath, opsClusterEntity, startUserSession, retSession);
-                startSlave(dataPath, opsClusterEntity, startUserSession, retSession);
-            }
-        } else {
-            String startCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SINGLE_START, dataPath);
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterContext.getOpsClusterNodeEntityList();
+        for (OpsClusterNodeEntity opsClusterNodeEntity : opsClusterNodeEntities) {
+            String dataPath = opsClusterNodeEntity.getDataPath();
+            String startCommand = MessageFormat.format(SshCommandConstants.LITE_START, dataPath);
             try {
-                JschResult jschResult = jschUtil.executeCommand(startCommand,opsClusterEntity.getEnvPath(), startUserSession, retSession);
+                JschResult jschResult = jschUtil.executeCommand(startCommand, opsClusterEntity.getEnvPath(),
+                    startUserSession, retSession);
                 if (0 != jschResult.getExitCode()) {
                     throw new OpsException("startup error，exit code " + jschResult.getExitCode());
                 }
@@ -469,32 +460,6 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
                 log.error("startup error", e);
                 throw new OpsException("startup error");
             }
-        }
-    }
-
-    private void startSlave(String dataPath, OpsClusterEntity opsClusterEntity, Session startUserSession, WsSession retSession) {
-        String slaveStartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SLAVE_START, dataPath);
-        try {
-            JschResult jschResult = jschUtil.executeCommand(slaveStartCommand,opsClusterEntity.getEnvPath(), startUserSession, retSession);
-            if (0 != jschResult.getExitCode()) {
-                throw new OpsException("startup error，exit code " + jschResult.getExitCode());
-            }
-        } catch (Exception e) {
-            log.error("startup error", e);
-            throw new OpsException("startup error");
-        }
-    }
-
-    private void startMaster(String dataPath, OpsClusterEntity opsClusterEntity, Session startUserSession, WsSession retSession) {
-        String masterStartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_MASTER_START, dataPath);
-        try {
-            JschResult jschResult = jschUtil.executeCommand(masterStartCommand, opsClusterEntity.getEnvPath(),startUserSession, retSession);
-            if (0 != jschResult.getExitCode()) {
-                throw new OpsException("startup error，exit code " + jschResult.getExitCode());
-            }
-        } catch (Exception e) {
-            log.error("startup error", e);
-            throw new OpsException("startup error");
         }
     }
 
@@ -567,21 +532,10 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
 
     private void doStop(Session stopUserSession, WsSession retSession, OpsClusterContext opsClusterContext) {
         OpsClusterEntity opsClusterEntity = opsClusterContext.getOpsClusterEntity();
-        DeployTypeEnum deployType = opsClusterEntity.getDeployType();
-        OpsClusterNodeEntity opsClusterNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
-
-        String dataPath = opsClusterNodeEntity.getDataPath();
-        if (DeployTypeEnum.CLUSTER == deployType) {
-            if (ClusterRoleEnum.MASTER == opsClusterContext.getRole()) {
-                stopMaster(dataPath, opsClusterEntity, stopUserSession, retSession);
-            }else if (ClusterRoleEnum.SLAVE == opsClusterContext.getRole()) {
-                stopSlave(dataPath, opsClusterEntity, stopUserSession, retSession);
-            }else {
-                stopMaster(dataPath, opsClusterEntity, stopUserSession, retSession);
-                stopSlave(dataPath, opsClusterEntity, stopUserSession, retSession);
-            }
-        } else {
-            String stopCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SINGLE_STOP, dataPath);
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterContext.getOpsClusterNodeEntityList();
+        for (OpsClusterNodeEntity opsClusterNodeEntity : opsClusterNodeEntities) {
+            String dataPath = opsClusterNodeEntity.getDataPath();
+            String stopCommand = MessageFormat.format(SshCommandConstants.LITE_STOP, dataPath);
             try {
                 JschResult jschResult = jschUtil.executeCommand(stopCommand,opsClusterEntity.getEnvPath(), stopUserSession, retSession);
                 if (0 != jschResult.getExitCode()) {
@@ -594,51 +548,15 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
         }
     }
 
-    private void stopSlave(String dataPath, OpsClusterEntity opsClusterEntity, Session stopUserSession, WsSession retSession) {
-        String slaveStopCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SLAVE_STOP, dataPath);
-        try {
-            JschResult jschResult = jschUtil.executeCommand(slaveStopCommand,opsClusterEntity.getEnvPath(), stopUserSession, retSession);
-            if (0 != jschResult.getExitCode()) {
-                throw new OpsException("stop error，exit code " + jschResult.getExitCode());
-            }
-        } catch (Exception e) {
-            log.error("stop error", e);
-            throw new OpsException("stop error");
-        }
-    }
-
-    private void stopMaster(String dataPath, OpsClusterEntity opsClusterEntity, Session stopUserSession, WsSession retSession) {
-        String masterStopCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_MASTER_STOP, dataPath);
-        try {
-            JschResult jschResult = jschUtil.executeCommand(masterStopCommand, opsClusterEntity.getEnvPath(), stopUserSession, retSession);
-            if (0 != jschResult.getExitCode()) {
-                throw new OpsException("stop error，exit code " + jschResult.getExitCode());
-            }
-        } catch (Exception e) {
-            log.error("stop error", e);
-            throw new OpsException("stop error");
-        }
-    }
-
     private void doRestart(Session restartUserSession, WsSession retSession, OpsClusterContext opsClusterContext) {
         OpsClusterEntity opsClusterEntity = opsClusterContext.getOpsClusterEntity();
-        DeployTypeEnum deployType = opsClusterEntity.getDeployType();
-        OpsClusterNodeEntity opsClusterNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
-
-        String dataPath = opsClusterNodeEntity.getDataPath();
-        if (DeployTypeEnum.CLUSTER == deployType) {
-            if (ClusterRoleEnum.MASTER == opsClusterContext.getRole()) {
-                restartMaster(dataPath, opsClusterEntity, restartUserSession, retSession);
-            }else if (ClusterRoleEnum.SLAVE == opsClusterContext.getRole()) {
-                restartSlave(dataPath, opsClusterEntity, restartUserSession, retSession);
-            }else {
-                restartMaster(dataPath, opsClusterEntity, restartUserSession, retSession);
-                restartSlave(dataPath, opsClusterEntity, restartUserSession, retSession);
-            }
-        } else {
-            String restartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SINGLE_RESTART, dataPath);
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterContext.getOpsClusterNodeEntityList();
+        for (OpsClusterNodeEntity opsClusterNodeEntity : opsClusterNodeEntities) {
+            String dataPath = opsClusterNodeEntity.getDataPath();
+            String restartCommand = MessageFormat.format(SshCommandConstants.LITE_RESTART, dataPath);
             try {
-                JschResult jschResult = jschUtil.executeCommand(restartCommand, opsClusterEntity.getEnvPath(),  restartUserSession, retSession);
+                JschResult jschResult = jschUtil.executeCommand(restartCommand, opsClusterEntity.getEnvPath(),
+                    restartUserSession, retSession);
                 if (0 != jschResult.getExitCode()) {
                     throw new OpsException("restart error，exit code " + jschResult.getExitCode());
                 }
@@ -649,73 +567,13 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
         }
     }
 
-    private void restartSlave(String dataPath, OpsClusterEntity opsClusterEntity, Session restartUserSession, WsSession retSession) {
-        String slaveRestartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SLAVE_RESTART, dataPath);
-        try {
-            JschResult jschResult = jschUtil.executeCommand(slaveRestartCommand, opsClusterEntity.getEnvPath(), restartUserSession, retSession);
-            if (0 != jschResult.getExitCode()) {
-                throw new OpsException("restart error，exit code " + jschResult.getExitCode());
-            }
-        } catch (Exception e) {
-            log.error("restart error", e);
-            throw new OpsException("restart error");
-        }
-    }
-
-    private void restartMaster(String dataPath, OpsClusterEntity opsClusterEntity, Session restartUserSession, WsSession retSession) {
-        String masterRestartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_MASTER_RESTART, dataPath);
-        try {
-            JschResult jschResult = jschUtil.executeCommand(masterRestartCommand, opsClusterEntity.getEnvPath(), restartUserSession, retSession);
-            if (0 != jschResult.getExitCode()) {
-                throw new OpsException("restart error，exit code " + jschResult.getExitCode());
-            }
-        } catch (Exception e) {
-            log.error("restart error", e);
-            throw new OpsException("restart error");
-        }
-    }
-
     private void doUnInstall(Session unInstallUserSession, WsSession retSession, UnInstallContext unInstallContext) {
         OpsClusterEntity opsClusterEntity = unInstallContext.getOpsClusterEntity();
-        DeployTypeEnum deployType = opsClusterEntity.getDeployType();
-        OpsClusterNodeEntity opsClusterNodeEntity = unInstallContext.getOpsClusterNodeEntityList().get(0);
-
-        String dataPath = opsClusterNodeEntity.getDataPath();
-        if (DeployTypeEnum.CLUSTER == deployType) {
-            // uninstall master
-            String masterCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_MASTER_UNINSTALL, dataPath);
-            try {
-                JschResult jschResult = jschUtil.executeCommand(masterCommand, opsClusterEntity.getEnvPath(), unInstallUserSession, retSession);
-                if (0 != jschResult.getExitCode()) {
-                    throw new OpsException("Uninstall error，exit code " + jschResult.getExitCode());
-                }
-            } catch (Exception e) {
-                log.error("Uninstall error", e);
-                throw new OpsException("Uninstall error");
-            }
-            // uninstall slave
-            String slaveCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SLAVE_UNINSTALL, dataPath);
-            try {
-                JschResult jschResult = jschUtil.executeCommand(slaveCommand, opsClusterEntity.getEnvPath(), unInstallUserSession, retSession);
-                if (0 != jschResult.getExitCode()) {
-                    throw new OpsException("Uninstall error，exit code " + jschResult.getExitCode());
-                }
-            } catch (Exception e) {
-                log.error("Uninstall error", e);
-                throw new OpsException("Uninstall error");
-            }
-
-            try {
-                JschResult jschResult = jschUtil.executeCommand("rm -rf " + dataPath, unInstallUserSession, retSession);
-                if (0 != jschResult.getExitCode()) {
-                    log.error("Failed to clean data, response code: {}, response message: {}", jschResult.getExitCode(), jschResult.getResult());
-                }
-            } catch (Exception e) {
-                log.error("Failed to clean data", e);
-            }
-        } else {
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = unInstallContext.getOpsClusterNodeEntityList();
+        for (OpsClusterNodeEntity opsClusterNodeEntity : opsClusterNodeEntities) {
+            String dataPath = opsClusterNodeEntity.getDataPath();
             // single uninstall
-            String command = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SINGLE_UNINSTALL, dataPath);
+            String command = MessageFormat.format(SshCommandConstants.LITE_STOP, dataPath);
             try {
                 JschResult jschResult = jschUtil.executeCommand(command, opsClusterEntity.getEnvPath(), unInstallUserSession, retSession);
                 if (0 != jschResult.getExitCode()) {
@@ -745,10 +603,7 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
         opsClusterNodeService.removeBatchByIds(opsClusterNodeEntityList.stream().map(OpsClusterNodeEntity::getClusterNodeId).collect(Collectors.toList()));
     }
 
-    private void saveContext(InstallContext installContext) {
-        OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
-        List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext.getMinimalistInstallConfig().toOpsClusterNodeEntityList();
-
+    private void saveContext(OpsClusterEntity opsClusterEntity, List<OpsClusterNodeEntity> opsClusterNodeEntities) {
         opsClusterService.save(opsClusterEntity);
         for (OpsClusterNodeEntity opsClusterNodeEntity : opsClusterNodeEntities) {
             opsClusterNodeEntity.setClusterId(opsClusterEntity.getClusterId());
