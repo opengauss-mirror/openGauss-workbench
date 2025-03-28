@@ -21,13 +21,23 @@
             >
               {{ $t('physical.index.5mphf11rr090') }}
             </a-button>
-            <a-button
-              type="primary"
-              class="mr"
-              @click="deleteSelectedHosts"
-            >
-              {{ $t('physical.index.5mphf11rr590') }}
-            </a-button>
+            <a-popconfirm
+              :popup-visible="isMultiDelConfirm"
+              :content="$t('physical.index.5mphf11szws0')"
+              type="warning"
+              :ok-text="$t('physical.index.5mphf11t05c0')"
+              :cancel-text="$t('physical.index.5mphf11t0bc0')"
+              @ok="deleteMultiRows()"
+              @cancel="isMultiDelConfirm = false"
+              >
+              <a-button
+                type="primary"
+                class="mr"
+                @click="deleteSelectedHosts"
+              >
+                {{ $t('physical.index.5mphf11rr590') }}
+              </a-button>
+            </a-popconfirm>
             <a-button
               type="primary"
               class="mr"
@@ -363,6 +373,9 @@ const filter = reactive({
   pageSize: 10
 })
 
+// 是否显示批量删除二次显示弹窗
+const isMultiDelConfirm = ref(false);
+
 const echartsOption = reactive<KeyValue>({
   cpuOption: cpuOption,
   memoryOption: memoryOption,
@@ -449,7 +462,6 @@ const batchFinish = () => {
   getAllTag()
 }
 
-// const tableBulk = ref<null | InstanceType<typeof Table>>(null)
 const bulkClose = () => {
   getListData()
   getAllTag()
@@ -712,18 +724,25 @@ const addHostbulk = (type: string, data?: KeyValue) => {
   addHostBulkRef.value?.open()
 }
 
-const deleHostbulkRef = ref<null | InstanceType<typeof BatchLabelDlg>>(null)
-
+// 判断是否显示二次确认删除popConfirm悬浮窗
 const deleteSelectedHosts = () => {
+  // 判断当前是否选中
+  if (list.selectedHostIds.length > 0) {
+    isMultiDelConfirm.value = true;
+  } else {
+    Message.warning(t('physical.index.else1'))
+    isMultiDelConfirm.value = false;
+  }
+}
+
+// 批量删除
+const deleteMultiRows = () => {
   const selectedRecords = list.selectedHostIds.map((hostId: string | number) => {
     return data.selectedData[hostId]
   })
-  if (selectedRecords.length > 0) {
-    const tempselectedRecords = selectedRecords.filter(hostId => hostId !== null && hostId !== undefined)
-    deleteMultipleRows(tempselectedRecords)
-  } else {
-    Message.warning(t('physical.index.else1'))
-  }
+  const tempselectedRecords = selectedRecords.filter(hostId => hostId != null && hostId !== undefined)
+  deleteMultipleRows(tempselectedRecords)
+  isMultiDelConfirm.value = false;
 }
 
 const deleteMultipleRows = (records: KeyValue) => {
