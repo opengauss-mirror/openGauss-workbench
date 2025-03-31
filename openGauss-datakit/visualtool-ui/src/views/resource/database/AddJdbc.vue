@@ -406,6 +406,7 @@ const open = (type: string, editData?: KeyValue) => {
   data.testLoading = false
   getHostList()
   if (type === 'update' && data) {
+    delRefObj()
     data.title = t('database.AddJdbc.5oxhkhimzmw0')
     if (editData) {
       Object.assign(data.form, {

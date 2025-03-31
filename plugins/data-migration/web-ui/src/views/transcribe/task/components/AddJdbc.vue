@@ -327,11 +327,12 @@ const handleDelete = (val) => {
     return item.id !== val
   })
   nextTick(() => {
-    data.activeTab = data.form.nodes[0].id
+      data.activeTab = data.form.nodes[0].id
   })
 }
 
 const open = (dbType) => {
+  delRefObj()
   data.show = true
   data.loading = false
   data.testLoading = false
