@@ -72,7 +72,7 @@
                     </el-select>
                     <div class="refresh-con">
                       <el-icon>
-                        <IconRefresh @click="getSourceClustersData"/>
+                        <IconRefresh @click="frechSourceCluster"/>
                       </el-icon>
                       <el-link @click="handleAddSql(taskBasicInfo.sourceDbType.toUpperCase())">
                         {{ $t('transcribe.create.newsource') }}
@@ -82,7 +82,7 @@
                   <div v-if="addHostVisible === true" style="margin-left: 170px; margin-bottom: 30px">
                     <span>
                       {{ $t('transcribe.create.addsourcemsg') }}
-                      <el-button text @click="handleAddSql(taskBasicInfo.sourceDbType.toUpperCase())">{{
+                      <el-button text @click="handleAddHost">{{
                           $t('transcribe.create.createserver')
                         }}</el-button>
                     </span>
@@ -408,7 +408,7 @@
 </template>
 
 <script setup>
-import {computed, reactive, ref, toRaw} from "vue"
+import {computed, watch, ref, toRaw} from "vue"
 import {
   getHostInfo, hostListAll, hostUsers, sourceClusterDbsData, sourceClusters, targetClusterDbsData, targetClusters,
   transcribeReplaydownloadAndConfig, transcribeReplayList, transcribeReplaySave, transcribeReplaytoolsVersion
@@ -468,6 +468,9 @@ const getHostUserPage = (type) => {
 
 const addHostVisible = ref(false)
 const addHostRef = ref()
+const handleAddHost = () => {
+  addHostRef.value?.open()
+}
 
 const backToIndex = () => {
   init()
@@ -567,7 +570,6 @@ const handleParamsConfig = async (type) => {
     taskAdvancedInfo.value.isDefaultRecordConfig = true
     defaultParamsConfig()
   }
-
 }
 
 const handleParamsconfigAgain = () => {
@@ -1068,6 +1070,7 @@ const getSourceClusterDB = () => {
     addHostVisible.value = true
   } else {
     addHostVisible.value = false
+    validateSourcehostip()
     sourceHostInfo.value.hostId = hostIpId.get([tempIp]).split(',')[0]
     sourceHostInfo.value.publicIp = hostIpId.get([tempIp]).split(',')[1]
     sourceHostInfo.value.privateIp = hostIpId.get([tempIp]).split(',')[2]
@@ -1134,12 +1137,23 @@ const getHostIp = () => {
     }
   }).catch(error => {
     console.log('get ip error:', error)
+  }) .finally(() => {
+    if (addHostVisible.value === true) {
+      getSourceClusterDB()
+    }
   })
 }
 
-const labelClose = async () => {
-  await getHostIp()
-  getSourceClusterDB()
+const frechSourceCluster = () => {
+  if (addHostVisible.value === true) {
+    getHostIp()
+  } else {
+    getSourceClustersData()
+  }
+}
+
+const labelClose = () => {
+  getHostIp()
 }
 
 const inittaskRetInfo = () => {
@@ -1297,8 +1311,28 @@ const inittaskBasicInfo = () => {
   taskBasicInfo.value.settings = [{sourceDB: '', targetDB: '', key: ''}]
 
 }
+watch(() => taskBasicInfo.value.sourceIp, (newValue, oldValue) => {
+  if (oldValue !== '' && newValue !== oldValue) {
+    taskBasicInfo.value.sourceHostUser = ''
+    taskBasicInfo.value.settings.length = 1
+    taskBasicInfo.value.settings[0].sourceDB = ''
+  }
+});
+watch(() => taskBasicInfo.value.targetIp, (newValue, oldValue) => {
+  if (oldValue !== '' && newValue !== oldValue) {
+    taskBasicInfo.value.targetHostUser = ''
+    taskBasicInfo.value.settings.length = 1
+    taskBasicInfo.value.settings[0].targetDB = ''
+  }
+})
 
 const init = () => {
+  sourceDBOptions.value = []
+  targetDBOptions.value = []
+  sourcehostUserList.value = []
+  targethostUserList.value = []
+  sourceDBOptions.value = []
+  targetDBOptions.value = []
   getSourceClustersData()
   getTargetClustersData()
   getTaskversionData()

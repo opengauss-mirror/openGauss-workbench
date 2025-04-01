@@ -189,7 +189,7 @@ const jdbcUrl = computed(() => {
       return urlPrefix
     }
   } else if (props.jdbcType === 'OPENGAUSS') {
-    urlPrefix = `jdbc:opengauss://${form.value.ip || '{IP}'}:${form.value.port || '{port}'} /postgres`
+    urlPrefix = `jdbc:opengauss://${form.value.ip || '{IP}'}:${form.value.port || '{port}'}/postgres`
     if (urlSuffix) {
       return urlPrefix + '?' + urlSuffix
     } else {

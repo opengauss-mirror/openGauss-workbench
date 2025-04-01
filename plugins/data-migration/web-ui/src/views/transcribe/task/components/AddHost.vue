@@ -23,13 +23,13 @@
             v-if="data.status === hostStatusEnum.success"
             color="green"
           >{{
-              $t('components.AddHost.5q0a7i43aeg0')
+              $t('transcribe.create.addHost.5mphy3snvg80')
           }}</a-tag>
           <a-tag
             v-if="data.status === hostStatusEnum.fail"
             color="red"
           >{{
-              $t('components.AddHost.5q0a7i43ajk0')
+              $t('transcribe.create.addHost.5mphy3snwq40')
           }}</a-tag>
         </div>
         <div>
@@ -45,7 +45,7 @@
             class="mr"
             @click="handleTestHost"
           >{{
-              $t('components.AddHost.5q0a7i43ap40')
+              $t('components.AddJdbc.5q0a7i43ap40')
           }}</a-button>
           <a-button
             :loading="data.loading"
@@ -92,7 +92,6 @@
       >
         <a-input
           v-model.trim="data.formData.publicIp"
-          disabled
           :placeholder="$t('transcribe.create.addHost.5mphy3snxmw0')"
           @blur="handleBlur"
         ></a-input>
@@ -280,7 +279,7 @@ const formRules = computed(() => {
 })
 
 const emits = defineEmits([`finish`])
-const formRef = ref<null | FormInstance>(null)
+const formRef = ref()
 const submit = () => {
   formRef.value?.validate().then(result => {
     if (!result) {
@@ -432,7 +431,7 @@ const open = (type, publicIp) => {
   data.status = hostStatusEnum.unTest
   data.loading = false
   isAdd.value = true
-  data.title = t('components.AddHost.5mphy3snz5k0')
+  data.title = t('transcribe.create.addHost.5mphy3snz5k0')
   console.log(publicIp)
   Object.assign(data.formData, {
     hostId: '',
@@ -456,3 +455,9 @@ defineExpose({
 })
 
 </script>
+<style>
+.flex-row {
+  display: flex;
+  align-items: center;
+}
+</style>
