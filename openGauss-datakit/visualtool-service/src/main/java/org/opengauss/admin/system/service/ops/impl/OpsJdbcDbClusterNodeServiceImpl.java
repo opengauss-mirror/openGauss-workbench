@@ -68,7 +68,6 @@ import java.util.stream.Collectors;
  **/
 @Service
 public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbClusterNodeMapper, OpsJdbcDbClusterNodeEntity> implements IOpsJdbcDbClusterNodeService {
-
     @Autowired
     private IOpsJdbcDbClusterService opsJdbcDbClusterService;
     @Autowired
@@ -79,6 +78,8 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
     private WsUtil wsUtil;
     @Autowired
     private IOpsClusterService opsClusterService;
+    @Autowired
+    private EncryptionUtils encryptionUtils;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -236,7 +237,8 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
     @Override
     public boolean ping(JdbcDbClusterNodeInputDto clusterNodeInput) {
         boolean res = false;
-        try (Connection connection = JdbcUtil.getConnection(clusterNodeInput.getUrl(), clusterNodeInput.getUsername(), clusterNodeInput.getPassword())) {
+        try (Connection connection = JdbcUtil.getConnection(clusterNodeInput.getUrl(), clusterNodeInput.getUsername(),
+                encryptionUtils.decrypt(clusterNodeInput.getPassword()))) {
             if (Objects.nonNull(connection)) {
                 res = true;
             }
