@@ -563,7 +563,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         } else if (REPLAY.equalsIgnoreCase(transcribeReplayTask.getTaskType())) {
             threadPoolTaskExecutor.submit(() -> startReplay(id));
         } else {
-            runTask(id, transcribeReplayTask);
+            threadPoolTaskExecutor.submit(() -> runTask(id, transcribeReplayTask));
         }
         return AjaxResult.success();
     }
