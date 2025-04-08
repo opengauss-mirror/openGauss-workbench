@@ -100,54 +100,6 @@ public interface SshCommandConstants {
      */
     String MINIMAL_LIST_CLUSTER_INSTALL = "sh {0}install.sh  -w {1} -p {2} --multinode &&source ~/.bashrc";
     /**
-     * Minimalist Single Node Uninstall
-     */
-    String MINIMAL_LIST_SINGLE_UNINSTALL = "gs_ctl stop -D {0}/single_node";
-    /**
-     * Minimalist single node restart
-     */
-    String MINIMAL_LIST_SINGLE_RESTART = "gs_ctl restart -D {0}/single_node";
-    /**
-     * Minimalist single node startup
-     */
-    String MINIMAL_LIST_SINGLE_START = "gs_ctl start -D {0}/single_node";
-    /**
-     * Minimalist single node stop
-     */
-    String MINIMAL_LIST_SINGLE_STOP = "gs_ctl stop -D {0}/single_node";
-    /**
-     * Minimalist master node uninstall
-     */
-    String MINIMAL_LIST_MASTER_UNINSTALL = "gs_ctl stop -D {0}/master";
-    /**
-     * minimalist uninstall from node
-     */
-    String MINIMAL_LIST_SLAVE_UNINSTALL = "gs_ctl stop -D {0}/slave";
-    /**
-     * Minimalist master node restart
-     */
-    String MINIMAL_LIST_MASTER_RESTART = "gs_ctl restart -D {0}/master";
-    /**
-     * Minimalist masternode startup
-     */
-    String MINIMAL_LIST_MASTER_START = "gs_ctl start -D {0}/master";
-    /**
-     * Minimalist masternode stopped
-     */
-    String MINIMAL_LIST_MASTER_STOP = "gs_ctl stop -D {0}/master";
-    /**
-     * Minimalist restart from node
-     */
-    String MINIMAL_LIST_SLAVE_RESTART = "gs_ctl restart -D {0}/slave";
-    /**
-     * The minimalist version starts from node
-     */
-    String MINIMAL_LIST_SLAVE_START = "gs_ctl start -D {0}/slave";
-    /**
-     * minimalist stop from node
-     */
-    String MINIMAL_LIST_SLAVE_STOP = "gs_ctl stop -D {0}/slave";
-    /**
      * Lite reboot
      */
     String LITE_RESTART = "gs_ctl restart -D {0}";

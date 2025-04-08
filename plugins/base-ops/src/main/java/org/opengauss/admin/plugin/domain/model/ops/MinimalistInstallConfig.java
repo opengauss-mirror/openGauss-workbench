@@ -26,9 +26,12 @@ package org.opengauss.admin.plugin.domain.model.ops;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.plugin.domain.model.ops.node.MinimalistInstallNodeConfig;
 import lombok.Data;
+import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
+import org.opengauss.admin.plugin.enums.ops.DeployTypeEnum;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,13 +69,35 @@ public class MinimalistInstallConfig implements ClusterInstallConfig {
         }
     }
 
-    public List<OpsClusterNodeEntity> toOpsClusterNodeEntityList() {
+    /**
+     * toOpsClusterNodeEntityList
+     *
+     * @param opsClusterEntity OpsClusterEntity
+     * @return List<OpsClusterNodeEntity>
+     */
+    public List<OpsClusterNodeEntity> toOpsClusterNodeEntityList(OpsClusterEntity opsClusterEntity) {
         ArrayList<OpsClusterNodeEntity> opsClusterNodeEntities = new ArrayList<>();
-
         for (MinimalistInstallNodeConfig nodeConfig : nodeConfigList) {
-            opsClusterNodeEntities.add(nodeConfig.toOpsClusterNodeEntity());
+            String completeDataPath = nodeConfig.getInstallPath() + "/data";
+            if (StrUtil.isEmpty(nodeConfig.getDataPath())) {
+                if (opsClusterEntity.getDeployType() == DeployTypeEnum.CLUSTER) {
+                    String masterDataPath = completeDataPath + "/master";
+                    nodeConfig.setDataPath(masterDataPath);
+                    nodeConfig.setClusterRole(ClusterRoleEnum.MASTER);
+                    opsClusterNodeEntities.add(nodeConfig.toOpsClusterNodeEntity());
+                    String slaveDataPath = completeDataPath + "/slave";
+                    nodeConfig.setDataPath(slaveDataPath);
+                    nodeConfig.setClusterRole(ClusterRoleEnum.SLAVE);
+                    opsClusterNodeEntities.add(nodeConfig.toOpsClusterNodeEntity());
+                } else {
+                    completeDataPath = completeDataPath + "/single_node";
+                    nodeConfig.setDataPath(completeDataPath);
+                    opsClusterNodeEntities.add(nodeConfig.toOpsClusterNodeEntity());
+                }
+            } else {
+                opsClusterNodeEntities.add(nodeConfig.toOpsClusterNodeEntity());
+            }
         }
-
         return opsClusterNodeEntities;
     }
 }

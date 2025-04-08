@@ -43,6 +43,27 @@
             :label="$t('simple.InstallConfig.else6')" validate-trigger="blur">
             <a-input v-model.trim="data.form.installPackagePath" :placeholder="$t('simple.InstallConfig.else7')" />
           </a-form-item>
+          <a-form-item
+            v-if="installType === 'import' && deployType === 'SINGLE_NODE'"
+            field="editDataPath"
+            :label="$t('simple.InstallConfig.5mpmu0laran0')"
+            validate-trigger="blur"
+          >
+            <a-switch
+              v-model="editDataPath"
+              style="margin-right: 20px;"
+            />
+            <div v-if="!editDataPath" class="label-color">{{ $t('simple.InstallConfig.5mpmu0larbb0') }}</div>
+          </a-form-item>
+          <a-form-item v-if="editDataPath" field="dataPath"
+            :label="$t('simple.InstallConfig.5mpmu0larbk0')" validate-trigger="blur">
+            <div class="flex-col-start full-w">
+              <div class="mb-s full-w">
+                <a-input v-model.trim="data.form.dataPath" :placeholder="$t('simple.InstallConfig.5mpmu0larew0')" />
+              </div>
+              <div class="label-color">{{ $t('simple.InstallConfig.5mpmu0larsl0') }}</div>
+            </div>
+          </a-form-item>
           <a-form-item field="port" :label="$t('simple.InstallConfig.5mpmu0larj40')" validate-trigger="blur">
             <a-input-number v-model="data.form.port" :placeholder="$t('simple.InstallConfig.5mpmu0larmo0')" :min="0"
               :max="65535" />
@@ -55,6 +76,29 @@
           <a-form-item field="databasePassword" :label="$t('simple.InstallConfig.5mpmu0larx00')" validate-trigger="blur">
             <a-input-password v-model="data.form.databasePassword" :placeholder="$t('simple.InstallConfig.5mpmu0las0k0')"
               allow-clear />
+          </a-form-item>
+          <a-form-item
+            v-if="installType === 'import' && deployType === 'SINGLE_NODE'"
+            field="isEnvSeparate"
+            :label="$t('simple.InstallConfig.else11')"
+            validate-trigger="blur"
+          >
+            <a-switch
+              v-model="data.form.isEnvSeparate"
+              style="margin-right: 20px;"
+            />
+            <div v-if="!data.form.isEnvSeparate" class="label-color">{{ $t('simple.InstallConfig.else14') }}</div>
+          </a-form-item>
+          <a-form-item
+            v-if="data.form.isEnvSeparate"
+            field="envPath"
+            :label="$t('simple.InstallConfig.else9')"
+            validate-trigger="blur"
+          >
+            <a-input
+              v-model.trim="data.form.envPath"
+              :placeholder="$t('simple.InstallConfig.else10')"
+            />
           </a-form-item>
         </a-form>
       </div>
@@ -88,7 +132,7 @@ const data = reactive({
     installUserName: '',
     installPath: '/opt/openGauss',
     installPackagePath: '/opt/software/openGauss',
-    dataPath: '/opt/openGauss/data',
+    dataPath: '',
     isEnvSeparate: false,
     envPath: '',
     port: Number(5432),
@@ -98,7 +142,9 @@ const data = reactive({
   },
   rules: {}
 })
-
+const deployStore = useOpsStore()
+const deployType = computed(() => deployStore.getInstallConfig.deployType)
+const editDataPath = ref<boolean>(false)
 const hostListLoading = ref<boolean>(false)
 const hostList = ref<KeyValue[]>([])
 
@@ -434,9 +480,12 @@ const validateSpecialFields = async () => {
   let encryptPwd = ''
   //  cluster port is used
   validMethodArr.push(await validatePort(data.form.port, encryptPwd, data.form.hostId))
-  validMethodArr.push(await validatePath(data.form.installPath + '/data', encryptPwd, data.form.hostId))
+  validMethodArr.push(await validatePath(data.form.installPath, encryptPwd, data.form.hostId))
   if (installType.value !== 'import') {
     validMethodArr.push(await validatePath(data.form.installPackagePath, encryptPwd, data.form.hostId))
+  }
+  if (installType.value === 'import' && editDataPath) {
+    validMethodArr.push(await validatePath(data.form.dataPath, encryptPwd, data.form.hostId))
   }
   if (validMethodArr.length) {
     let validResult
@@ -456,7 +505,6 @@ const validateSpecialFields = async () => {
       result = false
     }
     if ((installType.value !== 'import' && !validResult[1]) || (installType.value === 'import' && validResult[1])) {
-      // dataPath Valid
       formRef.value?.setFields({
         installPath: {
           status: 'error',
@@ -470,13 +518,21 @@ const validateSpecialFields = async () => {
       formRef.value?.setFields({
         installPackagePath: {
           status: 'error',
-          message: installType.value === 'import' ? t('enterprise.NodeConfig.else14') : t('enterprise.NodeConfig.else15')
+          message: t('enterprise.NodeConfig.else15')
+        }
+      })
+      result = false
+    }
+    if (editDataPath && installType.value === 'import' && validResult[2]) {
+      formRef.value?.setFields({
+        dataPath: {
+          status: 'error',
+          message: t('simple.InstallConfig.else15')
         }
       })
       result = false
     }
   }
-
   return result
 }
 

@@ -120,8 +120,8 @@ public class TaskMinimaListProvider extends AbstractTaskProvider {
 
             OpsClusterContext opsClusterContext = new OpsClusterContext();
             OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
-            List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext.getMinimalistInstallConfig().toOpsClusterNodeEntityList();
-
+            List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext.getMinimalistInstallConfig()
+                .toOpsClusterNodeEntityList(opsClusterEntity);
             opsClusterContext.setOpsClusterEntity(opsClusterEntity);
             opsClusterContext.setOpsClusterNodeEntityList(opsClusterNodeEntities);
 
@@ -131,7 +131,8 @@ public class TaskMinimaListProvider extends AbstractTaskProvider {
 
             sendOperateLog(installContext, "SAVE CONTEXT");
             sendOperateLog(installContext, "SAVE_INSTALL_CONTEXT");
-            saveContext(installContext);
+
+            saveContext(opsClusterEntity, opsClusterNodeEntities);
             sendOperateLog(installContext, "FINISH");
             log.info("The installation is complete");
         } catch (OpsException ex) {
@@ -304,36 +305,13 @@ public class TaskMinimaListProvider extends AbstractTaskProvider {
 
     private void doStart(Session startUserSession, RetBuffer retBuffer, OpsClusterContext opsClusterContext) {
         OpsClusterEntity opsClusterEntity = opsClusterContext.getOpsClusterEntity();
-        DeployTypeEnum deployType = opsClusterEntity.getDeployType();
-        OpsClusterNodeEntity opsClusterNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
-
-        String dataPath = opsClusterNodeEntity.getDataPath();
-        if (DeployTypeEnum.CLUSTER == deployType) {
-            if (ClusterRoleEnum.MASTER == opsClusterContext.getRole()) {
-                startMaster(dataPath, opsClusterEntity, startUserSession, retBuffer);
-            } else if (ClusterRoleEnum.SLAVE == opsClusterContext.getRole()) {
-                startSlave(dataPath, opsClusterEntity, startUserSession, retBuffer);
-            } else {
-                startMaster(dataPath, opsClusterEntity, startUserSession, retBuffer);
-                startSlave(dataPath, opsClusterEntity, startUserSession, retBuffer);
-            }
-        } else {
-            String startCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SINGLE_START, dataPath);
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterContext.getOpsClusterNodeEntityList();
+        for (OpsClusterNodeEntity opsClusterNodeEntity : opsClusterNodeEntities) {
+            String dataPath = opsClusterNodeEntity.getDataPath();
+            String startCommand = MessageFormat.format(SshCommandConstants.LITE_START, dataPath);
             startCommand = addCommandOfLoadEnvironmentVariable(startCommand, opsClusterEntity.getEnvPath());
-            opsHostRemoteService.executeCommand(startCommand, startUserSession, retBuffer, "startup single");
+            opsHostRemoteService.executeCommand(startCommand, startUserSession, retBuffer, "startup node");
         }
-    }
-
-    private void startSlave(String dataPath, OpsClusterEntity opsClusterEntity, Session startUserSession, RetBuffer retBuffer) {
-        String slaveStartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SLAVE_START, dataPath);
-        slaveStartCommand = addCommandOfLoadEnvironmentVariable(slaveStartCommand, opsClusterEntity.getEnvPath());
-        opsHostRemoteService.executeCommand(slaveStartCommand, startUserSession, retBuffer, "startup slave");
-    }
-
-    private void startMaster(String dataPath, OpsClusterEntity opsClusterEntity, Session startUserSession, RetBuffer retBuffer) {
-        String masterStartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_MASTER_START, dataPath);
-        masterStartCommand = addCommandOfLoadEnvironmentVariable(masterStartCommand, opsClusterEntity.getEnvPath());
-        opsHostRemoteService.executeCommand(masterStartCommand, startUserSession, retBuffer, "startup master");
     }
 
     @Override
@@ -360,76 +338,27 @@ public class TaskMinimaListProvider extends AbstractTaskProvider {
 
     private void doStop(Session stopUserSession, RetBuffer retBuffer, OpsClusterContext opsClusterContext) {
         OpsClusterEntity opsClusterEntity = opsClusterContext.getOpsClusterEntity();
-        DeployTypeEnum deployType = opsClusterEntity.getDeployType();
-        OpsClusterNodeEntity opsClusterNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
-
-        String dataPath = opsClusterNodeEntity.getDataPath();
-        if (DeployTypeEnum.CLUSTER == deployType) {
-            if (ClusterRoleEnum.MASTER == opsClusterContext.getRole()) {
-                stopMaster(dataPath, opsClusterEntity, stopUserSession, retBuffer);
-            } else if (ClusterRoleEnum.SLAVE == opsClusterContext.getRole()) {
-                stopSlave(dataPath, opsClusterEntity, stopUserSession, retBuffer);
-            } else {
-                stopMaster(dataPath, opsClusterEntity, stopUserSession, retBuffer);
-                stopSlave(dataPath, opsClusterEntity, stopUserSession, retBuffer);
-            }
-        } else {
-            String stopCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SINGLE_STOP, dataPath);
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterContext.getOpsClusterNodeEntityList();
+        for (OpsClusterNodeEntity opsClusterNodeEntity : opsClusterNodeEntities) {
+            String dataPath = opsClusterNodeEntity.getDataPath();
+            String stopCommand = MessageFormat.format(SshCommandConstants.LITE_STOP, dataPath);
             stopCommand = addCommandOfLoadEnvironmentVariable(stopCommand, opsClusterEntity.getEnvPath());
-            opsHostRemoteService.executeCommand(stopCommand, stopUserSession, retBuffer, "stop single");
+            opsHostRemoteService.executeCommand(stopCommand, stopUserSession, retBuffer, "stop node");
         }
-    }
-
-    private void stopSlave(String dataPath, OpsClusterEntity opsClusterEntity, Session stopUserSession, RetBuffer retBuffer) {
-        String slaveStopCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SLAVE_STOP, dataPath);
-        slaveStopCommand = addCommandOfLoadEnvironmentVariable(slaveStopCommand, opsClusterEntity.getEnvPath());
-        opsHostRemoteService.executeCommand(slaveStopCommand, stopUserSession, retBuffer, "stop slave");
-    }
-
-    private void stopMaster(String dataPath, OpsClusterEntity opsClusterEntity, Session stopUserSession, RetBuffer retBuffer) {
-        String masterStopCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_MASTER_STOP, dataPath);
-        masterStopCommand = addCommandOfLoadEnvironmentVariable(masterStopCommand, opsClusterEntity.getEnvPath());
-        opsHostRemoteService.executeCommand(masterStopCommand, stopUserSession, retBuffer, "stop master");
     }
 
     private void doRestart(Session restartUserSession, RetBuffer retBuffer, OpsClusterContext opsClusterContext) {
         OpsClusterEntity opsClusterEntity = opsClusterContext.getOpsClusterEntity();
-        DeployTypeEnum deployType = opsClusterEntity.getDeployType();
-        OpsClusterNodeEntity opsClusterNodeEntity = opsClusterContext.getOpsClusterNodeEntityList().get(0);
-
-        String dataPath = opsClusterNodeEntity.getDataPath();
-        if (DeployTypeEnum.CLUSTER == deployType) {
-            if (ClusterRoleEnum.MASTER == opsClusterContext.getRole()) {
-                restartMaster(dataPath, opsClusterEntity, restartUserSession, retBuffer);
-            } else if (ClusterRoleEnum.SLAVE == opsClusterContext.getRole()) {
-                restartSlave(dataPath, opsClusterEntity, restartUserSession, retBuffer);
-            } else {
-                restartMaster(dataPath, opsClusterEntity, restartUserSession, retBuffer);
-                restartSlave(dataPath, opsClusterEntity, restartUserSession, retBuffer);
-            }
-        } else {
-            String restartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SINGLE_RESTART, dataPath);
+        List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterContext.getOpsClusterNodeEntityList();
+        for (OpsClusterNodeEntity opsClusterNodeEntity : opsClusterNodeEntities) {
+            String dataPath = opsClusterNodeEntity.getDataPath();
+            String restartCommand = MessageFormat.format(SshCommandConstants.LITE_RESTART, dataPath);
             restartCommand = addCommandOfLoadEnvironmentVariable(restartCommand, opsClusterEntity.getEnvPath());
-            opsHostRemoteService.executeCommand(restartCommand, restartUserSession, retBuffer, "restart single");
+            opsHostRemoteService.executeCommand(restartCommand, restartUserSession, retBuffer, "restart node");
         }
     }
 
-    private void restartSlave(String dataPath, OpsClusterEntity opsClusterEntity, Session restartUserSession, RetBuffer retBuffer) {
-        String slaveRestartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_SLAVE_RESTART, dataPath);
-        slaveRestartCommand = addCommandOfLoadEnvironmentVariable(slaveRestartCommand, opsClusterEntity.getEnvPath());
-        opsHostRemoteService.executeCommand(slaveRestartCommand, restartUserSession, retBuffer, "restart slave");
-    }
-
-    private void restartMaster(String dataPath, OpsClusterEntity opsClusterEntity, Session restartUserSession, RetBuffer retBuffer) {
-        String masterRestartCommand = MessageFormat.format(SshCommandConstants.MINIMAL_LIST_MASTER_RESTART, dataPath);
-        masterRestartCommand = addCommandOfLoadEnvironmentVariable(masterRestartCommand, opsClusterEntity.getEnvPath());
-        opsHostRemoteService.executeCommand(masterRestartCommand, restartUserSession, retBuffer, "restart master");
-    }
-
-    private void saveContext(InstallContext installContext) {
-        OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
-        List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext.getMinimalistInstallConfig().toOpsClusterNodeEntityList();
-
+    private void saveContext(OpsClusterEntity opsClusterEntity, List<OpsClusterNodeEntity> opsClusterNodeEntities) {
         opsClusterService.save(opsClusterEntity);
         for (OpsClusterNodeEntity opsClusterNodeEntity : opsClusterNodeEntities) {
             opsClusterNodeEntity.setClusterId(opsClusterEntity.getClusterId());

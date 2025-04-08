@@ -50,6 +50,8 @@ public class MinimalistInstallNodeConfig {
 
     private String installPath;
 
+    private String dataPath;
+
     private Boolean isInstallDemoDatabase;
 
     public void checkConfig() {
@@ -77,7 +79,7 @@ public class MinimalistInstallNodeConfig {
         opsClusterNodeEntity.setHostId(hostId);
         opsClusterNodeEntity.setInstallUserId(installUserId);
         opsClusterNodeEntity.setInstallPath(installPath);
-        opsClusterNodeEntity.setDataPath(installPath+"/data");
+        opsClusterNodeEntity.setDataPath(dataPath);
         opsClusterNodeEntity.setPkgPath(installPath.substring(0, installPath.lastIndexOf("/")));
         opsClusterNodeEntity.setInstallDemoDatabase(isInstallDemoDatabase);
         return opsClusterNodeEntity;
