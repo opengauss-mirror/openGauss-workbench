@@ -40,7 +40,7 @@ spring:
           #url: jdbc:sqlite:data/observability-instance-data.db
           #driverClassName: org.sqlite.JDBC
           url: jdbc:intarkdb:data/observability-instance-data
-          driverClassName: org.intarkdb.IntarkdbJDBC
+          driverClassName: org.intarkdb.Driver
           init:
             schema: db/schema.sql
             data: db/data.sql

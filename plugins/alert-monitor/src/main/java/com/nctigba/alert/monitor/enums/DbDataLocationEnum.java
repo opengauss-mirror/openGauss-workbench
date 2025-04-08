@@ -39,7 +39,7 @@ import java.util.Optional;
 @AllArgsConstructor
 @Getter
 public enum DbDataLocationEnum {
-    INTARKDB("org.intarkdb.IntarkdbJDBC", Arrays.asList("classpath:db/intarkdb-alert-monitor.sql")),
+    INTARKDB("org.intarkdb.Driver", Arrays.asList("classpath:db/intarkdb-alert-monitor.sql")),
     OPENGAUSS("org.opengauss.Driver", Arrays.asList("classpath:db/alert-monitor.sql"));
 
     private String driverClass;
