@@ -604,7 +604,6 @@ const changeTranscribeMode = (val) => {
     taskRetInfo.value.pagefir['tcpdump.database.port'] = sourceDbPort.value
     taskRetInfo.value.pagefir['remote.receiver.name'] = taskBasicInfo.value.targetHostUser
     taskRetInfo.value.pagefir['remote.node.ip'] = targetHostInfo.value.publicIp
-    taskRetInfo.value.pagefir['tcpdump.node.port'] = targetHostInfo.value.port
     taskRetInfo.value.pagefir['tcpdump.network.interface'] = taskAdvancedInfo.value['tcpdump.network.interface']
     taskRetInfo.value.pagefir['tcpdump.capture.duration'] = taskAdvancedInfo.value['tcpdump.capture.duration']
   } else if (taskAdvancedInfo.value.transcribemode === 'attach') {
