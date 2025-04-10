@@ -25,6 +25,7 @@
 package org.opengauss.admin.plugin.vo;
 
 import lombok.Data;
+import org.opengauss.admin.common.enums.ops.DeployTypeEnum;
 
 import java.util.List;
 
@@ -35,10 +36,10 @@ import java.util.List;
  **/
 @Data
 public class TargetClusterVO {
-
     private String clusterId;
     private String clusterName;
     private String version;
     private String versionNum;
+    private DeployTypeEnum deployType;
     private List<TargetClusterNodeVO> clusterNodes;
 }
