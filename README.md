@@ -23,7 +23,7 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 ```
 ## 下载链接
 
-https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-7.0.0-RC1.tar.gz
+https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-7.0.0-RC2.tar.gz
 
 ## 正式发布版下载
 
@@ -51,9 +51,9 @@ sha256sum Datakit-6.0.0.tar.gz
 
 ## 安装步骤
 1. 解压安装包\
-   通过下载链接或编译代码获取安装包`Datakit-7.0.0-RC1.tar.gz`，解压安装包至`datakit`安装目录下，例如安装目录为`/path/datakit_server`时，解压目录如下:
+   通过下载链接或编译代码获取安装包`Datakit-7.0.0-RC2.tar.gz`，解压安装包至`datakit`安装目录下，例如安装目录为`/path/datakit_server`时，解压目录如下:
    ```shell
-   $ tar -zxvf Datakit-7.0.0-RC1.tar.gz -C /path/datakit_server
+   $ tar -zxvf Datakit-7.0.0-RC2.tar.gz -C /path/datakit_server
    ./application-temp.yml
    ./doc/
    ./doc/datasync-mysql-README.md
@@ -68,20 +68,20 @@ sha256sum Datakit-6.0.0.tar.gz
    ./doc/compatibility-assessment-README.md
    ./doc/openGauss-tools-monitor-README.md
    ./doc/base-ops-README.md
-   ./openGauss-datakit-7.0.0-RC1.jar
+   ./openGauss-datakit-7.0.0-RC2.jar
    ./run.sh
    ./visualtool-plugin/
-   ./visualtool-plugin/webds-plugin-7.0.0-RC1-repackage.jar
-   ./visualtool-plugin/compatibility-assessment-7.0.0-RC1-repackage.jar
-   ./visualtool-plugin/observability-instance-7.0.0-RC1-repackage.jar
-   ./visualtool-plugin/observability-sql-diagnosis-7.0.0-RC1-repackage.jar
-   ./visualtool-plugin/observability-log-search-7.0.0-RC1-repackage.jar
-   ./visualtool-plugin/monitor-tools-7.0.0-RC1-repackage.jar
-   ./visualtool-plugin/data-migration-7.0.0-RC1-repackage.jar
-   ./visualtool-plugin/alert-monitor-7.0.0-RC1-repackage.jar
-   ./visualtool-plugin/datakit-demo-plugin-7.0.0-RC1-repackage.jar
-   ./visualtool-plugin/datasync-mysql-7.0.0-RC1-repackage.jar
-   ./visualtool-plugin/base-ops-7.0.0-RC1-repackage.jar
+   ./visualtool-plugin/webds-plugin-7.0.0-RC2-repackage.jar
+   ./visualtool-plugin/compatibility-assessment-7.0.0-RC2-repackage.jar
+   ./visualtool-plugin/observability-instance-7.0.0-RC2-repackage.jar
+   ./visualtool-plugin/observability-sql-diagnosis-7.0.0-RC2-repackage.jar
+   ./visualtool-plugin/observability-log-search-7.0.0-RC2-repackage.jar
+   ./visualtool-plugin/monitor-tools-7.0.0-RC2-repackage.jar
+   ./visualtool-plugin/data-migration-7.0.0-RC2-repackage.jar
+   ./visualtool-plugin/alert-monitor-7.0.0-RC2-repackage.jar
+   ./visualtool-plugin/datakit-demo-plugin-7.0.0-RC2-repackage.jar
+   ./visualtool-plugin/datasync-mysql-7.0.0-RC2-repackage.jar
+   ./visualtool-plugin/base-ops-7.0.0-RC2-repackage.jar
    ```
 2. 创建新目录\
    在`datakit`安装目录下，创建新的目录`config`, `files`, `ssl`, `logs`

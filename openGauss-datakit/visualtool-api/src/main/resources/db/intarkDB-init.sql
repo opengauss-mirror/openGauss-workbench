@@ -1042,7 +1042,7 @@ UPDATE "sys_setting" SET portal_jar_name = 'portalControl-6.0.0.rc1-exec.jar';
 -- Records of sys_setting
 -- ----------------------------
 DELETE FROM "sys_setting" WHERE ID = 1;
-INSERT INTO "sys_setting" VALUES (1, 1, '/ops/files/', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/', 'PortalControl-7.0.0rc1.tar.gz', 'portalControl-7.0.0rc1-exec.jar');
+INSERT INTO "sys_setting" VALUES (1, 1, '/ops/files/', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/', 'PortalControl-7.0.0rc2.tar.gz', 'portalControl-7.0.0rc2-exec.jar');
 
 delete from "sys_menu" where menu_id = 202;
 update "sys_menu" set menu_name = '实例管理', order_num = 1 where menu_id = 201;
