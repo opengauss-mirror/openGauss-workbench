@@ -33,7 +33,9 @@ public class MigrationToolPortalDownloadInfoServiceImpl extends ServiceImpl<Migr
                     "openEuler20.03_x86_64",
                     "openEuler20.03_aarch64",
                     "openEuler22.03_x86_64",
-                    "openEuler22.03_aarch64"
+                    "openEuler22.03_aarch64",
+                    "openEuler24.03_x86_64",
+                    "openEuler24.03_aarch64"
             )
     );
 

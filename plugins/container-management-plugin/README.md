@@ -40,7 +40,7 @@ container-management datakit插件项目目前版本为1.0.0，主要目的是�
   #编译打包
   mvn clean package -P prod -Dmaven.test.skip
 
-- 打包完成后在plugins/container-management-plugin/target目录中找到container-management-plugin-7.0.0-RC1-repackage.jar即为插件安装包。
+- 打包完成后在plugins/container-management-plugin/target目录中找到container-management-plugin-7.0.0-RC2-repackage.jar即为插件安装包。
 
 - 打开并登陆openGauss一体化平台，点击插件管理-安装插件，将上诉步骤获得的安装包上传并安装。
 

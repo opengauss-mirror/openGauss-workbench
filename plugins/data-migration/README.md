@@ -30,7 +30,7 @@ data-migration项目目前版本为1.0.0。
   #编译打包
   mvn clean package -Dmaven.test.skip
   
-- 打包完成后在data-migration/target目录中找到data-migration-7.0.0-RC1-repackage.jar即为插件安装包。
+- 打包完成后在data-migration/target目录中找到data-migration-7.0.0-RC2-repackage.jar即为插件安装包。
 
 - 打开并登录openGauss Datakit，点击插件管理-安装插件，将上诉步骤获得的安装包上传并安装。
 
@@ -112,7 +112,7 @@ gs_guc set -N all -I all -c "enable_slot_log=on"
 
 ### 特性约束
 
-本特性从DataKit和portal的7.0.0-RC1版本开始支持，只有当两工具同时达到版本要求时，才会实时展示异常告警信息。当存在高低版本混用的情况时，无兼容性问题，但是不会收集并展示异常告警信息。
+本特性从DataKit和portal的7.0.0-RC2版本开始支持，只有当两工具同时达到版本要求时，才会实时展示异常告警信息。当存在高低版本混用的情况时，无兼容性问题，但是不会收集并展示异常告警信息。
 
 ### 特性使用
 
@@ -128,7 +128,7 @@ gs_guc set -N all -I all -c "enable_slot_log=on"
 
 ### 特性约束
 
-本特性从DataKit和portal的7.0.0-RC1版本开始支持。
+本特性从DataKit和portal的7.0.0-RC2版本开始支持。
 
 ### 特性使用
 
