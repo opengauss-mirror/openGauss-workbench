@@ -286,6 +286,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             clusterVO.setClusterId(o.getClusterId());
             clusterVO.setClusterName(o.getClusterName());
             clusterVO.setVersion(o.getVersion());
+            clusterVO.setDeployType(o.getDeployType());
             clusterVO.setVersionNum(
                 StringUtils.isNotBlank(o.getVersionNum()) ? o.getVersionNum() : TaskConstant.DEFAULT_OPENGAUSS_VERSION);
             List<TargetClusterNodeVO> nodes = o.getClusterNodes().stream().map(on -> {
@@ -317,6 +318,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             clusterVO.setClusterId(jc.getName());
             clusterVO.setClusterName(jc.getName());
             clusterVO.setVersion("3.0.0");
+            clusterVO.setDeployType(jc.getDeployType());
             List<TargetClusterNodeVO> nodes = jc.getNodes().stream().map(on -> {
                 TargetClusterNodeVO clusterNodeVO = new TargetClusterNodeVO();
                 clusterNodeVO.setNodeId(on.getClusterNodeId());

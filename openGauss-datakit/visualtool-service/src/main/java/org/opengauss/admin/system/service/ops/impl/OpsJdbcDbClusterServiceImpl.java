@@ -38,6 +38,7 @@ import org.opengauss.admin.common.core.domain.model.ops.jdbc.*;
 import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.common.enums.ops.DeployTypeEnum;
 import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.ops.JdbcUtil;
 import org.opengauss.admin.system.mapper.ops.OpsJdbcDbClusterMapper;
 import org.opengauss.admin.system.service.ops.IHostService;
@@ -560,6 +561,16 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
         List<JdbcDbClusterNodeInputDto> nodes = clusterInput.getNodes();
         if (CollUtil.isEmpty(nodes)) {
             throw new OpsException("Cluster node information does not exist");
+        }
+        if (StringUtils.isEmpty(clusterInput.getClusterName())) {
+            throw new OpsException("Cluster name cannot be empty");
+        }
+
+        LambdaQueryWrapper<OpsJdbcDbClusterEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(OpsJdbcDbClusterEntity::getName, clusterInput.getClusterName());
+        List<OpsJdbcDbClusterEntity> clusterEntityList = list(queryWrapper);
+        if (CollUtil.isNotEmpty(clusterEntityList)) {
+            throw new OpsException("Cluster name already exists");
         }
 
         JdbcDbClusterNodeInputDto firstNode = nodes.get(0);
