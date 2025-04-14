@@ -13,3 +13,15 @@ export async function encryptPassword (pwd) {
   encryptor.setPublicKey(publicKey)
   return encryptor.encrypt(pwd)
 }
+
+export async function initPublicKey() {
+  try {
+    const res = await getEntryKey()
+    if (Number(res.code) === 200 && res.key) {
+      return res.key
+    }
+  } catch (error) {
+    console.error('Failed to load public key:', error)
+    return ''
+  }
+}

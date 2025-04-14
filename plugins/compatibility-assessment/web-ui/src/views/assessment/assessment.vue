@@ -815,6 +815,7 @@ const downloadStatus = reactive({
 }
 
 import { IpRegex } from '../../../../../../openGauss-datakit/visualtool-ui/src/types/global'
+import {encryptPassword} from "@/utils/jsencrypt";
 
 const formRules = computed(() => {
   return {
@@ -977,18 +978,20 @@ const formRules = computed(() => {
   };
 });
 const startSync = async () => {
+  const encryptmySqlPwd = await encryptPassword(formLeft.mysqlPassword)
+  const encryptopenGaussPwd = await encryptPassword(formRight.opengaussPassword)
   const params = {
     osuser: formCommon.osuser,
     ospassword: formCommon.ospassword,
     mysqlHost: formLeft.mysqlHost,
     mysqlPort: formLeft.mysqlPort,
     mysqlUser: formLeft.mysqlUser,
-    mysqlPassword: formLeft.mysqlPassword,
+    mysqlPassword: encryptmySqlPwd,
     mysqlDbname: formLeft.mysqlDbname,
     opengaussHost: formRight.opengaussHost,
     opengaussPort: formRight.opengaussPort,
     opengaussUser: formRight.opengaussUser,
-    opengaussPassword: formRight.opengaussPassword,
+    opengaussPassword: encryptopenGaussPwd,
     opengaussDbname: formRight.opengaussDbname,
   };
   let data = getFormData(params)

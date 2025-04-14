@@ -73,6 +73,7 @@ import { addJdbc, editJdbc, hostListAll } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import JdbcInstance from './JdbcInstance.vue'
 import { useI18n } from 'vue-i18n'
+import {encryptPassword} from "@/utils/jsencrypt";
 // import { encryptPassword } from '@/utils/jsencrypt'
 const { t } = useI18n()
 enum jdbcStatusEnum {
@@ -197,7 +198,7 @@ const getHostList = () => {
 
 const emits = defineEmits([`finish`])
 
-const submit = () => {
+const submit = async() => {
   const methodArr = []
   for (let i = 0; i < refList.value.length; i++) {
     if (refList.value[i]) {
@@ -205,7 +206,7 @@ const submit = () => {
     }
   }
   methodArr.push(formRef.value?.validate())
-  Promise.all(methodArr).then((res) => {
+  Promise.all(methodArr).then(async (res) => {
     console.log('validRes', res)
     const validRes = res.filter((item: KeyValue) => {
       return item && item.res === false
@@ -222,7 +223,7 @@ const submit = () => {
     // save
     data.loading = true
 
-    const param: {
+    let param: {
       clusterName: string,
       dbType: string,
       deployType: string,
@@ -240,12 +241,16 @@ const submit = () => {
       item.extendProps = JSON.stringify(item.props)
       param.nodes.push(item)
     })
+    for (const item of param.nodes) {
+      const temppassword = await encryptPassword(item.password)
+      item.password = temppassword
+    }
 
     if (data.form.clusterId) {
       editJdbc(data.form.clusterId, param).then((res: KeyValue) => {
         data.loading = false
         if (Number(res.code) === 200) {
-          Message.success({ content: `Modified success` })
+          Message.success({content: `Modified success`})
           emits(`finish`)
         }
         close()
@@ -256,7 +261,7 @@ const submit = () => {
       addJdbc(param).then((res: KeyValue) => {
         data.loading = false
         if (Number(res.code) === 200) {
-          Message.success({ content: `Create success` })
+          Message.success({content: `Create success`})
           emits(`finish`)
         }
         close()
