@@ -62,11 +62,12 @@ import java.util.stream.Collectors;
  **/
 @Service
 public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMapper, OpsJdbcDbClusterEntity> implements IOpsJdbcDbClusterService {
-
     @Autowired
     private IOpsJdbcDbClusterNodeService opsJdbcDbClusterNodeService;
     @Autowired
     private IHostService hostService;
+    @Autowired
+    private EncryptionUtils encryptionUtils;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -541,7 +542,7 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
             opsJdbcDbClusterNodeEntity.setIp(jdbcInfo.getIp());
             opsJdbcDbClusterNodeEntity.setPort(jdbcInfo.getPort());
             opsJdbcDbClusterNodeEntity.setUsername(node.getUsername());
-            opsJdbcDbClusterNodeEntity.setPassword(node.getPassword());
+            opsJdbcDbClusterNodeEntity.setPassword(encryptionUtils.decrypt(node.getPassword()));
             opsJdbcDbClusterNodeEntity.setUrl(url);
             opsJdbcDbClusterNodeEntity.setCreateTime(now);
             opsJdbcDbClusterNodeEntity.setUpdateTime(now);

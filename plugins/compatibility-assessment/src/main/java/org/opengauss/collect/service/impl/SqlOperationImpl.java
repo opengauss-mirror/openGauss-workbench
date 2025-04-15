@@ -232,6 +232,8 @@ public class SqlOperationImpl implements SqlOperation {
 
     @Override
     public RespBean startAssessmentSql(Assessment assessment, String sqlInputType, Integer userId) {
+        assessment.setMysqlPassword(encryptionUtils.decrypt(assessment.getMysqlPassword()));
+        assessment.setOpengaussPassword(encryptionUtils.decrypt(assessment.getOpengaussPassword()));
         checkAssessment(assessment, sqlInputType);
         // 创建一个执行环境 data/gs_assessment/fileName  目前是这个
         String envPath = Constant.ENV_PATH;

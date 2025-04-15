@@ -424,7 +424,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         List<Map<String, Object>> result = new ArrayList<>();
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection(url, username, password);
+            conn = DriverManager.getConnection(url, username, encryptionUtils.decrypt(password));
             preparedStatement = conn.prepareStatement(sql);
             resultSet = preparedStatement.executeQuery();
             result = convertList(resultSet);
@@ -1222,6 +1222,6 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             return false;
         }
         return JdbcUtil.judgeSystemAdmin(clusterNode.getPublicIp(), clusterNode.getDbPort().toString(),
-            clusterNode.getDbUser(), clusterNode.getDbUserPassword());
+            clusterNode.getDbUser(), encryptionUtils.decrypt(clusterNode.getDbUserPassword()));
     }
 }
