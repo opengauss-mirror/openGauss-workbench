@@ -8,7 +8,7 @@
           <template #icon>
             <icon-info-circle-fill />
           </template>
-         {{ $t('components.PortalInstall.installDesc')}} 
+         {{ $t('components.PortalInstall.installDesc')}}
           </a-link>
         <template #content>
           <p>
@@ -226,10 +226,13 @@ watch(
   () => props.open,
   (v) => {
     if (v) {
-      getPortalDownloadInfoList(props.hostId).then((res) => {
-        packageInfos.value = res.data
+      try {
+        getPortalDownloadInfoList(props.hostId).then((res) => {
+          packageInfos.value = res.data
+        })
+      } finally {
         getHostUsers()
-      })
+      }
     } else {
       form.hostUserId = ''
       form.installPath = ''
