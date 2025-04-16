@@ -421,6 +421,8 @@ import AddHostUser from './components/AddHostUser.vue'
 import {IconHelpCircle} from "@computing/opendesign-icons"
 import showMessage from "@/utils/showMessage"
 import {useI18n} from 'vue-i18n'
+import JSEncrypt from "jsencrypt/bin/jsencrypt.min";
+import {initPublicKey} from "@/utils/jsencrypt";
 
 const {t} = useI18n()
 const addPlaybackRef = ref()
@@ -1077,7 +1079,8 @@ const getSourceClusterDB = () => {
     getUserList(sourceHostInfo.value.hostId, 'source')
     tempformdata.append('url', `jdbc:${taskBasicInfo.value.sourceDbType.toLowerCase()}://${taskBasicInfo.value.sourceIp}`)
     tempformdata.append('username', sourceClusterInfo.value[taskBasicInfo.value.sourceIp][0])
-    tempformdata.append('password', sourceClusterInfo.value[taskBasicInfo.value.sourceIp][1])
+    const encryptUserPwd = encryptor.encrypt(sourceClusterInfo.value[taskBasicInfo.value.sourceIp][1])
+    tempformdata.append('password', encryptUserPwd)
     taskBasicInfo.value.sourceClusterId = sourceClusterInfo.value[taskBasicInfo.value.sourceIp][2]
     sourceClusterDbsData(tempformdata).then(res => {
       if (Number(res.code) === 200) {
@@ -1112,6 +1115,10 @@ const getTargetClusterDB = () => {
   targetHostInfo.value.privateIp = hostIpId.get([tempIp]).split(',')[2]
   targetHostInfo.value.port = hostIpId.get([tempIp]).split(',')[3]
   taskBasicInfo.value.targetClusterId = targetClusterInfo.value[taskBasicInfo.value.targetIp].nodeId
+  if (targetClusterInfo.value[taskBasicInfo.value.targetIp].dbUserPassword.length <= 50) {
+    targetClusterInfo.value[taskBasicInfo.value.targetIp].dbUserPassword =
+      encryptor.encrypt(targetClusterInfo.value[taskBasicInfo.value.targetIp].dbUserPassword)
+  }
   getUserList(targetHostInfo.value.hostId, 'target')
   targetClusterDbsData(targetClusterInfo.value[taskBasicInfo.value.targetIp]).then(res => {
     if (Number(res.code) === 200) {
@@ -1325,6 +1332,12 @@ watch(() => taskBasicInfo.value.targetIp, (newValue, oldValue) => {
   }
 })
 
+const encryptor = new JSEncrypt()
+const initEncryptorKey = async () => {
+  const cachedPublicKey = await initPublicKey()
+  encryptor.setPublicKey(cachedPublicKey)
+}
+
 const init = () => {
   sourceDBOptions.value = []
   targetDBOptions.value = []
@@ -1340,6 +1353,7 @@ const init = () => {
   inittaskRetInfo()
   inittaskAdvancedInfo()
   inittaskBasicInfo()
+  initEncryptorKey()
   changeTranscribeMode(taskRetInfo.value['sql.transcribe.mode'])
   choosePlaybackMethod.value = false
   replayTaskVersion.value = false

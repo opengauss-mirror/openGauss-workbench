@@ -73,6 +73,7 @@ import { addJdbc, hostListAll } from '@/api/task'
 import { Message } from '@arco-design/web-vue'
 import JdbcInstance from './JdbcInstance.vue'
 import { useI18n } from 'vue-i18n'
+import {encryptPassword} from "@/utils/jsencrypt";
 
 const { t } = useI18n()
 
@@ -193,7 +194,7 @@ const getHostList = () => {
 
 const emits = defineEmits([`finish`])
 
-const submit = () => {
+const submit = async() => {
   const methodArr = []
   for (let i = 0; i < refList.value.length; i++) {
     if (refList.value[i]) {
@@ -201,7 +202,7 @@ const submit = () => {
     }
   }
   methodArr.push(formRef.value?.validate())
-  Promise.all(methodArr).then((res) => {
+  Promise.all(methodArr).then(async (res) => {
     console.log('validRes', res)
     const validRes = res.filter((item) => {
       return item && item.res === false
@@ -231,11 +232,14 @@ const submit = () => {
       item.extendProps = JSON.stringify(item.props)
       param.nodes.push(item)
     })
-
+    for (const item of param.nodes) {
+      const temppassword = await encryptPassword(item.password)
+      item.password = temppassword
+    }
     addJdbc(param).then((res) => {
       data.loading = false
       if (Number(res.code) === 200) {
-        Message.success({ content: `Create success` })
+        Message.success({content: `Create success`})
         emits(`finish`, data.form.dbType)
       }
       close()

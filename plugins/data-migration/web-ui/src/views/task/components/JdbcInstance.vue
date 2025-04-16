@@ -74,6 +74,7 @@ const columns = computed(() => [
 ])
 
 import { IpRegex } from '../../../../../../../openGauss-datakit/visualtool-ui/src/types/global'
+import {encryptPassword} from "@/utils/jsencrypt";
 
 const formRules = computed(() => {
   return {
@@ -144,9 +145,10 @@ const handelTest = async () => {
     id: form.value.id,
     res: false
   }
+  const encryptPwd = await encryptPassword(form.value.password)
   const param = {
     username: form.value.username,
-    password: form.value.password,
+    password: encryptPwd,
     url: jdbcUrl.value
   }
   try {

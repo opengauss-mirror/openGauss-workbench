@@ -46,6 +46,7 @@
 import {ref, computed, watch} from 'vue'
 import {jdbcNodePing} from '@/api/task'
 import {useI18n} from 'vue-i18n'
+import {encryptPassword} from "@/utils/jsencrypt";
 
 const {t} = useI18n()
 
@@ -148,9 +149,10 @@ const handelTest = async () => {
     id: form.value.id,
     res: false
   }
+  const encryptPwd = await encryptPassword(form.value.password)
   const param = {
     username: form.value.username,
-    password: form.value.password,
+    password: encryptPwd,
     url: jdbcUrl.value
   }
   try {

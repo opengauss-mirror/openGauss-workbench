@@ -113,3 +113,8 @@ export const hostListAll = () => {
 export const hostUserListAll = (hostId: string) => {
   return axios.get(`hostUser/listAll/${hostId}`)
 }
+
+// get Key
+export const getEntryKey = () => {
+  return axios.get('encryption/getKey')
+}

@@ -130,7 +130,7 @@
                       <span style="color: var(--color-primary-light-4)">
                         {{
                           nodeData?.title?.substr(index, searchTargetKey.length)
-                        }} 
+                        }}
                         </span>
                         <span>{{ nodeData?.title?.substr(index + searchTargetKey.length) }}</span>
                       </span>
@@ -270,6 +270,8 @@ import useTheme from "@/hooks/theme";
 import { useI18n } from "vue-i18n";
 import dataTblModal from "./dataTableModal.vue";
 import dataTblList from "./dataTableList.vue";
+import {encryptPassword, initPublicKey} from "@/utils/jsencrypt";
+import JSEncrypt from "jsencrypt/bin/jsencrypt.min";
 
 const { t } = useI18n();
 
@@ -366,6 +368,7 @@ const dataTblWin = async (nodeData) => {
     selecTblbf.value = "";
     seleDBMsg.seletedTbl = "";
   }
+  seleDBMsg.password = seleDBMsg.password.length > 20? seleDBMsg.password:encryptor.encrypt(seleDBMsg.password)
   if (seleDBMsg.url) {
     dataTblModalRef.value = true;
   }
@@ -591,11 +594,11 @@ const deepTargetTreeData = (data) => {
 // get source db data
 const getSourceClusterDbsData = (nodeData) => {
   getTblOpt(nodeData);
-
+  const temppassword = encryptor.encrypt(nodeData.password)
   const requestData = new FormData();
   requestData.append("url", nodeData.url);
   requestData.append("username", nodeData.username);
-  requestData.append("password", nodeData.password);
+  requestData.append("password", temppassword);
 
   return sourceClusterDbsData(requestData).then((res) => {
     const data = res.data || [];
@@ -625,6 +628,7 @@ const getSourceClusterDbsData = (nodeData) => {
 
 // get target db data
 const getTargetClusterDbsData = (nodeData) => {
+  const encryptUserPwd = encryptor.encrypt(nodeData.dbUserPassword)
   const requestData = {
     azAddress: nodeData.azAddress,
     azName: nodeData.azName,
@@ -632,7 +636,7 @@ const getTargetClusterDbsData = (nodeData) => {
     dbName: nodeData.dbName,
     dbPort: nodeData.dbPort,
     dbUser: nodeData.dbUser,
-    dbUserPassword: nodeData.dbUserPassword,
+    dbUserPassword: encryptUserPwd,
     hostId: nodeData.hostId,
     hostPort: nodeData.hostPort,
     hostname: nodeData.hostname,
@@ -640,7 +644,6 @@ const getTargetClusterDbsData = (nodeData) => {
     nodeId: nodeData.nodeId,
     privateIp: nodeData.privateIp,
     publicIp: nodeData.publicIp,
-    rootPassword: nodeData.rootPassword,
   };
 
   return targetClusterDbsData(requestData).then((res) => {
@@ -773,11 +776,12 @@ const addSubTask = async (targetDB) => {
   selecTblbf.value = "";
 
   const { host, port, username, password } = targetDB.parentInfo;
+  const encryptUserPwd = encryptor.encrypt(password)
   const requestData = {
     publicIp: host,
     dbPort: port,
     dbUser: username,
-    dbUserPassword: password,
+    dbUserPassword: encryptUserPwd,
   };
   try {
     const { data } = await isAdmin(requestData);
@@ -813,6 +817,11 @@ const handleAddSql = (dbType) => {
 };
 
 // init
+const encryptor = new JSEncrypt()
+const initEncryptorKey = async () => {
+  const cachedPublicKey = await initPublicKey()
+  encryptor.setPublicKey(cachedPublicKey)
+}
 const init = (val) => {
   tableData.value = toRaw(val || props.subTaskConfig);
 };
@@ -824,6 +833,7 @@ defineExpose({
 onMounted(() => {
   getSourceClustersData();
   getTargetClustersData();
+  initEncryptorKey();
   init();
 });
 </script>
