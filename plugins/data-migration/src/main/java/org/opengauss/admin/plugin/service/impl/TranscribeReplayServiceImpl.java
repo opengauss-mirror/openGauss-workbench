@@ -117,6 +117,8 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
     implements TranscribeReplayService, TranscribeReplayConstants {
     final String lastedVersionUrl = "https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/"
             + "transcribe-replay-tool-" + TranscribeReplayVersion.LATEST.getVersion() + ".tar.gz";
+    final String versionRc1Url = "https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/"
+            + "transcribe-replay-tool-" + TranscribeReplayVersion.VERSION_7_0_0_RC1.getVersion() + ".tar.gz";
     final String configFilePath = "/transcribe-replay-tool/config/";
     final String pluginPath = "/transcribe-replay-tool/plugin";
     final String transcribeConfigFile = "transcribe.properties";
@@ -162,7 +164,12 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
     @Override
     public void downloadAndConfig(TranscribeReplayTaskDto tp, Integer id, Map<String, String> config) {
         this.downloadId = id;
-        String url = lastedVersionUrl;
+        String url;
+        if (TranscribeReplayVersion.VERSION_7_0_0_RC1.getVersion().equals(tp.getToolVersion())) {
+            url = versionRc1Url;
+        } else {
+            url = lastedVersionUrl;
+        }
         String taskType = tp.getTaskType();
         boolean isTranscribe = taskType.contains("transcribe");
         boolean isReplay = taskType.contains("replay");

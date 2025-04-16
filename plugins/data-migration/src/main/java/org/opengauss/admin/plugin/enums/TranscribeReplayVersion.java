@@ -26,6 +26,7 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum TranscribeReplayVersion {
+    VERSION_7_0_0_RC1("7.0.0-RC1"),
     LATEST("7.0.0-RC2");
 
     private final String version;
