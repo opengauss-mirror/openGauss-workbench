@@ -301,6 +301,7 @@ public class SystemPluginController extends BaseController {
                     .pluginProvider(pluginInfo.getPluginDescriptor().getProvider()).isNeedConfigured(isNeedConfigured)
                     .pluginType(pluginType).pluginVersion(pluginInfo.getPluginDescriptor().getPluginVersion())
                     .theme(theme).build();
+            setPluginStatus(plugin, pluginInfo);
             sysPluginService.save(plugin);
         } else {
             // update plugin version,desc,provider
@@ -308,6 +309,7 @@ public class SystemPluginController extends BaseController {
             plugin.setPluginDesc(pluginInfo.getPluginDescriptor().getDescription());
             plugin.setPluginDescEn(descriptionEn);
             plugin.setPluginProvider(pluginInfo.getPluginDescriptor().getProvider());
+            setPluginStatus(plugin, pluginInfo);
             LambdaQueryWrapper<SysPlugin> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(SysPlugin::getPluginId, pluginInfo.getPluginId());
             sysPluginService.update(plugin, queryWrapper);
@@ -333,6 +335,14 @@ public class SystemPluginController extends BaseController {
             sysMenuService.updatePluginFatherMenuIcon(pluginInfo.getPluginId(), logo);
         }
         return result;
+    }
+
+    private void setPluginStatus(SysPlugin plugin, PluginInfo pluginInfo) {
+        if (PluginState.STARTED.equals(pluginInfo.getPluginState())) {
+            plugin.setPluginStatus(SysPluginStatus.START.getCode());
+        } else {
+            plugin.setPluginStatus(SysPluginStatus.DISABLE.getCode());
+        }
     }
 
     /**
