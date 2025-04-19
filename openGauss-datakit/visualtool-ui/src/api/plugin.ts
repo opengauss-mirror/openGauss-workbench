@@ -24,3 +24,20 @@ export function pluginConfigData (payload: any) {
 export function extendInfoList (query?: any) {
   return axios.get('/system/plugins/extensions/list', { params: query })
 }
+
+export function unloadPluginsInfo () {
+  return axios.get('/system/plugins/unloadPluginsInfo')
+}
+
+export function getUnloadpluginUrl (pluginId: string) {
+  return axios.post(`/system/plugins/getUnloadPluginUrl?pluginId=${pluginId}`)
+}
+
+export function downloadPluginWs (params: any) {
+  return axios.post(`/system/plugins/online_install`, params)
+}
+
+export function uploadPluginWs (params: any) {
+  return axios.post(`/system/plugins/offline_install`, params)
+}
+

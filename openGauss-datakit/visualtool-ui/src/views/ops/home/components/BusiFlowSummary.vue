@@ -20,35 +20,47 @@
         </div>
       </div>
     </div>
-    <a-table
-      class="full-w"
-      :data="list.data"
-      :columns="columns"
-      :pagination="false"
-      :loading="list.loading"
-    >
-      <template #name="{ record }">
-        {{ record.name ? record.name : '--' }}
-      </template>
-      <template #cluster="{ record }">
-        {{ record.clusterId ? record.clusterId : '--' }}
-      </template>
-      <template #type="{ record }">
-        {{ record.type ? record.type : '--' }}
-      </template>
-      <template #queryCount="{ record }">
-        {{ record.queryCount ? record.queryCount : '0' }}
-      </template>
-    </a-table>
+    <div v-if="isBaseopsInstalled === false">
+      <el-tooltip :content="$t('components.ModuleSummary.else2')" placement="bottom" effect="light">
+        <a-table
+          class="full-w"
+          :data="list.data"
+          :columns="columns"
+          :pagination="false"
+        />
+      </el-tooltip>
+    </div>
+    <div v-else>
+      <a-table
+        class="full-w"
+        :data="list.data"
+        :columns="columns"
+        :pagination="false"
+        :loading="list.loading"
+      >
+        <template #name="{ record }">
+          {{ record.name ? record.name : '--' }}
+        </template>
+        <template #cluster="{ record }">
+          {{ record.clusterId ? record.clusterId : '--' }}
+        </template>
+        <template #type="{ record }">
+          {{ record.type ? record.type : '--' }}
+        </template>
+        <template #queryCount="{ record }">
+          {{ record.queryCount ? record.queryCount : '0' }}
+        </template>
+      </a-table>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
-import { onMounted, reactive, computed } from 'vue'
+import { onMounted, reactive, computed, ref } from 'vue'
 import BusiFlowSummary from './echarts/BusiFlowSummary.vue'
 import DataSourceSummary from './echarts/DataSourceSummary.vue'
-import { getBusiFlowList } from '@/api/ops'
+import { getBusiFlowList, isBaseOpsStart } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
@@ -61,7 +73,7 @@ const list: {
 })
 
 onMounted(() => {
-  getListData()
+  getPluginInstall()
 })
 
 const columns = computed(() => [
@@ -73,23 +85,40 @@ const columns = computed(() => [
 
 const emits = defineEmits(['is-install-plugin'])
 
-const getListData = () => {
-  list.loading = true
-  getBusiFlowList().then((res: KeyValue) => {
+const isBaseopsInstalled = ref<boolean>(true)
+const getPluginInstall = () => {
+  isBaseOpsStart().then((res: KeyValue) => {
     if (Number(res.code) === 200) {
-      list.data = res.distribution
-    } else {
-      Message.error('Failed to get the list of business flow running instances')
+      isBaseopsInstalled.value = res.data
     }
-  }).catch((error) => {
-    console.log('show getBusiFlowList error', error)
-    const { response } = error
-    if (response.status === 404) {
-      emits('is-install-plugin', false)
-    }
-  }).finally(() => {
-    list.loading = false
+  }) .catch((error: any) => {
+    console.log(error)
+  }) .finally(() => {
+    getListData()
   })
+}
+
+const getListData = () => {
+  if (isBaseopsInstalled.value) {
+    list.loading = true
+    getBusiFlowList().then((res: KeyValue) => {
+      if (Number(res.code) === 200) {
+        list.data = res.distribution
+      } else {
+        Message.error('Failed to get the list of business flow running instances')
+      }
+    }).catch((error) => {
+      console.log('show getBusiFlowList error', error)
+      const { response } = error
+      if (response.status === 404) {
+        emits('is-install-plugin', false)
+      }
+    }).finally(() => {
+      list.loading = false
+    })
+  } else {
+    list.loading = true
+  }
 }
 
 </script>

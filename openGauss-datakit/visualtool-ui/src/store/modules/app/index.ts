@@ -48,6 +48,17 @@ const useAppStore = defineStore('app', {
     async fetchServerMenuConfig () {
       try {
         const { data } = await getMenuList()
+        if(!data.some((item: any) => item && item.name === 'Static-pluginBase-opsOps')) {
+          let found = false;
+          for (let i = 0; i < data.length && !found; i++) {
+            if (data[i].name === 'Resource') {
+              if(data[i].children[3].name === 'ResourcePackage') {
+                data[i].children[3].meta.hideInMenu = true
+                found = true
+              }
+            }
+          }
+        }
         data.unshift({
           path: '/',
           name: 'Home',
