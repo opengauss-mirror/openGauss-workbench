@@ -8,7 +8,7 @@
       <div class="label-color mb">
         {{ $t('components.OfflineInstall.5mpn1nwaz280') }}
         {{
-          data.path && data.fileName ? data.path + data.fileName : 'no choose'
+          data.path && data.fileName ? data.path : 'no choose'
         }}
       </div>
       <a-link class="mb-s" @click="showUploadModal">{{
@@ -199,6 +199,7 @@ const setPathToStore = () => {
     return
   }
   const fileInfo = data.files.find((item: KeyValue) => data.id === item.id)
+  data.path = fileInfo.path
   if (fileInfo.pkgManagedName) {
     let cpuArchStr = fileInfo.cpuArch
     if (cpuArchStr.includes('-')) {
