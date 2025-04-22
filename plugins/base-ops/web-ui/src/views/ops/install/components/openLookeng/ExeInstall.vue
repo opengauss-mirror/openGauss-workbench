@@ -94,6 +94,8 @@ const data = reactive<KeyValue>({
   serviceStatus: 'wait'
 })
 
+const fitAddonTerm = ref<any>(null)
+
 const getTermObj = (): Terminal => {
   return new Terminal({
     fontSize: 14,
@@ -109,14 +111,24 @@ const getTermObj = (): Terminal => {
   })
 }
 
+const resizeScreenTerm = () => {
+  try { // When the window size changes, trigger the xterm resize method to make it adaptive.
+    fitAddonTerm.value?.fit()
+  } catch (e) {
+    console.log("e", e)
+  }
+}
+
 const initTerm = (term: Terminal, ws: WebSocket | undefined) => {
   const fitAddon = new FitAddon()
+  fitAddonTerm.value = fitAddon
   term.loadAddon(fitAddon)
   term.open(document.getElementById('xterm') as HTMLElement)
   fitAddon.fit()
   term.clear()
   term.focus()
   termTerminal.value = term
+  window.addEventListener("resize", resizeScreenTerm)
 }
 
 const goHome = () => {
@@ -226,6 +238,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   terminalLogWs.value?.destroy()
   termTerminal.value?.dispose()
+  window.removeEventListener('resize', resizeScreenTerm)
 })
 
 const goManage = () => {
