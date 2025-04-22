@@ -1,31 +1,8 @@
-/*
- *  Copyright (c) GBA-NCTI-ISDC. 2022-2024. 
- *
- *  openGauss DataKit is licensed under Mulan PSL v2.
- *  You can use this software according to the terms and conditions of the Mulan PSL v2.
- *  You may obtain a copy of Mulan PSL v2 at:
- *
- *  http://license.coscl.org.cn/MulanPSL2
- *
- *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
- *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
- *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
- *  See the Mulan PSL v2 for more details.
- *  -------------------------------------------------------------------------
- *
- *  intarkdb-schema.sql
- *
- *  IDENTIFICATION
- *  plugins/base-ops/src/main/resources/intarkdb-schema.sql
- *
- *  -------------------------------------------------------------------------
- */
-
 -- ----------------------------
 -- Table structure for modeling_data_flow
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS "modeling_data_flow" (
-    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "id" int8 NOT NULL PRIMARY KEY,
     "name" varchar(512),
     "u_id" varchar(128),
     "tags" varchar(512),
@@ -40,9 +17,9 @@ CREATE TABLE IF NOT EXISTS "modeling_data_flow" (
     "cluster_node_id" varchar(128),
     "schema" varchar(255),
     "cluster_id" varchar(128),
-    "query_count" int8,
+    "query_count" int4,
     "data_base" varchar(128),
-    --"creator" int8[],
+    "creator" int4,
     "manager" varchar(1024),
     "developer" varchar(1024),
     "visitor" varchar(1024),
@@ -62,7 +39,7 @@ COMMENT ON COLUMN "modeling_data_flow"."create_time" IS '创建时间';
 COMMENT ON COLUMN "modeling_data_flow"."update_by" IS '更新者';
 COMMENT ON COLUMN "modeling_data_flow"."update_time" IS '更新时间';
 COMMENT ON COLUMN "modeling_data_flow"."data_base" IS '默认访问数据库';
---COMMENT ON COLUMN "modeling_data_flow"."creator" IS '创建人';
+COMMENT ON COLUMN "modeling_data_flow"."creator" IS '创建人';
 COMMENT ON COLUMN "modeling_data_flow"."manager" IS '管理权限';
 COMMENT ON COLUMN "modeling_data_flow"."developer" IS '开发权限';
 COMMENT ON COLUMN "modeling_data_flow"."visitor" IS '访客权限';
@@ -79,12 +56,12 @@ COMMENT ON TABLE "modeling_data_flow" IS '数据流表';
 -- Table structure for modeling_data_flow_operator
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS "modeling_data_flow_operator" (
-    "id" int8 NOT NULL PRIMARY KEY,
+    "id" int4 NOT NULL PRIMARY KEY,
     "name" varchar(255),
     "package_path" varchar(255),
-    "type" int8,
-    "group_id" int8,
-    "sort_id" int8,
+    "type" int2,
+    "group_id" int2,
+    "sort_id" int2,
     "create_by" varchar(64),
     "create_time" timestamp,
     "update_by" varchar(64),
@@ -106,27 +83,27 @@ COMMENT ON TABLE "modeling_data_flow_operator" IS '数据库操作算子表';
 -- ----------------------------
 -- Records of modeling_data_flow_operator
 -- ----------------------------
-INSERT INTO "modeling_data_flow_operator" VALUES (202, '条件算子', 'condition', 2, 2, 2, NULL, NULL, NULL, NULL, NULL);;
-INSERT INTO "modeling_data_flow_operator" VALUES (102, '条件算子', 'condition', 1, 2, 2, NULL, NULL, NULL, NULL, NULL);;
-INSERT INTO "modeling_data_flow_operator" VALUES (108, '映射算子', 'mapping', 1, 2, 8, NULL, NULL, NULL, NULL, NULL);;
-INSERT INTO "modeling_data_flow_operator" VALUES (101, '查询算子', 'query', 1, 1, 1, NULL, NULL, NULL, NULL, NULL);;
-INSERT INTO "modeling_data_flow_operator" VALUES (103, '排序算子', 'sort', 1, 2, 3, NULL, NULL, NULL, NULL, NULL);;
-INSERT INTO "modeling_data_flow_operator" VALUES (104, '限条算子', 'limit', 1, 2, 4, NULL, NULL, NULL, NULL, NULL);;
-INSERT INTO "modeling_data_flow_operator" VALUES (105, '分组算子', 'group', 1, 2, 5, NULL, NULL, NULL, NULL, NULL);;
-INSERT INTO "modeling_data_flow_operator" VALUES (106, '聚合算子', 'polymerization', 1, 2, 6, NULL, NULL, NULL, NULL, NULL);;
-INSERT INTO "modeling_data_flow_operator" VALUES (107, '桥接算子', 'join', 1, 2, 7, NULL, NULL, NULL, NULL, NULL);;
-INSERT INTO "modeling_data_flow_operator" VALUES (201, '更新算子', 'update', 2, 1, 1, NULL, NULL, NULL, NULL, NULL);;
-INSERT INTO "modeling_data_flow_operator" VALUES (1001, '数据源算子', 'dataSource', 10, 0, 1, NULL, NULL, NULL, NULL, NULL);;
-INSERT INTO "modeling_data_flow_operator" VALUES (301, '插入算子', 'insert', 3, 1, 1, NULL, NULL, NULL, NULL, NULL);;
-INSERT INTO "modeling_data_flow_operator" VALUES (401, '删除算子', 'delete', 4, 1, 1, NULL, NULL, NULL, NULL, NULL);;
+INSERT INTO "modeling_data_flow_operator" VALUES (202, '条件算子', 'condition', 2, 2, 2, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO "modeling_data_flow_operator" VALUES (102, '条件算子', 'condition', 1, 2, 2, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO "modeling_data_flow_operator" VALUES (108, '映射算子', 'mapping', 1, 2, 8, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO "modeling_data_flow_operator" VALUES (101, '查询算子', 'query', 1, 1, 1, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO "modeling_data_flow_operator" VALUES (103, '排序算子', 'sort', 1, 2, 3, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO "modeling_data_flow_operator" VALUES (104, '限条算子', 'limit', 1, 2, 4, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO "modeling_data_flow_operator" VALUES (105, '分组算子', 'group', 1, 2, 5, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO "modeling_data_flow_operator" VALUES (106, '聚合算子', 'polymerization', 1, 2, 6, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO "modeling_data_flow_operator" VALUES (107, '桥接算子', 'join', 1, 2, 7, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO "modeling_data_flow_operator" VALUES (201, '更新算子', 'update', 2, 1, 1, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO "modeling_data_flow_operator" VALUES (1001, '数据源算子', 'dataSource', 10, 0, 1, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO "modeling_data_flow_operator" VALUES (301, '插入算子', 'insert', 3, 1, 1, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO "modeling_data_flow_operator" VALUES (401, '删除算子', 'delete', 4, 1, 1, NULL, NULL, NULL, NULL, NULL);
 
 -- ----------------------------
 -- Table structure for modeling_data_flow_operator_group
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS "modeling_data_flow_operator_group" (
-    "id" int8 NOT NULL PRIMARY KEY,
+    "id" int4 NOT NULL PRIMARY KEY,
     "name" varchar(255),
-    "sort_id" int8,
+    "sort_id" int4,
     "create_by" varchar(64),
     "create_time" timestamp,
     "update_by" varchar(64),
@@ -146,14 +123,14 @@ COMMENT ON TABLE "modeling_data_flow_operator_group" IS '数据库算子分类';
 -- ----------------------------
 -- Records of modeling_data_flow_operator_group
 -- ----------------------------
-INSERT INTO "modeling_data_flow_operator_group" VALUES (1, '基础算子', 1, NULL, NULL, NULL, NULL, NULL);;
-INSERT INTO "modeling_data_flow_operator_group" VALUES (2, '组合算子', 2, NULL, NULL, NULL, NULL, NULL);;
+INSERT INTO "modeling_data_flow_operator_group" VALUES (1, '基础算子', 1, NULL, NULL, NULL, NULL, NULL);
+INSERT INTO "modeling_data_flow_operator_group" VALUES (2, '组合算子', 2, NULL, NULL, NULL, NULL, NULL);
 
 -- ----------------------------
 -- Table structure for modeling_data_flow_type
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS "modeling_data_flow_type" (
-    "id" int8 NOT NULL PRIMARY KEY,
+    "id" int4 NOT NULL PRIMARY KEY,
     "name" varchar(255),
     "create_by" varchar(64),
     "create_time" timestamp,
@@ -182,13 +159,13 @@ INSERT INTO "modeling_data_flow_type" VALUES (4, '插入类', NULL, NULL, NULL, 
 -- Table structure for modeling_visualization_custom_dimensions
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS "modeling_visualization_custom_dimensions" (
-    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "id" int8 NOT NULL PRIMARY KEY,
     "name" varchar(255),
     "field" varchar(128),
     "categories_json" text,
     "operator_id" varchar(128),
     "data_flow_id" int8,
-    "sort_id" int8,
+    "sort_id" int4,
     "create_by" varchar(64),
     "create_time" timestamp,
     "update_by" varchar(64),
@@ -217,13 +194,13 @@ COMMENT ON COLUMN "modeling_visualization_custom_dimensions"."remark" IS '描述
 -- Table structure for modeling_visualization_geo_files
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS "modeling_visualization_geo_files" (
-    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "id" int8 NOT NULL PRIMARY KEY,
     "name" varchar(255),
     "file_path" varchar(128),
     "geo_json" text,
     "register_name" varchar(128),
     "data_flow_id" int8,
-    "sort_id" int8,
+    "sort_id" int4,
     "create_by" varchar(64),
     "create_time" timestamp,
     "update_by" varchar(64),
@@ -252,13 +229,13 @@ COMMENT ON COLUMN "modeling_visualization_geo_files"."remark" IS '描述';
 -- Table structure for modeling_visualization_params
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS "modeling_visualization_params" (
-    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "id" int8 NOT NULL PRIMARY KEY,
     "name" varchar(255),
     "type" varchar(128),
     "params_json" text,
     "operator_id" varchar(128),
     "data_flow_id" int8,
-    "sort_id" int8,
+    "sort_id" int4,
     "create_by" varchar(64),
     "create_time" timestamp,
     "update_by" varchar(64),
@@ -287,7 +264,7 @@ COMMENT ON COLUMN "modeling_visualization_params"."remark" IS '描述';
 -- Table structure for modeling_visualization_reports
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS "modeling_visualization_reports" (
-    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "id" int8 NOT NULL PRIMARY KEY,
     "name" varchar(255),
     "url" varchar(1024),
     "intro" text,
@@ -316,7 +293,7 @@ COMMENT ON COLUMN "modeling_visualization_reports"."remark" IS '描述';
 -- Table structure for modeling_visualization_snapshots
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS "modeling_visualization_snapshots" (
-    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "id" int8 NOT NULL PRIMARY KEY,
     "name" varchar(255),
     "img_base64" text,
     "chart_data_json" text,
@@ -382,6 +359,28 @@ CREATE TABLE IF NOT EXISTS "ops_package_manager" (
     )
 ;
 
+CREATE TABLE IF NOT EXISTS "ops_device_manager" (
+    "name" varchar(64) NOT NULL PRIMARY KEY,
+    "host_ip" varchar(64),
+    "port" varchar(5),
+    "user_name" varchar(64),
+    "password" varchar(256),
+    "pair_id" varchar(256)
+    )
+;
+
+CREATE TABLE IF NOT EXISTS "ops_disaster_cluster" (
+    "cluster_id" varchar(255) NOT NULL PRIMARY KEY,
+    "primary_cluster_id" varchar(255),
+    "primary_cluster_device_manager_name" varchar(64),
+    "standby_cluster_id" varchar(255),
+    "standby_cluster_device_manager_name" varchar(64),
+    "primary_json_path" varchar(255),
+    "standby_json_path" varchar(255)
+    )
+;
+
+
 CREATE TABLE IF NOT EXISTS "ops_olk" (
     "id" VARCHAR(64) NOT NULL PRIMARY KEY,
     "name" VARCHAR(255) NOT NULL,
@@ -414,24 +413,3 @@ CREATE TABLE IF NOT EXISTS "ops_olk" (
     "create_time" TIMESTAMP NULL DEFAULT NULL,
     "dad_install_password" TEXT NULL DEFAULT NULL
     );
-
-CREATE TABLE IF NOT EXISTS "ops_device_manager" (
-    "name" varchar(64) NOT NULL PRIMARY KEY,
-    "host_ip" varchar(64) ,
-    "port" varchar(5) ,
-    "user_name" varchar(64) ,
-    "password" varchar(256) ,
-    "pair_id" varchar(256) 
-    )
-;
-
-CREATE TABLE IF NOT EXISTS "ops_disaster_cluster" (
-    "cluster_id" varchar(255) NOT NULL PRIMARY KEY,
-    "primary_cluster_id" varchar(255) ,
-    "primary_cluster_device_manager_name" varchar(64) ,
-    "standby_cluster_id" varchar(255) ,
-    "standby_cluster_device_manager_name" varchar(64) ,
-    "primary_json_path" varchar(255) ,
-    "standby_json_path" varchar(255) 
-    )
-;
