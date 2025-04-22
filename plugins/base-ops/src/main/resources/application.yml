@@ -1,6 +1,11 @@
 context:
   listener:
     classes: org.opengauss.admin.plugin.listener.BaseOpsPluginListener
+install:
+  package:
+    upgrade:
+      old-history-version: 3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1
+      history-version: 6.0.0;7.0.0-RC1
 spring:
   resources:
     static-locations: classpath:resources
