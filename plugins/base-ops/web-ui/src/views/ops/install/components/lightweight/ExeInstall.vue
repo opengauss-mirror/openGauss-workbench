@@ -195,6 +195,8 @@ const termTerminal = ref<Terminal>()
 
 const loadingFunc = inject<any>('loading')
 
+const fitAddonTerm = ref<any>(null)
+const fitAddonTermLog = ref<any>(null)
 onMounted(() => {
   loadingFunc.setNextBtnShow(false)
   hosts.value = []
@@ -217,6 +219,8 @@ onBeforeUnmount(() => {
   terminalWs.value?.destroy()
   termLog.value?.dispose()
   termTerminal.value?.dispose()
+  window.removeEventListener('resize', resizeScreenTermLog)
+  window.removeEventListener('resize', resizeScreenTerm)
 })
 
 const retryInstall = () => {
@@ -406,15 +410,33 @@ const syncStepNumberCluster = (messageData: string) => {
   }
 }
 
+const resizeScreenTermLog = () => {
+  try { // When the window size changes, trigger the xterm resize method to make it adaptive.
+    fitAddonTermLog.value?.fit()
+  } catch (e) {
+    console.log("e", e)
+  }
+}
+
 const initTermLog = (term: Terminal, ws: WebSocket | undefined) => {
   if (ws) {
     const fitAddon = new FitAddon()
+    fitAddonTermLog.value = fitAddon
     term.loadAddon(fitAddon)
     term.open(document.getElementById('xtermLog') as HTMLElement)
     fitAddon.fit()
     term.clear()
     term.focus()
     termLog.value = term
+    window.addEventListener("resize", resizeScreenTermLog)
+  }
+}
+
+const resizeScreenTerm = () => {
+  try { // When the window size changes, trigger the xterm resize method to make it adaptive.
+    fitAddonTerm.value?.fit()
+  } catch (e) {
+    console.log("e", e)
   }
 }
 
@@ -422,6 +444,7 @@ const initTerm = (term: Terminal, ws: WebSocket | undefined) => {
   if (ws) {
     const attachAddon = new AttachAddon(ws)
     const fitAddon = new FitAddon()
+    fitAddonTerm.value = fitAddon
     term.loadAddon(attachAddon)
     term.loadAddon(fitAddon)
     term.open(document.getElementById('xterm') as HTMLElement)
@@ -430,6 +453,7 @@ const initTerm = (term: Terminal, ws: WebSocket | undefined) => {
     term.focus()
     term.write('\r\n\x1b[33m$\x1b[0m ')
     termTerminal.value = term
+    window.addEventListener("resize", resizeScreenTerm)
   }
 }
 

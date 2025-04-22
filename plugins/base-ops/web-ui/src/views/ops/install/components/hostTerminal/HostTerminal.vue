@@ -31,7 +31,7 @@
 
 import { KeyValue } from '@/types/global'
 import Socket from '@/utils/websocket'
-import { reactive, ref, nextTick } from 'vue'
+import { reactive, ref, nextTick, onBeforeUnmount } from 'vue'
 import { openSSH } from '@/api/ops'
 import { WsConnectType } from '@/types/ops/install'
 import { Terminal } from 'xterm'
@@ -97,10 +97,25 @@ const openSocket = () => {
 
 let fitAddon = ref<FitAddon | undefined>()
 
+const fitAddonTerm = ref<any>(null)
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', resizeScreenTerm)
+})
+
+const resizeScreenTerm = () => {
+  try { // When the window size changes, trigger the xterm resize method to make it adaptive.
+    fitAddonTerm.value?.fit()
+  } catch (e) {
+    console.log("e", e)
+  }
+}
+
 const initTerm = (term: Terminal, ws: WebSocket | undefined) => {
   if (ws) {
     const attachAddon = new AttachAddon(ws)
     fitAddon.value = new FitAddon()
+    fitAddonTerm.value = fitAddon
     term.loadAddon(attachAddon)
     term.loadAddon(fitAddon.value)
     term.open(document.getElementById('xterm') as HTMLElement)
@@ -109,6 +124,7 @@ const initTerm = (term: Terminal, ws: WebSocket | undefined) => {
     term.focus()
     term.write('\r\n\x1b[33m$\x1b[0m ')
     termTerminal.value = term
+    window.addEventListener("resize", resizeScreenTerm)
   }
 }
 
