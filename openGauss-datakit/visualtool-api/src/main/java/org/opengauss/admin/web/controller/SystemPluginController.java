@@ -40,21 +40,29 @@ import com.gitee.starblues.spring.extract.ExtractCoordinate;
 import com.gitee.starblues.spring.extract.ExtractFactory;
 import com.google.common.collect.Maps;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.annotation.Log;
+import org.opengauss.admin.common.config.SystemConfig;
 import org.opengauss.admin.common.core.controller.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.dto.PluginConfigDataDto;
+import org.opengauss.admin.common.core.dto.PluginDownloadDTO;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.common.enums.BusinessType;
 import org.opengauss.admin.common.enums.PluginLicenseType;
 import org.opengauss.admin.common.enums.ResponseCode;
 import org.opengauss.admin.common.enums.SysPluginStatus;
+import org.opengauss.admin.common.enums.SysPluginDownloadStatus;
 import org.opengauss.admin.common.enums.SysPluginTheme;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.file.FileUploadUtils;
@@ -65,14 +73,21 @@ import org.opengauss.admin.system.plugin.extract.PluginExtensionInfoExtract;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
-import org.opengauss.admin.system.service.ISysMenuService;
 import org.opengauss.admin.system.service.ISysPluginConfigDataService;
 import org.opengauss.admin.system.service.ISysPluginConfigService;
-import org.opengauss.admin.system.service.ISysPluginLogoService;
+import org.opengauss.admin.system.service.ISysPluginRepositoryService;
 import org.opengauss.admin.system.service.ISysPluginService;
+import org.opengauss.admin.system.service.ISysMenuService;
+import org.opengauss.admin.system.service.ISysPluginLogoService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.PrintWriter;
@@ -84,9 +99,10 @@ import java.util.Map;
 @Api(tags = "plugins")
 @Slf4j
 public class SystemPluginController extends BaseController {
-
     @Autowired
     private ISysPluginService sysPluginService;
+    @Autowired
+    private ISysPluginRepositoryService sysPluginRepositoryService;
     @Autowired
     private PluginOperator pluginOperator;
     @Autowired
@@ -103,6 +119,8 @@ public class SystemPluginController extends BaseController {
     private RealizeProvider realizeProvider;
     @Autowired
     private IntegrationConfiguration configuration;
+
+    private final String baseOpsId = "base-ops";
 
 
     /**
@@ -233,23 +251,31 @@ public class SystemPluginController extends BaseController {
     }
 
     /**
-     * upload and instal plugin
+     * upload and instal plugin offline
      *
      * @param jarFile jarFile
      */
     @Log(title = "plugins", businessType = BusinessType.INSTALL)
-    @PostMapping("/install")
-    @ApiOperation("instal plugin")
+    @PostMapping("/offline_install")
+    @ApiOperation("offline install plugin")
     public AjaxResult install(@RequestParam("file") MultipartFile jarFile) {
         try {
             preInstall(jarFile);
             UploadParam uploadParam = UploadParam.byMultipartFile(jarFile)
-                .setBackOldPlugin(true)
-                .setStartPlugin(true)
-                .setUnpackPlugin(false);
+                    .setBackOldPlugin(true)
+                    .setStartPlugin(true)
+                    .setUnpackPlugin(false);
             PluginInfo pluginInfo = pluginOperator.uploadPlugin(uploadParam);
+            if (!pluginInfo.getPluginDescriptor().getPluginVersion()
+                    .equals(sysPluginRepositoryService.getCurrentVersion())) {
+                sysMenuService.deleteByPluginId(pluginInfo.getPluginId());
+                pluginOperator.uninstall(pluginInfo.getPluginId(), true, true);
+                return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_VERSION_ERROR.msg());
+            }
             Map<String, Object> result;
             if ((result = updateSystemByPluginInfo(pluginInfo)) != null) {
+                sysPluginRepositoryService.updatePluginDownloadStatus(
+                        List.of(pluginInfo.getPluginId()), SysPluginDownloadStatus.DOWNLOADED_STATUS.getCode());
                 return AjaxResult.success(result);
             } else {
                 return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_INSTALL_ERROR.code());
@@ -261,7 +287,57 @@ public class SystemPluginController extends BaseController {
             return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_INSTALL_ERROR.msg() + ":" + e.getMessage());
         }
     }
-    
+
+    /**
+     * getFileNameFromUrl
+     *
+     * @param url pluginDownloadUrl
+     * @return jarFile name
+     */
+    private String getFileNameFromUrl(String url) {
+        try {
+            URL u = new URL(url);
+            String path = u.getPath();
+            return path.substring(path.lastIndexOf("/") + 1);
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("Invalid URL format", e);
+        }
+    }
+
+    /**
+     * upload and instal plugin online
+     *
+     * @param dto dto
+     */
+    @Log(title = "plugins", businessType = BusinessType.INSTALL)
+    @PostMapping("/online_install")
+    @ApiOperation("online install plugin")
+    public AjaxResult onlineInstall(@RequestBody PluginDownloadDTO dto) {
+        String pluginUrl = dto.getPluginUrl();
+        String wsBusinessId = dto.getWsBusinessId();
+        String fileName = getFileNameFromUrl(pluginUrl);
+        log.info("wsBusinessId is {} in onlineInstall", wsBusinessId);
+        sysPluginRepositoryService.saveOnlinePackage(pluginUrl, fileName, wsBusinessId);
+        String pluginPathString = SystemConfig.getPluginPath() + File.separator + getFileNameFromUrl(pluginUrl);
+        Path pluginPath = Paths.get(pluginPathString);
+        PluginInfo pluginInfo = pluginOperator.install(pluginPath, false);
+        try {
+            Map<String, Object> result;
+            if ((result = updateSystemByPluginInfo(pluginInfo)) != null) {
+                sysPluginRepositoryService.updatePluginDownloadStatus(
+                        List.of(pluginInfo.getPluginId()), SysPluginDownloadStatus.DOWNLOADED_STATUS.getCode());
+                return AjaxResult.success(result);
+            } else {
+                return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_INSTALL_ERROR.code());
+            }
+        } catch (Exception e) {
+            StringWriter errorsWriter = new StringWriter();
+            e.printStackTrace(new PrintWriter(errorsWriter));
+            log.error(errorsWriter.toString());
+            return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_INSTALL_ERROR.msg() + ":" + e.getMessage());
+        }
+    }
+
     /**
      * Update plugin service info.
      * @param pluginInfo the plugin info.
@@ -284,7 +360,7 @@ public class SystemPluginController extends BaseController {
             isNeedConfigured = MapUtil.getInt(pluginInfo.getExtensionInfo(), "isNeedConfigured");
             theme = MapUtil.getStr(pluginInfo.getExtensionInfo(), "theme");
             configAttrs = MapUtil.getStr(pluginInfo.getExtensionInfo(), "configAttrs");
-        
+
             if (!SysPluginTheme.DARK.getCode().equals(theme) && !SysPluginTheme.LIGHT.getCode().equals(theme)) {
                 theme = null;
             }
@@ -362,6 +438,8 @@ public class SystemPluginController extends BaseController {
             }
             sysMenuService.deleteByPluginId(id);
             pluginOperator.uninstall(id, true, true);
+            sysPluginRepositoryService.updatePluginDownloadStatus(
+                    List.of(id), SysPluginDownloadStatus.UN_DOWNLOAD_STATUS.getCode());
             return AjaxResult.success();
         } catch (Exception e) {
             StringWriter errorsWriter = new StringWriter();
@@ -436,6 +514,21 @@ public class SystemPluginController extends BaseController {
         return pluginOperator.getPluginInfo(pluginOperator.parse(pluginPath).getPluginId()) != null;
     }
 
+    /**
+     * get unload plugins info list
+     */
+    @GetMapping("/isBaseOpsStart")
+    @ApiOperation("Get base-ops plugin status")
+    public AjaxResult getBaseOpsStatus() {
+        if (!sysPluginService.getPluginList().contains(baseOpsId)) {
+            return AjaxResult.success(false);
+        }
+        if (pluginOperator.getPluginInfo(baseOpsId).getPluginState().equals(PluginState.STOPPED)) {
+            return AjaxResult.success(false);
+        }
+        return AjaxResult.success(true);
+    }
+
     private boolean removePluginInstallationPackage(Path pluginPath) {
         try {
             Files.delete(pluginPath);
@@ -445,5 +538,42 @@ public class SystemPluginController extends BaseController {
             return false;
         }
         return true;
+    }
+
+    /**
+     * get unload plugins info list
+     */
+    @GetMapping("/unloadPluginsInfo")
+    @ApiOperation("Gets a list of undownloaded plugins information")
+    public AjaxResult getUnloadPluginInfosList() {
+        try {
+            // 获取未下载插件的plugin_id列表
+            List<String> unloadedPluginIds = sysPluginRepositoryService.getUnloadPluginIdsList();
+
+            return AjaxResult.success(unloadedPluginIds);
+        } catch (Exception e) {
+            StringWriter errorsWriter = new StringWriter();
+            e.printStackTrace(new PrintWriter(errorsWriter));
+            log.error(errorsWriter.toString());
+            return AjaxResult.error(ResponseCode.INTEGRATION_UNLOAD_PLUGIN_INFO_QUERY_ERROR.msg()
+                + ":" + e.getMessage());
+        }
+    }
+
+    /**
+     * get plugin info
+     *
+     * @param pluginId pluginVersion
+     */
+    @PostMapping("/getUnloadPluginUrl")
+    @ApiOperation("get unload plugin url")
+    public AjaxResult getUnloadPluginUrl(@RequestParam("pluginId") String pluginId) {
+        String pluginVersion = sysPluginRepositoryService.getCurrentVersion();
+        String unloadPluginUrl = sysPluginRepositoryService
+            .getPluginUrlByIdAndVersion(pluginId, pluginVersion);
+        if (unloadPluginUrl == null) {
+            return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_URL_QUERY_ERROR.msg());
+        }
+        return AjaxResult.success(unloadPluginUrl);
     }
 }

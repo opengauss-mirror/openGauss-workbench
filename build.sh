@@ -206,4 +206,5 @@ get_git_log
 build_pkg
 copy_plugin_pkg
 cd $output_path
-tar -zcf Datakit-${pom_version}.tar.gz ./*
+tar -zcf Datakit-All-${pom_version}.tar.gz ./*
+tar -zcf Datakit-Mini-${pom_version}.tar.gz ./application-temp.yml ./build_commit_id.log ./doc ./openGauss-datakit* ./run.sh ./visualtool-plugin/webds-plugin* ./visualtool-plugin/base-ops*

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.system.mapper.SysPluginRepositoryMapper">
+
+    <!-- Result Map for SysPluginRepository -->
+    <resultMap id="SysPluginRepositoryResult" type="org.opengauss.admin.system.domain.SysPluginRepository">
+        <id property="id" column="id"/>
+        <result property="pluginId" column="plugin_id"/>
+        <result property="isDownloaded" column="is_downloaded"/>
+        <result property="pluginVersion" column="plugin_version"/>
+        <result property="downloadUrl" column="download_url"/>
+        <result property="pluginDesc" column="plugin_desc"/>
+        <result property="pluginDescEn" column="plugin_desc_en"/>
+    </resultMap>
+    <!-- Update the download status of plugins -->
+    <update id="updatePluginDownloadStatus">
+        UPDATE sys_plugins_repository
+        SET is_downloaded = #{isDownload}
+        WHERE
+        <if test="pluginIds != null and pluginIds.size() > 0">
+            plugin_id IN
+            <foreach item="pluginId" collection="pluginIds" open="(" separator="," close=")">
+                #{pluginId}
+            </foreach>
+        </if>
+        <if test="pluginIds == null or pluginIds.size() == 0">
+            1 = 1  <!-- 这里的 1 = 1 是一个总是成立的条件，确保查询不会出错 -->
+        </if>
+    </update>
+
+    <!-- Select plugin IDs that are not loaded (for getUnloadPluginList) -->
+    <select id="getUnloadPluginListByRepository" resultType="java.lang.String" parameterType="java.util.List">
+        SELECT DISTINCT plugin_id
+        FROM sys_plugins_repository
+        WHERE
+        <if test="pluginIds != null and pluginIds.size() > 0">
+            plugin_id NOT IN
+            <foreach item="pluginId" collection="pluginIds" open="(" separator="," close=")">
+                #{pluginId}
+            </foreach>
+        </if>
+        <if test="pluginIds == null or pluginIds.size() == 0">
+            1 = 1  <!-- 这里的 1 = 1 是一个总是成立的条件，确保查询不会出错 -->
+        </if>
+    </select>
+
+    <!-- Select plugin repository information by pluginId and pluginVersion (for getUnloadPluginUrl) -->
+    <select id="getPluginUrlByIdAndVersion" resultType="java.lang.String">
+        SELECT download_url
+        FROM sys_plugins_repository
+        WHERE plugin_id = #{pluginId} AND plugin_version = #{pluginVersion}
+            LIMIT 1
+    </select>
+</mapper>

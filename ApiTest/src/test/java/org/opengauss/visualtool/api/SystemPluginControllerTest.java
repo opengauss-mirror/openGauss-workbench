@@ -143,7 +143,7 @@ public class SystemPluginControllerTest {
         getRequestSpecification()
                 .multiPart("file", baseOpsJarPath.toFile())
                 .when()
-                .post("/install")
+                .post("/offline_install")
                 .then()
                 .body("code", Matchers.equalTo(200))
                 .body("data.pluginId", Matchers.equalTo(baseOpsPluginId));

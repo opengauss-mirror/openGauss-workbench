@@ -20,11 +20,10 @@
 
     </resultMap>
 
-
     <sql id="selectSysPluginListVo">
         SELECT
             id,plugin_id,bootstrap_class,plugin_desc,logo_path,plugin_type,plugin_version,
-               plugin_provider,plugin_status,is_need_configured,theme,plugin_desc_en
+            plugin_provider,plugin_status,is_need_configured,theme,plugin_desc_en
         FROM sys_plugins
     </sql>
 
@@ -33,9 +32,9 @@
         <where>
             <if test="entity.pluginId != null and entity.pluginId != ''">
                 and (
-                    plugin_id like concat('%', #{entity.pluginId}, '%')
-                    or plugin_provider like concat('%', #{entity.pluginId}, '%')
-                    or plugin_desc like concat('%', #{entity.pluginId}, '%')
+                plugin_id like concat('%', #{entity.pluginId}, '%')
+                or plugin_provider like concat('%', #{entity.pluginId}, '%')
+                or plugin_desc like concat('%', #{entity.pluginId}, '%')
                 )
             </if>
             <if test="entity.pluginType != null ">
@@ -49,5 +48,10 @@
             </if>
         </where>
         order by id desc
+    </select>
+
+    <select id="getPluginIds" resultType="java.lang.String">
+        SELECT plugin_id
+        FROM sys_plugins
     </select>
 </mapper>

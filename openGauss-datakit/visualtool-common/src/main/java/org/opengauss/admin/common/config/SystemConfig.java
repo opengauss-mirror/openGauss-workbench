@@ -27,6 +27,8 @@ package org.opengauss.admin.common.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Paths;
+
 /**
  * system config
  *
@@ -48,6 +50,13 @@ public class SystemConfig {
 
     public void setDefaultStoragePath(String storagePath) {
         SystemConfig.defaultStoragePath = storagePath;
+    }
+
+    /**
+     * plugin path
+     */
+    public static String getPluginPath() {
+        return Paths.get(getStoragePath(), "../visualtool-plugin").normalize().toString();
     }
 
     /**
