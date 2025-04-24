@@ -57,7 +57,10 @@ export const getBusiFlowType = () => {
 export const getBusiFlowList = () => {
   return axios.get('plugins/base-ops/modeling/dataflow/processInfo')
 }
-
+// Get the status of Base-ops
+export const isBaseOpsStart = () => {
+  return axios.get('system/plugins/isBaseOpsStart')
+}
 // Get the number of plugins
 export const getPluginCount = () => {
   return axios.get('system/plugins/count')

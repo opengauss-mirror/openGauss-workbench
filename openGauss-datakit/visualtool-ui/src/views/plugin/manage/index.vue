@@ -193,208 +193,117 @@
         </div>
       </div>
     </a-modal>
-
-    <!-- add plugin -->
-    <a-modal
-      :title="$t('manage.index.5m5v55wxk140')"
-      v-model:visible="upload.open"
-      width="500px"
-      title-align="start"
-    >
-      <a-upload
-        ref="uploadDom"
-        :file-list="fileList"
-        :action="upload.url"
-        :limit="1"
-        accept=".jar"
-        :headers="upload.headers"
-        :auto-upload="false"
-        draggable
-        @progress="handleFileUploadProgress"
-        @success="handleFileSuccess"
-        @before-upload="handleBeforeUpload"
-      >
-        <template #upload-button>
-          <div class="upload-info">
-            <div class="upload-icon">
-              <icon-plus :style="{fontSize: '28px', color: '#86909C'}" />
-            </div>
-            <div class="tips-1">
-              <span>{{$t('manage.index.5m5v55wxkxw0')}}</span>
-              <span class="highlight">{{$t('manage.index.5m5v55wxl440')}}</span>
-            </div>
-            <div class="tips-2">
-              <span>{{$t('manage.index.5m5v55wxla00')}}</span>
-            </div>
-          </div>
-        </template>
-      </a-upload>
-      <template #footer>
-        <div class="modal-footer">
-          <a-button @click="closeInstall">{{$t('manage.index.5m5v55wxldg0')}}</a-button>
-        </div>
-      </template>
-    </a-modal>
-
-    <!-- plugin config -->
+    <plugin-install v-model:visible="uploadModal" :wsId="wsBusinessId" @downloadStart="downloadStart" />
+    <download-notification ref="downloadNotRef" :percentage="currPercent" :msg="$t('manage.index.onlineDownload')" :iconClass="'rar-file'"
+                           :fileName="uploadName"></download-notification>
     <plugin-config v-model:open="configVisible" :plugin-id="configPluginId" :configAttrs="configAttrs" :configData="configData" />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { reactive, ref, onMounted } from 'vue'
-  import { useAppStore, useTabBarStore } from '@/store'
-  import { Message } from '@arco-design/web-vue'
-  import { getToken } from '@/utils/auth'
-  import { list, start, stop, uninstall, extendInfoList } from '@/api/plugin'
-  import { getUserInfo } from '@/api/user'
-  import PluginConfig from './components/PluginConfig.vue'
-  import { destroyPluginApp } from '@/utils/pluginApp'
-  import useLocale from '@/hooks/locale'
-  import dayjs from 'dayjs'
+import { reactive, ref, onMounted, watch } from 'vue'
+import { useAppStore, useTabBarStore } from '@/store'
+import { Message } from '@arco-design/web-vue'
+import { getToken } from '@/utils/auth'
+import { list, start, stop, uninstall, extendInfoList } from '@/api/plugin'
+import { getUserInfo } from '@/api/user'
+import PluginConfig from './components/PluginConfig.vue'
+import PluginInstall from './components/PluginInstall.vue'
+import { destroyPluginApp } from '@/utils/pluginApp'
+import useLocale from '@/hooks/locale'
+import dayjs from 'dayjs'
+import downloadNotification from '@/components/downloadNotification'
+import showMessage from "@/hooks/showMessage";
 
-  const appStore = useAppStore()
-  const tabBarStore = useTabBarStore()
-  const { currentLocale } = useLocale()
-  const loading = ref<boolean>(true)
-  const doLoading = ref<boolean>(false)
+const appStore = useAppStore()
+const tabBarStore = useTabBarStore()
+const { currentLocale } = useLocale()
+const loading = ref<boolean>(true)
+const doLoading = ref<boolean>(false)
 
-  const form = reactive({
-    keyWords: undefined,
-    status: undefined
-  })
+const form = reactive({
+  keyWords: undefined,
+  status: undefined
+})
 
-  const upload = reactive({
-    open: false,
-    isUploading: true,
-    headers: { Authorization: 'Bearer ' + getToken() },
-    url: '/system/plugins/install'
-  })
+const upload = reactive({
+  open: false,
+})
 
-  const authDetail = reactive<any>({
-    open: false,
-    info: null,
-    extendInfo: null
-  })
+const authDetail = reactive<any>({
+  open: false,
+  info: null,
+  extendInfo: null
+})
 
-  const uploadDom = ref<any>(null)
-  const fileList = ref<any>([])
-  const pluginList = ref<any[]>([])
-  const configPluginId = ref<string | number>('')
-  const configVisible = ref<boolean>(false)
-  const configAttrs = ref<any[]>([])
-  const configData = ref<any>({})
+const pluginList = ref<any[]>([])
+const configPluginId = ref<string | number>('')
+const configVisible = ref<boolean>(false)
+const configAttrs = ref<any[]>([])
+const configData = ref<any>({})
 
-  const getList = () => {
-    const params = {
-      pluginId: form.keyWords,
-      pluginStatus: form.status
-    }
+const getList = () => {
+  const params = {
+    pluginId: form.keyWords,
+    pluginStatus: form.status
+  }
 
-    loading.value = true
-    Promise.all([
-      list(params),
-      extendInfoList(params)
-    ])
-      .then(([listRes, extendInfoRes]: any[]) => {
+  loading.value = true
+  Promise.all([
+    list(params),
+    extendInfoList(params)
+  ])
+    .then(([listRes, extendInfoRes]: any[]) => {
       const nextPluginList = (listRes.rows ?? []).map((item: any) => Object.assign(item, {
         extendInfo: extendInfoRes.rows.find((info: any) => info.pluginId === item.pluginId) ?? null
       }))
 
       pluginList.value = nextPluginList
     })
-      .finally(() => loading.value = false)
-  }
+    .finally(() => {
+      loading.value = false
+      doLoading.value = false
+    })
+}
 
-  const resetQuery = () => {
-    form.keyWords = undefined
-    form.status = undefined
-    getList()
-  }
+const resetQuery = () => {
+  form.keyWords = undefined
+  form.status = undefined
+  getList()
+}
+const uploadModal = ref<boolean>(false)
+const handleUpload = () => {
+  webSocketOpen()
+  uploadModal.value = true
+  upload.open = true
+}
 
-  const handleUpload = () => {
-    upload.open = true
-  }
-
-  const handleFileUploadProgress = () => {
-    upload.isUploading = true
-  }
-
-  const handleFileSuccess = (fileItem: any) => {
-    upload.open = false
-    upload.isUploading = true
-    fileList.value = []
-    if (fileItem.response.code === 200) {
-      const data: any = fileItem.response.data
-      configPluginId.value = data.pluginId
-      if (data.isNeedConfigured === 1) {
-        configVisible.value = true
-        configAttrs.value = JSON.parse(data.configAttrs) || []
-        configData.value = JSON.parse(data.configData) || {}
-      }
-      Message.success('Install success')
+watch(
+  () => uploadModal.value,
+  (oldVal, newVal) => {
+    if (newVal && !oldVal) {
       appStore.fetchServerMenuConfig()
       getList()
-    } else {
-      Message.error(fileItem.response.msg)
     }
   }
-
-  const handleBeforeUpload = () => {
-    return new Promise((resolve, reject) => {
-      getUserInfo().then(() => {
-        resolve(true)
-      }).catch(() => {
-        reject('cancel')
-      })
-    })
-  }
-
-  const closeInstall = () => {
-    upload.open = false
-    upload.isUploading = true
-    fileList.value = []
-  }
-
-  const switchChange = async (row: any) => {
-    const pluginId = row.pluginId
-    if (row.pluginStatus !== 2) {
-      try {
-        doLoading.value = true
-        await start(pluginId)
-        doLoading.value = false
-        Message.success('Start success')
-      } catch (e) {
-        doLoading.value = false
-      }
-    } else {
-      try {
-        doLoading.value = true
-        await stop(pluginId)
-        doLoading.value = false
-        Message.success('Stop success')
-        const tagList: any[] = [...tabBarStore.tagList]
-        tagList.forEach((item: any) => {
-          if (~item.fullPath.indexOf(`/${pluginId}/`)) {
-            tabBarStore.deleteTags(item)
-            destroyPluginApp(item.fullPath)
-          }
-        })
-      } catch (e) {
-        doLoading.value = false
-      }
-    }
-    appStore.fetchServerMenuConfig()
-    getList()
-  }
-
-  const handleUninstall = async (row: any) => {
-    const pluginId = row.pluginId
+)
+const switchChange = async (row: any) => {
+  const pluginId = row.pluginId
+  if (row.pluginStatus !== 2) {
     try {
       doLoading.value = true
-      await uninstall(pluginId)
+      await start(pluginId)
       doLoading.value = false
-      Message.success('Uninstall success')
+      Message.success('Start success')
+    } catch (e) {
+      doLoading.value = false
+    }
+  } else {
+    try {
+      doLoading.value = true
+      await stop(pluginId)
+      doLoading.value = false
+      Message.success('Stop success')
       const tagList: any[] = [...tabBarStore.tagList]
       tagList.forEach((item: any) => {
         if (~item.fullPath.indexOf(`/${pluginId}/`)) {
@@ -405,21 +314,157 @@
     } catch (e) {
       doLoading.value = false
     }
+  }
+  appStore.fetchServerMenuConfig()
+  getList()
+}
+
+const handleUninstall = async (row: any) => {
+  const pluginId = row.pluginId
+  try {
+    doLoading.value = true
+    await uninstall(pluginId)
+    doLoading.value = false
+    Message.success('Uninstall success')
+    const tagList: any[] = [...tabBarStore.tagList]
+    tagList.forEach((item: any) => {
+      if (~item.fullPath.indexOf(`/${pluginId}/`)) {
+        tabBarStore.deleteTags(item)
+        destroyPluginApp(item.fullPath)
+      }
+    })
+  } catch (e) {
+    doLoading.value = false
+  }
+  appStore.fetchServerMenuConfig()
+  getList()
+}
+
+const isAbsolutePath = (url: string): boolean => url.startsWith('http')
+
+const handleAuthDetail = (info: any, extendInfo: any = null): void => {
+  authDetail.info = info
+  authDetail.extendInfo = extendInfo
+  authDetail.open = Boolean(info)
+}
+const wsBusinessId = ref('')
+const currPercent = ref<number>(0)
+const percentLoading = ref<boolean>(false)
+const processVisible = ref<boolean>(false)
+
+watch(currPercent, (newValue) => {
+  if (newValue === 100) {
+    processVisible.value = false
+    closeNotification()
     appStore.fetchServerMenuConfig()
     getList()
   }
+})
+const notificationVisible = ref<boolean>(false)
+const closeNotification = () => {
+  notificationVisible.value = false
+  uploadName.value = ''
+}
 
-  const isAbsolutePath = (url: string): boolean => url.startsWith('http')
-
-  const handleAuthDetail = (info: any, extendInfo: any = null): void => {
-    authDetail.info = info
-    authDetail.extendInfo = extendInfo
-    authDetail.open = Boolean(info)
-  }
-
-  onMounted(() => {
+const uploadName = ref('')
+const downloadStart = (name: string) => {
+  if (name === 'END') {
     getList()
-  })
+    appStore.fetchServerMenuConfig()
+  } else {
+    uploadName.value = name
+    notificationVisible.value = true
+  }
+}
+
+const timer = ref<any>(null)
+const lastProcess = ref(0);
+const nextProcess = ref(0);
+const webSocketOpen = () => {
+  currPercent.value = 0
+  const socketKey = new Date().getTime()
+  const wsPrefix = window.location.protocol.includes('https') ? 'wss' : 'ws'
+  const socketUrl = `${wsPrefix}://${window.location.host}/websocket/1/downloadPlugin_${socketKey}`
+  const websocket = new WebSocket(socketUrl)
+  wsBusinessId.value = `downloadPlugin_${socketKey}`
+  websocket.onopen = function (event) {
+    wsBusinessId.value = `downloadPlugin_${socketKey}`
+  }
+  websocket.onmessage = function (event) {
+    processVisible.value = true
+    const messageData = event.data
+    downloadNotRef.value?.createOrUpdateNotification(wsBusinessId, messageData, uploadName.value)
+    if (messageData === 'File download Failed') {
+      showMessage('error', t('components.Package.5mtcyb0rty52'))
+      websocket.close()
+      downloadNotRef.value?.closeNotifiCation(wsBusinessId);
+      clearInterval(timer.value)
+    } else {
+      if (!isNaN(Number(messageData))) {
+        const percent = Number(messageData)
+        nextProcess.value = percent;
+        clearInterval(timer.value);
+        timer.value = setInterval(() => {
+          if (nextProcess.value === 1) {
+            lastProcess.value = 0;
+            nextProcess.value = 0;
+          } else if (nextProcess.value.toString() === lastProcess.value.toString()) {
+            let warnningMsg = setTimeout(() => {
+              showMessage('error', 'websocket长时间无响应，将关闭下载进度悬浮框')
+              downloadNotRef.value?.closeNotifiCation(wsBusinessId);
+              clearTimeout(warnningMsg)
+            }, 3000)
+            websocket.close();
+            clearInterval(timer.value);
+          } else {
+            lastProcess.value = nextProcess.value
+          }
+        }, 10000)
+        if (percent === 1) {
+          clearInterval(timer.value);
+          percentLoading.value = false
+          lastProcess.value = 0;
+          nextProcess.value = 0;
+          websocket.close()
+          downloadNotRef.value?.closeNotifiCation(wsBusinessId);
+          doLoading.value = true
+          downloadStart('END')
+        }
+      } else if (messageData === 'DOWNLOAD_FINISH') {
+        percentLoading.value = false
+        websocket.close()
+        downloadNotRef.value?.closeNotifiCation(wsBusinessId);
+        lastProcess.value = 0;
+        nextProcess.value = 0;
+        clearInterval(timer.value)
+        doLoading.value = true
+        downloadStart('END')
+      } else {
+        console.error('WebSocket error', messageData)
+        websocket.close()
+        downloadNotRef.value?.closeNotifiCation(wsBusinessId);
+        lastProcess.value = 0;
+        nextProcess.value = 0;
+        clearInterval(timer.value)
+      }
+    }
+  }
+  websocket.onclose = function () {
+    console.log('WebSocket Close')
+  }
+  websocket.onerror = function (error) {
+    console.error('WebSocket error:', error)
+  }
+}
+
+const downloadNotRef = ref(null)
+
+const init =() => {
+  getList()
+}
+onMounted(() => {
+  init()
+})
 </script>
 
 <style lang="less" scoped>
