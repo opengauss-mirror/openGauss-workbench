@@ -14,7 +14,6 @@
     <packaging>jar</packaging>
     <properties>
         <junit.version>4.13</junit.version>
-        <easyexcel.version>3.1.1</easyexcel.version>
         <build.frontend.skip>false</build.frontend.skip>
     </properties>
 
@@ -38,7 +37,14 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>easyexcel</artifactId>
-            <version>${easyexcel.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.gitee.starblues</groupId>
+            <artifactId>spring-brick-bootstrap</artifactId>
         </dependency>
         <dependency>
             <groupId>com.gitee.starblues</groupId>

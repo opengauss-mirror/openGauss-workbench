@@ -242,7 +242,12 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
 
     private List<HostRecord> readExcelFile(InputStream inputStream) {
         HostRecordDataListener hostRecordDataListener = new HostRecordDataListener(this, isSwitchingLanguage);
-        return EasyExcel.read(inputStream, HostRecord.class, hostRecordDataListener).sheet().doReadSync();
+        try {
+            return EasyExcel.read(inputStream, HostRecord.class, hostRecordDataListener).sheet().doReadSync();
+        } catch (Exception e) {
+            log.error("Failed to parse data.", e);
+            throw new OpsException("Failed to parse data.");
+        }
     }
 
     private Map<String, List<HostRecord>> groupHostRecordsByIP(List<HostRecord> hostRecords) {
@@ -447,25 +452,22 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     @Transactional(rollbackFor = Exception.class)
     public boolean edit(String hostId, HostBody hostBody) {
         OpsHostEntity hostEntity = checkHostExist(hostId);
-
         if (StringUtils.isBlank(hostBody.getName())) {
             throw new OpsException("Host name cannot be empty");
         }
         if (ObjectUtils.isEmpty(hostBody.getPort())) {
             throw new OpsException("Host port cannot be empty");
         }
-        if (!hostEntity.getPrivateIp().equals(hostBody.getPrivateIp())
-                || !hostEntity.getPublicIp().equals(hostBody.getPublicIp())) {
+        if (!hostEntity.getPrivateIp().equals(hostBody.getPrivateIp()) || !hostEntity.getPublicIp()
+            .equals(hostBody.getPublicIp())) {
             throw new OpsException("Host public and private IP cannot be modified");
         }
         if (StringUtils.isAnyBlank(hostBody.getUsername(), hostBody.getPassword())) {
             throw new OpsException("Host username and password cannot be empty");
         }
-
         SshLogin sshLogin = new SshLogin(hostBody.getPublicIp(), hostBody.getPort(), hostBody.getUsername(),
-                encryptionUtils.decrypt(hostBody.getPassword()));
+            encryptionUtils.decrypt(hostBody.getPassword()));
         HostInfoVo hostInfoVo = getHostInfoVo(jschExecutorService.createSession(sshLogin));
-
         hostEntity.setName(hostBody.getName());
         hostEntity.setPort(hostBody.getPort());
         hostEntity.setRemark(hostBody.getRemark());
@@ -474,7 +476,6 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         hostEntity.setCpuArch(hostInfoVo.getCpuArch());
         hostEntity.setHostname(hostInfoVo.getHostname());
         updateById(hostEntity);
-
         opsHostTagRelService.cleanHostTag(hostId);
         opsHostTagService.addTag(HostTagInputDto.of(hostBody.getTags(), hostId));
         return true;
