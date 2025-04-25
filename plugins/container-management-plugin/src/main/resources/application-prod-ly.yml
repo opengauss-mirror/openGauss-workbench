@@ -6,12 +6,12 @@ context:
 spring:
   resources:
     static-locations: classpath:resources
-  datasource:
-    type: com.alibaba.druid.pool.DruidDataSource
-    driver-class-name: org.opengauss.Driver
-    url: jdbc:opengauss://ip:port/postgres?currentSchema=public&batchMode=off
-    username: username
-    password: password
+    #datasource:
+    #type: com.alibaba.druid.pool.DruidDataSource
+    #driver-class-name: org.opengauss.Driver
+    #url: jdbc:opengauss://ip:port/postgres?currentSchema=public&batchMode=off
+    #username: username
+    #password: password
 
 mybatis-plus:
   typeAliasesPackage: org.opengauss.admin.container.domain

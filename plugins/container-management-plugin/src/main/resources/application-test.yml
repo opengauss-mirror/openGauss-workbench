@@ -6,12 +6,12 @@ context:
 spring:
   resources:
     static-locations: classpath:resources
-  datasource:
-    type: com.alibaba.druid.pool.DruidDataSource
-    driver-class-name: org.opengauss.Driver
-    url: jdbc:opengauss://ip1:port1,ip2:port2,ip3:port3/opengauss_api?currentSchema=opengauss_api&useUnicode=true&characterEncoding=utf8&useSSL=false&targetServerType=master&batchMode=off&quoteReturningIdentifiers=false
-    username: og_opengauss_api
-    password: test1
+    #datasource:
+    #type: com.alibaba.druid.pool.DruidDataSource
+    #driver-class-name: org.opengauss.Driver
+    #url: jdbc:opengauss://ip1:port1,ip2:port2,ip3:port3/opengauss_api?currentSchema=opengauss_api&useUnicode=true&characterEncoding=utf8&useSSL=false&targetServerType=master&batchMode=off&quoteReturningIdentifiers=false
+    #username: og_opengauss_api
+    #password: test1
   redis:
     cluster:
       nodes: node1:20001,node2:20001,node2:20001,node4:20001,node5:20001,node6:20001
