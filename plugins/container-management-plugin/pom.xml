@@ -176,6 +176,11 @@
                         <provider>opengauss</provider>
                         <description>容器管理插件</description>
                     </pluginInfo>
+                    <loadMainResourcePattern>
+                        <includes>
+                            <include>org.intarkdb.**</include>
+                        </includes>
+                    </loadMainResourcePattern>
                 </configuration>
                 <executions>
                     <execution>

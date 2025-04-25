@@ -59,11 +59,13 @@ public class DataSourceConfig {
     @Profile("!dev")
     DataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSourceProperties properties,
                                                                             DataSource dataSource) {
-        checkDatabaseAvailability(properties);
         String driverClassName = properties.getDriverClassName();
+        if (DbDataLocationEnum.OPENGAUSS.getDriverClass().equals(driverClassName)) {
+            checkDatabaseAvailability(properties);
+        }
         Optional<DbDataLocationEnum> dbDataLocationEnum = DbDataLocationEnum.of(driverClassName);
         DatabaseInitializationSettings settings = new DatabaseInitializationSettings();
-        settings.setContinueOnError(false);
+        settings.setContinueOnError(true);
         settings.setSeparator(";");
         settings.setMode(DatabaseInitializationMode.ALWAYS);
         if (dbDataLocationEnum.isEmpty()) {

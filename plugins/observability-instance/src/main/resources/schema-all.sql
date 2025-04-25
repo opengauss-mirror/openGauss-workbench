@@ -48,3 +48,22 @@ LANGUAGE plpgsql;
 
 SELECT alter_nctigba_env();
 DROP FUNCTION alter_nctigba_env();
+
+CREATE TABLE IF NOT EXISTS nctigba_env (
+    id VARCHAR(255),
+    hostid VARCHAR(255),
+    "type" VARCHAR(255),
+    username VARCHAR(255),
+    "path" VARCHAR(255),
+    port int8
+    );
+
+ALTER TABLE nctigba_env ADD COLUMN nodeid VARCHAR(255);
+
+ALTER TABLE nctigba_env ADD COLUMN status VARCHAR(255);
+
+ALTER TABLE nctigba_env ADD COLUMN update_time TIMESTAMP;
+
+ALTER TABLE nctigba_env ADD COLUMN param VARCHAR(255);
+
+ALTER TABLE nctigba_env ADD COLUMN err_status_msg VARCHAR(255);
