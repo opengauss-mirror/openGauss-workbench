@@ -2,7 +2,7 @@
 -- Table structure for modeling_data_flow
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS "modeling_data_flow" (
-    "id" int8 NOT NULL PRIMARY KEY,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "name" varchar(512),
     "u_id" varchar(128),
     "tags" varchar(512),
