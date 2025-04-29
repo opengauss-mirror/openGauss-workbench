@@ -1,13 +1,12 @@
 CREATE TABLE IF NOT EXISTS "tb_migration_main_task" (
-    "id" int8 NOT NULL,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "task_name" varchar(255),
     "exec_status" int4,
     "create_time" timestamp,
     "finish_time" timestamp,
     "exec_time" timestamp,
     "exec_progress" varchar(10),
-    "create_user" varchar(255),
-    CONSTRAINT "sys_task_copy1_pkey" PRIMARY KEY ("id")
+    "create_user" varchar(255)
     );
 
 COMMENT ON COLUMN "tb_migration_main_task"."id" IS '主键ID';
@@ -30,7 +29,7 @@ COMMENT ON TABLE "tb_migration_main_task" IS '平台任务表';
 
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task" (
-    "id" int8 NOT NULL,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "source_node_id" varchar(64),
     "source_db" varchar(255),
     "source_tables" text,
@@ -58,8 +57,7 @@ CREATE TABLE IF NOT EXISTS "tb_migration_task" (
     "migration_model_id" int8,
     "migration_process" varchar(10),
     "run_hostname" varchar(255),
-    "target_db_version" varchar(20),
-    CONSTRAINT "tb_migration_task_pkey" PRIMARY KEY ("id")
+    "target_db_version" varchar(20)
     );
 
 COMMENT ON COLUMN "tb_migration_task"."id" IS '主键ID';
@@ -131,12 +129,11 @@ ALTER TABLE tb_migration_task ADD COLUMN source_tables text;
 COMMENT ON COLUMN "tb_migration_task"."source_tables" IS '源端表';
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task_exec_result_detail" (
-    "id" int8 NOT NULL,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "task_id" int8,
     "exec_result_detail" text,
     "create_time" timestamp,
-    "process_type" int2,
-    CONSTRAINT "tb_task_exec_result_detail_pkey" PRIMARY KEY ("id")
+    "process_type" int2
     );
 
 COMMENT ON COLUMN "tb_migration_task_exec_result_detail"."id" IS '主键ID';
@@ -150,12 +147,11 @@ COMMENT ON COLUMN "tb_migration_task_exec_result_detail"."process_type" IS '进�
 COMMENT ON TABLE "tb_migration_task_exec_result_detail" IS '任务执行结果进度详情';
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task_global_param" (
-    "id" int8 NOT NULL,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "param_key" varchar(255),
     "param_value" varchar(255),
     "param_desc" varchar(512),
-    "main_task_id" int8,
-    CONSTRAINT "tb_task_global_param_pkey" PRIMARY KEY ("id")
+    "main_task_id" int8
     );
 
 COMMENT ON COLUMN "tb_migration_task_global_param"."id" IS '主键ID';
@@ -172,7 +168,7 @@ COMMENT ON TABLE "tb_migration_task_global_param" IS '任务全局参数配置�
 
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task_global_tools_param" (
-    "id" int8 NOT NULL,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "param_key" varchar(255),
     "param_value" varchar(255),
     "param_value_type" int2,
@@ -181,8 +177,7 @@ CREATE TABLE IF NOT EXISTS "tb_migration_task_global_tools_param" (
     "portal_host_id" varchar(255),
     "param_desc" varchar(1024),
     "delete_flag" int2,
-    "new_param_flag" int2,
-    CONSTRAINT "tb_task_global_tools_param_pkey" PRIMARY KEY ("id")
+    "new_param_flag" int2
     );
 
 COMMENT ON COLUMN "tb_migration_task_global_tools_param"."id" IS '主键ID';
@@ -208,11 +203,10 @@ COMMENT ON COLUMN "tb_migration_task_global_tools_param"."new_param_flag" IS '�
 COMMENT ON TABLE "tb_migration_task_global_tools_param" IS '工具全局参数配置表';
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task_host_ref" (
-    "id" int8 NOT NULL AUTOINCREMENT,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "main_task_id" int8,
     "run_host_id" varchar(64),
-    "create_time" timestamp,
-    CONSTRAINT "tb_task_host_ref_pkey" PRIMARY KEY ("id")
+    "create_time" timestamp
     );
 
 COMMENT ON COLUMN "tb_migration_task_host_ref"."id" IS '主键ID';
@@ -225,11 +219,10 @@ COMMENT ON COLUMN "tb_migration_task_host_ref"."create_time" IS '创建时间';
 
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task_init_global_param" (
-    "id" int8 NOT NULL AUTOINCREMENT,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "param_key" varchar(255),
     "param_value" varchar(255),
-    "param_desc" varchar(512),
-    CONSTRAINT "tb_init_global_param_pkey" PRIMARY KEY ("id")
+    "param_desc" varchar(512)
     );
 
 COMMENT ON COLUMN "tb_migration_task_init_global_param"."id" IS '主键ID';
@@ -244,10 +237,9 @@ COMMENT ON TABLE "tb_migration_task_init_global_param" IS '初始全局参数配
 
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task_model" (
-    "id" int8 NOT NULL,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "model_name" varchar(255),
-    "migration_operations" varchar(255),
-    CONSTRAINT "tb_miration_model_pkey" PRIMARY KEY ("id")
+    "migration_operations" varchar(255)
     );
 
 COMMENT ON COLUMN "tb_migration_task_model"."id" IS '主键ID';
@@ -259,14 +251,13 @@ COMMENT ON COLUMN "tb_migration_task_model"."migration_operations" IS '迁移动
 COMMENT ON TABLE "tb_migration_task_model" IS '迁移模式表';
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task_param" (
-    "id" int8 NOT NULL AUTOINCREMENT,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "main_task_id" int8,
     "task_id" int8,
     "param_key" varchar(255),
     "param_value" varchar(255),
     "param_desc" varchar(512),
-    "param_type" int2,
-    CONSTRAINT "tb_task_param_pkey" PRIMARY KEY ("id")
+    "param_type" int2
     );
 
 COMMENT ON COLUMN "tb_migration_task_param"."id" IS '主键ID';
@@ -287,7 +278,7 @@ COMMENT ON TABLE "tb_migration_task_param" IS '任务参数配置表';
 
 
 CREATE TABLE IF NOT EXISTS "tb_migration_third_party_software_config" (
-    "id" int8 NOT NULL AUTOINCREMENT,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "zk_port" varchar(50),
     "kafka_port" varchar(50),
     "schema_registry_port" varchar(50),
@@ -296,8 +287,7 @@ CREATE TABLE IF NOT EXISTS "tb_migration_third_party_software_config" (
     "schema_registry_ip" varchar(255),
     "install_dir" varchar(255),
     "bind_portal_host" varchar(512),
-    "host" varchar(512),
-    CONSTRAINT "tb_migration_third_party_software_pkey" PRIMARY KEY ("id")
+    "host" varchar(512)
     );
 
 COMMENT ON COLUMN "tb_migration_third_party_software_config"."id" IS '主键ID';
@@ -323,13 +313,12 @@ COMMENT ON COLUMN "tb_migration_third_party_software_config"."host" IS '安装�
 COMMENT ON TABLE "tb_migration_third_party_software_config" IS 'kafka实例配置表';
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task_operate_record" (
-    "id" int8 NOT NULL AUTOINCREMENT,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "task_id" int8,
     "title" varchar(255),
     "oper_time" timestamp,
     "oper_user" varchar(255),
-    "oper_type" int2,
-    CONSTRAINT "tb_task_process_record_pkey" PRIMARY KEY ("id")
+    "oper_type" int2
     );
 
 COMMENT ON COLUMN "tb_migration_task_operate_record"."id" IS '主键ID';
@@ -347,13 +336,12 @@ COMMENT ON COLUMN "tb_migration_task_operate_record"."oper_type" IS '操作类�
 COMMENT ON TABLE "tb_migration_task_operate_record" IS '任务操作记录表';
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task_status_record" (
-    "id" int8 NOT NULL AUTOINCREMENT,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "title" varchar(255),
     "operate_id" int8,
     "task_id" int8,
     "status_id" int4,
-    "create_time" timestamptz(6),
-    CONSTRAINT "tb_migration_task_status_record_pkey" PRIMARY KEY ("id")
+    "create_time" timestamp
     );
 
 COMMENT ON COLUMN "tb_migration_task_status_record"."id" IS '主键ID';
@@ -370,9 +358,9 @@ COMMENT ON COLUMN "tb_migration_task_status_record"."create_time" IS '记录时�
 COMMENT ON TABLE "tb_migration_task_status_record" IS '任务状态记录表';
 
 INSERT INTO "tb_migration_task_model" ("id", "model_name", "migration_operations")
-VALUES (1, ''离线模式'', ''start_plan1'');
+VALUES (1, '离线模式', 'start_plan1');
 INSERT INTO "tb_migration_task_model" ("id", "model_name", "migration_operations")
-VALUES (2, ''在线模式'', ''start_plan3'');
+VALUES (2, '在线模式', 'start_plan3');
 
 INSERT INTO "tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
 VALUES (1, 'sink.query-dop', '8', 'sink端数据库并行查询会话配置');
@@ -447,14 +435,13 @@ ALTER TABLE tb_migration_task ADD COLUMN status_desc varchar(512);
 COMMENT ON COLUMN "tb_migration_task"."status_desc" IS ''状态说明'';
 
 CREATE TABLE IF NOT EXISTS "tb_main_task_env_error_host" (
-    "id" int8 NOT NULL AUTOINCREMENT,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "run_host_id" varchar(64),
     "run_host" varchar(64),
     "run_port" varchar(64),
     "run_user" varchar(64),
     "run_pass" varchar(512),
-    "main_task_id" int8,
-    CONSTRAINT "tb_main_task_env_error_host_pkey" PRIMARY KEY ("id")
+    "main_task_id" int8
     );
 
 COMMENT ON COLUMN "tb_main_task_env_error_host"."id" IS '主键ID';
@@ -468,10 +455,9 @@ COMMENT ON COLUMN "tb_main_task_env_error_host"."main_task_id" IS '主任务ID';
 ALTER TABLE "tb_migration_task" ALTER COLUMN "status_desc" type text;
 
 CREATE TABLE IF NOT EXISTS "tb_migration_host_portal_install" (
-    "id" int8 NOT NULL AUTOINCREMENT,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "run_host_id" varchar(64),
-    "install_status" int2,
-    CONSTRAINT "tb_migration_host_portal_install_pkey" PRIMARY KEY ("id")
+    "install_status" int2
     );
 
 
@@ -655,14 +641,13 @@ WHERE "id" = 31;
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS "tb_migration_tool_portal_download_info" (
-    "id" int8 NOT NULL AUTOINCREMENT,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "host_os" varchar(255) NOT NULL,
     "host_os_version" varchar(255) NOT NULL,
     "host_cpu_arch" varchar(255) NOT NULL,
     "portal_pkg_download_url" text NOT NULL,
     "portal_pkg_name" text NOT NULL,
-    "portal_jar_name" text NOT NULL,
-    CONSTRAINT "tb_migration_tool_portal_download_info_pkey" PRIMARY KEY ("id")
+    "portal_jar_name" text NOT NULL
     );
 
 COMMENT ON COLUMN "tb_migration_tool_portal_download_info"."id" IS 'portal下载信息主键';
@@ -741,26 +726,57 @@ INSERT INTO "tb_migration_tool_portal_download_info"
 VALUES(20, 'openEuler', '22.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/6.0.0/tools/openEuler22.03/', 'PortalControl-6.0.0-aarch64.tar.gz', 'portalControl-6.0.0-exec.jar');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
-VALUES(21, 'centos', '7', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/centos7/', 'latest_PortalControl-7.0.0rc1-x86_64.tar.gz', 'portalControl-7.0.0rc1-exec.jar');
+VALUES(21, 'centos', '7', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/centos7/', 'PortalControl-7.0.0rc1-x86_64.tar.gz', 'portalControl-7.0.0rc1-exec.jar');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
-VALUES(22, 'openEuler', '20.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler20.03/', 'latest_PortalControl-7.0.0rc1-x86_64.tar.gz', 'portalControl-7.0.0rc1-exec.jar');
+VALUES(22, 'openEuler', '20.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler20.03/', 'PortalControl-7.0.0rc1-x86_64.tar.gz', 'portalControl-7.0.0rc1-exec.jar');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
-VALUES(23, 'openEuler', '20.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler20.03/', 'latest_PortalControl-7.0.0rc1-aarch64.tar.gz', 'portalControl-7.0.0rc1-exec.jar');
+VALUES(23, 'openEuler', '20.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler20.03/', 'PortalControl-7.0.0rc1-aarch64.tar.gz', 'portalControl-7.0.0rc1-exec.jar');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
-VALUES(24, 'openEuler', '22.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler22.03/', 'latest_PortalControl-7.0.0rc1-x86_64.tar.gz', 'portalControl-7.0.0rc1-exec.jar');
+VALUES(24, 'openEuler', '22.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler22.03/', 'PortalControl-7.0.0rc1-x86_64.tar.gz', 'portalControl-7.0.0rc1-exec.jar');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
-VALUES(25, 'openEuler', '22.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler22.03/', 'latest_PortalControl-7.0.0rc1-aarch64.tar.gz', 'portalControl-7.0.0rc1-exec.jar');
+VALUES(25, 'openEuler', '22.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler22.03/', 'PortalControl-7.0.0rc1-aarch64.tar.gz', 'portalControl-7.0.0rc1-exec.jar');
+INSERT INTO "tb_migration_tool_portal_download_info"
+("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
+VALUES(26, 'openEuler', '24.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler24.03/', 'PortalControl-7.0.0rc1-x86_64.tar.gz', 'portalControl-7.0.0rc1-exec.jar');
+INSERT INTO "tb_migration_tool_portal_download_info"
+("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
+VALUES(27, 'openEuler', '24.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler24.03/', 'PortalControl-7.0.0rc1-aarch64.tar.gz', 'portalControl-7.0.0rc1-exec.jar');
+
+
+INSERT INTO "tb_migration_tool_portal_download_info"
+("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
+VALUES(28, 'centos', '7', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/centos7/', 'latest_PortalControl-7.0.0rc2-x86_64.tar.gz', 'portalControl-7.0.0rc2-exec.jar');
+INSERT INTO "tb_migration_tool_portal_download_info"
+("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
+VALUES(29, 'openEuler', '20.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler20.03/', 'latest_PortalControl-7.0.0rc2-x86_64.tar.gz', 'portalControl-7.0.0rc2-exec.jar');
+INSERT INTO "tb_migration_tool_portal_download_info"
+("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
+VALUES(30, 'openEuler', '20.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler20.03/', 'latest_PortalControl-7.0.0rc2-aarch64.tar.gz', 'portalControl-7.0.0rc2-exec.jar');
+INSERT INTO "tb_migration_tool_portal_download_info"
+("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
+VALUES(31, 'openEuler', '22.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler22.03/', 'latest_PortalControl-7.0.0rc2-x86_64.tar.gz', 'portalControl-7.0.0rc2-exec.jar');
+INSERT INTO "tb_migration_tool_portal_download_info"
+("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
+VALUES(32, 'openEuler', '22.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler22.03/', 'latest_PortalControl-7.0.0rc2-aarch64.tar.gz', 'portalControl-7.0.0rc2-exec.jar');
+INSERT INTO "tb_migration_tool_portal_download_info"
+("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
+VALUES(33, 'openEuler', '24.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler24.03/', 'latest_PortalControl-7.0.0rc2-x86_64.tar.gz', 'portalControl-7.0.0rc2-exec.jar');
+INSERT INTO "tb_migration_tool_portal_download_info"
+("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name")
+VALUES(34, 'openEuler', '24.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler24.03/', 'latest_PortalControl-7.0.0rc2-aarch64.tar.gz', 'portalControl-7.0.0rc2-exec.jar');
+
+
 
 -- ----------------------------
 -- Table structure for tb_migration_task_alert
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task_alert" (
-    "id" int8 NOT NULL AUTOINCREMENT,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "task_id" int8 NOT NULL,
     "migration_phase" int8 NOT NULL,
     "date_time" varchar(24) NOT NULL,
@@ -772,8 +788,7 @@ CREATE TABLE IF NOT EXISTS "tb_migration_task_alert" (
     "cause_en" text NOT NULL,
     "log_level" varchar(10),
     "log_code" varchar(4) NOT NULL,
-    "log_source" int8 NOT NULL,
-    CONSTRAINT "tb_migration_task_alert_pkey" PRIMARY KEY ("id")
+    "log_source" int8 NOT NULL
     );
 
 COMMENT ON COLUMN "tb_migration_task_alert"."id" IS '告警信息主键ID';
@@ -795,9 +810,8 @@ COMMENT ON COLUMN "tb_migration_task_alert"."log_source" IS '告警对应的日�
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task_alert_detail" (
-    "alert_id" int8 NOT NULL,
-    "detail" text NOT NULL,
-    CONSTRAINT "tb_migration_task_alert_detail_pkey" PRIMARY KEY ("alert_id")
+    "alert_id" int8 NOT NULL PRIMARY KEY,
+    "detail" text NOT NULL
     );
 
 COMMENT ON COLUMN "tb_migration_task_alert_detail"."alert_id" IS '告警信息主键ID';
@@ -809,7 +823,7 @@ COMMENT ON COLUMN "tb_migration_task_alert_detail"."detail" IS '告警对应的�
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task_check_progress_detail" (
-    "id" varchar(255) NOT NULL,
+    "id" varchar(255) NOT NULL PRIMARY KEY,
     "task_id" int8 NOT NULL,
     "schema_name" varchar(255),
     "source_name" varchar(255),
@@ -818,8 +832,7 @@ CREATE TABLE IF NOT EXISTS "tb_migration_task_check_progress_detail" (
     "failed_rows" int8,
     "repair_file_name" varchar(255),
     "message" text,
-    "create_time" timestamp DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "tb_migration_task_check_progress_detail_pkey" PRIMARY KEY ("id")
+    "create_time" timestamp DEFAULT CURRENT_TIMESTAMP
     );
 COMMENT ON COLUMN "tb_migration_task_check_progress_detail"."id" IS 'ID';
 COMMENT ON COLUMN "tb_migration_task_check_progress_detail"."task_id" IS '迁移任务ID';
@@ -839,7 +852,7 @@ COMMENT ON COLUMN "tb_migration_task_check_progress_detail"."create_time" IS '�
 -- ----------------------------
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task_check_progress_summary" (
-    "id" int8 NOT NULL AUTOINCREMENT,
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "task_id" int8 NOT NULL,
     "source_db" varchar(255),
     "sink_db" varchar(255),
@@ -849,8 +862,7 @@ CREATE TABLE IF NOT EXISTS "tb_migration_task_check_progress_summary" (
     "table_count" int4,
     "start_time" timestamp,
     "end_time" timestamp,
-    "status" varchar(16),
-    CONSTRAINT "tb_migration_task_check_progress_summary_pkey" PRIMARY KEY ("id")
+    "status" varchar(16)
     );
 
 COMMENT ON COLUMN "tb_migration_task_check_progress_summary"."id" IS '迁移全量校验进度表详情主键ID';
@@ -868,7 +880,7 @@ COMMENT ON COLUMN "tb_migration_task_check_progress_summary"."status" IS '迁移
 
 CREATE TABLE IF NOT EXISTS "tb_transcribe_replay_task"
 (
-    id                int8 PRIMARY KEY,
+    id                int8 PRIMARY KEY AUTOINCREMENT,
     task_name          VARCHAR(255) NOT NULL,
     task_type          VARCHAR(255) NOT NULL,
     db_name            text NOT NULL,
@@ -958,7 +970,7 @@ COMMENT ON COLUMN "tb_transcribe_replay_slow_sql"."count_str" IS '该SQL的执�
 
 CREATE TABLE IF NOT EXISTS  "tb_transcribe_replay_fail_sql"
 (
-    id       int8 PRIMARY KEY,
+    id       int8 PRIMARY KEY AUTOINCREMENT,
     task_id  INT  NOT NULL,
     sql TEXT NOT NULL,
     message  TEXT
@@ -972,7 +984,7 @@ COMMENT ON COLUMN tb_transcribe_replay_fail_sql.message IS '错误消息或日�
 
 CREATE TABLE IF NOT EXISTS  "tb_transcribe_replay_param"
 (
-    id int8 PRIMARY KEY,
+    id int8 PRIMARY KEY AUTOINCREMENT,
     fail_sql_id INT NOT NULL,
     type VARCHAR(255) NOT NULL,
     value TEXT

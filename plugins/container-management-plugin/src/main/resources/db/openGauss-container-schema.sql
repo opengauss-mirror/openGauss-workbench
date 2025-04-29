@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS k8s_cluster
 
 CREATE TABLE IF NOT EXISTS open_gauss_cluster
 (
-    id              int8,
+    id              int8 AUTOINCREMENT,
     k8s_id          varchar(60),
     name          varchar(100),
     namespace       varchar(50),
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS open_gauss_cluster
 
 CREATE TABLE IF NOT EXISTS open_gauss_image
 (
-    id           int8,
+    id           int8 AUTOINCREMENT,
     type       varchar(20),
     architecture varchar(20),
     os           varchar(20),
@@ -69,7 +69,7 @@ CREATE UNIQUE INDEX IF NOT exists open_gauss_image_name_idx ON opengauss_api.ope
 
 CREATE TABLE IF NOT EXISTS open_gauss_operator
 (
-    id                      int8,
+    id                      int8 AUTOINCREMENT,
     k8s_cluster_id          varchar(60),
     name                    varchar(100),
     type                    varchar(10),
