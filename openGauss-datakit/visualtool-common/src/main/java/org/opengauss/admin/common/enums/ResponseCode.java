@@ -85,7 +85,7 @@ public enum ResponseCode {
     INTEGRATION_UNLOAD_PLUGIN_INFO_QUERY_ERROR(50129, "query unload plugins information error"),
     INTEGRATION_PLUGIN_URL_QUERY_ERROR(50130, "query plugin url error"),
     INTEGRATION_PLUGIN_VERSION_ERROR(50131,
-            "The uploaded pluginJar package version should be consistent with the current datakit version");
+            "The uploaded pluginJar package version should be consistent with the current datakit version: ");
 
 
     private static Map<Integer, ResponseCode> codeMap = new HashMap<Integer, ResponseCode>();
