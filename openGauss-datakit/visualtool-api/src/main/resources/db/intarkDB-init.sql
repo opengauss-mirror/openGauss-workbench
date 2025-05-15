@@ -637,34 +637,34 @@ INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version
 VALUES (1, 'alert-monitor', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/alert-monitor-7.0.0-RC2-repackage.jar', '告警插件', 'Alarm Plugin');
 
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (2, 'container-management-plugin', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/container-management-plugin-7.0.0-RC2-repackage.jar', '容器管理插件', 'Container management Plugin');
+VALUES (2, 'webds-plugin', 1, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/webds-plugin-7.0.0-RC2-repackage.jar', '业务开发', 'Data Studio Plugin');
 
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (3, 'webds-plugin', 1, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/webds-plugin-7.0.0-RC2-repackage.jar', '业务开发', 'Data Studio Plugin');
+VALUES (3, 'oauth-login', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/oauth-login-7.0.0-RC2-repackage.jar', '统一登录插件', 'Oauth Login Plugin');
 
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (4, 'oauth-login', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/oauth-login-7.0.0-RC2-repackage.jar', '统一登录插件', 'Oauth Login Plugin');
+VALUES (4, 'observability-log-search', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-log-search-7.0.0-RC2-repackage.jar', '日志检索插件', 'Log Retrieval Plugin');
 
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (5, 'observability-log-search', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-log-search-7.0.0-RC2-repackage.jar', '日志检索插件', 'Log Retrieval Plugin');
+VALUES (5, 'MetaTune', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/MetaTune-7.0.0-RC2-repackage.jar', '数据库智能参数调优', 'The database intelligent parameter tuning tool');
 
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (6, 'MetaTune', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/MetaTune-7.0.0-RC2-repackage.jar', '数据库智能参数调优', 'The database intelligent parameter tuning tool');
+VALUES (6, 'observability-instance', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-instance-7.0.0-RC2-repackage.jar', '实例监控插件', 'Instance Monitoring Plugin');
 
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (7, 'observability-instance', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-instance-7.0.0-RC2-repackage.jar', '实例监控插件', 'Instance Monitoring Plugin');
+VALUES (7, 'data-migration', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/data-migration-7.0.0-RC2-repackage.jar', '数据迁移插件', 'Data Migration Plugin');
 
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (8, 'data-migration', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/data-migration-7.0.0-RC2-repackage.jar', '数据迁移插件', 'Data Migration Plugin');
+VALUES (8, 'base-ops', 1, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/base-ops-7.0.0-RC2-repackage.jar', '基础运维插件', 'Basic Operation Plugin');
 
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (9, 'base-ops', 1, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/base-ops-7.0.0-RC2-repackage.jar', '基础运维插件', 'Basic Operation Plugin');
+VALUES (9, 'observability-sql-diagnosis', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-sql-diagnosis-7.0.0-RC2-repackage.jar', '智能诊断插件', 'Intelligent Diagnosis Plugin');
 
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (10, 'observability-sql-diagnosis', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-sql-diagnosis-7.0.0-RC2-repackage.jar', '智能诊断插件', 'Intelligent Diagnosis Plugin');
+VALUES (10, 'monitor-tools', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/monitor-tools-7.0.0-RC2-repackage.jar', '数据库监控插件生成工具', 'Database monitoring plugin generation tool');
 
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (11, 'monitor-tools', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/monitor-tools-7.0.0-RC2-repackage.jar', '数据库监控插件生成工具', 'Database monitoring plugin generation tool');
+VALUES (11, 'compatibility-assessment', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/compatibility-assessment-7.0.0-RC2-repackage.jar', 'openGauss兼容性评估工具', 'The openGauss compatibility evaluation tool');
 
 -- ----------------------------
 -- Table structure for sys_role

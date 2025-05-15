@@ -50,7 +50,7 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 | MetaTune-7.0.0-RC2-repackage.jar                    | 数据库智能参数调优工具 | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/MetaTune-7.0.0-RC2-repackage.jar                                        |
 | observability-instance-7.0.0-RC2-repackage.jar      | 实例监控插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-instance-7.0.0-RC2-repackage.jar     |
 | observability-log-search-7.0.0-RC2-repackage.jar    | 日志检索插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-log-search-7.0.0-RC2-repackage.jar   |
-| container-management-plugin-7.0.0-RC2-repackage.jar | 容器管理插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/container-management-plugin-7.0.0-RC2-repackage.jar |
+| compatibility-assessment-7.0.0-RC2-repackage.jar    | 兼容性评估工具    | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/compatibility-assessment-7.0.0-RC2-repackage.jar |
 | monitor-tools-7.0.0-RC2-repackage.jar               | 数据库监控插件生成工具 | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/monitor-tools-7.0.0-RC2-repackage.jar              |
 | observability-sql-diagnosis-7.0.0-RC2-repackage.jar | 智能诊断插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-sql-diagnosis-7.0.0-RC2-repackage.jar                  |
 

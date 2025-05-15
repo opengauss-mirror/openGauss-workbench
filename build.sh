@@ -186,10 +186,13 @@ function copy_plugin_pkg() {
         cd ${build_path}
         if [ "$plugin_name" == "openGauss-tools-monitor" ] ; then
             cp ./**/target/*repackage.jar ${output_path}/$plugin_output/ 2>/dev/null
+            echo "copy ${plugin_name} success!!!"
+        elif [ "$plugin_name" == "container-management-plugin" ]; then
+            continue
         else
             cp ./**target/*repackage.jar ${output_path}/$plugin_output/ 2>/dev/null
+            echo "copy ${plugin_name} success!!!"
         fi
-        echo "copy ${plugin_name} success!!!"
         if [ -f ./readme.md ] ; then
             cp ./readme.md ${output_path}/${plugin_doc_output}/${plugin_name}-README.md
         fi

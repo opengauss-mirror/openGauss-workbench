@@ -183,7 +183,7 @@ const unloadedPluginTra = new Map<string, string>([
   ['oauth-login', 'manage.PluginInstall.oauthLogin'],
   ['alert-monitor', 'manage.PluginInstall.alertMonitor'],
   ['MetaTune', 'manage.PluginInstall.MetaTune'],
-  ['container-management-plugin', 'manage.PluginInstall.containerManagement'],
+  //['container-management-plugin', 'manage.PluginInstall.containerManagement'],
   ['compatibility-assessment', 'manage.PluginInstall.compatibilityAssessment'],
   ['observability-log-search', 'manage.PluginInstall.observabilityLogSearch'],
   ['data-migration', 'manage.PluginInstall.dataMigration'],
