@@ -238,14 +238,14 @@ const submit = async() => {
       param.clusterName = clusterName.value
     }
     data.form.nodes.forEach((item: any) => {
-      item.extendProps = JSON.stringify(item.props)
-      param.nodes.push(item)
+      const newItem = { ...item }
+      newItem.extendProps = JSON.stringify(newItem.props)
+      param.nodes.push(newItem)
     })
     for (const item of param.nodes) {
       const temppassword = await encryptPassword(item.password)
       item.password = temppassword
     }
-
     if (data.form.clusterId) {
       editJdbc(data.form.clusterId, param).then((res: KeyValue) => {
         data.loading = false
@@ -265,7 +265,9 @@ const submit = async() => {
           emits(`finish`)
         }
         close()
-      }).finally(() => {
+      }).catch((error) => {
+        console.log(error)
+      }) .finally(() => {
         data.loading = false
       })
     }

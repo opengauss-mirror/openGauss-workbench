@@ -229,8 +229,9 @@ const submit = () => {
       param.clusterName = clusterName.value
     }
     data.form.nodes.forEach((item) => {
-      item.extendProps = JSON.stringify(item.props)
-      param.nodes.push(item)
+      const newItem = { ...item }
+      newItem.extendProps = JSON.stringify(newItem.props)
+      param.nodes.push(newItem)
     })
     for (const item of param.nodes) {
       const temppassword = await encryptPassword(item.password)
@@ -244,6 +245,8 @@ const submit = () => {
         emits(`finish`, data.form.dbType)
       }
       close()
+    }).catch((error) => {
+      console.log(error)
     }).finally(() => {
       data.loading = false
     })
