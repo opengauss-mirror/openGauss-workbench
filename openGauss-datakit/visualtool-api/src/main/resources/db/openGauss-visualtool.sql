@@ -2033,6 +2033,7 @@ INSERT INTO "public"."ops_package_path_dict" VALUES ('28', 'openEuler', '20.03',
 INSERT INTO "public"."ops_package_path_dict" VALUES ('29', 'openEuler', '22.03','aarch64', 'LITE', 'openEuler22.03/arm', 'openGauss-Lite-%s-openEuler22.03-aarch64.tar.gz','6.0.0', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
 INSERT INTO "public"."ops_package_path_dict" VALUES ('30', 'openEuler', '22.03', 'aarch64', 'MINIMAL_LIST', 'openEuler22.03/arm', 'openGauss-Server-%s-openEuler22.03-aarch64.tar.gz','6.0.0',  NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
 INSERT INTO "public"."ops_package_path_dict" VALUES ('31', 'openEuler', '22.03', 'aarch64', 'ENTERPRISE', 'openEuler22.03/arm', 'openGauss-All-%s-openEuler22.03-aarch64.tar.gz', '6.0.0', NULL, 'admin', now(), 'admin', now()) ON DUPLICATE KEY UPDATE NOTHING;
+update "public"."ops_package_path_dict" set package_name_tmp= replace(package_name_tmp,'gz','bz2')  where id>17 and version='MINIMAL_LIST';
 
 CREATE
 OR REPLACE FUNCTION init_data_fuc() RETURNS integer AS 'BEGIN

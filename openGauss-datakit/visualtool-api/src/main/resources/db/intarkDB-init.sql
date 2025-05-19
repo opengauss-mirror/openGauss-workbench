@@ -1627,6 +1627,7 @@ INSERT INTO "ops_package_path_dict" VALUES ('29', 'openEuler', '22.03','aarch64'
 INSERT INTO "ops_package_path_dict" VALUES ('30', 'openEuler', '22.03', 'aarch64', 'MINIMAL_LIST', 'openEuler22.03/arm', 'openGauss-Server-%s-openEuler22.03-aarch64.tar.gz','6.0.0',  NULL, 'admin', now(), 'admin', now());
 INSERT INTO "ops_package_path_dict" VALUES ('31', 'openEuler', '22.03', 'aarch64', 'ENTERPRISE', 'openEuler22.03/arm', 'openGauss-All-%s-openEuler22.03-aarch64.tar.gz', '6.0.0', NULL, 'admin', now(), 'admin', now());
 
+update "ops_package_path_dict" set package_name_tmp= replace(package_name_tmp,'gz','bz2')  where id>17 and version='MINIMAL_LIST';
 
  INSERT INTO "sys_role" ("role_id", "role_name", "role_key", "role_sort", "data_scope", "menu_check_strictly", "dept_check_strictly", "status", "del_flag", "create_by", "create_time", "update_by", "update_time", "remark") VALUES (1, '超级管理员', 'admin', 1, '1', 1, 1, '0', '0', 'admin', '2021-11-01 09:38:10', NULL, NULL, '超级管理员');
  INSERT INTO "sys_role" ("role_id", "role_name", "role_key", "role_sort", "data_scope", "menu_check_strictly", "dept_check_strictly", "status", "del_flag", "create_by", "create_time", "update_by", "update_time", "remark") VALUES (2, '普通角色', 'common', 2, '2', 1, 1, '0', '1', 'admin', '2021-11-01 09:38:10', NULL, NULL, '普通角色');

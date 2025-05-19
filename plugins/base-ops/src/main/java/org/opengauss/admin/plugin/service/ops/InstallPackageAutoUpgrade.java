@@ -58,6 +58,8 @@ import javax.annotation.Resource;
 @Component
 public class InstallPackageAutoUpgrade implements ApplicationRunner {
     private static final Snowflake SNOWFLAKE = IdUtil.getSnowflake(1, 1);
+    private static final String TAR_GZ = ".tar.gz";
+    private static final String TAR_BZ_2 = ".tar.bz2";
 
     @Resource
     private IOpsPackageManagerV2Service opsPackageManagerV2Service;
@@ -131,6 +133,12 @@ public class InstallPackageAutoUpgrade implements ApplicationRunner {
     }
 
     private String buildPackageManagerName(String packageNameTmp, String version) {
-        return packageNameTmp.replace("%s", version).replace(".tar.gz", "");
+        if (packageNameTmp.contains(TAR_GZ)) {
+            return packageNameTmp.replace("%s", version).replace(TAR_GZ, "");
+        } else if (packageNameTmp.contains(TAR_BZ_2)) {
+            return packageNameTmp.replace("%s", version).replace(TAR_BZ_2, "");
+        } else {
+            return packageNameTmp.replace("%s", version);
+        }
     }
 }
