@@ -270,7 +270,8 @@ public class SystemPluginController extends BaseController {
                     .equals(sysPluginRepositoryService.getCurrentVersion())) {
                 sysMenuService.deleteByPluginId(pluginInfo.getPluginId());
                 pluginOperator.uninstall(pluginInfo.getPluginId(), true, true);
-                return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_VERSION_ERROR.msg());
+                return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_VERSION_ERROR.msg()
+                    + sysPluginRepositoryService.getCurrentVersion());
             }
             Map<String, Object> result;
             if ((result = updateSystemByPluginInfo(pluginInfo)) != null) {
