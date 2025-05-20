@@ -39,7 +39,7 @@
         m.component,
         m.visible,
         m.status,
-        COALESCE(m.perms, '') AS perms,
+        CASE WHEN m.perms IS NULL THEN '' ELSE m.perms END AS perms,
         m.is_frame,
         m.is_cache,
         m.menu_type,
@@ -65,7 +65,8 @@
 
     <select id="selectMenuTreeByUserId" parameterType="Integer" resultMap="SysMenuResult">
         select distinct m.menu_id, m.parent_id, m.menu_name,m.menu_en_name, m.path, m.component, m.visible, m.status,
-        COALESCE(m.perms,'') as perms, m.is_frame, m.is_cache, m.menu_type, m.icon, m.order_num, m.create_time,
+        CASE WHEN m.perms IS NULL THEN '' ELSE m.perms END as perms,
+        m.is_frame, m.is_cache, m.menu_type, m.icon, m.order_num, m.create_time,
         m.plugin_theme,m.menu_classify
         from sys_menu m
         left join sys_role_menu rm on m.menu_id = rm.menu_id
