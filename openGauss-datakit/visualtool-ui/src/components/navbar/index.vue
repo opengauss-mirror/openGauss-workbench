@@ -9,6 +9,21 @@
       </a-space>
     </div>
     <ul class="right-side">
+      <el-tooltip
+        popper-class='robotClass'
+        placement="bottom-end"
+        :effect="theme"
+        :show-arrow="false"
+      >
+        <template #default>
+          <img class="robotImg" :src="robot" alt="robot icon" />
+        </template>
+        <template #content><div class="divClass" >{{$t('navbar.index.5nu4bvtnuyk0')}}<a href="mailto:ogpilot@public.opengauss.org">ogpilot@public.opengauss.org</a>{{$t('navbar.index.5nu5bvtnuyk0')}}</div>
+          <div class="buttonClass">
+          <el-button type="primary" tag="a" size="small" href="mailto:ogpilot@public.opengauss.org?subject=oGPilot试用申请&body=请在此填写您的公司/学校名和公网IP" target="_blank" rel="noopener noreferrer" >{{$t('navbar.index.5nu6bvtnuyk0')}}</el-button>
+          <el-button type="primary" tag="a" size="small" href="https://opengauss-copilot.test.osinfra.cn/" target="_blank" rel="noopener noreferrer" >{{$t('navbar.index.5nu7bvtnuyk0')}}</el-button></div>
+        </template>
+      </el-tooltip>
       <li>
         <a-dropdown trigger="hover" @select="changeLang">
           <div class="nav-con">
@@ -92,6 +107,7 @@ import UpdateCode from '@/views/security/user/components/UpdateCode.vue'
 import WujieVue from 'wujie-vue3'
 import { useI18n } from 'vue-i18n'
 import SystemSetting from '@/views/security/systemSetting/SystemSetting.vue'
+import robot from '@/assets/images/ops/robot.png'
 
 const { t } = useI18n()
 const { bus } = WujieVue
@@ -112,7 +128,6 @@ const userName = computed(() => userStore.userName)
 const theme = computed(() => {
   return appStore.theme
 })
-
 watch(() => appStore.menuCollapse, (val) => {
   if (val) {
     bus.$emit('opengauss-menu-collapse', '1')
@@ -207,6 +222,19 @@ onMounted(() => {
   display: flex;
   padding-right: 16px;
   list-style: none;
+  .robotImg {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: 0.2s;
+    height: 38px;
+    top: 6px;
+    right: 212px;
+    position: absolute;
+  }
+  .robotImg:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
 
   :deep(.locale-select) {
     border-radius: 20px;
@@ -284,6 +312,37 @@ onMounted(() => {
 .message-popover {
   .arco-popover-content {
     margin-top: 0;
+  }
+}
+.robotClass{
+  max-width: 282px !important;
+  background: var(--el-text-color-primary) !important;
+  color:var(--el-bg-color) !important;
+  border: 1px solid var(--el-text-color-primary) !important;
+  .buttonClass {
+    display: flex;
+    justify-content: space-between;
+    margin: 8px 4px 4px 4px;
+    .el-button--primary{
+      color: var(--color-bg-2);
+      background-color: rgb(var(--primary-6));
+      border: 1px solid transparent;
+      &:hover{
+        background-color: rgb(var(--primary-5));
+        border-color: transparent;
+      }
+    }
+  }
+  .divClass{
+    padding:4px;
+    width: 282px;
+  }
+  a {
+    color: white;
+    text-decoration: none;
+    &:hover{
+      color: rgb(var(--primary-6));
+    }
   }
 }
 </style>
