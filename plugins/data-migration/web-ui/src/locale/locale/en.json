@@ -650,7 +650,10 @@
             "5qtkk97a2e64": "The connection type is not supported. Supported type: host or hostnossl;",
             "5qtkk97a2e65": "The user does not have the replication connection privileges for this portal ip address. Ip: ",
             "5qtkk97a2e66": "The authentication method is not supported. Supported method: sha256 or md5;",
-            "5qtkk97a2e67": "Sql exception: "
+            "5qtkk97a2e67": "SQL exception: ",
+            "5qtkk97a2e68": "MySQL Executed_Gtid_Set verification：",
+            "5qtkk97a2e69": "The param value is empty or the number of transactions is 1, the verification failed;",
+            "5qtkk97a2e70": "successful;"
         }
     },
     "third": {
