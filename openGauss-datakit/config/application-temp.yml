@@ -20,13 +20,13 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     # For openGauss
-    driver-class-name: org.opengauss.Driver
-    url: jdbc:opengauss://ip:port/database?currentSchema=public&batchMode=off
-    username: dbuser
-    password: dbpassword
+#    driver-class-name: org.opengauss.Driver
+#    url: jdbc:opengauss://ip:port/database?currentSchema=public&batchMode=off
+#    username: dbuser
+#    password: dbpassword
     # For Intarkdb
-#    driver-class-name: org.intarkdb.Driver
-#    url: jdbc:intarkdb:data/datakit
+    driver-class-name: org.intarkdb.Driver
+    url: jdbc:intarkdb:data/datakit
     # 嵌入式数据库IntarkDB可开启网络访问功能，相关介绍可以查看README.md
     #url: jdbc:intarkdb:data/datakit?open_remote=true&port=9000&dbname=intarkdb
     druid:
