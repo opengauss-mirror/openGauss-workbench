@@ -129,7 +129,7 @@ sha256sum Datakit-6.0.0.tar.gz
    logging.file.path: /ops/logs
    ```
 4. 更改配置文件 - 配置数据库\
-   数据库可选用`openGauss`或轻量嵌入式数据库`Intarkdb`，平台默认使用`openGauss`作为后台数据库。使用`openGauss`作为后台数据库时，需要正确配置`openGauss`的连接信息。配置内容如下：
+   数据库可选用`openGauss`或轻量嵌入式数据库`Intarkdb`，平台默认使用`Intarkdb`作为后台数据库。使用`openGauss`作为后台数据库时，需要正确配置`openGauss`的连接信息。配置内容如下：
    ```yaml
    # For openGauss
    driver-class-name: org.opengauss.Driver
