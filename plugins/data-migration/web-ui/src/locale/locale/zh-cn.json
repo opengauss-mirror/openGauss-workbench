@@ -651,7 +651,10 @@
             "5qtkk97a2e64": "连接类型不支持，仅支持：host或hostnossl类型；",
             "5qtkk97a2e65": "用户在当前执行机ip地址没有复制连接权限，ip：",
             "5qtkk97a2e66": "认证方法不支持，仅支持：sha256或md5类型；",
-            "5qtkk97a2e67": "sql异常："
+            "5qtkk97a2e67": "SQL异常：",
+            "5qtkk97a2e68": "MySQL Executed_Gtid_Set校验：",
+            "5qtkk97a2e69": "值为空或事务数为1，校验不通过；",
+            "5qtkk97a2e70": "通过；"
         }
     },
     "third": {

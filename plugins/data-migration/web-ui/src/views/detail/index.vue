@@ -102,6 +102,8 @@
                       parseEnableSlotLog(record.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(record.statusDesc, 'hba_conf') === true">{{ parseHbaConf(record.statusDesc) }}
                     </p>
+                    <p v-if="judgeKeyExist(record.statusDesc, 'gtid_set') === true">{{
+                      parseGtidSet(record.statusDesc) }}</p>
                   </div>
                 </template>
               </a-popover>
@@ -642,6 +644,22 @@ const parseHbaConf = (content) => {
   }
 }
 
+const parseGtidSet = (content) => {
+  const obj = JSON.parse(content)
+  let result = t('detail.index.5qtkk97a2e68')
+
+  switch (obj.gtid_set.result) {
+    case 0:
+      return result + t('detail.index.5qtkk97a2e70')
+    case 1:
+      if (obj.gtid_set.error_message !== undefined) {
+        return result + t('detail.index.5qtkk97a2e67') + obj.gtid_set.error_message + t('detail.index.5qtkk97a2e35')
+      }
+      return result = result + t('detail.index.5qtkk97a2e69')
+    default:
+      return result + t('detail.index.5qtkk97a2e40') + t('detail.index.5qtkk97a2e35')
+  }
+}
 
 const handleLog = (row) => {
   subTaskDetailVisible.value = true
