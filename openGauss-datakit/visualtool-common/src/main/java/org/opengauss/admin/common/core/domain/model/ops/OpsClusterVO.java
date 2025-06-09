@@ -60,7 +60,7 @@ public class OpsClusterVO {
     public static OpsClusterVO of(OpsClusterEntity opsClusterEntity) {
         OpsClusterVO opsClusterVO = new OpsClusterVO();
         opsClusterVO.setClusterId(opsClusterEntity.getClusterId());
-        opsClusterVO.setClusterName(opsClusterEntity.getClusterName());
+        opsClusterVO.setClusterName(opsClusterEntity.getClusterId());
         opsClusterVO.setVersion(opsClusterEntity.getVersion().name());
         opsClusterVO.setVersionNum(opsClusterEntity.getVersionNum());
         opsClusterVO.setDatabasePassword(opsClusterEntity.getDatabasePassword());

@@ -229,12 +229,14 @@ COMMENT ON COLUMN "tb_migration_task_init_global_param"."id" IS '主键ID';
 
 COMMENT ON COLUMN "tb_migration_task_init_global_param"."param_key" IS '参数key';
 
-COMMENT ON COLUMN "tb_migration_task_init_global_param"."param_value" IS '参数默认值';
+COMMENT ON COLUMN "tb_migration_task_init_global_param"."param_value" IS '参数值';
 
 COMMENT ON COLUMN "tb_migration_task_init_global_param"."param_desc" IS '参数说明';
 
 COMMENT ON TABLE "tb_migration_task_init_global_param" IS '初始全局参数配置表';
 
+ALTER TABLE tb_migration_task_init_global_param ADD COLUMN default_param_value varchar(255);
+COMMENT ON COLUMN "tb_migration_task_init_global_param"."default_param_value" IS '默认参数值';
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task_model" (
     "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,

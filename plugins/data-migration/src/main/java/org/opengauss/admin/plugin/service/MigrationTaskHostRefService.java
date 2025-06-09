@@ -59,6 +59,14 @@ public interface MigrationTaskHostRefService extends IService<MigrationTaskHostR
 
     List<JdbcDbClusterVO> getSourceClusters();
 
+    /**
+     * getSourceClusters
+     *
+     * @param dbType database Type
+     * @return JdbcDbClusterVOList
+     */
+    List<JdbcDbClusterVO> getSourceClusters(String dbType);
+
     void saveDbResource(CustomDbResource dbResource);
 
     void saveSource(String clusterName, String dbUrl, String username, String password);
@@ -117,4 +125,12 @@ public interface MigrationTaskHostRefService extends IService<MigrationTaskHostR
      * @return boolean
      */
     boolean isConnectUserAdmin(OpsClusterNodeVO clusterNode);
+
+    /**
+     * isMasterNode
+     *
+     * @param clusterName cluster name
+     * @return Map<String, Boolean>
+     */
+    Map<String, Boolean> getNodeRoleMap(String clusterName);
 }

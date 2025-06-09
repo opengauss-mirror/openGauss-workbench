@@ -98,11 +98,11 @@ public class MigrationTaskResourceController extends BaseController {
      * @return AjaxResult Response
      */
     @GetMapping("/sourceClusters")
-    public AjaxResult getSourceClusters() {
-        List<JdbcDbClusterVO> sourceClusters = migrationTaskHostRefService.getSourceClusters();
-        Map<String, Object> result = new HashMap<>();
-        result.put("sourceClusters", sourceClusters);
-        return AjaxResult.success(result);
+    public AjaxResult getSourceClusters(@RequestParam(required = false) String dbType) {
+        List<JdbcDbClusterVO> sourceClusters = dbType == null
+                ? migrationTaskHostRefService.getSourceClusters()
+                : migrationTaskHostRefService.getSourceClusters(dbType);
+        return AjaxResult.success(Map.of("sourceClusters", sourceClusters));
     }
 
     /**
@@ -115,6 +115,17 @@ public class MigrationTaskResourceController extends BaseController {
         List<TargetClusterVO> targetClusters = migrationTaskHostRefService.getTargetClusters();
         Map<String, Object> result = new HashMap<>();
         result.put("targetClusters", targetClusters);
+        return AjaxResult.success(result);
+    }
+
+    /**
+     * judge cluster NodeType
+     *
+     * @return AjaxResult Response
+     */
+    @GetMapping("/isMaster")
+    public AjaxResult isMasterNode(@RequestParam String clusterName) {
+        Map<String, Boolean> result = migrationTaskHostRefService.getNodeRoleMap(clusterName);
         return AjaxResult.success(result);
     }
 

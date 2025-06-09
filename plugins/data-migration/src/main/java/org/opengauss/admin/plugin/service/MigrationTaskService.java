@@ -32,6 +32,10 @@ import org.opengauss.admin.plugin.domain.MigrationTaskCheckProgressDetail;
 import org.opengauss.admin.plugin.domain.MigrationTaskCheckProgressSummary;
 import org.opengauss.admin.plugin.domain.MigrationTaskGlobalParam;
 import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
+import org.opengauss.admin.plugin.dto.MigrationCurrentCheckInfoDto;
+import org.opengauss.admin.plugin.dto.MigrationInfoDto;
+import org.opengauss.admin.plugin.dto.MigrationLogsInfoDto;
+import org.opengauss.admin.plugin.dto.MigrationTaskWebsocketInfoDto;
 import org.opengauss.admin.plugin.enums.TaskStatus;
 import org.opengauss.admin.plugin.vo.FullCheckParam;
 import org.opengauss.admin.plugin.vo.TaskProcessStatus;
@@ -55,7 +59,13 @@ public interface MigrationTaskService extends IService<MigrationTask> {
 
     List<MigrationTask> listByMainTaskId(Integer mainTaskId);
 
-    Map<String, Object> getTaskDetailById(Integer taskId);
+    /**
+     * getTaskDetailById
+     *
+     * @param taskId taskId
+     * @return MigrationTaskWebsocketInfoDto
+     */
+    MigrationTaskWebsocketInfoDto getTaskDetailById(Integer taskId);
 
     Map<String, Object> getSingleTaskStatusAndProcessByProtal(MigrationTask t);
 
@@ -193,4 +203,40 @@ public interface MigrationTaskService extends IService<MigrationTask> {
      * @return file context
      */
     String downloadRepairFile(Integer id, String repairFileName);
+
+    /**
+     * getFullDataById
+     *
+     * @param taskId taskId
+     * @return MigrationInfo_websocket
+     */
+    MigrationTaskWebsocketInfoDto getFullDataById(Integer taskId);
+
+    /**
+     * getSubTaskBasicInfo
+     *
+     * @param id id
+     * @return SubTaskBasicInfo
+     */
+    MigrationInfoDto getSubTaskBasicInfo(Integer id);
+
+    /**
+     * getFullMigCurrentTypeInfo
+     *
+     * @param id id
+     * @param currentInfoType currentInfoType
+     * @param info MigrationCurrentCheckInfo
+     * @return MigrationInfoMap
+     */
+    Map<String, Object> getFullMigCurrentTypeInfo(Integer id, String currentInfoType,
+                                                  MigrationCurrentCheckInfoDto info);
+
+    /**
+     * getMigLogsInfo
+     *
+     * @param id id
+     * @param info MigrationLogsInfo
+     * @return MigrationLogsInfoMap
+     */
+    Map<String, Object> getMigLogsInfo(Integer id, MigrationLogsInfoDto info);
 }

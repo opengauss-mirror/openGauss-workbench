@@ -56,6 +56,11 @@ public class MigrationTaskInitGlobalParam {
     private String paramValue;
 
     /**
+     * field defaultParamValue
+     */
+    private String defaultParamValue;
+
+    /**
      * field paramDesc
      */
     private String paramDesc;

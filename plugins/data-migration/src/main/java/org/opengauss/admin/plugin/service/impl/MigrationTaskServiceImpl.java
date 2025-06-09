@@ -20,8 +20,12 @@ import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 
+import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang3.StringUtils;
@@ -33,6 +37,10 @@ import org.opengauss.admin.common.utils.OpsAssert;
 import org.opengauss.admin.plugin.constants.TaskAlertConstants;
 import org.opengauss.admin.plugin.context.MigrationTaskContext;
 import org.opengauss.admin.plugin.domain.*;
+import org.opengauss.admin.plugin.dto.MigrationCurrentCheckInfoDto;
+import org.opengauss.admin.plugin.dto.MigrationInfoDto;
+import org.opengauss.admin.plugin.dto.MigrationLogsInfoDto;
+import org.opengauss.admin.plugin.dto.MigrationTaskWebsocketInfoDto;
 import org.opengauss.admin.plugin.enums.FullMigrationDbObjEnum;
 import org.opengauss.admin.plugin.enums.MainTaskStatus;
 import org.opengauss.admin.plugin.enums.MigrationMode;
@@ -42,6 +50,8 @@ import org.opengauss.admin.plugin.enums.TaskStatus;
 import org.opengauss.admin.plugin.enums.ToolsConfigEnum;
 import org.opengauss.admin.plugin.handler.MigrationRecoveryHandler;
 import org.opengauss.admin.plugin.handler.PortalHandle;
+import org.opengauss.admin.plugin.mapper.MigrationSourceDbTypeMapper;
+import org.opengauss.admin.plugin.mapper.MigrationTaskAlertMapper;
 import org.opengauss.admin.plugin.mapper.MigrationTaskMapper;
 import org.opengauss.admin.plugin.service.*;
 import org.opengauss.admin.plugin.utils.ShellUtil;
@@ -58,6 +68,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
@@ -151,6 +165,12 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     private ScheduledExecutorService scheduledExecutorService;
     private Map<Integer, MigrationHostPortalInstall> installMap = new ConcurrentHashMap<>();
 
+    @Autowired
+    private MigrationTaskAlertMapper alertMapper;
+
+    @Resource
+    private MigrationSourceDbTypeMapper migrationSourceDbTypeMapper;
+
     @Override
     public void initMigrationTaskCheckProgressMonitor() {
         // 启动加载历史任务
@@ -229,33 +249,29 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     }
 
     @Override
-    public Map<String, Object> getTaskDetailById(Integer taskId) {
-        Map<String, Object> result = new HashMap<>();
+    public MigrationTaskWebsocketInfoDto getTaskDetailById(Integer taskId) {
+        MigrationTaskWebsocketInfoDto wsInfo = new MigrationTaskWebsocketInfoDto();
         MigrationTask task = getTaskInfo(taskId);
-        result.put("task", task);
-        setProcessExecDetails(task, result);
-        MigrationTaskExecResultDetail fullProcess = null;
-        Object fullProcessObj = result.get("fullProcess");
-        if (fullProcessObj instanceof MigrationTaskExecResultDetail) {
-            fullProcess = (MigrationTaskExecResultDetail) fullProcessObj;
-        }
+        wsInfo.setTask(task);
+        setProcessExecDetails(task, wsInfo);
+        MigrationTaskExecResultDetail fullProcess = wsInfo.getFullProcess();
         if (fullProcess != null && StringUtils.isNotBlank(fullProcess.getExecResultDetail())) {
             Map<String, Object> processMap = JSON.parseObject(fullProcess.getExecResultDetail());
-            result.put("tableCounts",
-                new FullMigrationSubProcessCounter(processMap, FullMigrationDbObjEnum.TABLE.getObjectType()));
-            result.put("viewCounts",
-                new FullMigrationSubProcessCounter(processMap, FullMigrationDbObjEnum.VIEW.getObjectType()));
-            result.put("funcCounts",
-                new FullMigrationSubProcessCounter(processMap, FullMigrationDbObjEnum.FUNCTION.getObjectType()));
-            result.put("triggerCounts",
-                new FullMigrationSubProcessCounter(processMap, FullMigrationDbObjEnum.TRIGGER.getObjectType()));
-            result.put("produceCounts",
-                new FullMigrationSubProcessCounter(processMap, FullMigrationDbObjEnum.PROCEDURE.getObjectType()));
+            wsInfo.setTableCounts(new FullMigrationSubProcessCounter(processMap, FullMigrationDbObjEnum.TABLE
+                    .getObjectType()));
+            wsInfo.setViewCounts(new FullMigrationSubProcessCounter(processMap, FullMigrationDbObjEnum.VIEW
+                    .getObjectType()));
+            wsInfo.setFuncCounts(new FullMigrationSubProcessCounter(processMap, FullMigrationDbObjEnum.FUNCTION
+                    .getObjectType()));
+            wsInfo.setTriggerCounts(new FullMigrationSubProcessCounter(processMap, FullMigrationDbObjEnum.TRIGGER
+                    .getObjectType()));
+            wsInfo.setProduceCounts(new FullMigrationSubProcessCounter(processMap, FullMigrationDbObjEnum.PROCEDURE
+                    .getObjectType()));
             FullMigrationProcessCounter processCounter = new FullMigrationProcessCounter(processMap);
-            result.put("totalWaitCount", processCounter.getTotalWaitCount());
-            result.put("totalRunningCount", processCounter.getTotalRunningCount());
-            result.put("totalSuccessCount", processCounter.getTotalSuccessCount());
-            result.put("totalErrorCount", processCounter.getTotalErrorCount());
+            wsInfo.setTotalWaitCount(processCounter.getTotalWaitCount());
+            wsInfo.setTotalRunningCount(processCounter.getTotalRunningCount());
+            wsInfo.setTotalSuccessCount(processCounter.getTotalSuccessCount());
+            wsInfo.setTotalErrorCount(processCounter.getTotalErrorCount());
         }
         List<String> logPaths = new ArrayList<>();
         if (!task.getExecStatus().equals(TaskStatus.NOT_RUN.getCode())) {
@@ -265,20 +281,155 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                 installHost.getRunUser(), encryptionUtils.decrypt(installHost.getRunPassword()),
                 installHost.getInstallPath(), task);
         }
-        result.put("logs", logPaths);
-        return result;
+        wsInfo.setLogs(logPaths);
+        return wsInfo;
+    }
+
+    @Override
+    public MigrationTaskWebsocketInfoDto getFullDataById(Integer taskId) {
+        MigrationTaskWebsocketInfoDto wsInfo = new MigrationTaskWebsocketInfoDto();
+        MigrationTask task = getTaskInfo(taskId);
+        MigrationTaskStatusRecord lastTaskStatus = migrationTaskStatusRecordService.getLastByTaskId(taskId);
+        wsInfo.setCurrentExecStatus(lastTaskStatus.getStatusId());
+        wsInfo.setExecStatus(task.getExecStatus());
+        wsInfo.setExceptionAlertTotalCount(alertMapper.countGroupAlertByTaskId(taskId));
+        if (task.getFinishTime() == null) {
+            wsInfo.setExecutedTime(Duration.between(task.getExecTime(), task.getCurrentTime()).toSeconds());
+        } else {
+            wsInfo.setExecutedTime(Duration.between(task.getExecTime(), task.getFinishTime()).toSeconds());
+        }
+        setProcessExecDetails(task, wsInfo);
+        MigrationTaskExecResultDetail fullProcess = wsInfo.getFullProcess();
+        if (fullProcess != null && StringUtils.isNotBlank(fullProcess.getExecResultDetail())) {
+            Map<String, Object> processMap = JSON.parseObject(fullProcess.getExecResultDetail());
+            wsInfo.setTableCounts(new FullMigrationSubProcessCounter(processMap, FullMigrationDbObjEnum.TABLE
+                .getObjectType()));
+            wsInfo.setViewCounts(new FullMigrationSubProcessCounter(processMap, FullMigrationDbObjEnum.VIEW
+                .getObjectType()));
+            wsInfo.setFuncCounts(new FullMigrationSubProcessCounter(processMap, FullMigrationDbObjEnum.FUNCTION
+                .getObjectType()));
+            wsInfo.setTriggerCounts(new FullMigrationSubProcessCounter(processMap, FullMigrationDbObjEnum.TRIGGER
+                .getObjectType()));
+            wsInfo.setProduceCounts(new FullMigrationSubProcessCounter(processMap, FullMigrationDbObjEnum.PROCEDURE
+                .getObjectType()));
+            FullMigrationProcessCounter processCounter = new FullMigrationProcessCounter(processMap);
+            wsInfo.setTotalWaitCount(processCounter.getTotalWaitCount());
+            wsInfo.setTotalRunningCount(processCounter.getTotalRunningCount());
+            wsInfo.setTotalSuccessCount(processCounter.getTotalSuccessCount());
+            wsInfo.setTotalErrorCount(processCounter.getTotalErrorCount());
+        }
+        return wsInfo;
+    }
+
+    @Override
+    public MigrationInfoDto getSubTaskBasicInfo(Integer id) {
+        MigrationTask task = getTaskInfo(id);
+        MigrationMainTask mainTask = new MigrationMainTask();
+        Object migrationMainTaskInfo = migrationMainTaskService.getDetailById(task.getMainTaskId()).get("task");
+        if (migrationMainTaskInfo instanceof MigrationMainTask) {
+            mainTask = (MigrationMainTask) migrationMainTaskInfo;
+        }
+        MigrationInfoDto migrationInfo = new MigrationInfoDto();
+        migrationInfo.setSubTaskId(id);
+        migrationInfo.setTaskName(mainTask.getTaskName());
+        migrationInfo.setExecMode(task.getMigrationModelId());
+        migrationInfo.setSourceDb(task.getSourceDb());
+        migrationInfo.setTargetDb(task.getTargetDb());
+        migrationInfo.setCreateTime(task.getCreateTime());
+        migrationInfo.setStartTime(task.getExecTime());
+        migrationInfo.setFinishTime(task.getFinishTime());
+        migrationInfo.setSourceDbType(migrationSourceDbTypeMapper.getSourceDbType(task.getSourceDbHost(),
+                task.getSourceDbPort()));
+        return migrationInfo;
+    }
+
+    @Override
+    public Map<String, Object> getFullMigCurrentTypeInfo(Integer taskId, String currentInfoType,
+                                                         MigrationCurrentCheckInfoDto info) {
+        MigrationTaskWebsocketInfoDto wsInfo = new MigrationTaskWebsocketInfoDto();
+        MigrationTask task = getTaskInfo(taskId);
+        setProcessExecDetails(task, wsInfo);
+        MigrationTaskExecResultDetail fullProcessObj = wsInfo.getFullProcess();
+        if (fullProcessObj == null) {
+            return Collections.emptyMap();
+        }
+        String jsonString = fullProcessObj.getExecResultDetail();
+        Map<String, Object> filteredMap = new HashMap<>();
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, Object> resultMap = objectMapper.readValue(jsonString, new TypeReference<>() {});
+            List<Map<String, String>> mapArray = (List<Map<String, String>>) resultMap.get(currentInfoType);
+            if (mapArray == null) {
+                return filteredMap;
+            }
+            mapArray = mapArray.stream().filter(entry -> entry.get("name").contains(info.getTableName()))
+                    .collect(Collectors.toList());
+            List<List<Map<String, String>>> pageList = Lists.partition(mapArray, info.getPageSize());
+            if (!pageList.isEmpty()) {
+                filteredMap.put(currentInfoType, pageList.get(info.getPageNum() - 1));
+            }
+            filteredMap.put("total", mapArray.size());
+        } catch (JsonProcessingException e) {
+            log.error("Read json value error:", e);
+        }
+        return filteredMap;
+    }
+
+    @Override
+    public Map<String, Object> getMigLogsInfo(Integer taskId, MigrationLogsInfoDto info) {
+        MigrationTask task = getTaskInfo(taskId);
+        Map<String, Object> migLogsInfo = new HashMap<>();
+        if (task == null) {
+            return migLogsInfo;
+        }
+        if (!task.getExecStatus().equals(TaskStatus.NOT_RUN.getCode())) {
+            MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(
+                    task.getRunHostId());
+            List<String> logPaths = PortalHandle.getPortalLogPath(installHost.getHost(), installHost.getPort(),
+                    installHost.getRunUser(), encryptionUtils.decrypt(installHost.getRunPassword()),
+                    installHost.getInstallPath(), task);
+            Map<String, String> logsMap = extractFileNames(logPaths);
+            List<String> filterLogPaths = "".equals(info.getFileName()) ? logPaths : getFilterLogPaths(logsMap,
+                info.getFileName());
+            List<List<String>> pageList = Lists.partition(filterLogPaths, info.getPageSize());
+            if (!pageList.isEmpty()) {
+                migLogsInfo.put("logs", pageList.get(info.getPageNum() - 1));
+            }
+            migLogsInfo.put("total", filterLogPaths.size());
+        }
+        return migLogsInfo;
+    }
+
+    private List<String> getFilterLogPaths(Map<String, String> logsMap, String fileName) {
+        List<String> filterLogPaths = new ArrayList<>();
+        for (Map.Entry<String, String> entry : logsMap.entrySet()) {
+            if (entry.getKey().contains(fileName)) {
+                filterLogPaths.add(entry.getValue());
+            }
+        }
+        return filterLogPaths;
+    }
+
+    private Map<String, String> extractFileNames(List<String> paths) {
+        Map<String, String> logsMap = new HashMap<>();
+        for (String path : paths) {
+            Path p = Paths.get(path);
+            String fileName = p.getFileName().toString();
+            logsMap.put(fileName, path);
+        }
+        return logsMap;
     }
 
     private MigrationTask getTaskInfo(Integer taskId) {
         MigrationTask task = getById(taskId);
-        task.setCurrentTime(new Date());
+        task.setCurrentTime(Instant.now());
         String maskedPass = "********";
         task.setSourceDbPass(maskedPass);
         task.setTargetDbPass(maskedPass);
         return task;
     }
 
-    private void setProcessExecDetails(MigrationTask task, Map<String, Object> result) {
+    private void setProcessExecDetails(MigrationTask task, MigrationTaskWebsocketInfoDto wsInfo) {
         MigrationTaskExecResultDetail fullProcess = null;
         MigrationTaskExecResultDetail incrementalProcess = null;
         MigrationTaskExecResultDetail reverseProcess = null;
@@ -311,20 +462,20 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                     ProcessType.REVERSE.getCode());
             }
         }
-        result.put("fullProcess", fullProcess);
+        wsInfo.setFullProcess(fullProcess);
         if (dataCheckProcess != null && StringUtils.isNotBlank(dataCheckProcess.getExecResultDetail())) {
-            result.put("dataCheckProcess", dataCheckProcess);
+            wsInfo.setDataCheckProcess(dataCheckProcess);
         }
         if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
-            result.put("incrementalProcess", incrementalProcess);
-            result.put("reverseProcess", reverseProcess);
+            wsInfo.setIncrementalProcess(incrementalProcess);
+            wsInfo.setReverseProcess(reverseProcess);
             List<MigrationTaskStatusRecord> migrationTaskStatusRecords
                 = migrationTaskStatusRecordService.selectByTaskId(task.getId());
             // migrationTaskStatusRecords  存在可能为空情况，导致接口查询失败。添加过滤条件，过滤掉operateType为空的记录
-            Map<Integer, List<MigrationTaskStatusRecord>> recordMap = migrationTaskStatusRecords.stream()
+            Map<String, List<MigrationTaskStatusRecord>> recordMap = migrationTaskStatusRecords.stream()
                 .filter(record -> Objects.nonNull(record.getOperateType()))
-                .collect(Collectors.groupingBy(MigrationTaskStatusRecord::getOperateType));
-            result.put("statusRecords", recordMap);
+                .collect(Collectors.groupingBy(record -> record.getOperateType().toString()));
+            wsInfo.setStatusRecords(recordMap);
         }
     }
 
@@ -409,7 +560,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
 
             if (TaskStatus.FULL_CHECK_FINISH.getCode().equals(state) && t.getMigrationModelId().equals(1)) {
                 update.setExecStatus(TaskStatus.MIGRATION_FINISH.getCode());
-                update.setFinishTime(new Date());
+                update.setFinishTime(Instant.now());
             }
             if (TaskStatus.MIGRATION_ERROR.getCode().equals(state)) {
                 String msg = MapUtil.getStr(lastStatus, "msg");
@@ -548,7 +699,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         update = MigrationTask.builder()
             .id(t.getId())
             .execStatus(TaskStatus.FULL_START.getCode())
-            .execTime(new Date())
+            .execTime(Instant.now())
             .build();
         migrationTaskOperateRecordService.saveRecord(t.getId(), TaskOperate.RUN, operateUsername);
         updateById(update);
