@@ -158,9 +158,11 @@ public class SlowLogServiceImpl extends ServiceImpl<SlowLogMapper, StatementHist
     }
 
     public Map<String, Object> getSlowSqlChart(String nodeId, Long start, Long end, Integer step, String dbName) {
+        clusterManager.setCurrentDatasource(nodeId, "");
         LambdaQueryWrapper<PgSettingsDO> wrapper = Wrappers.<PgSettingsDO>lambdaQuery()
                 .in(PgSettingsDO::getName, "enable_stmt_track", "track_stmt_stat_level");
         List<PgSettingsDO> pgSettingsDOList = pgSettingsMapper.selectList(wrapper);
+        clusterManager.pool();
         for (PgSettingsDO pgSettingsDO : pgSettingsDOList) {
             if ("enable_stmt_track".equals(pgSettingsDO.getName()) && "off".equals(pgSettingsDO.getSetting())) {
                 throw new CustomException(LocaleStringUtils.format("slowSql.param.tip"));
