@@ -290,7 +290,14 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
         jdbcTemplate.execute(
                 "create table if not exists DATABASELINK(id INTEGER PRIMARY KEY AUTOINCREMENT,type varchar(20),"
                         + "name text ,driver varchar(100),ip varchar(30),port varchar(10),"
-                        + "dataName varchar(40),username varchar(40),userpassword varchar(40) ,"
+                        + "dataName varchar(40),username varchar(40),userpassword varchar(128) ,"
                         + "webuser varchar(40),edition  varchar(300), UNIQUE(name));");
+        // update table column
+        Integer bytes = jdbcTemplate.queryForObject(
+                "select BYTES from \"SYS_TABLES\" t left join \"SYS_COLUMNS\" c on t.id=c.\"TABLE#\" where t"
+                        + ".name='databaselink' and c.name='userpassword';", Integer.class);
+        if (bytes != null && bytes < 128) {
+            jdbcTemplate.execute("alter table DATABASELINK alter column userpassword type varchar(128);");
+        }
     }
 }
