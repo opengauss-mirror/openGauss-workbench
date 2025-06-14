@@ -135,7 +135,7 @@ sha256sum Datakit-6.0.0.tar.gz
    driver-class-name: org.opengauss.Driver
    url: jdbc:opengauss://ip:port/database?currentSchema=public&batchMode=off
    username: dbuser
-   password: dbpassword
+   password: ******
    ```
    使用轻量嵌入式数据库`Intarkdb`作为后台数据库时，只需注释`openGauss`的配置内容，并解开对`Intarkdb`配置内容的注释，即可完成配置。目前`datakit`、`base-ops`和`alert-monitor`在启动时会在数据库初始化数据。配置内容如下： 
    ```yaml
