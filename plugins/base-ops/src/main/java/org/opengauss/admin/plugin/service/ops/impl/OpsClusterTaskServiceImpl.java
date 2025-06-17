@@ -36,6 +36,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,6 +77,8 @@ import org.opengauss.admin.plugin.vo.ops.ClusterEnvCheck;
 import org.opengauss.admin.plugin.vo.ops.ClusterNodeEnvCheck;
 import org.opengauss.admin.plugin.vo.ops.ClusterPortVo;
 import org.opengauss.admin.plugin.vo.ops.TaskStatusVo;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -126,6 +129,9 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
     private CheckDeployTypeService checkDeployTypeService;
     @Resource
     private ClusterTaskPathFactory clusterTaskPathFactory;
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
 
     @Override
     public IPage<OpsClusterTaskEntity> pageByCondition(Page page, OpsClusterTaskQueryParamDTO dto) {
@@ -347,6 +353,7 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
     @Transactional(rollbackFor = Exception.class)
     public String createClusterTask(OpsClusterTaskDTO dto) {
         OpsClusterTaskEntity entity = dto.toEntity();
+        entity.setDatabasePassword(encryptionUtils.decrypt(entity.getDatabasePassword()));
         try {
             Assert.isTrue(checkPasswordStrength(entity.getDatabasePassword()),
                 "database password is not strong enough");
@@ -355,6 +362,7 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
             Assert.isTrue(!checkClusterNameExist(null, entity.getClusterName()),
                 "cluster name " + entity.getClusterName() + " is exist");
             entity.setStatus(OpsClusterTaskStatusEnum.DRAFT);
+            entity.setDatabasePassword(encryptionUtils.encrypt(entity.getDatabasePassword()));
             save(entity);
             OperateLogFactory.operateCreate(entity.getClusterId());
             log.info("Create cluster task success, clusterId: {}", entity.getClusterId());
@@ -687,7 +695,8 @@ public class OpsClusterTaskServiceImpl extends ServiceImpl<OpsClusterTaskMapper,
         // update task
         Assert.isTrue(updateById(entity),
             "cluster task update failed, cluster task id not exist:" + dto.getClusterId());
-        Assert.isTrue(checkPasswordStrength(entity.getDatabasePassword()), "database password is not strong enough");
+        Assert.isTrue(checkPasswordStrength(encryptionUtils.decrypt(entity.getDatabasePassword())),
+            "database password is not strong enough");
         OperateLogFactory.operateUpdate(entity.getClusterId());
     }
 

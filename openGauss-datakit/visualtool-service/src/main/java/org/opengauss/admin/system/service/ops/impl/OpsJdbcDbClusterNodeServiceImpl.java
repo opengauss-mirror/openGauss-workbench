@@ -271,8 +271,8 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
 
         Connection connection = null;
         try {
-            connection = JdbcUtil.getConnection(clusterNodeEntity.getUrl(), clusterNodeEntity.getUsername(), clusterNodeEntity.getPassword());
-
+            connection = JdbcUtil.getConnection(clusterNodeEntity.getUrl(), clusterNodeEntity.getUsername(),
+                encryptionUtils.decrypt(clusterNodeEntity.getPassword()));
             if (Objects.isNull(connection) || connection.isClosed()) {
                 res.put("msg", "JDBC connection failed");
                 res.put("res", false);

@@ -178,7 +178,7 @@ public class EncryptionUtils {
     public static synchronized void generateKeyPair() {
         try {
             KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA");
-            gen.initialize(512);
+            gen.initialize(4096);
             KeyPair keyPair = gen.generateKeyPair();
             PublicKey pubKey = keyPair.getPublic();
             PrivateKey priKey = keyPair.getPrivate();

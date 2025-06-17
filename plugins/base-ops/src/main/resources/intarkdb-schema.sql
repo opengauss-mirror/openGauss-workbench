@@ -364,7 +364,7 @@ CREATE TABLE IF NOT EXISTS "ops_device_manager" (
     "host_ip" varchar(64),
     "port" varchar(5),
     "user_name" varchar(64),
-    "password" varchar(256),
+    "password" text,
     "pair_id" varchar(256)
     )
 ;
@@ -413,3 +413,5 @@ CREATE TABLE IF NOT EXISTS "ops_olk" (
     "create_time" TIMESTAMP NULL DEFAULT NULL,
     "dad_install_password" TEXT NULL DEFAULT NULL
     );
+
+ALTER TABLE "ops_device_manager" ALTER COLUMN "password" TYPE text;

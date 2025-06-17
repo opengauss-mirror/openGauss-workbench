@@ -937,7 +937,7 @@ CREATE TABLE IF NOT EXISTS "tb_transcribe_replay_host"
     ip   VARCHAR(255) NOT NULL,
     port   INTEGER      NOT NULL,
     user_name   VARCHAR(255) NOT NULL,
-    passwd VARCHAR(255) NOT NULL,
+    passwd TEXT NOT NULL,
     db_type VARCHAR(50)  NOT NULL
 );
 
@@ -1245,3 +1245,5 @@ COMMENT
 ON COLUMN "tb_migration_reverse_migration_progress"."sink_speed" IS '写入速度，条/s';
 COMMENT
 ON COLUMN "tb_migration_reverse_migration_progress"."source_speed" IS '抽取速度，条/s';
+
+ALTER TABLE "tb_transcribe_replay_host" ALTER COLUMN "passwd" TYPE text;

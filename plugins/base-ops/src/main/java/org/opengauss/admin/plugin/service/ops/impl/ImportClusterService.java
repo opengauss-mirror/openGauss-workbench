@@ -45,11 +45,13 @@ import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.mapper.ops.OpsClusterMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.utils.DBUtil;
+import org.opengauss.admin.plugin.utils.DecryptionUtil;
 import org.opengauss.admin.system.plugin.beans.SshLogin;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.plugin.facade.JschExecutorFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
@@ -81,6 +83,8 @@ public class ImportClusterService extends ServiceImpl<OpsClusterMapper, OpsClust
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private EncryptionUtils encryptionUtils;
+    @Autowired
+    private DecryptionUtil decryptionUtil;
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private JschExecutorFacade jschExecutorFacade;
@@ -96,6 +100,7 @@ public class ImportClusterService extends ServiceImpl<OpsClusterMapper, OpsClust
      */
     public void importCluster(ImportClusterBody importClusterBody) {
         importClusterBody.checkConfig();
+        decryptionUtil.decryptDatabasePassword(importClusterBody);
         OpenGaussVersionEnum openGaussVersion = importClusterBody.getOpenGaussVersion();
         ClusterConfig clusterConfig = getClusterConfig(importClusterBody, openGaussVersion);
         OpsHostUserEntity masterNodeInstallUser = getMasterNodeInstallUser(clusterConfig.masterNodeInstallUserId);
@@ -118,6 +123,7 @@ public class ImportClusterService extends ServiceImpl<OpsClusterMapper, OpsClust
             throw new OpsException("connection fail");
         }
         OpsClusterEntity opsClusterEntity = importClusterBody.toOpsClusterEntity();
+        opsClusterEntity.setDatabasePassword(encryptionUtils.encrypt(opsClusterEntity.getDatabasePassword()));
         save(opsClusterEntity);
         saveClusterNodes(importClusterBody, opsClusterEntity);
     }

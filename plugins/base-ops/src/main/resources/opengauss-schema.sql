@@ -435,7 +435,7 @@ CREATE TABLE IF NOT EXISTS "public"."ops_device_manager" (
     "host_ip" varchar(64) COLLATE "pg_catalog"."default",
     "port" varchar(5) COLLATE "pg_catalog"."default",
     "user_name" varchar(64) COLLATE "pg_catalog"."default",
-    "password" varchar(256) COLLATE "pg_catalog"."default",
+    "password" text COLLATE "pg_catalog"."default",
     "pair_id" varchar(256) COLLATE "pg_catalog"."default"
     )
 ;
@@ -501,3 +501,23 @@ RETURN 0;
 SELECT add_field_db_name();
 
 DROP FUNCTION add_field_db_name;
+
+CREATE OR REPLACE FUNCTION change_password_field_to_text() RETURNS integer AS 'BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ''public''
+          AND table_name = ''ops_device_manager''
+          AND column_name = ''password''
+          AND data_type != ''text''
+    ) THEN
+        ALTER TABLE public.ops_device_manager
+        ALTER COLUMN password TYPE text USING password::text;
+    END IF;
+    RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT change_password_field_to_text();
+
+DROP FUNCTION change_password_field_to_text;

@@ -194,9 +194,9 @@ ALTER TABLE "notify_way" ADD COLUMN "snmp_version" int8;
 COMMENT ON COLUMN "notify_way"."snmp_version" IS '0为版本1，1为版本2c，3为版本3';
 ALTER TABLE "notify_way" ADD COLUMN "snmp_username" varchar(100);
 COMMENT ON COLUMN "notify_way"."snmp_username" IS 'snmp用户名，snmp_version为v3有效';
-ALTER TABLE "notify_way" ADD COLUMN "snmp_auth_passwd" varchar(100);
+ALTER TABLE "notify_way" ADD COLUMN "snmp_auth_passwd" text;
 COMMENT ON COLUMN "notify_way"."snmp_auth_passwd" IS 'snmp鉴权密码，snmp_version为v3有效';
-ALTER TABLE "notify_way" ADD COLUMN "snmp_priv_passwd" varchar(100);
+ALTER TABLE "notify_way" ADD COLUMN "snmp_priv_passwd" text;
 COMMENT ON COLUMN "notify_way"."snmp_priv_passwd" IS 'snmp数据加密密码，snmp_version为v3有效';
 
 
@@ -433,7 +433,7 @@ CREATE TABLE IF NOT EXISTS "notify_config" (
     "sever" varchar(100),
     "port" int8,
     "account" varchar(50),
-    "passwd" varchar(100),
+    "passwd" text,
     "agent_id" varchar(100),
     "app_key" varchar(100),
     "secret" text,
@@ -1501,3 +1501,7 @@ and rule_content ='故障描述：${nodeName}数据库的活动会话数过多�
 update alert_template_rule_item set unit = '', rule_exp_name = 'activeSession', operate = '>', limit_value = 24,
 rule_exp = 'sum(pg_state_activity_group_count{state="active",instance=~"${instances}"}) by (instance)',
 rule_item_desc = '活动会话数大于24' where rule_item_id = 26 and (operate is null or operate = '');
+
+ALTER TABLE "notify_config" ALTER COLUMN "passwd" TYPE text;
+ALTER TABLE "notify_way" ALTER COLUMN "snmp_priv_passwd" TYPE text;
+ALTER TABLE "notify_way" ALTER COLUMN "snmp_auth_passwd" TYPE text;

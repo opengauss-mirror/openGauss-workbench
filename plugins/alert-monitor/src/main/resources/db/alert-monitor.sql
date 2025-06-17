@@ -395,9 +395,9 @@ ALTER TABLE "public"."notify_way" ADD COLUMN "snmp_version" int1;
 COMMENT ON COLUMN "public"."notify_way"."snmp_version" IS '0为版本1，1为版本2c，3为版本3';
 ALTER TABLE "public"."notify_way" ADD COLUMN "snmp_username" varchar(100);
 COMMENT ON COLUMN "public"."notify_way"."snmp_username" IS 'snmp用户名，snmp_version为v3有效';
-ALTER TABLE "public"."notify_way" ADD COLUMN "snmp_auth_passwd" varchar(100);
+ALTER TABLE "public"."notify_way" ADD COLUMN "snmp_auth_passwd" text;
 COMMENT ON COLUMN "public"."notify_way"."snmp_auth_passwd" IS 'snmp鉴权密码，snmp_version为v3有效';
-ALTER TABLE "public"."notify_way" ADD COLUMN "snmp_priv_passwd" varchar(100);
+ALTER TABLE "public"."notify_way" ADD COLUMN "snmp_priv_passwd" text;
 COMMENT ON COLUMN "public"."notify_way"."snmp_priv_passwd" IS 'snmp数据加密密码，snmp_version为v3有效';
 
 
@@ -636,7 +636,7 @@ CREATE TABLE IF NOT EXISTS "public"."notify_config" (
     "sever" varchar(100) COLLATE "pg_catalog"."default",
     "port" int4,
     "account" varchar(50) COLLATE "pg_catalog"."default",
-    "passwd" varchar(100) COLLATE "pg_catalog"."default",
+    "passwd" text COLLATE "pg_catalog"."default",
     "agent_id" varchar(100) COLLATE "pg_catalog"."default",
     "app_key" varchar(100) COLLATE "pg_catalog"."default",
     "secret" text COLLATE "pg_catalog"."default",
@@ -1756,3 +1756,45 @@ update public.alert_template_rule set rule_content = '故障描述：$'||'{nodeN
 update public.alert_template_rule_item set unit = '', rule_exp_name = 'activeSession', operate = '>', limit_value = 24,
 rule_exp = 'sum(pg_state_activity_group_count{state="active",instance=~"$'||'{instances}"}) by (instance)',
 rule_item_desc = '活动会话数大于24' where rule_item_id = 26 and (operate is null or operate = '');
+
+CREATE OR REPLACE FUNCTION change_password_field_to_text() RETURNS integer AS 'BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ''public''
+          AND table_name = ''notify_config''
+          AND column_name = ''passwd''
+          AND data_type != ''text''
+    ) THEN
+        ALTER TABLE public.notify_config
+        ALTER COLUMN passwd TYPE text USING passwd::text;
+    END IF;
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ''public''
+          AND table_name = ''notify_way''
+          AND column_name = ''snmp_priv_passwd''
+          AND data_type != ''text''
+    ) THEN
+        ALTER TABLE public.notify_way
+        ALTER COLUMN snmp_priv_passwd TYPE text USING snmp_priv_passwd::text;
+    END IF;
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ''public''
+          AND table_name = ''notify_way''
+          AND column_name = ''snmp_auth_passwd''
+          AND data_type != ''text''
+    ) THEN
+        ALTER TABLE public.notify_way
+        ALTER COLUMN snmp_auth_passwd TYPE text USING snmp_auth_passwd::text;
+    END IF;
+    RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT change_password_field_to_text();
+
+DROP FUNCTION change_password_field_to_text;

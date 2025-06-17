@@ -26,6 +26,8 @@ package org.opengauss.admin.plugin.controller.ops;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.opengauss.admin.common.annotation.Log;
 import org.opengauss.admin.common.enums.BusinessType;
@@ -40,6 +42,8 @@ import org.opengauss.admin.plugin.domain.model.ops.dto.OpsClusterTaskDTO;
 import org.opengauss.admin.plugin.domain.model.ops.dto.OpsClusterTaskQueryParamDTO;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterTaskService;
 import org.opengauss.admin.plugin.service.ops.impl.OpsHostRemoteService;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -64,6 +68,9 @@ public class OpsClusterTaskController extends BaseController {
     private IOpsClusterTaskService opsClusterTaskService;
     @Resource
     private OpsHostRemoteService opsHostRemoteService;
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
 
     /**
      * query host info by ip
@@ -439,5 +446,18 @@ public class OpsClusterTaskController extends BaseController {
         } catch (OpsException ex) {
             return AjaxResult.error(ex.getMessage());
         }
+    }
+
+    /**
+     * Get decrypt password
+     *
+     * @param password password
+     * @return ajax
+     */
+    @PostMapping("/getPassword")
+    public AjaxResult getPassword(String password) {
+        AjaxResult ajax = AjaxResult.success();
+        ajax.put("password", encryptionUtils.decrypt(password));
+        return ajax;
     }
 }

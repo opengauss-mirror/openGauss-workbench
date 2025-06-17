@@ -604,6 +604,7 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
     }
 
     private void saveContext(OpsClusterEntity opsClusterEntity, List<OpsClusterNodeEntity> opsClusterNodeEntities) {
+        opsClusterEntity.setDatabasePassword(encryptionUtils.encrypt(opsClusterEntity.getDatabasePassword()));
         opsClusterService.save(opsClusterEntity);
         for (OpsClusterNodeEntity opsClusterNodeEntity : opsClusterNodeEntities) {
             opsClusterNodeEntity.setClusterId(opsClusterEntity.getClusterId());

@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS "ops_cluster" (
     "deploy_type" varchar(64) ,
     "cluster_name" varchar(255) ,
     "install_package_path" varchar(255) ,
-    "database_password" varchar(255) ,
+    "database_password" text ,
     "database_username" varchar(255) ,
     "remark" varchar(255) ,
     "create_by" varchar(64) ,
@@ -170,7 +170,7 @@ CREATE TABLE IF NOT EXISTS "ops_cluster_task" (
     "package_id" varchar(255) ,
     "cluster_name" varchar(255) ,
     "database_username" varchar(255) ,
-    "database_password" varchar(255) ,
+    "database_password" text ,
     "database_port" int4 DEFAULT 5432,
     "install_package_path" varchar(255) ,
     "install_path" varchar(255) ,
@@ -288,9 +288,9 @@ CREATE TABLE IF NOT EXISTS "ops_encryption"
     "create_time" timestamp,
     "update_by" varchar(64),
     "update_time" timestamp,
-    "encryption_key" varchar(255),
-    "public_key" varchar(1024),
-    "private_key" varchar(1024)
+    "encryption_key" text,
+    "public_key" text,
+    "private_key" text
 );
 COMMENT ON COLUMN "ops_encryption"."remark" IS '描述';
 COMMENT ON COLUMN "ops_encryption"."create_by" IS '创建者';
@@ -335,7 +335,7 @@ COMMENT ON COLUMN "ops_host"."update_time" IS '更新时间';
 CREATE TABLE IF NOT EXISTS "ops_host_user" (
     "host_user_id" int8 NOT NULL PRIMARY KEY,
     "username" varchar(255)  NOT NULL,
-    "password" varchar(255) ,
+    "password" text ,
     "host_id" int8 NOT NULL,
     "remark" varchar(255) ,
     "create_by" varchar(64) ,
@@ -1671,7 +1671,7 @@ CREATE TABLE IF NOT EXISTS "ops_jdbcdb_cluster_node"
     "ip" varchar(255) ,
     "port" varchar(255) ,
     "username" varchar(255) ,
-    "password" varchar(255) ,
+    "password" text ,
     "url" varchar(255) ,
     "remark" varchar(255) ,
     "create_by" varchar(64) ,
@@ -2047,3 +2047,11 @@ CREATE TABLE IF NOT EXISTS   "agent_task_table_relation" (
 COMMENT ON COLUMN   "agent_task_table_relation"."task_id" IS 'Agent任务集群关联关系-任务ID';
 COMMENT ON COLUMN   "agent_task_table_relation"."task_table_name" IS '集群ID';
 COMMENT ON TABLE   "agent_task_table_relation" IS 'Agent任务集群关联表';
+
+ALTER TABLE "ops_encryption" ALTER COLUMN "public_key" TYPE text;
+ALTER TABLE "ops_encryption" ALTER COLUMN "encryption_key" TYPE text;
+ALTER TABLE "ops_encryption" ALTER COLUMN "private_key" TYPE text;
+ALTER TABLE "ops_jdbcdb_cluster_node" ALTER COLUMN "password" TYPE text;
+ALTER TABLE "ops_host_user" ALTER COLUMN "password" TYPE text;
+ALTER TABLE "ops_cluster_task" ALTER COLUMN "database_password" TYPE text;
+ALTER TABLE "ops_cluster" ALTER COLUMN "database_password" TYPE text;
