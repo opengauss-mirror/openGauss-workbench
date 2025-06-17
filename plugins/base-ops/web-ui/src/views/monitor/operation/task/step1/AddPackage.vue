@@ -277,7 +277,7 @@ const getUploadPath = () => {
 
 // init
 const packageVersionNum = ref([])
-
+const currentPackageName = ref('')
 const tempPackageUrl = ref('')
 const getPackageUrl = () => {
   const params = {
@@ -291,18 +291,31 @@ const getPackageUrl = () => {
     if (res.code === 200){
       if (res.data.length) {
         data.formData.packageUrl = res.data[0].packageUrl
+        currentPackageName.value = res.data[0].name
       } else {
         data.formData.packageUrl = res.data.packageUrl
+        currentPackageName.value = res.data.name
       }
       tempPackageUrl.value = data.formData.packageUrl
     } else {
       console.log('error')
     }
-    let name = data.formData.packageUrl.split('/').pop()
-    name = name.split('.')
-    name.pop()
-    name.pop()
-    data.formData.name = name.join('.')
+    let noExtensionName = ''
+    if (currentPackageName.value) {
+      // If the name attribute exists
+      noExtensionName = currentPackageName.value
+    } else {
+      // If the name attribute does not exist, the packageUrl name is truncated and the date is appended
+      let packageNameList = data.formData.packageUrl.split('/').pop();
+      let namelist = packageNameList?.split('.') || [];
+      // Here two pops function are performed
+      namelist.length && namelist.pop()
+      namelist.length && namelist.pop()
+      const now = dayjs();
+      const curTime = now.format('YYMMDD')
+      noExtensionName = namelist.join('.') + curTime;
+    }
+    data.formData.name = noExtensionName;
   }) .catch(error => {
     console.error({
       content: error + data.formData.packageVersionNum
