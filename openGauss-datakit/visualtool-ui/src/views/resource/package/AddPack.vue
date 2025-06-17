@@ -534,7 +534,7 @@ const updateVersionData = (value:string) => {
 }
 
 const formRef = ref<null | FormInstance>(null)
-const emits = defineEmits([`finish`])
+const emits = defineEmits([`finish`, `downloadStart`])
 const submitLoading = ref(false)
 const progressPercent = ref(0)
 const submit = async () => {
@@ -616,6 +616,7 @@ const submit = async () => {
           downloadUrl: data.formData.packageUrl,
           wsBusinessId: wsBusinessId.value
         }
+        emits('downloadStart', data.formData.name)
         batchPackageOnline(params).then((res) => {
           if (res.code === 200) {
             data.show = false
@@ -632,6 +633,7 @@ const submit = async () => {
             'Content-Type': 'application/x-www-form-urlencoded'
           }
         }
+        emits('downloadStart', data.formData.name)
         packageOnlineUpdate(params, config)
           .then(res => {
             if (res.code === 200) {

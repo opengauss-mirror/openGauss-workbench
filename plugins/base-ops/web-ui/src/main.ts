@@ -7,6 +7,11 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import i18n from './locale/index'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+import opendesign2 from '@computing/opendesign2'
+import '@computing/opendesign2/themes/es/css'
+import 'element-plus/dist/index.css'
 import '@/assets/icons'
 import '@/api/interceptor'
 
@@ -17,6 +22,8 @@ const app = createApp(App)
 
 app.use(ArcoVue, {})
 app.use(ArcoVueIcon)
+app.use(ElementPlus)
+app.use(opendesign2)
 
 app.use(router)
 app.use(store)

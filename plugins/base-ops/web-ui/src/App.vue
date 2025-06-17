@@ -21,6 +21,8 @@
 import { computed, onMounted } from 'vue'
 import enUS from '@arco-design/web-vue/es/locale/lang/en-us'
 import zhCN from '@arco-design/web-vue/es/locale/lang/zh-cn'
+import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+import en from 'element-plus/dist/locale/en.mjs'
 import useLocale from '@/hooks/locale'
 const { changeLocale, currentLocale } = useLocale()
 const locale = computed(() => {
