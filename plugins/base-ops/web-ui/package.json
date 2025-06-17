@@ -9,6 +9,8 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@computing/opendesign-icons": "file:lib\\opendesign-icons-1.0.3.tgz",
+    "@computing/opendesign2": "file:lib\\opendesign2-2.0.22.tgz",
     "@types/lodash": "4.14.190",
     "@antv/x6": "1.32.10",
     "@antv/x6-vue-shape": "1.4.2",
@@ -39,6 +41,8 @@
     "xterm": "^5.3.0"
   },
   "devDependencies": {
+    "@computing/opendesign-icons": "file:lib\\opendesign-icons-1.0.3.tgz",
+    "@computing/opendesign2": "file:lib\\opendesign2-2.0.22.tgz",
     "@typescript-eslint/eslint-plugin": "5.4.0",
     "@typescript-eslint/parser": "5.4.0",
     "@vue/cli-plugin-babel": "~5.0.0",

@@ -4,41 +4,41 @@
       <div class="left">
         <div ref="module1" class="module" id="server">
           <div class="item">
-            <h2>服务器配置</h2>
+            <h2>{{ $t('operation.task.step1.index.serverConfig') }}</h2>
           </div>
           <a-form :model="data" :rules="serverRules" validateTrigger="onBlur" labelAlign="left" ref="serverFormRef">
             <div v-if="changeHostipFlag">
-              <a-form-item label="主机IP" field="hostIp" validate-trigger="blur">
+              <a-form-item :label="$t('operation.task.step1.index.IP')" field="hostIp" validate-trigger="blur">
                 <a-popover position="right" trigger="click">
                   <a-select field="hostIp" v-model="ipPublicPrivate" allow-search show-search :options="hostIpList"
-                    @change="fetchUserList" placeholder="请输入或者选择主机IP" style="width: 30%; height: 32px">
+                    @change="fetchUserList" :placeholder="$t('operation.task.step1.index.IPPlaceholder')" style="width: 30%; height: 32px">
                   </a-select>
                   <template #content>
-                    <p>主备节点操作系统和架构应该一致，更改主机IP后可能会影响节点配置，是否确认更改</p>
+                    <p>{{ $t('operation.task.step1.index.IPContent') }}</p>
                   </template>
                 </a-popover>
               </a-form-item>
-              <a-form-item label="安装用户" field="hostUser" validate-trigger="blur">
+              <a-form-item :label="$t('operation.task.step1.index.installUser')" field="hostUser" validate-trigger="blur">
                 <a-popover position="right" trigger="click">
                   <a-select field="hostUserList" v-model="data.hostUser" :options="hostUserList" optionFilterProp="label"
-                    allow-search show-search allow-clear @change="getHostId" placeholder="请选择安装用户"
+                    allow-search show-search allow-clear @change="getHostId" :placeholder="$t('operation.task.step1.index.installUserPlaceholder')"
                     style="width: 30%; height: 32px">
                   </a-select>
                   <template #content>
-                    <p>主备节点用户选择应该一致，更改用户后可能会影响节点配置，是否确认更改</p>
+                    <p>{{ $t('operation.task.step1.index.userContent') }}</p>
                   </template>
                 </a-popover>
               </a-form-item>
             </div>
             <div v-else>
-              <a-form-item label="主机IP" field="hostIp" validate-trigger="blur">
+              <a-form-item :label="$t('operation.task.step1.index.IP')" field="hostIp" validate-trigger="blur">
                 <a-select field="hostIp" v-model="ipPublicPrivate" allow-search show-search :options="hostIpList"
-                  @change="fetchUserList" placeholder="请输入或者选择主机IP" style="width: 30%; height: 32px">
+                  @change="fetchUserList" :placeholder="$t('operation.task.step1.index.IPPlaceholder')" style="width: 30%; height: 32px">
                 </a-select>
               </a-form-item>
-              <a-form-item label="安装用户" field="hostUser" validate-trigger="blur">
+              <a-form-item :label="$t('operation.task.step1.index.installUser')" field="hostUser" validate-trigger="blur">
                 <a-select field="hostUserList" v-model="data.hostUser" :options="hostUserList" optionFilterProp="label"
-                  allow-search show-search allow-clear @change="getHostId" placeholder="请选择安装用户"
+                  allow-search show-search allow-clear @change="getHostId" :placeholder="$t('operation.task.step1.index.installUserPlaceholder')"
                   style="width: 30%; height: 32px">
                 </a-select>
               </a-form-item>
@@ -48,10 +48,10 @@
         </div>
         <div ref="module2" class="module" id="package">
           <div class="item">
-            <h2>安装包配置</h2>
+            <h2>{{ $t('operation.task.step1.index.packageConfig') }}</h2>
           </div>
           <a-form :model="data" :rules="serverRules" labelAlign="left" ref="packageFormRef">
-            <a-form-item label="操作系统">
+            <a-form-item :label="$t('operation.task.step1.index.system')">
               <div v-if="data.os === OS.OPEN_EULER">
                 <a-button type="primary" disabled>openEuler</a-button>
                 <a-button disabled>centOs</a-button>
@@ -61,7 +61,7 @@
                 <a-button type="primary" disabled>centOs</a-button>
               </div>
             </a-form-item>
-            <a-form-item label="系统架构">
+            <a-form-item :label="$t('operation.task.step1.index.cpuArch')">
               <div v-if="data.cpuArch === CpuArch.X86_64">
                 <a-button type="primary" disabled>{{ CpuArch.X86_64 }}</a-button>
                 <a-button disabled>{{ CpuArch.AARCH64 }}</a-button>
@@ -71,122 +71,131 @@
                 <a-button type="primary" disabled>{{ CpuArch.AARCH64 }}</a-button>
               </div>
             </a-form-item>
-            <a-form-item label="openGauss版本">
+            <a-form-item :label="$t('operation.task.step1.index.version')">
               <div class="flex-row-center panel-body">
                 <a-button class="squarebutton mr-xlg"
                   :class="'card-item-c ' + (currVersion === OpenGaussVersionEnum.MINIMAL_LIST ? 'center-item-active' : '')"
                   @click="chooseVer(OpenGaussVersionEnum.MINIMAL_LIST)">
                   <svg-icon icon-class="people-safe" class="icon-size mb-0"></svg-icon>
-                  <div class="label-color ft-lg mb-s" style="font-weight: bold;">{{ $t('极简版') }}</div>
+                  <div class="label-color ft-lg mb-s" style="font-weight: bold;">{{ $t('operation.task.step1.index.MINIMAL_LIST') }}</div>
                   <div class="label-color remark" style="font-size: 11px;">
-                    极简版安装的使用主体主要针对<br>高校和个人测试环境，相对企业<br>安装流程更简单快捷。<br><br></div>
+                    <a-typography-text>
+                      {{ $t('operation.task.step1.index.MINIMAL_LISTContent') }}
+                    </a-typography-text>
+                   </div>
                 </a-button>
                 <a-button class="squarebutton mr-xlg"
                   :class="'card-item-c ' + (currVersion === OpenGaussVersionEnum.LITE ? 'center-item-active' : '')"
                   @click="chooseVer(OpenGaussVersionEnum.LITE)">
                   <svg-icon icon-class="people-safe" class="icon-size mb-0"></svg-icon>
-                  <div class="label-color ft-lg mb-s" style="font-weight: bold;">{{ $t('轻量版') }}</div>
+                  <div class="label-color ft-lg mb-s" style="font-weight: bold;">{{ $t('operation.task.step1.index.LITE') }}</div>
                   <p class="label-color remark" style="font-size: 11px;">
-                    openGauss轻量版在各台机器上分<br>别执行安装操作，因为轻量版版本<br>没有OM，CM等组件，所以安装、<br>卸载、升级等OM功能需要分别在各<br>个节点上手动操作。</p>
+                    <a-typography-text>
+                      {{ $t('operation.task.step1.index.LITEContent') }}
+                    </a-typography-text>
+                  </p>
                 </a-button>
                 <a-button class="squarebutton mr-xlg"
                   :class="'card-item-c ' + (currVersion === OpenGaussVersionEnum.ENTERPRISE ? 'center-item-active' : '')"
                   @click="chooseVer(OpenGaussVersionEnum.ENTERPRISE)">
                   <svg-icon icon-class="people-safe" class="icon-size mb-0"></svg-icon>
-                  <div class="label-color ft-lg mb-s" style="font-weight: bold;">{{ $t('企业版') }}</div>
+                  <div class="label-color ft-lg mb-s" style="font-weight: bold;">{{ $t('operation.task.step1.index.ENTERPRISE') }}</div>
                   <div class="label-color remark" style="font-size: 11px;">
-                    企业版安装的主要使用主体为<br>企业或对数据库性能要求较高<br>的个人，安装流程比较复杂，功<br>能更全。<br></div>
+                    <a-typography-text>
+                      {{ $t('operation.task.step1.index.ENTERPRISEContent') }}
+                    </a-typography-text>
+                  </div>
                 </a-button>
               </div>
             </a-form-item>
-            <a-form-item label="openGauss版本号" field="packageVersionNum">
+            <a-form-item :label="$t('operation.task.step1.index.versionNum')" field="packageVersionNum">
               <a-select field="packageVersionNum" v-model="data.packageVersionNum" allow-create allow-clear allow-search
-                show-search placeholder="请输入版本号" :options="versionNumList" :inputmode="true" @change="checkContains"
+                show-search :placeholder="$t('operation.task.step1.index.versionPlaceholder')" :options="versionNumList" :inputmode="true" @change="checkContains"
                 style="width: 30%; height: 32px">
               </a-select><br>
             </a-form-item>
-            <a-form-item label="已选择安装包">
+            <a-form-item :label="$t('operation.task.step1.index.selectedPackage')">
               <div v-if="!packageSerchResult">
-                <p>{{ $t('未列出我想要的包？') }}</p>
-                <a-button class="primary" type="text" @click="addPackInstall('create', 1)">离线上传</a-button>
-                <a-button class="primary" type="text" @click="addPackInstall('create', 0)">在线下载</a-button>
+                <p>{{ $t('operation.task.step1.index.morePackage') }}</p>
+                <a-button class="primary" type="text" @click="addPackInstall('create', 1)">{{ $t('operation.task.step1.index.upload') }}</a-button>
+                <a-button class="primary" type="text" @click="addPackInstall('create', 0)">{{ $t('operation.task.step1.index.download') }}</a-button>
               </div>
               <div v-else>
                 <p>{{ data.packageName }}</p>
-                <a-button class="primary" type="text" @click="openPackManage()">安装包管理</a-button>
-                <a-button class="primary" type="text" @click="addPackInstall('create', 1)">离线上传</a-button>
-                <a-button class="primary" type="text" @click="addPackInstall('create', 0)">在线下载</a-button>
+                <a-button class="primary" type="text" @click="openPackManage()">{{ $t('operation.task.step1.index.packageManagement') }}</a-button>
+                <a-button class="primary" type="text" @click="addPackInstall('create', 1)">{{ $t('operation.task.step1.index.upload') }}</a-button>
+                <a-button class="primary" type="text" @click="addPackInstall('create', 0)">{{ $t('operation.task.step1.index.download') }}</a-button>
               </div>
             </a-form-item>
           </a-form>
         </div>
         <div ref="module3" class="module" id="cluster">
           <div class="item">
-            <h2>集群配置</h2>
+            <h2>{{ $t('operation.task.step1.index.clusterConfig') }}</h2>
           </div>
           <a-form :model="data" :rules="serverRules" labelAlign="left" ref="clusterFormRef">
-            <a-form-item label="集群标识" field="clusterName" validate-trigger="blur">
-              <a-input v-model="data.clusterName" placeholder="请输入集群标识" @change="getClusterName" :max-length="255"
+            <a-form-item :label="$t('operation.task.step1.index.clusterName')" field="clusterName" validate-trigger="blur">
+              <a-input v-model="data.clusterName" :placeholder="$t('operation.task.step1.index.clusterNamePlaceholder')" @change="getClusterName" :max-length="255"
                 style="width: 30%; height: 32px" />
             </a-form-item>
-            <a-form-item label="安装目录" field="installPath" validate-trigger="blur">
-              <a-input v-model="data.installPath" placeholder="请输入安装目录" @change="getInstallPath" :max-length="255"
-                style="width: 30%; height: 32px" />
-              <template #extra>
-                <span class="form-helper-text">安装目录指的是安装openGauss的根目录，类似/opt/openGauss</span>
-              </template>
-            </a-form-item>
-            <a-form-item label="软件包路径" field="installPackagePath">
-              <a-input v-model="data.installPackagePath" placeholder="请输入软件包路径" :max-length="255"
+            <a-form-item :label="$t('operation.task.step1.index.installPath')" field="installPath" validate-trigger="blur">
+              <a-input v-model="data.installPath" :placeholder="$t('operation.task.step1.index.installPathPlaceholder')" @change="getInstallPath" :max-length="255"
                 style="width: 30%; height: 32px" />
               <template #extra>
-                <span class="form-helper-text">软件包路径指的是存放openGauss官方安装包压缩文件的路径</span>
+                <span class="form-helper-text">{{ $t('operation.task.step1.index.installPathContent') }}</span>
               </template>
             </a-form-item>
-            <a-form-item label="端口号" field="port">
+            <a-form-item :label="$t('operation.task.step1.index.installPackagePath')" field="installPackagePath">
+              <a-input v-model="data.installPackagePath" :placeholder="$t('operation.task.step1.index.installPackagePathplaceholder')" :max-length="255"
+                style="width: 30%; height: 32px" />
+              <template #extra>
+                <span class="form-helper-text">{{ $t('operation.task.step1.index.installPackagePathcontent') }}</span>
+              </template>
+            </a-form-item>
+            <a-form-item :label="$t('operation.task.step1.index.port')" field="port">
               <a-input-number id="inputNumber" v-model="data.port" :min="1024" :max="65535" @change="getPort"
                 style="width: 10%; height: 32px" :step="10" />
             </a-form-item>
-            <a-form-item label="数据库密码" field="databasePassword">
-              <a-input-password v-model="data.databasePassword" placeholder="请输入" :max-length="255"
+            <a-form-item :label="$t('operation.task.step1.index.dbPwd')" field="databasePassword">
+              <a-input-password v-model="data.databasePassword" :placeholder="$t('operation.task.step1.index.placeholder')" :max-length="255"
                 style="width: 30%; height: 32px" />
               <template #extra>
-                <span class="form-helper-text">用于登录数据库时的凭证， 请输入高安全度密码</span>
+                <span class="form-helper-text">{{ $t('operation.task.step1.index.dbPwdContent') }}</span>
               </template>
             </a-form-item>
-            <a-form-item label="部署类型">
+            <a-form-item :label="$t('operation.task.step1.index.deployType')">
               <a-radio-group v-model="data.deployType" @change="clusterModeChange" type="button">
-                <a-radio value="SINGLE_NODE" :disabled="flagCM.valueOf()">单节点安装</a-radio>
-                <a-radio value="CLUSTER">多节点安装</a-radio>
+                <a-radio value="SINGLE_NODE" :disabled="flagCM.valueOf()">{{ $t('operation.task.step1.index.SINGLE_NODE') }}</a-radio>
+                <a-radio value="CLUSTER">{{ $t('operation.task.step1.index.CLUSTER') }}</a-radio>
               </a-radio-group>
             </a-form-item>
             <a-form-item v-if="data.packageVersion === OpenGaussVersionEnum.ENTERPRISE && data.deployType === 'CLUSTER'"
-              label="是否安装CM">
+              :label="$t('operation.task.step1.index.checkflagCM')">
               <a-switch v-model="flagCM" @change="checkflagCM" />
             </a-form-item>
-            <a-form-item label="是否环境分离" v-if="data.packageVersion !== OpenGaussVersionEnum.MINIMAL_LIST">
+            <a-form-item :label="$t('operation.task.step1.index.checkflagEnvSeqar')" v-if="data.packageVersion !== OpenGaussVersionEnum.MINIMAL_LIST">
               <a-switch v-model="flagEnvSeqar" @change="checkflagEnvSeqar" />
             </a-form-item>
-            <a-form-item v-if="flagEnvSeqar && data.packageVersion !== OpenGaussVersionEnum.MINIMAL_LIST" label="环境分离路径"
+            <a-form-item v-if="flagEnvSeqar && data.packageVersion !== OpenGaussVersionEnum.MINIMAL_LIST" :label="$t('operation.task.step1.envPath')"
               field="envPath">
-              <a-input v-model="data.envPath" placeholder="请输入环境分离路径" :max-length="255"
+              <a-input v-model="data.envPath" :placeholder="$t('operation.task.step1.index.envPathPlaceholder')" :max-length="255"
                 style="width: 30%; height: 32px" />
             </a-form-item>
             <div class="item" v-if="data.packageVersion === OpenGaussVersionEnum.ENTERPRISE">
               <a-collapse :default-active-key="['0']">
-                <a-collapse-item :key='1' header="高级参数配置">
-                  <a-form-item label="日志目录" field="logPath">
-                    <a-input v-model="data.logPath" :max-length="255" autofocus placeholder="请输入日志目录" />
+                <a-collapse-item :key='1' :header="$t('operation.task.step1.index.proConfig')">
+                  <a-form-item :label="$t('operation.task.step1.index.logPath')" field="logPath">
+                    <a-input v-model="data.logPath" :max-length="255" autofocus :placeholder="$t('operation.task.step1.index.logPathPlaceholder')" />
                   </a-form-item>
-                  <a-form-item label="临时文件目录" field="tmpPath">
-                    <a-input v-model="data.tmpPath" autofocus placeholder="请输入临时文件目录" style="width: 30%; height: 32px" />
+                  <a-form-item :label="$t('operation.task.step1.index.tmpPath')" field="tmpPath">
+                    <a-input v-model="data.tmpPath" autofocus :placeholder="$t('operation.task.step1.index.tmpPathPlaceholder')" style="width: 30%; height: 32px" />
                   </a-form-item>
-                  <a-form-item label="数据库工具目录" field="omToolsPath">
-                    <a-input v-model="data.omToolsPath" :max-length="255" autofocus placeholder="请输入数据库工具目录"
+                  <a-form-item :label="$t('operation.task.step1.index.omToolsPath')" field="omToolsPath">
+                    <a-input v-model="data.omToolsPath" :max-length="255" autofocus :placeholder="$t('operation.task.step1.index.omToolsPathPlaceholder')"
                       style="width: 30%; height: 32px" />
                   </a-form-item>
-                  <a-form-item label="数据库core目录" field="corePath">
-                    <a-input v-model="data.corePath" autofocus :max-length="255" placeholder="请输入数据库core目录"
+                  <a-form-item :label="$t('operation.task.step1.index.corePath')" field="corePath">
+                    <a-input v-model="data.corePath" autofocus :max-length="255" :placeholder="$t('operation.task.step1.index.corePathPlaceholder')"
                       style="width: 30%; height: 32px" />
                   </a-form-item>
                 </a-collapse-item>
@@ -196,14 +205,14 @@
         </div>
         <div ref="module4" class="module" id="clusternode">
           <div class="item">
-            <h2>节点配置</h2>
+            <h2>{{ $t('operation.task.step1.index.nodeConfig') }}</h2>
           </div>
           <a-button type="text" icon="plus" @click="addColumn"
-            v-if="clusterNodesLimit > data.clusterNodes.length">添加节点</a-button>
+            v-if="clusterNodesLimit > data.clusterNodes.length">{{ $t('operation.task.step1.index.addColumn') }}</a-button>
           <a-table :data="data.clusterNodes" style="margin-top: 20px; width: 100%" :pagination="false" column-resizable
             :bordered="{ cell: true }">
             <template #columns>
-              <a-table-column title="主机ip" data-index="displayHostIp" fixed="left">
+              <a-table-column :title="$t('operation.task.step1.index.IP')" data-index="displayHostIp" fixed="left">
                 <template #cell="{ record }">
                   <div class="flex-row-start" v-if="record.editing && record.nodeType !== 'MASTER'">
                     <a-select :options="hostIpSame" @change="e => checkSameUser(e, record.order)"
@@ -214,18 +223,18 @@
                   </div>
                 </template>
               </a-table-column>
-              <a-table-column title="安装用户" data-index="hostUser"></a-table-column>
-              <a-table-column title="节点类型" data-index="nodeType">
+              <a-table-column :title="$t('operation.task.step1.index.installUser')" data-index="hostUser"></a-table-column>
+              <a-table-column :title="$t('operation.task.step1.index.clusterType')" data-index="nodeType">
                 <template #cell="{ record }">
                   <div class="flex-row-start" v-if="record.nodeType === 'MASTER'">
-                    <p>主节点</p>
+                    <p>{{ $t('operation.task.step1.index.clusterMaster') }}</p>
                   </div>
                   <div v-else>
-                    <p>备节点</p>
+                    <p>{{ $t('operation.task.step1.index.clusterOthers') }}</p>
                   </div>
                 </template>
               </a-table-column>
-              <a-table-column title="数据路径" data-index="dataPath"
+              <a-table-column :title="$t('operation.task.step1.index.dataPath')" data-index="dataPath"
                 v-if="data.packageVersion !== OpenGaussVersionEnum.MINIMAL_LIST">
                 <template #cell="{ record }">
                   <div class="flex-row-start" v-if="record.editing">
@@ -237,7 +246,7 @@
                   </div>
                 </template>
               </a-table-column>
-              <a-table-column title="所属AZ" data-index="azOwner"
+              <a-table-column :title="$t('operation.task.step1.index.azOwner')" data-index="azOwner"
                 v-if="data.packageVersion === OpenGaussVersionEnum.ENTERPRISE">
                 <template #cell="{ record }">
                   <div class="flex-row-start" v-if="record.editing">
@@ -249,7 +258,7 @@
                   </div>
                 </template>
               </a-table-column>
-              <a-table-column title="AZ优先级" data-index="azPriority"
+              <a-table-column :title="$t('operation.task.step1.index.azPriority')" data-index="azPriority"
                 v-if="data.packageVersion === OpenGaussVersionEnum.ENTERPRISE">
                 <template #cell="{ record }">
                   <div class="flex-row-start" v-if="record.editing">
@@ -261,23 +270,23 @@
                   </div>
                 </template>
               </a-table-column>
-              <a-table-column title="是否是CM主节点" data-index="isCMMaster"
+              <a-table-column :title="$t('operation.task.step1.index.isCMMaster')" data-index="isCMMaster"
                 v-if="data.packageVersion === OpenGaussVersionEnum.ENTERPRISE && data.enableCmTool">
                 <template #cell="{ record }">
                   <div class="flex-row-start" v-if="record.editing">
-                    <a-popconfirm :content="$t('仅支持单个节点作为CM主节点，一旦更改后可能会影响其他节点属性，是否确认更改？')" type="warning"
-                      :ok-text="$t('确定')" :cancel-text="$t('取消')">
+                    <a-popconfirm :content="$t('operation.task.step1.index.cmMasterContent')" type="warning"
+                      :ok-text="$t('operation.task.step1.index.confirm')" :cancel-text="$t('operation.task.step1.index.cancel')">
                       <a-select :options="optionsCMMaster" @change="e => checkCMMaster(e, record.order)"
-                        :default-value="record.isCMMaster ? '是' : '否'" />
+                        :default-value="record.isCMMaster ? $t('operation.task.step1.index.yes') : $t('operation.task.step1.index.no')" />
                     </a-popconfirm>
                   </div>
                   <div v-else>
-                    <p v-if="record.isCMMaster">是</p>
-                    <p v-else>否</p>
+                    <p v-if="record.isCMMaster">{{ $t('operation.task.step1.index.yes') }}</p>
+                    <p v-else>{{ $t('operation.task.step1.index.no') }}</p>
                   </div>
                 </template>
               </a-table-column>
-              <a-table-column title="CM数据路径" data-index="cmDataPath"
+              <a-table-column :title="$t('operation.task.step1.index.cmDataPath')" data-index="cmDataPath"
                 v-if="data.packageVersion === OpenGaussVersionEnum.ENTERPRISE && data.enableCmTool">
                 <template #cell="{ record }">
                   <div class="flex-row-start" v-if="record.editing">
@@ -289,12 +298,12 @@
                   </div>
                 </template>
               </a-table-column>
-              <a-table-column title="CM端口号" data-index="cmPort"
+              <a-table-column :title="$t('operation.task.step1.index.cmPort')" data-index="cmPort"
                 v-if="data.packageVersion === OpenGaussVersionEnum.ENTERPRISE && data.enableCmTool">
                 <template #cell="{ record }">
                   <div class="flex-row-start" v-if="record.editing">
-                    <a-popconfirm :content="$t('所有CM节点端口一致，一旦更改后可能会影响其他节点属性，是否确认更改？')" type="warning" :ok-text="$t('确定')"
-                      :cancel-text="$t('取消')">
+                    <a-popconfirm :content="$t('operation.task.step1.index.cmPortContent')" type="warning" :ok-text="$t('operation.task.step1.index.confirm')"
+                      :cancel-text="$t('operation.task.step1.index.cancel')">
                       <a-input-number @change="e => checkCmPort(e, record.order)" :min="1024" :max="65529"
                         :default-value="record.cmPort" />
                     </a-popconfirm>
@@ -304,19 +313,19 @@
                   </div>
                 </template>
               </a-table-column>
-              <a-table-column title="操作" data-index="operation"
+              <a-table-column :title="$t('operation.task.step1.index.option')" data-index="operation"
                 v-if="data.packageVersion !== OpenGaussVersionEnum.MINIMAL_LIST">
                 <template #cell="{ record }">
                   <div class="flex-row-start" v-if="record.editing === false">
-                    <a-link class="mr" @click="editCluster(record)">编辑</a-link>
-                    <a-popconfirm :content="$t('是否确定删除？')" type="warning" :ok-text="$t('确定')" :cancel-text="$t('取消')"
+                    <a-link class="mr" @click="editCluster(record)">{{ $t('operation.task.step1.index.edit') }}</a-link>
+                    <a-popconfirm :content="$t('operation.task.step1.index.deleteContent')" type="warning" :ok-text="$t('operation.task.step1.index.confirm')" :cancel-text="$t('operation.task.step1.index.cancel')"
                       @ok="deleteRows(record)">
-                      <a-link status="danger" v-if="record.nodeType !== 'MASTER'">删除</a-link>
+                      <a-link status="danger" v-if="record.nodeType !== 'MASTER'">{{ $t('operation.task.step1.index.delete') }}</a-link>
                     </a-popconfirm>
                   </div>
                   <div class="flex-row-start" v-else>
-                    <a-link class="mr" @click="saveCluster(record)">保存</a-link>
-                    <a-link class="mr" @click="cancelEdit(record)">取消</a-link>
+                    <a-link class="mr" @click="saveCluster(record)">{{ $t('operation.task.step1.index.save') }}</a-link>
+                    <a-link class="mr" @click="cancelEdit(record)">{{ $t('operation.task.step1.index.cancel') }}</a-link>
                   </div>
                 </template>
               </a-table-column>
@@ -328,26 +337,18 @@
         <div>
           <a-affix :offsetTop="80">
             <a-anchor :change-hash="false">
-              <a-anchor-link href="#server">服务器配置</a-anchor-link>
-              <a-anchor-link href="#package">安装包配置</a-anchor-link>
-              <a-anchor-link href="#cluster">集群配置</a-anchor-link>
-              <a-anchor-link href="#clusternode">节点配置</a-anchor-link>
+              <a-anchor-link href="#server">{{ $t('operation.task.step1.index.serverConfig') }}</a-anchor-link>
+              <a-anchor-link href="#package">{{ $t('operation.task.step1.index.packageConfig') }}</a-anchor-link>
+              <a-anchor-link href="#cluster">{{ $t('operation.task.step1.index.clusterConfig') }}</a-anchor-link>
+              <a-anchor-link href="#clusternode">{{ $t('operation.task.step1.index.nodeConfig') }}</a-anchor-link>
             </a-anchor>
           </a-affix>
         </div>
       </div>
     </div>
-    <div style="bottom: 20px; right: 20px;">
-      <a-modal :mask-closable="false" :esc-to-close="false" v-model:visible="processVisible" :ok-text="$t('下载完成')"
-        @ok="handleOk">
-        <template #title>
-          {{ $t('在线下载') }}
-        </template>
-        <!--        <p>{{data.packageName}}</p>-->
-        <a-progress size="large" :percent="currPercent" />
-      </a-modal>
-    </div>
-    <addPack ref="addPackRef" @close="addPackClose()" @submit="addPackSubmit()"></addPack>
+    <download-notification ref="downloadNotRef" :percentage="currPercent" :msg="$t('operation.task.step1.index.onlineDownload')"
+                           :iconClass="'rar-file'" :fileName="uploadName"></download-notification>
+    <addPack ref="addPackRef" @close="addPackClose()" @submit="addPackSubmit()" @downloadStart="addPackStart"></addPack>
     <packManage ref="packManageRef" :packageIDSelected="packageIDSelected" @finish="packManageClose()"
       @ok="packManageSubmit()" @packageIDSelected="syncSubTask"></packManage>
   </div>
@@ -376,6 +377,9 @@ import AddPack from "./AddPackage.vue"
 import PackManage from "./PackageManage.vue"
 import Socket from "@/utils/websocket"
 import { useRoute } from "vue-router";
+import downloadNotification from '@/components/downloadNotification'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const module1 = ref(null)
 const module2 = ref(null)
 const module3 = ref(null)
@@ -489,7 +493,7 @@ const fetchOsSystem = (isChange: boolean) => {
       data.osVersion = res.data.osVersion
     }
     if (!res.data.os || !res.data.cpuArch) {
-      Message.error('当前服务器数据不全 请选择其他IP')
+      Message.error(t('operation.task.step1.index.serverDataError'))
     } else {
       fetchSameOs(isChange)
     }
@@ -597,13 +601,13 @@ const checkContains = (inputValue: any) => {
       checkVersionNumber(params).then((res: any) => {
         if (res.code !== 200) {
           Message.error({
-            content: data.packageVersionNum + '不存在，请重新选择'
+            content: data.packageVersionNum + t('operation.task.step1.index.packageExistError')
           })
           data.packageVersionNum = ''
         }
       }).catch((error: any) => {
-        message.error({
-          content: '版本号' + data.packageVersionNum + '不存在，请重新选择' + error
+        Message.error({
+          content: '版本号' + data.packageVersionNum + t('operation.task.step1.index.packageExistError') + error
         })
         data.packageVersionNum = versionNumList.value[0]
       })
@@ -616,7 +620,7 @@ const checkContains = (inputValue: any) => {
 const clusterOrder = ref(0)
 const initMasterNode = () => {
   if (data.packageVersionNum === '' || data.hostUser === '') {
-    data.hostUser === '' ? Message.error('请选择安装用户，否则无法生成节点') : ''
+    data.hostUser === '' ? Message.error(t('operation.task.step1.index.userNullError')) : ''
   } else {
     let tempCMPath = data.packageVersion === OpenGaussVersionEnum.ENTERPRISE && data.enableCmTool === true ? '/opt/' + data.hostUser + '/openGauss/data/cmserver' : ""
     let tempCMPort = data.packageVersion === OpenGaussVersionEnum.ENTERPRISE && data.enableCmTool === true ? 15300 : 1
@@ -724,7 +728,11 @@ const fetchPackageList = () => {
     })
   }
 }
-
+const downloadNotRef = ref(null)
+const timer = ref<any>(null)
+const lastProcess = ref(0);
+const nextProcess = ref(0);
+const uploadName = ref('')
 const downloadWs = ref<Socket<any, any> | undefined>()
 const processVisible = ref(false)
 const percentLoading = ref(false)
@@ -734,8 +742,6 @@ const wsBusinessId = ref('')
 const webSocketOpen = () => {
   currPercent.value = 0
   const socketKey = new Date().getTime()
-  // const wsPrefix = window.location.protocol.includes('https') ? 'wss' : 'ws'
-  // const socketUrl = `${wsPrefix}://192.168.0.114:19494/ws/base-ops/downloadPackage_${socketKey}`
   const wsPrefix = window.location.protocol.includes('https') ? 'wss' : 'ws'
   const socketUrl = `${wsPrefix}://${window.location.host}/ws/base-ops/downloadPackage_${socketKey}`
   const websocket = new WebSocket(socketUrl)
@@ -747,12 +753,60 @@ const webSocketOpen = () => {
   websocket.onmessage = function (event) {
     processVisible.value = true
     const messageData = event.data
-    if (!isNaN(Number(messageData))) {
-      const percent = Number(messageData)
-      currPercent.value = percent
-      if (percent === 100) {
+    downloadNotRef.value?.createOrUpdateNotification(wsBusinessId, messageData, uploadName.value)
+    if (messageData === 'File download Failed') {
+      Message.error({
+        content: t('components.Package.5mtcyb0rty52')
+      })
+      handleOk()
+      websocket.close()
+      downloadNotRef.value?.closeNotifiCation(wsBusinessId);
+      clearInterval(timer.value)
+    } else {
+      if (!isNaN(Number(messageData))) {
+        const percent = Number(messageData)
+        currPercent.value = percent
+        nextProcess.value = percent
+        clearInterval(timer.value)
+        timer.value = setInterval(() => {
+          if (nextProcess.value === 1) {
+            lastProcess.value = 0;
+            nextProcess.value = 0;
+          } else if (nextProcess.value.toString() === lastProcess.value.toString()) {
+            let warnningMsg = setTimeout(() => {
+              Message.error(t('operation.task.step1.index.websocketErrorMsg'))
+              downloadNotRef.value?.closeNotifiCation(wsBusinessId);
+              clearTimeout(warnningMsg)
+            }, 3000)
+            websocket.close();
+            clearInterval(timer.value);
+          } else {
+            lastProcess.value = nextProcess.value
+          }
+        }, 10000)
+        if (percent === 1) {
+          clearInterval(timer.value);
+          lastProcess.value = 0;
+          nextProcess.value = 0;
+          percentLoading.value = false
+          websocket.close()
+          downloadNotRef.value?.closeNotifiCation(wsBusinessId);
+          clearInterval(timer.value);
+        }
+      } else if (messageData === 'DOWNLOAD_FINISH') {
         percentLoading.value = false
         websocket.close()
+        downloadNotRef.value?.closeNotifiCation(wsBusinessId);
+        clearInterval(timer.value);
+        lastProcess.value = 0;
+        nextProcess.value = 0;
+      } else {
+        websocket.close()
+        downloadNotRef.value?.closeNotifiCation(wsBusinessId);
+        clearInterval(timer.value);
+        lastProcess.value = 0;
+        nextProcess.value = 0;
+        console.error('WebSocket error')
       }
     }
   }
@@ -792,11 +846,21 @@ const simulateDownload = async () => {
     console.error('Download failed:', error)
   }
 }
-
 const handleOk = () => {
   processVisible.value = false
+  uploadName.value = ''
   fetchPackageList()
 }
+const addPackStart =(name) => {
+  uploadName.value = name
+}
+watch(currPercent, (newValue) => {
+  if (newValue === 100) {
+    processVisible.value = false
+    handleOk()
+  }
+})
+
 
 const addPackRef = ref<null | InstanceType<typeof AddPack>>(null)
 const addPackInstall = (type: string, uploadFlag: number) => {
@@ -875,10 +939,10 @@ const checkPackageExist = async () => {
   try {
     const res = await checkPkg(data.packageId)
     if (!res.data) {
-      Message.error("安装包检查未通过，可能会影响流程")
+      Message.error(t('operation.task.step1.index.packageCheckError'))
     }
   } catch (error) {
-    Message.error("安装包检查未通过，可能会影响流程")
+    Message.error($t('operation.task.step1.index.packageCheckError'))
   }
 }
 
@@ -977,10 +1041,10 @@ const checkSameUser = (inputValue: string, order: number) => {
   tempEditCluster.displayHostIp = inputValue
   let tempHostId = hostIpId.get(tempEditCluster.hostIp)
   if (!inputValue || inputValue === '') {
-    Message.error('ip不可为空')
+    Message.error(t('operation.task.step1.index.ipNullError'))
   } else {
     if (tempEditCluster.hostIp === masterHostIp.value && tempEditCluster.nodeType !== "MASTER") {
-      Message.error("所选ip与主机ip相同，请重新选择")
+      Message.error(t('operation.task.step1.index.ipSameError'))
     } else {
       getHostUser(tempHostId).then((res) => {
         res.data.forEach(item => {
@@ -992,7 +1056,7 @@ const checkSameUser = (inputValue: string, order: number) => {
           }
         })
         if (!tempFlag) {
-          Message.error("所选ip不存在该用户，请重新选择ip或在该ip新增用户")
+          Message.error(t('operation.task.step1.index.ipUserError'))
           tempEditCluster.hostId = item.hostId
         }
         tempEditArr.value[order] = tempEditCluster
@@ -1041,7 +1105,7 @@ const checkCmPort = (inputValue: string, order: number) => {
         editFlag.CmPort = true
       } else {
         editFlag.CmPort = false
-        Message.error(getIpById(tempEditCluster.hostId) + 'IP 下' + tempEditCluster.cmPort + '端口被占用，无法保存')
+        Message.error(getIpById(tempEditCluster.hostId) + t('operation.task.step1.index.ipNoticeError') + tempEditCluster.cmPort + t('operation.task.step1.index.portOccupied'))
       }
     }).catch((error) => {
       editFlag.CmPort = false
@@ -1097,10 +1161,10 @@ const saveCluster = async (record: any) => {
   let checkHostIpPromise = new Promise((resolve) => {
     if (record.order !== 1) {
       if (!tempEditCluster.hostIp || tempEditCluster.hostIp === '') {
-        Message.error('ip不可为空')
+        Message.error(t('operation.task.step1.index.ipNullError'))
       } else {
         if (tempEditCluster.hostIp === masterHostIp.value && tempEditCluster.nodeType !== "MASTER") {
-          Message.error("所选ip与主机ip相同，请重新选择")
+          Message.error(t('operation.task.step1.index.ipSameError'))
         } else {
           let tempHostId = hostIpId.get(tempEditCluster.hostIp)
           let tempFlag = false
@@ -1115,7 +1179,7 @@ const saveCluster = async (record: any) => {
               }
             })
             if (!tempFlag) {
-              Message.error("所选ip不存在该用户，请重新选择ip或在该ip新增用户")
+              Message.error(t('operation.task.step1.index.ipUserError'))
             }
           }).catch((error) => {
             console.error(error)
@@ -1135,7 +1199,7 @@ const saveCluster = async (record: any) => {
           editFlag.CmPort = true
         } else {
           editFlag.CmPort = false
-          Message.error(getIpById(tempEditCluster.hostId) + 'IP 下' + tempEditCluster.cmPort + '端口被占用，无法保存')
+          Message.error(getIpById(tempEditCluster.hostId) + t('operation.task.step1.index.ipNoticeError') + tempEditCluster.cmPort + t('operation.task.step1.index.portOccupied'))
         }
       }).catch((error) => {
         editFlag.CmPort = false
@@ -1158,7 +1222,7 @@ const saveCluster = async (record: any) => {
         }
       })
       if (!editFlag.CMMaster && !data.enableCmTool) {
-        Message.error("所有节点中没有CM主节点，无法更改为非主节点")
+        Message.error(t('operation.task.step1.index.cmMasterError'))
       }
     } else {
       editFlag.CMMaster = true
@@ -1174,7 +1238,7 @@ const saveCluster = async (record: any) => {
             let tempPort = tempEditCluster.cmPort
             checkPortExist(item.hostId, tempPort, data.clusterId).then((res) => {
               if (res.data !== "NO_USED") {
-                Message.error(getIpById(item.hostIp) + 'IP 下' + tempPort + '端口被占用，无法保存')
+                Message.error(getIpById(item.hostIp) + t('operation.task.step1.index.ipNoticeError') + tempPort + t('operation.task.step1.index.portOccupied'))
                 editFlag.CmPort = false
               }
             }).catch((error) => {
@@ -1271,7 +1335,7 @@ const saveCluster = async (record: any) => {
         }
       }
     } else {
-      Message.error("仍有不符合规则项，无法保存")
+      Message.error(t('operation.task.step1.index.saveError'))
     }
   }).catch((error) => {
     console.error((error))
@@ -1299,7 +1363,7 @@ const getClusterName = (inputValue: any) => {
     if (res.data === false) {
       data.clusterName = inputValue
     } else {
-      Message.error('该标识已经存在，请重新命名')
+      Message.error(t('operation.task.step1.index.sameNameError'))
     }
   }).catch((error) => {
     console.error(error)
@@ -1322,7 +1386,7 @@ const getPort = (inputvalue: number) => {
     if (res.data === "NO_USED") {
       data.port = inputvalue
     } else {
-      Message.error(data.hostIp + 'IP 下' + inputvalue + '端口被占用，无法保存')
+      Message.error(data.hostIp + t('operation.task.step1.index.ipNoticeError') + inputvalue + t('operation.task.step1.index.portOccupied'))
     }
   }).catch((error) => {
     console.error(error)

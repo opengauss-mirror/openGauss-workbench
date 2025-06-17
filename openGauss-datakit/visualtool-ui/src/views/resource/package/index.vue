@@ -85,23 +85,11 @@
       ref="addPackRef"
       @finish="addPackClose()"
       @close="addPackClose"
+      @downloadStart="addPackStart"
       @submit="addPackSubmit()"
     ></addPack>
-    <div style="bottom: 20px; right: 20px;">
-      <a-modal
-        :mask-closable="false"
-        :esc-to-close="false"
-        v-model:visible="processVisible"
-        :ok-text="$t('components.Package.5mtcyb0rty24')"
-        @ok="handleOk"
-        @close="close"
-      >
-        <template #title>
-          {{ $t('components.Package.5mtcyb0rty23') }}
-        </template>
-        <a-progress size="large" :percent="currPercent" />
-      </a-modal>
-    </div>
+    <download-notification ref="downloadNotRef" :percentage="currPercent" :msg="$t('manage.index.onlineDownload')" :iconClass="'rar-file'"
+                           :fileName="uploadName"></download-notification>
   </div>
 </template>
 
@@ -129,6 +117,8 @@ import FusionSearch from '@/components/fusion-search'
 import { CpuArch, OS } from '../../../../../../plugins/base-ops/web-ui/src/types/os'
 import { OpenGaussVersionEnum } from '@/types/ops/install'
 import { searchType } from '@/types/searchType'
+import showMessage from "@/hooks/showMessage";
+import downloadNotification from '@/components/downloadNotification'
 
 const { t } = useI18n()
 const { bus } = WujieVue
@@ -235,7 +225,9 @@ const addPackClose = () => {
   fetchVersionNum()
   getListData(filter.pageSize, filter.pageNum, searchFormData)
 }
-
+const addPackStart =(name) => {
+  uploadName.value = name
+}
 const addPackSubmit = () => {
   processVisible.value = true
   if (wsBusinessId.value && wsBusinessId.value != '') {
@@ -625,12 +617,23 @@ const percentLoading = ref(false)
 const currPercent = ref<number>(0)
 const wsBusinessId = ref('')
 
+
+const closeNotification = () => {
+  processVisible.value = false
+  uploadName.value = ''
+}
+
+const uploadName = ref('')
+
 watch(currPercent, (newValue) => {
   if (newValue === 100) {
     processVisible.value = false
+    closeNotification()
   }
 })
-
+const timer = ref<any>(null)
+const lastProcess = ref(0)
+const nextProcess = ref(0)
 const webSocketOpen = (type: string, data?: KeyValue, addOptionFlag?:number) => {
   currPercent.value = 0
   const socketKey = new Date().getTime()
@@ -646,24 +649,59 @@ const webSocketOpen = (type: string, data?: KeyValue, addOptionFlag?:number) => 
   websocket.onmessage = function (event) {
     processVisible.value = true
     const messageData = event.data
+    downloadNotRef.value?.createOrUpdateNotification(wsBusinessId, messageData, uploadName.value)
     if (messageData === 'File download Failed') {
       Message.error({
         content: t('components.Package.5mtcyb0rty52')
       })
       handleOk()
       websocket.close()
+      downloadNotRef.value?.closeNotifiCation(wsBusinessId);
+      clearInterval(timer.value)
     } else {
       if (!isNaN(Number(messageData))) {
         const percent = Number(messageData)
+        nextProcess.value = percent;
+        clearInterval(timer.value);
         currPercent.value = percent
-        if (percent === 100) {
+        timer.value = setInterval(() => {
+          if (nextProcess.value === 1) {
+            lastProcess.value = 0;
+            nextProcess.value = 0;
+          } else if (nextProcess.value.toString() === lastProcess.value.toString()) {
+            let warnningMsg = setTimeout(() => {
+              showMessage('error', t('manage.index.websocketErrorMsg'))
+              downloadNotRef.value?.closeNotifiCation(wsBusinessId);
+              clearTimeout(warnningMsg)
+            }, 3000)
+            websocket.close();
+            clearInterval(timer.value);
+          } else {
+            lastProcess.value = nextProcess.value
+          }
+        }, 10000)
+        if (percent === 1) {
+          clearInterval(timer.value);
+          lastProcess.value = 0;
+          nextProcess.value = 0;
           percentLoading.value = false
           websocket.close()
+          downloadNotRef.value?.closeNotifiCation(wsBusinessId);
+          clearInterval(timer.value);
         }
       } else if (messageData === 'DOWNLOAD_FINISH') {
         percentLoading.value = false
         websocket.close()
+        downloadNotRef.value?.closeNotifiCation(wsBusinessId);
+        clearInterval(timer.value);
+        lastProcess.value = 0;
+        nextProcess.value = 0;
       } else {
+        websocket.close()
+        downloadNotRef.value?.closeNotifiCation(wsBusinessId);
+        clearInterval(timer.value);
+        lastProcess.value = 0;
+        nextProcess.value = 0;
         console.error('WebSocket error')
       }
     }
@@ -672,6 +710,7 @@ const webSocketOpen = (type: string, data?: KeyValue, addOptionFlag?:number) => 
     console.error('WebSocket error:', error)
   }
 }
+const downloadNotRef = ref(null)
 const uploadPackageId = ref('')
 
 const downloadPackage = () => {
@@ -718,9 +757,6 @@ const handleOk = () => {
   fetchVersion()
   fetchVersionNum()
   getListData(filter.pageSize, filter.pageNum, searchFormData)
-}
-const close = () => {
-  processVisible.value = false
 }
 
 init()
