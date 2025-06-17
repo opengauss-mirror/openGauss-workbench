@@ -233,7 +233,6 @@ const tableAllSele = ref(false)
 const getTblSelec = async() => {
   const { dbName, url, username, password, seletedTbl } = props.seleDBMsg
   tempdbname.value = dbName
-  const c = computed(() => `${url}/${dbName}`)
   let preseletedTbl = ''
   tableAllSele.value = false
   if (seletedTbl) {
@@ -244,7 +243,7 @@ const getTblSelec = async() => {
       piecePreTbl = JSON.parse(preseletedTbl)
     }
   }
-  useInFo.append('url', c.value)
+  useInFo.append('url', url)
   useInFo.append('username', username)
   useInFo.append('password', password)
 }
