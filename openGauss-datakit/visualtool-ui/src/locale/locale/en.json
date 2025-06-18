@@ -61,7 +61,8 @@
       "manual": "Manual",
       "demo": "DEMO",
       "websocketErrorMsg": "WebSocket unresponsive - closing download progress panel",
-      "onlineDownload": "Online Download"
+      "onlineDownload": "Online Download",
+      "notificationText": "Match the following installation package based on the configuration and download it:"
     },
     "PluginInstall": {
       "observabilitySqlDiagnosis": "Intelligent Diagnosis Plugin",

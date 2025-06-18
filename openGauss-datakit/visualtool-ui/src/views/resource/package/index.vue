@@ -88,7 +88,7 @@
       @downloadStart="addPackStart"
       @submit="addPackSubmit()"
     ></addPack>
-    <download-notification ref="downloadNotRef" :percentage="currPercent" :msg="$t('manage.index.onlineDownload')" :iconClass="'rar-file'"
+    <download-notification ref="downloadNotRef" :percentage="currPercent" :msg="$t('manage.index.notificationText')" :iconClass="'rar-file'"
                            :fileName="uploadName"></download-notification>
   </div>
 </template>
