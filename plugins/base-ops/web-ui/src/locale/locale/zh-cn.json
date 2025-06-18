@@ -465,7 +465,8 @@
               "websocketErrorMsg": "WebSocket长时间无响应，将关闭下载进度悬浮框",
               "onlineDownload": "在线下载",
               "ipNoticeError": " IP下",
-              "portOccupied": "端口被占用，无法保存"
+              "portOccupied": "端口被占用，无法保存",
+              "notificationText": "根据配置匹配到如下安装包并进行下载:"
             }
           },
             "step2s5cf2y0": "环境监测中...",

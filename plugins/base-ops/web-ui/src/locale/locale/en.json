@@ -464,7 +464,8 @@
               "websocketErrorMsg": "WebSocket unresponsive - closing download progress panel",
               "onlineDownload": "Online Download",
               "ipNoticeError": "IP Down",
-              "portOccupied": "Port is occupied, unable to save"
+              "portOccupied": "Port is occupied, unable to save",
+              "notificationText": "Match the following installation package based on the configuration and download it:"
             }
           },
             "step2s5cf2y0": "Environmental monitoring in progress...",

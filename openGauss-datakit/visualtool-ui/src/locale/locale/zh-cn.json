@@ -61,7 +61,8 @@
       "manual": "用户手册",
       "demo": "演示地址",
       "websocketErrorMsg": "WebSocket长时间无响应，将关闭下载进度悬浮框",
-      "onlineDownload": "在线下载"
+      "onlineDownload": "在线下载",
+      "notificationText": "根据配置匹配到如下安装包并进行下载:"
     },
     "PluginInstall": {
       "observabilitySqlDiagnosis": "智能诊断插件",

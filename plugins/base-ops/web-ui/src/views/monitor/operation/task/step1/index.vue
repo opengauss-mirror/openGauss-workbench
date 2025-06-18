@@ -346,7 +346,7 @@
         </div>
       </div>
     </div>
-    <download-notification ref="downloadNotRef" :percentage="currPercent" :msg="$t('operation.task.step1.index.onlineDownload')"
+    <download-notification ref="downloadNotRef" :percentage="currPercent" :msg="$t('operation.task.step1.index.notificationText')"
                            :iconClass="'rar-file'" :fileName="uploadName"></download-notification>
     <addPack ref="addPackRef" @close="addPackClose()" @submit="addPackSubmit()" @downloadStart="addPackStart"></addPack>
     <packManage ref="packManageRef" :packageIDSelected="packageIDSelected" @finish="packManageClose()"
@@ -792,6 +792,7 @@ const webSocketOpen = () => {
           websocket.close()
           downloadNotRef.value?.closeNotifiCation(wsBusinessId);
           clearInterval(timer.value);
+          handleOk()
         }
       } else if (messageData === 'DOWNLOAD_FINISH') {
         percentLoading.value = false
@@ -800,6 +801,7 @@ const webSocketOpen = () => {
         clearInterval(timer.value);
         lastProcess.value = 0;
         nextProcess.value = 0;
+        handleOk()
       } else {
         websocket.close()
         downloadNotRef.value?.closeNotifiCation(wsBusinessId);
@@ -855,7 +857,7 @@ const addPackStart =(name) => {
   uploadName.value = name
 }
 watch(currPercent, (newValue) => {
-  if (newValue === 100) {
+  if (newValue === 1) {
     processVisible.value = false
     handleOk()
   }
