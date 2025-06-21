@@ -48,6 +48,7 @@ import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterInputDto;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterNodeInputDto;
+import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
 import org.opengauss.admin.common.utils.OpsAssert;
 import org.opengauss.admin.common.utils.StringUtils;
@@ -66,6 +67,7 @@ import org.opengauss.admin.plugin.enums.PortalInstallStatus;
 import org.opengauss.admin.plugin.enums.PortalInstallType;
 import org.opengauss.admin.plugin.enums.ThirdPartySoftwareConfigType;
 import org.opengauss.admin.plugin.enums.ToolsConfigEnum;
+import org.opengauss.admin.plugin.enums.DbTypeEnum;
 import org.opengauss.admin.plugin.exception.MigrationTaskException;
 import org.opengauss.admin.plugin.exception.PortalInstallException;
 import org.opengauss.admin.plugin.exception.ShellException;
@@ -115,10 +117,16 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Locale;
+import java.util.Collections;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
+
+import static org.opengauss.admin.plugin.enums.DbTypeEnum.MYSQL;
+import static org.opengauss.admin.plugin.enums.DbTypeEnum.OPENGAUSS;
+import static org.opengauss.admin.plugin.enums.DbTypeEnum.POSTGRESQL;
 
 /**
  * @author xielibo
@@ -259,6 +267,28 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     }
 
     @Override
+    public List<JdbcDbClusterVO> getSourceClusters(String dbTypeStr) {
+        List<JdbcDbClusterVO> jdbcSourceCluster = new ArrayList<>();
+        DbTypeEnum dbType = DbTypeEnum.fromString(dbTypeStr.toUpperCase(Locale.ROOT));
+        switch (dbType) {
+            case MYSQL:
+                jdbcSourceCluster = jdbcDbClusterFacade.listAll(MYSQL.getDbType());
+                break;
+            case OPENGAUSS:
+                jdbcSourceCluster = jdbcDbClusterFacade.listAll(OPENGAUSS.getDbType());
+                jdbcSourceCluster.addAll(getClustersManagementList());
+                break;
+            case POSTGRESQL:
+                jdbcSourceCluster = jdbcDbClusterFacade.listAll(POSTGRESQL.getDbType());
+                break;
+            default:
+                log.warn("Unsupported database type.");
+                break;
+        }
+        return jdbcSourceCluster;
+    }
+
+    @Override
     public void saveDbResource(CustomDbResource dbResource) {
         saveSource(dbResource.getClusterName(), dbResource.getDbUrl(), dbResource.getUserName(),
             dbResource.getPassword());
@@ -311,6 +341,33 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         return targetClusters;
     }
 
+    private List<JdbcDbClusterVO> getClustersManagementList() {
+        List<OpsClusterVO> opsClusterVOS = opsFacade.listCluster();
+        return opsClusterVOS.stream().map(cluster -> {
+            JdbcDbClusterVO jdbcDbClusterVO = new JdbcDbClusterVO();
+            jdbcDbClusterVO.setClusterId(cluster.getClusterId());
+            jdbcDbClusterVO.setName(cluster.getClusterName());
+            jdbcDbClusterVO.setDeployType(cluster.getDeployType());
+            jdbcDbClusterVO.setNodes(getJdbcDbClusterList(cluster));
+            return jdbcDbClusterVO;
+        }).collect(Collectors.toList());
+    }
+
+    private List<JdbcDbClusterNodeVO> getJdbcDbClusterList(OpsClusterVO cluster) {
+        return cluster.getClusterNodes().stream().map(node -> {
+            JdbcDbClusterNodeVO jdbcDbClusterNodeVO = new JdbcDbClusterNodeVO();
+            jdbcDbClusterNodeVO.setClusterNodeId(node.getNodeId());
+            jdbcDbClusterNodeVO.setName(node.getNodeId());
+            jdbcDbClusterNodeVO.setIp(node.getPublicIp());
+            jdbcDbClusterNodeVO.setPort(node.getDbPort().toString());
+            jdbcDbClusterNodeVO.setUsername(node.getDbUser());
+            jdbcDbClusterNodeVO.setPassword(node.getDbUserPassword());
+            String url = String.format("jdbc:opengauss://%s:%s/postgres", node.getPublicIp(), node.getDbPort());
+            jdbcDbClusterNodeVO.setUrl(url);
+            return jdbcDbClusterNodeVO;
+        }).collect(Collectors.toList());
+    }
+
     private List<TargetClusterVO> getJdbcTargetClusters() {
         List<JdbcDbClusterVO> jdbcTargetCluster = jdbcDbClusterFacade.listAll("openGauss");
         return jdbcTargetCluster.stream().map(jc -> {
@@ -336,6 +393,99 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             clusterVO.setClusterNodes(nodes);
             return clusterVO;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public Map<String, Boolean> getNodeRoleMap(String clusterName) {
+        List<OpsClusterVO> opsClusterVOS = opsFacade.listCluster();
+        List<OpsClusterVO> filteredOpsClusterList = opsClusterVOS.stream()
+            .filter(cluster -> clusterName.equals(cluster.getClusterId()))
+            .collect(Collectors.toList());
+        List<JdbcDbClusterVO> jdbcTargetCluster = jdbcDbClusterFacade.listAll("openGauss");
+        List<JdbcDbClusterVO> filteredJdbcList = jdbcTargetCluster.stream()
+            .filter(cluster -> clusterName.equals(cluster.getName()))
+            .collect(Collectors.toList());
+        if (!filteredOpsClusterList.isEmpty()) {
+            return judgeClusterConnection(filteredOpsClusterList);
+        }
+        if (!filteredJdbcList.isEmpty()) {
+            return judgeJdbcDbConnection(filteredJdbcList);
+        }
+        return Collections.emptyMap();
+    }
+
+    private Map<String, Boolean> judgeClusterConnection(List<OpsClusterVO> filteredOpsClusterList) {
+        ShellInfoVo shellInfoVo = new ShellInfoVo();
+        int opsClusterNodeNum = filteredOpsClusterList.get(0).getClusterNodes().size();
+        Map<String, Boolean> result = new HashMap<>();
+        for (int i = 0; i < opsClusterNodeNum; i++) {
+            OpsClusterNodeVO opsNode = filteredOpsClusterList.get(0).getClusterNodes().get(i);
+            if (!filteredOpsClusterList.isEmpty()) {
+                shellInfoVo.setIp(opsNode.getPublicIp());
+                shellInfoVo.setPort(opsNode.getDbPort());
+                shellInfoVo.setUsername(opsNode.getDbUser());
+                shellInfoVo.setPassword(opsNode.getDbUserPassword());
+            } else {
+                log.error("cluster not exist.");
+            }
+            getConnectionInfo(shellInfoVo, result);
+        }
+        return result;
+    }
+
+    private Map<String, Boolean> judgeJdbcDbConnection(List<JdbcDbClusterVO> filteredJdbcList) {
+        ShellInfoVo shellInfoVo = new ShellInfoVo();
+        int jdbcClusterLength = filteredJdbcList.get(0).getNodes().size();
+        Map<String, Boolean> result = new HashMap<>();
+        for (int i = 0; i < jdbcClusterLength; i++) {
+            JdbcDbClusterNodeVO jdbcNode = filteredJdbcList.get(0).getNodes().get(i);
+            if (!filteredJdbcList.isEmpty()) {
+                shellInfoVo.setIp(jdbcNode.getIp());
+                shellInfoVo.setPort(Integer.parseInt(jdbcNode.getPort()));
+                shellInfoVo.setUsername(jdbcNode.getUsername());
+                shellInfoVo.setPassword(jdbcNode.getPassword());
+            } else {
+                log.error("JdbcDb not exist.");
+            }
+            getConnectionInfo(shellInfoVo, result);
+        }
+        return result;
+    }
+
+    private void getConnectionInfo(ShellInfoVo shellInfoVo, Map<String, Boolean> result) {
+        String driver = "org.opengauss.Driver";
+        String url = String.format("jdbc:opengauss://%s:%s/postgres", shellInfoVo.getIp(), shellInfoVo.getPort());
+        Connection conn = null;
+        try {
+            Class.forName(driver);
+            conn = DriverManager.getConnection(url, shellInfoVo.getUsername(), encryptionUtils.decrypt(shellInfoVo
+                .getPassword()));
+            result.put(shellInfoVo.getIp() + ":" + shellInfoVo.getPort(), isPrimary(conn));
+        } catch (SQLException | ClassNotFoundException e) {
+            log.error("Connection failed", e);
+            result.put(shellInfoVo.getIp() + ":" + shellInfoVo.getPort(), false);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    log.warn("Failed to close connection", e);
+                }
+            }
+        }
+    }
+
+    private boolean isPrimary(Connection conn) {
+        String sql = "SELECT pg_is_in_recovery()";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            if (rs.next()) {
+                return !rs.getBoolean(1);
+            }
+        } catch (SQLException e) {
+            log.error("The execution of the 'SELECT pg_is_in_recovery()' command failed", e);
+        }
+        return false;
     }
 
     @Override

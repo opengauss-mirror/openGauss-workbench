@@ -33,10 +33,11 @@ import java.util.Optional;
  * @author xielibo
  */
 public enum MainTaskStatus {
-
     NOT_RUN(0, "not run"),
     RUNNING(1, "migrating"),
     FINISH(2, "finish"),
+    SUCCESS(3, "success"),
+    FAIL(4, "fail"),
     INSTALL_PORTAL_ERROR(501, "install_portal_error"),
     CHECK_MIGRATION(3000, "check migration")
     ;

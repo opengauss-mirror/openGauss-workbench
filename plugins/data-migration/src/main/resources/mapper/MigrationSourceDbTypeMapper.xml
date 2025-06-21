@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.opengauss.admin.plugin.mapper.MigrationSourceDbTypeMapper">
+    <select id="getSourceDbType" resultType="java.lang.String">
+        SELECT c.db_type
+        FROM ops_jdbcdb_cluster c
+                 JOIN ops_jdbcdb_cluster_node n ON c.cluster_id = n.cluster_id
+        WHERE n.ip = #{ip} AND n.port = #{port};
+    </select>
+</mapper>

@@ -34,6 +34,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 /**
  * @author xielibo
  * @date 2023/01/14 09:01
@@ -52,8 +54,12 @@ public class TaskParamController extends BaseController {
     public AjaxResult getDefaultGlobalParam() {
         LambdaQueryWrapper<MigrationTaskInitGlobalParam> wrapper = new LambdaQueryWrapper();
         wrapper.orderByAsc(MigrationTaskInitGlobalParam::getId);
-        return AjaxResult.success(taskInitGlobalParamService.list(wrapper));
+        List<MigrationTaskInitGlobalParam> paramList = taskInitGlobalParamService.list(wrapper);
+        paramList.forEach(param -> {
+            if (param.getDefaultParamValue() == null) {
+                param.setDefaultParamValue(param.getParamValue());
+            }
+        });
+        return AjaxResult.success(paramList);
     }
-
-
 }

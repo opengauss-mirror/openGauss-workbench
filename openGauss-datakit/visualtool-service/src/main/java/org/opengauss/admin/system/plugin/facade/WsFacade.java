@@ -49,7 +49,7 @@ public class WsFacade {
      * @param message
      */
     public void sendMessage(String pluginId, String sessionId, String message) {
-        log.info("call to send message. plugin: {}, sessionId: {}, message: {}", pluginId, sessionId, message);
+        log.debug("call to send message. plugin: {}, sessionId: {}, message: {}", pluginId, sessionId, message);
         wsService.sendMessage(pluginId, sessionId, message);
     }
 }

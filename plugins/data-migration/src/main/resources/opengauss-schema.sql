@@ -452,12 +452,26 @@ COMMENT ON COLUMN "public"."tb_migration_task_init_global_param"."id" IS '主键
 
 COMMENT ON COLUMN "public"."tb_migration_task_init_global_param"."param_key" IS '参数key';
 
-COMMENT ON COLUMN "public"."tb_migration_task_init_global_param"."param_value" IS '参数默认值';
+COMMENT ON COLUMN "public"."tb_migration_task_init_global_param"."param_value" IS '参数值';
 
 COMMENT ON COLUMN "public"."tb_migration_task_init_global_param"."param_desc" IS '参数说明';
 
 COMMENT ON TABLE "public"."tb_migration_task_init_global_param" IS '初始全局参数配置表';
 
+CREATE OR REPLACE FUNCTION add_migration_task_init_global_param_field_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''tb_migration_task_init_global_param'' AND COLUMN_NAME = ''default_param_value'' ) = 0
+THEN
+ALTER TABLE public.tb_migration_task_init_global_param ADD COLUMN default_param_value varchar(255) COLLATE "pg_catalog"."default";
+COMMENT ON COLUMN "public"."tb_migration_task_init_global_param"."default_param_value" IS ''默认参数值'';
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_migration_task_init_global_param_field_func();
+
+DROP FUNCTION add_migration_task_init_global_param_field_func;
 
 CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_model" (
   "id" int8 NOT NULL,

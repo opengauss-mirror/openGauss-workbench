@@ -33,7 +33,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Tolerate;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -90,17 +90,17 @@ public class MigrationTask {
     private Integer mainTaskId;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date createTime;
+    private Instant createTime;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date finishTime;
+    private Instant finishTime;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date execTime;
+    private Instant execTime;
 
     @TableField(exist = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date currentTime;
+    private Instant currentTime;
 
 
     @TableField(exist = false)
