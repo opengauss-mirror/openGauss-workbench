@@ -7,11 +7,13 @@
             <div>
               <el-button type="primary" class="mr" @click="addRecordPlayBack('create')">{{
                 $t('transcribe.index.createtask') }}</el-button>
-              <el-popconfirm :title="t('transcribe.index.bulkdelete')" @confirm="deleteSelectedHosts">
-                <template #reference>
-                  <el-button type="primary" class="mr">{{ $t('transcribe.index.bulkdeletebtn') }}</el-button>
-                </template>
-              </el-popconfirm>
+
+              <a-popconfirm :content="$t('transcribe.index.bulkdelete')" type="warning"
+                :ok-text="$t('list.index.confirm')" :cancel-text="$t('list.index.cancel')" @ok="deleteSelectedHosts()"
+                class="aPopConfirmStyle">
+                <el-button type="primary" class="mr">{{ $t('transcribe.index.bulkdeletebtn') }}</el-button>
+              </a-popconfirm>
+
               <el-button class="mr" @click="getListData">{{ $t('detail.index.5q09asiwg4g0') }}</el-button>
             </div>
             <div class="switchside">
@@ -74,18 +76,18 @@
               v-if="scope.row.executionStatus !== TASKSTATE.RUNNING_NUMERIC" :disabled="isButtonDisabled(scope.row)">
               {{ getButtonText(scope.row.executionStatus) }}
             </el-button>
-            <el-popconfirm :title="t('transcribe.index.confirmstop')" @confirm="finishRows(scope.row)" v-else>
-              <template #reference>
-                <el-button link type="primary">{{ $t('transcribe.index.stop') }}</el-button>
-              </template>
-            </el-popconfirm>
-            <el-popconfirm :title="t('transcribe.index.confirmdelete')" @confirm="deleteRows(scope.row)">
-              <template #reference>
-                <el-button link type="danger" :disabled="scope.row.executionStatus === TASKSTATE.RUNNING_NUMERIC">
+            <a-popconfirm :content="$t('transcribe.index.confirmstop')" type="warning" v-else
+              :ok-text="$t('list.index.confirm')" :cancel-text="$t('list.index.cancel')" @ok="finishRows(scope.row)"
+              class="aPopConfirmStyle">
+              <el-button link type="primary">{{ $t('transcribe.index.stop') }}</el-button>
+            </a-popconfirm>
+            <a-popconfirm :content="$t('transcribe.index.confirmdelete')" type="warning" 
+              :ok-text="$t('list.index.confirm')" :cancel-text="$t('list.index.cancel')" @ok="deleteRows(scope.row)"
+              class="aPopConfirmStyle">
+              <el-button link type="danger" :disabled="scope.row.executionStatus === TASKSTATE.RUNNING_NUMERIC">
                   {{ $t('transcribe.index.delete') }}
                 </el-button>
-              </template>
-            </el-popconfirm>
+            </a-popconfirm>
           </template>
         </el-table-column>
       </el-table>
@@ -98,7 +100,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref, toRaw, onBeforeUnmount,computed } from 'vue'
+import { onMounted, reactive, ref, toRaw, onBeforeUnmount, computed } from 'vue'
 import WujieVue from 'wujie-vue3'
 import { useI18n } from 'vue-i18n'
 import {

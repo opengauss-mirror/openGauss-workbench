@@ -1,284 +1,215 @@
 <template>
-  <div class="detail-container" id="migrationDetail">
-    <div class="title-con">
-      <div class="title-left">
-        <div class="title">
-          {{ $t('detail.index.5q09cuenq100', { name: task.taskName }) }}
+  <div class="detail-container common-layout" id="migrationDetail">
+    <div class="mainDetail">
+      <div class="leftContent">
+        <div class="top-content basic-title">
+          <img src="@/assets/images/list.png" width="40" height="40" />
+          <div class="title-right">
+            <el-tooltip :content="task.taskName">
+              <div class="name-text">{{ task.taskName }}</div>
+            </el-tooltip>
+            <el-tag :type="statusColorMap[task?.execStatus] || '--'" class="status-tag">{{
+              execStatusMap(task.execStatus)
+              }}</el-tag>
+          </div>
         </div>
-        <div class="task-status-con">
-          <span class="task-status-title">{{
-            $t('detail.index.5q09asiwekc0')
-          }}</span>
-          <span class="task-status">{{ execStatusMap(task.execStatus) }}</span>
+        <div class="bottom-content basic-info">
+          <div class="info-title">{{ t('detail.index.baseInfo') }}</div>
+          <div class="basicItem" :key="item.label" v-for="(item) in descData" style="margin-bottom:16px">
+            <TextTooltip  class="basicLable" :content="item?.label"></TextTooltip>
+            <TextTooltip class="basicValue" :content="item?.value"></TextTooltip>
+          </div>
         </div>
       </div>
-      <div class="title-right">
-        <a-button v-if="task.execStatus === TaskStatus.Progress" type="primary" @click="stopTask">{{
-          $t('detail.index.5q09asiwffw0') }}</a-button>
+      <div class="rightContent">
+        <div class="top-content statistic">
+          <div class="card-area">
+            <statistic-card :count="totalCount.total" :description="$t('detail.index.subTaskTotal')" type="default"
+              class="mr-16"></statistic-card>
+            <statistic-card :count="totalCount.finishCount" :description="$t('detail.index.migrationComplete')"
+              type="success" class="mr-4"></statistic-card>
+            <statistic-card :count="totalCount.errorCount" :description="$t('detail.index.migrationFail')" type="danger"
+              class="mr-4"></statistic-card>
+            <statistic-card :count="totalCount.checkErrorCount" :description="$t('detail.index.preCheckFail')"
+              type="danger" class="mr-4"></statistic-card>
+            <statistic-card :count="totalCount.runningCount" :description="$t('detail.index.execution')" type="primary"
+              class="mr-4"></statistic-card>
+            <statistic-card :count="totalCount.notRunCount" :description="$t('detail.index.notStarted')" type="wait"
+              class="mr-4"></statistic-card>
+          </div>
+          <div class="button-area">
+            <div class="switchIntervalUpdate">
+              <div class="switchDesc">
+                {{ switchRefreshText }}
+              </div>
+              <el-switch v-model="autoRefresh" :active-value="true" :inactive-value="false" size="small"
+                @change="switchIntervalQueryList"></el-switch>
+            </div>
+            <div class="processTask">
+              <el-button type="primary" @click="stopTask">{{ t('detail.index.migrationEnd') }}</el-button>
+              <el-popconfirm :title="$t('list.index.5q08sf2dk800')" @confirm="deleteTheTask">
+                <template #reference>
+                  <el-button :disabled="task.execStatus !== 0 && task.execStatus !== 2">{{ t('detail.index.delTask')
+                    }}</el-button>
+                </template>
+              </el-popconfirm>
+            </div>
+          </div>
+        </div>
+        <div class="bottom-content main-list">
+          <div class="list-title">
+            {{ t('detail.index.subTaskList') }}
+          </div>
+          <div class="updateBtn">
+            <el-button @click="getSubTaskList">
+              <template #icon>
+                <icon-sync />
+              </template>
+              <template #default>{{ $t('list.index.5q08sf2dj240') }}</template>
+            </el-button>
+          </div>
+          <div class="main-table openDesignTableArea">
+            <el-table :data="tableData" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme">
+              <el-table-column :label="$t('detail.index.5q09asiwg7s0')" prop="id"></el-table-column>
+              <el-table-column :label="$t('detail.index.5q09asiwgb40')" ellipsis tooltip>
+                <template #default="scope">
+                  {{ `${scope.row.sourceDbHost}:${scope.row.sourceDbPort}` }}
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('detail.index.5q09asiwifk0')" prop="sourceDb" ellipsis
+                tooltip></el-table-column>
+              <el-table-column :label="$t('detail.index.5q09asiwijw0')" ellipsis tooltip>
+                <template #default="scope">
+                  {{ `${scope.row.targetDbHost}:${scope.row.targetDbPort}` }}
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('detail.index.5q09asiwing0')" prop="targetDb" ellipsis
+                tooltip></el-table-column>
+              <el-table-column :label="$t('detail.index.5q09asiwiqk0')" ellipsis tooltip>
+                <template #default="scope">
+                  {{
+                    scope.row.migrationModelId === TaskMode.Offline
+                      ? $t('detail.index.5q09asiwiyc0')
+                      : $t('detail.index.5q09asiwj1o0')
+                  }}
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('detail.index.5q09asiwj4g0')" ellipsis tooltip>
+                <template #default="scope">
+                  <span class="mac-txt" @click="handleTerminal(scope.row)"><icon-code-square />
+                    {{ `${scope.row.runHost}（${scope.row.runHostname}）` }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('detail.index.5q09asiwjvg0')" :min-width="180" ellipsis tooltip>
+                <template #default="scope">
+                  <el-tag class="minWid88" :type="statusColorMap[scope.row.execStatus] || '--'"> {{
+                    execSubStatusMap(scope.row.execStatus)
+                  }}</el-tag>
+                  <el-tooltip :title="titleMap(scope.row.execStatus)">
+                    <template #default>
+                      <icon-close-circle-fill
+                        v-if="scope.row.execStatus === SUB_TASK_STATUS.MIGRATION_ERROR || scope.row.execStatus === SUB_TASK_STATUS.CHECK_FAILED"
+                        size="14" style="color: #ff7d01; margin-left: 3px; cursor: pointer" />
+                    </template>
+                    <template #content>
+                      <div v-if="scope.row.execStatus === SUB_TASK_STATUS.MIGRATION_ERROR" class="error-tips">{{
+                        scope.row.statusDesc }}</div>
+                      <div v-if="scope.row.execStatus === SUB_TASK_STATUS.CHECK_FAILED" class="error-tips">
+                        <p v-if="judgeKeyExist(scope.row.statusDesc, 'service_availability')">{{
+                          parseServiceAvailability(scope.row.statusDesc) }}</p>
+                        <p v-if="judgeKeyExist(scope.row.statusDesc, 'database_connect')">{{
+                          parseDatabaseConnect(scope.row.statusDesc) }}</p>
+                        <p>{{ parseDatabasePermission(scope.row.statusDesc) }}</p>
+                        <p
+                          v-if="judgeKeyExist(scope.row.statusDesc, 'increment_param') || judgeKeyExist(scope.row.statusDesc, 'reverse_param')">
+                          {{ parselogParameter(scope.row.statusDesc) }}</p>
+                        <p v-if="judgeKeyExist(scope.row.statusDesc, 'lower_param')">{{
+                          parseLowerParameter(scope.row.statusDesc) }}</p>
+                        <p v-if="judgeKeyExist(scope.row.statusDesc, 'disk_space')">{{
+                          parseDiskSpace(scope.row.statusDesc)
+                        }}</p>
+                        <p v-if="judgeKeyExist(scope.row.statusDesc, 'mysql_encryption')">{{
+                          parseMysqlEncryption(scope.row.statusDesc) }}</p>
+                        <p v-if="judgeKeyExist(scope.row.statusDesc, 'sql_compatibility')">{{
+                          parseOpenGaussBDB(scope.row.statusDesc) }}</p>
+                        <p v-if="judgeKeyExist(scope.row.statusDesc, 'replication_slots')">{{
+                          parseReplicationNumber(scope.row.statusDesc) }}</p>
+                        <p v-if="judgeKeyExist(scope.row.statusDesc, 'enable_slot_log')">{{
+                          parseEnableSlotLog(scope.row.statusDesc) }}</p>
+                        <p v-if="judgeKeyExist(scope.row.statusDesc, 'hba_conf')">{{
+                          parseHbaConf(scope.row.statusDesc) }}
+                        </p>
+                        <p v-if="judgeKeyExist(scope.row.statusDesc, 'gtid_set')">{{
+                          parseGtidSet(scope.row.statusDesc) }}
+                        </p>
+                      </div>
+                    </template>
+                  </el-tooltip>
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('detail.index.5q09asiwka80')" align="center" width="200" fixed="right">
+                <template #default="scope">
+                  <el-button size="small" :disabled="scope.row.execStatus === SUB_TASK_STATUS.NOT_RUN" type="text"
+                    @click="handleDetail(scope.row)">
+                    {{
+                      $t('detail.index.5q09asiwkds0')
+                    }}
+                  </el-button>
+                  <el-popconfirm :title="tooltipMap(scope.row.checkDataLevelingAndIncrementFinish)"
+                    @confirm="stopSubIncrease(scope.row)">
+                    <template #reference>
+                      <el-button v-if="(scope.row.migrationModelId === TaskMode.Online &&
+                        scope.row.execStatus ===
+                        SUB_TASK_STATUS.INCREMENTAL_RUNNING) ||
+                        scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_FINISHED
+                      " size="small" type="text" :loading="scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_FINISHED
+                            ">
+                        {{
+                          $t('detail.index.5q09asiwkkw0')
+                        }}
+                      </el-button>
+                    </template>
+
+                  </el-popconfirm>
+                  <el-button v-if="scope.row.migrationModelId === TaskMode.Online &&
+                    scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_STOPPED
+                  " size="small" type="text" @click="startSubReverse(scope.row)">
+                    {{
+                      $t('detail.index.5q09asiwkq40')
+                    }}
+                  </el-button>
+                  <el-button v-if="scope.row.execStatus !== SUB_TASK_STATUS.MIGRATION_FINISH" size="small" type="text"
+                    @click="stopSubTask(scope.row)">
+                    {{
+                      $t('detail.index.5q09asiwl5g0')
+                    }}
+                  </el-button>
+                  <el-button size="small" type="text" @click="handleLog(scope.row)">
+                    {{
+                      $t('detail.index.5q09asiwlac0')
+                    }}
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-pagination :total="total" :layout="layout" v-model:page-size="pagination.pageSize"
+              v-model:current-page="pagination.pageNum" @change="getSubTaskList"></el-pagination>
+          </div>
+        </div>
       </div>
     </div>
-    <a-divider />
-    <div class="desc-con">
-      <a-descriptions :data="descData" layout="inline-horizontal" table-layout="fixed" bordered />
-    </div>
-    <div class="progress-con">
-      <span class="progress-info">{{ $t('detail.index.5q09asiwg0g0') }}</span>
-      <a-progress size="large" :percent="task.execStatus === TaskStatus.Completed
-        ? 1
-        : Number(task.execProgress) || 0
-        " />
-      <a-button type="text" @click="loopSubTaskStatus">
-        <template #icon>
-          <icon-refresh />
-        </template>
-        <template #default>{{ $t('detail.index.5q09asiwg4g0') }}</template>
-      </a-button>
-    </div>
-    <div class="table-con">
-      <a-table :data="tableData" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme"
-        :pagination="pagination" @page-change="pageChange">
-        <template #columns>
-          <a-table-column :title="$t('detail.index.5q09asiwg7s0')" data-index="id" :width="90"></a-table-column>
-          <a-table-column :title="$t('detail.index.5q09asiwgb40')" :width="160" ellipsis tooltip>
-            <template #cell="{ record }">
-              {{ record.sourceDbHost + ':' + record.sourceDbPort }}
-            </template>
-          </a-table-column>
-          <a-table-column :title="$t('detail.index.5q09asiwifk0')" data-index="sourceDb" :width="120" ellipsis
-            tooltip></a-table-column>
-          <a-table-column :title="$t('detail.index.5q09asiwijw0')" :width="160" ellipsis tooltip>
-            <template #cell="{ record }">
-              {{ record.targetDbHost + ':' + record.targetDbPort }}
-            </template>
-          </a-table-column>
-          <a-table-column :title="$t('detail.index.5q09asiwing0')" data-index="targetDb" :width="120" ellipsis
-            tooltip></a-table-column>
-          <a-table-column :title="$t('detail.index.5q09asiwiqk0')" :width="120" ellipsis tooltip>
-            <template #cell="{ record }">
-              {{
-                record.migrationModelId === TaskMode.Offline
-                ? $t('detail.index.5q09asiwiyc0')
-                : $t('detail.index.5q09asiwj1o0')
-              }}
-            </template>
-          </a-table-column>
-          <a-table-column :title="$t('detail.index.5q09asiwj4g0')" :width="300" ellipsis tooltip>
-            <template #cell="{ record }">
-              <span class="mac-txt" @click="handleTerminal(record)"><icon-code-square /> {{ record.runHost }}（{{
-                record.runHostname
-              }}）</span>
-            </template>
-          </a-table-column>
-          <a-table-column :title="$t('detail.index.5q09asiwjvg0')" :width="150" ellipsis tooltip>
-            <template #cell="{ record }">
-              <span>{{ execSubStatusMap(record.execStatus) }}</span>
-              <a-popover :title="titleMap(record.execStatus)">
-                <icon-close-circle-fill
-                  v-if="record.execStatus === SUB_TASK_STATUS.MIGRATION_ERROR || record.execStatus === SUB_TASK_STATUS.CHECK_FAILED"
-                  size="14" style="color: #ff7d01; margin-left: 3px; cursor: pointer" />
-                <template #content>
-                  <div v-if="record.execStatus === SUB_TASK_STATUS.MIGRATION_ERROR" class="error-tips">{{
-                    record.statusDesc }}</div>
-                  <div v-if="record.execStatus === SUB_TASK_STATUS.CHECK_FAILED" class="error-tips">
-                    <p v-if="judgeKeyExist(record.statusDesc, 'service_availability') === true">{{
-                      parseServiceAvailability(record.statusDesc) }}</p>
-                    <p v-if="judgeKeyExist(record.statusDesc, 'database_connect') === true">{{
-                      parseDatabaseConnect(record.statusDesc) }}</p>
-                    <p>{{ parseDatabasePermission(record.statusDesc) }}</p>
-                    <p
-                      v-if="judgeKeyExist(record.statusDesc, 'increment_param') === true || judgeKeyExist(record.statusDesc, 'reverse_param') === true">
-                      {{ parselogParameter(record.statusDesc) }}</p>
-                    <p v-if="judgeKeyExist(record.statusDesc, 'lower_param') === true">{{
-                      parseLowerParameter(record.statusDesc) }}</p>
-                    <p v-if="judgeKeyExist(record.statusDesc, 'disk_space') === true">{{ parseDiskSpace(record.statusDesc)
-                    }}</p>
-                    <p v-if="judgeKeyExist(record.statusDesc, 'mysql_encryption') === true">{{
-                      parseMysqlEncryption(record.statusDesc) }}</p>
-                    <p v-if="judgeKeyExist(record.statusDesc, 'sql_compatibility') === true">{{
-                      parseOpenGaussBDB(record.statusDesc) }}</p>
-                    <p v-if="judgeKeyExist(record.statusDesc, 'replication_slots') === true">{{
-                      parseReplicationNumber(record.statusDesc) }}</p>
-                    <p v-if="judgeKeyExist(record.statusDesc, 'enable_slot_log') === true">{{
-                      parseEnableSlotLog(record.statusDesc) }}</p>
-                    <p v-if="judgeKeyExist(record.statusDesc, 'hba_conf') === true">{{ parseHbaConf(record.statusDesc) }}
-                    </p>
-                    <p v-if="judgeKeyExist(record.statusDesc, 'gtid_set') === true">{{
-                      parseGtidSet(record.statusDesc) }}</p>
-                  </div>
-                </template>
-              </a-popover>
-            </template>
-          </a-table-column>
-          <a-table-column :title="$t('detail.index.5q09asiwka80')" align="center" :width="340" fixed="right">
-            <template #cell="{ record }">
-              <a-button size="mini" type="text" @click="handleDetail(record)">
-                <template #icon>
-                  <icon-eye />
-                </template>
-                <template #default>{{
-                  $t('detail.index.5q09asiwkds0')
-                }}</template>
-              </a-button>
-              <a-popconfirm :content="tooltipMap(record.checkDataLevelingAndIncrementFinish)"
-                @ok="stopSubIncrease(record)">
-                <a-button v-if="(record.migrationModelId === TaskMode.Online &&
-                  record.execStatus ===
-                  SUB_TASK_STATUS.INCREMENTAL_RUNNING) ||
-                  record.execStatus === SUB_TASK_STATUS.INCREMENTAL_FINISHED
-                  " size="mini" type="text" :loading="record.execStatus === SUB_TASK_STATUS.INCREMENTAL_FINISHED
-    ">
-                  <template #icon>
-                    <icon-pause />
-                  </template>
-                  <template #default>{{
-                    $t('detail.index.5q09asiwkkw0')
-                  }}</template>
-                </a-button>
-              </a-popconfirm>
-              <a-button v-if="record.migrationModelId === TaskMode.Online &&
-                  record.execStatus === SUB_TASK_STATUS.INCREMENTAL_STOPPED
-                  " size="mini" type="text" @click="startSubReverse(record)" :loading="startReverseLoading">
-                <template #icon>
-                  <icon-play-arrow />
-                </template>
-                <template #default>{{
-                  $t('detail.index.5q09asiwkq40')
-                }}</template>
-              </a-button>
-              <a-popconfirm v-if="record.execStatus !== SUB_TASK_STATUS.MIGRATION_FINISH"
-                :content="$t('list.index.endMigration')" @ok="stopSubTask(record)">
-                <a-button size="mini" type="text">
-                  <template #icon>
-                    <icon-stop />
-                  </template>
-                  <template #default>{{
-                    $t('detail.index.5q09asiwl5g0')
-                  }}</template>
-                </a-button>
-              </a-popconfirm>
-              <a-button size="mini" type="text" @click="handleLog(record)">
-                <template #icon>
-                  <icon-file />
-                </template>
-                <template #default>{{
-                  $t('detail.index.5q09asiwlac0')
-                }}</template>
-              </a-button>
-            </template>
-          </a-table-column>
-        </template>
-      </a-table>
-    </div>
-
-    <!-- sub task detail -->
-    <sub-task-detail v-model:open="subTaskDetailVisible" :task-info="task" :sub-task-id="subTaskId" :tab="tabIndex" />
-
-    <!-- machine terminal -->
     <mac-terminal v-model:open="terminalVisible" :host="macHost" />
-
-    <!-- reverse error dialog -->
-    <a-modal v-model:visible="reverseVisible" width="800px" :title="$t('detail.index.5qofnua1tf40')" title-align="start"
-      :footer="false">
-      <div class="config-con">
-        <a-row :gutter="20">
-          <a-col :span="12">
-            <div class="cur-config">
-              <div class="config-title">
-                {{ $t('detail.index.5qofnua40ig0') }}
-              </div>
-              <a-alert class="config-item" :type="reverseConfig.replacationPermise ? 'success' : 'error'">
-                <template #title>
-                  {{ $t('detail.index.5qofnua4a4g0') }}
-                </template>
-                {{
-                  reverseConfig.replacationPermise
-                  ? $t('detail.index.5qofnua4abs0')
-                  : $t('detail.index.5qofnua4ag40')
-                }}
-              </a-alert>
-              <a-alert class="config-item" :type="reverseConfig.sslValue === 'NULL' ||
-                    reverseConfig.walLevelValue === 'NULL'
-                    ? 'error'
-                    : 'success'
-                  ">
-                <template #title>
-                  {{ $t('detail.index.5qofom5ifnk0') }}
-                </template>
-                <p>
-                  {{
-                    reverseConfig.sslValue === 'NULL'
-                    ? $t('detail.index.5qofqisf3jc0')
-                    : `ssl=${reverseConfig.sslValue};`
-                  }}
-                </p>
-                <p>
-                  {{
-                    reverseConfig.walLevelValue === 'NULL'
-                    ? $t('detail.index.5qofqisf68w0')
-                    : `wal_level=${reverseConfig.walLevelValue};`
-                  }}
-                </p>
-              </a-alert>
-              <a-alert class="config-item" :type="reverseConfig.rolcanlogin === 'false' ||
-                    reverseConfig.rolreplication === 'false'
-                    ? 'error'
-                    : 'success'
-                  ">
-                <template #title>
-                  {{ $t('detail.index.5qofpdnmtkk0') }}
-                </template>
-                <a-descriptions :data="replicationData" size="medium" layout="vertical" bordered />
-              </a-alert>
-            </div>
-          </a-col>
-          <a-col :span="12">
-            <div class="correct-config">
-              <div class="config-title">
-                {{ $t('detail.index.5qofnua4akg0') }}
-              </div>
-              <a-alert class="config-item" type="success">
-                <template #title>
-                  {{ $t('detail.index.5qofnua4a4g0') }}
-                </template>
-                host replication {{ reverseConfig.dbUser }} 0.0.0.0/0 sha256
-                host replication {{ reverseConfig.dbUser }} ::/0 sha256
-              </a-alert>
-              <a-alert class="config-item" type="success">
-                <template #title>
-                  {{ $t('detail.index.5qofom5ifnk0') }}
-                </template>
-                <p>ssl=on;</p>
-                <p>wal_level=logical;</p>
-              </a-alert>
-              <a-alert class="config-item" type="success">
-                <template #title>
-                  {{ $t('detail.index.5qofpdnmtkk0') }}
-                </template>
-                <a-descriptions :data="[
-                  {
-                    label: 'rolcanlogin',
-                    value: 't'
-                  },
-                  {
-                    label: 'rolreplication',
-                    value: 't'
-                  }
-                ]" size="medium" layout="vertical" bordered />
-              </a-alert>
-            </div>
-          </a-col>
-        </a-row>
-      </div>
-    </a-modal>
   </div>
 </template>
 
 <script setup>
-import { reactive, ref, onMounted, onBeforeUnmount } from 'vue'
-import { Message } from '@arco-design/web-vue'
-import SubTaskDetail from './components/SubTaskDetail.vue'
+import { reactive, ref, onMounted, onBeforeUnmount, computed, provide } from 'vue'
+import StatisticCard from '@/components/statisticCard'
 import MacTerminal from './components/MacTerminal.vue'
-import { stop } from '@/api/list'
+import { stop, deleteTask } from '@/api/list'
+import usePagination from '@/utils/usePagination'
+import showMessage from '@/utils/showMessage'
+import TextTooltip from "@/components/textTooltip/index.vue";
 import {
   taskDetail,
   refreshStatus,
@@ -289,27 +220,54 @@ import {
 } from '@/api/detail'
 import useTheme from '@/hooks/theme'
 import { useI18n } from 'vue-i18n'
+import { useRouter, useRoute } from 'vue-router'
 import { SUB_TASK_STATUS } from '@/utils/constants'
-
+const route = useRoute();
+const router = useRouter();
 const { t } = useI18n()
 
 const { currentTheme } = useTheme()
-
+const autoRefresh = ref(true)
+const switchRefreshText = computed(() => {
+  return autoRefresh.value ? t('components.SubTaskDetail.autoRefresh') : t('components.SubTaskDetail.stoprefresh')
+})
 const task = ref({})
-const descData = ref([])
+const hosts = ref([]);
+const descData = computed(() => [
+  {
+    label: t('detail.index.taskName'),
+    value: task.value?.taskName || '--',
+  },
+  {
+    label: t('detail.index.5q09asiwnow0'),
+    value: hosts.value.length ? `${t('detail.index.5q09efwo3nc0', {
+      num: hosts.value.length
+    })}（${hosts.value?.map((item) => item.hostName)}）` : '--',
+  },
+  {
+    label: t('detail.index.5q09asiwnks0'),
+    value: task.value.createUser || '--'
+  },
+
+  {
+    label: t('detail.index.5q09asiwnrs0'),
+    value: task.value.createTime || '--'
+  },
+  {
+    label: t('detail.index.5q09asiwnw00'),
+    value: task.value.execTime || '--'
+  }
+])
+
 let timerTop = null
 let timerDown = null
 let timerStatus = null
 
-const queryParams = reactive({
-  pageNum: 1,
-  pageSize: 10
-})
-const pagination = reactive({
-  total: 0,
-  current: 1,
-  pageSize: 10
-})
+const {
+  total,
+  pagination,
+  layout
+} = usePagination()
 const tableData = ref([])
 
 const reverseVisible = ref(false)
@@ -330,12 +288,6 @@ const execStatusMap = (status) => {
 const TaskMode = reactive({
   Offline: 1,
   Online: 2
-})
-
-const TaskStatus = reactive({
-  Unstart: 0,
-  Progress: 1,
-  Completed: 2
 })
 
 // sub task status map
@@ -365,6 +317,29 @@ const execSubStatusMap = (status) => {
   return maps[status]
 }
 
+const statusColorMap = {
+  0: 'info',
+  1: 'primary',
+  2: 'primary',
+  3: 'primary',
+  4: 'primary',
+  5: 'primary',
+  6: 'primary',
+  7: 'primary',
+  8: 'primary',
+  9: 'primary',
+  10: 'primary',
+  11: 'primary',
+  12: 'primary',
+  13: 'primary',
+  30: 'danger',
+  40: 'danger',
+  100: 'success',
+  500: 'danger',
+  1000: 'primary',
+  3000: 'danger'
+}
+
 const titleMap = (status) => {
   const maps = {
     500: t('detail.index.5q09asiwk6k0'),
@@ -382,18 +357,20 @@ const tooltipMap = (checkDataLevelingAndIncrementFinish) => {
   return maps[checkDataLevelingAndIncrementFinish]
 }
 
-const pageChange = (current) => {
-  queryParams.pageNum = current
-  pagination.current = current
-  getSubTaskList()
-}
-
 const subTaskDetailVisible = ref(false)
 const subTaskId = ref()
 const tabIndex = ref(1)
 
 const terminalVisible = ref(false)
 const macHost = ref({})
+
+const switchIntervalQueryList = () => {
+  // Determine whether it is enabled, and poll if it is enabled
+  if (autoRefresh.value) {
+    // Query the APIs related to polling
+    queryDetailInfo()
+  }
+}
 
 const handleTerminal = (row) => {
   terminalVisible.value = true
@@ -404,23 +381,27 @@ const handleDetail = (row) => {
   subTaskDetailVisible.value = true
   subTaskId.value = row.id
   tabIndex.value = 1
+  window.$wujie?.props.methods.jump({
+    name: `Static-pluginData-migrationSubTaskDetail`,
+    query: {
+      id: row.id
+    }
+  })
 }
 
+provide('subTaskId', subTaskId)
 const judgeKeyExist = (content, key) => {
-  console.log('key', key)
-  var result = ref(false)
-  var obj = JSON.parse(content)
+  let result = false;
+  const obj = JSON.parse(content);
   if (key in obj) {
-    result = true
+    result = true;
   }
-  return result
+  return result;
 }
 
 const parseServiceAvailability = (content) => {
-  var result = t('detail.index.5qtkk97a2eo1')
-  console.log('content', content)
-  var obj = JSON.parse(content)
-  console.log('obj.service_availability', obj.service_availability)
+  const obj = JSON.parse(content)
+  let result = t('detail.index.5qtkk97a2eo1')
   if (obj.service_availability === 0) {
     result = result + t('detail.index.5qtkk97a2eo2')
   } else {
@@ -430,9 +411,8 @@ const parseServiceAvailability = (content) => {
 }
 
 const parseDatabaseConnect = (content) => {
-  var result = t('detail.index.5qtkk97a2eo4')
-  var obj = JSON.parse(content)
-  console.log('obj.database_connect', obj.database_connect)
+  const obj = JSON.parse(content)
+  let result = t('detail.index.5qtkk97a2eo4')
   if (obj.database_connect.mysql === 0) {
     result = result + t('detail.index.5qtkk97a2eo5')
   } else {
@@ -447,10 +427,9 @@ const parseDatabaseConnect = (content) => {
 }
 
 const parseDatabasePermission = (content) => {
-  var result = t('detail.index.5qtkk97a2eo9')
-  var obj = JSON.parse(content)
+  const obj = JSON.parse(content)
+  let result = t('detail.index.5qtkk97a2eo9')
   if ("full_permission" in obj) {
-    console.log('obj.full_permission', obj.full_permission)
     if (obj.full_permission.mysql === 0) {
       result = result + t('detail.index.5qtkk97a2e10')
     } else if (obj.full_permission.mysql === 1) {
@@ -468,13 +447,12 @@ const parseDatabasePermission = (content) => {
   }
 
   if ("increment_permission" in obj) {
-    console.log('obj.increment_permission', obj.increment_permission)
     if (obj.increment_permission.mysql === 0) {
       result = result + t('detail.index.5qtkk97a2e16')
     } else if (obj.increment_permission.mysql === 1) {
       result = result + t('detail.index.5qtkk97a2e17')
     } else {
-      result = result + t('detail.index.5qtkk97a2e19')
+      result = result + t('detail.index.5qtkk97a2e18')
     }
     if (obj.increment_permission.opengauss === 0) {
       result = result + t('detail.index.5qtkk97a2e19')
@@ -486,7 +464,6 @@ const parseDatabasePermission = (content) => {
   }
 
   if ("reverse_permission" in obj) {
-    console.log('content.reverse_permission', obj.reverse_permission)
     if (obj.reverse_permission.mysql === 0) {
       result = result + t('detail.index.5qtkk97a2e22')
     } else if (obj.reverse_permission.mysql === 1) {
@@ -506,8 +483,8 @@ const parseDatabasePermission = (content) => {
 }
 
 const parselogParameter = (content) => {
-  var obj = JSON.parse(content)
-  var result = t('detail.index.5qtkk97a2e28')
+  const obj = JSON.parse(content)
+  let result = t('detail.index.5qtkk97a2e28')
   if ("increment_param" in obj) {
     if (obj.increment_param.mysql.result === 0) {
       result = result + t('detail.index.5qtkk97a2e29')
@@ -537,9 +514,8 @@ const parselogParameter = (content) => {
 }
 
 const parseLowerParameter = (content) => {
-  var obj = JSON.parse(content)
-  var result = t('detail.index.5qtkk97a2e41')
-  console.log('obj.disk_space', obj.lower_param)
+  const obj = JSON.parse(content)
+  let result = t('detail.index.5qtkk97a2e41')
   if (obj.lower_param.result === 0) {
     result = result + t('detail.index.5qtkk97a2e42')
   } else if (obj.lower_param.result === 1) {
@@ -552,9 +528,8 @@ const parseLowerParameter = (content) => {
 }
 
 const parseDiskSpace = (content) => {
-  var obj = JSON.parse(content)
-  var result = t('detail.index.5qtkk97a2e36')
-  console.log('obj.disk_space', obj.disk_space)
+  const obj = JSON.parse(content)
+  let result = t('detail.index.5qtkk97a2e36')
   if (obj.disk_space.result === 0) {
     result = result + t('detail.index.5qtkk97a2e37')
   } else if (obj.disk_space.result === 1) {
@@ -566,9 +541,8 @@ const parseDiskSpace = (content) => {
 }
 
 const parseMysqlEncryption = (content) => {
-  var obj = JSON.parse(content)
-  var result = t('detail.index.5qtkk97a2e46')
-  console.log('obj.mysql_encryption', obj.mysql_encryption)
+  const obj = JSON.parse(content)
+  let result = t('detail.index.5qtkk97a2e46')
   if (obj.mysql_encryption.result === 0) {
     result = result + t('detail.index.5qtkk97a2e47')
   } else if (obj.mysql_encryption.result === 1) {
@@ -578,9 +552,8 @@ const parseMysqlEncryption = (content) => {
 }
 
 const parseOpenGaussBDB = (content) => {
-  var obj = JSON.parse(content)
-  var result = t('detail.index.5qtkk97a2e50')
-  console.log('obj.sql_compatibility', obj.sql_compatibility)
+  const obj = JSON.parse(content)
+  let result = t('detail.index.5qtkk97a2e50')
   if (obj.sql_compatibility.result === 0) {
     result = result + t('detail.index.5qtkk97a2e51')
   } else if (obj.sql_compatibility.result === 1) {
@@ -590,9 +563,8 @@ const parseOpenGaussBDB = (content) => {
 }
 
 const parseReplicationNumber = (content) => {
-  var obj = JSON.parse(content)
-  var result = t('detail.index.5qtkk97a2e54')
-  console.log('obj.replication_slots', obj.replication_slots)
+  const obj = JSON.parse(content)
+  let result = t('detail.index.5qtkk97a2e54')
   if (obj.replication_slots.result === 0) {
     result = result + t('detail.index.5qtkk97a2e55')
   } else if (obj.replication_slots.result === 1) {
@@ -602,9 +574,8 @@ const parseReplicationNumber = (content) => {
 }
 
 const parseEnableSlotLog = (content) => {
-  var obj = JSON.parse(content)
-  var result = t('detail.index.5qtkk97a2e58')
-  console.log('obj.enable_slot_log', obj.enable_slot_log)
+  const obj = JSON.parse(content)
+  let result = t('detail.index.5qtkk97a2e58')
   if (obj.enable_slot_log.result === 0) {
     result = result + t('detail.index.5qtkk97a2e59')
   } else if (obj.enable_slot_log.result === 1) {
@@ -620,7 +591,6 @@ const parseEnableSlotLog = (content) => {
 const parseHbaConf = (content) => {
   const obj = JSON.parse(content)
   let result = t('detail.index.5qtkk97a2e61')
-
   switch (obj.hba_conf.result) {
     case 0:
       return result + t('detail.index.5qtkk97a2e51')
@@ -665,12 +635,24 @@ const handleLog = (row) => {
   subTaskDetailVisible.value = true
   subTaskId.value = row.id
   tabIndex.value = 3
+  window.$wujie?.props.methods.jump({
+    name: `Static-pluginData-migrationSubTaskDetail`,
+    query: {
+      id: row.id,
+      tab: 'log'
+    }
+  })
+}
+
+const deleteTheTask = async () => {
+  await deleteTask(task.value.id)
+  showMessage('success', 'Delete success')
 }
 
 // stop task
 const stopTask = async () => {
   await stop(task.value.id)
-  Message.success('Stop success')
+  showMessage('success', 'Stop success')
   getTaskDetail()
   getSubTaskList()
 }
@@ -678,7 +660,7 @@ const stopTask = async () => {
 // stop sub task full
 const stopSubTask = (row) => {
   subTaskFinish(row.id).then(() => {
-    Message.success('Stop success')
+    showMessage('success', 'Stop success')
     loopSubTaskStatus()
     getSubTaskList()
   })
@@ -687,25 +669,21 @@ const stopSubTask = (row) => {
 // stop sub task increase
 const stopSubIncrease = (row) => {
   subTaskStopIncremental(row.id).then(() => {
-    Message.success('Stop success')
+    showMessage('success', 'Stop success')
     loopSubTaskStatus()
     getSubTaskList()
   })
 }
 
 // start sub task reverse
-const startReverseLoading = ref(false)
 const startSubReverse = (row) => {
-  startReverseLoading.value = true
   subTaskStartReverse(row.id)
     .then(() => {
-      Message.success('Start success')
-      startReverseLoading.value = false
+      showMessage('success', 'Start success')
       loopSubTaskStatus()
       getSubTaskList()
     })
     .catch((e) => {
-      startReverseLoading.value = false
       if (e.code === 50154) {
         reverseConfig.value = e.data
         replicationData.value = [
@@ -721,20 +699,23 @@ const startSubReverse = (row) => {
         reverseVisible.value = true
       }
       if (e.code === 50155) {
-        Message.error(t('detail.index.5qtkk99a2eo0'))
+        showMessage('error', t('detail.index.5qtkk99a2eo0'))
       }
     })
 }
 
-const loopSubTaskStatus = () => {
+const loopSubTaskStatus = (loopQuery) => {
   timerStatus && clearTimeout(timerStatus)
-  const id = window.$wujie?.props.data.id
+  const id = window.$wujie?.props.data.id || 74
+  if (loopQuery === 'loopQuery' && !autoRefresh.value) {
+    return
+  }
   refreshStatus(id)
     .then(() => {
-      if (task.value.execStatus !== 2) {
+      if (task.value.execStatus !== 2 && autoRefresh.value) {
         timerStatus = setTimeout(() => {
-          loopSubTaskStatus()
-        }, 10000)
+          loopSubTaskStatus('loopQuery')
+        }, 3000)
       }
     })
     .catch(() => {
@@ -743,94 +724,61 @@ const loopSubTaskStatus = () => {
     })
 }
 
-const getSubTaskList = () => {
+const getSubTaskList = (loopQuery) => {
   timerDown && clearTimeout(timerDown)
-  const id = window.$wujie?.props.data.id
+  const id = window.$wujie?.props.data.id || 74
+  if (loopQuery === 'loopQuery' && !autoRefresh.value) {
+    return
+  }
   subTaskList(id, {
-    ...queryParams
+    ...pagination.value
   })
     .then((res) => {
-      tableData.value = res.rows
-      pagination.total = res.total
+      tableData.value = res.rows.map(item => {
+        return item
+      })
+
+      total.value = res.total
       if (task.value.execStatus !== 2) {
         timerDown = setTimeout(() => {
-          getSubTaskList()
+          getSubTaskList('loopQuery')
         }, 5000)
       }
     })
-    .catch(() => {
+    .catch((err) => {
       timerDown && clearTimeout(timerDown)
       timerDown = null
     })
 }
 
-const getTaskDetail = () => {
+const totalCount = ref({
+  total: 0,
+  notRunCount: 0,
+  runningCount: 0,
+  finishCount: 0,
+  errorCount: 0,
+  checkErrorCount: 0
+})
+
+const getTaskDetail = (loopQuery) => {
   timerTop && clearTimeout(timerTop)
-  const id = window.$wujie?.props.data.id
-  taskDetail(id)
-    .then((res) => {
-      task.value = res.data.task
-      const taskInfo = res.data.task
-      const offlineCounts = res.data.offlineCounts
-      const onlineCounts = res.data.onlineCounts
-      const hosts = res.data.hosts
-      descData.value = [
-        {
-          label: () => t('detail.index.5q09asiwnks0'),
-          value: taskInfo.createUser
-        },
-        {
-          label: () => t('detail.index.5q09asiwnmw0'),
-          value: offlineCounts['total'] + onlineCounts['total']
-        },
-        {
-          label: () => t('detail.index.5q09asiwnow0'),
-          value: () =>
-            `${t('detail.index.5q09efwo3nc0', {
-              num: hosts.length
-            })}（${hosts.map((item) => item.hostName)}）`
-        },
-        {
-          label: () => t('detail.index.5q09asiwnrs0'),
-          value: taskInfo.createTime
-        },
-        {
-          label: () => t('detail.index.5q09asiwnu40'),
-          value: () =>
-            t('detail.index.5q09frs8fh00', {
-              total: offlineCounts['total'],
-              notRunCount: offlineCounts['notRunCount'],
-              runningCount: offlineCounts['runningCount'],
-              finishCount: offlineCounts['finishCount'],
-              errorCount: offlineCounts['errorCount'],
-              checkErrorCount: offlineCounts['checkErrorCount']
-            }),
-          span: 2
-        },
-        {
-          label: () => t('detail.index.5q09asiwnw00'),
-          value: taskInfo.execTime
-        },
-        {
-          label: () => t('detail.index.5q09asiwny00'),
-          value: () =>
-            t('detail.index.5q09frs8fh00', {
-              total: onlineCounts['total'],
-              notRunCount: onlineCounts['notRunCount'],
-              runningCount: onlineCounts['runningCount'],
-              finishCount: onlineCounts['finishCount'],
-              errorCount: onlineCounts['errorCount'],
-              checkErrorCount: onlineCounts['checkErrorCount']
-            }),
-          span: 2
-        }
-      ]
-      if (task.value.execStatus !== 2) {
-        timerTop = setTimeout(() => {
-          getTaskDetail()
-        }, 5000)
-      }
+  const id = window.$wujie?.props.data.id || 74
+
+  if (loopQuery === 'loopQuery' && !autoRefresh.value) {
+    return
+  }
+  taskDetail(id).then((res) => {
+    task.value = res.data.task
+    Object.keys(totalCount.value).forEach(e => {
+      totalCount.value[e] = 0 + res.data.offlineCounts[e] + res.data.onlineCounts[e]
     })
+    hosts.value = res.data.hosts
+    if (task.value.execStatus !== 2) {
+      timerTop = setTimeout(() => {
+        getTaskDetail('loopQuery')
+      }, 5000)
+    }
+  })
     .catch(() => {
       timerTop && clearTimeout(timerTop)
       timerTop = null
@@ -838,12 +786,16 @@ const getTaskDetail = () => {
 }
 
 onMounted(() => {
+  queryDetailInfo();
+})
+
+const queryDetailInfo = () => {
   getTaskDetail()
   getSubTaskList()
   setTimeout(() => {
     loopSubTaskStatus()
   }, 3000)
-})
+}
 
 onBeforeUnmount(() => {
   timerTop && clearTimeout(timerTop)
@@ -851,87 +803,169 @@ onBeforeUnmount(() => {
   timerStatus && clearTimeout(timerStatus)
 })
 </script>
-
 <style lang="less" scoped>
 .detail-container {
-  position: relative;
+  height: calc(100vh - 114px);
+  min-height: calc(100vh - 114px);
+  background-color: var(--o-bg-color-light);
+  padding: 20px 24px 28px 20px;
+  overflow-x: auto;
 
-  .title-con {
-    padding: 20px 20px 0;
+  .mainDetail {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    gap: 24px;
+    height: 100%;
+    min-width: 1000px;
 
-    .title-left {
+    .leftContent {
+      width: 292px;
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      gap: 16px;
 
-      .title {
-        font-size: 20px;
-        color: var(--color-text-1);
-      }
-
-      .task-status-con {
-        margin-left: 40px;
+      .basic-title {
+        height: 80px;
+        background-color: var(--o-bg-color-light2);
         display: flex;
+        padding: 0 24px;
         align-items: center;
+        gap: 16px;
 
-        .task-status-title {
-          color: var(--color-text-1);
-          white-space: nowrap;
-          margin-right: 10px;
-          display: flex;
-          align-items: center;
+        img {
+          width: 40px;
+          height: 40px;
         }
 
-        .task-status {
-          color: rgb(var(--primary-6));
+        .title-right {
+          flex: 1;
+          width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          color: var(--o-text-color-primary);
+
+          .name-text {
+            height: 24px;
+            line-height: 24px;
+            font-size: 16px;
+            font-weight: bolder;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .el-tag {
+            width: fit-content;
+            padding: 4px 24px;
+            font-size: 12px;
+          }
+        }
+      }
+
+      .basic-info {
+        flex: 1;
+        padding: 20px 24px;
+        background-color: var(--o-bg-color-light2);
+        color: var(--o-text-color-primary);
+
+        .info-title {
+          height: 24px;
+          line-height: 24px;
+          font-size: 16px;
+          font-weight: bolder;
+        }
+
+        .basicItem {
+          display: flex;
+          height: 24px;
+          margin-top: 12px;
+          align-items: center;
+
+          .basicLable {
+            width: 106px;
+          }
+
+          .basicValue {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
         }
       }
     }
-  }
 
-  .desc-con {
-    padding: 0 20px;
-  }
+    .rightContent {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      width: 0;
+      gap: 16px;
 
-  .progress-con {
-    margin-top: 20px;
-    padding: 0 20px;
-    display: flex;
-    align-items: center;
+      .top-content {
+        height: 80px;
+        display: flex;
+        width: 100%;
 
-    .progress-info {
-      white-space: nowrap;
-      margin-right: 10px;
-      color: var(--color-text-1);
+        .card-area {
+          flex: 1;
+          display: flex;
+          gap: 4px;
+          max-width: calc(100% - 192px);
+
+          .main-card {
+            max-width: 182px;
+            background-color: var(--o-bg-color-light2);
+            color: var(--o-text-color-primary);
+
+            &:first-child {
+              margin-right: 12px;
+            }
+          }
+        }
+
+        .button-area {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+
+          .switchIntervalUpdate {
+            display: flex;
+            gap: 4px;
+            place-self: flex-end;
+          }
+        }
+      }
+
+      .bottom-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 24px;
+        background-color: var(--o-bg-color-light2);
+        overflow: auto;
+
+        .list-title {
+          height: 24px;
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--o-text-color-primary);
+          margin-bottom: 12px;
+        }
+
+        .updateBtn {
+          height: 32px;
+          margin-bottom: 16px;
+        }
+
+        .main-table {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+      }
     }
-  }
-
-  .table-con {
-    margin-top: 20px;
-    padding: 0 20px 30px;
-
-    .mac-txt {
-      cursor: pointer;
-      color: rgb(var(--primary-6));
-    }
-  }
-}
-
-.error-tips {
-  max-width: 1200px;
-  max-height: 350px;
-  overflow-y: auto;
-}
-
-.config-con {
-  .config-title {
-    font-size: 14px;
-  }
-
-  .config-item {
-    margin-top: 10px;
   }
 }
 </style>

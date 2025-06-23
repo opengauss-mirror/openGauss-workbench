@@ -12,23 +12,12 @@ body {
   background-color: var(--color-bg-1);
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
-  --o-font-size-info: 14px;
-  --o-color-primary: #e32020;
-  --o-color-primary-secondary: #e41d1d;
+  --o-font-size-info: 14px !important;
+  --o-pagination-font-size: 12px;
 }
 
 #app {
   background: var(--color-bg-2);
-}
-
-.el-button.is-text {
-  .el-icon svg {
-    color: #e41d1d;
-  }
-
-  .el-icon+span {
-    color: #e41d1d;
-  }
 }
 
 .arco-message-list-top {
@@ -59,6 +48,14 @@ body {
   background: var(--color-bg-1);
 }
 
+.mb16 {
+  margin-bottom: 16px;
+}
+
+.mt24 {
+  margin-top: 24px;
+}
+
 .mr-s {
   margin-right: 8px;
 }
@@ -69,4 +66,175 @@ body {
 
 .danger-color {
   color: var(--o-color-danger)
+}
+
+.primary-color {
+  color: var(--o-color-primary)
+}
+
+.wait-color {
+  color: #ACACAD
+}
+
+.el-table__empty-block {
+  margin-top: 0;
+}
+
+.el-table .cell {
+  line-height: 18px;
+}
+
+.el-popper {
+  max-width: 1000px !important;
+}
+
+// Here, we uniformly modify the el-popConfirm style
+.el-popper.o-popper-confirm {
+  padding: 12px 8px !important;
+  width: fit-content !important;
+  min-width: 150px;
+
+  .el-popconfirm__action {
+    text-align: center !important;
+
+    >button {
+      height: 24px;
+      width: 48px;
+      font-size: 12px;
+    }
+
+    // Cancel button background color
+    button.is-text {
+      color: var(--o-button-color);
+      border: 1px solid var(--o-button-border-color);
+
+      &:hover {
+        background-color: var(--o-button-bg-color_hover);
+        color: var(--o-button-color_hover);
+        border-color: var(--o-button-border-color_hover);
+      }
+
+      &:active {
+        background-color: var(--o-button-bg-color_active);
+        color: var(--o-button-color_active);
+        border-color: var(--o-button-border-color_active);
+      }
+    }
+  }
+}
+
+// Here is the minimum width
+.minWid88 {
+  min-width: 88px;
+}
+
+.minWid680 {
+  min-width: 680px !important;
+}
+
+.minWid912 {
+  min-width: 912px !important;
+}
+
+// Here you can modify the style of the pagination table uniformly
+.openDesignTableArea {
+  min-width: 1000px;
+
+  .el-table__expanded-cell {
+    padding: 20px 40px;
+
+    .subTableTitle {
+      height: 24px;
+      line-height: 24px;
+      font-size: 16px;
+      color: var(--o-text-color-primary);
+      margin-bottom: 15px;
+    }
+  }
+
+  .el-pagination {
+    margin-top: 20px;
+    font-size: 12px;
+
+    .el-select__placeholder {
+      span {
+        font-size: 12px !important;
+      }
+    }
+  }
+}
+
+.el-tree-node__content .el-select-dropdown__item {
+  color: var(--o-text-color-secondary);
+}
+
+.el-tree-node__content:hover {
+  background-color: var(--o-color-primary-secondary) !important;
+
+  .el-select-dropdown__item {
+    color: var(--o-bg-color-light2);
+  }
+
+  .el-tree-node__expand-icon {
+    color: var(--o-bg-color-light2) !important;
+  }
+}
+
+.el-tree-node__children {
+  .el-tree-node__expand-icon {
+    opacity: 0;
+  }
+}
+
+// The drop-down tree expands the icon style
+.el-tree-node__content:active,
+.el-tree-node.is-current>.el-tree-node__content {
+  background-color: var(--o-color-primary) !important;
+
+  .el-select-dropdown__item {
+    color: var(--o-bg-color-light2);
+  }
+
+  .el-tree-node__expand-icon:not(.is-leaf) {
+    color: var(--o-bg-color-light2);
+  }
+}
+
+// Uniformly modify the style of the migration form - the required item ID and the corresponding new refresh button
+.openDesignForm {
+  .el-form-item.is-required {
+    .el-form-item__label {
+      margin-left: -8px;
+      &::before {
+        width: 8px;
+        margin-right: 0 !important;
+      }
+    }
+    .refresh-con {
+      display: flex;
+      .el-icon {
+        font-size: 16px;
+        margin: 0 12px;
+        cursor: pointer;
+        &:hover {
+          color: var(--o-color-primary);
+        }
+      }
+    }
+  }
+}
+
+.aPopConfirmStyle {
+  .arco-btn-primary {
+    background-color: #07f !important;
+    &:hover {
+      background-color: #3291Fe !important;
+    }
+  }
+}
+
+.detailDialog {
+  .el-dialog__body {
+    min-height: 450px;
+  }
 }

@@ -2,16 +2,21 @@
   <div>
     <el-steps v-bind="$attrs">
       <el-step v-for="(item, index) in props.steps" :key="item.title" :description="item.description" :title="item.title"
-        :status="getStatus(item.stepIndex)">
-        <template #icon v-if="item.stepIndex > props.current">
-          <div class="circle"></div>
-        </template>
-        <template #icon v-if="item.stepIndex === props.current">
+        :status="getStatus(item.stepIndex)" @click="clickNode(item.stepIndex)"
+        :class="{ pointer: props.active && item.stepIndex <= props.current }">
+        <!-- enlarge double circle, clicked node or current node   -->
+        <template #icon v-if="props.active ? item.stepIndex === props.active : item.stepIndex === props.current">
           <div class="doubleCircle outer">
             <div class="doubleCircle inner"></div>
           </div>
+          <div class="currentMark">{{ t('detail.index.currentPage') }}</div>
         </template>
-        <template #icon v-if="item.stepIndex < props.current">
+        <!-- gray circle -->
+        <template #icon v-else-if="item.stepIndex > props.current">
+          <div class="circle"></div>
+        </template>
+        <!-- checked node  -->
+        <template #icon v-else>
           <div class="checkCircle">
             <svg-icon icon-class="circleCheck"></svg-icon>
           </div>
@@ -22,7 +27,13 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const props = defineProps({
+  active: {
+    type: Number,
+    required: false
+  },
   steps: {
     type: Object,
     required: true,
@@ -41,11 +52,19 @@ const getStatus = (index) => {
     return 'process'
   }
 }
+
+const emits = defineEmits(['update:active'])
+const clickNode = (index) => {
+  if (index > props.current) {
+    return
+  }
+  emits('update:active', index)
+}
 </script>
-  
+
 <style scoped lang="less">
 :deep(.el-steps--horizontal:not(.o-cluster) .el-step__title) {
-  background-color: var(--color-bg-1);
+  background-color: var(--o-bg-color-light2);
   font-size: 14px;
 }
 
@@ -55,6 +74,10 @@ const getStatus = (index) => {
 
 :deep(.el-steps--horizontal) {
   background-color: inherit;
+}
+
+.pointer {
+  cursor: pointer;
 }
 
 .circle {
@@ -72,7 +95,7 @@ const getStatus = (index) => {
 .outer {
   width: 24px;
   height: 24px;
-  border: 2px solid rgb(var(--primary-6))
+  border: 2px solid var(--o-color-primary)
 }
 
 .inner {
@@ -81,7 +104,7 @@ const getStatus = (index) => {
   transform: translate(-50%, -50%);
   width: 12px;
   height: 12px;
-  border: 1px solid rgb(var(--primary-6))
+  border: 1px solid var(--o-color-primary)
 }
 
 :deep(.el-steps--horizontal:not(.o-cluster) .el-step__head.is-process .el-step__icon) {
@@ -89,11 +112,21 @@ const getStatus = (index) => {
 }
 
 :deep(.el-steps--horizontal:not(.o-cluster) .el-step__title.is-process) {
-  color: rgb(var(--primary-6));
+  // color: var(--o-color-primary);
 }
 
 :deep(.el-steps--horizontal:not(.o-cluster) .el-step__line) {
   background: var(--o-border-color-lighter);
+}
+
+.currentMark {
+  position: absolute;
+  left: 26px;
+  top: 40px;
+  width: 64px;
+  height: 16px;
+  background-color: transparent;
+  color: var(--o-color-primary);
 }
 
 .checkCircle {
@@ -107,13 +140,13 @@ const getStatus = (index) => {
     margin: 2px;
     width: 80%;
     height: 80%;
-    background-color: #f4a7a7;
+    background-color: var(--o-color-primary-fourth);
     border-radius: 50%;
     z-index: -1;
   }
 
   svg {
-    color: rgb(var(--primary-6));
+    color: var(--o-color-primary);
     font-size: 20px;
     border-radius: 50%;
   }

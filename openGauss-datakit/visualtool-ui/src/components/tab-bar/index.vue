@@ -24,7 +24,11 @@
   import { useAppStore, useTabBarStore } from '@/store'
   import appClientMenus from '@/router/appMenus'
   import tabItem from './tab-item.vue'
+  import { destroyPluginApp } from '@/utils/pluginApp'
+  import showMessage from '@/hooks/showMessage'
+  import { useI18n } from 'vue-i18n'
 
+  const { t } = useI18n()
   const appStore = useAppStore()
   const appRoute = computed(() => {
     if (appStore.menuFromServer) {
@@ -63,6 +67,15 @@
       !route.meta.noAffix &&
       !tagList.value.some((tag) => tag.fullPath === route.fullPath)
     ) {
+      // Migration subtask details expand only the current one
+      if (route.name === 'Static-pluginData-migrationSubTaskDetail') {
+        // if there were previous subtask details
+        const migrationSubDetailTag = tagList.value.find((tag) => tag.name === 'Static-pluginData-migrationSubTaskDetail')
+        migrationSubDetailTag && tabBarStore.deleteTagByFullPath(migrationSubDetailTag);
+        migrationSubDetailTag && destroyPluginApp(migrationSubDetailTag.fullPath)
+        // The prompt shows only one subtask details
+        migrationSubDetailTag && showMessage('warning', t('tab-bar.tab-item.subTaskMigraTab'))
+      }
       tabBarStore.updateTabList(route)
     }
   }, true)

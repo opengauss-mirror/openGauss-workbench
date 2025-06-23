@@ -1,52 +1,71 @@
 <template>
-  <div class="app-container" id="migrationThird">
+  <div class="app-container common-layout" id="migrationThird">
     <div class="search-con">
-      <a-form :model="form" layout="inline">
-        <a-form-item field="kafkaIp" style="margin-left: -17px;">
-          <a-input v-model="form.kafkaIp" allow-clear :placeholder="$t('third.index.5q08thptsw88')" style="width: 200px;" @change="getList"></a-input>
-        </a-form-item>
-        <a-form-item>
-          <a-button type="outline" @click="getList">
-            <template #icon>
-              <icon-search />
-            </template>
-            <template #default>{{$t('third.index.5q08thptsw90')}}</template>
-          </a-button>
-          <a-button style="margin-left: 10px;" @click="resetQuery">
-            <template #icon>
-              <icon-sync />
-            </template>
-            <template #default>{{$t('third.index.5q08thptsw91')}}</template>
-          </a-button>
-        </a-form-item>
-      </a-form>
-      
+      <el-form :model="form" class="input-wrapper">
+        <el-form-item field="kafkaIp">
+          <el-input v-model="form.kafkaIp" allow-clear :placeholder="$t('third.index.5q08thptsw88')"
+            class="o-style-search" @change="getList" :prefix-icon="IconSearch" @search="getList"></el-input>
+        </el-form-item>
+      </el-form>
+      <div class="button-wrapper">
+        <el-button class="o-button--icon" :icon="IconRefresh" @click="resetQuery"></el-button>
+      </div>
     </div>
-
     <div class="table-con">
-      <a-table :loading="loading" row-key="id" :data="tableData" :row-selection="rowSelection" v-model:selectedKeys="selectedKeys" :bordered="false" :stripe="!currentTheme" :hoverable="!currentTheme" :pagination="pagination" @page-change="pageChange">
-        <template #columns>
-          <a-table-column :title="$t('third.index.5q08thptsw81')" data-index="kafkaIp" :width="150"></a-table-column>
-          <a-table-column :title="$t('third.index.5q08thptsw84')" data-index="kafkaPort" :width="150"></a-table-column>
-          <a-table-column :title="$t('third.index.5q08thptsw85')" data-index="zookeeperPort" :width="150"></a-table-column>
-          <a-table-column :title="$t('third.index.5q08thptsw86')" data-index="schemaRegistryPort" :width="150"></a-table-column>
-          <a-table-column :title="$t('third.index.5q08thptsw89')" data-index="installDir" :width="150"></a-table-column>
-          <a-table-column :title="$t('third.index.5q08thptsw87')" data-index="bindPortalHost" :width="150"></a-table-column>
+      <el-table v-loading="loading" row-key="id" :data="tableData" :bordered="false">
+        <template #empty>
+          <div class="o-table-empty mt24">
+            <el-icon class="o-empty-icon">
+              <IconEmpty />
+            </el-icon>
+            <div class="o-empty-label">
+              {{ $t('third.index.noData') }}
+            </div>
+          </div>
         </template>
-      </a-table>
+        <el-table-column :label="$t('third.index.5q08thptsw81')" prop="kafkaIp">
+          <template #default="{ row }">
+            {{ row.kafkaIp || '--' }}
+          </template>
+        </el-table-column>
+        <el-table-column :label="$t('third.index.5q08thptsw84')" prop="kafkaPort">
+          <template #default="{ row }">
+            {{ row.kafkaPort || '--' }}
+          </template>
+        </el-table-column>
+        <el-table-column :label="$t('third.index.5q08thptsw85')" prop="zookeeperPort">
+          <template #default="{ row }">
+            {{ row.zookeeperPort || '--' }}
+          </template>
+        </el-table-column>
+        <el-table-column :label="$t('third.index.5q08thptsw86')" prop="schemaRegistryPort">
+          <template #default="{ row }">
+            {{ row.schemaRegistryPort || '--' }}
+          </template>
+        </el-table-column>
+        <el-table-column :label="$t('third.index.5q08thptsw89')" prop="installDir">
+          <template #default="{ row }">
+            {{ row.installDir || '--' }}
+          </template>
+        </el-table-column>
+        <el-table-column :label="$t('third.index.5q08thptsw87')" prop="bindPortalHost">
+          <template #default="{ row }">
+            {{ row.bindPortalHost || '--' }}
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination :total="total" @change="getList" :layout="layout" v-model:current-page="pagination.pageNum"
+        v-model:page-size="pagination.pageSize"></el-pagination>
     </div>
-   
-        
   </div>
 </template>
 
-<script setup>
-
+<script setup lang="ts">
 import { reactive, ref, onMounted } from 'vue'
-
 import { listKafkaInstance } from '@/api/task'
-
+import { PageType } from '@/types/global'
 import { useI18n } from 'vue-i18n'
+import { IconSearch, IconRefresh, IconEmpty } from '@computing/opendesign-icons'
 
 const { t } = useI18n()
 
@@ -66,33 +85,29 @@ const form = reactive({
   installDir: undefined,
   bindPortalHost: undefined
 })
+const layout = 'total, sizes, prev, pager, next, jumper'
+const total = ref(0)
+const loading = ref(false)
 const pagination = reactive({
-  total: 0,
-  current: 1,
-  pageSize: 10
-})
-
-const pageChange = current => {
-  queryParams.pageNum = current
-  pagination.current = current
-  getList()
-}
-
-const queryParams = reactive({
   pageNum: 1,
   pageSize: 10
 })
 
-const tableData = ref([])
+const tableData = ref<any[]>([])
 
-const getList = () => {
-  listKafkaInstance({
-    kafkaIp: form.kafkaIp,
-    ...queryParams
-  }).then(res => {
+const getList = async () => {
+  try {
+    loading.value = true;
+    const res:PageType = await listKafkaInstance({
+      kafkaIp: form.kafkaIp,
+      ...pagination
+    })
+    loading.value = false
     tableData.value = res.rows
-    pagination.total = res.total
-  })
+    total.value = res.total
+  } catch (error) {
+    loading.value = false
+  }
 }
 
 onMounted(() => {
@@ -107,10 +122,29 @@ onMounted(() => {
 
 <style lang="less" scoped>
 .app-container {
-  .main-bd {
-    .az-list {
-      padding: 20px;
+  min-height: calc(100vh - 114px);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 28px 20px;
+
+  .search-con {
+    display: flex;
+
+    .input-wrapper {
+      flex-grow: 1
     }
+
+    .button-wrapper {
+      margin-left: 8px;
+    }
+  }
+
+  .table-con {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
   }
 }
 </style>

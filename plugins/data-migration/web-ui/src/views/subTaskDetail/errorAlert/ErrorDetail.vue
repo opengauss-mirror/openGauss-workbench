@@ -1,6 +1,6 @@
 <template>
   <el-dialog v-model="props.errorVisible" draggable :close-on-click-modal="false" @close="closeModal"
-    style="width: fit-content;max-width: 1550px;">
+    style="width: fit-content;max-width: 1550px;" custom-class="testDialog">
     <template #header>
       <div class="header">{{ $t('components.SubTaskDetail.showDetail') }}</div>
     </template>
@@ -43,7 +43,7 @@
 </template>
 
 <script setup>
-import { toRefs, computed } from 'vue'
+import { toRefs, computed, onBeforeUnmount, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -84,7 +84,6 @@ const emits = defineEmits(['update:errorVisible'])
 const closeModal = () => {
   emits('update:errorVisible', false)
 }
-
 </script>
 
 <style lang="less" scoped>
