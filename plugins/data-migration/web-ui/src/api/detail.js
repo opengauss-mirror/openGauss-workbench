@@ -28,6 +28,22 @@ export function subTaskDetail (id) {
   return axios.get(`/plugins/data-migration/migration/subTaskInfo/${id}`)
 }
 
+export function subTaskInfoDetail (id, session) {
+  return axios.get(`/plugins/data-migration/migration/subTaskInfo/${id}/${session}`)
+}
+
+export function fullMigInfo (id, type, params) {
+  return axios.post(`/plugins/data-migration/migration/fullMigInfo/${id}/${type}`,  params)
+}
+
+export function migLogsInfo (id, params) {
+  return axios.post(`/plugins/data-migration/migration/getMigLogsInfo/${id}`, params)
+}
+
+export function subTaskBasicInfo (id) {
+  return axios.get(`/plugins/data-migration/migration/subTaskBasicInfo/${id}`)
+}
+
 export function downloadLog (id, query) {
   return axios.get(`/plugins/data-migration/migration/subTask/log/download/${id}`, { params: query })
 }

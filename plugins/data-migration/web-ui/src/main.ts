@@ -14,6 +14,7 @@ import '@computing/opendesign2/themes/es/css'
 
 import '@arco-design/web-vue/dist/arco.less'
 import '@/assets/style/global.less'
+import store from '@/store';
 
 const app = createApp(App)
 
@@ -25,5 +26,6 @@ app.use(opendesign2)
 app.use(router)
 app.use(globalComponents)
 app.use(i18n)
+app.use(store)
 
 app.mount('#app')

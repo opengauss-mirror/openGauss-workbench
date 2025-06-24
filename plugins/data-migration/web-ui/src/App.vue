@@ -30,18 +30,22 @@ onMounted(() => {
   const theme = localStorage.getItem('opengauss-theme')
   if (theme === 'dark') {
     document.body.setAttribute('arco-theme', 'dark')
+    document.body.setAttribute('theme', 'dark')
     changeTheme('dark')
   } else {
     document.body.removeAttribute('arco-theme')
+    document.body.removeAttribute('theme')
     changeTheme('')
   }
 
   window.$wujie?.bus.$on('opengauss-theme-change', val => {
     if (val === 'dark') {
       document.body.setAttribute('arco-theme', 'dark')
+      document.body.setAttribute('theme', 'dark')
       changeTheme('dark')
     } else {
       document.body.removeAttribute('arco-theme')
+      document.body.removeAttribute('theme')
       changeTheme('')
     }
   })

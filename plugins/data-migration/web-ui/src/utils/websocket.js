@@ -62,10 +62,10 @@ export default class SocketTool extends Heart {
     let wsUrl
     if (process.env.NODE_ENV === 'development') {
       // change by yourself
-      wsUrl = `wss://${process.env.VUE_APP_WS_BASE_URL}/websocket/${this.options.url}`
+      wsUrl = `wss://${process.env.VUE_APP_WS_BASE_URL}/ws/${this.options.url}`
     } else {
       const wsPrefix = window.location.protocol.includes('https') ? 'wss' : 'ws'
-      wsUrl = `${wsPrefix}://${window.location.host}/websocket/${this.options.url}`
+      wsUrl = `${wsPrefix}://${window.location.host}/ws/${this.options.url}`
     }
     this.ws = new WebSocket(wsUrl)
     this.onopen(this.options.openCb)

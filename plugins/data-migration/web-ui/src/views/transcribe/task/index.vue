@@ -74,7 +74,7 @@
                       <el-icon>
                         <IconRefresh @click="frechSourceCluster"/>
                       </el-icon>
-                      <el-link @click="handleAddSql(taskBasicInfo.sourceDbType.toUpperCase())">
+                      <el-link type="primary" @click="handleAddSql(taskBasicInfo.sourceDbType.toUpperCase())">
                         {{ $t('transcribe.create.newsource') }}
                       </el-link>
                     </div>
@@ -99,7 +99,7 @@
                       <el-icon>
                         <IconRefresh @click="getHostUserPage('source')"/>
                       </el-icon>
-                      <el-link @click="handleAddUser('source')">{{ $t('transcribe.create.adduser') }}</el-link>
+                      <el-link type="primary" @click="handleAddUser('source')">{{ $t('transcribe.create.adduser') }}</el-link>
                     </div>
                   </el-form-item>
                   <div
@@ -130,7 +130,7 @@
                       <el-icon>
                         <IconRefresh @click="getTargetClustersData"/>
                       </el-icon>
-                      <el-link @click="handleAddSql('OPENGAUSS')">{{ $t('transcribe.create.newsource') }}</el-link>
+                      <el-link type="primary" @click="handleAddSql('OPENGAUSS')">{{ $t('transcribe.create.newsource') }}</el-link>
                     </div>
                   </el-form-item>
                   <el-form-item :label="t('transcribe.create.serveruser')" prop="targetHostUser">
@@ -145,7 +145,7 @@
                       <el-icon>
                         <IconRefresh @click="getHostUserPage('target')"/>
                       </el-icon>
-                      <el-link @click="handleAddUser('target')">{{ $t('transcribe.create.adduser') }}</el-link>
+                      <el-link type="primary" @click="handleAddUser('target')">{{ $t('transcribe.create.adduser') }}</el-link>
                     </div>
                   </el-form-item>
                   <div
@@ -606,6 +606,7 @@ const changeTranscribeMode = (val) => {
     taskRetInfo.value.pagefir['tcpdump.database.port'] = sourceDbPort.value
     taskRetInfo.value.pagefir['remote.receiver.name'] = taskBasicInfo.value.targetHostUser
     taskRetInfo.value.pagefir['remote.node.ip'] = targetHostInfo.value.publicIp
+    taskRetInfo.value.pagefir['remote.node.port'] = targetHostInfo.value.port
     taskRetInfo.value.pagefir['tcpdump.network.interface'] = taskAdvancedInfo.value['tcpdump.network.interface']
     taskRetInfo.value.pagefir['tcpdump.capture.duration'] = taskAdvancedInfo.value['tcpdump.capture.duration']
   } else if (taskAdvancedInfo.value.transcribemode === 'attach') {

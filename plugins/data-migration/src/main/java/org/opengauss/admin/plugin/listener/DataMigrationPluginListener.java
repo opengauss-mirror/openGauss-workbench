@@ -68,6 +68,7 @@ public class DataMigrationPluginListener implements ApplicationListener<Applicat
                         parentMenu.getMenuId());
                 menuFacade.savePluginRoute(pluginId, "创建迁移任务", "taskConfig", parentMenu.getMenuId());
                 menuFacade.savePluginRoute(pluginId, "任务详情", "taskDetail", parentMenu.getMenuId());
+                menuFacade.savePluginRoute(pluginId, "子任务详情", "subTaskDetail", parentMenu.getMenuId());
                 menuFacade.savePluginRoute(pluginId, "录制回放详情", "transcribetaskDetail", parentMenu.getMenuId());
                 menuFacade.savePluginRoute(pluginId, "创建录制回放", "createtranscribetask", parentMenu.getMenuId());
             }

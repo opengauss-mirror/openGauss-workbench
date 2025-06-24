@@ -17,11 +17,13 @@
     "dayjs": "^1.11.7",
     "echarts": "5.5.1",
     "jsencrypt": "3.0.0-rc.1",
+    "pinia": "2.0.17",
     "vue": "3.2.41",
     "vue-echarts": "^7.0.3",
     "vue-i18n": "^9.3.0-beta.6",
     "vue-router": "4.0.3",
     "wujie-vue3": "^1.0.0",
+    "wujie-polyfill": "^1.1.2",
     "xterm": "4.19.0",
     "xterm-addon-attach": "0.6.0",
     "xterm-addon-fit": "0.5.0"
