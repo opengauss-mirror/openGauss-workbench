@@ -46,6 +46,7 @@ public class JdbcDbClusterVO {
     private List<JdbcDbClusterNodeVO> nodes;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updateTime;
+    private String versionNum;
 
     public static JdbcDbClusterVO of(OpsJdbcDbClusterEntity record, List<JdbcDbClusterNodeVO> nodes) {
         JdbcDbClusterVO jdbcDbClusterVO = new JdbcDbClusterVO();
