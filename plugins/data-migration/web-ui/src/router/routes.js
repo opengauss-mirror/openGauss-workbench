@@ -15,7 +15,7 @@ const routes = [
   {
     path: '/taskConfig',
     name: 'TaskConfig',
-    component: () => import('@/views/task/index'),
+    component: () => import('@/views/migration/index.vue'),
     meta: {
       title: '创建迁移任务',
       keepAlive: false

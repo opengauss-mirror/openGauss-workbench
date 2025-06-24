@@ -42,13 +42,19 @@ export function sourceClusterDbsData(formData) {
 export function sourceClusters(payload) {
   return axios.get('/plugins/data-migration/resource/sourceClusters', payload)
 }
-
+export function sourceClustersType(dbType) {
+  return axios.get(`/plugins/data-migration/resource/sourceClusters?dbType=${dbType}`)
+}
 export function targetClusterDbsData(data) {
   return axios.post('/plugins/data-migration/resource/getTargetClusterDbs', data)
 }
 
 export function targetClusters(payload) {
   return axios.get('/plugins/data-migration/resource/targetClusters', payload)
+}
+
+export function checkTargetclusterMaster(clusterName) {
+  return axios.get(`/plugins/data-migration/resource/isMaster?/clusterName=${clusterName}`)
 }
 
 export function transcribeReplaySave(data) {
