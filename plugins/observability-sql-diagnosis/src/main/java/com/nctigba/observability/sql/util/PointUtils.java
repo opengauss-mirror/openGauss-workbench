@@ -28,11 +28,16 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.nctigba.observability.sql.constant.CommonConstants;
 import com.nctigba.observability.sql.constant.PrometheusConstants;
+import com.nctigba.observability.sql.constant.ThresholdConstants;
 import com.nctigba.observability.sql.exception.HisDiagnosisException;
 import com.nctigba.observability.sql.mapper.HisThresholdMapper;
+import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
 import com.nctigba.observability.sql.model.dto.point.AspAnalysisDTO;
 import com.nctigba.observability.sql.model.dto.point.FunctionTableDTO;
+import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
+import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
 import com.nctigba.observability.sql.model.entity.DiagnosisThresholdDO;
+import com.nctigba.observability.sql.model.vo.AutoShowDataVO;
 import com.nctigba.observability.sql.model.vo.collection.DatabaseVO;
 import com.nctigba.observability.sql.model.vo.collection.PrometheusVO;
 import com.nctigba.observability.sql.model.vo.point.ExecPlanDetailVO;
@@ -40,6 +45,8 @@ import com.nctigba.observability.sql.model.vo.point.PlanVO;
 import com.nctigba.observability.sql.model.vo.point.ShowData;
 import com.nctigba.observability.sql.model.vo.point.TableShowDataColumnVO;
 import com.nctigba.observability.sql.model.vo.point.TableShowDataVO;
+import com.nctigba.observability.sql.service.CollectionItem;
+import com.nctigba.observability.sql.service.DataStoreService;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
@@ -65,13 +72,32 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+
+import static com.nctigba.observability.sql.constant.CommonConstants.CHART_NAME_STRING;
+import static com.nctigba.observability.sql.constant.CommonConstants.COLUMN_NAME_STRING;
+import static com.nctigba.observability.sql.constant.CommonConstants.DATE_FORMAT;
+import static com.nctigba.observability.sql.constant.CommonConstants.GB_STRING;
+import static com.nctigba.observability.sql.constant.CommonConstants.HUNDRED;
+import static com.nctigba.observability.sql.constant.CommonConstants.KB_STRING;
+import static com.nctigba.observability.sql.constant.CommonConstants.KILOBYTE;
+import static com.nctigba.observability.sql.constant.CommonConstants.MB_STRING;
+import static com.nctigba.observability.sql.constant.CommonConstants.NUMERIC_FORMAT;
+import static com.nctigba.observability.sql.constant.CommonConstants.SCALE;
+import static com.nctigba.observability.sql.constant.CommonConstants.SQL_SUGGEST_HIGH_STRING;
+import static com.nctigba.observability.sql.constant.CommonConstants.SQL_SUGGEST_NORMAL_STRING;
 
 /**
  * PointUtil
@@ -82,6 +108,14 @@ import java.util.Map;
 @Component
 @Slf4j
 public class PointUtils {
+    private static final String MEMORY_TYPE = "memorytype";
+    private static final String MEMORY_M_BYTES = "memorymbytes";
+    private static final String PROCESS_USED_MEMORY = "process_used_memory";
+    private static final String USED_SIZE = "usedsize";
+    private static final String TABLE_CHART_NAME = "Table";
+    private static final String DB_DYNAMIC_MEMORY = "DbDynamicMemory";
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
+
     private int totalPlanRows = 0;
 
     private int totalPlanWidth = 0;
@@ -370,7 +404,11 @@ public class PointUtils {
                 for (String key : map.keySet()) {
                     TableShowDataColumnVO columnVO = new TableShowDataColumnVO();
                     columnVO.setKey(key);
-                    columnVO.setName(key);
+                    if (chartName.contains(TABLE_CHART_NAME)) {
+                        columnVO.setName(LocaleStringUtils.format(String.format(COLUMN_NAME_STRING, chartName, key)));
+                    } else {
+                        columnVO.setName(key);
+                    }
                     if (!columnList.contains(columnVO)) {
                         columnList.add(columnVO);
                     }
@@ -380,7 +418,11 @@ public class PointUtils {
             });
         }
         TableShowDataVO data = new TableShowDataVO();
-        data.setDataName(chartName);
+        if (chartName.contains(TABLE_CHART_NAME)) {
+            data.setDataName(LocaleStringUtils.format(String.format(CHART_NAME_STRING, chartName)));
+        } else {
+            data.setDataName(chartName);
+        }
         data.setData(dataList);
         data.setColumns(columnList);
         List<ShowData> tableList = new ArrayList<>();
@@ -596,5 +638,159 @@ public class PointUtils {
             throw new HisDiagnosisException("fetch threshold data failed!");
         }
         return value;
+    }
+
+    /**
+     * Get store data
+     *
+     * @param list List
+     * @return list
+     */
+    public List<?> getStoreData(List<?> list) {
+        if (list == null || list.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return list.stream()
+                .filter(data -> data instanceof DatabaseVO)
+                .map(data -> (DatabaseVO) data)
+                .findFirst()
+                .map(DatabaseVO::getValue)
+                .filter(value -> !value.isEmpty())
+                .map(value -> (List<?>) value.get(0))
+                .orElse(Collections.emptyList());
+    }
+
+    /**
+     * Diagnosis point  analysis
+     *
+     * @param task             DiagnosisTaskDO
+     * @param dataStoreService DataStoreService
+     * @param item             CollectionItem
+     * @param memoryItem       CollectionItem
+     * @param diagnosisName    String
+     * @return AnalysisDTO
+     */
+    public AnalysisDTO pointAnalysis(DiagnosisTaskDO task, DataStoreService dataStoreService, CollectionItem<?> item,
+            CollectionItem<?> memoryItem, String diagnosisName) {
+        AnalysisDTO analysisDTO = new AnalysisDTO();
+        analysisDTO.setPointType(DiagnosisResultDO.PointType.DIAGNOSIS);
+        analysisDTO.setIsHint(DiagnosisResultDO.ResultState.NO_ADVICE);
+        List<?> list = (List<?>) dataStoreService.getData(item).getCollectionData();
+        List<?> mapList = getStoreData(list);
+        if (mapList == null) {
+            return analysisDTO;
+        }
+        List<?> dynamicList = (List<?>) dataStoreService.getData(memoryItem).getCollectionData();
+        List<?> dynamicMapList = getStoreData(dynamicList);
+        if (dynamicMapList == null) {
+            return analysisDTO;
+        }
+        String thresholdName;
+        if (DB_DYNAMIC_MEMORY.equals(diagnosisName)) {
+            thresholdName = ThresholdConstants.SESSION_MEM_USAGE_RATE;
+        } else {
+            thresholdName = ThresholdConstants.SHARE_MEM_USAGE_RATE;
+        }
+        String thresholdValue = getThresholdValue(
+                task.getThresholds(), thresholdName);
+        int processUsedMemory = getProcessUsedMemory(mapList);
+        float usedSize = getUsedSizeInMB(dynamicMapList);
+        BigDecimal usageRate = new BigDecimal(usedSize).divide(
+                BigDecimal.valueOf(processUsedMemory), SCALE, RoundingMode.HALF_UP).multiply(
+                BigDecimal.valueOf(HUNDRED));
+        LocalDateTime now = LocalDateTime.now();
+        String formattedDate = now.format(DATE_TIME_FORMATTER);
+        if (usageRate.intValue() > Integer.parseInt(thresholdValue)) {
+            analysisDTO.setIsHint(DiagnosisResultDO.ResultState.SUGGESTIONS);
+            analysisDTO.setSuggestion(
+                    LocaleStringUtils.format(String.format(SQL_SUGGEST_HIGH_STRING, diagnosisName), formattedDate,
+                            String.format(Locale.ROOT, NUMERIC_FORMAT, usageRate), thresholdValue));
+        } else {
+            analysisDTO.setSuggestion(
+                    LocaleStringUtils.format(String.format(SQL_SUGGEST_NORMAL_STRING, diagnosisName), formattedDate,
+                            String.format(Locale.ROOT, NUMERIC_FORMAT, usageRate), thresholdValue));
+        }
+        AutoShowDataVO dataVO = buildData(dynamicList, processUsedMemory, diagnosisName);
+        analysisDTO.setPointData(dataVO);
+        return analysisDTO;
+    }
+
+    private int getProcessUsedMemory(List<?> mapList) {
+        return mapList.stream()
+                .filter(HashMap.class::isInstance)
+                .map(HashMap.class::cast)
+                .filter(map -> PROCESS_USED_MEMORY.equals(map.get(MEMORY_TYPE)))
+                .findFirst()
+                .map(map -> {
+                    Object memoryMBytesObj = map.get(MEMORY_M_BYTES);
+                    return memoryMBytesObj instanceof Integer ? (int) memoryMBytesObj : 0;
+                })
+                .orElse(0);
+    }
+
+    private float getUsedSizeInMB(List<?> dynamicMapList) {
+        float usedSizeMB = 0.0f;
+        for (Object data : dynamicMapList) {
+            if (data instanceof HashMap) {
+                HashMap<?, ?> map = (HashMap<?, ?>) data;
+                Object usedSizeObj = map.get(USED_SIZE);
+                if (!(usedSizeObj instanceof String)) {
+                    continue;
+                }
+                String sizeString = (String) usedSizeObj;
+                int size = Integer.parseInt(sizeString.substring(0, sizeString.length() - 2).trim());
+                if (sizeString.contains(GB_STRING)) {
+                    usedSizeMB += (float) size * KILOBYTE;
+                } else if (sizeString.contains(MB_STRING)) {
+                    usedSizeMB += (float) size;
+                } else if (sizeString.contains(KB_STRING)) {
+                    usedSizeMB += (float) size / (float) KILOBYTE;
+                } else {
+                    usedSizeMB += (float) size / (float) (KILOBYTE * KILOBYTE);
+                }
+            }
+        }
+        return usedSizeMB;
+    }
+
+    private AutoShowDataVO buildData(List<?> dynamicList, int processUsedMemory, String diagnosisName) {
+        String chartName = diagnosisName + TABLE_CHART_NAME;
+        List<ShowData> tableList = getTableData(dynamicList, chartName);
+        final String pUseMem = processUsedMemory + " " + MB_STRING;
+        TableShowDataVO showDataVO = new TableShowDataVO();
+        tableList.forEach(f -> {
+            if (f instanceof TableShowDataVO) {
+                List<TableShowDataColumnVO> columns = ((TableShowDataVO) f).getColumns();
+                TableShowDataColumnVO columnVO = new TableShowDataColumnVO();
+                columnVO.setName(
+                        LocaleStringUtils.format(String.format(COLUMN_NAME_STRING, chartName, PROCESS_USED_MEMORY)));
+                columnVO.setKey(PROCESS_USED_MEMORY);
+                columns.add(columnVO);
+                Object dataList = f.getData();
+                HashMap<String, Object> map = getMap(dataList);
+                map.put(PROCESS_USED_MEMORY, pUseMem);
+                List<Map<String, Object>> tmpList = new ArrayList<>();
+                tmpList.add(map);
+                showDataVO.setData(tmpList);
+                showDataVO.setColumns(columns);
+            }
+        });
+        tableList.clear();
+        tableList.add(showDataVO);
+        AutoShowDataVO dataVO = new AutoShowDataVO();
+        dataVO.setData(tableList);
+        return dataVO;
+    }
+
+    private HashMap<String, Object> getMap(Object dataList) {
+        HashMap<String, Object> map = new HashMap<>();
+        if (dataList instanceof List) {
+            for (Object data : (List<?>) dataList) {
+                if (data instanceof HashMap) {
+                    map = (HashMap<String, Object>) data;
+                }
+            }
+        }
+        return map;
     }
 }

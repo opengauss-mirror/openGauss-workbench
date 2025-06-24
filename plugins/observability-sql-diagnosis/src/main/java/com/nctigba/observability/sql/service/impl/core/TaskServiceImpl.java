@@ -425,6 +425,9 @@ public class TaskServiceImpl implements TaskService {
                             if (!"DatabaseParam".equals(pointName)) {
                                 DiagnosisResultDO result = new DiagnosisResultDO(
                                         task, analysisDTO, pointName, DiagnosisResultDO.PointState.SUCCEED);
+                                if (analysisDTO.getSuggestion() != null) {
+                                    result.setPointSuggestion(analysisDTO.getSuggestion());
+                                }
                                 resultMapper.update(
                                         result, Wrappers.<DiagnosisResultDO>lambdaQuery().eq(
                                                         DiagnosisResultDO::getTaskId, result.getTaskId())

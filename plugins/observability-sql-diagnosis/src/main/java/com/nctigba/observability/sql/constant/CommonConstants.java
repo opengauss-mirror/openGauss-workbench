@@ -140,4 +140,64 @@ public class CommonConstants {
      * Get user authority
      */
     public static final String USER_AUTHORITY = "sudo -n true 2>/dev/null && echo \"true\" || echo \"false\"";
+
+    /**
+     * Byte
+     */
+    public static final int KILOBYTE = 1024;
+
+    /**
+     * Scale
+     */
+    public static final int SCALE = 2;
+
+    /**
+     * Hundred
+     */
+    public static final int HUNDRED = 100;
+
+    /**
+     * Data time format
+     */
+    public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+
+    /**
+     * Numeric format
+     */
+    public static final String NUMERIC_FORMAT = "%.2f";
+
+    /**
+     * GB string
+     */
+    public static final String GB_STRING = "GB";
+
+    /**
+     * MB string
+     */
+    public static final String MB_STRING = "MB";
+
+    /**
+     * KB string
+     */
+    public static final String KB_STRING = "KB";
+
+    /**
+     * Chart name i18n
+     */
+    public static final String CHART_NAME_STRING = "%s.name";
+
+    /**
+     * Column name i18n
+     */
+    public static final String COLUMN_NAME_STRING = "%s.column.%s";
+
+    /**
+     * Sql diagnosis suggest i18n
+     */
+    public static final String SQL_SUGGEST_HIGH_STRING = "sql.%s.suggest.high";
+
+    /**
+     * Sql diagnosis suggest i18n
+     */
+    public static final String SQL_SUGGEST_NORMAL_STRING = "sql.%s.suggest.normal";
 }
