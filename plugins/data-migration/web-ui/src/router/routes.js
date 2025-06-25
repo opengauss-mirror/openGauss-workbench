@@ -24,9 +24,18 @@ const routes = [
   {
     path: '/taskDetail',
     name: 'TaskDetail',
-    component: () => import('@/views/detail/index'),
+    component: () => import('@/views/detail/index.vue'),
     meta: {
       title: '迁移任务详情',
+      keepAlive: false
+    }
+  },
+  {
+    path: '/subTaskDetail',
+    name: 'SubTaskDetail',
+    component: () => import('@/views/subTaskDetail/index'),
+    meta: {
+      title: '迁移子任务详情',
       keepAlive: false
     }
   },
