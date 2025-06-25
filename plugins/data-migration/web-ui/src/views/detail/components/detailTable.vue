@@ -14,7 +14,7 @@
         </el-table-column>
         <el-table-column :label="$t('detail.index.sourceType')" ellipsis tooltip prop="sourceDbType">
           <template #default="scope">
-            {{ scope.row.sourceDbType || '--' }}
+            {{ scope.row.sourceDbType || 'MySQL' }}
           </template>
         </el-table-column>
         <el-table-column :label="$t('detail.index.5q09asiwgb40')" ellipsis tooltip>
