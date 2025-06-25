@@ -227,7 +227,7 @@ sha256sum Datakit-6.0.0.tar.gz
    ```jdbc:intarkdb:{数据库所在路径}?open_remote=true&port={}&dbname={}```  
    例如，开启9000端口、数据库名称为intarkdb：```jdbc:intarkdb:data/datakit?open_remote=true&port=9000&dbname=intarkdb```  
 ### 4.使用`IntarkDB-JDBC`通过网络连接至`IntarkDB`  
-   当`IntarkDB`开启网络服务时，可通过网络连接至远程的`IntarkDB`实例。目前，连接时使用默认的登录凭证，用户名为`SYS`，密码为`IntarkDB`，且这些凭证不可修改。
+   当`IntarkDB`开启网络服务时，可通过网络连接至远程的`IntarkDB`实例。
 #### 连接 URL 格式
    ```jdbc:intarkdb:tcp://{ip:port}?dbname={dbname}```  
    例如，连接到127.0.0.1:9000的intarkdb数据库：```jdbc:intarkdb:tcp://127.0.0.1:9000?dbname=intarkdb```
