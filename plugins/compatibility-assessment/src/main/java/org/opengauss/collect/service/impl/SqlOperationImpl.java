@@ -241,7 +241,7 @@ public class SqlOperationImpl implements SqlOperation {
         String version = getVersion();
         String downCommand = String.format(Constant.DOWN_LOAD_PATH, version, Constant.ASSESS_PATH,
                 version);
-        boolean isSucc = CommandLineRunner.runCommand(downCommand, envPath, Constant.DOWN_TIME_OUT);
+        boolean isSucc = CommandLineRunner.runCommand("", "", downCommand, envPath, Constant.DOWN_TIME_OUT);
         log.info("Download evaluation files---->{}", isSucc);
         // 推送评估文件到envPath
         if (!isSucc) {
@@ -263,7 +263,8 @@ public class SqlOperationImpl implements SqlOperation {
         String command = getAssessCommand(sqlInputType);
         // 执行command  在真实路径下执行
         String actPath = envPath + Constant.ASSESS_PATH;
-        boolean isSuccess = CommandLineRunner.runCommand(command, actPath, Constant.TIME_OUT);
+        boolean isSuccess = CommandLineRunner.runCommand(assessment.getMysqlPassword(),
+                assessment.getOpengaussPassword(), command, actPath, Constant.TIME_OUT);
         AssertUtil.isTrue(!isSuccess, "Evaluation failed");
         long id = IdUtils.SNOWFLAKE.nextId();
         String reportFileName = id + "_" + Constant.ASSESS_REPORT;

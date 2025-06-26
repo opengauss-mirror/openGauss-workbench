@@ -42,15 +42,20 @@ public class CommandLineRunner {
     /**
      * runCommand
      *
-     * @param command  command
-     * @param filePath filePath
-     * @param timeOut  timeOut
+     * @param mysqlPassword     mysqlPassword
+     * @param opengaussPassword opengaussPassword
+     * @param command           command
+     * @param filePath          filePath
+     * @param timeOut           timeOut
      * @return boolean
      */
-    public static boolean runCommand(String command, String filePath, long timeOut) {
+    public static boolean runCommand(String mysqlPassword, String opengaussPassword,
+                                     String command, String filePath, long timeOut) {
         try {
             ProcessBuilder builder = new ProcessBuilder("bash", "-c", command);
             builder.directory(new File(filePath));
+            builder.environment().put("MYSQL_PASSWORD", mysqlPassword);
+            builder.environment().put("OPENGAUSS_PASSWORD", opengaussPassword);
             Process process = builder.start();
             String output = readFromStream(process.getInputStream());
             String error = readFromStream(process.getErrorStream());
@@ -58,7 +63,6 @@ public class CommandLineRunner {
             StringBuilder result = new StringBuilder();
             result.append(output).append(StrUtil.LF).append(error);
             String res = result.toString();
-            log.info(res);
             return res.contains(Constant.SUCCESS_INSTALL);
         } catch (IOException | InterruptedException exception) {
             log.error("Command execution failed: {}", exception.getMessage());
