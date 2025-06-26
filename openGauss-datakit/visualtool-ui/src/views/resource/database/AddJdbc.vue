@@ -73,8 +73,8 @@ import { addJdbc, editJdbc, hostListAll } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import JdbcInstance from './JdbcInstance.vue'
 import { useI18n } from 'vue-i18n'
-import {encryptPassword} from "@/utils/jsencrypt";
-// import { encryptPassword } from '@/utils/jsencrypt'
+import { encryptPassword, decryptPassword } from "@/utils/jsencrypt";
+import showMessage from '@/hooks/showMessage'
 const { t } = useI18n()
 enum jdbcStatusEnum {
   unTest = -1,
@@ -407,7 +407,7 @@ const getProps = (url: string): KeyValue[] => {
   return result
 }
 
-const open = (type: string, editData?: KeyValue) => {
+const open = async (type: string, editData?: KeyValue) => {
   data.show = true
   data.loading = false
   data.testLoading = false
@@ -422,19 +422,27 @@ const open = (type: string, editData?: KeyValue) => {
         dbType: editData.dbType,
         nodes: []
       })
-      editData.nodes.forEach((item: KeyValue) => {
+      let flag = true;
+      for (const item of editData.nodes) {
+        const password = await decryptPassword(item.password)
         const temp = {
           id: item.clusterNodeId,
           url: item.url,
           ip: item.ip,
           port: Number(item.port),
           username: item.username,
-          password: item.password,
+          password: password || '',
           props: getProps(item.url),
           status: jdbcStatusEnum.unTest
         }
+        if (!temp.password) {
+          flag = false;
+        }
         data.form.nodes.push(temp)
-      })
+      }
+      if (!flag) {
+        showMessage('warning', t('database.AddJdbc.checkPassword'))
+      }
       const nameByNode = getNameByNode(data.form)
       if (nameByNode === data.form.name) {
         data.form.isCustomName = false

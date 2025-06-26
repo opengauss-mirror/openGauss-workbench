@@ -9,6 +9,14 @@ export const getEntryKey = () => {
   return axios.get('encryption/getKey')
 }
 
+// get decrypt password
+export const getDecryptKey = (password: string) => {
+  const formData = new FormData();
+  formData.append('password', password);
+  return axios.post('clusterTask/getPassword', formData)
+}
+
+
 export const download = (data: downloadPackage) => {
   return axios.post(`opsCluster/download`, data ? data : {})
 }

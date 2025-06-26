@@ -79,6 +79,7 @@ import {useRoute, useRouter} from "vue-router";
 import {OpenGaussVersionEnum} from "@/types/ops/install";
 import router from "@/router";
 import {map} from "lodash";
+import { encryptPassword, decryptPassword } from "@/utils/jsencrypt";
 
 const currentStep = ref(1)
 const taskId = ref()
@@ -132,7 +133,7 @@ const onNext = () => {
       })
     }
   } else if (currentStep.value === 2) {
-    envCheckResult(clusterId.value || tempClusterId.value) .then((res) =>{
+    envCheckResult(clusterId.value || tempClusterId.value).then((res) =>{
       if (Number(res.code) === 200 ) {
         if (res.data.result === "SUCCESS" ){
           createClusterId.value = clusterId.value
@@ -294,7 +295,7 @@ const saveUpdateCulster = async () => {
       clusterTaskList.packageId = subTaskConfig.value.packageId
       clusterTaskList.clusterName = subTaskConfig.value.clusterName
       clusterTaskList.databaseUsername = subTaskConfig.value.hostUser
-      clusterTaskList.databasePassword = subTaskConfig.value.databasePassword
+      clusterTaskList.databasePassword = await encryptPassword(subTaskConfig.value.databasePassword)
       clusterTaskList.port = subTaskConfig.value.port
       clusterTaskList.installPackagePath = subTaskConfig.value.installPackagePath
       clusterTaskList.installPath = subTaskConfig.value.installPath
@@ -396,7 +397,7 @@ const saveUpdateCulster = async () => {
       clusterTaskList.packageId = subTaskConfig.value.packageId
       clusterTaskList.clusterName = subTaskConfig.value.clusterName
       clusterTaskList.databaseUsername = subTaskConfig.value.hostUser
-      clusterTaskList.databasePassword = subTaskConfig.value.databasePassword
+      clusterTaskList.databasePassword = await encryptPassword(subTaskConfig.value.databasePassword)
       clusterTaskList.port = subTaskConfig.value.port
       clusterTaskList.installPackagePath = subTaskConfig.value.installPackagePath
       clusterTaskList.installPath = subTaskConfig.value.installPath
