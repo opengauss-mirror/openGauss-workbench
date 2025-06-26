@@ -314,9 +314,9 @@ public enum MetricsLine {
     INSTANCE_DB_SLOWSQL_DBNAME(
             Type.DB, "sum(pg_stat_activity_slow_count{instanceId='ogbrench',state!='idle',datname='postgres'})"),
     INSTANCE_DB_RESPONSETIME_P80(Type.DB, "gauss_statement_responsetime_percentile_p80{instanceId="
-            + "'ogbrench'}"),
+            + "'ogbrench'} / 1000"),
     INSTANCE_DB_RESPONSETIME_P95(Type.DB, "gauss_statement_responsetime_percentile_p95{instanceId="
-            + "'ogbrench'}"),
+            + "'ogbrench'} / 1000"),
     INSTANCE_DB_DATABASE_INS(Type.DB, "sum(rate(pg_stat_database_tup_inserted_total{instanceId='ogbrench'}[5m])) by "
             + "(datname)", "{datname}"),
     INSTANCE_DB_DATABASE_UPD(Type.DB, "sum(rate(pg_stat_database_tup_updated_total{instanceId='ogbrench'}[5m])) by "
