@@ -83,7 +83,8 @@ public class FileUploadUtil {
     public static void delCache(String dataKitPath) {
         // 评估结束后，删除assess目录下的缓存文件
         String command = String.format(Constant.CREATE_PATH, dataKitPath, dataKitPath, dataKitPath);
-        boolean isSuccess = CommandLineRunner.runCommand(command, Constant.ENV_PATH, Constant.TIME_OUT);
+        boolean isSuccess = CommandLineRunner.runCommand("", "",
+                command, Constant.ENV_PATH, Constant.TIME_OUT);
         AssertUtil.isTrue(!isSuccess, "Failed to create upload "
                 + "directory or delete cache file, directory is" + dataKitPath
                 + "Please check permissions");
