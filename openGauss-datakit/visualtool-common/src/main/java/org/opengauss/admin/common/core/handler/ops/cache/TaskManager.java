@@ -16,17 +16,18 @@
  * TaskManager.java
  *
  * IDENTIFICATION
- * openGauss-visualtool/visualtool-common/src/main/java/org/opengauss/admin/common/core/handler/ops/cache/TaskManager.java
+ * openGauss-visualtool/visualtool-common/src/main/java/org/opengauss/admin/common/core/handler/ops/cache/TaskManager
+ * .java
  *
  * -------------------------------------------------------------------------
  */
-
 
 package org.opengauss.admin.common.core.handler.ops.cache;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Objects;
+import org.opengauss.admin.common.exception.ops.OpsException;
+
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -38,23 +39,58 @@ import java.util.concurrent.TimeUnit;
  **/
 @Slf4j
 public class TaskManager {
+    private static final int MAX_RETRIES = 10;
     private static final ConcurrentHashMap<String, Future<?>> TASK_CONTEXT = new ConcurrentHashMap<>();
 
+    /**
+     * registry task to context
+     *
+     * @param businessId businessId
+     * @param future future
+     */
     public static void registry(String businessId, Future<?> future) {
         TASK_CONTEXT.put(businessId, future);
     }
 
+    /**
+     * remove task from context, if the task is not finished, it will be cancelled.
+     * if the task is finished or cancelled, it will be removed from context.
+     *
+     * @param businessId businessId
+     * @return Optional<Future < ?>> future
+     */
     public static Optional<Future<?>> remove(String businessId) {
         Future<?> future = TASK_CONTEXT.get(businessId);
-        while (Objects.nonNull(future) && !future.isCancelled()) {
+        if (future == null) {
+            log.info("task {} not found in context", businessId);
+            return Optional.empty();
+        }
+        // 如果任务已经完成或取消，直接返回
+        if (future.isDone() || future.isCancelled()) {
+            log.info("task {} already completed or cancelled", businessId);
+            return Optional.of(TASK_CONTEXT.remove(businessId));
+        }
+        int retryCount = 0;
+        while (!future.isCancelled() && !future.isDone() && retryCount < MAX_RETRIES) {
             future.cancel(true);
-            log.warn("remove task message: {}", businessId);
+            log.warn("attempting to cancel task: {}", businessId);
             try {
                 TimeUnit.MILLISECONDS.sleep(200);
-            } catch (InterruptedException ignore) {
-                log.debug("thread interrupted while waiting for task {}cancellation", businessId);
+            } catch (InterruptedException e) {
+                log.debug("thread interrupted while waiting for task cancellation", e);
+                Thread.currentThread().interrupt();
+                break;
             }
+            retryCount++;
         }
-        return Optional.ofNullable(TASK_CONTEXT.remove(businessId));
+        // 检查任务是否成功取消或完成
+        if (future.isCancelled() || future.isDone()) {
+            log.info("task {} successfully cancelled or completed", businessId);
+            return Optional.of(TASK_CONTEXT.remove(businessId));
+        } else {
+            log.error("failed to cancel task {} after {} attempts", businessId, MAX_RETRIES);
+            // 任务未取消，不应该从上下文中移除
+            throw new OpsException("Failed to cancel task " + businessId);
+        }
     }
 }
