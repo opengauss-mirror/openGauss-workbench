@@ -11,7 +11,7 @@
       <div class="selectInputBind">
         <!-- input and the hiding control value area -->
         <div id="mainInput">
-          <el-input
+          <el-input :maxlength="maxLen"
             :placeholder="isLabelSelect ? $t('components.FusionSearch.addFilters') : labelOptions[currentKeyValue]?.placeholder"
             @click="inputFocus" v-model="selectValue" @search="clickSearch" @keyup.enter="clickSearch">
             <template #suffix>
@@ -39,6 +39,9 @@
         </div>
       </div>
     </div>
+    <div class="inputMaxWarning" v-if="componentId === searchType.INPUT && selectValue.length >= Number(maxLen)">
+      {{ t('components.FusionSearch.inputMaxWarnText') }}
+    </div>
   </div>
 </template>
 
@@ -50,7 +53,8 @@ import fusionDateRange from './fusionDateRange.vue'
 import { IconSearch, IconXSolid } from '@computing/opendesign-icons'
 import { ClickOutside as vClickOutside } from 'element-plus'
 import { searchType } from '@/types/searchType'
-
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const { labelOptions } = defineProps({
   labelOptions: {
     type: Object,
@@ -86,7 +90,7 @@ const currentKeyLabel = ref('') // Chinese editing key name
 const currentKeyValue = ref('') // English editing key name
 // this variable maintain params, display tags and the return params comes form it.
 const selectedData = ref<dynamicParams>({})
-
+const maxLen = ref('50')
 const clearAllVisible = computed(() => {
   return currentKeyValue.value || Object.keys(selectedData.value).length
 })
@@ -116,6 +120,10 @@ const handleBlur = () => {
     currentKeyValue.value = selectValue.value
     currentKeyLabel.value = labelOptions[selectValue.value].label
     selectValue.value = ''
+    // The input field needs to set the maximum input length
+    if (componentId.value === searchType.INPUT) {
+      maxLen.value = labelOptions[currentKeyValue.value]?.maxlength || '50'
+    }
   }
 }
 

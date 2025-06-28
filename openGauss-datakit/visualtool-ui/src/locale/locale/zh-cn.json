@@ -94,7 +94,8 @@
     "FusionSearch": {
       "addFilters": "请添加筛选条件",
       "confirm": "确认",
-      "cancel": "取消"
+      "cancel": "取消",
+      "inputMaxWarnText": "已达到最大长度"
     },
     "UpdateDefaultCode": {
       "5nus586u4jg0": "重置默认密码",
