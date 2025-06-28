@@ -475,9 +475,9 @@
       "taskNamePlace": "请输入任务名称",
       "taskConfig": "任务配置",
       "subTaskConfig": "子任务配置",
-      "subTask": "子任务",
       "addSubTask": "新增子任务",
       "sourceData": "源端数据",
+      "sourceSchema": "源端schema",
       "sqlType": "数据库类型",
       "sourceIpPort": "源IP和端口",
       "sourceDB": "源端数据库",
@@ -491,6 +491,7 @@
       "migrationMode": "迁移模式",
       "offline": "离线模式",
       "online": "在线模式",
+      "onlineContent": "迁移模式必须选择",
       "offlineMsg": "离线模式：自动执行全量迁移，完成后自动结束，释放资源。",
       "onlineMsg": "在线模式：自动执行全量迁移+增量迁移，用户手动启动反向迁移，需要用户操作结束迁移，释放资源。",
       "adjust": "调整内核参数",
@@ -578,6 +579,7 @@
       "bulkInstallErrmsg": "请选择未安装迁移套件的服务器",
       "migrationSubtask": "迁移子任务：",
       "machineSelect": "已选择机器：",
+      "portalVersion": "portal版本",
       "5q092waasqk0": "提示：每个迁移过程都需要有参数配置，DataKit已经为每一个迁移过程（即子任务）配置了默认参数。您也可以在下表中修改某个迁移过程（即子任务）的参数配置，来确保迁移过程顺利执行。",
       "5q092waatio0": "默认任务参数配置(全局配置)",
       "5q092waatnk0": "请输入源IP/端口/库名",
@@ -614,6 +616,9 @@
         "paramValueMsg": "请输入参数值",
         "paramTypeMsg": "请输入参数类型",
         "errorMsg": "验证失败，请稍后重试"
+      },
+      "portalInstall": {
+        "portalType": "Portal类型"
       }
     }
   },

@@ -28,8 +28,12 @@ export function migrationUpdate (payload) {
   return axios.post('/plugins/data-migration/migration/update', payload)
 }
 
-export function defaultParams () {
-  return axios.get('/plugins/data-migration/param/default')
+export function defaultParams (dbType) {
+  if(dbType === 'MYSQL') {
+    return axios.get('/plugins/data-migration/param/default')
+  } else {
+    return axios.get('/plugins/data-migration/param/pgsql')
+  }
 }
 
 export function jdbcNodePing (data) {

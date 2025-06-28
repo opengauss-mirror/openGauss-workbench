@@ -475,9 +475,9 @@
       "taskNamePlace": "Please enter the task name",
       "taskConfig": "Task Configuration",
       "subTaskConfig": "Subtask Configuration",
-      "subTask": "Subtask",
       "addSubTask": "Add Subtask",
       "sourceData": "Source Data",
+      "sourceSchema": "Source Schema",
       "sqlType": "Database Type",
       "sourceIpPort": "Source IP and Port",
       "sourceDB": "Source Database",
@@ -491,6 +491,7 @@
       "migrationMode": "Migration Mode",
       "offline": "Offline mode",
       "online": "Online mode",
+      "onlineContent": "Migration Mode must be choose",
       "offlineMsg": "Offline mode: Automatically perform full migration and end automatically after completion to release resources.",
       "onlineMsg": "Online mode: Full migration + incremental migration is automatically performed, and the reverse migration is manually started by the user. User operations are required to end the migration and release resources.",
       "adjust": "Adjusting kernel parameters",
@@ -578,6 +579,7 @@
       "bulkInstallErrmsg": "Select a server that does not have migration kit installed",
       "migrationSubtask": "Migration subtasks：",
       "machineSelect": "Selected machine：",
+      "portalVersion": "Portal Version",
       "5q092waasqk0": "Tip: Each migration process requires parameter configuration, and DataKit has configured default parameters for each migration process (ie, subtask). You can also modify the parameter configuration of a certain migration process (subtask) in the table below to ensure the smooth execution of the migration process.",
       "5q092waatio0": "Default task parameter configuration (global configuration)",
       "5q092waatnk0": "Source IP/port/name",
@@ -614,6 +616,9 @@
         "paramValueMsg": "Please enter parameter value",
         "paramTypeMsg": "Please enter parameter type",
         "errorMsg": "Validation failed, please try again later"
+      },
+      "portalInstall": {
+        "portalType": "Portal Type"
       }
     }
   },

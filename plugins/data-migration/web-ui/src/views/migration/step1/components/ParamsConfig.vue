@@ -42,7 +42,7 @@
           </el-form>
         </div>
       </div>
-      <div class="super-config-con">
+      <div class="super-config-con" v-if="defaultData.more.length > 0">
         <el-collapse v-model="activeCollapse" accordion name="1">
           <el-collapse-item :title="$t('components.ParamsConfig.5q0aazsppwg0')" name="1" :style="customStyle">
             <div class="super-params-table">
@@ -108,8 +108,6 @@ const props = defineProps({
   globalParams: Object,
   taskInfo: Object
 })
-
-const basicRowCount = 13
 
 const emits = defineEmits(['update:open', 'syncGlobalParams', 'syncTaskParams'])
 
@@ -270,8 +268,9 @@ const moreValueChange = (row, rowIndex) => {
 }
 
 const getDefaultParams = () => {
-  defaultParams().then((res) => {
+  defaultParams(props.taskInfo.sourceDbType).then((res) => {
     fillDefaultData(res.data)
+    let basicRowCount = props.taskInfo.sourceDbType == 'MYSQL'? 13: 3
     defaultData.basic = res.data.slice(0, basicRowCount)
     defaultData.more = res.data.slice(basicRowCount)
     const data = JSON.parse(JSON.stringify(res.data))
@@ -398,6 +397,17 @@ const fillDefaultData = (data) => {
     ) {
       item.paramValue = props.taskInfo?.sourceDBName
       item.defaultParamValue = props.taskInfo?.sourceDBName
+    }
+    if (
+      item.paramType === PORTAL_PARAM_TYPE.VAR &&
+      item.paramKey === 'schema.mappings'
+    ) {
+      const result = Object.entries(props.taskInfo?.sourceSchema)
+        .filter(([_, value]) => value != null)
+        .map(([_, value]) => `${value}:${value}`)
+        .join(',')
+      item.paramValue = result
+      item.defaultParamValue = result
     }
     if (item && item.defaultParamValue === undefined && defaultBasicDataMap.get(item.paramKey)) {
       item.defaultParamValue = defaultBasicDataMap.get(item.paramKey).defaultParamValue

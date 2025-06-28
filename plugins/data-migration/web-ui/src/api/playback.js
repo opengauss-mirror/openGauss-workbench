@@ -42,9 +42,27 @@ export function sourceClusterDbsData(formData) {
 export function sourceClusters(payload) {
   return axios.get('/plugins/data-migration/resource/sourceClusters', payload)
 }
+
 export function sourceClustersType(dbType) {
-  return axios.get(`/plugins/data-migration/resource/sourceClusters?dbType=${dbType}`)
+  if (dbType === 'MYSQL') {
+    return axios.get(`/plugins/data-migration/resource/sourceClusters?dbType=${dbType}`)
+  } else {
+    return axios.get('/plugins/data-migration/resource/pgsqlClusters')
+  }
 }
+
+export function sourceClusterDbsType(formData, dbType) {
+  if (dbType === 'MYSQL') {
+    return axios.post('/plugins/data-migration/resource/getSourceClusterDbs', formData)
+  } else {
+    return axios.post('/plugins/data-migration/resource/getPgsqlClusterDbs', formData)
+  }
+}
+
+export function sourceClusterSchema(formData, dbType) {
+  return axios.post('/plugins/data-migration/resource/getPgsqlDbSchemas', formData)
+}
+
 export function targetClusterDbsData(data) {
   return axios.post('/plugins/data-migration/resource/getTargetClusterDbs', data)
 }
@@ -54,7 +72,7 @@ export function targetClusters(payload) {
 }
 
 export function checkTargetclusterMaster(clusterName) {
-  return axios.get(`/plugins/data-migration/resource/isMaster?/clusterName=${clusterName}`)
+  return axios.get(`/plugins/data-migration/resource/isMaster?clusterName=${clusterName}`)
 }
 
 export function transcribeReplaySave(data) {

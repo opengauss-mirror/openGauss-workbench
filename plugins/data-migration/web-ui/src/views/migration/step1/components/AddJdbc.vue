@@ -31,8 +31,8 @@
             </el-row>
             <el-form-item :label="$t('components.AddJdbc.5q0a7i43bto0')" validate-trigger="change">
               <el-radio-group v-model="data.form.dbType">
-                <el-radio-button value="MYSQL">MySQL</el-radio-button>
-                <el-radio-button value="POSTGRESQL" disabled>PostgreSQL</el-radio-button>
+                <el-radio-button value="MYSQL" disabled>MYSQL</el-radio-button>
+                <el-radio-button value="POSTGRESQL" disabled>POSTGRESQL</el-radio-button>
                 <el-radio-button value="OPENGAUSS" disabled>openGauss</el-radio-button>
               </el-radio-group>
             </el-form-item>
@@ -116,7 +116,7 @@ const data = reactive({
   hostList: [],
   activeTab: '',
   dbTypes: [
-    {label: 'MySQL', value: 'MYSQL'},
+    {label: 'MYSQL', value: 'MYSQL'},
     {label: 'openGauss', value: 'OPENGAUSS'}
   ]
 })
@@ -159,7 +159,7 @@ const formRules = computed(() => {
     name: [
       {required: data.form.isCustomName, 'validate-trigger': 'blur', message: t('components.AddJdbc.5q0a7i43c280')},
       {
-        validator: (value, cb) => {
+        validator: (rule, value, cb) => {
           return new Promise(resolve => {
             if (!value.trim()) {
               cb(t('components.AddJdbc.5q0a7i43c4s0'))

@@ -227,6 +227,13 @@ const jdbcUrl = computed(() => {
     } else {
       return urlPrefix
     }
+  } else {
+    urlPrefix = `jdbc:postgresql://${form.value.ip || '{IP}'}:${form.value.port || '{port}'}/postgres`
+    if (urlSuffix) {
+      return urlPrefix + '?' + urlSuffix
+    } else {
+      return urlPrefix
+    }
   }
   return urlPrefix
 })
@@ -237,7 +244,7 @@ watch(jdbcUrl, (val) => {
 watch(() => props.jdbcType, (val) => {
   if (val === 'MYSQL') {
     form.value.port = 3306
-  } else if (val === 'OPENGAUSS') {
+  } else {
     form.value.port = 5432
   }
 })
