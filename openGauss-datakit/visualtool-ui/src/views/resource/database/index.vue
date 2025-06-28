@@ -35,6 +35,7 @@
                   style="width: 150px;">
                   <a-option value="OPENGAUSS">OPENGAUSS</a-option>
                   <a-option value="MYSQL">MYSQL</a-option>
+                  <a-option value="POSTGRESQL">POSTGRESQL</a-option>
                 </a-select>
               </a-form-item>
               <a-form-item>

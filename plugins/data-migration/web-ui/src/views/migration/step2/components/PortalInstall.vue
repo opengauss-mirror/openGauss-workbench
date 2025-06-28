@@ -48,7 +48,7 @@
     </template>
 
     <el-skeleton :loading="loading">
-      <el-form ref="formRef" :model="form" label-width="auto">
+      <el-form ref="formRef" :model="form" label-width="auto" class="page-input-size">
         <el-form-item
           :label="$t('components.PortalInstall.5q0aajl76580')"
           :rules="[
@@ -81,13 +81,35 @@
         <el-form-item
           :label="$t('components.PortalInstall.5q0aajl76xw0')"
           prop="installPath"
+          :rules="[{
+            required: true,
+            message: $t('transcribe.create.required'),
+          },
+          {
+            validator: validateInstallPath,
+            trigger: 'blur'
+          }]"
         >
           <el-input
+            maxlength="200"
             v-model="form.installPath"
             :placeholder="$t('components.PortalInstall.5q0aajl77f40')"
           />
         </el-form-item>
-
+        <el-form-item
+          :label="$t('step2.compoents.portalInstall.portalType')"
+          prop="portalType"
+          @change="changePortalType"
+        >
+          <el-radio-group v-model="form.portalType">
+            <el-radio-button label="MULTI_DB">
+              MULTI_DB
+            </el-radio-button>
+            <el-radio-button label="MYSQL_ONLY">
+              MYSQL_ONLY
+            </el-radio-button>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item
           :label="$t('components.PortalInstall.5q0aajl77lg33')"
           prop="installType"
@@ -144,13 +166,12 @@
         <template v-if="form.installType === INSTALL_TYPE.OFFLINE">
           <el-form-item
             :label="$t('components.PortalInstall.5q0aajl77lg9')"
-            :rules="[
-            {
-              required: true,
+            :rules="[{
+              required: form.installType === INSTALL_TYPE.OFFLINE,
               validator: validUpload,
-            },
-          ]"
+            },]"
             prop="packagePath"
+            class="upload-container"
           >
             <el-upload
               ref="uploadRef"
@@ -161,8 +182,8 @@
               drag
               @before-remove="handleBeforeRemove"
             >
-              <el-icon class="el-icon--upload">
-                <plus/>
+              <el-icon class="el-icon--upload" :size="40">
+                <Plus/>
               </el-icon>
               <div class="el-upload__text">
                 {{ $t('components.PortalInstall.5q0aajl77lg10') }}
@@ -171,27 +192,55 @@
           </el-form-item>
         </template>
 
-        <template v-if="form.installType !== INSTALL_TYPE.IMPORTINSTALL">
-          <el-form-item :label="$t('components.PortalInstall.5q0aajl77lg16')">
-            <el-input
+        <template v-if="form.installType !== INSTALL_TYPE.IMPORTINSTALL && isMysqlPortaltype === true">
+          <el-form-item :label="$t('components.PortalInstall.5q0aajl77lg16')"
+                        :rules="[{
+                          required: form.installType !== INSTALL_TYPE.IMPORTINSTALL && isMysqlPortaltype === true,
+                          message: $t('transcribe.create.required'),
+                        }]"
+          >
+            <el-input-number
+              min="1" max="65535"
               v-model="thirdPartyParam.zookeeperPort"
               :placeholder="$t('components.PortalInstall.5q0aajl77lg18')"
             />
           </el-form-item>
-          <el-form-item :label="$t('components.PortalInstall.5q0aajl77lg17')">
-            <el-input
+          <el-form-item :label="$t('components.PortalInstall.5q0aajl77lg17')"
+                        :rules="[{
+                          required: form.installType !== INSTALL_TYPE.IMPORTINSTALL && isMysqlPortaltype === true,
+                          message: $t('transcribe.create.required'),
+                        }]"
+          >
+            <el-input-number
+              min="1" max="65535"
               v-model="thirdPartyParam.kafkaPort"
               :placeholder="$t('components.PortalInstall.5q0aajl77lg19')"
             />
           </el-form-item>
-          <el-form-item :label="$t('components.PortalInstall.5q0aajl77lg30')">
-            <el-input
+          <el-form-item :label="$t('components.PortalInstall.5q0aajl77lg30')"
+                        :rules="[{
+                          required: form.installType !== INSTALL_TYPE.IMPORTINSTALL && isMysqlPortaltype === true,
+                          message: $t('transcribe.create.required'),
+                        }]"
+          >
+            <el-input-number
+              min="1" max="65535"
               v-model="thirdPartyParam.schemaRegistryPort"
               :placeholder="$t('components.PortalInstall.5q0aajl77lg31')"
             />
           </el-form-item>
-          <el-form-item :label="$t('components.PortalInstall.5q0aajl77lg27')">
+          <el-form-item :label="$t('components.PortalInstall.5q0aajl77lg27')"
+                        :rules="[{
+                          required: form.installType !== INSTALL_TYPE.IMPORTINSTALL && isMysqlPortaltype === true,
+                          message: $t('transcribe.create.required'),
+                        },
+                        {
+                          validator: validateInstallPath,
+                          trigger: 'blur'
+                        }]"
+          >
             <el-input
+              maxlength="255"
               v-model="thirdPartyParam.kafkaInstallDir"
               :placeholder="$t('components.PortalInstall.5q0aajl77lg29')"
             />
@@ -255,7 +304,7 @@ import {getPortalDownloadInfoList} from '@/api/common'
 import {INSTALL_TYPE, KAFKA_CONFIG_TYPE} from '@/utils/constants'
 import {useI18n} from 'vue-i18n'
 import {Modal} from '@arco-design/web-vue'
-
+import {Plus} from '@element-plus/icons-vue'
 const {t} = useI18n()
 
 const props = defineProps({
@@ -277,6 +326,22 @@ const form = reactive({
   jarName: 'portalControl-1.0-SNAPSHOT-exec.jar',
   pkgUploadPath: {}
 })
+
+const validateInstallPath = (rule, value, callback) => {
+  if (!value) {
+    callback()
+    return
+  }
+  if (!/^[~\/]/.test(value)) {
+    callback(new Error(t('transcribe.create.formaterror')))
+    return
+  }
+  if (/\/{2,}/.test(value)) {
+    callback(new Error(t('transcribe.create.formaterror')))
+    return
+  }
+  callback()
+}
 
 const packageInfos = reactive({
   value: []
@@ -310,7 +375,10 @@ watch(
   () => props.open,
   (v) => {
     if (v) {
-      getPortalDownloadInfoList(props.hostId).then((res) => {
+      loading.value = true
+      form.portalType = props.installInfo?.portalType?props.installInfo?.portalType: 'MYSQL_ONLY'
+      isMysqlPortaltype.value = form.portalType === 'MYSQL_ONLY'? true : false
+      getPortalDownloadInfoList(props.hostId, form.portalType).then((res) => {
         packageInfos.value = res.data
         getHostUsers()
       })
@@ -324,6 +392,7 @@ watch(
       packageInfos.value = []
       upload.fileList = []
       showPermission.value = false
+      isMysqlPortaltype.value = form.portalType === 'MYSQL_ONLY'? true : false
     }
     visible.value = v
   }
@@ -341,6 +410,16 @@ watch(
   }
 )
 
+const isMysqlPortaltype = ref(true)
+const changePortalType =() => {
+  if (form.portalType === 'MULTI_DB') {
+    isMysqlPortaltype.value = false
+  }
+  getPortalDownloadInfoList(props.hostId, form.portalType).then((res) => {
+    packageInfos.value = res.data
+  })
+}
+
 const getHostUsers = () => {
   hostUsers(props.hostId).then((res) => {
     hostUserData.value = res.data.length > 0 ? res.data : []
@@ -350,13 +429,7 @@ const getHostUsers = () => {
       form.installPath = props.installInfo?.installPath
       form.pkgUploadPath = props.installInfo?.pkgUploadPath
       if (form.pkgUploadPath?.realPath) {
-        upload.fileList = [
-          {
-            uid: '-1',
-            name: form.pkgUploadPath.name,
-            url: form.pkgUploadPath.realPath
-          }
-        ]
+        upload.fileList = []
       }
     } else {
       form.hostUserId = ''
@@ -364,6 +437,10 @@ const getHostUsers = () => {
     }
     form.pkgDownloadUrl = props.installInfo?.pkgDownloadUrl || form.pkgDownloadUrl
     form.pkgName = props.installInfo?.pkgName || form.pkgName
+  }) .catch((error) => {
+    console.log(error)
+  }) .finally(() => {
+    loading.value = false
   })
 }
 
@@ -389,9 +466,9 @@ const cancel = () => {
 }
 
 const confirmSubmit = () => {
-  formRef.value?.validate((valid) => {
+  formRef.value?.validate(async (valid) => {
     if (valid) {
-      const params = buildInstallReq()
+      const params = await buildInstallReq()
       loading.value = true
       let method = props.mode === 'install' ? installPortal : reInstallPortal
       method(props.hostId, params)
@@ -422,20 +499,18 @@ const buildInstallReq = () => {
   params.append('thirdPartySoftwareConfig.installDir', thirdPartyParam.kafkaInstallDir)
   params.append('thirdPartySoftwareConfig.schemaRegistryPort', thirdPartyParam.schemaRegistryPort)
 
+  params.append('portalType', form.portalType)
   let uploadPath = form.pkgUploadPath
   if (form.installType === INSTALL_TYPE.ONLINE) {
     uploadPath = {}
     params.append('pkgName', form.pkgName)
   }
   params.append('pkgUploadPath', JSON.stringify(uploadPath))
-  if (upload.fileList.length > 0) {
+  if (upload.fileList.length > 0 && form.installType === INSTALL_TYPE.OFFLINE) {
     const file = upload.fileList[0]
-    // onlu init file need here
-    if (file.status === 'init') {
-      params.append('file', file.file)
-      if (form.installType === INSTALL_TYPE.OFFLINE) {
-        params.append('pkgName', file.name)
-      }
+    if (form.installType === INSTALL_TYPE.OFFLINE) {
+      params.append('file', file.raw)
+      params.append('pkgName', file.name)
     }
   }
   return params
@@ -462,17 +537,18 @@ const handleBeforeRemove = (file) => {
   })
 }
 
-const validUpload = (val, cb) => {
-  if (upload.fileList.length > 0) {
-    cb()
+const validUpload = (rule, val, cb) => {
+  if (upload.fileList.length <= 0) {
+    cb(new Error(t('components.PortalInstall.5q0aajl77lg13')))
   } else {
-    cb(t('components.PortalInstall.5q0aajl77lg13'))
+    cb()
   }
 }
 
 onMounted(() => {
   visible.value = props.open
 })
+
 </script>
 
 <style lang="less" scoped>
@@ -513,5 +589,20 @@ onMounted(() => {
 
 :deep(.arco-upload-progress) {
   display: none;
-}</style>
+}
+
+.upload-container :deep(.el-upload),
+.upload-container :deep(.el-upload--text),
+.upload-container :deep(.is-drag),
+.upload-container :deep(.el-upload-dragger){
+  width: 400px !important;
+}
+
+.page-input-size :deep(.el-form-item .el-input),
+.page-input-size :deep(.el-form-item .el-select),
+.page-input-size :deep(.el-form-item .el-input-number){
+  width: 300px !important;
+}
+
+</style>
 

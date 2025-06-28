@@ -42,19 +42,21 @@
       <el-form :model="form" inline>
         <el-row class="form-margin">
           <el-form-item prop="ip" style="margin-left: -17px" :label="$t('step2.index.physicalIP')">
-            <el-input v-model.trim="form.ip" clearable :placeholder="$t('step3.index.5q093f8y8b40')" style="width: 160px" />
+            <el-input v-model.trim="form.ip" clearable :placeholder="$t('step3.index.5q093f8y8b40')" style="width: 160px"
+                      maxlength="255"/>
           </el-form-item>
           <el-form-item prop="hostname" style="margin-left: -17px" :label="$t('step2.index.hostName')">
-            <el-input v-model.trim="form.hostname" clearable :placeholder="$t('step3.index.5q093f8y8fs0')" style="width: 160px" />
+            <el-input v-model.trim="form.hostname" clearable :placeholder="$t('step3.index.5q093f8y8fs0')" style="width: 160px"
+                      maxlength="255"/>
           </el-form-item>
           <el-form-item prop="cpu" style="margin-left: -17px" :label="$t('step2.index.CPUcores')">
-            <el-input v-model.number="form.cpu" maxlength="5" clearable :placeholder="$t('step3.index.5q093f8y8j40')" style="width: 160px" />
+            <el-input v-model.number="form.cpu" maxlength="5" clearable :placeholder="$t('step3.index.5q093f8y8j40')" style="width: 160px"/>
           </el-form-item>
           <el-form-item prop="memory" style="margin-left: -17px" :label="$t('step2.index.remainMemory')">
-            <el-input v-model.number="form.memory" maxlength="10" clearable :placeholder="$t('step3.index.5q093f8y8lw0')" style="width: 160px" />
+            <el-input v-model.number="form.memory" maxlength="10" clearable :placeholder="$t('step3.index.5q093f8y8lw0')" style="width: 160px"  />
           </el-form-item>
           <el-form-item prop="disk" style="margin-left: -17px" :label="$t('step2.index.remainHarddiskCapacity')">
-            <el-input v-model.number="form.disk" maxlength="10" clearable :placeholder="$t('step3.index.5q093f8y8p40')" style="width: 160px" />
+            <el-input v-model.number="form.disk" maxlength="10" clearable :placeholder="$t('step3.index.5q093f8y8p40')" style="width: 160px"/>
           </el-form-item>
         </el-row>
         <el-row class="form-margin, flex-end">
@@ -120,11 +122,17 @@
                 {{ $t('step2.index.installFailed') }}
               </span>
               <span v-else-if="row.installPortalStatus === PORTAL_INSTALL_STATUS.INSTALLING">
-                {{ $t('step2.index.installing') }}
+                {{ $t('step2.index.installIng') }}
               </span>
             </el-row>
           </template>
         </el-table-column>
+        <el-table-column
+          :label="$t('step2.index.portalVersion')"
+          prop="installInfo.portalType"
+          :min-width="100"
+          show-overflow-tooltip
+        />
         <el-table-column
           :label="$t('step2.index.hostNameOs')"
           prop="hostInfo.hostname"
@@ -569,7 +577,6 @@ const getHostsData = () => {
       timer && clearTimeout(timer)
       timer = null
     }) .finally(() =>{
-      console.log(selectedKeys.value)
     tableData.value.forEach((row) =>{
       const isSelected = selectedKeys.value.includes(row.hostId)
       tableRef.value?.toggleRowSelection(row, isSelected)

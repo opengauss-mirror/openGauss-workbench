@@ -3,7 +3,7 @@
     <div class="main-con">
       <el-container class="page-container">
         <el-header class="header">
-          <el-page-header @back="backToIndex" :title="t('task.index.indexName')" class="page-header text-color-second">
+          <el-page-header @back="backToIndex" :title="t('task.index.back')" class="page-header text-color-second">
             <template #content>
               <span class="text-color font-600 mr-3">{{ $t('task.index.indexName') }}</span>
             </template>
@@ -36,8 +36,7 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, reactive, onMounted, provide, computed, nextTick, getCurrentInstance, toRaw} from 'vue'
-import {Message} from '@arco-design/web-vue'
+import {ref, onMounted, provide, computed, toRaw} from 'vue'
 import Step1 from './step1/index.vue'
 import Step2 from './step2/index.vue'
 import {migrationSave, migrationUpdate, defaultParams} from '@/api/task'
@@ -63,6 +62,7 @@ interface subTaskList {
     nodeId: string
   },
   sourceDBName: string,
+  sourceSchema: string[],
   seletedTbl: string[],
   sourceTables: string,
   targetNodeName: string,
@@ -190,11 +190,11 @@ const saveConfig = async () => {
     const installedHosts = await findHostsFromTableByStatus(selectedPortal.value, PORTAL_INSTALL_STATUS.INSTALLED)
     taskBasicInfo.value.selectedHosts = []
     installedHosts.map((item) => taskBasicInfo.value.selectedHosts.push(item.hostId))
-    if(selectedPortal.value.length !== taskBasicInfo.value.subTaskData.length) {
+    if(selectedPortal.value.length !== installedHosts.length) {
       showMessage('error',t('task.index.portalStatuserrMsg'))
       return
     }
-    if (taskBasicInfo.value.subTaskData.length !== taskBasicInfo.value.selectedHosts.length) {
+    if (selectedPortal.value.length !== taskBasicInfo.value.subTaskData.length) {
       showMessage('error',t('task.index.portalNumerrMsg'))
       return
     }
@@ -240,6 +240,8 @@ const saveConfig = async () => {
         sourceDbPort: item.sourceNodeInfo.port,
         sourceDbUser: item.sourceNodeInfo.username,
         sourceNodeId: item.sourceNodeInfo.nodeId,
+        sourceSchemas: Object.values(item.sourceSchema).join(','),
+        sourceDbType: item.sourceDbType.toUpperCase(),
         targetDb: item.targetDBName,
         targetDbHost: item.targetNodeInfo.host,
         targetDbPass: item.targetNodeInfo.password,
@@ -293,14 +295,18 @@ const saveConfig = async () => {
   }
 }
 
-const getDefaultParams = () => {
-  return defaultParams().then((res: any) => {
+const getDefaultParams = (type: string) => {
+  return defaultParams(type.toUpperCase()).then((res: any) => {
     if(Number(res.code) === 200) {
-      defaultBasicData.value = res.data.slice(0, 12)
+      if (type === 'MYSQL') {
+        defaultBasicData.value = res.data.slice(0, 12)
+      } else {
+        defaultBasicData.value = res.data
+      }
+
     }
-  }).catch(error => {
+  }).catch((error) => {
     console.log(error)
-    throw error;
   })
 }
 
@@ -317,6 +323,7 @@ const initSubTask = (currentTab: string) => {
     sourceDBName: '',
     seletedTbl: [],
     sourceTables: '',
+    sourceSchema: [],
     targetNodeName: '',
     targetNodeInfo: {
       host: '',
@@ -337,7 +344,7 @@ const initSubTask = (currentTab: string) => {
     id: '',
     curretTab: Number(currentTab),
     subTaskName: `Task_${dayjs().format('YYYYMMDDHHmm')}_${Math.random().toString(36).substring(2, 8)}` + currentTab,
-    sourceDbType: 'MySQL',
+    sourceDbType: 'MYSQL',
     sourceIpPort: '',
     targetIpPort: '',
     sourceIp: '',
@@ -353,7 +360,7 @@ const initSubTask = (currentTab: string) => {
 }
 
 const getTaskDetail = async (id: number) => {
-  await getDefaultParams()
+  await getDefaultParams('MYSQL')
   taskEditInfo(id).then((res: KeyValue) => {
     if (Number(res.code) !== 200) return
     const {data} = res
@@ -373,7 +380,7 @@ const getTaskDetail = async (id: number) => {
         isSystemAdmin, isAdjustKernelParam, migrationModelId, taskParams,
         sourceDb, sourceDbHost, sourceDbPort, sourceDbUser, sourceDbPass, sourceNodeId,
         targetDb, targetDbHost, targetDbPort, targetDbUser, targetDbPass, targetNodeId, targetDbVersion,
-        sourceTables
+        sourceTables, sourceDbType, sourceSchemas
       } = task
 
       const sourceNodeName = `${sourceDbHost}:${sourceDbPort}`;
@@ -392,6 +399,8 @@ const getTaskDetail = async (id: number) => {
           sourceDBName: sourceDb,
           sourceNodeName,
           sourceIpPort: sourceNodeName,
+          sourceDbType,
+          sourceSchema: [],
           targetDBName: targetDb,
           targetNodeName,
           targetIpPort: targetNodeName,
@@ -420,11 +429,12 @@ const getTaskDetail = async (id: number) => {
     });
   }).catch(console.error)
     .finally(() => {
-    currentStep.value = 1
-  })
-};
+      currentStep.value = 1
+    })
+}
+
 const inittaskBasicInfo = async () => {
-  await getDefaultParams()
+  await getDefaultParams('MYSQL')
   taskBasicInfo.value.taskName = `Task_${dayjs().format('YYYYMMDDHHmm')}_${Math.random().toString(36).substring(2, 8)}`
   taskBasicInfo.value.subTaskData.length = 0
   taskBasicInfo.value.selectedHosts = []

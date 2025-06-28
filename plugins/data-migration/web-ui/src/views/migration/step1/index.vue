@@ -54,9 +54,10 @@
             >
               <h4> {{ $t('step1.index.sourceData') }} </h4>
               <el-form-item :label="t('step1.index.sqlType')" label-position="left" prop="sourceDbType">
-                <el-radio-group v-model="taskBasicInfo.subTaskData[0].sourceDbType">
-                  <el-radio-button value="MySQL">MySQL</el-radio-button>
-                  <el-radio-button value="PostgreSQL" disabled>PostgreSQL</el-radio-button>
+                <el-radio-group v-model="taskBasicInfo.subTaskData[curTableTabs].sourceDbType"
+                                @change="changeSourceType('select')">
+                  <el-radio-button value="MYSQL">MYSQL</el-radio-button>
+                  <el-radio-button value="POSTGRESQL">POSTGRESQL</el-radio-button>
                   <el-radio-button value="openGauss" disabled>openGauss</el-radio-button>
                 </el-radio-group>
               </el-form-item>
@@ -93,7 +94,19 @@
                              :value="option.value"/>
                 </el-select>
               </el-form-item>
-              <el-form-item :label="t('step1.index.sourceTable')" label-position="left" prop="sourceTable">
+              <el-form-item :label="t('step1.index.sourceSchema')" label-position="left" prop="sourceSchema"
+                            v-if="taskBasicInfo.subTaskData[curTableTabs].sourceDbType.toUpperCase() === 'POSTGRESQL'">
+                <el-select v-model="taskBasicInfo.subTaskData[curTableTabs].sourceSchema"
+                           :placeholder="t('step1.index.pleaseSelect')" filterable
+                           multiple collapse-tags collapse-tags-tooltip :max-collapse-tags="3"
+                           class="select-width"
+                           :teleported="false">
+                  <el-option v-for="option in sourceSchemaOptions" :key="option.key" :label="option.value"
+                             :value="option.value"/>
+                </el-select>
+              </el-form-item>
+              <el-form-item :label="t('step1.index.sourceTable')" label-position="left" prop="sourceTable"
+                            v-if="taskBasicInfo.subTaskData[curTableTabs].sourceDbType === 'MYSQL'">
                 <el-radio-group v-model="taskBasicInfo.subTaskData[curTableTabs].isSelectAlltables">
                   <el-radio-button value=true @click="changeSeleTbl(true)">{{$t('step1.index.allTable') }}</el-radio-button>
                   <el-radio-button value=false @click="changeSeleTbl(false)">{{$t('step1.index.selectedTable') }}</el-radio-button>
@@ -108,6 +121,12 @@
                   v-model="taskBasicInfo.subTaskData[curTableTabs].targetIpPort"
                   :data="targetClusterfilterOption"
                   :load="loadTargetNode"
+                  :props="{
+                    value: 'value',
+                    label: 'label',
+                    children: 'children',
+                    isLeaf: 'isLeaf'
+                  }"
                   lazy
                   :filter-method="filterTargetMethod"
                   filterable
@@ -165,7 +184,9 @@
               <el-form-item :label="t('step1.index.migrationConfig')" label-position="left"
                             prop="isDefaultRecordConfig">
                 <el-radio-group v-model="taskBasicInfo.subTaskData[curTableTabs].isDefaultConfig">
-                  <el-radio-button value=true>{{ $t('step1.index.defaultConfig') }}</el-radio-button>
+                  <el-radio-button value=true @click="defaultParamsConfig('customized')">
+                    {{ $t('step1.index.defaultConfig') }}
+                  </el-radio-button>
                   <el-radio-button value=false @click="handleParamsConfig('customized')">
                     {{ $t('step1.index.customConfig') }}
                   </el-radio-button>
@@ -185,7 +206,7 @@
                 </div>
               </el-form-item>
             </el-form>
-            <div style="text-align: left; padding: 10px 0;">
+            <div style="text-align: left; padding: 10px 0;" v-if="curTableTabs > 1">
               <el-button type="primary" @click="saveSubTask()">{{ $t('step1.index.save') }}</el-button>
               <el-button @click="resetSubTask">{{ $t('step1.index.reset') }}</el-button>
               <el-button v-if="curTableTabs > 0" @click="removeTab(curTableTabs.toString())">{{
@@ -212,8 +233,9 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, onMounted, ref, toRaw} from "vue"
-import { sourceClusterDbsData, sourceClusters, sourceClustersType, targetClusterDbsData, targetClusters,} from "@/api/playback"
+import {computed, nextTick, onMounted, ref, toRaw, unref, watch} from "vue"
+import {checkTargetclusterMaster, sourceClusterDbsType, sourceClusterSchema, sourceClustersType, targetClusterDbsData,
+  targetClusters,} from "@/api/playback"
 import ParamsConfig from './components/ParamsConfig.vue'
 import AddJdbc2 from './components/AddJdbc.vue'
 import {IconHelpCircle} from "@computing/opendesign-icons"
@@ -287,7 +309,7 @@ const handleTabClick = (tab: any) => {
 const addHostRef = ref()
 
 const finishAddJdbc = (type: string) => {
-  if (type === 'MYSQL') {
+  if (type.toUpperCase() === 'MYSQL' || type.toUpperCase() === 'POSTGRESQL') {
     getSourceClustersData()
   } else {
     getTargetClustersData()
@@ -378,6 +400,7 @@ interface subTaskList {
     nodeId: string
   },
   sourceDBName: string,
+  sourceSchema: string[],
   seletedTbl: string[],
   sourceTables: string,
   targetNodeName: string,
@@ -467,6 +490,10 @@ const taskBasicRules = computed(() => {
     sourceDBName: [
       {required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change']},
     ],
+    sourceSchema: [
+      {required: taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType.toUpperCase() === 'POSTGRESQL',
+        message: t('transcribe.create.required'), trigger: ['blur', 'change']},
+    ],
     targetIpPort: [
       {required: true, trigger: ['blur', 'change'], message: t('transcribe.create.withouytargetip')},
     ],
@@ -474,11 +501,27 @@ const taskBasicRules = computed(() => {
       {required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change']},
     ],
     mode: [
-      {required: true, message: t('迁移模式必须选择'), trigger: ['blur', 'change']},
+      {required: true, message: t('step1.index.onlineContent'), trigger: ['blur', 'change']},
     ],
   }
 })
 
+const changeSourceType = (type?: string) => {
+  if (type === 'select') {
+    taskBasicInfo.value.subTaskData[curTableTabs.value].sourceIpPort = ''
+    taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDBName = ''
+    taskBasicInfo.value.subTaskData[curTableTabs.value].seletedTbl = []
+    taskBasicInfo.value.subTaskData[curTableTabs.value].sourceSchema = []
+    taskBasicInfo.value.subTaskData[curTableTabs.value].isDefaultConfig = true
+    defaultParamsConfig('customized')
+    preSourceDb.value = ''
+  }
+  const formRef = taskDataFormRef.value[curTableTabs.value]
+  if (formRef) {
+    formRef.clearValidate()
+  }
+  getSourceClustersData()
+}
 
 const taskNameFormRef = ref<InstanceType<typeof ElTable> | null>(null)
 const taskDataFormRef = ref<(FormInstance | null)[]>([])
@@ -495,7 +538,7 @@ const sourceClusterOption = ref<TreeNode[]>([])
 const sourceClusterfilterOption = ref<TreeNode[]>([])
 const sourceClusterInfo = ref<{ [key: string]: string[] }>({})
 const getSourceClustersData = () => {
-  const tempDbType = taskBasicInfo.value?.subTaskData?.[curTableTabs.value]?.sourceDbType ?? 'MySQL';
+  const tempDbType = taskBasicInfo.value?.subTaskData?.[curTableTabs.value]?.sourceDbType ?? 'MYSQL';
   sourceClustersType(tempDbType).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       sourceClusterInfo.value = {}
@@ -558,9 +601,22 @@ const targetClusterfilterOption = ref<TreeNode[]>([])
 const targetClusterInfo = ref<{ [key: string]: string[] }>({})
 const tempTargetCluster = ref<{ [key: string]: string[] }>({})
 
-const filterTargetMethod = (value: any) => {
-  targetClusterfilterOption.value = [...targetClusterOption.value].filter((item) => item.label.includes(value))
+const filterTargetMethod = (value: string) => {
+  targetClusterfilterOption.value = [...targetClusterOption.value]
+    .filter(item => item.label.includes(value))
+    .map(item => ({
+      ...item,
+      isLeaf: false,
+      children: item.children
+        ? item.children.filter(child => child.label.includes(value))
+          .map(child => ({
+            ...child,
+            isLeaf: true
+          }))
+        : []
+    }))
 }
+
 const getTargetClustersData = () => {
   targetClusters().then((res: KeyValue) => {
     if (Number(res.code) === 200) {
@@ -570,9 +626,12 @@ const getTargetClustersData = () => {
       targetClusterOption.value = res.data.targetClusters.map((item: any) => ({
         value: item.clusterId,
         label: item.clusterId,
+        isLeaf: false,
         children: item.clusterNodes?.map((clusterNodes: any) => ({
           value: `${clusterNodes.publicIp}:${clusterNodes.dbPort}`,
           label: `${clusterNodes.publicIp}:${clusterNodes.dbPort}`,
+          isLeaf: true,
+          disabled: false
         }))
       }))
       res.data.targetClusters.forEach((item: any) => {
@@ -606,33 +665,27 @@ const loadTargetNode = (node: Node, resolve: (data: TreeNode[]) => void) => {
     resolve(targetClusterOption.value)
     return
   }
-  // else if (node.level === 1) {
-  //   console.log('632', node.level === 1?node.data.label:'no')
-  //   const disabledMap = new Map()
-  //   const tempClusterName = node.data.label
-  //   checkTargetclusterMaster(tempClusterName) .then((res) => {
-  //     if(Number(res.code) === 200) {
-  //       res.data.forEach((item) => {
-  //         disabledMap.set(item)
-  //       })
-  //       const processedChildren = (node.data.children || []).map((child: any) => ({
-  //         ...child,
-  //         disabled: disabledMap.get(String(child.value)) || false
-  //       }))
-  //       resolve(processedChildren)
-  //     }
-  //   }).catch((error) => {
-  //     console.log(eror)
-  //   })
-  // }
-  const disabledMap = new Map()
-  disabledMap.set('192.168.0.163:1002', true)
-  disabledMap.set('192.168.0.163:1004', true)
-  const processedChildren = (node.data.children || []).map((child: any) => ({
-    ...child,
-    disabled: disabledMap.get(String(child.value)) || false
-  }))
-  resolve(processedChildren)
+  else if (node.level === 1) {
+    const disabledMap = new Map()
+    const tempClusterName = node.data.label
+    checkTargetclusterMaster(tempClusterName) .then((res) => {
+      if(Number(res.code) === 200) {
+        Object.entries(res.data).forEach(([key, value]) => {
+          disabledMap.set(key, value)
+        })
+        const processedChildren = (node.data.children || []).map((child: any) => ({
+          ...child,
+          disabled: !disabledMap.get(String(child.value))
+        }))
+        resolve(processedChildren)
+      }
+    }).catch((error) => {
+      console.log(error)
+    })
+  } else {
+    resolve([])
+    return
+  }
 }
 
 const preSourceDb = ref<string>('')
@@ -643,6 +696,16 @@ const changeSourceDb = () => {
     taskBasicInfo.value.subTaskData[curTableTabs.value].isSelectAlltables = true
   }
   preSourceDb.value = taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDBName
+  if(taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType.toUpperCase() === "POSTGRESQL") {
+    getSourceSchema()
+    if(taskBasicInfo.value.subTaskData[curTableTabs.value].sourceSchema.length !== 0) {
+      taskBasicInfo.value.subTaskData[curTableTabs.value].sourceSchema.length = 0
+    }
+    const formRef = taskDataFormRef.value[curTableTabs.value]
+    if (formRef) {
+      formRef.clearValidate()
+    }
+  }
 }
 
 const sourceDBOptions = ref<{ [key: string]: string }[]>([])
@@ -673,6 +736,27 @@ const updateNodeInfo = (subTask: any, ip: string, port: number, clusterInfo: any
   }
 }
 
+const sourceSchemaOptions = ref<{ [key: string]: string }[]>([])
+const getSourceSchema = async (type?: string) => {
+  sourceSchemaOptions.value = []
+  const subTask = taskBasicInfo.value.subTaskData[curTableTabs.value]
+  const {sourceIpPort} = subTask
+  const [ip, port] = await parseIpPort(sourceIpPort)
+  if (!ip || !port) return
+  const clusterInfo = {...sourceClusterInfo.value[sourceIpPort]} || []
+  await updateNodeInfo(subTask, ip, port, clusterInfo, 'source')
+  clusterInfo[2] = await encryptPassword(clusterInfo[2])
+  const formData = createFormData(subTask, clusterInfo)
+  formData.append('dbName', taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDBName);
+  sourceClusterSchema(formData, taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType).then((res: any) => {
+    if (Number(res.code) === 200) {
+      sourceSchemaOptions.value = res.data.map((db: any) => ({key: db, value: db}))
+    }
+  }).catch((error) => {
+    console.error('获取源schema失败:', error)
+  })
+}
+
 const parseIpPort = (ipPort: string) => {
   const lastColonIndex = ipPort.lastIndexOf(':');
   if (lastColonIndex === -1) return [null, null];
@@ -684,9 +768,12 @@ const parseIpPort = (ipPort: string) => {
 
 const createFormData = (subTask: any, clusterInfo: any[]) => {
   const formData = new FormData();
-  formData.append('url', `jdbc:${subTask.sourceDbType.toLowerCase()}://${subTask.sourceIp}:${subTask.sourcePort}`);
-  formData.append('username', clusterInfo[0]);
-  formData.append('password', clusterInfo[1]);
+  const tempUrl = taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType === 'MYSQL' ?
+    `jdbc:${subTask.sourceDbType.toLowerCase()}://${subTask.sourceIp}:${subTask.sourcePort}` :
+    `jdbc:${subTask.sourceDbType.toLowerCase()}://${subTask.sourceIp}:${subTask.sourcePort}/postgres`
+  formData.append('url', tempUrl)
+  formData.append('username', clusterInfo[0])
+  formData.append('password', clusterInfo[1])
   return formData;
 };
 
@@ -711,7 +798,7 @@ const getSourceClusterDB = async (type?: string) => {
   await updateNodeInfo(subTask, ip, port, clusterInfo, 'source')
   clusterInfo[2] = await encryptPassword(clusterInfo[2])
   const formData = createFormData(subTask, clusterInfo)
-  sourceClusterDbsData(formData).then((res: any) => {
+  sourceClusterDbsType(formData, taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType).then((res: any) => {
     if (Number(res.code) === 200) {
       updateDatabaseOptions(res.data, 'source')
     }
@@ -792,6 +879,7 @@ const saveSubTask = async () => {
     const currentTabNum = curTableTabs.value + 1
     showMessage('success', t('step1.index.saveSubtaskSuc', {num: currentTabNum}))
     editableTabs.value[curTableTabs.value].isValid = true
+    subtaskValidFlag.value = true
     return true
   } else {
     const currentTabNum = curTableTabs.value + 1
@@ -864,19 +952,16 @@ const dataTblWin = async () => {
 }
 
 const dataTblWinClose = () => {
-  dataTblModalRef.value = false;
-  console.log('rtest')
+  dataTblModalRef.value = false
   if(taskBasicInfo.value.subTaskData[curTableTabs.value].seletedTbl.length === 0) {
     taskBasicInfo.value.subTaskData[curTableTabs.value].isSelectAlltables = true
     taskBasicInfo.value.subTaskData[curTableTabs.value].seletedTbl = []
     taskBasicInfo.value.subTaskData[curTableTabs.value].isSelectAlltables === true
-    console.log('rtest1')
     showMessage('info', t('step1.index.selectTblContent'))
   }
 }
 
 const handleTableSeleted = (selectedTblCurrent: any) => {
-  console.log('rtest2')
   taskBasicInfo.value.subTaskData[curTableTabs.value].seletedTbl = selectedTblCurrent
   if (selectedTblCurrent.length === 0) {
     taskBasicInfo.value.subTaskData[curTableTabs.value].isSelectAlltables = true
@@ -929,7 +1014,7 @@ const initSubTask = (currentTab: string) => {
     id: '',
     curretTab: Number(currentTab),
     subTaskName: `Task_${dayjs().format('YYYYMMDDHHmm')}_${Math.random().toString(36).substring(2, 8)}` + currentTab,
-    sourceDbType: 'MySQL',
+    sourceDbType: 'MYSQL',
     sourceIpPort: '',
     targetIpPort: '',
     sourceIp: '',
@@ -960,14 +1045,27 @@ const inittaskBasicInfo = async () => {
   })
 }
 
+watch(
+  () => {
+    const data = taskBasicInfo.value.subTaskData[curTableTabs.value]
+    return data ? { ...data } : null
+  },
+  (newData, oldData) => {
+    if (!newData || JSON.stringify(oldData) === JSON.stringify(newData)) return
+    if (editableTabs.value[curTableTabs.value]?.isValid === true && subtaskValidFlag.value && oldData !== null) {
+      editableTabs.value[curTableTabs.value].isValid = null
+    }
+  }, { deep: false })
 
 const props = defineProps<{
   modelValue: migrationTaskList,
   defaultBasicData: any
 }>()
 
+const subtaskValidFlag = ref(false)
 const defaultBasicData = ref()
 const init = () => {
+  subtaskValidFlag.value = false
   editableTabs.value = []
   taskBasicInfo.value = {...props.modelValue}
   defaultBasicData.value = toRaw(props.defaultBasicData)
@@ -989,6 +1087,7 @@ const init = () => {
       }
     })
   }
+  subtaskValidFlag.value = true
   preSourceDb.value = taskBasicInfo.value.subTaskData[curTableTabs.value] && taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDB !== '' ?
     taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDB : ''
 }
@@ -1009,7 +1108,6 @@ onMounted(() => {
 @import '@/assets/style/openGlobal.less';
 
 .background-main {
-  //height: auto;
   background-color: var(--o-bg-color-light);
   position: absolute;
   width: -webkit-fill-available;
