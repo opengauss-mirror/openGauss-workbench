@@ -514,7 +514,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             && !isPrimaryNodeInCluster(clusterNode))) {
             return dbList;
         }
-        String sql = "select datname from pg_database;";
+        String sql = "select datname, datcompatibility from pg_database;";
         List<Map<String, Object>> resultSet = queryTarget(clusterNode, "", sql);
         resultSet.forEach(ret -> {
             Map<String, Object> itemMap = new HashMap<>();
@@ -522,6 +522,8 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             itemMap.put("dbName", datname);
             Integer count = migrationTaskService.countNotFinishByTargetDb(clusterNode.getNodeId(), datname);
             itemMap.put("isSelect", count == 0);
+            String datcompatibility = ret.get("datcompatibility").toString();
+            itemMap.put("datcompatibility", datcompatibility);
             dbList.add(itemMap);
         });
         return dbList;

@@ -53,6 +53,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -491,30 +495,51 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
         if (CollUtil.isEmpty(records)) {
             return Collections.emptyList();
         }
-
         List<JdbcDbClusterVO> res = new ArrayList<>();
-
         Set<String> clusterIds = records.stream().map(OpsJdbcDbClusterEntity::getClusterId).collect(Collectors.toSet());
         Map<String, List<OpsJdbcDbClusterNodeEntity>> clusterNodeMap = opsJdbcDbClusterNodeService.mapClusterNodesByClusterId(clusterIds);
         final Set<String> ipSet = clusterNodeMap.values().stream().flatMap(val -> val.stream()).map(OpsJdbcDbClusterNodeEntity::getIp).collect(Collectors.toSet());
         Map<String, String> ipOsMap = hostService.mapOsByIps(ipSet);
-
+        Connection conn = null;
         for (OpsJdbcDbClusterEntity record : records) {
             List<JdbcDbClusterNodeVO> nodes = new ArrayList<>();
             JdbcDbClusterVO jdbcDbClusterVO = JdbcDbClusterVO.of(record, nodes);
-
             String clusterId = record.getClusterId();
             List<OpsJdbcDbClusterNodeEntity> clusterNodeEntityList = clusterNodeMap.get(clusterId);
             if (CollUtil.isNotEmpty(clusterNodeEntityList)) {
                 for (OpsJdbcDbClusterNodeEntity clusterNodeEntity : clusterNodeEntityList) {
                     nodes.add(JdbcDbClusterNodeVO.of(clusterNodeEntity, ipOsMap.get(clusterNodeEntity.getIp())));
+                    try {
+                        conn = JdbcUtil.getConnection(clusterNodeEntity.getUrl(), clusterNodeEntity.getUsername(),
+                            encryptionUtils.decrypt(clusterNodeEntity.getPassword()));
+                    } catch (OpsException e) {
+                        log.error("opsException: ", e);
+                    }
+                    jdbcDbClusterVO.setVersionNum(getDbVersion(conn));
                 }
             }
-
             res.add(jdbcDbClusterVO);
         }
-
         return res;
+    }
+
+    private String getDbVersion(Connection connection) {
+        if (connection == null) {
+            return "";
+        }
+        String sql = "select version()";
+        String version = "";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+            if (resultSet.next()) {
+                version = resultSet.getString(1);
+                return version;
+            }
+        } catch (SQLException e) {
+            log.error("query version fail", e);
+            throw new OpsException("query version fail");
+        }
+        return version;
     }
 
     private void saveClusterNode(OpsJdbcDbClusterEntity clusterEntity, JdbcDbClusterInputDto clusterInput) {
