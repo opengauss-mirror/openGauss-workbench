@@ -35,7 +35,6 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.enums.ops.ClusterRoleEnum;
-import org.opengauss.admin.common.enums.ops.DeployTypeEnum;
 import org.opengauss.admin.common.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,11 +71,6 @@ public class OpenEulerX86MinimaListOpsProvider extends AbstractOpsProvider {
             dataPath = opsClusterNodeEntities.stream().filter(
                 node -> node.getClusterRole() == ClusterRoleEnum.MASTER).findFirst().orElseThrow(
                 () -> new OpsException("Master node configuration not found")).getDataPath();
-            if (clusterEntity.getDeployType() == DeployTypeEnum.CLUSTER) {
-                dataPath = dataPath + "/master";
-            } else {
-                dataPath = dataPath + "/single_node";
-            }
         }
 
         String checkCommand = "gs_guc check -D " + dataPath + " -c \"enable_wdr_snapshot\"";
