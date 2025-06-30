@@ -32,4 +32,18 @@ public class CacheConfig {
                 .maximumSize(1000)
                 .build();
     }
+
+    /**
+     * get a caffeine cache instance to store the last modified time of a file
+     *
+     * @return Cache<String, Long>
+     */
+    @Bean
+    public Cache<String, Long> fileLastModifiedCache() {
+        return Caffeine.newBuilder()
+                .expireAfterWrite(10, TimeUnit.MINUTES)
+                .initialCapacity(100)
+                .maximumSize(10000)
+                .build();
+    }
 }

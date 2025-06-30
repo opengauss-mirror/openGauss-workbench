@@ -35,6 +35,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import org.opengauss.admin.common.core.domain.UploadInfo;
+import org.opengauss.admin.plugin.enums.PortalType;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -74,6 +75,7 @@ public class MigrationHostPortalInstall {
     private String pkgDownloadUrl;
     private String pkgName;
     private String jarName;
+    private PortalType portalType;
 
     @TableField(exist = false)
     @JSONField(name = "thirdPartySoftwareConfig", serialize = false, deserialize = false)
@@ -88,7 +90,15 @@ public class MigrationHostPortalInstall {
     @JSONField(serialize = false, deserialize = false)
     private MultipartFile file;
 
+    /**
+     * get portal log path
+     *
+     * @return String
+     */
     public String getPortalLogPath() {
+        if (PortalType.MULTI_DB.equals(portalType)) {
+            return installPath + "portal/logs/portal.log";
+        }
         return installPath + "portal/logs/portal_.log";
     }
 

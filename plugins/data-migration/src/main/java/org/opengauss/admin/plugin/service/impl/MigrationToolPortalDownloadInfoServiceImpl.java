@@ -6,6 +6,7 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.plugin.domain.MigrationToolPortalDownloadInfo;
+import org.opengauss.admin.plugin.enums.PortalType;
 import org.opengauss.admin.plugin.exception.PortalInstallException;
 import org.opengauss.admin.plugin.mapper.MigrationToolPortalDownloadInfoMapper;
 import org.opengauss.admin.plugin.service.MigrationToolPortalDownloadInfoService;
@@ -47,15 +48,21 @@ public class MigrationToolPortalDownloadInfoServiceImpl extends ServiceImpl<Migr
      * get portal installation package download information list
      *
      * @param hostId the host ID
+     * @param portalType portal type
      * @return package download information list
      */
     @Override
-    public List<MigrationToolPortalDownloadInfo> getPortalDownloadInfoList(String hostId) {
+    public List<MigrationToolPortalDownloadInfo> getPortalDownloadInfoList(String hostId, PortalType portalType) {
         OpsHostEntity opsHostEntity = checkHost(hostId);
         LambdaQueryWrapper<MigrationToolPortalDownloadInfo> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(MigrationToolPortalDownloadInfo::getHostOs, opsHostEntity.getOs())
                 .eq(MigrationToolPortalDownloadInfo::getHostCpuArch, opsHostEntity.getCpuArch())
                 .eq(MigrationToolPortalDownloadInfo::getHostOsVersion, opsHostEntity.getOsVersion());
+        if (PortalType.MULTI_DB.equals(portalType)) {
+            queryWrapper.eq(MigrationToolPortalDownloadInfo::getPortalType, PortalType.MULTI_DB);
+        } else {
+            queryWrapper.eq(MigrationToolPortalDownloadInfo::getPortalType, PortalType.MYSQL_ONLY);
+        }
 
         List<MigrationToolPortalDownloadInfo> portalDownloadInfos = list(queryWrapper);
         if (ObjectUtils.isEmpty(portalDownloadInfos)) {

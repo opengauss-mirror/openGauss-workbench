@@ -24,12 +24,16 @@
 
 package org.opengauss.admin.plugin.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.plugin.domain.MigrationTaskInitGlobalParam;
 import org.opengauss.admin.plugin.mapper.MigrationTaskInitGlobalParamMapper;
 import org.opengauss.admin.plugin.service.MigrationTaskInitGlobalParamService;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * @author xielibo
@@ -38,6 +42,11 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class MigrationTaskInitGlobalParamServiceImpl extends ServiceImpl<MigrationTaskInitGlobalParamMapper, MigrationTaskInitGlobalParam> implements MigrationTaskInitGlobalParamService {
-
-
+    @Override
+    public List<MigrationTaskInitGlobalParam> getPgsqlMigrationConfigParams() {
+        LambdaQueryWrapper<MigrationTaskInitGlobalParam> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MigrationTaskInitGlobalParam::getDbType, DbTypeEnum.POSTGRESQL);
+        wrapper.orderByAsc(MigrationTaskInitGlobalParam::getId);
+        return list(wrapper);
+    }
 }

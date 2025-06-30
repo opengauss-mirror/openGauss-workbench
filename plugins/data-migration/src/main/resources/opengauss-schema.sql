@@ -889,6 +889,8 @@ END;'
 
 SELECT add_migration_task_init_global_param_field_func();
 
+DROP FUNCTION add_migration_task_init_global_param_field_func;
+
 DELETE FROM "public"."tb_migration_task_init_global_param" WHERE "id" = 15;
 DELETE FROM "public"."tb_migration_task_init_global_param" WHERE "id" = 16;
 DELETE FROM "public"."tb_migration_task_init_global_param" WHERE "id" = 17;
@@ -1405,3 +1407,279 @@ UPDATE "public"."tb_migration_task_init_global_param"
 SET "param_value" = '20',
     "param_rules" = '[5,100]'
 WHERE "id" = 10;
+
+-------------------------------------------
+-- ALTER TABLE tb_migration_task_init_global_param
+-------------------------------------------
+
+CREATE OR REPLACE FUNCTION add_migration_task_init_global_param_field_func() RETURNS integer AS 'BEGIN
+    IF
+            (SELECT COUNT(*) AS ct1
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_NAME = ''tb_migration_task_init_global_param''
+               AND COLUMN_NAME = ''db_type'') = 0
+    THEN
+        ALTER TABLE tb_migration_task_init_global_param
+            ADD COLUMN db_type varchar(255);
+        COMMENT ON COLUMN "public"."tb_migration_task_init_global_param"."db_type" IS ''参数所属数据库类型'';
+    END IF;
+    RETURN 0;
+END;'
+    LANGUAGE plpgsql;
+
+SELECT add_migration_task_init_global_param_field_func();
+
+DROP FUNCTION add_migration_task_init_global_param_field_func;
+
+UPDATE "public"."tb_migration_task_init_global_param"
+SET "db_type" = 'MYSQL'
+WHERE "db_type" IS NULL;
+
+INSERT INTO "public"."tb_migration_task_init_global_param"
+("id", "param_key", "param_value", "param_desc", "param_type", "db_type")
+VALUES(32, 'is.migration.object', 'true', '是否迁移对象（view, trigger, function, procedure）', 3, 'POSTGRESQL')
+    ON DUPLICATE KEY UPDATE NOTHING;
+
+INSERT INTO "public"."tb_migration_task_init_global_param"
+("id", "param_key", "param_value", "param_desc", "param_type", "db_type")
+VALUES(33, 'schema.mappings', '', '源端到目标端的schema映射，不配置时，默认迁移至目标端的schema与源端schema同名，配置格式为：public:public,schema1:schema1,schema2:schema2，注意分隔符均为英文的冒号和逗号', 6, 'POSTGRESQL')
+    ON DUPLICATE KEY UPDATE NOTHING;
+
+-------------------------------------------
+-- ALTER TABLE tb_migration_host_portal_install
+-------------------------------------------
+
+CREATE OR REPLACE FUNCTION add_tb_migration_host_portal_install_field_func() RETURNS integer AS 'BEGIN
+    IF
+            (SELECT COUNT(*) AS ct1
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_NAME = ''tb_migration_host_portal_install''
+               AND COLUMN_NAME = ''portal_type'') = 0
+    THEN
+        ALTER TABLE tb_migration_host_portal_install
+            ADD COLUMN portal_type varchar(255);
+        COMMENT ON COLUMN "public"."tb_migration_host_portal_install"."portal_type" IS ''portal类型：MYSQL_ONLY，MULTI_DB'';
+    END IF;
+    RETURN 0;
+END;'
+    LANGUAGE plpgsql;
+
+SELECT add_tb_migration_host_portal_install_field_func();
+
+DROP FUNCTION add_tb_migration_host_portal_install_field_func;
+
+UPDATE "public"."tb_migration_host_portal_install"
+SET "portal_type" = 'MYSQL_ONLY'
+WHERE "portal_type" IS NULL;
+
+-------------------------------------------
+-- ALTER TABLE tb_migration_tool_portal_download_info
+-------------------------------------------
+
+CREATE OR REPLACE FUNCTION add_tb_migration_tool_portal_download_info_field_func() RETURNS integer AS 'BEGIN
+    IF
+            (SELECT COUNT(*) AS ct1
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_NAME = ''tb_migration_tool_portal_download_info''
+               AND COLUMN_NAME = ''portal_type'') = 0
+    THEN
+        ALTER TABLE tb_migration_tool_portal_download_info
+            ADD COLUMN portal_type varchar(255);
+        COMMENT ON COLUMN "public"."tb_migration_tool_portal_download_info"."portal_type" IS ''portal类型：MYSQL_ONLY，MULTI_DB'';
+    END IF;
+    RETURN 0;
+END;'
+    LANGUAGE plpgsql;
+
+SELECT add_tb_migration_tool_portal_download_info_field_func();
+
+DROP FUNCTION add_tb_migration_tool_portal_download_info_field_func;
+
+UPDATE "public"."tb_migration_tool_portal_download_info"
+SET "portal_type" = 'MYSQL_ONLY'
+WHERE "portal_type" IS NULL;
+
+INSERT INTO "public"."tb_migration_tool_portal_download_info"
+("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type")
+VALUES(35, 'centos', '7', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/centos7/', 'openGauss-portal-7.0.0rc2-CentOS7-x86_64.tar.gz', 'openGauss-portal-7.0.0rc2.jar', 'MULTI_DB');
+INSERT INTO "public"."tb_migration_tool_portal_download_info"
+("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type")
+VALUES(36, 'openEuler', '20.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler20.03/', 'openGauss-portal-7.0.0rc2-openEuler20.03-x86_64.tar.gz', 'openGauss-portal-7.0.0rc2.jar', 'MULTI_DB');
+INSERT INTO "public"."tb_migration_tool_portal_download_info"
+("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type")
+VALUES(37, 'openEuler', '20.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler20.03/', 'openGauss-portal-7.0.0rc2-openEuler20.03-aarch64.tar.gz', 'openGauss-portal-7.0.0rc2.jar', 'MULTI_DB');
+INSERT INTO "public"."tb_migration_tool_portal_download_info"
+("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type")
+VALUES(38, 'openEuler', '22.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler22.03/', 'openGauss-portal-7.0.0rc2-openEuler22.03-x86_64.tar.gz', 'openGauss-portal-7.0.0rc2.jar', 'MULTI_DB');
+INSERT INTO "public"."tb_migration_tool_portal_download_info"
+("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type")
+VALUES(39, 'openEuler', '22.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler22.03/', 'openGauss-portal-7.0.0rc2-openEuler22.03-aarch64.tar.gz', 'openGauss-portal-7.0.0rc2.jar', 'MULTI_DB');
+INSERT INTO "public"."tb_migration_tool_portal_download_info"
+("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type")
+VALUES(40, 'openEuler', '24.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler24.03/', 'openGauss-portal-7.0.0rc2-openEuler24.03-x86_64.tar.gz', 'openGauss-portal-7.0.0rc2.jar', 'MULTI_DB');
+INSERT INTO "public"."tb_migration_tool_portal_download_info"
+("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type")
+VALUES(41, 'openEuler', '24.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler24.03/', 'openGauss-portal-7.0.0rc2-openEuler24.03-aarch64.tar.gz', 'openGauss-portal-7.0.0rc2.jar', 'MULTI_DB');
+
+-------------------------------------------
+-- ALTER TABLE tb_migration_task
+-------------------------------------------
+
+CREATE OR REPLACE FUNCTION add_migration_task_field_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''tb_migration_task'' AND COLUMN_NAME = ''source_schemas'' ) = 0
+THEN
+ALTER TABLE public.tb_migration_task ADD COLUMN source_schemas text;
+COMMENT ON COLUMN "public"."tb_migration_task"."source_schemas" IS ''源端schema列表，多个schema以英文逗号分隔'';
+END IF;
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''tb_migration_task'' AND COLUMN_NAME = ''source_db_type'' ) = 0
+THEN
+ALTER TABLE public.tb_migration_task ADD COLUMN source_db_type varchar(255);
+COMMENT ON COLUMN "public"."tb_migration_task"."source_db_type" IS ''源端数据库类型，如：MYSQL, POSTGRESQL'';
+UPDATE public.tb_migration_task SET "source_db_type" = ''MYSQL'' WHERE "source_db_type" IS NULL;
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_migration_task_field_func();
+
+DROP FUNCTION add_migration_task_field_func;
+
+---------------------------------
+-- CREATE TABLE tb_migration_full_migration_progress
+---------------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."tb_migration_full_migration_progress"
+(
+    id      BIGSERIAL PRIMARY KEY,
+    task_id INT              NOT NULL,
+    object_type VARCHAR(255) NOT NULL,
+    name    VARCHAR(255)     NOT NULL,
+    schema  VARCHAR(255)     NOT NULL,
+    status  INT              NOT NULL,
+    percent DOUBLE PRECISION NOT NULL,
+    error   TEXT
+    );
+
+COMMENT
+ON COLUMN "public"."tb_migration_full_migration_progress"."id" IS '主键ID';
+COMMENT
+ON COLUMN "public"."tb_migration_full_migration_progress"."task_id" IS '任务ID';
+COMMENT
+ON COLUMN "public"."tb_migration_full_migration_progress"."object_type" IS '对象类型，如：table, view, trigger, function, procedure';
+COMMENT
+ON COLUMN "public"."tb_migration_full_migration_progress"."name" IS '对象名';
+COMMENT
+ON COLUMN "public"."tb_migration_full_migration_progress"."schema" IS 'schema名';
+COMMENT
+ON COLUMN "public"."tb_migration_full_migration_progress"."status" IS '迁移状态，1未开始，2迁移中，3迁移成功，6迁移失败';
+COMMENT
+ON COLUMN "public"."tb_migration_full_migration_progress"."percent" IS '迁移进度%';
+COMMENT
+ON COLUMN "public"."tb_migration_full_migration_progress"."error" IS '异常信息';
+
+---------------------------------
+-- CREATE TABLE tb_migration_full_migration_summary_data
+---------------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."tb_migration_full_migration_summary_data"
+(
+    id             BIGSERIAL PRIMARY KEY,
+    task_id        INT              NOT NULL,
+    data           DOUBLE PRECISION NOT NULL,
+    record         BIGINT           NOT NULL,
+    speed          DOUBLE PRECISION NOT NULL,
+    time           INT              NOT NULL
+);
+
+COMMENT
+ON COLUMN "public"."tb_migration_full_migration_summary_data"."id" IS '主键ID';
+COMMENT
+ON COLUMN "public"."tb_migration_full_migration_summary_data"."task_id" IS '任务ID';
+COMMENT
+ON COLUMN "public"."tb_migration_full_migration_summary_data"."data" IS '已迁移数据总量，MB';
+COMMENT
+ON COLUMN "public"."tb_migration_full_migration_summary_data"."record" IS '已迁移记录总条数';
+COMMENT
+ON COLUMN "public"."tb_migration_full_migration_summary_data"."speed" IS '当前迁移速率，MB/s';
+COMMENT
+ON COLUMN "public"."tb_migration_full_migration_summary_data"."time" IS '迁移总耗时，s';
+
+---------------------------------
+-- CREATE TABLE tb_migration_incremental_migration_progress
+---------------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."tb_migration_incremental_migration_progress"
+(
+    id             BIGSERIAL PRIMARY KEY,
+    task_id        INT    NOT NULL,
+    total_count    BIGINT NOT NULL,
+    failed_count   BIGINT NOT NULL,
+    replayed_count BIGINT NOT NULL,
+    success_count  BIGINT NOT NULL,
+    skipped_count  BIGINT NOT NULL,
+    rest           BIGINT NOT NULL,
+    sink_speed     INT    NOT NULL,
+    source_speed   INT    NOT NULL
+);
+COMMENT
+ON COLUMN "public"."tb_migration_incremental_migration_progress"."id" IS '主键ID';
+COMMENT
+ON COLUMN "public"."tb_migration_incremental_migration_progress"."task_id" IS '任务ID';
+COMMENT
+ON COLUMN "public"."tb_migration_incremental_migration_progress"."total_count" IS '总迁移条数';
+COMMENT
+ON COLUMN "public"."tb_migration_incremental_migration_progress"."failed_count" IS '迁移失败条数';
+COMMENT
+ON COLUMN "public"."tb_migration_incremental_migration_progress"."replayed_count" IS '已回放条数';
+COMMENT
+ON COLUMN "public"."tb_migration_incremental_migration_progress"."success_count" IS '迁移成功条数';
+COMMENT
+ON COLUMN "public"."tb_migration_incremental_migration_progress"."skipped_count" IS '跳过条数';
+COMMENT
+ON COLUMN "public"."tb_migration_incremental_migration_progress"."rest" IS '剩余待写入条数';
+COMMENT
+ON COLUMN "public"."tb_migration_incremental_migration_progress"."sink_speed" IS '写入速度，条/s';
+COMMENT
+ON COLUMN "public"."tb_migration_incremental_migration_progress"."source_speed" IS '抽取速度，条/s';
+
+---------------------------------
+-- CREATE TABLE tb_migration_reverse_migration_progress
+---------------------------------
+
+CREATE TABLE IF NOT EXISTS "public"."tb_migration_reverse_migration_progress"
+(
+    id             BIGSERIAL PRIMARY KEY,
+    task_id        INT    NOT NULL,
+    total_count    BIGINT NOT NULL,
+    failed_count   BIGINT NOT NULL,
+    replayed_count BIGINT NOT NULL,
+    success_count  BIGINT NOT NULL,
+    skipped_count  BIGINT NOT NULL,
+    rest           BIGINT NOT NULL,
+    sink_speed     INT    NOT NULL,
+    source_speed   INT    NOT NULL
+);
+
+COMMENT
+ON COLUMN "public"."tb_migration_reverse_migration_progress"."id" IS '主键ID';
+COMMENT
+ON COLUMN "public"."tb_migration_reverse_migration_progress"."task_id" IS '任务ID';
+COMMENT
+ON COLUMN "public"."tb_migration_reverse_migration_progress"."total_count" IS '总迁移条数';
+COMMENT
+ON COLUMN "public"."tb_migration_reverse_migration_progress"."failed_count" IS '迁移失败条数';
+COMMENT
+ON COLUMN "public"."tb_migration_reverse_migration_progress"."replayed_count" IS '已回放条数';
+COMMENT
+ON COLUMN "public"."tb_migration_reverse_migration_progress"."success_count" IS '迁移成功条数';
+COMMENT
+ON COLUMN "public"."tb_migration_reverse_migration_progress"."skipped_count" IS '跳过条数';
+COMMENT
+ON COLUMN "public"."tb_migration_reverse_migration_progress"."rest" IS '剩余待写入条数';
+COMMENT
+ON COLUMN "public"."tb_migration_reverse_migration_progress"."sink_speed" IS '写入速度，条/s';
+COMMENT
+ON COLUMN "public"."tb_migration_reverse_migration_progress"."source_speed" IS '抽取速度，条/s';

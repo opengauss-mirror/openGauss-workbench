@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import org.opengauss.admin.plugin.enums.PortalType;
 
 /**
  * @author duanguoqiang
@@ -21,4 +22,5 @@ public class MigrationToolPortalDownloadInfo {
     private String portalPkgDownloadUrl;
     private String portalPkgName;
     private String portalJarName;
+    private PortalType portalType;
 }

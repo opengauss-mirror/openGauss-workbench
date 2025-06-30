@@ -18,6 +18,7 @@ package org.opengauss.admin.plugin.utils;
 import lombok.extern.slf4j.Slf4j;
 
 import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.plugin.constants.SqlConstants;
 import org.opengauss.admin.plugin.domain.TranscribeReplayNodeInfo;
 import org.opengauss.admin.plugin.domain.TranscribeReplayTask;
 
@@ -28,9 +29,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -40,9 +44,11 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class JDBCUtils {
+    private static final Pattern PG_VERSION_PATTERN = Pattern.compile("PostgreSQL\\s((?:\\d+\\.)+[^\\s]*) ");
+
     private static Connection connection = null;
-    private static PreparedStatement preparedStatement = null;
-    private static ResultSet resultSet = null;
+    private static PreparedStatement staticPreparedStatement = null;
+    private static ResultSet staticResultSet = null;
 
     /**
      * Connect to the database.
@@ -79,13 +85,13 @@ public class JDBCUtils {
                 connection.close();
                 connection = null;
             }
-            if (preparedStatement != null) {
-                preparedStatement.close();
-                preparedStatement = null;
+            if (staticPreparedStatement != null) {
+                staticPreparedStatement.close();
+                staticPreparedStatement = null;
             }
-            if (resultSet != null) {
-                resultSet.close();
-                resultSet = null;
+            if (staticResultSet != null) {
+                staticResultSet.close();
+                staticResultSet = null;
             }
         } catch (SQLException e) {
             log.error(e.getMessage());
@@ -118,6 +124,28 @@ public class JDBCUtils {
             list.add(obj);
         }
         return list;
+    }
+
+    /**
+     * get pgsql version.
+     *
+     * @param connection connection
+     * @return String db version
+     * @throws SQLException SQLException
+     */
+    public static String getPgsqlVersion(Connection connection) throws SQLException {
+        try (Statement statement = connection.createStatement();
+             ResultSet rs = statement.executeQuery(SqlConstants.SELECT_VERSION)) {
+            if (rs.next()) {
+                String rsString = rs.getString("version");
+                Matcher matcher = PG_VERSION_PATTERN.matcher(rsString);
+                if (matcher.find()) {
+                    return matcher.group(1);
+                }
+            }
+        }
+
+        throw new SQLException("Not found PostgreSQL version.");
     }
 
     private static void setFieldValue(Object obj, Field[] fields, String fieldName, Object value)
