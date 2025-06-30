@@ -24,6 +24,13 @@
 
 package org.opengauss.admin.plugin.utils;
 
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpATTRS;
+import com.jcraft.jsch.SftpException;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 
@@ -31,6 +38,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
 /**
  * @className: FileUtils
@@ -82,5 +90,46 @@ public class FileUtils {
         String command = String.format("cat %s", filePath);
         JschResult jschResult = ShellUtil.execCommandGetResult(shellInfo, command);
         return jschResult.isOk() ? jschResult.getResult().trim() : "";
+    }
+
+    /**
+     * get remote file last modified time
+     *
+     * @param shellInfo shell info
+     * @param remoteFilePath remote file path
+     * @return last modified time
+     * @throws JSchException jsch exception
+     * @throws SftpException sftp exception
+     */
+    public static Long getRemoteFileLastModified(ShellInfoVo shellInfo, String remoteFilePath)
+            throws JSchException, SftpException {
+        Session session = null;
+        ChannelSftp channelSftp = null;
+
+        try {
+            JSch jsch = new JSch();
+            session = jsch.getSession(shellInfo.getUsername(), shellInfo.getIp(), shellInfo.getPort());
+            session.setPassword(shellInfo.getPassword());
+
+            Properties config = new Properties();
+            config.put("StrictHostKeyChecking", "no");
+            session.setConfig(config);
+            session.connect();
+            Channel channel = session.openChannel("sftp");
+            if (channel instanceof ChannelSftp) {
+                channelSftp = (ChannelSftp) channel;
+            }
+            channelSftp.connect();
+
+            SftpATTRS attrs = channelSftp.stat(remoteFilePath);
+            return (long) attrs.getMTime() * 1000;
+        } finally {
+            if (channelSftp != null && channelSftp.isConnected()) {
+                channelSftp.disconnect();
+            }
+            if (session != null && session.isConnected()) {
+                session.disconnect();
+            }
+        }
     }
 }

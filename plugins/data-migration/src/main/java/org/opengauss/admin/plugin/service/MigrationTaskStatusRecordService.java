@@ -43,6 +43,14 @@ public interface MigrationTaskStatusRecordService extends IService<MigrationTask
 
     MigrationTaskStatusRecord getLastByTaskId(Integer taskId);
 
+    /**
+     * Get the latest record of the task
+     *
+     * @param taskId taskId
+     * @return record
+     */
+    MigrationTaskStatusRecord getLagerStatusByTaskId(Integer taskId);
+
     List<MigrationTaskStatusRecord> selectByTaskId(Integer taskId);
 
     void deleteByTaskIds(List<Integer> taskIds);

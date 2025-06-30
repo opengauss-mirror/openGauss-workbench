@@ -146,6 +146,14 @@ public class MigrationTaskStatusRecordServiceImpl
     }
 
     @Override
+    public MigrationTaskStatusRecord getLagerStatusByTaskId(Integer taskId) {
+        LambdaQueryWrapper<MigrationTaskStatusRecord> query = new LambdaQueryWrapper<>();
+        query.eq(MigrationTaskStatusRecord::getTaskId, taskId);
+        query.last("limit 1").orderByDesc(MigrationTaskStatusRecord::getStatusId);
+        return getOne(query);
+    }
+
+    @Override
     public List<MigrationTaskStatusRecord> selectByTaskId(Integer taskId) {
         return migrationTaskStatusRecordMapper.selectByTaskId(taskId);
     }
