@@ -1,12 +1,13 @@
 <template>
   <div class="migration-log openDesignTableArea minWid912">
     <div class="search-con">
-      <el-input class="o-style-search" allow-clear v-model="filter.fileName" :placeholder="t('components.SubTaskDetail.fileName')"
+      <el-input class="o-style-search" maxlength="50" allow-clear v-model="filter.fileName" :placeholder="t('components.SubTaskDetail.fileName')"
         :prefix-icon="IconSearch" @search="searchLog" @change="searchLog"></el-input>
       <div class="button-wrapper">
         <el-button class="o-button--icon" @click="searchLog" :icon="IconRefresh"></el-button>
       </div>
     </div>
+    <div class="inputMaxWarning" v-if="filter.fileName?.length >= 50">{{ t('components.FusionSearch.inputMaxWarnText') }}</div>
     <el-table :data="logData">
       <template #empty>
         <empty-page></empty-page>

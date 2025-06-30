@@ -62,7 +62,8 @@
     "FusionSearch": {
       "addFilters": "请添加筛选条件",
       "confirm": "确认",
-      "cancel": "取消"
+      "cancel": "取消",
+      "inputMaxWarnText": "已达到最大长度"
     },
     "MacTerminal": {
       "5q08wsv861k0": "执行机器"

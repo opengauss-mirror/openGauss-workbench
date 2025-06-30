@@ -3,8 +3,9 @@
     <div class="search-con">
       <el-form :model="form" class="input-wrapper">
         <el-form-item field="kafkaIp">
-          <el-input v-model="form.kafkaIp" allow-clear :placeholder="$t('third.index.5q08thptsw88')"
+          <el-input v-model="form.kafkaIp" maxlength="50" allow-clear :placeholder="$t('third.index.5q08thptsw88')"
             class="o-style-search" @change="getList" :prefix-icon="IconSearch" @search="getList"></el-input>
+          <div class="inputMaxWarning" v-if="(form.kafkaIp + '').length >= 50">{{ t('components.FusionSearch.inputMaxWarnText') }}</div>
         </el-form-item>
       </el-form>
       <div class="button-wrapper">

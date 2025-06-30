@@ -94,7 +94,8 @@
     "FusionSearch": {
       "addFilters": "Please add filters",
       "confirm": "Confirm",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "inputMaxWarnText": "Maximum length has been reached"
     },
     "UpdateDefaultCode": {
       "5nus586u4jg0": "Rest Default Password",
