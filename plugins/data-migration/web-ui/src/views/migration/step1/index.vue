@@ -65,8 +65,7 @@
                 <el-tree-select
                   v-model="taskBasicInfo.subTaskData[curTableTabs].sourceIpPort"
                   :data="sourceClusterfilterOption"
-                  :load="loadSourceNode"
-                  lazy
+
                   :filter-method="filterSourceMethod"
                   filterable
                   highlight-current
@@ -82,6 +81,7 @@
                     {{ $t('step1.index.newsource') }}
                   </el-link>
                 </div>
+                <el-text type="default"> {{ sourceVersionNum }} </el-text>
               </el-form-item>
               <el-form-item :label="t('step1.index.sourceDB')" label-position="left" prop="sourceDBName">
                 <el-select v-model="taskBasicInfo.subTaskData[curTableTabs].sourceDBName"
@@ -146,10 +146,20 @@
                            :placeholder="t('transcribe.create.sourcedb')" filterable class="select-width"
                            :teleported="false"
                            :rules="[{ required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change'] }]">
-                  <el-option v-for="option in targetDBOptions" :key="option.key" :label="option.value"
+                  <el-option v-for="option in targetDBOptions" :key="option.key" :label="option.key"
                              :disabled="option.select === false"
                              :value="option.value"/>
                 </el-select>
+                <el-tooltip class="item" effect="light"
+                            :content="t('step1.index.dbTypeContent')"
+                            placement="right"
+                            :teleported="false">
+                  <i class="el-icon icon">
+                    <el-icon>
+                      <IconHelpCircle/>
+                    </el-icon>
+                  </i>
+                </el-tooltip>
               </el-form-item>
               <h4>{{ $t('step1.index.migrationSet') }}</h4>
               <el-form-item :label="t('step1.index.migrationMode')" label-position="left" prop="mode">
@@ -555,11 +565,15 @@ const getSourceClustersData = () => {
       res.data.sourceClusters.forEach((item: any) => {
         Object.values(item.nodes).forEach((node: any) => {
           const tempname = `${node.ip}:${node.port}`
-          sourceClusterInfo.value[tempname] = [
+          const clusterInfo = [
             node.username,
             node.password,
             node.clusterNodeId,
           ]
+          if (item.versionNum) {
+            clusterInfo.push(item.versionNum)
+          }
+          sourceClusterInfo.value[tempname] = clusterInfo
         })
       })
       filterSourceMethod('')
@@ -575,21 +589,17 @@ const getSourceClustersData = () => {
   })
 }
 
-const loadSourceNode = (node: Node, resolve: (data: TreeNode[]) => void) => {
-  if (node.level === 0) {
-    resolve(sourceClusterOption.value)
-    return
+const sourceVersionNum = computed(() => {
+  const ip = taskBasicInfo.value.subTaskData[curTableTabs.value].sourceIpPort
+  const clusterInfo = {...sourceClusterInfo.value[ip]} || []
+  if (clusterInfo && clusterInfo[3]) {
+    const sqlType = taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType
+    return t('step1.index.dbVersionInfo', {sqlType: sqlType, versionNum: clusterInfo[3]}) + t('step1.index.dbVersionSuc')
   }
-  const disabledMap = new Map()
-  disabledMap.set('192.168.0.163:1001', true)
-  disabledMap.set('192.168.0.163:1002', true)
-  disabledMap.set('192.168.0.163:1004', true)
-  const processedChildren = (node.data.children || []).map((child: any) => ({
-    ...child,
-    disabled: disabledMap.get(String(child.value)) || false
-  }))
-  resolve(processedChildren)
-}
+  return ''
+})
+
+
 const filterSourceMethod = (value: any) => {
   sourceClusterfilterOption.value = [...sourceClusterOption.value].filter((item) => item.label.includes(value))
 }
@@ -745,7 +755,7 @@ const getSourceSchema = async (type?: string) => {
   if (!ip || !port) return
   const clusterInfo = {...sourceClusterInfo.value[sourceIpPort]} || []
   await updateNodeInfo(subTask, ip, port, clusterInfo, 'source')
-  clusterInfo[2] = await encryptPassword(clusterInfo[2])
+  clusterInfo[1] = await encryptPassword(clusterInfo[1])
   const formData = createFormData(subTask, clusterInfo)
   formData.append('dbName', taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDBName);
   sourceClusterSchema(formData, taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType).then((res: any) => {
@@ -781,7 +791,14 @@ const updateDatabaseOptions = (databases: string[], type: string) => {
   if (type === 'source') {
     sourceDBOptions.value = databases.map((db: any) => ({key: db, value: db}))
   } else {
-    targetDBOptions.value = databases.map((db: any) => ({key: db.dbName, value: db.dbName, select: db.isSelect}))
+    let type = ''
+    if (taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType === 'MYSQL') {
+      type = 'B'
+    } else {
+      type='PG'
+    }
+    targetDBOptions.value = databases.map((db: any) => ({key: db.dbName + '(' +  db.datcompatibility.toUpperCase() + ')',
+      value: db.dbName, select: db.isSelect && (db.datcompatibility.toUpperCase() === type)}))
   }
 }
 
@@ -796,7 +813,7 @@ const getSourceClusterDB = async (type?: string) => {
   if (!ip || !port) return
   const clusterInfo = {...sourceClusterInfo.value[sourceIpPort]} || []
   await updateNodeInfo(subTask, ip, port, clusterInfo, 'source')
-  clusterInfo[2] = await encryptPassword(clusterInfo[2])
+  clusterInfo[1] = await encryptPassword(clusterInfo[1])
   const formData = createFormData(subTask, clusterInfo)
   sourceClusterDbsType(formData, taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType).then((res: any) => {
     if (Number(res.code) === 200) {
