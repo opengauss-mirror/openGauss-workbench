@@ -27,10 +27,17 @@ package org.opengauss.admin.plugin.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.plugin.domain.MigrationTaskInitGlobalParam;
 
+import java.util.List;
+
 /**
  * @author xielibo
  * @date 2023/01/14 09:01
  */
 public interface MigrationTaskInitGlobalParamService extends IService<MigrationTaskInitGlobalParam> {
-
+    /**
+     * Get pgsql migration config params
+     *
+     * @return pgsql migration config params
+     */
+    List<MigrationTaskInitGlobalParam> getPgsqlMigrationConfigParams();
 }

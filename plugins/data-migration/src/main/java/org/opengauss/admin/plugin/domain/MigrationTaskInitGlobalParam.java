@@ -28,6 +28,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 
 /**
  * MigrationTaskInitGlobalParam Object
@@ -79,4 +80,6 @@ public class MigrationTaskInitGlobalParam {
      * field paramRules
      */
     private String paramRules;
+
+    private DbTypeEnum dbType;
 }

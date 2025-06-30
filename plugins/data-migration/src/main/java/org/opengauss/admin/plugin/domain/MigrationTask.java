@@ -32,6 +32,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Tolerate;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 
 import java.time.Instant;
 import java.util.List;
@@ -52,6 +53,8 @@ public class MigrationTask {
     private Integer id;
     private String sourceNodeId;
     private String sourceDb;
+    private DbTypeEnum sourceDbType = DbTypeEnum.MYSQL;
+    private String sourceSchemas;
     private String sourceTables;
     private String sourceDbHost;
     private String sourceDbPort;

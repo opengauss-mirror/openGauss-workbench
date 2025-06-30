@@ -36,7 +36,8 @@ import lombok.Getter;
 @Getter
 public enum DbTypeEnum {
     MYSQL("com.mysql.cj.jdbc.Driver"),
-    OPENGAUSS("org.opengauss.Driver");
+    OPENGAUSS("org.opengauss.Driver"),
+    POSTGRESQL("org.postgresql.Driver");
 
     private String driverClass;
 

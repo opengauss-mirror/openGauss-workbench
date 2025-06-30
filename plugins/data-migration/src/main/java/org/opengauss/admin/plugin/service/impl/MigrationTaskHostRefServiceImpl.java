@@ -50,10 +50,12 @@ import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterInputD
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterNodeInputDto;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
+import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcInfo;
 import org.opengauss.admin.common.utils.OpsAssert;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.file.FileUploadUtils;
 import org.opengauss.admin.common.utils.ops.JdbcUtil;
+import org.opengauss.admin.plugin.constants.SqlConstants;
 import org.opengauss.admin.plugin.constants.TaskConstant;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTask;
@@ -65,6 +67,7 @@ import org.opengauss.admin.plugin.dto.MigrationHostDto;
 import org.opengauss.admin.plugin.enums.MigrationErrorCode;
 import org.opengauss.admin.plugin.enums.PortalInstallStatus;
 import org.opengauss.admin.plugin.enums.PortalInstallType;
+import org.opengauss.admin.plugin.enums.PortalType;
 import org.opengauss.admin.plugin.enums.ThirdPartySoftwareConfigType;
 import org.opengauss.admin.plugin.enums.ToolsConfigEnum;
 import org.opengauss.admin.plugin.enums.DbTypeEnum;
@@ -73,11 +76,13 @@ import org.opengauss.admin.plugin.exception.PortalInstallException;
 import org.opengauss.admin.plugin.exception.ShellException;
 import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationTaskHostRefMapper;
+import org.opengauss.admin.plugin.portal.MultiDbPortal;
 import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
 import org.opengauss.admin.plugin.service.MigrationMqInstanceService;
 import org.opengauss.admin.plugin.service.MigrationTaskHostRefService;
 import org.opengauss.admin.plugin.service.MigrationTaskService;
 import org.opengauss.admin.plugin.service.TbMigrationTaskGlobalToolsParamService;
+import org.opengauss.admin.plugin.utils.JDBCUtils;
 import org.opengauss.admin.plugin.utils.ShellUtil;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 import org.opengauss.admin.plugin.vo.TargetClusterNodeVO;
@@ -91,6 +96,7 @@ import org.opengauss.admin.system.plugin.facade.JschExecutorFacade;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.opengauss.admin.system.plugin.facade.SysSettingFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -108,6 +114,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -184,6 +191,9 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
 
     @Resource
     private TbMigrationTaskGlobalToolsParamService taskGlobalToolsParamService;
+
+    @Autowired
+    private MultiDbPortal multiDbPortal;
 
     @Override
     public void deleteByMainTaskId(Integer mainTaskId) {
@@ -286,6 +296,58 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 break;
         }
         return jdbcSourceCluster;
+    }
+
+    @Override
+    public List<JdbcDbClusterVO> getPgsqlClusters() {
+        List<JdbcDbClusterVO> jdbcDbClusterVOList = jdbcDbClusterFacade.listAll(
+                org.opengauss.admin.common.enums.ops.DbTypeEnum.POSTGRESQL.name());
+        if (jdbcDbClusterVOList.isEmpty()) {
+            return jdbcDbClusterVOList;
+        }
+
+        for (JdbcDbClusterVO jdbcDbClusterVO : jdbcDbClusterVOList) {
+            for (JdbcDbClusterNodeVO dbClusterNodeVO : jdbcDbClusterVO.getNodes()) {
+                if (dbClusterNodeVO == null) {
+                    continue;
+                }
+
+                String version = getPgsqlVersion(dbClusterNodeVO.getUrl(), dbClusterNodeVO.getUsername(),
+                        dbClusterNodeVO.getPassword());
+                boolean isSupport = isPgsqlVersionSupportMigration(version);
+                if (!isSupport) {
+                    log.error("Current version {} is not supported for migration.", version);
+                }
+                break;
+            }
+        }
+        return jdbcDbClusterVOList;
+    }
+
+    private String getPgsqlVersion(String url, String username, String password) {
+        try (Connection connection = DriverManager.getConnection(url, username, encryptionUtils.decrypt(password))) {
+            return JDBCUtils.getPgsqlVersion(connection);
+        } catch (SQLException e) {
+            log.error("Select postgresql version failed", e);
+            throw new MigrationTaskException("Select postgresql version failed");
+        }
+    }
+
+    private boolean isPgsqlVersionSupportMigration(String version) {
+        String[] versionList = version.split("\\.");
+        int supportMajorVersion = 9;
+        int supportMinorVersion = 4;
+        if (versionList.length >= 2) {
+            int majorVersion = Integer.parseInt(versionList[0]);
+            int minorVersion = Integer.parseInt(versionList[1]);
+            if (supportMajorVersion < majorVersion) {
+                return true;
+            }
+            if (supportMajorVersion == majorVersion && supportMinorVersion <= minorVersion) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -500,6 +562,53 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         return dbList;
     }
 
+    @Override
+    public List<String> getPgsqlClusterDbNames(String url, String username, String password) {
+        List<String> databases = new ArrayList<>();
+
+        try (Connection connection = DriverManager.getConnection(url, username, password);
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(SqlConstants.PGSQL_SELECT_ALL_DATABASES)) {
+            while (resultSet.next()) {
+                String dbName = resultSet.getString("datname");
+                databases.add(dbName);
+            }
+        } catch (SQLException e) {
+            log.error("Failed to retrieve databases", e);
+            throw new MigrationTaskException("Failed to retrieve databases" + e.getMessage());
+        }
+        return databases;
+    }
+
+
+    @Override
+    public List<String> getPgsqlDbSchemas(String url, String username, String password, String dbName) {
+        List<String> schemas = new ArrayList<>();
+
+        JdbcInfo jdbcInfo = JdbcUtil.parseUrl(url);
+        String dbUrl = String.format("jdbc:postgresql://%s:%s/%s", jdbcInfo.getIp(), jdbcInfo.getPort(), dbName);
+        try (Connection connection = DriverManager.getConnection(dbUrl, username, password);
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(SqlConstants.PGSQL_SELECT_ALL_SCHEMAS)) {
+            while (resultSet.next()) {
+                String schemaName = resultSet.getString("schema_name");
+                schemas.add(schemaName);
+            }
+        } catch (SQLException e) {
+            log.error("Failed to retrieve schemas", e);
+            throw new MigrationTaskException("Failed to retrieve schemas" + e.getMessage());
+        }
+
+        if (!schemas.isEmpty()) {
+            schemas.remove("information_schema");
+            schemas.remove("pg_catalog");
+            schemas.remove("pg_toast");
+        }
+
+        return schemas;
+    }
+
+
     /**
      * get the list of database names on a node.
      *
@@ -678,12 +787,18 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult installPortal(String hostId, MigrationHostPortalInstall install) {
+        if (PortalType.MULTI_DB.equals(install.getPortalType())) {
+            return multiDbPortal.install(hostId, install, false);
+        }
         return installPortalProc(hostId, install, false);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult retryInstallPortal(String hostId, MigrationHostPortalInstall install) {
+        if (PortalType.MULTI_DB.equals(install.getPortalType())) {
+            return multiDbPortal.install(hostId, install, true);
+        }
         return installPortalProc(hostId, install, true);
     }
 
@@ -782,6 +897,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         checkJarName(install);
         physicalInstallParams.setJarName(install.getJarName());
         physicalInstallParams.setPkgName(install.getPkgName());
+        physicalInstallParams.setPortalType(PortalType.MYSQL_ONLY);
         physicalInstallParams.setInstallStatus(PortalInstallStatus.INSTALLING.getCode());
         physicalInstallParams.setInstallType(install.getInstallType());
         physicalInstallParams.setFile(install.getFile());
@@ -1080,6 +1196,10 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             return AjaxResult.error(MigrationErrorCode.PORTAL_DELETE_ERROR.getCode(),
                 MigrationErrorCode.PORTAL_DELETE_ERROR.getMsg());
         }
+        if (PortalType.MULTI_DB.equals(install.getPortalType())) {
+            return multiDbPortal.deletePortal(hostId);
+        }
+
         List<String> bindPortalKafkas = migrationThirdPartySoftwareInstanceService.listBindHostsByPortalHost(
             install.getHost());
         if (!CollectionUtils.isEmpty(bindPortalKafkas)) {

@@ -106,6 +106,17 @@ public class MigrationTaskResourceController extends BaseController {
     }
 
     /**
+     * retrieve the pgsql cluster
+     *
+     * @return AjaxResult Response
+     */
+    @GetMapping("/pgsqlClusters")
+    public AjaxResult getPgsqlClusters() {
+        List<JdbcDbClusterVO> pgsqlClusters = migrationTaskHostRefService.getPgsqlClusters();
+        return AjaxResult.success(Map.of("sourceClusters", pgsqlClusters));
+    }
+
+    /**
      * retrieve the target cluster
      *
      * @return AjaxResult Response
@@ -116,6 +127,33 @@ public class MigrationTaskResourceController extends BaseController {
         Map<String, Object> result = new HashMap<>();
         result.put("targetClusters", targetClusters);
         return AjaxResult.success(result);
+    }
+
+    /**
+     * get pgsql databases
+     *
+     * @param url jdbc url
+     * @param username username
+     * @param password password
+     * @return AjaxResult
+     */
+    @PostMapping("/getPgsqlClusterDbs")
+    public AjaxResult getPgsqlClusterDbs(String url, String username, String password) {
+        return AjaxResult.success(migrationTaskHostRefService.getPgsqlClusterDbNames(url, username, password));
+    }
+
+    /**
+     * get pgsql database schemas
+     *
+     * @param url jdbc url
+     * @param username username
+     * @param password password
+     * @param dbName database name
+     * @return AjaxResult
+     */
+    @PostMapping("/getPgsqlDbSchemas")
+    public AjaxResult getPgsqlDbSchemas(String url, String username, String password, String dbName) {
+        return AjaxResult.success(migrationTaskHostRefService.getPgsqlDbSchemas(url, username, password, dbName));
     }
 
     /**

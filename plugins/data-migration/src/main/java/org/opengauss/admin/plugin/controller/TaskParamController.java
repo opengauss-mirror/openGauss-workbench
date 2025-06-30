@@ -26,6 +26,7 @@ package org.opengauss.admin.plugin.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.plugin.domain.MigrationTaskInitGlobalParam;
 import org.opengauss.admin.plugin.service.MigrationTaskInitGlobalParamService;
@@ -54,6 +55,7 @@ public class TaskParamController extends BaseController {
     public AjaxResult getDefaultGlobalParam() {
         LambdaQueryWrapper<MigrationTaskInitGlobalParam> wrapper = new LambdaQueryWrapper();
         wrapper.orderByAsc(MigrationTaskInitGlobalParam::getId);
+        wrapper.eq(MigrationTaskInitGlobalParam::getDbType, DbTypeEnum.MYSQL);
         List<MigrationTaskInitGlobalParam> paramList = taskInitGlobalParamService.list(wrapper);
         paramList.forEach(param -> {
             if (param.getDefaultParamValue() == null) {
@@ -61,5 +63,17 @@ public class TaskParamController extends BaseController {
             }
         });
         return AjaxResult.success(paramList);
+    }
+
+    /**
+     * get pgsql migration config params
+     *
+     * @return pgsql migration config params
+     */
+    @GetMapping(value = "/pgsql")
+    public AjaxResult getPgsqlMigrationConfigParams() {
+        List<MigrationTaskInitGlobalParam> paramVos = taskInitGlobalParamService.getPgsqlMigrationConfigParams();
+        paramVos.forEach(param -> param.setDefaultParamValue(param.getParamValue()));
+        return AjaxResult.success(paramVos);
     }
 }

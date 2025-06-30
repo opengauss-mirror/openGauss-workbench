@@ -67,6 +67,13 @@ public interface MigrationTaskHostRefService extends IService<MigrationTaskHostR
      */
     List<JdbcDbClusterVO> getSourceClusters(String dbType);
 
+    /**
+     * getMysqlClusters
+     *
+     * @return JdbcDbClusterVOList
+     */
+    List<JdbcDbClusterVO> getPgsqlClusters();
+
     void saveDbResource(CustomDbResource dbResource);
 
     void saveSource(String clusterName, String dbUrl, String username, String password);
@@ -74,6 +81,27 @@ public interface MigrationTaskHostRefService extends IService<MigrationTaskHostR
     List<TargetClusterVO> getTargetClusters();
 
     List<String> getMysqlClusterDbNames(String url, String username, String password);
+
+    /**
+     * getPgsqlClusterDbNames
+     *
+     * @param url      url
+     * @param username username
+     * @param password password
+     * @return dbNames
+     */
+    List<String> getPgsqlClusterDbNames(String url, String username, String password);
+
+    /**
+     * getPgsqlDbSchemas
+     *
+     * @param url      url
+     * @param username username
+     * @param password password
+     * @param dbName   dbName
+     * @return dbSchemas
+     */
+    List<String> getPgsqlDbSchemas(String url, String username, String password, String dbName);
 
     List<Map<String, Object>> getOpsClusterDbNames(OpsClusterNodeVO clusterNode);
 
