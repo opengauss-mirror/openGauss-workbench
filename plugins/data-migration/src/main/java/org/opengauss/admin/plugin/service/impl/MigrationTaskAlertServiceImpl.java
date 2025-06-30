@@ -14,6 +14,7 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.github.benmanes.caffeine.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.plugin.constants.TaskAlertConstants;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTask;
@@ -77,6 +78,9 @@ public class MigrationTaskAlertServiceImpl extends ServiceImpl<MigrationTaskAler
 
     @Override
     public synchronized void refreshAlertByPortal(MigrationTask task) {
+        if (DbTypeEnum.POSTGRESQL.equals(task.getSourceDbType())) {
+            return;
+        }
         MigrationHostPortalInstall portalInstall = portalInstallHostService.getOneByHostId(task.getRunHostId());
         String portalHome = PortalHandle.generatePortalHome(portalInstall.getInstallPath());
 

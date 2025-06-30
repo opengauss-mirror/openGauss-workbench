@@ -2,7 +2,7 @@
  * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
  */
 
-package org.opengauss.admin.plugin.helper;
+package org.opengauss.admin.plugin.portal;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -18,12 +18,12 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
- * MULTI_DB portal helper
+ * MULTI_DB portal directory helper
  *
  * @since 2025/06/23
  */
 @Slf4j
-public class MultiDbPortalHelper {
+public class MultiDbPortalDirHelper {
     /**
      * Get task port file path
      *
