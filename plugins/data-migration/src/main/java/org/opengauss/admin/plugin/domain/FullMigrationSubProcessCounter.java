@@ -54,6 +54,15 @@ public class FullMigrationSubProcessCounter {
     private int errorCount;
     private boolean isUncounted;
 
+    public FullMigrationSubProcessCounter(List<FullMigrationProgress> objectProgressList) {
+        this.totalCount = objectProgressList.size();
+        this.isUncounted = CollectionUtils.isEmpty(objectProgressList);
+        this.waitCount = getFullMigrationProgressCountByStatus(objectProgressList, WAIT_CODE_SET);
+        this.errorCount = getFullMigrationProgressCountByStatus(objectProgressList, ERROR_CODE_SET);
+        this.runningCount = getFullMigrationProgressCountByStatus(objectProgressList, RUNNING_CODE_SET);
+        this.successCount = getFullMigrationProgressCountByStatus(objectProgressList, SUCCESS_CODE_SET);
+    }
+
     /**
      * build FullMigrationSubProcessCounter
      *
@@ -72,6 +81,12 @@ public class FullMigrationSubProcessCounter {
         } else {
             this.successCount = getCountByStatus(processList, SUCCESS_CODE_SET);
         }
+    }
+
+    private int getFullMigrationProgressCountByStatus(List<FullMigrationProgress> processList, Set<Integer> codeSet) {
+        return Math.toIntExact(processList.stream()
+                .filter(m -> codeSet.contains(m.getStatus()))
+                .count());
     }
 
     private int getCountByStatus(List<Map<String, Object>> processList, Set<Integer> codeSet) {
