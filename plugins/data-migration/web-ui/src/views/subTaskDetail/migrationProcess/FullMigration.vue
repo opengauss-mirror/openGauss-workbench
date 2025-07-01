@@ -27,7 +27,7 @@ import { useI18n } from 'vue-i18n';
 const { t } = useI18n();
 const subTaskStore = useSubTaskStore()
 // The tabular form of each tab corresponding to each page
-type tabType = 'table' | 'view' | 'function' | 'trigger' | 'wait'
+type tabType = 'table' | 'view' | 'function' | 'trigger' | 'procedure'
 const tabName = ref<tabType>('table')
 const tabTypeVal = computed(() => tabName.value)
 const fullMigrationTableRef = ref<any>();
