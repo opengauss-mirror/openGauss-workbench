@@ -37,21 +37,43 @@ import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.LoginUser;
 import org.opengauss.admin.common.core.dto.ops.ClusterNodeDto;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.common.utils.SecurityUtils;
 import org.opengauss.admin.common.utils.ops.JdbcUtil;
-import org.opengauss.admin.plugin.domain.*;
+import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
+import org.opengauss.admin.plugin.domain.MigrationMainTask;
+import org.opengauss.admin.plugin.domain.MigrationTask;
+import org.opengauss.admin.plugin.domain.MigrationTaskExecResultDetail;
+import org.opengauss.admin.plugin.domain.MigrationTaskGlobalParam;
+import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
+import org.opengauss.admin.plugin.domain.MigrationTaskModel;
+import org.opengauss.admin.plugin.domain.MigrationTaskParam;
+import org.opengauss.admin.plugin.domain.MigrationTaskStatusRecord;
 import org.opengauss.admin.plugin.dto.MigrationMainTaskDto;
 import org.opengauss.admin.plugin.dto.MigrationTaskDto;
 import org.opengauss.admin.plugin.enums.MainTaskStatus;
 import org.opengauss.admin.plugin.enums.MigrationErrorCode;
+import org.opengauss.admin.plugin.enums.MigrationMode;
+import org.opengauss.admin.plugin.enums.PortalType;
 import org.opengauss.admin.plugin.enums.ProcessType;
 import org.opengauss.admin.plugin.enums.TaskOperate;
 import org.opengauss.admin.plugin.enums.TaskStatus;
-import org.opengauss.admin.plugin.enums.MigrationMode;
 import org.opengauss.admin.plugin.exception.MigrationTaskException;
 import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationMainTaskMapper;
-import org.opengauss.admin.plugin.service.*;
+import org.opengauss.admin.plugin.portal.MultiDbPortal;
+import org.opengauss.admin.plugin.service.MainTaskEnvErrorHostService;
+import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
+import org.opengauss.admin.plugin.service.MigrationMainTaskService;
+import org.opengauss.admin.plugin.service.MigrationTaskAlertService;
+import org.opengauss.admin.plugin.service.MigrationTaskExecResultDetailService;
+import org.opengauss.admin.plugin.service.MigrationTaskGlobalParamService;
+import org.opengauss.admin.plugin.service.MigrationTaskHostRefService;
+import org.opengauss.admin.plugin.service.MigrationTaskModelService;
+import org.opengauss.admin.plugin.service.MigrationTaskOperateRecordService;
+import org.opengauss.admin.plugin.service.MigrationTaskParamService;
+import org.opengauss.admin.plugin.service.MigrationTaskService;
+import org.opengauss.admin.plugin.service.MigrationTaskStatusRecordService;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
@@ -65,7 +87,14 @@ import org.springframework.util.ObjectUtils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
@@ -117,6 +146,9 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private EncryptionUtils encryptionUtils;
+
+    @Autowired
+    private MultiDbPortal multiDbPortal;
 
     /**
      * Query the task list by page
@@ -291,6 +323,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     @Override
     @Transactional
     public void saveTask(MigrationTaskDto taskDto) {
+        checkTask(taskDto);
+
         MigrationMainTask mainTask = new MigrationMainTask();
         LoginUser loginUser = SecurityUtils.getLoginUser();
         mainTask.setCreateUser(loginUser != null ? loginUser.getUsername() : "unknown");
@@ -325,6 +359,23 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             param.setMainTaskId(mainTask.getId());
             migrationTaskGlobalParamService.save(param);
         });
+    }
+
+    private void checkTask(MigrationTaskDto taskDto) {
+        List<MigrationTask> tasks = taskDto.getTasks();
+        if (tasks == null || tasks.size() != 1) {
+            throw new MigrationTaskException("A main task must contain one subtask and can only contain one subtask.");
+        }
+        List<String> hostIds = taskDto.getHostIds();
+        if (hostIds == null || hostIds.size() != 1) {
+            throw new MigrationTaskException(
+                    "A main task must select one portal host and can only select one portal host.");
+        }
+
+        PortalType portalType = migrationHostPortalInstallHostService.getOneByHostId(hostIds.get(0)).getPortalType();
+        if (!portalType.getSupportedDbTypes().contains(tasks.get(0).getSourceDbType())) {
+            throw new MigrationTaskException("Current portal host does not support current source database type");
+        }
     }
 
     @Override
@@ -566,9 +617,14 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             log.error("Cannot get portal host information by host id: {}", task.getRunHostId());
             throw new MigrationTaskException("The portal host does not exist.");
         }
-        ShellInfoVo shellInfo = new ShellInfoVo(
-                task.getRunHost(), task.getRunPort(), task.getRunUser(), encryptionUtils.decrypt(task.getRunPass()));
-        PortalHandle.finishPortal(shellInfo, portalHost.getInstallPath(), portalHost.getJarName(), task);
+
+        if (DbTypeEnum.POSTGRESQL.equals(task.getSourceDbType())) {
+            multiDbPortal.stopTask(portalHost, task);
+        } else {
+            ShellInfoVo shellInfo = new ShellInfoVo(task.getRunHost(), task.getRunPort(), task.getRunUser(),
+                    encryptionUtils.decrypt(task.getRunPass()));
+            PortalHandle.finishPortal(shellInfo, portalHost.getInstallPath(), portalHost.getJarName(), task);
+        }
     }
 
     @Override
@@ -584,8 +640,15 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(subTask.getRunHostId());
         long stopIncrementalTimestamp = System.currentTimeMillis();
         subTask.setOrderInvokedTimestamp(stopIncrementalTimestamp);
-        PortalHandle.stopIncrementalPortal(subTask.getRunHost(), subTask.getRunPort(),
-                subTask.getRunUser(), encryptionUtils.decrypt(subTask.getRunPass()), installHost.getInstallPath(), installHost.getJarName(), subTask);
+
+        if (DbTypeEnum.POSTGRESQL.equals(subTask.getSourceDbType())) {
+            multiDbPortal.stopIncremental(installHost, subTask);
+        } else {
+            PortalHandle.stopIncrementalPortal(subTask.getRunHost(), subTask.getRunPort(), subTask.getRunUser(),
+                    encryptionUtils.decrypt(subTask.getRunPass()), installHost.getInstallPath(),
+                    installHost.getJarName(), subTask);
+        }
+
         MigrationTask update = MigrationTask.builder().id(subTask.getId())
                 .execStatus(TaskStatus.INCREMENTAL_FINISHED.getCode())
                 .execTime(Instant.now()).build();
@@ -668,14 +731,21 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         installHost.setRunPassword(encryptionUtils.decrypt(installHost.getRunPassword()));
         List<MigrationTaskGlobalParam> globalParams = migrationTaskGlobalParamService.selectByMainTaskId(
             subTask.getMainTaskId());
-        if (!migrationTaskService.execMigrationCheck(installHost, subTask, globalParams, "verify_reverse_migration")) {
-            return AjaxResult.success();
+
+        if (DbTypeEnum.POSTGRESQL.equals(subTask.getSourceDbType())) {
+            multiDbPortal.startReverse(installHost, subTask);
+        } else {
+            if (!migrationTaskService.execMigrationCheck(
+                    installHost, subTask, globalParams, "verify_reverse_migration")) {
+                return AjaxResult.success();
+            }
+            long startReverseTimestamp = System.currentTimeMillis();
+            subTask.setOrderInvokedTimestamp(startReverseTimestamp);
+            PortalHandle.startReversePortal(subTask.getRunHost(), subTask.getRunPort(), subTask.getRunUser(),
+                    encryptionUtils.decrypt(subTask.getRunPass()), installHost.getInstallPath(),
+                    installHost.getJarName(), subTask);
         }
-        long startReverseTimestamp = System.currentTimeMillis();
-        subTask.setOrderInvokedTimestamp(startReverseTimestamp);
-        PortalHandle.startReversePortal(subTask.getRunHost(), subTask.getRunPort(), subTask.getRunUser(),
-            encryptionUtils.decrypt(subTask.getRunPass()), installHost.getInstallPath(), installHost.getJarName(),
-            subTask);
+
         MigrationTask update = MigrationTask.builder()
             .id(subTask.getId())
             .execStatus(TaskStatus.REVERSE_START.getCode())

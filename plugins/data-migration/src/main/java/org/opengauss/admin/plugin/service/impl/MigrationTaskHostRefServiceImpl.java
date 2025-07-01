@@ -29,15 +29,12 @@ import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-
 import lombok.extern.slf4j.Slf4j;
-
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
@@ -64,13 +61,13 @@ import org.opengauss.admin.plugin.domain.MigrationThirdPartySoftwareConfig;
 import org.opengauss.admin.plugin.domain.TbMigrationTaskGlobalToolsParam;
 import org.opengauss.admin.plugin.dto.CustomDbResource;
 import org.opengauss.admin.plugin.dto.MigrationHostDto;
+import org.opengauss.admin.plugin.enums.DbTypeEnum;
 import org.opengauss.admin.plugin.enums.MigrationErrorCode;
 import org.opengauss.admin.plugin.enums.PortalInstallStatus;
 import org.opengauss.admin.plugin.enums.PortalInstallType;
 import org.opengauss.admin.plugin.enums.PortalType;
 import org.opengauss.admin.plugin.enums.ThirdPartySoftwareConfigType;
 import org.opengauss.admin.plugin.enums.ToolsConfigEnum;
-import org.opengauss.admin.plugin.enums.DbTypeEnum;
 import org.opengauss.admin.plugin.exception.MigrationTaskException;
 import org.opengauss.admin.plugin.exception.PortalInstallException;
 import org.opengauss.admin.plugin.exception.ShellException;
@@ -104,6 +101,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.annotation.Resource;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -117,19 +115,17 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.Locale;
-import java.util.Collections;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import javax.annotation.Resource;
 
 import static org.opengauss.admin.plugin.enums.DbTypeEnum.MYSQL;
 import static org.opengauss.admin.plugin.enums.DbTypeEnum.OPENGAUSS;
@@ -566,7 +562,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     public List<String> getPgsqlClusterDbNames(String url, String username, String password) {
         List<String> databases = new ArrayList<>();
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
+        try (Connection connection = DriverManager.getConnection(url, username, encryptionUtils.decrypt(password));
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(SqlConstants.PGSQL_SELECT_ALL_DATABASES)) {
             while (resultSet.next()) {
@@ -587,7 +583,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
 
         JdbcInfo jdbcInfo = JdbcUtil.parseUrl(url);
         String dbUrl = String.format("jdbc:postgresql://%s:%s/%s", jdbcInfo.getIp(), jdbcInfo.getPort(), dbName);
-        try (Connection connection = DriverManager.getConnection(dbUrl, username, password);
+        try (Connection connection = DriverManager.getConnection(dbUrl, username, encryptionUtils.decrypt(password));
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(SqlConstants.PGSQL_SELECT_ALL_SCHEMAS)) {
             while (resultSet.next()) {

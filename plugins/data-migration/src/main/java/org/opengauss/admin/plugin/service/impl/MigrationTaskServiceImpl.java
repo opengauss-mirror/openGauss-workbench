@@ -15,7 +15,6 @@ package org.opengauss.admin.plugin.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.map.MapUtil;
-
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -24,19 +23,31 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
-
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.OpsAssert;
 import org.opengauss.admin.plugin.constants.TaskAlertConstants;
 import org.opengauss.admin.plugin.context.MigrationTaskContext;
-import org.opengauss.admin.plugin.domain.*;
+import org.opengauss.admin.plugin.domain.FullMigrationProcessCounter;
+import org.opengauss.admin.plugin.domain.FullMigrationSubProcessCounter;
+import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
+import org.opengauss.admin.plugin.domain.MigrationMainTask;
+import org.opengauss.admin.plugin.domain.MigrationTask;
+import org.opengauss.admin.plugin.domain.MigrationTaskCheckProgressDetail;
+import org.opengauss.admin.plugin.domain.MigrationTaskCheckProgressSummary;
+import org.opengauss.admin.plugin.domain.MigrationTaskExecResultDetail;
+import org.opengauss.admin.plugin.domain.MigrationTaskGlobalParam;
+import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
+import org.opengauss.admin.plugin.domain.MigrationTaskParam;
+import org.opengauss.admin.plugin.domain.MigrationTaskStatusRecord;
+import org.opengauss.admin.plugin.domain.MigrationThirdPartySoftwareConfig;
+import org.opengauss.admin.plugin.domain.TbMigrationTaskGlobalToolsParam;
 import org.opengauss.admin.plugin.dto.MigrationCurrentCheckInfoDto;
 import org.opengauss.admin.plugin.dto.MigrationInfoDto;
 import org.opengauss.admin.plugin.dto.MigrationLogsInfoDto;
@@ -44,6 +55,7 @@ import org.opengauss.admin.plugin.dto.MigrationTaskWebsocketInfoDto;
 import org.opengauss.admin.plugin.enums.FullMigrationDbObjEnum;
 import org.opengauss.admin.plugin.enums.MainTaskStatus;
 import org.opengauss.admin.plugin.enums.MigrationMode;
+import org.opengauss.admin.plugin.enums.PortalType;
 import org.opengauss.admin.plugin.enums.ProcessType;
 import org.opengauss.admin.plugin.enums.TaskOperate;
 import org.opengauss.admin.plugin.enums.TaskStatus;
@@ -53,7 +65,18 @@ import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationSourceDbTypeMapper;
 import org.opengauss.admin.plugin.mapper.MigrationTaskAlertMapper;
 import org.opengauss.admin.plugin.mapper.MigrationTaskMapper;
-import org.opengauss.admin.plugin.service.*;
+import org.opengauss.admin.plugin.portal.MultiDbPortal;
+import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
+import org.opengauss.admin.plugin.service.MigrationMainTaskService;
+import org.opengauss.admin.plugin.service.MigrationMqInstanceService;
+import org.opengauss.admin.plugin.service.MigrationTaskExecResultDetailService;
+import org.opengauss.admin.plugin.service.MigrationTaskGlobalParamService;
+import org.opengauss.admin.plugin.service.MigrationTaskHostRefService;
+import org.opengauss.admin.plugin.service.MigrationTaskOperateRecordService;
+import org.opengauss.admin.plugin.service.MigrationTaskParamService;
+import org.opengauss.admin.plugin.service.MigrationTaskService;
+import org.opengauss.admin.plugin.service.MigrationTaskStatusRecordService;
+import org.opengauss.admin.plugin.service.TbMigrationTaskGlobalToolsParamService;
 import org.opengauss.admin.plugin.utils.ShellUtil;
 import org.opengauss.admin.plugin.vo.FullCheckParam;
 import org.opengauss.admin.plugin.vo.ProcessStatus;
@@ -66,13 +89,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -80,8 +111,6 @@ import java.util.stream.Collectors;
 
 import static org.opengauss.admin.plugin.constants.ToolsParamsLog.NEW_DESC_PREFIX;
 import static org.opengauss.admin.plugin.constants.ToolsParamsLog.NEW_PARAM_PREFIX;
-
-import javax.annotation.Resource;
 
 /**
  * @author xielibo
@@ -170,6 +199,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
 
     @Resource
     private MigrationSourceDbTypeMapper migrationSourceDbTypeMapper;
+
+    @Autowired
+    private MultiDbPortal multiDbPortal;
 
     @Override
     public void initMigrationTaskCheckProgressMonitor() {
@@ -289,6 +321,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     public MigrationTaskWebsocketInfoDto getFullDataById(Integer taskId) {
         MigrationTaskWebsocketInfoDto wsInfo = new MigrationTaskWebsocketInfoDto();
         MigrationTask task = getTaskInfo(taskId);
+        if (DbTypeEnum.POSTGRESQL.equals(task.getSourceDbType())) {
+            return multiDbPortal.getWsData(task);
+        }
+
         MigrationTaskStatusRecord lastTaskStatus = migrationTaskStatusRecordService.getLastByTaskId(taskId);
         wsInfo.setCurrentExecStatus(lastTaskStatus.getStatusId());
         wsInfo.setExecStatus(task.getExecStatus());
@@ -338,6 +374,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         migrationInfo.setCreateTime(task.getCreateTime());
         migrationInfo.setStartTime(task.getExecTime());
         migrationInfo.setFinishTime(task.getFinishTime());
+        if (DbTypeEnum.POSTGRESQL.equals(task.getSourceDbType())) {
+            migrationInfo.setSourceDbType(DbTypeEnum.POSTGRESQL.name());
+            return migrationInfo;
+        }
         migrationInfo.setSourceDbType(migrationSourceDbTypeMapper.getSourceDbType(task.getSourceDbHost(),
                 task.getSourceDbPort()));
         return migrationInfo;
@@ -348,6 +388,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                                                          MigrationCurrentCheckInfoDto info) {
         MigrationTaskWebsocketInfoDto wsInfo = new MigrationTaskWebsocketInfoDto();
         MigrationTask task = getTaskInfo(taskId);
+        if (DbTypeEnum.POSTGRESQL.equals(task.getSourceDbType())) {
+            return multiDbPortal.getFullMigCurrentTypeInfo(task, currentInfoType, info);
+        }
         setProcessExecDetails(task, wsInfo);
         MigrationTaskExecResultDetail fullProcessObj = wsInfo.getFullProcess();
         if (fullProcessObj == null) {
@@ -382,6 +425,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         if (task == null) {
             return migLogsInfo;
         }
+        if (DbTypeEnum.POSTGRESQL.equals(task.getSourceDbType())) {
+            return multiDbPortal.getMigLogsInfo(task, info);
+        }
+
         if (!task.getExecStatus().equals(TaskStatus.NOT_RUN.getCode())) {
             MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(
                     task.getRunHostId());
@@ -485,6 +532,11 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
 
     @Override
     public Map<String, Object> getSingleTaskStatusAndProcessByProtal(MigrationTask t) {
+        if (DbTypeEnum.POSTGRESQL.equals(t.getSourceDbType())) {
+            multiDbPortal.refreshStatusAndProcess(t);
+            return new HashMap<>();
+        }
+
         Map<String, Object> result = new HashMap<>();
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(t.getRunHostId());
         String password = encryptionUtils.decrypt(installHost.getRunPassword());
@@ -692,10 +744,16 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             .runPass(h.getPassword())
             .build();
         updateById(update);
-        if (!execMigrationCheck(installHost, t, globalParams, "verify_pre_migration")) {
-            return;
+        boolean isMultiDbPortal = PortalType.MULTI_DB.equals(installHost.getPortalType());
+        if (isMultiDbPortal) {
+            multiDbPortal.startTask(installHost, t);
+        } else {
+            if (!execMigrationCheck(installHost, t, globalParams, "verify_pre_migration")) {
+                return;
+            }
+            PortalHandle.startPortal(installHost, t, installHost.getJarName(),
+                    getTaskParam(installHost, globalParams, t));
         }
-        PortalHandle.startPortal(installHost, t, installHost.getJarName(), getTaskParam(installHost, globalParams, t));
         update = MigrationTask.builder()
             .id(t.getId())
             .execStatus(TaskStatus.FULL_START.getCode())
@@ -703,6 +761,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             .build();
         migrationTaskOperateRecordService.saveRecord(t.getId(), TaskOperate.RUN, operateUsername);
         updateById(update);
+        if (isMultiDbPortal) {
+            return;
+        }
+
         MigrationTaskContext context = new MigrationTaskContext();
         context.setId(t.getId());
         context.setMigrationTask(t);
@@ -748,6 +810,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     @Override
     public TaskProcessStatus checkStatusOfIncrementalOrReverseMigrationTask(Integer id) {
         MigrationTask migrationTask = getById(id);
+        if (DbTypeEnum.POSTGRESQL.equals(migrationTask.getSourceDbType())) {
+            return multiDbPortal.checkStatusOfIncrementalOrReverseMigrationTask(migrationTask);
+        }
         OpsAssert.nonNull(migrationTask, "migration task not exist.");
         MigrationTaskStatusRecord lastTaskStatus = migrationTaskStatusRecordService.getLastByTaskId(id);
         OpsAssert.nonNull(lastTaskStatus, "migration task status not exist.");
@@ -799,6 +864,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     @Override
     public TaskProcessStatus startTaskOfIncrementalOrReverseMigrationProcess(Integer id, String name) {
         MigrationTask migrationTask = getById(id);
+        if (DbTypeEnum.POSTGRESQL.equals(migrationTask.getSourceDbType())) {
+            return multiDbPortal.resumeMigrationProcess(migrationTask);
+        }
         OpsAssert.nonNull(migrationTask, "migration task not exist.");
         MigrationTaskStatusRecord lastTaskStatus = migrationTaskStatusRecordService.getLastByTaskId(id);
         OpsAssert.nonNull(lastTaskStatus, "migration task status not exist.");
