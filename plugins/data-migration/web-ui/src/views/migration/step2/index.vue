@@ -80,7 +80,6 @@
         @selection-change="handleSelectionChange"
         style="width: 100%"
         border
-        stripe
       >
         <el-table-column type="selection" width="55" fixed="left"  reserve-selection />
         <el-table-column
@@ -469,15 +468,25 @@ watch(() => tableData.value, (newData) => {
     }, 150)
   })
 }, { deep: true })
+const selectedRowList = ref([]);
 const handleSelectionChange = (selection) => {
-  selectedKeys.value = selection.map(row => row.hostId)
-  emits('syncHost', selection)
+  selectedRowList.value = uniqueArrById(selection);
+  selectedKeys.value = selectedRowList.value.map(row => row.hostId)
+  emits('syncHost', selectedRowList.value)
 }
+
+// Deduplication method
+const uniqueArrById = (arr) => {
+  if (!arr || arr.length === 0) return [];
+  // The map takes the hostId of each row as the key, the value of each line, and finally returns the value --- deduplication
+  return [...new Map(arr.map(item => [item.hostId, item])).values()];
+};
+
 const selectionChange = () => {
   nextTick(() => {
     const rows = []
     selectedKeys.value.map((item) => rows.push(item))
-    emits('syncHost', rows)
+    emits('syncHost', selectedRowList.value)
   })
 }
 
@@ -728,7 +737,7 @@ onBeforeUnmount(() => {
   .search-con {
     margin: 24px;
     padding: 0 20px;
-    background-color: var(--el-fill-color-light);
+    background-color: var(--o-bg-color-light);
   }
 
   .table-con {
@@ -752,7 +761,7 @@ onBeforeUnmount(() => {
 }
 
 .warn-padding {
-  background-color: var(--el-fill-color-light);
+  background-color: var(--o-bg-color-light);
   padding: 10px;
 }
 
@@ -804,7 +813,7 @@ onBeforeUnmount(() => {
   align-items: center;
   padding: 0 5px;
   height: 16px;
-  background-color: var(--o-fill-color-light);
+  background-color: var(--o-border-color-light);
   color: black;
   border-radius: 9999px;
   font-size: 14px;

@@ -100,6 +100,7 @@ onMounted(() => {
 
 
 const interQueryTable = () => {
+  cancelInterval()
   intervalTimer.value = setInterval(() => {
     getFullCheckData('loopQuery');
   }, 6000)
@@ -123,10 +124,7 @@ watch(() => autoRefresh.value, (newVal, oldValue) => {
 
 onBeforeUnmount(() => {
   // Cancel polling
-  if (fullCheckTimer.value) {
-    clearInterval(fullCheckTimer.value)
-    fullCheckTimer.value = null;
-  }
+  cancelInterval()
 })
 
 const downloadFixShell = async (row) => {
@@ -186,8 +184,7 @@ const getFullCheckData = async (loopQuery) => {
         }
         fullCheckPage.value.loading = false;
     } catch (error) {
-        fullCheckTimer.value && clearInterval(fullCheckTimer.value)
-        fullCheckTimer.value = null;
+        cancelInterval()
         fullCheckPage.value.loading = false;
     }
 }

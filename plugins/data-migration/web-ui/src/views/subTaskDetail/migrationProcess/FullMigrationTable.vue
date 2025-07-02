@@ -2,19 +2,19 @@
   <div class="table-con">
     <div class="statistic">
       <div class="success-color">{{ $t('components.BigDataList.5q09o79wvtw0') }}
-        <el-tag type="round" size="small">{{ subTaskStore?.subTaskData?.[tableType + 'Counts']?.successCount ||
+        <el-tag type="round" size="small">{{ subTaskStore?.subTaskData?.[transFiled[tableType] + 'Counts']?.successCount ||
           0 }}</el-tag>
       </div>
       <div class="danger-color"> {{ $t('components.BigDataList.5q09o79ww2g0') }}
-        <el-tag type="round" size="small">{{ subTaskStore?.subTaskData?.[tableType + 'Counts']?.errorCount ||
+        <el-tag type="round" size="small">{{ subTaskStore?.subTaskData?.[transFiled[tableType] + 'Counts']?.errorCount ||
           0 }}</el-tag>
       </div>
       <div class="primary-color">{{ $t('components.BigDataList.5q09o79wsew0') }}
-        <el-tag type="round" size="small">{{ subTaskStore?.subTaskData?.[tableType + 'Counts']?.runningCount ||
+        <el-tag type="round" size="small">{{ subTaskStore?.subTaskData?.[transFiled[tableType] + 'Counts']?.runningCount ||
           0 }}</el-tag>
       </div>
       <div class="wait-color"> {{ $t('components.BigDataList.5q09nizckiw0') }}
-        <el-tag type="round" size="small">{{ subTaskStore?.subTaskData?.[tableType + 'Counts']?.waitCount ||
+        <el-tag type="round" size="small">{{ subTaskStore?.subTaskData?.[transFiled[tableType] + 'Counts']?.waitCount ||
           0 }}</el-tag>
       </div>
     </div>
@@ -23,7 +23,7 @@
       <div class="mb16">
         <fusion-search :label-options="labelOptions" @click-search="clickSearch" />
       </div>
-      <el-table v-loading="loading" :data="tableData" :bordered="false" @filter-change="filterChange">
+      <el-table v-loading="tableLoading" :data="tableData" :bordered="false" @filter-change="filterChange">
         <template #empty>
           <div>
             <empty-page></empty-page>
@@ -90,13 +90,21 @@ import { IconSuccess, IconError, IconFilter } from '@computing/opendesign-icons'
 import { useSubTaskStore } from '@/store'
 import FusionSearch from "@/components/fusion-search/index.vue";
 import { searchType } from "@/types/searchType";
-
+type tabType = 'table' | 'view' | 'function' | 'trigger' | 'procedure'
+// Here, because the table interface passes parameters to the function and procedure fields, and the statistics are not func and produce, it is escaped here
+const transFiled = {
+  table: 'table',
+  view: 'view',
+  function: 'func',
+  trigger: 'trigger',
+  procedure: 'produce',
+}
 const subTaskStore = useSubTaskStore()
 const { t } = useI18n();
 const { layout } = usePagination();
 const subTaskId = inject('subTaskId')
 const autoRefresh = inject('autoRefresh');
-const tableType = ref('table')
+const tableType = ref<tabType>('table')
 const total = ref(0);
 const loading = ref(false);
 const filter = reactive({
@@ -130,6 +138,7 @@ const totalTable = ref([])
 const onlyError = ref(false);
 const intervalTimer = ref(null)
 const interQueryTable = () => {
+  cancelInterval()
   intervalTimer.value = setInterval(() => {
     searchTable('loopQuery');
   }, 6000)
@@ -161,6 +170,13 @@ const clickSearch = (params) => {
   filter.schemaName = schemaName || ''
   searchTable()
 }
+
+const tableLoading = computed(() =>{
+  if (subTaskStore.subTaskData?.execStatus && tableLoading.value) {
+    searchTable();
+  }
+  return !subTaskStore.subTaskData?.execStatus;
+});
 
 const searchTable = (loopQuery?) => {
   // Need to judge that it's a poll call and that auto-refresh here is turned off
