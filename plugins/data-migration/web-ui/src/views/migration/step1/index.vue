@@ -152,7 +152,8 @@
                 </el-select>
                 <el-tooltip class="item" effect="light"
                             :content="t('step1.index.dbTypeContent')"
-                            placement="right"
+                            placement="bottom"
+                            :popper-style="{ maxWidth: '45vw', width: 'auto' }"
                             :teleported="false">
                   <i class="el-icon icon">
                     <el-icon>
@@ -169,7 +170,8 @@
                 </el-radio-group>
                 <el-tooltip class="item" effect="light"
                             :content="t('step1.index.onlineMsg') + t('step1.index.offlineMsg')"
-                            placement="right"
+                            placement="bottom"
+                            :popper-style="{ maxWidth: '5vw', width: 'auto' }"
                             :teleported="false">
                   <i class="el-icon icon">
                     <el-icon>
@@ -182,7 +184,8 @@
                 <el-switch v-model="taskBasicInfo.subTaskData[curTableTabs].isAdjustKernelParam"
                            :disabled="!taskBasicInfo.subTaskData[curTableTabs].isSystemAdmin"/>
                 <el-tooltip class="item" effect="light" :content="t('step1.index.adjustMsg')"
-                            placement="right"
+                            placement="bottom"
+                            :popper-style="{ maxWidth: '10vw', width: 'auto' }"
                             :teleported="false">
                   <i class="el-icon icon">
                     <el-icon>
@@ -548,7 +551,8 @@ const sourceClusterOption = ref<TreeNode[]>([])
 const sourceClusterfilterOption = ref<TreeNode[]>([])
 const sourceClusterInfo = ref<{ [key: string]: string[] }>({})
 const getSourceClustersData = () => {
-  const tempDbType = taskBasicInfo.value?.subTaskData?.[curTableTabs.value]?.sourceDbType ?? 'MYSQL';
+  const propsType = props?.modelValue?.subTaskData?.[0]?.sourceDbType ?? ''
+  const tempDbType = taskBasicInfo.value?.subTaskData?.[curTableTabs.value]?.sourceDbType || propsType || 'MYSQL';
   sourceClustersType(tempDbType).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       sourceClusterInfo.value = {}
