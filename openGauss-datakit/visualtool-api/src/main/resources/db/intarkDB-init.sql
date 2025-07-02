@@ -1778,3 +1778,272 @@ update "sys_menu" set menu_name = '服务器管理', menu_en_name = 'server', or
 
 ALTER TABLE ops_host ADD COLUMN os_version varchar(255);
 COMMENT ON COLUMN "ops_host"."os_version" IS '操作系统版本';
+
+
+CREATE TABLE IF NOT EXISTS   "agent_install" (
+    "agent_id" varchar(100)  NOT NULL PRIMARY KEY,
+    "agent_ip" varchar(100),
+    "agent_name" varchar(100),
+    "agent_port" int4 DEFAULT 1025,
+    "install_path" varchar(255),
+    "install_user" varchar(100),
+    "install_user_id" varchar(100),
+    "status" varchar(100),
+    "create_time" timestamp,
+    "update_time" timestamp
+    );
+
+CREATE TABLE IF NOT EXISTS   "agent_task_template_definition" (
+    "name" varchar(100) NOT NULL PRIMARY KEY,
+    "type" varchar(100),
+    "group_tag" varchar(100),
+    "plugins_tag" varchar(100),
+    "operate_obj_type" varchar(100),
+    "operate_obj" text,
+    "period" varchar(100),
+    "collect_metric" varchar(100),
+    "storage_policy" varchar(100),
+    "keep_period" varchar(100),
+    "receive_api" varchar(100),
+    "create_time" timestamp
+    );
+COMMENT ON COLUMN   "agent_task_template_definition"."name" IS '主键ID 采集任务名称';
+COMMENT ON COLUMN   "agent_task_template_definition"."type" IS '采集任务类型 实时任务 统计历史任务';
+COMMENT ON COLUMN   "agent_task_template_definition"."group_tag" IS '采集任务所属分组-用户自定义标签';
+COMMENT ON COLUMN   "agent_task_template_definition"."plugins_tag" IS '采集任务所属插件-插件标签';
+COMMENT ON COLUMN   "agent_task_template_definition"."operate_obj_type" IS '采集任务操作对象类型OS,DB,OSHI,HTTP';
+COMMENT ON COLUMN   "agent_task_template_definition"."operate_obj" IS '采集任务操作对象类';
+COMMENT ON COLUMN   "agent_task_template_definition"."period" IS '采集任务周期';
+COMMENT ON COLUMN   "agent_task_template_definition"."collect_metric" IS '采集任务收集指标';
+COMMENT ON COLUMN   "agent_task_template_definition"."storage_policy" IS '采集任务收集数据存储策略';
+COMMENT ON COLUMN   "agent_task_template_definition"."keep_period" IS '采集任务收集数据保存周期';
+COMMENT ON COLUMN   "agent_task_template_definition"."receive_api" IS '采集任务收集数据接收地址';
+COMMENT ON TABLE   "agent_task_template_definition" IS '采集任务模版定义表';
+
+
+INSERT INTO "agent_task_template_definition" VALUES ('base_host_info', 'OSHI_FIXED_METRIC', 'datakit', NULL, 'OSHI', NULL, 'PT0S', 'base_host_info', 'CUSTOM', NULL, '/receive/fixed/host/info', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_template_definition" VALUES ('host_history_dynamic_metrics', 'OSHI_DYNAMIC_METRIC', 'datakit', NULL, 'OSHI', NULL, 'PT10S', 'host_dynamic_metrics', 'HISTORY', 'PT1H', '/receive/metrics', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_template_definition" VALUES ('opengauss_instance_monitor_history', 'DB_METRIC', 'datakit', NULL, 'DB', NULL, 'PT10S', 'opengauss_instance_monitor', 'HISTORY', 'PT1H', '/receive/metrics', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_template_definition" VALUES ('mysql_instance_monitor_history', 'DB_METRIC', 'datakit', NULL, 'DB', NULL, 'PT10S', 'mysql_instance_monitor', 'HISTORY', 'PT1H', '/receive/metrics', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_template_definition" VALUES ('opengauss_instance_memory_top10', 'DB_PIPE', 'datakit', NULL, 'DB', 'SELECT * FROM pv_session_memory_detail() ORDER BY usedsize desc limit 10;', 'PT10S', 'opengauss_instance_memory_top10', 'HISTORY', 'PT1H', '/receive/pipeline', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_template_definition" VALUES ('opengauss_sql_trace', 'DB_PIPE', 'datakit', NULL, 'HTTP', NULL, 'PT10S', 'opengauss_sql_trace', 'TREE', 'P7D', '/receive/pipeline', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_template_definition" VALUES ('opengauss_alarm_notification', 'DB_PIPE', 'datakit', NULL, 'HTTP', NULL, 'PT10S', 'opengauss_alarm_notification', 'HISTORY', 'P7D', '/receive/pipeline', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_template_definition" VALUES ('opengauss_slow_sql_query', 'DB_PIPE', 'datakit', NULL, 'DB', NULL, 'PT10S', 'opengauss_slow_sql_query', 'FINGERPRINT', 'P7D', '/receive/pipeline', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_template_definition" VALUES ('host_dynamic_metrics', 'OSHI_DYNAMIC_METRIC', 'datakit', NULL, 'OSHI', NULL, 'PT10S', 'host_dynamic_metrics', 'REAL_TIME', NULL, '/receive/metrics', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_template_definition" VALUES ('opengauss_instance_monitor', 'DB_METRIC', 'datakit', NULL, 'DB', NULL, 'PT10S', 'opengauss_instance_monitor', 'REAL_TIME', NULL, '/receive/metrics', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_template_definition" VALUES ('mysql_instance_monitor', 'DB_METRIC', 'datakit', NULL, 'DB', NULL, 'PT10S', 'mysql_instance_monitor', 'REAL_TIME', NULL, '/receive/metrics', '2025-04-16 16:34:16');
+
+
+CREATE TABLE IF NOT EXISTS   "agent_task_schema_definition" (
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "name" varchar(100) NOT NULL   ,
+    "metric" varchar(100)   ,
+    "create_time" timestamp
+    );
+COMMENT ON COLUMN   "agent_task_schema_definition"."name" IS '采集任务名称';
+COMMENT ON COLUMN   "agent_task_schema_definition"."metric" IS '采集任务绑定指标名称';
+COMMENT ON TABLE   "agent_task_schema_definition" IS '采集任务数据结构定义表';
+
+INSERT INTO "agent_task_schema_definition" VALUES (1, 'base_host_info', 'system.hostname', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (2, 'base_host_info', 'system.os.name', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (3, 'base_host_info', 'system.os.version', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (4, 'base_host_info', 'system.cpu.name', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (5, 'base_host_info', 'system.cpu.max.freq', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (6, 'base_host_info', 'system.cpu.arch', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (7, 'base_host_info', 'system.cpu.core.count', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (8, 'host_dynamic_metrics', 'system.memory.total', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (9, 'host_dynamic_metrics', 'system.cpu.usage', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (10, 'host_dynamic_metrics', 'system.memory.available', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (11, 'host_dynamic_metrics', 'system.memory.usage', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (12, 'host_dynamic_metrics', 'system.net.bytes.received', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (13, 'host_dynamic_metrics', 'system.net.bytes.sent', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (14, 'host_dynamic_metrics', 'system.disk.total', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (15, 'host_dynamic_metrics', 'system.disk.bytes.write', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (16, 'host_dynamic_metrics', 'system.disk.bytes.read', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (17, 'host_dynamic_metrics', 'system.disk.fs.total', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (18, 'host_dynamic_metrics', 'system.disk.fs.used', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (19, 'host_dynamic_metrics', 'system.disk.fs.free', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (24, 'opengauss_instance_monitor', 'opengauss.pg.locks.count', '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_schema_definition" VALUES (25, 'opengauss_instance_monitor', 'opengauss.pg.session.count', '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_schema_definition" VALUES (26, 'opengauss_instance_monitor', 'opengauss.pg.connect.count', '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_schema_definition" VALUES (28, 'mysql_instance_monitor', 'mysql.jdbc.monitor.conn.num', '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_schema_definition" VALUES (29, 'mysql_instance_monitor', 'mysql.jdbc.monitor.qps', '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_schema_definition" VALUES (30, 'mysql_instance_monitor', 'mysql.jdbc.monitor.tps', '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_schema_definition" VALUES (31, 'mysql_instance_monitor', 'mysql.jdbc.monitor.memory.used', '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_schema_definition" VALUES (32, 'mysql_instance_monitor', 'mysql.jdbc.monitor.table.space.used', '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_schema_definition" VALUES (33, 'opengauss_instance_memory_top10', 'opengauss.pg.session.memory.top10.sessid', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (34, 'opengauss_instance_memory_top10', 'opengauss.pg.session.memory.top10.usedsize', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (35, 'opengauss_instance_memory_top10', 'opengauss.pg.session.memory.top10.freesize', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (36, 'opengauss_instance_memory_top10', 'opengauss.pg.session.memory.top10.totalsize', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (37, 'opengauss_instance_memory_top10', 'opengauss.pg.session.memory.top10.contextname', '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_schema_definition" VALUES (201,'opengauss_alarm_notification', 'opengauss.alarm.id', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_schema_definition" VALUES (202,'opengauss_alarm_notification','opengauss.alarm.name', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_schema_definition" VALUES (203,'opengauss_alarm_notification','opengauss.alarm.level', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_schema_definition" VALUES (204,'opengauss_alarm_notification','opengauss.alarm.scope', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_schema_definition" VALUES (205,'opengauss_alarm_notification','opengauss.alarm.source_tag', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_schema_definition" VALUES (206,'opengauss_alarm_notification','opengauss.alarm.details', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_schema_definition" VALUES (207,'opengauss_alarm_notification','opengauss.alarm.op_type', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_schema_definition" VALUES (208,'opengauss_alarm_notification','opengauss.alarm.clear_type', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_schema_definition" VALUES (209,'opengauss_alarm_notification','opengauss.alarm.start_timestamp', '2025-04-16 16:34:16');
+INSERT INTO "agent_task_schema_definition" VALUES (210,'opengauss_alarm_notification','opengauss.alarm.end_timestamp', '2025-04-16 16:34:16');
+
+
+CREATE TABLE IF NOT EXISTS   "agent_task_metrics_definition" (
+    "name" varchar(100) NOT NULL PRIMARY KEY ,
+    "description" varchar(100),
+    "field_name" varchar(100),
+    "unit" varchar(100),
+    "data_type" varchar(100),
+    "prop" varchar(100),
+    "collect_cmd" varchar(1024),
+    "create_time" timestamp
+    );
+COMMENT ON COLUMN   "agent_task_metrics_definition"."name" IS '采集任务指标名称';
+COMMENT ON COLUMN   "agent_task_metrics_definition"."description" IS '采集任务指标描述';
+COMMENT ON COLUMN   "agent_task_metrics_definition"."field_name" IS '采集任务指标字段名称';
+COMMENT ON COLUMN   "agent_task_metrics_definition"."unit" IS '采集任务指标数据展示单位';
+COMMENT ON COLUMN   "agent_task_metrics_definition"."data_type" IS '采集任务指标数据类型';
+COMMENT ON COLUMN   "agent_task_metrics_definition"."prop" IS '采集任务指标属性';
+COMMENT ON COLUMN   "agent_task_metrics_definition"."collect_cmd" IS '指标采集指令-SQL';
+COMMENT ON TABLE   "agent_task_metrics_definition" IS '采集任务指标定义表';
+
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.hostname', '服务器Host名称', 'hostname', NULL, 'String', NULL, NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.os.name', '操作系统名称', 'osName', NULL, 'String', NULL, NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.os.version', '操作系统版本', 'osVersion', NULL, 'String', NULL, NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.cpu.name', 'cpu名称', 'cpuName', NULL, 'String', NULL, NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.cpu.max.freq', 'cpu最大主频', 'cpuMaxFreq', 'GHz', 'long', NULL, NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.cpu.arch', 'cpu架构', 'cpuArch', NULL, 'String', NULL, NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.cpu.core.count', 'cpu核数', 'cpuCoreCount', NULL, 'long', NULL, NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.memory.total', '内存总量', 'memoryTotal', 'GB', 'long', NULL, NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.cpu.usage', 'CPU使用率', 'cpuUsage', '%', 'double', NULL, NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.memory.available', '剩余内存', 'memoryAvailable', 'GB', 'long', NULL, NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.memory.usage', '内存使用率', 'memoryUsage', '%', 'double', NULL, NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.net.bytes.received', '网卡下行速率', 'netRecv', 'kb/s', 'long', 'faceName', NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.net.bytes.sent', '网卡上行速率', 'netSent', 'kb/s', 'long', 'faceName', NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.disk.total', '磁盘总大小', 'diskTotal', 'GB', 'long', 'diskName', NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.disk.bytes.write', '磁盘写入速率', 'diskWrite', 'GB/s', 'long', 'diskName', NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.disk.bytes.read', '磁盘读取速率', 'diskRead', 'GB/s', 'long', 'diskName', NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.disk.fs.total', '磁盘分区大小', 'diskFsTotal', 'GB', 'long', 'mountPoint', NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.disk.fs.used', '磁盘分区已使用大小', 'diskFsUsed', 'GB', 'long', 'mountPoint', NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('system.disk.fs.free', '磁盘分区剩余大小', 'diskFsFree', 'GB', 'long', 'mountPoint', NULL, '2025-04-16 16:34:16') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.status.cm.state', 'openGauss集群CM状态', 'cmState', NULL, 'String', NULL, NULL, '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.status.cluster.state', 'openGauss集群Cluster状态', 'cluster_state', NULL, 'String', NULL, NULL, '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.status.node.state', 'openGauss集群节点状态', 'nodeState', NULL, 'String', NULL, NULL, '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.status.node.role', 'openGauss集群节点角色', 'nodeRole', NULL, 'String', NULL, NULL, '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.pg.locks.count', 'openGauss锁数量', 'count', NULL, 'Long', NULL, 'SELECT count(*) count FROM pg_locks', '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.pg.session.count', 'openGauss会话数量', 'count', NULL, 'Long', NULL, 'SELECT count(*) count FROM pg_stat_activity', '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.pg.connect.count', 'openGauss连接数量', 'count', NULL, 'Long', NULL, 'SELECT count(*) count FROM (SELECT pg_stat_get_backend_idset() AS backendid) AS s', '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('mysql.jdbc.monitor.role', 'mysql主备role', 'role', NULL, 'String', NULL, 'SHOW SLAVE STATUS', '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('mysql.jdbc.monitor.conn.num', 'mysql连接数', 'value', NULL, 'Long', NULL, 'SHOW STATUS LIKE ''Threads_connected''', '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('mysql.jdbc.monitor.qps', 'mysql QPS', 'qps', NULL, 'double', NULL, 'SELECT ROUND(CAST(questions AS UNSIGNED) / IF(CAST(uptime AS UNSIGNED) = 0, 1, CAST(uptime AS UNSIGNED)),2) AS qps FROM ( SELECT MAX(CASE WHEN VARIABLE_NAME = ''Questions'' THEN VARIABLE_VALUE END) AS questions, MAX(CASE WHEN VARIABLE_NAME = ''Uptime'' THEN VARIABLE_VALUE END) AS uptime FROM performance_schema.global_status WHERE VARIABLE_NAME IN (''Questions'', ''Uptime'')) AS status;', '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('mysql.jdbc.monitor.tps', 'mysql TPS', 'tps', NULL, 'double', NULL, 'SELECT ROUND(((COALESCE(CAST(com_commit AS UNSIGNED), 0) + COALESCE(CAST(com_rollback AS UNSIGNED), 0)) / IF(COALESCE(CAST(uptime AS UNSIGNED), 0) = 0, 1, COALESCE(CAST(uptime AS UNSIGNED), 0))), 2) AS tps FROM (SELECT MAX(CASE WHEN VARIABLE_NAME = ''Com_commit'' THEN VARIABLE_VALUE END) AS com_commit,MAX(CASE WHEN VARIABLE_NAME = ''Com_rollback'' THEN VARIABLE_VALUE END) AS com_rollback,MAX(CASE WHEN VARIABLE_NAME = ''Uptime'' THEN VARIABLE_VALUE END) AS uptime FROM performance_schema.global_status WHERE VARIABLE_NAME IN (''Com_commit'', ''Com_rollback'', ''Uptime'')) AS status;', '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('mysql.jdbc.monitor.memory.used', 'mysql 内存使用量', 'memoryUsed', NULL, 'double', NULL, 'SELECT (@@key_buffer_size + @@innodb_buffer_pool_size + @@innodb_log_buffer_size + @@max_connections * ( @@read_buffer_size + @@read_rnd_buffer_size + @@sort_buffer_size + @@join_buffer_size + @@binlog_cache_size + @@thread_stack + @@tmp_table_size )) AS ''memoryUsed''', '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('mysql.jdbc.monitor.table.space.used', 'mysql 表空间使用量', 'tableSpaceUsed', NULL, 'double', NULL, 'SELECT SUM( table_schema_size.table_schema_size ) AS ''tableSpaceUsed'' FROM ( SELECT table_schema, SUM( data_length + index_length ) AS table_schema_size FROM information_schema.TABLES GROUP BY table_schema ) table_schema_size', '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.pg.session.memory.top10.sessid', 'openGauss会话内存使用Top10', 'sessid', NULL, 'String', NULL, NULL, '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.pg.session.memory.top10.usedsize', 'openGauss会话内存使用Top10', 'usedsize', NULL, 'Long', NULL, NULL, '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.pg.session.memory.top10.freesize', 'openGauss会话内存使用Top10', 'freesize', NULL, 'Long', NULL, NULL, '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.pg.session.memory.top10.totalsize', 'openGauss会话内存使用Top10', 'totalsize', NULL, 'Long', NULL, NULL, '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.pg.session.memory.top10.contextname', 'openGauss会话内存使用Top10', 'contextname', NULL, 'String', NULL, NULL, '2025-04-18 15:36:28') ;
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.alarm.id', 'openGauss告警信息ID', 'id', NULL, 'String', NULL, NULL, '2025-04-18 15:36:28.000');
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.alarm.name', 'openGauss告警信息名称', 'name', NULL, 'String', NULL, NULL, '2025-04-18 15:36:28.000');
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.alarm.level', 'openGauss告警信息级别', 'level', NULL, 'String', NULL, NULL, '2025-04-18 15:36:28.000');
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.alarm.scope', 'openGauss告警信息范围', 'scope', NULL, 'String', NULL, NULL, '2025-04-18 15:36:28.000');
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.alarm.source_tag', 'openGauss告警信息标签', 'source_tag', '', 'String', NULL, NULL, '2025-04-18 15:36:28.000');
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.alarm.details', 'openGauss告警信息详情', 'details', NULL, 'String', NULL, NULL, '2025-04-18 15:36:28.000');
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.alarm.op_type', 'openGauss告警信息操作类型', 'op_type', NULL, 'String', NULL, NULL, '2025-04-18 15:36:28.000');
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.alarm.clear_type', 'openGauss告警信息清除类型', 'clear_type', NULL, 'String', NULL, NULL, '2025-04-18 15:36:28.000');
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.alarm.start_timestamp', 'openGauss告警信息开始时间', 'start_timestamp', NULL, 'long', NULL, NULL, '2025-04-18 15:36:28.000');
+INSERT INTO "agent_task_metrics_definition" VALUES ('opengauss.alarm.end_timestamp', 'openGauss告警信息结束时间', 'end_timestamp', NULL, 'long', NULL, NULL, '2025-04-18 15:36:28.000');
+
+CREATE TABLE IF NOT EXISTS   "agent_task_instance" (
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "task_template_id" varchar(100) NOT NULL,
+    "task_name" varchar(100) NOT NULL,
+    "agent_id" varchar(100) NOT NULL,
+    "cluster_id" varchar(100),
+    "cluster_original" varchar(100),
+    "task_status" varchar(100) NOT NULL,
+    "start_time" timestamp,
+    "end_time" timestamp,
+    "error_msg" text,
+    "task_params" text,
+    "create_time" timestamp,
+    "update_time" timestamp
+    );
+COMMENT ON COLUMN   "agent_task_instance"."id" IS '采集任务ID';
+COMMENT ON COLUMN   "agent_task_instance"."task_template_id" IS '采集任务绑定模版ID';
+COMMENT ON COLUMN   "agent_task_instance"."task_name" IS '采集任务名称';
+COMMENT ON COLUMN   "agent_task_instance"."agent_id" IS '采集任务执行AgentID';
+COMMENT ON COLUMN   "agent_task_instance"."cluster_id" IS '采集任务关联数据库集群实例ID';
+COMMENT ON COLUMN   "agent_task_instance"."cluster_original" IS '采集任务关联集群来源:OPS_CLUSTER;OPS_JDBC_CLUSTER';
+COMMENT ON COLUMN   "agent_task_instance"."task_status" IS '采集任务状态';
+COMMENT ON COLUMN   "agent_task_instance"."start_time" IS '采集任务开始时间';
+COMMENT ON COLUMN   "agent_task_instance"."end_time" IS '采集任务结束时间';
+COMMENT ON COLUMN   "agent_task_instance"."error_msg" IS '采集任务异常信息';
+COMMENT ON COLUMN   "agent_task_instance"."task_params" IS '采集任务执行参数';
+COMMENT ON TABLE   "agent_task_instance" IS 'Agent任务实例表';
+
+
+CREATE TABLE IF NOT EXISTS   "agent_cluster_relation" (
+    "cluster_node_id" varchar(100) NOT NULL PRIMARY KEY,
+    "cluster_original" varchar(100) NOT NULL
+    );
+COMMENT ON COLUMN   "agent_cluster_relation"."cluster_node_id" IS '集群ID';
+COMMENT ON COLUMN   "agent_cluster_relation"."cluster_original" IS '采集任务关联集群来源:OPS_CLUSTER;OPS_JDBC_CLUSTER';
+COMMENT ON TABLE   "agent_cluster_relation" IS 'Agent任务集群关联表';
+
+
+CREATE TABLE IF NOT EXISTS   "agent_metric_real_time" (
+    "multi_id" varchar(300) NOT NULL   ,
+    "agent_id" int8 NOT NULL,
+    "cluster_node_id" varchar(100)    ,
+    "metric" varchar(100) NOT NULL   ,
+    "property" varchar(100)    ,
+    "value" varchar(100) NOT NULL   ,
+    "start_time" timestamp,
+    "end_time" timestamp,
+    "create_time" timestamp,
+    PRIMARY KEY ("agent_id","cluster_node_id","metric","property")
+    );
+COMMENT ON COLUMN   "agent_metric_real_time"."multi_id" IS 'Agent 联合主键值';
+COMMENT ON COLUMN   "agent_metric_real_time"."agent_id" IS 'AgentID';
+COMMENT ON COLUMN   "agent_metric_real_time"."cluster_node_id" IS '集群ID';
+COMMENT ON COLUMN   "agent_metric_real_time"."metric" IS '指标ID,指标名称';
+COMMENT ON COLUMN   "agent_metric_real_time"."property" IS '指标属性对应值';
+COMMENT ON COLUMN   "agent_metric_real_time"."value" IS '指标值';
+COMMENT ON COLUMN   "agent_metric_real_time"."start_time" IS '指标采集开始时间';
+COMMENT ON COLUMN   "agent_metric_real_time"."end_time" IS '指标采集结束时间';
+COMMENT ON COLUMN   "agent_metric_real_time"."create_time" IS '指标保存时间';
+COMMENT ON TABLE   "agent_metric_real_time" IS 'Agent实时指标数据表';
+
+CREATE TABLE IF NOT EXISTS   "agent_metric_historical" (
+    "id" int8 NOT NULL PRIMARY KEY,
+    "task_id" int8 NOT NULL,
+    "agent_id" int8 NOT NULL,
+    "cluster_node_id" varchar(100)    ,
+    "metric" varchar(100) NOT NULL   ,
+    "property" varchar(100)    ,
+    "value" varchar(100) NOT NULL   ,
+    "start_time" timestamp,
+    "end_time" timestamp,
+    "create_time" timestamp
+    );
+COMMENT ON COLUMN   "agent_metric_historical"."id" IS 'Agent 主键值';
+COMMENT ON COLUMN   "agent_metric_historical"."task_id" IS '数据采集任务ID';
+COMMENT ON COLUMN   "agent_metric_historical"."agent_id" IS 'AgentID';
+COMMENT ON COLUMN   "agent_metric_historical"."cluster_node_id" IS '集群ID';
+COMMENT ON COLUMN   "agent_metric_historical"."metric" IS '指标ID,指标名称';
+COMMENT ON COLUMN   "agent_metric_historical"."property" IS '指标属性对应值';
+COMMENT ON COLUMN   "agent_metric_historical"."value" IS '指标值';
+COMMENT ON COLUMN   "agent_metric_historical"."start_time" IS '指标采集开始时间';
+COMMENT ON COLUMN   "agent_metric_historical"."end_time" IS '指标采集结束时间';
+COMMENT ON COLUMN   "agent_metric_historical"."create_time" IS '指标保存时间';
+COMMENT ON TABLE   "agent_metric_historical" IS 'Agent历史指标数据表';
+
+CREATE TABLE IF NOT EXISTS   "agent_task_table_relation" (
+    "task_id" varchar(100) NOT NULL  PRIMARY KEY ,
+    "task_table_name" varchar(100) NOT NULL,
+    );
+COMMENT ON COLUMN   "agent_task_table_relation"."task_id" IS 'Agent任务集群关联关系-任务ID';
+COMMENT ON COLUMN   "agent_task_table_relation"."task_table_name" IS '集群ID';
+COMMENT ON TABLE   "agent_task_table_relation" IS 'Agent任务集群关联表';
