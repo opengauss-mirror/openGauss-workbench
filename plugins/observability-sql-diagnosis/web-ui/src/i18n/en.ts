@@ -142,8 +142,11 @@ export default {
     session: 'Session Management',
     slow: 'Slow SQL',
     space: 'Spatial Analysis',
+    month: 'month',
     day: 'day',
     hour: 'hour',
+    minute: 'minute',
+    second: 'second',
     range: 'Range',
     last1H: 'Last Hour',
     last12H: 'Last 12 Hours',
@@ -527,7 +530,15 @@ export default {
       'schema'
     ],
     configTable: ['Time', 'Type', 'Grade', 'log', 'Cluster ID', 'Instance ID'],
-    pleaseInstallInstance: 'Please install the instance monitoring plugin before using this feature to access SQL details'
+    pleaseInstallInstance: 'Please install the instance monitoring plugin before using this feature to access SQL details',
+    dataCacheTime: 'Data cache time',
+    peroid: 'peroid',
+    frequency: 'frequency',
+    bySecond: 'By Second',
+    byMinute: 'By Minute',
+    byHour: 'By Hour',
+    byDay: 'By Day',
+    byMonth: 'By Month',
   },
   spatial: {
     diskUsage: 'Disk Usage',

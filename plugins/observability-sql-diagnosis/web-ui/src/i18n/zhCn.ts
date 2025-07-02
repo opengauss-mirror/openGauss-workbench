@@ -236,8 +236,11 @@ export default {
     slow: '慢SQL',
     top: 'TOPSQL',
     space: '空间分析',
+    month: '月',
     day: '天',
     hour: '小时',
+    minute: '分钟',
+    second: '秒',
     range: '范围',
     last1H: '近1小时',
     last12H: '近12小时',
@@ -615,7 +618,14 @@ export default {
       '模式'
     ],
     logSearchTable: ['时间', '类型', '级别', '日志', '集群ID', '实例ID'],
-    pleaseInstallInstance: '请先安装实例监控插件后再使用此功能进入SQL详情'
+    pleaseInstallInstance: '请先安装实例监控插件后再使用此功能进入SQL详情',
+    peroid: '慢sql生命周期',
+    frequency: '慢sql采集频率',
+    bySecond: '按秒',
+    byMinute: '按分钟',
+    byHour: '按小时',
+    byDay: '按天数',
+    byMonth: '按月',
   },
   spatial: {
     nodeId: '节点id',

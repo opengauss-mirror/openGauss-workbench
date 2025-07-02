@@ -1,27 +1,39 @@
 <template>
   <div class="search-form">
-    <div class="filter">
-      <ClusterCascader :title="$t('datasource.cluterTitle')" @getCluster="handleClusterValue" />
+    <div class="form1">
+      <div class="filter">
+        <span>{{ $t('datasource.peroid') }}&nbsp;</span>
+        <el-cascader v-model="sqlPeroid" :options="peroidOptions" :show-all-levels="false" @change="setSqlConfig('peroid')" style="width: 100px;" />
+      </div>
+      <div class="filter">
+        <span>{{ $t('datasource.frequency') }}&nbsp;</span>
+        <el-cascader v-model="sqlFrequency" :options="frequencyOptions" :show-all-levels="false" @change="setSqlConfig('frequency')" style="width: 100px;" />
+      </div>
     </div>
-    <div class="filter">
-      <span>{{ $t('datasource.database') }}&nbsp;</span>
-      <el-select
-        v-model="formData.dbName"
-        :placeholder="$t('datasource.selectDatabaseType')"
-        style="max-width: 150px"
-        clearable
-      >
-        <el-option v-for="item in dbList" :key="item" :value="item" :label="item" />
-      </el-select>
+    <div class="form2">
+      <div class="filter">
+        <ClusterCascader :title="$t('datasource.cluterTitle')" @getCluster="handleClusterValue" />
+      </div>
+      <div class="filter">
+        <span>{{ $t('datasource.database') }}&nbsp;</span>
+        <el-select
+          v-model="formData.dbName"
+          :placeholder="$t('datasource.selectDatabaseType')"
+          style="max-width: 150px"
+          clearable
+        >
+          <el-option v-for="item in dbList" :key="item" :value="item" :label="item" />
+        </el-select>
+      </div>
+      <div class="filter">
+        <span>{{ $t('datasource.sqlTrackTaskStartTimeSelect') }}&nbsp;</span>
+        <MyDatePicker v-model="formData.dateValue" type="datetimerange" :valueFormatToUTC="true" style="width: 300px" />
+      </div>
+      <el-button type="primary" class="search-button" @click="handleQuery" :icon="Search">{{
+        $t('app.query')
+      }}</el-button>
+      <el-button @click="handleReset" :title="$t('app.refresh')" :icon="Refresh">{{ $t('app.reset') }}</el-button>
     </div>
-    <div class="filter">
-      <span>{{ $t('datasource.sqlTrackTaskStartTimeSelect') }}&nbsp;</span>
-      <MyDatePicker v-model="formData.dateValue" type="datetimerange" :valueFormatToUTC="true" style="width: 300px" />
-    </div>
-    <el-button type="primary" class="search-button" @click="handleQuery" :icon="Search">{{
-      $t('app.query')
-    }}</el-button>
-    <el-button @click="handleReset" :title="$t('app.refresh')" :icon="Refresh">{{ $t('app.reset') }}</el-button>
   </div>
   <div>
     <my-card
@@ -499,9 +511,74 @@ const {
   nodeId,
 } = storeToRefs(useMonitorStore(props.tabId));
 
+const sqlPeroid = ref([])
+const sqlFrequency = ref([])
+
+const peroidOptions = computed(() => [{
+  value: 'day',
+  label: t('datasource.byDay'),
+  children: Array.from({ length: 29 }).map((item, index) => ({
+    value: `${index + 1}day`,
+    label: (index + 1) + t('dashboard.day'),
+  }))
+},
+{
+  value: 'month',
+  label: t('datasource.byMonth'),
+  children: Array.from({ length: 12 }).map((item, index) => ({
+    value: `${index + 1}month`,
+    label: (index + 1) + t('dashboard.month'),
+  }))
+}])
+
+const frequencyOptions = computed(() => [{
+  value: 's',
+  label: t('datasource.bySecond'),
+  children: Array.from({ length: 50 }).map((item, index) => ({
+    value: `${index + 10}s`,
+    label: (index + 10) + t('dashboard.second'),
+  }))
+},
+{
+  value: 'm',
+  label: t('datasource.byMinute'),
+  children: Array.from({ length: 59 }).map((item, index) => ({
+    value: `${index + 1}m`,
+    label: (index + 1) + t('dashboard.minute'),
+  }))
+},
+{
+  value: 'h',
+  label: t('datasource.byHour'),
+  children: Array.from({ length: 24 }).map((item, index) => ({
+    value: `${index + 1}h`,
+    label: (index + 1) + t('dashboard.hour'),
+  }))
+}])
+
+const getSqlDefaultConfig = () => {
+  ogRequest.get('/sqlDiagnosis/api/v1/getDefault').then((res) => {
+    sqlPeroid.value = [res.peroid?.match(/[a-zA-Z]+$/)?.[0], res.peroid]
+    sqlFrequency.value = [res.frequency.slice(-1)[0], res.frequency]
+  })
+}
+const setSqlConfig = (type: 'peroid' | 'frequency') => {
+  if (type === 'peroid') {
+    ogRequest.post(`/sqlDiagnosis/api/v1/peroid?peroid=${sqlPeroid.value.slice(-1)[0]}`).then(() => {
+      ElMessage.success(t('app.saveSuccess'))
+    })
+  }
+  if (type === 'frequency') {
+    ogRequest.post(`/sqlDiagnosis/api/v1/frequency?frequency=${sqlFrequency.value.slice(-1)[0]}`).then(() => {
+      ElMessage.success(t('app.saveSuccess'))
+    })
+  }
+}
+
 // same for every page in index
 const timer = ref<number>();
 onMounted(() => {
+  getSqlDefaultConfig()
   load();
 });
 watch(
@@ -682,6 +759,18 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  column-gap: 15px;
+}
+.form1, .form2 {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 4px;
+}
 .slow-log {
   &-chart {
     height: 200px;
