@@ -32,7 +32,6 @@ import com.gitee.starblues.spring.environment.EnvironmentProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -83,20 +82,18 @@ public class DataSourceConfig {
         var d = new DynamicRoutingDataSource();
         d.addDataSource("primary", primary);
         d.setPrimary("primary");
-        if (GS_DRIVER.equals(driverClassName)) {
-            for (Map.Entry<String, DataSourceProperty> dataSourceProperty : properties.getDatasource().entrySet()) {
-                dataSourceProperty.getValue().setDriverClassName(SQLITE_DRIVER);
-                if ("instanceAgent".equals(dataSourceProperty.getKey())) {
-                    dataSourceProperty.getValue().setUrl(SQLITE_INSTANCE_URL);
-                    continue;
-                }
-                String url = SQLITE_URL + dataSourceProperty.getKey() + ".db";
-                dataSourceProperty.getValue().setUrl(url);
-                dataSourceProperty.getValue().getDruid().setMaxActive(1);
-                String[] split = url.split(":");
-                String dbFile = split[split.length - 1];
-                initDbFile(dbFile);
+        for (Map.Entry<String, DataSourceProperty> dataSourceProperty : properties.getDatasource().entrySet()) {
+            dataSourceProperty.getValue().setDriverClassName(SQLITE_DRIVER);
+            if ("instanceAgent".equals(dataSourceProperty.getKey())) {
+                dataSourceProperty.getValue().setUrl(SQLITE_INSTANCE_URL);
+                continue;
             }
+            String url = SQLITE_URL + dataSourceProperty.getKey() + ".db";
+            dataSourceProperty.getValue().setUrl(url);
+            dataSourceProperty.getValue().getDruid().setMaxActive(1);
+            String[] split = url.split(":");
+            String dbFile = split[split.length - 1];
+            initDbFile(dbFile);
         }
         return d;
     }

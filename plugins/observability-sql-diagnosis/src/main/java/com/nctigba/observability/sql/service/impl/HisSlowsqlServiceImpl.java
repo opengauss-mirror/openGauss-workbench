@@ -1,0 +1,350 @@
+package com.nctigba.observability.sql.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.nctigba.observability.sql.caller.DiagnosisCaller;
+import com.nctigba.observability.sql.mapper.DynamicHisSlowSqlMapper;
+import com.nctigba.observability.sql.mapper.OpengaussAllSlowsqlMapper;
+import com.nctigba.observability.sql.mapper.PgSettingsMapper;
+import com.nctigba.observability.sql.model.dto.BasePageDTO;
+import com.nctigba.observability.sql.model.dto.SlowSqlDTO;
+import com.nctigba.observability.sql.model.entity.HisSlowsqlInfoDO;
+import com.nctigba.observability.sql.model.entity.PgSettingsDO;
+import com.nctigba.observability.sql.model.query.SlowLogQuery;
+import com.nctigba.observability.sql.model.vo.StatementHistoryAggVO;
+import com.nctigba.observability.sql.model.vo.StatementHistoryDetailVO;
+import com.nctigba.observability.sql.service.MyPage;
+import com.nctigba.observability.sql.util.LocaleStringUtils;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
+import org.opengauss.admin.common.exception.CustomException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.BadSqlGrammarException;
+import org.springframework.stereotype.Service;
+
+import java.sql.SQLException;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicReference;
+
+/**
+ * HisSlowqlServiceImpl
+ *
+ * @author jianghongbo
+ * @since 2025-06-30
+ */
+@Slf4j
+@Service
+public class HisSlowsqlServiceImpl extends ServiceImpl<DynamicHisSlowSqlMapper, HisSlowsqlInfoDO> {
+    private static final String TABLE_PREFIX = "tb_slowsqls_";
+    private static final Integer TIME_OFFSET = 60;
+
+    @Autowired
+    private OpengaussAllSlowsqlMapper opengaussAllSlowsqlMapper;
+    @Autowired
+    private ClusterManager clusterManager;
+    @Autowired
+    private DynamicHisSlowSqlMapper dynamicHisSlowSqlMapper;
+    @Autowired
+    private TimeConfigServiceImpl timeConfigService;
+    @Autowired
+    private PgSettingsMapper pgSettingsMapper;
+    @Autowired
+    private DiagnosisCaller diagnosisCaller;
+    private Map<SlowLogQuery, cacheAble<Future<BasePageDTO<StatementHistoryDetailVO>>>> cache
+            = new WeakHashMap<>();
+
+    @Data
+    static class cacheAble<T> {
+        long curr = System.currentTimeMillis();
+        T obj;
+
+        public cacheAble(T obj) {
+            this.obj = obj;
+        }
+    }
+
+    /**
+     * collect and clean slow sqls
+     *
+     * @param node OpsClusterNodeVO database node
+     */
+    public void cleanAndCollectSlowsqls(OpsClusterNodeVO node) {
+        collectNodeSlowsqls(node.getNodeId());
+        cleanExpiredSlowInfo(node.getNodeId());
+    }
+
+    /**
+     * clean expired records
+     *
+     * @param nodeId String
+     */
+    public void cleanExpiredSlowInfo(String nodeId) {
+        int peroid = timeConfigService.getPeroid();
+        String tableName = getTableNameByNodeId(nodeId);
+        int expiredNumber = dynamicHisSlowSqlMapper.cleanExpiredData(tableName, peroid);
+        log.info("clean {} expired records for table {}", expiredNumber, tableName);
+    }
+
+    /**
+     * collect slow sql infos
+     *
+     * @param nodeId String
+     */
+    public void collectNodeSlowsqls(String nodeId) {
+        List<HisSlowsqlInfoDO> statementRows = new ArrayList<>();
+        String tableName = getTableNameByNodeId(nodeId);
+        Date timeShot = dynamicHisSlowSqlMapper.selectTimeshot(tableName);
+        if (timeShot == null) {
+            timeShot = new Date(0);
+        } else {
+            timeShot = getOneMinuteAgo(timeShot);
+        }
+        log.debug("timeShot is {} for node {}", timeShot, nodeId);
+        try {
+            statementRows = queryNodeSlowsqls(nodeId, timeShot);
+            dynamicHisSlowSqlMapper.createTable(tableName);
+            AtomicReference<Date> maxTime = new AtomicReference<>();
+            log.info("collect {} records for node {}", statementRows.size(), nodeId);
+            statementRows.forEach(row -> {
+                Date timeRecord = row.getFinishTime();
+                if (maxTime.get() == null || timeRecord.after(maxTime.get())) {
+                    maxTime.set(timeRecord);
+                }
+                dynamicHisSlowSqlMapper.insert(tableName, row);
+            });
+            if (statementRows.size() > 0) {
+                dynamicHisSlowSqlMapper.insertMaxtime(tableName, maxTime.get().getTime());
+            }
+        } catch (SQLException e) {
+            log.error("collect slow sqls from node {} occurred Exception: {}", nodeId, e);
+            throw new CustomException(e.getMessage());
+        }
+    }
+
+    private List<HisSlowsqlInfoDO> queryNodeSlowsqls(String nodeId, Date timeShot) throws SQLException {
+        List<HisSlowsqlInfoDO> statementRows = new ArrayList<>();
+        try {
+            clusterManager.setCurrentDatasource(nodeId, "postgres");
+            statementRows = opengaussAllSlowsqlMapper.selectSlowSqls(timeShot);
+        } catch (SQLException e) {
+            throw e;
+        } catch (BadSqlGrammarException e) {
+            statementRows = queryNodeSlowsqlsOldVersion(timeShot);
+        } finally {
+            clusterManager.pool();
+        }
+        return statementRows;
+    }
+
+    private List<HisSlowsqlInfoDO> queryNodeSlowsqlsOldVersion(Date timeShot) throws SQLException {
+        List<HisSlowsqlInfoDO> statementRows = new ArrayList<>();
+        String nodeRole = opengaussAllSlowsqlMapper.selectNodeStatus().toLowerCase(Locale.ROOT);
+        if (isPrimary(nodeRole)) {
+            statementRows = opengaussAllSlowsqlMapper.selectPrimarySlowSqls(
+                    convertToDateTime(String.valueOf(timeShot.getTime()), ZoneId.systemDefault()));
+        } else if (isStandby(nodeRole)) {
+            statementRows = opengaussAllSlowsqlMapper.selectStandbySlowSqls(timeShot);
+        } else {
+            throw new CustomException("unknown node role: " + nodeRole);
+        }
+        return statementRows;
+    }
+
+    private boolean isPrimary(String nodeRole) {
+        return "primary".equalsIgnoreCase(nodeRole) || "normal".equalsIgnoreCase(nodeRole);
+    }
+
+    private boolean isStandby(String nodeRole) {
+        return "standby".equalsIgnoreCase(nodeRole) || "cascade standby".equalsIgnoreCase(nodeRole)
+                || "main standby".equalsIgnoreCase(nodeRole);
+    }
+
+    private Date getOneMinuteAgo(Date date) {
+        Instant oneMinuteAgo = date.toInstant().minus(TIME_OFFSET, ChronoUnit.SECONDS);
+        return Date.from(oneMinuteAgo);
+    }
+
+    /**
+     * list slow sqls to frontend
+     *
+     * @param slowLogQuery SlowLogQuery
+     * @return MyPage<StatementHistoryDetailVO>
+     */
+    public MyPage<StatementHistoryDetailVO> listSlowSQLs(SlowLogQuery slowLogQuery) {
+        SlowLogQuery finalSlowLogQuery = setDefaultSlowlogQuery(slowLogQuery);
+        synchronized (cache) {
+            if (cache.containsKey(finalSlowLogQuery)) {
+                var cacheAble = cache.get(finalSlowLogQuery);
+                if (cacheAble.getObj().isDone() && System.currentTimeMillis() - cacheAble.getCurr() > 1000) {
+                    cache.remove(finalSlowLogQuery);
+                } else {
+                    try {
+                        return cacheAble.getObj().get();
+                    } catch (InterruptedException e) {
+                        log.error("Interrupted!", e);
+                        Thread.currentThread().interrupt();
+                    } catch (ExecutionException e) {
+                        log.error("ExecutionException!", e);
+                    }
+                }
+            }
+        }
+        var future = Executors.newSingleThreadExecutor().submit(() -> {
+            var wrapper = Wrappers.<HisSlowsqlInfoDO>lambdaQuery()
+                    .eq(StringUtils.isNotBlank(finalSlowLogQuery.getDbName()), HisSlowsqlInfoDO::getDbName,
+                            finalSlowLogQuery.getDbName())
+                    .le(finalSlowLogQuery.getFinishTime() != null, HisSlowsqlInfoDO::getFinishTime,
+                            finalSlowLogQuery.getFinishTime())
+                    .ge(finalSlowLogQuery.getStartTime() != null, HisSlowsqlInfoDO::getStartTime,
+                            finalSlowLogQuery.getStartTime())
+                    .eq(HisSlowsqlInfoDO::getIsSlowSql, true);
+            var page = new BasePageDTO<StatementHistoryDetailVO>();
+            String tableName = getTableNameByNodeId(finalSlowLogQuery.getNodeId());
+            if (finalSlowLogQuery.getQueryCount()) {
+                page.setTotal(dynamicHisSlowSqlMapper.selectCount(tableName, wrapper));
+            }
+            SlowSqlDTO slowSqlDTO = constructSlowSqlDTO(finalSlowLogQuery);
+            List<StatementHistoryDetailVO> list = dynamicHisSlowSqlMapper.selectAllSlowSql(tableName, slowSqlDTO);
+            page.setRecords(list);
+            page.setCurrent(slowLogQuery.getPageNum()).setSize(slowLogQuery.getPageSize());
+            return page;
+        });
+        var c = new cacheAble<>(future);
+        cache.put(slowLogQuery, c);
+
+        try {
+            BasePageDTO<StatementHistoryDetailVO> page = future.get();
+            c.setCurr(System.currentTimeMillis());
+            return page;
+        } catch (InterruptedException e) {
+            log.error("Interrupted!", e);
+            Thread.currentThread().interrupt();
+            throw new CustomException(e.getMessage());
+        } catch (ExecutionException e) {
+            log.error("ExecutionException!", e);
+            throw new CustomException(e.getMessage());
+        }
+    }
+
+    private SlowSqlDTO constructSlowSqlDTO(SlowLogQuery slowLogQuery) {
+        int pageNum = (slowLogQuery.getPageNum() - 1) * slowLogQuery.getPageSize();
+        int pageSize = slowLogQuery.getPageSize();
+        SlowSqlDTO slowSqlDTO = new SlowSqlDTO();
+        slowSqlDTO.setDbName(slowLogQuery.getDbName());
+        slowSqlDTO.setStartTime(slowLogQuery.getStartTime());
+        slowSqlDTO.setFinishTime(slowLogQuery.getFinishTime());
+        slowSqlDTO.setLimit(pageSize);
+        slowSqlDTO.setOffset(pageNum);
+        slowSqlDTO.setOrderByColumn(slowLogQuery.getOrderByColumn());
+        slowSqlDTO.setIsAsc(slowLogQuery.getIsAsc());
+        return slowSqlDTO;
+    }
+
+    private SlowLogQuery setDefaultSlowlogQuery(SlowLogQuery slowLogQuery) {
+        SlowLogQuery defaultSlowLogQuery = slowLogQuery;
+        if (defaultSlowLogQuery.getStartTime() == null || defaultSlowLogQuery.getFinishTime() == null) {
+            defaultSlowLogQuery.setFinishTime(new Date());
+            LocalDate sevenDaysAgo = LocalDate.now().minusDays(7);
+            Date endDate = Date.from(sevenDaysAgo.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            defaultSlowLogQuery.setStartTime(endDate);
+        }
+        return defaultSlowLogQuery;
+    }
+
+    /**
+     * list statistics slow sql info to frontend
+     *
+     * @param slowLogQuery SlowLogQuery
+     * @return MyPage<StatementHistoryAggVO>
+     */
+    public MyPage<StatementHistoryAggVO> selectSlowSqlAggData(SlowLogQuery slowLogQuery) {
+        SlowLogQuery finalSlowLogQuery = setDefaultSlowlogQuery(slowLogQuery);
+        SlowSqlDTO slowSqlDTO = constructSlowSqlDTO(finalSlowLogQuery);
+        String tableName = getTableNameByNodeId(slowLogQuery.getNodeId());
+        List<StatementHistoryAggVO> list = dynamicHisSlowSqlMapper.selectAggSlowSql(tableName, slowSqlDTO);
+        list.forEach(elem -> {
+            elem.setFirstExecuteTime(convertToDateTime(elem.getFirstExecuteTime(), ZoneId.of("UTC")));
+            elem.setFinalExecuteTime(convertToDateTime(elem.getFinalExecuteTime(), ZoneId.of("UTC")));
+        });
+        BasePageDTO<StatementHistoryAggVO> page = new BasePageDTO<>();
+        if (slowLogQuery.getQueryCount()) {
+            page.setTotal(list.size());
+        }
+        int startIndex = (slowLogQuery.getPageNum() - 1) * slowLogQuery.getPageSize();
+        int endIndex = Math.min(startIndex + slowLogQuery.getPageSize(), list.size());
+        page.setRecords(list.subList(startIndex, endIndex));
+        page.setCurrent(slowLogQuery.getPageNum()).setSize(slowLogQuery.getPageSize());
+        return page;
+    }
+
+    private String convertToDateTime(String timestampStr, ZoneId zone) {
+        try {
+            long timestamp = Long.parseLong(timestampStr);
+            Instant instant = Instant.ofEpochMilli(timestamp);
+            LocalDateTime dateTime = LocalDateTime.ofInstant(instant, zone);
+            return dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS"));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("illegal timestampStr", e);
+        }
+    }
+
+    private String getTableNameByNodeId(String nodeId) {
+        return TABLE_PREFIX
+                + nodeId.replaceAll("-", "_");
+    }
+
+    /**
+     * list statistics slow sql info to frontend
+     *
+     * @param nodeId String
+     * @param start Long
+     * @param end Long
+     * @param step Integer
+     * @param dbName String
+     * @return Map<String, Object>
+     */
+    public Map<String, Object> getSlowSqlChart(String nodeId, Long start, Long end, Integer step, String dbName) {
+        LambdaQueryWrapper<PgSettingsDO> wrapper = Wrappers.<PgSettingsDO>lambdaQuery()
+                .in(PgSettingsDO::getName, "enable_stmt_track", "track_stmt_stat_level");
+        List<PgSettingsDO> pgSettingsDOList = pgSettingsMapper.selectList(wrapper);
+        for (PgSettingsDO pgSettingsDO : pgSettingsDOList) {
+            if ("enable_stmt_track".equals(pgSettingsDO.getName()) && "off".equals(pgSettingsDO.getSetting())) {
+                throw new CustomException(LocaleStringUtils.format("slowSql.param.tip"));
+            }
+            if ("track_stmt_stat_level".equals(pgSettingsDO.getName())) {
+                String[] split = pgSettingsDO.getSetting().split(",");
+                if ("off".equals(split[1])) {
+                    throw new CustomException(LocaleStringUtils.format("slowSql.param.tip"));
+                }
+            }
+        }
+        AjaxResult dataResult = diagnosisCaller.getInstanceMetric(
+                "nodeId:" + nodeId + ";start:" + start + ";end:" + end + ";step:" + step + ";dbName:" + dbName);
+        if (dataResult == null) {
+            return dataResult;
+        }
+        Object data = dataResult.get("data");
+        if (data == null) {
+            throw new CustomException(LocaleStringUtils.format("slowSql.agent.tip"));
+        }
+        return (Map<String, Object>) data;
+    }
+}
