@@ -39,11 +39,13 @@ const props = withDefaults(
         disabled?: boolean
         valueFormatToISO?: boolean // Whether to process as ISO8601 format string '2020-04-02T08:02:17-05:00'
         valueFormatToUTC?: boolean // Whether to process as UTC Universal Time
+        visibleChange?: Function
     }>(),
     {
         showShortcuts: true,
         valueFormatToISO: false,
         valueFormatToUTC: false,
+        visibleChange: () => {},
     }
 )
 const myEmit = defineEmits<{
@@ -76,6 +78,7 @@ const getShortcutsConfig = () => {
 }
 
 const onDatePackerVisible = (v: boolean) => {
+    props.visibleChange(v);
     if (!v) {
         const docu = document.getElementsByClassName('el-range-input')
         if (docu.length > 0) {

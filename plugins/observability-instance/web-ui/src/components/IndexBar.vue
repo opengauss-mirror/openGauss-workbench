@@ -1,5 +1,5 @@
 <template>
-  <div class="refresh-bar-container">
+  <div class="refresh-bar-container" :style="{height: containerHeight}">
     <div class="refresh-bar-filter">
       <div style="white-space: nowrap">{{ $t("app.autoRefresh") }}:</div>
       <el-select v-model="autoRefreshTime" style="width: 130px; margin: 0 4px">
@@ -35,6 +35,7 @@
         type="datetimerange"
         :valueFormatToUTC="true"
         @change="selectDate"
+        :visible-change="dataPickerVisibleChange"
       />
     </div>
   </div>
@@ -53,6 +54,11 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const props = withDefaults(defineProps<{ tabId: string }>(), {});
+
+const containerHeight = ref('auto');
+const dataPickerVisibleChange = (val: boolean) => {
+  containerHeight.value = val ? '500px' : 'auto';
+}
 
 const {
   sourceType,
