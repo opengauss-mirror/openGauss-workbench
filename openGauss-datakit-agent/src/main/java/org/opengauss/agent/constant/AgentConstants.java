@@ -48,6 +48,16 @@ public interface AgentConstants {
         String SPLIT_DATE_AND_TIME = "T";
 
         /**
+         * duration time unit Y/M
+         */
+        String YEAR = "Y";
+
+        /**
+         * duration time unit Y/M
+         */
+        String MONTH = "M";
+
+        /**
          * duration time prefix P
          */
         String PREFIX_DATE = "P";
