@@ -170,6 +170,7 @@ const onNext = async () => {
 const selectedPortal = ref()
 const syncHost = (hosts: any) => {
   selectedPortal.value = toRaw(hosts)
+  taskBasicInfo.value.selectedHosts = [ ...selectedPortal.value ]
 }
 
 const findHostsFromTableByStatus = (keys, status) => {

@@ -50,14 +50,14 @@
                      :rules="taskBasicRules" validateTrigger="onBlur"
                      labelAlign="left"
                      label-width="300px"
-                     class="page-input-size"
+                     class="page-input-size openDesignForm"
             >
               <h4> {{ $t('step1.index.sourceData') }} </h4>
               <el-form-item :label="t('step1.index.sqlType')" label-position="left" prop="sourceDbType">
                 <el-radio-group v-model="taskBasicInfo.subTaskData[curTableTabs].sourceDbType"
                                 @change="changeSourceType('select')">
-                  <el-radio-button value="MYSQL">MYSQL</el-radio-button>
-                  <el-radio-button value="POSTGRESQL">POSTGRESQL</el-radio-button>
+                  <el-radio-button value="MYSQL">MySQL</el-radio-button>
+                  <el-radio-button value="POSTGRESQL">PostgreSQL</el-radio-button>
                   <el-radio-button value="openGauss" disabled>openGauss</el-radio-button>
                 </el-radio-group>
               </el-form-item>
@@ -597,7 +597,13 @@ const sourceVersionNum = computed(() => {
   const ip = taskBasicInfo.value.subTaskData[curTableTabs.value].sourceIpPort
   const clusterInfo = {...sourceClusterInfo.value[ip]} || []
   if (clusterInfo && clusterInfo[3]) {
-    const sqlType = taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType
+    let sqlType = taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType
+    if (sqlType.toUpperCase() === 'MYSQL') {
+      sqlType = 'MySQL'
+    } 
+    if (sqlType.toUpperCase() === 'POSTGRESQL') {
+      sqlType = 'PostgreSQL'
+    }
     return t('step1.index.dbVersionInfo', {sqlType: sqlType, versionNum: clusterInfo[3]}) + t('step1.index.dbVersionSuc')
   }
   return ''

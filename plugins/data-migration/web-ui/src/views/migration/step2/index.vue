@@ -457,17 +457,6 @@ const getFilterData = () => {
 }
 const tableRef = ref(null)
 
-watch(() => tableData.value, (newData) => {
-  nextTick(() => {
-    // 确保表格渲染完成
-    setTimeout(() => {
-      newData.forEach(row => {
-        const isSelected = selectedKeys.value.includes(row.hostId)
-        tableRef.value?.toggleRowSelection(row, isSelected)
-      })
-    }, 150)
-  })
-}, { deep: true })
 const selectedRowList = ref([]);
 const handleSelectionChange = (selection) => {
   selectedRowList.value = uniqueArrById(selection);
@@ -586,10 +575,11 @@ const getHostsData = () => {
       timer && clearTimeout(timer)
       timer = null
     }) .finally(() =>{
-    tableData.value.forEach((row) =>{
-      const isSelected = selectedKeys.value.includes(row.hostId)
-      tableRef.value?.toggleRowSelection(row, isSelected)
-    })
+      const lastedSelectedRows = [...selectedKeys.value]
+      tableData.value.forEach((row) =>{
+        const isSelected = lastedSelectedRows.includes(row.hostId)
+        tableRef.value?.toggleRowSelection(row, isSelected)
+      })
   })
 }
 
@@ -712,7 +702,9 @@ const refreshInstallStatus = (hostIdList) => {
 }
 
 onMounted(() => {
-  selectedKeys.value = toRaw(props.taskBasicInfo.selectedHosts)
+  selectedKeys.value = toRaw(props.taskBasicInfo.selectedHosts).map(item => {
+    return item.hostId ? item.hostId : item; 
+  })
   console.log(selectedKeys.value, props.taskBasicInfo.selectedHosts)
   getHostsData()
   searchAreaVisible.value = false
