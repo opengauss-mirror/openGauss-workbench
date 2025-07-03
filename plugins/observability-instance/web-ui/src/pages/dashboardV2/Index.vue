@@ -12,7 +12,7 @@
           <div class="seperator"></div>
           <div class="cluster-title">{{ $t('instanceMonitor.clusterTitle') }}</div>
 
-          <el-cascader v-model="clusterNodeId" :options="clusterList" style="width: 280px"
+          <el-cascader v-model="clusterNodeId" :options="clusterList" style="width: 280px" filterable
            :class="{'cascader-err': selectInstanceTip}" @visible-change="updateClusterList"/>
           <span ref="infoHollow"><svg-icon v-if="clusterNodeId" class="info-hollow" name="info-hollow" style="margin-left: 4px" @click="showInfo" /></span>
           <!-- <span class="msg-err" v-if="selectInstanceTip">{{selectInstanceTip}}</span> -->
