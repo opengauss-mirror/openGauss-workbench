@@ -25,6 +25,7 @@ package com.nctigba.observability.sql.controller;
 
 import com.nctigba.observability.sql.config.ControllerConfig;
 import com.nctigba.observability.sql.model.query.SlowLogQuery;
+import com.nctigba.observability.sql.service.impl.HisSlowsqlServiceImpl;
 import com.nctigba.observability.sql.service.impl.SlowLogServiceImpl;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.exception.CustomException;
@@ -38,10 +39,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class SlowLogController extends ControllerConfig {
     @Autowired
     private SlowLogServiceImpl slowLogServiceImpl;
+    @Autowired
+    private HisSlowsqlServiceImpl hisSlowqlServiceImpl;
 
     @GetMapping("/slowSqls")
     public AjaxResult listSlowSQLs(SlowLogQuery slowLogQuery) {
-        return AjaxResult.success(slowLogServiceImpl.listSlowSQLs(slowLogQuery));
+        hisSlowqlServiceImpl.collectNodeSlowsqls(slowLogQuery.getNodeId());
+        return AjaxResult.success(hisSlowqlServiceImpl.listSlowSQLs(slowLogQuery));
     }
 
     @GetMapping("/slowSqls/chart")
@@ -55,6 +59,7 @@ public class SlowLogController extends ControllerConfig {
 
     @GetMapping("/slowSqls/aggData")
     public AjaxResult slowSqlAggData(SlowLogQuery slowLogQuery) {
-        return AjaxResult.success(slowLogServiceImpl.selectSlowSqlAggData(slowLogQuery));
+        hisSlowqlServiceImpl.collectNodeSlowsqls(slowLogQuery.getNodeId());
+        return AjaxResult.success(hisSlowqlServiceImpl.selectSlowSqlAggData(slowLogQuery));
     }
 }
