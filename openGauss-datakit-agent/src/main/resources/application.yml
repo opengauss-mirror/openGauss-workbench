@@ -1,0 +1,45 @@
+agent:
+  id: 1
+  version: 7.0.0-RC2
+  server: http://127.0.0.1:9494
+  name: datakit-agent
+  heartbeat:
+    interval: 2
+    break-wait-max-times: 3
+  thread-pool:
+    max-threads: 10
+quarkus:
+  http:
+    port: 19001
+  scheduler:
+    start-mode: forced
+    thread-pool:
+      core-threads: 1
+      max-threads: 10
+      keep-alive-time: 10000
+  rest-client:
+    "agent.server":
+      uri: ${agent.server}
+      connect-timeout: 5000
+      read-timeout: 10000
+  log:
+    category:
+      "org.apache.http":
+        level: WARN
+      "io.vertx.core.impl.EventLoopContext":
+        level: WARN
+      "io.netty":
+        level: ERROR
+    file:
+      level: DEBUG
+      enable: true
+      path: /path/datakit_agent.log
+      max-size: 100MB
+      max-history: 30
+      format: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1.}] (%t) %s%e%n"
+      pattern: logs/datakit_agent.%d{yyyy-MM-dd}.log
+    console:
+      enable: true
+      level: DEBUG
+      color: true
+      format: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%c{1.}] (%t) %s%e%n"
