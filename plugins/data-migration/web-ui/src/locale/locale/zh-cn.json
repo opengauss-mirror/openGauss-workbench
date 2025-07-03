@@ -465,7 +465,7 @@
       "5q090g6io340": "确定每一个迁移过程的执行参数",
       "5q090g6iouw0": "选择合适的机器执行迁移过程",
       "portalInstallDesc": "迁移套件安装说明",
-      "portalStatuserrMsg":"选择机器包含未安portal装物理机",
+      "portalStatuserrMsg":"选择机器包含未安装portal物理机",
       "portalNumerrMsg": "请选择与子任务数量对应的portal机器",
       "saveErrMsg": "当前页面有未保存项"
     }

@@ -596,7 +596,7 @@ onMounted(() => {
 
   .btn-con {
     position: relative;
-    min-width: 1000px;
+    min-width: 1060px;
 
     .switchUpdate {
       position: absolute;

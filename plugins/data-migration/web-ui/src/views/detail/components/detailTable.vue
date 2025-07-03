@@ -44,7 +44,7 @@
               {{ `${scope.row.runHost}（${scope.row.runHostname}）` }}</span>
           </template>
         </el-table-column>
-        <el-table-column :label="$t('detail.index.5q09asiwjvg0')" :min-width="140" ellipsis tooltip>
+        <el-table-column :label="$t('detail.index.5q09asiwjvg0')" :min-width="156" ellipsis tooltip>
           <template #default="scope">
             <el-tag style="min-width: 88px;" :type="statusColor(scope.row.execStatus, scope.row.migrationModelId) || '--'"
             > {{
