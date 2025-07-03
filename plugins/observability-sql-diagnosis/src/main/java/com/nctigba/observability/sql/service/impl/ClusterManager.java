@@ -136,6 +136,7 @@ public class ClusterManager {
         var hids = new HikariDataSource();
         hids.setDataSource(datasource);
         hids.setMaximumPoolSize(20);
+        hids.setConnectionTimeout(5000);
         ds.addDataSource(nodeId, hids);
         DynamicDataSourceContextHolder.push(nodeId);
     }

@@ -1,3 +1,26 @@
+/*
+ *  Copyright (c) Huawei Technologies Co. 2025-2025.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  DynamicHisSlowSqlMapper.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/mapper/DynamicHisSlowSqlMapper.java
+ *
+ *  -------------------------------------------------------------------------
+ */
+
 package com.nctigba.observability.sql.mapper;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
@@ -105,4 +128,17 @@ public interface DynamicHisSlowSqlMapper extends BaseMapper<HisSlowsqlInfoDO> {
      */
     @Select("select max_finish_time from tb_max_finish_time where node_tablename = #{tableName}")
     Date selectTimeshot(@Param("tableName") String tableName);
+
+    /**
+     * get number of sqls at one point
+     *
+     * @param tableName String
+     * @param pointTime Long
+     * @param dbName String
+     * @return int number of active sqls at pointTime
+     */
+    @Select("select count(1) from ${tableName} where start_time <= #{pointTime} "
+            + " and finish_time >= #{pointTime} and db_name = #{dbName}")
+    int selectActiveSlowsqls(@Param("tableName") String tableName, @Param("pointTime") Long pointTime,
+                             @Param("dbName") String dbName);
 }

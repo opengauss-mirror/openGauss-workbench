@@ -74,6 +74,15 @@ spring:
           #driverClassName: org.sqlite.JDBC
           url: jdbc:intarkdb:data/observability-instance-data
           driverClassName: org.intarkdb.Driver
+        hisSlowSqlInfo:
+          #url: jdbc:sqlite:data/history-slowsql-info.db
+          #driverClassName: org.sqlite.JDBC
+          url: jdbc:intarkdb:data/history-slowsql-info
+          driverClassName: org.intarkdb.Driver
+          init:
+            schema: db/hisSlowsqlInfo.sql
+            continue-on-error: false
+            separator: ";"
 server.compression:
   enabled: true
   mime-types: application/javascript,text/css,application/json,application/xml,text/html,text/xml,text/plain
