@@ -96,7 +96,7 @@ public class SqlProvider {
             + "              is_slow_sql boolean,\n"
             + "              trace_id text,\n"
             + "              advise text,\n"
-            + "              net_send_time bigint\n"
+            + "              net_send_time bigint,\n"
             + "              UNIQUE(debug_query_id, start_time)"
             + ");";
     private static final String DELETE_EXIPRED_DATA = "delete from %s where finish_time < '%s'";

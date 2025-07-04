@@ -1,25 +1,42 @@
+/*
+ *  Copyright (c) Huawei Technologies Co. 2025-2025.
+ *
+ *  openGauss DataKit is licensed under Mulan PSL v2.
+ *  You can use this software according to the terms and conditions of the Mulan PSL v2.
+ *  You may obtain a copy of Mulan PSL v2 at:
+ *
+ *  http://license.coscl.org.cn/MulanPSL2
+ *
+ *  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ *  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ *  MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ *  See the Mulan PSL v2 for more details.
+ *  -------------------------------------------------------------------------
+ *
+ *  HisSlowsqlServiceImpl.java
+ *
+ *  IDENTIFICATION
+ *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/mapper/HisSlowsqlServiceImpl.java
+ *
+ *  -------------------------------------------------------------------------
+ */
+
 package com.nctigba.observability.sql.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.nctigba.observability.sql.caller.DiagnosisCaller;
 import com.nctigba.observability.sql.mapper.DynamicHisSlowSqlMapper;
 import com.nctigba.observability.sql.mapper.OpengaussAllSlowsqlMapper;
-import com.nctigba.observability.sql.mapper.PgSettingsMapper;
 import com.nctigba.observability.sql.model.dto.BasePageDTO;
 import com.nctigba.observability.sql.model.dto.SlowSqlDTO;
 import com.nctigba.observability.sql.model.entity.HisSlowsqlInfoDO;
-import com.nctigba.observability.sql.model.entity.PgSettingsDO;
 import com.nctigba.observability.sql.model.query.SlowLogQuery;
 import com.nctigba.observability.sql.model.vo.StatementHistoryAggVO;
 import com.nctigba.observability.sql.model.vo.StatementHistoryDetailVO;
 import com.nctigba.observability.sql.service.MyPage;
-import com.nctigba.observability.sql.util.LocaleStringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +52,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -64,10 +82,6 @@ public class HisSlowsqlServiceImpl extends ServiceImpl<DynamicHisSlowSqlMapper, 
     private DynamicHisSlowSqlMapper dynamicHisSlowSqlMapper;
     @Autowired
     private TimeConfigServiceImpl timeConfigService;
-    @Autowired
-    private PgSettingsMapper pgSettingsMapper;
-    @Autowired
-    private DiagnosisCaller diagnosisCaller;
     private Map<SlowLogQuery, cacheAble<Future<BasePageDTO<StatementHistoryDetailVO>>>> cache
             = new WeakHashMap<>();
 
@@ -322,29 +336,21 @@ public class HisSlowsqlServiceImpl extends ServiceImpl<DynamicHisSlowSqlMapper, 
      * @return Map<String, Object>
      */
     public Map<String, Object> getSlowSqlChart(String nodeId, Long start, Long end, Integer step, String dbName) {
-        LambdaQueryWrapper<PgSettingsDO> wrapper = Wrappers.<PgSettingsDO>lambdaQuery()
-                .in(PgSettingsDO::getName, "enable_stmt_track", "track_stmt_stat_level");
-        List<PgSettingsDO> pgSettingsDOList = pgSettingsMapper.selectList(wrapper);
-        for (PgSettingsDO pgSettingsDO : pgSettingsDOList) {
-            if ("enable_stmt_track".equals(pgSettingsDO.getName()) && "off".equals(pgSettingsDO.getSetting())) {
-                throw new CustomException(LocaleStringUtils.format("slowSql.param.tip"));
-            }
-            if ("track_stmt_stat_level".equals(pgSettingsDO.getName())) {
-                String[] split = pgSettingsDO.getSetting().split(",");
-                if ("off".equals(split[1])) {
-                    throw new CustomException(LocaleStringUtils.format("slowSql.param.tip"));
-                }
-            }
+        List<Date> timePints = new ArrayList<>();
+        List<Integer> activeSqls = new ArrayList<>();
+        String tableName = getTableNameByNodeId(nodeId);
+        for (long point = start; point <= end; point += step) {
+            long millsTimePoint = point * 1000;
+            timePints.add(new Date(millsTimePoint));
+            activeSqls.add(dynamicHisSlowSqlMapper.selectActiveSlowsqls(tableName, millsTimePoint, dbName));
         }
-        AjaxResult dataResult = diagnosisCaller.getInstanceMetric(
-                "nodeId:" + nodeId + ";start:" + start + ";end:" + end + ";step:" + step + ";dbName:" + dbName);
-        if (dataResult == null) {
-            return dataResult;
-        }
-        Object data = dataResult.get("data");
-        if (data == null) {
-            throw new CustomException(LocaleStringUtils.format("slowSql.agent.tip"));
-        }
-        return (Map<String, Object>) data;
+        clusterManager.setCurrentDatasource(nodeId, "postgres");
+        String slowSqlThreshold = opengaussAllSlowsqlMapper.getSlowsqlThreshold();
+        clusterManager.pool();
+        Map<String, Object> data = new HashMap<>();
+        data.put("time", timePints);
+        data.put("slowSqlThreshold", slowSqlThreshold);
+        data.put("INSTANCE_DB_SLOWSQL", activeSqls);
+        return data;
     }
 }

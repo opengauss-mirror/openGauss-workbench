@@ -26,7 +26,6 @@ package com.nctigba.observability.sql.controller;
 import com.nctigba.observability.sql.config.ControllerConfig;
 import com.nctigba.observability.sql.model.query.SlowLogQuery;
 import com.nctigba.observability.sql.service.impl.HisSlowsqlServiceImpl;
-import com.nctigba.observability.sql.service.impl.SlowLogServiceImpl;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +36,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/sqlDiagnosis/api/v1")
 public class SlowLogController extends ControllerConfig {
-    @Autowired
-    private SlowLogServiceImpl slowLogServiceImpl;
     @Autowired
     private HisSlowsqlServiceImpl hisSlowqlServiceImpl;
 
@@ -51,7 +48,8 @@ public class SlowLogController extends ControllerConfig {
     @GetMapping("/slowSqls/chart")
     public AjaxResult slowSqlChart(String id, Long start, Long end, Integer step, String dbName) {
         try {
-            return AjaxResult.success(slowLogServiceImpl.getSlowSqlChart(id, start, end, step, dbName));
+            hisSlowqlServiceImpl.collectNodeSlowsqls(id);
+            return AjaxResult.success(hisSlowqlServiceImpl.getSlowSqlChart(id, start, end, step, dbName));
         } catch (CustomException e) {
             return AjaxResult.success(e.getMessage());
         }
