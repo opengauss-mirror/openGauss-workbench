@@ -37,7 +37,7 @@
   </div>
   <div>
     <my-card
-      :title="$t('dashboard.slowSqlMoreThan3Seconds') + metricsData.threshold + ')'"
+      :title="$t('dashboard.slowSqlMore') + (metricsData.threshold ? `(${$t('app.moreThan') + metricsData.threshold})` : '')"
       height="200"
       :bodyPadding="false"
       :showBtns="true" @download="title => download(title,slowSQL3s)"
@@ -534,9 +534,9 @@ const peroidOptions = computed(() => [{
 const frequencyOptions = computed(() => [{
   value: 's',
   label: t('datasource.bySecond'),
-  children: Array.from({ length: 50 }).map((item, index) => ({
-    value: `${index + 10}s`,
-    label: (index + 10) + t('dashboard.second'),
+  children: Array.from({ length: 30 }).map((item, index) => ({
+    value: `${index + 30}s`,
+    label: (index + 30) + t('dashboard.second'),
   }))
 },
 {
