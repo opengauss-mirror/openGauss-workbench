@@ -117,18 +117,18 @@ const filter = reactive({
 const labelOptions = computed(() => {
   return {
     tableName: {
-      label: t('components.SubTaskDetail.tableName'),
+      label: t('components.SubTaskDetail.databaseName'),
       value: 'tableName',
       placeholder: t('transcribe.index.inputtaskname'),
       selectType: searchType.INPUT
     },
-    schemaName: {
-      label: t('components.SubTaskDetail.schemaName'),
-      value: 'schemaName',
-      placeholder: t('transcribe.index.inputtaskname'),
-      selectType: searchType.INPUT
-    }
-
+    // The pgSQL adaptation will be shown in the future
+    // schemaName: {
+    //   label: t('components.SubTaskDetail.schemaName'),
+    //   value: 'schemaName',
+    //   placeholder: t('transcribe.index.inputtaskname'),
+    //   selectType: searchType.INPUT
+    // }
   }
 })
 // Here is the displayed table data.
