@@ -32,7 +32,7 @@
         prop="paramKey"
         :label="$t('components.ToolsParamsConfig.5q0toolspa15')"
       >
-        <el-input v-model.trim="data.formData.paramKey"></el-input>
+        <el-input v-model.trim="data.formData.paramKey" maxlength="100"></el-input>
       </el-form-item>
 
       <el-form-item
@@ -51,13 +51,13 @@
         prop="paramValue"
         :label="$t('components.ToolsParamsConfig.5q0toolspa16')"
       >
-        <el-input v-model.trim="data.formData.paramValue"></el-input>
+        <el-input v-model.trim="data.formData.paramValue" maxlength="100"></el-input>
       </el-form-item>
       <el-form-item
         prop="desc"
         :label="$t('components.ToolsParamsConfig.5q0toolspa18')"
       >
-        <el-input v-model.trim="data.formData.paramDesc"></el-input>
+        <el-input v-model.trim="data.formData.paramDesc" maxlength="100"></el-input>
       </el-form-item>
     </el-form>
   </el-dialog>

@@ -6,7 +6,7 @@
                  label-width="300px" ref="taskNameFormRef">
           <h3>{{ $t('step1.index.taskConfig') }}</h3>
           <el-form-item :label="t('step1.index.taskName')" prop="taskName">
-            <el-input v-model="taskBasicInfo.taskName" class="select-width" :placeholder="t('step1.index.taskNamePlace')"/>
+            <el-input v-model.trim="taskBasicInfo.taskName" class="select-width" :placeholder="t('step1.index.taskNamePlace')"/>
           </el-form-item>
         </el-form>
       </el-card>
@@ -95,7 +95,8 @@
                 </el-select>
               </el-form-item>
               <el-form-item :label="t('step1.index.sourceSchema')" label-position="left" prop="sourceSchema"
-                            v-if="taskBasicInfo.subTaskData[curTableTabs].sourceDbType.toUpperCase() === 'POSTGRESQL'">
+                            v-if="taskBasicInfo.subTaskData[curTableTabs].sourceDbType.toUpperCase() === 'POSTGRESQL'"
+                            :rules="[{ required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change'] }]">
                 <el-select v-model="taskBasicInfo.subTaskData[curTableTabs].sourceSchema"
                            :placeholder="t('step1.index.pleaseSelect')" filterable
                            multiple collapse-tags collapse-tags-tooltip :max-collapse-tags="3"
@@ -503,10 +504,6 @@ const taskBasicRules = computed(() => {
     sourceDBName: [
       {required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change']},
     ],
-    sourceSchema: [
-      {required: taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType.toUpperCase() === 'POSTGRESQL',
-        message: t('transcribe.create.required'), trigger: ['blur', 'change']},
-    ],
     targetIpPort: [
       {required: true, trigger: ['blur', 'change'], message: t('transcribe.create.withouytargetip')},
     ],
@@ -525,6 +522,8 @@ const changeSourceType = (type?: string) => {
     taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDBName = ''
     taskBasicInfo.value.subTaskData[curTableTabs.value].seletedTbl = []
     taskBasicInfo.value.subTaskData[curTableTabs.value].sourceSchema = []
+    taskBasicInfo.value.subTaskData[curTableTabs.value].targetIpPort = ''
+    taskBasicInfo.value.subTaskData[curTableTabs.value].targetDBName = ''
     taskBasicInfo.value.subTaskData[curTableTabs.value].isDefaultConfig = true
     defaultParamsConfig('customized')
     preSourceDb.value = ''
@@ -600,7 +599,7 @@ const sourceVersionNum = computed(() => {
     let sqlType = taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType
     if (sqlType.toUpperCase() === 'MYSQL') {
       sqlType = 'MySQL'
-    } 
+    }
     if (sqlType.toUpperCase() === 'POSTGRESQL') {
       sqlType = 'PostgreSQL'
     }

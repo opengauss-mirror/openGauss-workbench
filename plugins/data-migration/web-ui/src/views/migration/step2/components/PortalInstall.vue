@@ -48,7 +48,7 @@
     </template>
 
     <el-skeleton :loading="loading">
-      <el-form ref="formRef" :model="form" label-width="auto" class="page-input-size">
+      <el-form ref="formRef" :model="form" label-width="130" class="page-input-size">
         <el-form-item
           :label="$t('components.PortalInstall.5q0aajl76580')"
           :rules="[
@@ -92,7 +92,7 @@
         >
           <el-input
             maxlength="200"
-            v-model="form.installPath"
+            v-model.trim="form.installPath"
             :placeholder="$t('components.PortalInstall.5q0aajl77f40')"
           />
         </el-form-item>
@@ -139,7 +139,7 @@
           ]"
             prop="pkgDownloadUrl"
           >
-            <el-input v-model="form.pkgDownloadUrl"/>
+            <el-input v-model.trim="form.pkgDownloadUrl" maxlength="100" />
           </el-form-item>
 
           <el-form-item
@@ -241,7 +241,7 @@
           >
             <el-input
               maxlength="255"
-              v-model="thirdPartyParam.kafkaInstallDir"
+              v-model.trim="thirdPartyParam.kafkaInstallDir"
               :placeholder="$t('components.PortalInstall.5q0aajl77lg29')"
             />
           </el-form-item>
@@ -378,6 +378,12 @@ watch(
       loading.value = true
       form.portalType = props.installInfo?.portalType?props.installInfo?.portalType: 'MYSQL_ONLY'
       isMysqlPortaltype.value = form.portalType === 'MYSQL_ONLY'? true : false
+      if (props.installInfo === null) {
+        thirdPartyParam.zookeeperPort = '2181'
+        thirdPartyParam.kafkaPort = '9092'
+        thirdPartyParam.schemaRegistryPort = '8081'
+        thirdPartyParam.kafkaInstallDir = form.installPath + KAFKA_CONFIG_TYPE.INSTALL_DIR_DEFAULT
+      }
       getPortalDownloadInfoList(props.hostId, form.portalType).then((res) => {
         packageInfos.value = res.data
         getHostUsers()
@@ -412,9 +418,7 @@ watch(
 
 const isMysqlPortaltype = ref(true)
 const changePortalType =() => {
-  if (form.portalType === 'MULTI_DB') {
-    isMysqlPortaltype.value = false
-  }
+  form.portalType === 'MULTI_DB'? isMysqlPortaltype.value = false: isMysqlPortaltype.value = true
   getPortalDownloadInfoList(props.hostId, form.portalType).then((res) => {
     packageInfos.value = res.data
   })

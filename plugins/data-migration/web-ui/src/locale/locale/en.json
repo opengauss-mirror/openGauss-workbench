@@ -623,7 +623,9 @@
         "errorMsg": "Validation failed, please try again later"
       },
       "portalInstall": {
-        "portalType": "Portal Type"
+        "portalType": "Portal Type",
+        "portEmpty": "Port cannot be empty",
+        "portalContent": "Port number must be a numeric value between 1 and 65535"
       }
     }
   },

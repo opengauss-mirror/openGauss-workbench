@@ -3,7 +3,7 @@
     :title="t('step3.batchAddPortal.5q097pi0r541')"
     v-model="visible"
     width="95vw"
-    :style="{ minWidth: '920px' }"
+    :style="{ minWidth: '980px' }"
     :close-on-click-modal="false"
     class="batch-modal"
     @close="handleClose"
@@ -22,15 +22,15 @@
       </el-form-item>
 
       <el-form-item :label="t('step3.batchAddPortal.5q097pi0r543')">
-        <el-input v-model="globalData.installPath" />
+        <el-input v-model.trim="globalData.installPath" maxlength="100" />
       </el-form-item>
 
       <el-form-item :label="t('step3.batchAddPortal.5q097pi0r544')">
-        <el-input v-model="globalData.jarName" />
+        <el-input v-model.trim="globalData.jarName" maxlength="100" />
       </el-form-item>
 
       <el-form-item :label="t('step3.batchAddPortal.5q097pi0r545')">
-        <el-input v-model="globalData.pkgName" />
+        <el-input v-model.trim="globalData.pkgName" maxlength="100" />
       </el-form-item>
 
       <el-form-item>
@@ -74,7 +74,7 @@
               :prop="`tableData.${scope.$index}.installPath`"
               :rules="formRules.installPath"
             >
-              <el-input v-model="scope.row.installPath" />
+              <el-input v-model.trim="scope.row.installPath" maxlength="100" />
             </el-form-item>
 
             <!-- Jar Name -->
@@ -83,35 +83,35 @@
               :prop="`tableData.${scope.$index}.jarName`"
               :rules="formRules.jarName"
             >
-              <el-input v-model="scope.row.jarName" />
+              <el-input v-model.trim="scope.row.jarName" maxlength="100" />
             </el-form-item>
             <el-form-item
               v-else-if="col.slotName === 'pkgName'"
               :prop="`tableData.${scope.$index}.pkgName`"
               :rules="formRules.pkgName"
             >
-              <el-input v-model="scope.row.pkgName" />
+              <el-input v-model.trim="scope.row.pkgName" maxlength="100" />
             </el-form-item>
             <el-form-item
               v-else-if="col.slotName === 'kafkaPort'"
               :prop="`tableData.${scope.$index}.kafkaPort`"
               :rules="formRules.kafkaPort"
             >
-              <el-input v-model="scope.row.kafkaPort" />
+              <el-input v-model.number="scope.row.kafkaPort" :min="1" :max="65535" maxlength="100" />
             </el-form-item>
             <el-form-item
               v-else-if="col.slotName === 'zookeeperPort'"
               :prop="`tableData.${scope.$index}.zookeeperPort`"
               :rules="formRules.zookeeperPort"
             >
-              <el-input v-model="scope.row.zookeeperPort" />
+              <el-input v-model.number="scope.row.zookeeperPort" :min="1" :max="65535" maxlength="100" />
             </el-form-item>
             <el-form-item
               v-else-if="col.slotName === 'schemaRegistryPort'"
               :prop="`tableData.${scope.$index}.schemaRegistryPort`"
               :rules="formRules.schemaRegistryPort"
             >
-              <el-input v-model="scope.row.schemaRegistryPort" />
+              <el-input v-model.number="scope.row.schemaRegistryPort" :min="1" :max="65535" maxlength="100" />
             </el-form-item>
             <template v-else-if="col.slotName === 'op'">
               <el-icon class="del-icon" @click="handleDeleteRow(scope.row.uid)">
@@ -248,7 +248,7 @@ const columns = [
   }
 ]
 
-const formRules = reactive({
+const formRules = computed(() => ({
   hostUserId: [
     { required: true, message: t('step3.batchAddPortal.5q097pi0r547'), trigger: 'change' }
   ],
@@ -262,15 +262,30 @@ const formRules = reactive({
     { required: true, message: t('step3.batchAddPortal.5q097pi0r550'), trigger: 'blur' }
   ],
   kafkaPort: [
-    { required: true, message: 'Kafka端口不能为空', trigger: 'blur' }
+    { required: true, message: t('step2.compoents.portalInstall.portEmpty'), trigger: 'blur' },
+    {
+      pattern: /^(|[1-9]\d{0,4}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/,
+      message: t('step2.compoents.portalInstall.portalContent'),
+      trigger: ['blur', 'change']
+    }
   ],
   zookeeperPort: [
-    { required: true, message: 'Zookeeper端口不能为空', trigger: 'blur' }
+    { required: true, message: t('step3.batchAddPortal.5q097pi0r550'), trigger: 'blur' },
+    {
+      pattern: /^(|[1-9]\d{0,4}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/,
+      message: t('step2.compoents.portalInstall.portalContent'),
+      trigger: ['blur', 'change']
+    }
   ],
   schemaRegistryPort: [
-    { required: true, message: 'Schema Registry端口不能为空', trigger: 'blur' }
+    { required: true, message: t('step3.batchAddPortal.5q097pi0r550'), trigger: 'blur' },
+    {
+      pattern: /^(|[1-9]\d{0,4}|[1-5]\d{4}|6[0-4]\d{3}|65[0-4]\d{2}|655[0-2]\d|6553[0-5])$/,
+      message: t('step2.compoents.portalInstall.portalContent'),
+      trigger: ['blur', 'change']
+    }
   ]
-})
+}))
 
 watch(visible, (v) => {
   emits('update:open', v)
@@ -434,12 +449,13 @@ onMounted(() => {
 :deep(.batch-add-dialog) {
   .el-dialog__body {
     flex-shrink: 0 !important;
-    min-width: 920px;
+    min-width: 980px;
   }
 }
 
 .portal-table {
   min-width: 920px;
+  min-height: 150px;
 }
 .add-portal-modal {
   .modal-footer {
@@ -457,7 +473,5 @@ onMounted(() => {
   color: rgb(var(--primary-6));
   cursor: pointer;
 }
-.portal-table {
-  min-height: 400px;
-}
+
 </style>

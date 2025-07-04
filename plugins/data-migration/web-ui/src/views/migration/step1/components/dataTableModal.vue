@@ -1,5 +1,6 @@
 <template>
-  <el-dialog v-model="winConVisible" :title="$t('step1.index.5q091ixigdc1')" draggable :before-close="closeModal">
+  <el-dialog v-model="winConVisible" :title="$t('step1.index.5q091ixigdc1')" draggable :before-close="closeModal"
+  :z-index="1000" >
     <div >
       <el-form>
         <el-form-item :label="$t('step1.index.5q091ixigjo1')" label-position="right" style="margin-bottom: 0">
@@ -15,10 +16,11 @@
             <el-text v-else type="default">{{$t('step1.index.defaultSeleMsg')}}</el-text>
           </div>
           <el-input
-            v-model="searchTblNam"
+            v-model.trim="searchTblNam"
             :placeholder="$t('step1.index.5q091ixih2i0')"
             clearable
             :suffix-icon="Search"
+            maxlength="100"
           />
         </el-form-item>
       </el-form>
@@ -47,7 +49,7 @@
     </div>
     <template #footer>
        <span class="dialog-footer">
-       <div style="justify-content: center">
+       <div style="justify-content: center" v-if="searchTblNam.length <= 0">
         <el-pagination
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
@@ -80,7 +82,6 @@ const winConVisible = ref<boolean>(false)
 const tableData = ref([])
 const searchTblNam = ref<string>('')
 const tableRef = ref()
-
 
 const currentPage = ref<number>(1)
 const pageSize = ref<number>(50)
