@@ -24,6 +24,11 @@ package org.opengauss.agent.constant;
  **/
 public interface AgentConstants {
     /**
+     * NULL string
+     */
+    String NULL = "null";
+
+    /**
      * heartbeat status up
      */
     String HEARTBEAT_STATUS_UP = "UP";
@@ -66,5 +71,30 @@ public interface AgentConstants {
          * duration time prefix PT
          */
         String PREFIX_ONLE_TIME = "PT";
+    }
+
+    /**
+     * MetricTranslate
+     */
+    interface MetricTranslate {
+        /**
+         * metric name unknown
+         */
+        String DEFAULT_NAME = "unknown_metric";
+
+        /**
+         * metric description, no description
+         */
+        String DEFAULT_DESC = "no_description";
+
+        /**
+         * metric unit, no unit
+         */
+        String DEFAULT_UNIT = "unitless";
+
+        /**
+         * metric type, no defined
+         */
+        String DEFAULT_TYPE = "UNDEFINED";
     }
 }
