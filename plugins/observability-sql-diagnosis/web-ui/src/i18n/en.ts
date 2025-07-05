@@ -26,6 +26,7 @@ export default {
     lastSixHour: 'Last 6 hour',
     cluterTitle: 'Cluster/Instance:',
     saveSuccess: 'Save succeed！',
+    moreThan: 'more than',
   },
   diagnosis: {
     sqlDiagnosis: 'SQL Diagnosis',
@@ -191,6 +192,7 @@ export default {
     tps: 'TPS',
     qps: 'QPS',
     connectionNum: 'Number of connections',
+    slowSqlMore: 'Slow SQL',
     slowSqlMoreThan3Seconds: 'Slow SQL (>',
     longTransactionNumGreaterThan30Seconds: 'Number of long transactions (greater than 30 seconds)',
     sqlResponseTime: 'SQL response time',

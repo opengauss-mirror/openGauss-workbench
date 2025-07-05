@@ -27,6 +27,7 @@ export default {
     back: '返回',
     cluterTitle: '集群/实例：',
     saveSuccess: '保存成功！',
+    moreThan: '大于',
   },
   diagnosis: {
     sqlDiagnosis: 'SQL诊断',
@@ -284,6 +285,7 @@ export default {
     tps: 'TPS',
     qps: 'QPS',
     connectionNum: '连接数',
+    slowSqlMore: '慢SQL数',
     slowSqlMoreThan3Seconds: '慢SQL数(大于',
     longTransactionNumGreaterThan30Seconds: '长事务数(大于30秒)',
     sqlResponseTime: 'SQL响应时间',
