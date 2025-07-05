@@ -31,7 +31,6 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
@@ -46,12 +45,14 @@ public interface OpengaussAllSlowsqlMapper extends BaseMapper<StatementHistoryDO
     /**
      * select slow sqls from database
      *
-     * @param timeShot String
+     * @param startPoint Date
+     * @param finishPoint Date
      * @return List<HisSlowsqlInfoDO>
-     * @throws SQLException SQLException
      */
-    @Select("select * from dbe_perf.get_statement_history(#{timeShot}::timestamptz) where debug_query_id > 0")
-    List<HisSlowsqlInfoDO> selectSlowSqls(@Param("timeShot") Date timeShot) throws SQLException;
+    @Select("select * from dbe_perf.get_statement_history(#{startPoint}::timestamptz, #{finishPoint}::timestamptz)"
+            + "  where debug_query_id > 0")
+    List<HisSlowsqlInfoDO> selectSlowSqls(@Param("startPoint") Date startPoint,
+                                          @Param("finishPoint") Date finishPoint);
 
     /**
      * select slow sqls from primary node
@@ -59,7 +60,7 @@ public interface OpengaussAllSlowsqlMapper extends BaseMapper<StatementHistoryDO
      * @param timeShot String
      * @return List<HisSlowsqlInfoDO>
      */
-    @Select("select * from dbe_perf.statement_history where debug_query_id > 0 and finish_time > #{timeShot}")
+    @Select("select * from dbe_perf.statement_history where debug_query_id > 0 and start_time > #{timeShot}")
     List<HisSlowsqlInfoDO> selectPrimarySlowSqls(@Param("timeShot") String timeShot);
 
     /**

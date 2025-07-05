@@ -35,11 +35,9 @@ import org.apache.ibatis.annotations.InsertProvider;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.SelectProvider;
 import org.apache.ibatis.annotations.DeleteProvider;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -109,25 +107,6 @@ public interface DynamicHisSlowSqlMapper extends BaseMapper<HisSlowsqlInfoDO> {
      */
     @DeleteProvider(type = SqlProvider.class, method = "getCleanupSql")
     int cleanExpiredData(String tableName, int peroid);
-
-    /**
-     * record time snapshot
-     *
-     * @param tableName String
-     * @param maxTime Long
-     * @return int
-     */
-    @Insert("INSERT OR REPLACE INTO tb_max_finish_time VALUES (#{tableName}, #{maxTime});")
-    int insertMaxtime(@Param("tableName") String tableName, @Param("maxTime") Long maxTime);
-
-    /**
-     * record time snapshot
-     *
-     * @param tableName String
-     * @return Date
-     */
-    @Select("select max_finish_time from tb_max_finish_time where node_tablename = #{tableName}")
-    Date selectTimeshot(@Param("tableName") String tableName);
 
     /**
      * get number of sqls at one point

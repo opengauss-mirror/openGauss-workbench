@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) Huawei Technologies Co. 2025-2025.
+ *  Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
  *
  *  openGauss DataKit is licensed under Mulan PSL v2.
  *  You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -13,35 +13,41 @@
  *  See the Mulan PSL v2 for more details.
  *  -------------------------------------------------------------------------
  *
- *  TimeConfigDO.java
+ *  TimePointDO.java
  *
  *  IDENTIFICATION
- *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/scheduler/TimeConfigDO.java
+ *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/scheduler/TimePointDO.java
  *
  *  -------------------------------------------------------------------------
  */
 
 package com.nctigba.observability.sql.model.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import java.util.Date;
+
 /**
- * TimeConfigDO
+ * TimePointDO
  *
  * @author jianghongbo
  * @since 2025-06-30
  */
 @Data
-@TableName("tb_time_config")
+@TableName("tb_time_point")
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(chain = true)
-public class TimeConfigDO {
-    private Integer id;
-    private Integer peroid;
-    private Integer frequency;
+public class TimePointDO {
+    @TableField("node_tablename")
+    private String nodeTablename;
+    @TableField("start_time_point")
+    private Date startTimePoint;
+    @TableField("finish_time_point")
+    private Date finishTimePoint;
 }

@@ -27,9 +27,11 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nctigba.observability.sql.mapper.DynamicHisSlowSqlMapper;
 import com.nctigba.observability.sql.mapper.OpengaussAllSlowsqlMapper;
+import com.nctigba.observability.sql.mapper.TimePointMapper;
 import com.nctigba.observability.sql.model.dto.BasePageDTO;
 import com.nctigba.observability.sql.model.dto.SlowSqlDTO;
 import com.nctigba.observability.sql.model.entity.HisSlowsqlInfoDO;
+import com.nctigba.observability.sql.model.entity.TimePointDO;
 import com.nctigba.observability.sql.model.query.SlowLogQuery;
 import com.nctigba.observability.sql.model.vo.StatementHistoryAggVO;
 import com.nctigba.observability.sql.model.vo.StatementHistoryDetailVO;
@@ -43,7 +45,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Service;
 
-import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -80,6 +81,8 @@ public class HisSlowsqlServiceImpl extends ServiceImpl<DynamicHisSlowSqlMapper, 
     private ClusterManager clusterManager;
     @Autowired
     private DynamicHisSlowSqlMapper dynamicHisSlowSqlMapper;
+    @Autowired
+    private TimePointMapper timePointMapper;
     @Autowired
     private TimeConfigServiceImpl timeConfigService;
     private Map<SlowLogQuery, cacheAble<Future<BasePageDTO<StatementHistoryDetailVO>>>> cache
@@ -123,59 +126,61 @@ public class HisSlowsqlServiceImpl extends ServiceImpl<DynamicHisSlowSqlMapper, 
      * @param nodeId String
      */
     public void collectNodeSlowsqls(String nodeId) {
-        List<HisSlowsqlInfoDO> statementRows = new ArrayList<>();
         String tableName = getTableNameByNodeId(nodeId);
-        Date timeShot = dynamicHisSlowSqlMapper.selectTimeshot(tableName);
-        if (timeShot == null) {
-            timeShot = new Date(0);
+        TimePointDO timePointDO = timePointMapper.selectTimePoint(tableName);
+        Date startPoint;
+        Date finishPoint;
+        if (timePointDO == null) {
+            startPoint = new Date(0);
+            finishPoint = new Date(0);
         } else {
-            timeShot = getOneMinuteAgo(timeShot);
+            startPoint = getOneMinuteAgo(timePointDO.getStartTimePoint());
+            finishPoint = getOneMinuteAgo(timePointDO.getFinishTimePoint());
         }
-        log.debug("timeShot is {} for node {}", timeShot, nodeId);
-        try {
-            statementRows = queryNodeSlowsqls(nodeId, timeShot);
-            dynamicHisSlowSqlMapper.createTable(tableName);
-            AtomicReference<Date> maxTime = new AtomicReference<>();
-            log.info("collect {} records for node {}", statementRows.size(), nodeId);
-            statementRows.forEach(row -> {
-                Date timeRecord = row.getFinishTime();
-                if (maxTime.get() == null || timeRecord.after(maxTime.get())) {
-                    maxTime.set(timeRecord);
-                }
-                dynamicHisSlowSqlMapper.insert(tableName, row);
-            });
-            if (statementRows.size() > 0) {
-                dynamicHisSlowSqlMapper.insertMaxtime(tableName, maxTime.get().getTime());
+        log.debug("timeShot is {}, {} for node {}", startPoint, finishPoint, nodeId);
+        List<HisSlowsqlInfoDO> statementRows = new ArrayList<>();
+        statementRows = queryNodeSlowsqls(nodeId, startPoint, finishPoint);
+        dynamicHisSlowSqlMapper.createTable(tableName);
+        AtomicReference<Date> maxStartTime = new AtomicReference<>();
+        AtomicReference<Date> maxFinishTime = new AtomicReference<>();
+        log.info("collect {} records for node {}", statementRows.size(), nodeId);
+        statementRows.forEach(row -> {
+            Date startTimeRecord = row.getStartTime();
+            Date finishTimeRecord = row.getStartTime();
+            if (maxStartTime.get() == null || startTimeRecord.after(maxStartTime.get())) {
+                maxStartTime.set(startTimeRecord);
             }
-        } catch (SQLException e) {
-            log.error("collect slow sqls from node {} occurred Exception: {}", nodeId, e);
-            throw new CustomException(e.getMessage());
+            if (maxFinishTime.get() == null || finishTimeRecord.after(maxFinishTime.get())) {
+                maxFinishTime.set(finishTimeRecord);
+            }
+            dynamicHisSlowSqlMapper.insert(tableName, row);
+        });
+        if (statementRows.size() > 0) {
+            timePointMapper.insertTimePoint(tableName, maxStartTime.get().getTime(), maxFinishTime.get().getTime());
         }
     }
 
-    private List<HisSlowsqlInfoDO> queryNodeSlowsqls(String nodeId, Date timeShot) throws SQLException {
+    private List<HisSlowsqlInfoDO> queryNodeSlowsqls(String nodeId, Date startPoint, Date finishPoint) {
         List<HisSlowsqlInfoDO> statementRows = new ArrayList<>();
         try {
             clusterManager.setCurrentDatasource(nodeId, "postgres");
-            statementRows = opengaussAllSlowsqlMapper.selectSlowSqls(timeShot);
-        } catch (SQLException e) {
-            throw e;
+            statementRows = opengaussAllSlowsqlMapper.selectSlowSqls(startPoint, finishPoint);
         } catch (BadSqlGrammarException e) {
-            statementRows = queryNodeSlowsqlsOldVersion(timeShot);
+            statementRows = queryNodeSlowsqlsOldVersion(startPoint, finishPoint);
         } finally {
             clusterManager.pool();
         }
         return statementRows;
     }
 
-    private List<HisSlowsqlInfoDO> queryNodeSlowsqlsOldVersion(Date timeShot) throws SQLException {
+    private List<HisSlowsqlInfoDO> queryNodeSlowsqlsOldVersion(Date startPoint, Date finishPoint) {
         List<HisSlowsqlInfoDO> statementRows = new ArrayList<>();
         String nodeRole = opengaussAllSlowsqlMapper.selectNodeStatus().toLowerCase(Locale.ROOT);
         if (isPrimary(nodeRole)) {
             statementRows = opengaussAllSlowsqlMapper.selectPrimarySlowSqls(
-                    convertToDateTime(String.valueOf(timeShot.getTime()), ZoneId.systemDefault()));
+                    convertToDateTime(String.valueOf(startPoint.getTime()), ZoneId.systemDefault()));
         } else if (isStandby(nodeRole)) {
-            statementRows = opengaussAllSlowsqlMapper.selectStandbySlowSqls(timeShot);
+            statementRows = opengaussAllSlowsqlMapper.selectStandbySlowSqls(finishPoint);
         } else {
             throw new CustomException("unknown node role: " + nodeRole);
         }

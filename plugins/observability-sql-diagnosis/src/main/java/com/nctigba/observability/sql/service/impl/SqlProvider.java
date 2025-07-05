@@ -97,7 +97,7 @@ public class SqlProvider {
             + "              trace_id text,\n"
             + "              advise text,\n"
             + "              net_send_time bigint,\n"
-            + "              UNIQUE(debug_query_id, start_time)"
+            + "              UNIQUE(debug_query_id, start_time, finish_time)"
             + ");";
     private static final String DELETE_EXIPRED_DATA = "delete from %s where finish_time < '%s'";
     private static final String INSERT_COLUMN_LIST = "INSERT OR IGNORE INTO %s ( %s ) VALUES ( %s )";
