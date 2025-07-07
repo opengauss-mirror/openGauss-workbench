@@ -49,7 +49,7 @@ public interface TimePointMapper {
      */
     @Insert("INSERT OR REPLACE INTO tb_time_point VALUES (#{tableName}, #{startTime}, #{finishTime});")
     int insertTimePoint(@Param("tableName") String tableName, @Param("startTime") Long startTime,
-                      @Param("startTime") Long finishTime);
+                      @Param("finishTime") Long finishTime);
 
     /**
      * record time snapshot

@@ -146,7 +146,7 @@ public class HisSlowsqlServiceImpl extends ServiceImpl<DynamicHisSlowSqlMapper, 
         log.info("collect {} records for node {}", statementRows.size(), nodeId);
         statementRows.forEach(row -> {
             Date startTimeRecord = row.getStartTime();
-            Date finishTimeRecord = row.getStartTime();
+            Date finishTimeRecord = row.getFinishTime();
             if (maxStartTime.get() == null || startTimeRecord.after(maxStartTime.get())) {
                 maxStartTime.set(startTimeRecord);
             }
