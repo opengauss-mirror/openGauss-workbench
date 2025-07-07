@@ -103,6 +103,15 @@ onMounted(() => {
                 i18n.global.locale.value = 'zhCn'
             }
         })
+        
+        const htmlstyle = document.getElementsByTagName('html')[0].style
+        wujie?.bus.$on('opengauss-menu-collapse', (val: string) => {
+            if (val === '1') {
+                htmlstyle.setProperty('padding-left', '64px', 'important')
+            } else {
+                htmlstyle.setProperty('padding-left', '236px', 'important')
+            }
+        })
     } else {
         // local default
         localStorage.setItem('INSTANCE_CURRENT_MODE', 'local')
