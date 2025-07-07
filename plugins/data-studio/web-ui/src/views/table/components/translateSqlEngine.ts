@@ -69,7 +69,9 @@ function fn(list: SetFilterTableDataRow[]) {
         rowStr = `${item.key} ${sqlSyntaxMap[item.connector]} '${value}' AND '${value2}'`;
       }
       if (['isInList', 'isNotInList'].includes(item.connector)) {
-        rowStr = `${item.key} ${sqlSyntaxMap[item.connector]} ('${value}')`;
+        const arr = value.split(',');
+        const dueValue = arr.map((item) => `'${item}'`).join(',');
+        rowStr = `${item.key} ${sqlSyntaxMap[item.connector]} (${dueValue})`;
       }
     }
     return rowStr + logic;
