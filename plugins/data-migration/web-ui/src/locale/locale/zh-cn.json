@@ -623,7 +623,9 @@
         "errorMsg": "验证失败，请稍后重试"
       },
       "portalInstall": {
-        "portalType": "Portal类型"
+        "portalType": "Portal类型",
+        "portEmpty": "端口不可为空",
+        "portalContent": "端口号必须是1-65535之间的数字"
       }
     }
   },

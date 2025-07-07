@@ -129,6 +129,7 @@
         <el-table-column
           :label="$t('step2.index.portalVersion')"
           prop="installInfo.portalType"
+          :formatter="(row) => row.installInfo?.portalType || ''"
           :min-width="100"
           show-overflow-tooltip
         />
@@ -609,6 +610,7 @@ const handleDelete = (record) => {
         (item) => item.hostId === record.hostId
       )
       deletedRow.installPortalStatus = PORTAL_INSTALL_STATUS.NOT_INSTALL
+      deletedRow.installInfo = null
       nextTick(() => {
         selectionChange()
         tableLoading.value = false
@@ -626,7 +628,6 @@ const handleUploadPkg = () => {
 }
 
 const handleBatchInstall = () => {
-  console.log('handleBatchInstall')
   const notInstallHosts = findHostsFromTableByStatus(
     selectedKeys.value,
     PORTAL_INSTALL_STATUS.NOT_INSTALL
@@ -635,7 +636,6 @@ const handleBatchInstall = () => {
     showMessage('error',t('step2.index.bulkInstallErrmsg'))
     return
   }
-  console.log(notInstallHosts)
   if (notInstallHosts.length <= 0) {
     showMessage('error',t('step2.index.bulkInstallErrmsg'))
     return
@@ -703,9 +703,8 @@ const refreshInstallStatus = (hostIdList) => {
 
 onMounted(() => {
   selectedKeys.value = toRaw(props.taskBasicInfo.selectedHosts).map(item => {
-    return item.hostId ? item.hostId : item; 
+    return item.hostId ? item.hostId : item;
   })
-  console.log(selectedKeys.value, props.taskBasicInfo.selectedHosts)
   getHostsData()
   searchAreaVisible.value = false
 })
