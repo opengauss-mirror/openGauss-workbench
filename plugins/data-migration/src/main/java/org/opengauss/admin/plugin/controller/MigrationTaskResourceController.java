@@ -34,11 +34,11 @@ import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
 import org.opengauss.admin.common.core.page.TableDataInfo;
-import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationThirdPartySoftwareConfig;
 import org.opengauss.admin.plugin.dto.CustomDbResource;
+import org.opengauss.admin.plugin.dto.PortalInstallHostDto;
 import org.opengauss.admin.plugin.exception.PortalInstallException;
 import org.opengauss.admin.plugin.service.MigrationTaskHostRefService;
 import org.opengauss.admin.plugin.utils.FileUtils;
@@ -47,7 +47,16 @@ import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -191,9 +200,15 @@ public class MigrationTaskResourceController extends BaseController {
         return AjaxResult.success(migrationTaskHostRefService.getMysqlClusterDbNames(url, username, password));
     }
 
-    @GetMapping("/getHosts")
-    public AjaxResult getHosts() {
-        return AjaxResult.success(migrationTaskHostRefService.getHosts());
+    /**
+     * get host page list
+     *
+     * @param portalInstallHostDto portal install host info
+     * @return AjaxResult host page list info
+     */
+    @PostMapping("/getHosts")
+    public AjaxResult getHosts(@RequestBody PortalInstallHostDto portalInstallHostDto) {
+        return AjaxResult.success(migrationTaskHostRefService.getHosts(startPage(), portalInstallHostDto));
     }
 
     @GetMapping("/listAllHostUser")

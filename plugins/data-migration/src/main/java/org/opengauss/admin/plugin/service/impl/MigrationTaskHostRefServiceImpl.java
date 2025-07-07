@@ -61,6 +61,7 @@ import org.opengauss.admin.plugin.domain.MigrationThirdPartySoftwareConfig;
 import org.opengauss.admin.plugin.domain.TbMigrationTaskGlobalToolsParam;
 import org.opengauss.admin.plugin.dto.CustomDbResource;
 import org.opengauss.admin.plugin.dto.MigrationHostDto;
+import org.opengauss.admin.plugin.dto.PortalInstallHostDto;
 import org.opengauss.admin.plugin.enums.DbTypeEnum;
 import org.opengauss.admin.plugin.enums.MigrationErrorCode;
 import org.opengauss.admin.plugin.enums.PortalInstallStatus;
@@ -218,15 +219,11 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         return hosts;
     }
 
-    /**
-     * get migration exec host list
-     *
-     * @return host info list
-     */
     @Override
-    public List<MigrationHostDto> getHosts() {
-        List<OpsHostEntity> opsHostEntities = hostFacade.listAll();
-        List<MigrationHostDto> result = new ArrayList<>();
+    public IPage<MigrationHostDto> getHosts(IPage<MigrationHostDto> iPage, PortalInstallHostDto portalInstallHostDto) {
+        List<OpsHostEntity> opsHostEntities = hostFacade.getHostList(portalInstallHostDto.getHostname(),
+                portalInstallHostDto.getIp());
+        List<MigrationHostDto> hostDtoList = new ArrayList<>();
         opsHostEntities.forEach(host -> {
             MigrationHostDto eachOne = new MigrationHostDto();
             eachOne.setHostInfo(host);
@@ -234,7 +231,12 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             eachOne.setTasks(tasks);
             MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(
                 host.getHostId());
+
+            PortalType portalType = portalInstallHostDto.getPortalType();
             if (installHost == null) {
+                if (portalType != null) {
+                    return;
+                }
                 String[] opsHosInfo = getHostBaseInfo(host.getHostId());
                 if (opsHosInfo.length == 0) {
                     log.warn("Host no install , opsHostInfo is empty {}", host);
@@ -243,6 +245,9 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 eachOne.setBaseInfos(ListUtil.toList(opsHosInfo));
                 eachOne.setInstallPortalStatus(PortalInstallStatus.NOT_INSTALL.getCode());
             } else {
+                if (portalType != null && !installHost.getPortalType().equals(portalType)) {
+                    return;
+                }
                 String[] hostInfo = getHostBaseInfo(host.getHostId());
                 if (hostInfo.length == 0) {
                     log.warn("Host install , opsHostInfo is empty {}", host);
@@ -252,10 +257,55 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 eachOne.setInstallInfo(installHost);
                 eachOne.setInstallPortalStatus(installHost.getInstallStatus());
             }
-            result.add(eachOne);
+            hostDtoList.add(eachOne);
         });
-        result.sort(Comparator.comparing(o -> o.getHostInfo().getPublicIp()));
-        return result;
+        hostDtoList.sort(Comparator.comparing(o -> o.getHostInfo().getPublicIp()));
+        List<MigrationHostDto> totalHostDto = filterBaseInfos(hostDtoList, portalInstallHostDto);
+        return getPageFromList(totalHostDto, iPage.getCurrent(), iPage.getSize());
+    }
+
+    private List<MigrationHostDto> filterBaseInfos(
+            List<MigrationHostDto> hostDtoList, PortalInstallHostDto portalInstallHostDto) {
+        List<MigrationHostDto> resultList = new ArrayList<>();
+        for (MigrationHostDto hostDto : hostDtoList) {
+            List<String> baseInfos = hostDto.getBaseInfos();
+            if (baseInfos.size() == 3) {
+                String cpu = baseInfos.get(0);
+                Integer expectCpu = portalInstallHostDto.getCpu();
+                if (cpu == null || (expectCpu != null && !Integer.valueOf(cpu).equals(expectCpu))) {
+                    continue;
+                }
+
+                String memory = baseInfos.get(1);
+                Double expectMemory = portalInstallHostDto.getMemory();
+                if (memory == null || (expectMemory != null && Double.parseDouble(memory) < expectMemory)) {
+                    continue;
+                }
+
+                String disk = baseInfos.get(2);
+                Double expectDisk = portalInstallHostDto.getDisk();
+                if (disk == null || (expectDisk != null && Double.parseDouble(disk) < expectDisk)) {
+                    continue;
+                }
+                resultList.add(hostDto);
+            }
+        }
+        return resultList;
+    }
+
+    private <T> Page<T> getPageFromList(List<T> sourceList, long current, long size) {
+        Page<T> page = new Page<>(current, size);
+        page.setTotal(sourceList.size());
+
+        int fromIndex = (int) ((current - 1) * size);
+        int toIndex = (int) Math.min(fromIndex + size, sourceList.size());
+
+        if (fromIndex > sourceList.size() || fromIndex < 0) {
+            page.setRecords(Collections.emptyList());
+        } else {
+            page.setRecords(sourceList.subList(fromIndex, toIndex));
+        }
+        return page;
     }
 
     private String[] getHostBaseInfo(String hostId) {
@@ -1223,7 +1273,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             removeKafkaTools(install, portalHome, opsHost, hostUser, password);
             ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,
                 "rm -rf  " + realInstallPath + "portal");
-            migrationHostPortalInstallHostService.updateStatus(hostId, PortalInstallStatus.NOT_INSTALL.getCode());
+            migrationHostPortalInstallHostService.removeById(install.getId());
         }
         migrationHostPortalInstallHostService.clearPkgUploadPath(hostId);
         ShellUtil.rmFile(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,
