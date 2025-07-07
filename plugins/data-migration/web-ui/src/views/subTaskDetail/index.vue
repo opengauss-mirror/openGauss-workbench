@@ -142,7 +142,7 @@ const descData = computed(() => [
   },
   {
     label: t('components.SubTaskDetail.executionMode'),
-    value: descValueObj.value.executionMode || '--',
+    value: descValueObj.value.executionMode === 1 ? t('components.SubTaskDetail.offLineMigration') : t('components.SubTaskDetail.onLineMigration'),
     prop: 'executionMode'
   },
   {
@@ -313,7 +313,7 @@ const getSubTaskBasicInfo = () => {
       descValueObj.value.subTaskName = res.data?.subTaskId;
       descValueObj.value.fatherTask = res.data?.taskName;
       // offline = 1; online = 2;
-      descValueObj.value.executionMode = res.data?.execMode === 1 ? t('components.SubTaskDetail.offLineInstall') : t('components.SubTaskDetail.onLineInstall')
+      descValueObj.value.executionMode = res.data?.execMode
       descValueObj.value.sourceLibrary = res.data?.sourceDb
       descValueObj.value.sourceDbType = res.data?.sourceDbType
       descValueObj.value.sinkLibrary = res.data?.targetDb
