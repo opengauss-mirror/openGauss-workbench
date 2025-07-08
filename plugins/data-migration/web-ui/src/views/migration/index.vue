@@ -137,6 +137,7 @@ const taskBasicInfo = ref<migrationTaskList>({
 })
 
 const defaultBasicData = ref([])
+const defaultMoreData = ref([])
 const stepOneComp = ref()
 const submitLoading = ref(false)
 provide('changeSubmitLoading', (val) => {
@@ -301,6 +302,7 @@ const getDefaultParams = (type: string) => {
     if(Number(res.code) === 200) {
       if (type === 'MYSQL') {
         defaultBasicData.value = res.data.slice(0, 12)
+        defaultMoreData.value = res.data.slice(12)
       } else {
         defaultBasicData.value = res.data
       }
@@ -390,7 +392,10 @@ const getTaskDetail = async (id: number) => {
       const isDefaultConfigtemp = (taskParams.length > 1) || (taskParams.length === 1 && taskParams[0].paramKey !== "rules.enable")
       const defaultBasicDataSet = computed(() =>
         new Set(defaultBasicData.value.map(item => item.paramKey))
-      );
+      )
+      const defaultMoreDataSet = computed(() =>
+        new Map(defaultMoreData.value.map(item => [item.paramKey, item]))
+      )
       Object.assign(subTask, {
           isSystemAdmin,
           isAdjustKernelParam,
@@ -422,7 +427,27 @@ const getTaskDetail = async (id: number) => {
           },
           taskParamsObject: {
             basic: taskParams.filter((child: KeyValue) => defaultBasicDataSet.value.has(child.paramKey)),
-            more: taskParams.filter((child: KeyValue) => !defaultBasicDataSet.value.has(child.paramKey))
+            more: taskParams
+              .filter((child: KeyValue) => !defaultBasicDataSet.value.has(child.paramKey))
+              .map((child: KeyValue) => {
+                if (!defaultMoreDataSet.value.has(child.paramKey)) {
+                  const tempParamKey = child.paramKey.split('.').slice(0, 2).join('.')
+                  if (defaultMoreDataSet.value.has(tempParamKey)) {
+                    const tempParamExtends = JSON.parse(defaultMoreDataSet.value.get(tempParamKey).paramExtends)
+                    const matchedItem = tempParamExtends.find((item: any )=> {
+                      const regex = new RegExp(`^${item.subKeyPrefix}\\d*$`)
+                      return regex.test(child.paramKey)
+                    })
+                    return {
+                      ...child,
+                      paramType: matchedItem.paramType,
+                      paramRules: matchedItem.paramRules,
+                    }
+                  }
+                  return child
+                }
+                return child
+              })
           },
           sourceTables
       });

@@ -31,7 +31,7 @@ export function getValidator(record,isGlobal) {
   return validator
 }
 
-const regexValidator = (value, cb) => {
+const regexValidator = (rule, value, cb) => {
   if (value) {
     cb()
   } else {
