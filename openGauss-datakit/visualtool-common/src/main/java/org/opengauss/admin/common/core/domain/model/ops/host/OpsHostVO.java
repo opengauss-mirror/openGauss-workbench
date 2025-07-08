@@ -26,6 +26,8 @@ package org.opengauss.admin.common.core.domain.model.ops.host;
 
 import lombok.Data;
 
+import org.opengauss.admin.common.enums.agent.AgentStatus;
+
 import java.util.Set;
 
 /**
@@ -46,5 +48,10 @@ public class OpsHostVO {
     private String os;
     private String cpuArch;
     private String name;
+    private AgentStatus agentStatus;
+    private String agentInstallPath;
+    private String agentInstallUsername;
+    private Integer agentInstallPort;
+    private String osVersion;
     private Set<String> tags;
 }

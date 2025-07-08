@@ -43,7 +43,16 @@ plugin:
   runMode: prod
   pluginPath:
     - ~/visualtool-plugin
-
+agent:
+  localPath:  ./agent
+  agentName: datakit-agent-${version}-runner.jar
+disruptor:
+  bufferSize: 1024
+  backpressure:
+    threshold: 10
+    initDelay: 1
+    maxDelay: 100
+    factor: 2
 management:
   server:
     port: 9494

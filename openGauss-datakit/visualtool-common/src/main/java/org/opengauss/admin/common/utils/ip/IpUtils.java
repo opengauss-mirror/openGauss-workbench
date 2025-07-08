@@ -24,6 +24,7 @@
 
 package org.opengauss.admin.common.utils.ip;
 
+import org.apache.commons.net.util.SubnetUtils;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.html.EscapeUtil;
@@ -34,7 +35,14 @@ import javax.servlet.http.HttpServletRequest;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * IP Tool
@@ -247,5 +255,101 @@ public class IpUtils {
 
     public static boolean mayBeIPAddress(String hostIp) {
         return InetAddressValidator.getInstance().isValid(hostIp);
+    }
+
+    /**
+     * <pre>
+     * Get local IP address and mask (Ip,Mask).
+     * if the local IP address is invalid, return empty. multiple IPs are supported.
+     * "192.168.1.20", "255.255.255.0"
+     * "2001:db8:abcd:0012::2", "64"
+     * </pre>
+     *
+     * @return Map<String, String>
+     */
+    public static Map<String, String> getLocalIpAddressMap() {
+        Map<String, String> ipMaskMap = new HashMap<>();
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface ni = interfaces.nextElement();
+                if (ni.isLoopback() || !ni.isUp()) {
+                    continue;
+                }
+                for (InterfaceAddress ia : ni.getInterfaceAddresses()) {
+                    InetAddress addr = ia.getAddress();
+                    if (addr instanceof Inet4Address) {
+                        int prefix = ia.getNetworkPrefixLength();
+                        String mask = calculateIPv4Mask(prefix);
+                        ipMaskMap.put(addr.getHostAddress(), mask);
+                    }
+                    if (addr instanceof Inet6Address && !addr.isLinkLocalAddress()) {
+                        ipMaskMap.put(addr.getHostAddress(), String.valueOf(ia.getNetworkPrefixLength()));
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            log.error("Failed to load DataKit Server Network IP", e);
+        }
+        return ipMaskMap;
+    }
+
+    private static String calculateIPv4Mask(int prefix) {
+        int mask = 0xffffffff << (32 - prefix);
+        return String.format(Locale.getDefault(), "%d.%d.%d.%d", (mask >> 24) & 0xff, (mask >> 16) & 0xff,
+            (mask >> 8) & 0xff, mask & 0xff);
+    }
+
+    /**
+     * <pre>
+     * check ip1 and ip2 is in the same subnet
+     * // IPv4 测试
+     * (isIpInSubnet("192.168.1.10", "192.168.1.20", "255.255.255.0")); // 同子网
+     * (isIpInSubnet("192.168.1.10", "192.168.2.20", "255.255.255.0")); // 不同子网
+     *
+     * // IPv6 测试
+     * (isIpInSubnet("2001:db8:abcd:0012::1", "2001:db8:abcd:0012::2", "64"));
+     * (isIpInSubnet("2001:db8:abcd:0012::1", "2001:db8:1234:5678::1", "64"));
+     * </pre>
+     *
+     * @param ip1 ip1 eg. 192.168.1.10
+     * @param ip2 ip2 eg. 192.168.1.20
+     * @param mask mask eg. 255.255.255.0
+     * @return true or false
+     * @throws UnknownHostException UnknownHostException
+     */
+    public static boolean isIpInSubnet(String ip1, String ip2, String mask) throws UnknownHostException {
+        if (mask.contains(".")) {
+            SubnetUtils subnet = new SubnetUtils(ip1, mask);
+            return subnet.getInfo().isInRange(ip2);
+        } else {
+            int prefixLength = Integer.parseInt(mask);
+            return isSameSubnetV6(ip1, ip2, prefixLength);
+        }
+    }
+
+    private static boolean isSameSubnetV6(String ip1, String ip2, int prefixLength) throws UnknownHostException {
+        if (Inet6Address.getByName(ip1) instanceof Inet6Address addr1 && Inet6Address.getByName(
+            ip2) instanceof Inet6Address addr2) {
+            byte[] a1 = addr1.getAddress();
+            byte[] a2 = addr2.getAddress();
+            int bytes = prefixLength / 8;
+            int bits = prefixLength % 8;
+            for (int i = 0; i < bytes; i++) {
+                if (a1[i] != a2[i]) {
+                    return false;
+                }
+            }
+            if (bits > 0) {
+                int mask = (0xFF << (8 - bits)) & 0xFF;
+                int b1 = a1[bytes] & 0xFF; // 转换为无符号
+                int b2 = a2[bytes] & 0xFF;
+                return (b1 & mask) == (b2 & mask);
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
     }
 }

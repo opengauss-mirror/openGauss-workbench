@@ -9,9 +9,7 @@ agent:
   thread-pool:
     max-threads: 10
   os:
-    command-write-list:
-    default-command-write-list: [ "date", "df", "dig", "ps", "ping", "ls", "echo", "dir","wc", "head", "java", "git", "cat",
-                          "free", "mkdir","tail", "grep", "touch", "less", "sort", "id", "javac" ]
+    command-write-list: df,free,top,ps,netstat
 quarkus:
   http:
     port: 19001

@@ -17,11 +17,10 @@ package org.opengauss.agent.config;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import io.quarkus.runtime.Startup;
+import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.context.Initialized;
 import jakarta.enterprise.event.Observes;
-import jakarta.inject.Singleton;
+import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 import org.opengauss.agent.utils.OsCommandUtils;
@@ -38,26 +37,17 @@ import java.util.List;
  * @since 7.0.0-RC2
  **/
 @Slf4j
-@Singleton
-@Startup
+@ApplicationScoped
 public class AppConfigDistributor {
-    private final AppConfig appConfig;
-
-    /**
-     * AppConfigDistributor
-     *
-     * @param appConfig appConfig
-     */
-    public AppConfigDistributor(AppConfig appConfig) {
-        this.appConfig = appConfig;
-    }
+    @Inject
+    AppConfig appConfig;
 
     /**
      * onStart initialize AppConfigDistributor instance when application start
      *
-     * @param event startup event
+     * @param event StartupEvent
      */
-    void onStart(@Observes @Initialized(ApplicationScoped.class) Object event) {
+    void onStart(@Observes StartupEvent event) {
         initializeOsCommandWriteList();
     }
 
@@ -71,7 +61,7 @@ public class AppConfigDistributor {
         }
         if (StrUtil.isNotEmpty(osCommandWriteList)) {
             writeList.addAll(Arrays.asList(osCommandWriteList.split(",")));
-            log.info("initialized osCommand custom write list : {}", osCommandDefaultWriteList);
+            log.info("initialized osCommand custom write list : {}", osCommandWriteList);
         }
         if (CollUtil.isNotEmpty(writeList)) {
             OsCommandUtils.forceRefreshAllowedCommand(writeList);

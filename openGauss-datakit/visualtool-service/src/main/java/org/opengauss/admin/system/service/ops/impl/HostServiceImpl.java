@@ -25,7 +25,7 @@
 package org.opengauss.admin.system.service.ops.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.lang.Assert;
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 
 import com.alibaba.excel.EasyExcel;
@@ -41,8 +41,10 @@ import com.google.common.cache.CacheBuilder;
 import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.Session;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.opengauss.admin.common.core.domain.entity.agent.AgentInstallEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.*;
@@ -55,6 +57,7 @@ import org.opengauss.admin.common.core.handler.ops.cache.TaskManager;
 import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
 import org.opengauss.admin.common.core.vo.HostInfoVo;
 import org.opengauss.admin.common.enums.OsSupportMap;
+import org.opengauss.admin.common.enums.agent.AgentStatus;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.OpsAssert;
 import org.opengauss.admin.common.utils.StringUtils;
@@ -67,6 +70,7 @@ import org.opengauss.admin.system.plugin.beans.SshLogin;
 import org.opengauss.admin.system.service.HostMonitorCacheService;
 import org.opengauss.admin.system.service.JschExecutorService;
 import org.opengauss.admin.system.service.ops.*;
+import org.opengauss.agent.service.IAgentInstallService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -98,6 +102,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> implements IHostService {
+    private final Object sessionLock = new Object();
     private String isSwitchingLanguage;
     @Autowired
     private IHostUserService hostUserService;
@@ -123,6 +128,9 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     private IOpsHostTagService opsHostTagService;
     @Autowired
     private HostMonitorCacheService hostMonitorCacheService;
+    @Autowired
+    private IAgentInstallService agentInstallService;
+
     private Cache<String, List<ErrorHostRecord>> errorExcel = CacheBuilder.newBuilder()
         .maximumSize(1000)
         .expireAfterWrite(1, TimeUnit.DAYS)
@@ -490,7 +498,23 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         final List<OpsHostVO> records = opsHostVOIPage.getRecords();
         populateIsRememberVO(records);
         populateTags(records);
+        populateAgentInstallInfoAndStatus(records);
         return opsHostVOIPage;
+    }
+
+    private void populateAgentInstallInfoAndStatus(List<OpsHostVO> records) {
+        Map<String, AgentInstallEntity> agentInstallMap = agentInstallService.queryAgentInstallInfo();
+        for (OpsHostVO record : records) {
+            AgentInstallEntity agentInstall = agentInstallMap.get(record.getHostId());
+            if (Objects.isNull(agentInstall)) {
+                record.setAgentStatus(AgentStatus.UNINSTALL);
+            } else {
+                record.setAgentInstallPort(agentInstall.getAgentPort());
+                record.setAgentStatus(agentInstall.getStatus());
+                record.setAgentInstallPath(agentInstall.getInstallPath());
+                record.setAgentInstallUsername(agentInstall.getInstallUser());
+            }
+        }
     }
 
     @Override
@@ -553,28 +577,100 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     }
 
     @Override
-    public Map<String, Object> monitor(String hostId, String businessId, String password) {
+    public Map<String, Object> pageMonitor(List<String> hostIds, String businessId) {
         Map<String, Object> res = new HashMap<>();
         res.put("res", true);
+        List<String> pageHostList;
         try {
-            OpsHostEntity hostEntity = getById(hostId);
-            Assert.notNull(hostEntity, "host info not found");
+            pageHostList = list().stream()
+                .filter(hostEntity -> hostIds.contains(hostEntity.getHostId()))
+                .map(OpsHostEntity::getHostId)
+                .collect(Collectors.toList());
+            if (pageHostList.size() != hostIds.size()) {
+                res.put("miss_msg", "some host ids not found");
+                res.put("miss", CollUtil.subtract(hostIds, pageHostList));
+            }
         } catch (IllegalArgumentException | OpsException e) {
             res.put("res", false);
             res.put("msg", e.getMessage());
             return res;
         }
-        WsSession wsSession = wsConnectorManager.getSession(businessId)
-            .orElseThrow(() -> new OpsException("response session does not exist"));
-        Future<?> future = threadPoolTaskExecutor.submit(() -> {
+        Runnable worker = TaskManager.getRegistryWorker(businessId);
+        if (worker == null) {
+            WsSession wsSession = wsConnectorManager.getSession(businessId)
+                .orElseThrow(() -> new OpsException("response session does not exist"));
+            worker = new PageMonitorWorker(wsSession, pageHostList);
+            TaskManager.registryWorker(businessId, worker);
+            Future<?> future = threadPoolTaskExecutor.submit(worker);
+            TaskManager.registry(businessId, future);
+        } else {
+            if (worker instanceof PageMonitorWorker pageMonitorWorker) {
+                pageMonitorWorker.resetHostIds(pageHostList);
+            } else {
+                throw new OpsException("worker is not PageMonitorWorker");
+            }
+        }
+        return res;
+    }
+
+    /**
+     * PageMonitorWorker
+     */
+    @AllArgsConstructor
+    class PageMonitorWorker implements Runnable {
+        private final WsSession wsSession;
+        private final List<String> hostIds;
+
+        /**
+         * reset hostIds
+         *
+         * @param hostIds hostIds
+         */
+        public void resetHostIds(List<String> hostIds) {
+            this.hostIds.clear();
+            this.hostIds.addAll(hostIds);
+        }
+
+        @Override
+        public void run() {
             try {
-                doMonitor(wsSession, hostId);
+                doPageMonitor();
             } finally {
+                hostIds.clear();
                 wsUtil.close(wsSession);
             }
-        });
-        TaskManager.registry(businessId, future);
-        return res;
+        }
+
+        private void doPageMonitor() {
+            while (true) {
+                synchronized (sessionLock) {
+                    if (!wsSession.getSession().isOpen()) {
+                        break;
+                    }
+                }
+                for (String hostId : hostIds) {
+                    if (!wsSession.getSession().isOpen()) {
+                        break;
+                    }
+                    HostMonitorVO hostMonitorVO = new HostMonitorVO();
+                    try {
+                        hostMonitorVO.setHostId(hostId);
+                        String[] net = netMonitor(hostId);
+                        hostMonitorVO.setUpSpeed(net[0]);
+                        hostMonitorVO.setDownSpeed(net[1]);
+                        hostMonitorVO.setCpu(cpuMonitor(hostId));
+                        hostMonitorVO.setMemory(memoryMonitor(hostId));
+                        hostMonitorVO.setDisk(diskMonitor(hostId));
+                    } catch (OpsException | NullPointerException ex) {
+                        log.error("Failed to collect monitor data for hostId: {}", hostId, ex);
+                    }
+                    if (wsSession.getSession().isOpen()) {
+                        wsUtil.sendText(wsSession, JSON.toJSONString(hostMonitorVO));
+                    }
+                }
+                ThreadUtil.safeSleep(1000L);
+            }
+        }
     }
 
     @Override

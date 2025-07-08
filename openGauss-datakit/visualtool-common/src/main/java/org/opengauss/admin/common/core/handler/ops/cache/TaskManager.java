@@ -41,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 public class TaskManager {
     private static final int MAX_RETRIES = 10;
     private static final ConcurrentHashMap<String, Future<?>> TASK_CONTEXT = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Runnable> TASK_WORKER_CONTEXT = new ConcurrentHashMap<>();
 
     /**
      * registry task to context
@@ -65,9 +66,9 @@ public class TaskManager {
             log.info("task {} not found in context", businessId);
             return Optional.empty();
         }
-        // 如果任务已经完成或取消，直接返回
         if (future.isDone() || future.isCancelled()) {
             log.info("task {} already completed or cancelled", businessId);
+            TASK_WORKER_CONTEXT.remove(businessId);
             return Optional.of(TASK_CONTEXT.remove(businessId));
         }
         int retryCount = 0;
@@ -83,14 +84,33 @@ public class TaskManager {
             }
             retryCount++;
         }
-        // 检查任务是否成功取消或完成
         if (future.isCancelled() || future.isDone()) {
             log.info("task {} successfully cancelled or completed", businessId);
+            TASK_WORKER_CONTEXT.remove(businessId);
             return Optional.of(TASK_CONTEXT.remove(businessId));
         } else {
             log.error("failed to cancel task {} after {} attempts", businessId, MAX_RETRIES);
-            // 任务未取消，不应该从上下文中移除
             throw new OpsException("Failed to cancel task " + businessId);
         }
+    }
+
+    /**
+     * registry worker to context
+     *
+     * @param businessId businessId
+     * @param worker worker
+     */
+    public static void registryWorker(String businessId, Runnable worker) {
+        TASK_WORKER_CONTEXT.put(businessId, worker);
+    }
+
+    /**
+     * get worker from context
+     *
+     * @param businessId businessId
+     * @return Runnable
+     */
+    public static Runnable getRegistryWorker(String businessId) {
+        return TASK_WORKER_CONTEXT.get(businessId);
     }
 }
