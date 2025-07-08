@@ -43,4 +43,8 @@ public class AppConfig {
     int heartbeatInterval;
     @ConfigProperty(name = "agent.heartbeat.break-wait-max-times")
     int heartbeatBreakWaitMaxTimes;
+    @ConfigProperty(name = "agent.os.command-write-list")
+    String osCommandWriteList;
+    @ConfigProperty(name = "agent.os.default-command-write-list")
+    String osCommandDefaultWriteList;
 }

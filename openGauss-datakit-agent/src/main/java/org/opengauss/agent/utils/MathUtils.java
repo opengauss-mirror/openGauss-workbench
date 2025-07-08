@@ -68,4 +68,18 @@ public class MathUtils {
         BigDecimal totalValue = BigDecimal.valueOf(total);
         return used.multiply(HUNDRED).divide(totalValue, 4, RoundingMode.HALF_UP).doubleValue();
     }
+
+    /**
+     * safe parse double value to double, if parse failed, return Double.NaN
+     *
+     * @param value value
+     * @return double
+     */
+    public static Double doubleValueOf(String value) {
+        try {
+            return Double.valueOf(value);
+        } catch (NumberFormatException e) {
+            return Double.NaN;
+        }
+    }
 }
