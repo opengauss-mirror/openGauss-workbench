@@ -707,7 +707,8 @@
       "5m6ntgxo9vc0": "关闭左侧标签页",
       "5m6ntgxoa240": "关闭右侧标签页",
       "5m6ntgxoa540": "关闭其它标签页",
-      "5m6ntgxoadc0": "关闭全部标签页"
+      "5m6ntgxoadc0": "关闭全部标签页",
+      "subTaskMigraTab": "之前的迁移子任务详情tab页签将关闭，只展示当前的迁移子任务详情tab页"
     }
   },
   "sys-log": {

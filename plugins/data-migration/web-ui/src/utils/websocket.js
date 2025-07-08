@@ -36,6 +36,7 @@ export default class SocketTool extends Heart {
     isRestory: false,
     reconnectTime: 5000,
     reconnectCount: 5,
+    wsType: '',
     openCb: (e) => {
       console.log('connect success callback::::', e)
     },
@@ -58,14 +59,14 @@ export default class SocketTool extends Heart {
       throw new Error('The address does not exist, and the channel cannot be established')
     }
     // this.ws = null
-    console.log('get locaion host: ', window.location.host, window.location.protocol)
     let wsUrl
+    const currentType = this.options.type ? 'websocket' : 'ws'
     if (process.env.NODE_ENV === 'development') {
       // change by yourself
-      wsUrl = `wss://${process.env.VUE_APP_WS_BASE_URL}/ws/${this.options.url}`
+      wsUrl = `wss://${process.env.VUE_APP_WS_BASE_URL}/${currentType}/${this.options.url}`
     } else {
       const wsPrefix = window.location.protocol.includes('https') ? 'wss' : 'ws'
-      wsUrl = `${wsPrefix}://${window.location.host}/ws/${this.options.url}`
+      wsUrl = `${wsPrefix}://${window.location.host}/${currentType}/${this.options.url}`
     }
     this.ws = new WebSocket(wsUrl)
     this.onopen(this.options.openCb)

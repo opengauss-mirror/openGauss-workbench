@@ -8,7 +8,7 @@
           :description="t('components.SubTaskDetail.restWriteData')"></statistic-card>
       </div>
       <div class="button-area">
-        <el-button type="primary" @click="handleFix('reset')">{{ t('components.SubTaskDetail.oneClickRepair')
+        <el-button type="primary" v-if="showRepair" @click="handleFix('reset')">{{ t('components.SubTaskDetail.oneClickRepair')
           }}</el-button>
         <el-button v-if="currentActive === 3 && subTaskMode === 2 &&
           currentExecStatus === SUB_TASK_STATUS.INCREMENTAL_RUNNING" @click="stopSubIncrese">{{
@@ -21,19 +21,31 @@
     <div class="sub-tabs">
       <div class="process-card">
         <div class="info">
-          <el-icon v-if="fixStatus.source" class="icon" size="21"><icon-success /></el-icon>
-          <el-icon v-else class="icon" size="21"><icon-error /></el-icon>
+          <span v-if="fixStatus.source">
+            <el-icon v-if="curFixStatus()" class="icon" size="21"><icon-success /></el-icon>
+            <el-icon v-else class="icon" size="21"><IconCheckCircle /></el-icon>
+          </span>
+          <span v-else>
+            <el-icon v-if="curFixStatus()" class="icon" size="21"><IconAlertCircle /></el-icon>
+            <el-icon v-else class="icon" size="21"><icon-error /></el-icon>
+          </span>
           {{ t('components.SubTaskDetail.sourceRepair') }}
         </div>
-        <span class="fix-button" @click="handleFix('source')">{{ t('components.SubTaskDetail.oneClickRepair') }}</span>
+        <span class="fix-button" :class="showRepair ? '' : 'unableClick'" @click="handleFix('source')">{{ t('components.SubTaskDetail.oneClickRepair') }}</span>
       </div>
       <div class="process-card">
         <div class="info">
-          <el-icon v-if="fixStatus.sink" size="21" class="icon"><icon-success /></el-icon>
-          <el-icon v-else size="21" class="icon"><icon-error /></el-icon>
+          <span v-if="fixStatus.sink">
+            <el-icon v-if="curFixStatus()" class="icon" size="21"><icon-success /></el-icon>
+            <el-icon v-else class="icon" size="21"><IconCheckCircle /></el-icon>
+          </span>
+          <span v-else>
+            <el-icon  v-if="curFixStatus()" class="icon" size="21"><IconAlertCircle /></el-icon>
+            <el-icon v-else class="icon" size="21"><icon-error /></el-icon>
+          </span>
           {{ t('components.SubTaskDetail.targetRepair') }}
         </div>
-        <span class="fix-button" @click="handleFix('sink')">{{ t('components.SubTaskDetail.oneClickRepair') }}</span>
+        <span class="fix-button" :class="showRepair ? '' : 'unableClick'" @click="handleFix('sink')">{{ t('components.SubTaskDetail.oneClickRepair') }}</span>
       </div>
     </div>
     <ReverseDetail v-if="reverseVisible" @closeDialog="closeDialog" :replicationData="replicationData"
@@ -42,7 +54,7 @@
 </template>
 <script setup lang="ts">
 import StatisticCard from '@/components/statisticCard'
-import { IconSuccess, IconError } from '@computing/opendesign-icons';
+import { IconSuccess, IconError, IconAlertCircle, IconCheckCircle } from '@computing/opendesign-icons';
 import { computed, inject, onBeforeUnmount, onMounted, watch, ref } from 'vue'
 import {
   getOnlineReverseStatus, queryFullCheckDetail,
@@ -93,6 +105,42 @@ const reverseVisible = ref(false);
 watch(() => props.active, (newVal, oldVal) => {
   currentActive.value = props.active;
 })
+
+const showRepair = computed(() => {
+  if (isReverse.value) {
+    // If it is a reverse migration currently, the repair button will not be displayed 
+    // when the reverse migration is completed/when the migration is completed.
+    if (currentExecStatus.value === SUB_TASK_STATUS.REVERSE_STOP || 
+        currentExecStatus.value === SUB_TASK_STATUS.MIGRATION_FINISH || 
+        props.active === 3
+    ) {
+      return false
+    }
+  } else {
+    // If it is an incremental migration currentlythe repair button will not be displayed 
+    // when the increment is completed/at the end of the increment/it is not in an incremental state.
+    if (currentExecStatus.value === SUB_TASK_STATUS.INCREMENTAL_FINISHED ||
+        currentExecStatus.value === SUB_TASK_STATUS.INCREMENTAL_STOPPED ||
+        currentExecStatus.value === SUB_TASK_STATUS.MIGRATION_FINISH
+    ) {
+      return false
+    }
+  }
+  return true;
+})
+
+
+// Judge the current state
+const curFixStatus = () => {
+  let curStatusFlag = false; 
+  if (isReverse.value) {
+    curStatusFlag = currentExecStatus.value === SUB_TASK_STATUS.REVERSE_STOP 
+  } else {
+    curStatusFlag = currentExecStatus.value === SUB_TASK_STATUS.INCREMENTAL_FINISHED ||
+        currentExecStatus.value === SUB_TASK_STATUS.INCREMENTAL_STOPPED;
+  }
+  return curFixStatus
+}
 
 const closeDialog = () => {
   reverseVisible.value = false;
@@ -266,7 +314,11 @@ const getFixStatus = async () => {
       .fix-button{
         cursor: pointer;
       }
-
+      .unableClick {
+        color: var(--o-color-placeholder);
+        cursor: not-allowed;
+        pointer-events: none;
+      }
     }
   }
 }

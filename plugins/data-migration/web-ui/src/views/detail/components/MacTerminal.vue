@@ -55,7 +55,7 @@ watch(
 const handleConnect = async () => {
   const term = getTerminalInstance();
   const socketKey = new Date().getTime();
-  const terminalSocket = new Wsocket({ url: `SSH/jdbc_terminal_${socketKey}` });
+  const terminalSocket = new Wsocket({ url: `SSH/jdbc_terminal_${socketKey}`, type: 'websocket' });
   terminalWs.value = terminalSocket;
   terminalSocket.onopen(() => {
     const param = {
