@@ -443,7 +443,11 @@
     const session = aceEditor.getSession();
     session.setMode('ace/mode/sql', function () {
       const rules = session.$mode.$highlightRules.getRules();
-      rules.start.unshift(...newRulesData);
+      newRulesData.forEach((newRuleItem) => {
+        if (!rules.start.find((rule) => rule.regex == newRuleItem.regex)) {
+          rules.start.unshift(newRuleItem);
+        }
+      });
       session.$mode.$tokenizer = null;
       session.bgTokenizer.setTokenizer(session.$mode.getTokenizer());
       session.bgTokenizer.start(0);
