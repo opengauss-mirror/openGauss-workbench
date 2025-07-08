@@ -39,7 +39,7 @@
       </div>
     </div>
     <div class="search-con" v-if="searchAreaVisible">
-      <el-form :model="form" inline>
+      <el-form :model="form" inline ref="formRef">
         <el-row class="form-margin">
           <el-form-item prop="ip" style="margin-left: -17px" :label="$t('step2.index.physicalIP')">
             <el-input v-model.trim="form.ip" clearable :placeholder="$t('step3.index.5q093f8y8b40')" style="width: 160px"
@@ -49,14 +49,34 @@
             <el-input v-model.trim="form.hostname" clearable :placeholder="$t('step3.index.5q093f8y8fs0')" style="width: 160px"
                       maxlength="255"/>
           </el-form-item>
-          <el-form-item prop="cpu" style="margin-left: -17px" :label="$t('step2.index.CPUcores')">
-            <el-input v-model.number="form.cpu" maxlength="5" clearable :placeholder="$t('step3.index.5q093f8y8j40')" style="width: 160px"/>
+          <el-form-item prop="cpu" style="margin-left: -17px" :label="$t('step2.index.CPUcores')"
+                        :rules="[{ required: false, message: $t('step2.index.cpuRequired') },
+            { type: 'number', message: $t('components.ToolsParamsConfig.5q0toolspa32') }]"
+          >
+            <el-input v-model.number="form.cpu" maxlength="5" clearable
+                      :placeholder="$t('step3.index.5q093f8y8j40')" style="width: 160px"/>
           </el-form-item>
-          <el-form-item prop="memory" style="margin-left: -17px" :label="$t('step2.index.remainMemory')">
-            <el-input v-model.number="form.memory" maxlength="10" clearable :placeholder="$t('step3.index.5q093f8y8lw0')" style="width: 160px"  />
+          <el-form-item prop="memory" style="margin-left: -17px" :label="$t('step2.index.remainMemory')"
+                        :rules="[{ required: false, message: $t('step2.index.memoryRequired') },
+            { type: 'number', message: $t('components.ToolsParamsConfig.5q0toolspa32') }]"
+          >
+            <el-input v-model.number="form.memory" maxlength="10" clearable
+                      :placeholder="$t('step3.index.5q093f8y8lw0')" style="width: 160px"
+            />
           </el-form-item>
-          <el-form-item prop="disk" style="margin-left: -17px" :label="$t('step2.index.remainHarddiskCapacity')">
-            <el-input v-model.number="form.disk" maxlength="10" clearable :placeholder="$t('step3.index.5q093f8y8p40')" style="width: 160px"/>
+          <el-form-item prop="disk" style="margin-left: -17px" :label="$t('step2.index.remainHarddiskCapacity')"
+                        :rules="[{ required: false, message: $t('step2.index.diskRequired') },
+                    { type: 'number', message: $t('components.ToolsParamsConfig.5q0toolspa32') }]"
+          >
+            <el-input v-model.number="form.disk" maxlength="10" clearable
+                      :placeholder="$t('step3.index.5q093f8y8p40')" style="width: 160px"
+            />
+          </el-form-item>
+          <el-form-item prop="portalType" style="margin-left: -17px" :label="$t('step2.index.portalVersion')">
+            <el-select v-model="form.portalType" clearable style="width: 160px" :placeholder="$t('step2.index.portalVersionContent')">
+              <el-option  label="MYSQL_ONLY" value="MYSQL_ONLY" />
+              <el-option  label="MULTI_DB" value="MULTI_DB" />
+            </el-select>
           </el-form-item>
         </el-row>
         <el-row class="form-margin, flex-end">
@@ -278,18 +298,17 @@
           </template>
         </el-table-column>
       </el-table>
-<!--      <div class="pagination-con">-->
-<!--        <el-pagination-->
-<!--          v-model:current-page="pagination.current"-->
-<!--          v-model:page-size="pagination.pageSize"-->
-<!--          :page-sizes="[10, 20, 50, 100]"-->
-<!--          :background="true"-->
-<!--          layout="total, sizes, prev, pager, next, jumper"-->
-<!--          :total="pagination.total"-->
-<!--          @size-change="handleSizeChange"-->
-<!--          @current-change="handleCurrentChange"-->
-<!--        />-->
-<!--      </div>-->
+      <div >
+        <el-pagination
+          v-model:current-page="pagination.current"
+          v-model:page-size="pagination.pageSize"
+          :total="pagination.total"
+          :page-sizes="[10, 20, 50, 100]"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </div>
     <portal-install
       v-model:open="portalDlg.visible"
@@ -329,20 +348,20 @@ import showMessage from "@/utils/showMessage";
 
 const { t } = useI18n()
 
-// const refreshPageData = () => {
-//   pagination.current = 1
-//   getFilterData()
-// }
+const refreshPageData = () => {
+  pagination.current = 1
+  getHostsData()
+}
 
-// const handleSizeChange = (val) => {
-//   pagination.pageSize = val
-//   getFilterData()
-// }
-//
-// const handleCurrentChange = (val) => {
-//   pagination.current = val
-//   getFilterData()
-// }
+const handleSizeChange = (val) => {
+  pagination.pageSize = val
+  getHostsData()
+}
+
+const handleCurrentChange = (val) => {
+  pagination.current = val
+  getHostsData()
+}
 
 
 const changeSubmitLoading = inject('changeSubmitLoading')
@@ -368,18 +387,19 @@ const loading = ref(true)
 const tableLoading = ref(false)
 const removeLoading = ref(false)
 const form = reactive({
-  ip: undefined,
-  hostname: undefined,
-  cpu: undefined,
-  memory: undefined,
-  disk: undefined
+  ip: null,
+  hostname: null,
+  cpu: null,
+  memory: null,
+  disk: null,
+  portalType: null
 })
+const formRef = ref()
 
 const pagination = reactive({
   total: 0,
   current: 1,
-  pageSize: 20,
-  showPageSize: true
+  pageSize: 10,
 })
 const tableData = ref([])
 const originData = ref([])
@@ -420,41 +440,10 @@ const pageChange = (current) => {
   pagination.current = current
 }
 
+const filterFlag = ref(false)
 const getFilterData = () => {
-  const rawOriginData = toRaw(originData.value);
-  tableData.value = rawOriginData.filter(item => {
-    const {
-      hostInfo = {},
-      baseInfos = []
-    } = item;
-    let flag = true;
-    if (form.ip) {
-      const ipMatch = hostInfo.name?.includes?.(form.ip) ?? false;
-      if (!ipMatch) flag = false;
-    }
-    if (form.hostname) {
-      const hostnameMatch = hostInfo.hostname?.includes?.(form.hostname) ?? false;
-      if (!hostnameMatch) flag = false;
-    }
-    if (form.cpu) {
-      const cpuMatch = baseInfos[0] === form.cpu;
-      if (!cpuMatch) flag = false;
-    }
-    if (form.memory) {
-      const memoryValue = parseFloat(baseInfos[1]) || 0;
-      if (memoryValue < form.memory) flag = false;
-    }
-    if (form.disk) {
-      const diskValue = parseFloat(baseInfos[2]) || 0;
-      if (diskValue < form.disk) flag = false;
-    }
-
-    return flag;
-  });
-  pagination.total = tableData.value.length;
-  if (!form.ip && !form.hostname && !form.cpu && !form.memory && !form.disk) {
-    getHostsData()
-  }
+  filterFlag.value = true
+  getHostsData()
 }
 const tableRef = ref(null)
 
@@ -552,19 +541,23 @@ const refreshSearchInfo = (hostIdList) => {
 const getHostsData = () => {
   timer && clearTimeout(timer)
   loading.value = true
-  hostsData()
+  hostsData({
+    ip: filterFlag.value? form.ip: null,
+    hostname: filterFlag.value? form.hostname: null,
+    cpu: filterFlag.value? form.cpu: null,
+    memory: filterFlag.value? form.memory: null,
+    disk: filterFlag.value? form.disk: null,
+    portalType: filterFlag.value? form.portalType: null
+  }, pagination.pageSize, pagination.current)
     .then((res) => {
-      loading.value = false
-      if (form.ip || form.hostname || form.cpu || form.memory || form.disk) {
-        timer && clearTimeout(timer)
-        timer = null
-      } else {
-        tableData.value = res.data.map((item) => ({
+      if (Number(res.code) === 200) {
+        loading.value = false
+        pagination.total = res.data.total
+        tableData.value = res.data.records.map((item) => ({
           ...item,
           hostId: item.hostInfo.hostId
         }))
         originData.value = JSON.parse(JSON.stringify(tableData.value))
-        pagination.total = res.data.length
         selectionChange()
         timer = setTimeout(() => {
           getHostsData()
@@ -576,11 +569,11 @@ const getHostsData = () => {
       timer && clearTimeout(timer)
       timer = null
     }) .finally(() =>{
-      const lastedSelectedRows = [...selectedKeys.value]
-      tableData.value.forEach((row) =>{
-        const isSelected = lastedSelectedRows.includes(row.hostId)
-        tableRef.value?.toggleRowSelection(row, isSelected)
-      })
+    const lastedSelectedRows = [...selectedKeys.value]
+    tableData.value.forEach((row) =>{
+      const isSelected = lastedSelectedRows.includes(row.hostId)
+      tableRef.value?.toggleRowSelection(row, isSelected)
+    })
   })
 }
 
@@ -590,7 +583,9 @@ const resetQuery = () => {
   form.cpu = undefined
   form.memory = undefined
   form.disk = undefined
-  getFilterData()
+  form.portalType = null
+  filterFlag.value = false
+  getHostsData()
 }
 
 const filterTag = (value, row) => {
@@ -705,6 +700,7 @@ onMounted(() => {
   selectedKeys.value = toRaw(props.taskBasicInfo.selectedHosts).map(item => {
     return item.hostId ? item.hostId : item;
   })
+  filterFlag.value = false
   getHostsData()
   searchAreaVisible.value = false
 })
@@ -742,12 +738,13 @@ onBeforeUnmount(() => {
       color: var(--o-text-color-primary);
     }
   }
+
   .pagination-con {
-    position: absolute;  /* 固定定位 */
-    left: 5px;       /* 距离左边距 */
-    bottom: 5px;     /* 距离底部距离 */
-    z-index: 1000;    /* 确保在顶层 */
-    padding: 10px;    /* 可选内边距 */
+    position: absolute;
+    left: 5px;
+    bottom: 5px;
+    z-index: 1000;
+    padding: 10px;
   }
 }
 
@@ -787,10 +784,12 @@ onBeforeUnmount(() => {
   margin-left: 32px;
   margin-right: 32px
 }
+
 .flex-end {
   display: flex;
   justify-content: end;
 }
+
 .status-dot {
   display: inline-block;
   width: 8px;

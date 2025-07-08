@@ -584,7 +584,8 @@
       "bulkInstallErrmsg": "请选择未安装迁移套件的服务器",
       "migrationSubtask": "迁移子任务：",
       "machineSelect": "已选择机器：",
-      "portalVersion": "portal版本",
+      "portalVersion": "Portal版本",
+      "portalVersionContent": "请选择Portal版本",
       "5q092waasqk0": "提示：每个迁移过程都需要有参数配置，DataKit已经为每一个迁移过程（即子任务）配置了默认参数。您也可以在下表中修改某个迁移过程（即子任务）的参数配置，来确保迁移过程顺利执行。",
       "5q092waatio0": "默认任务参数配置(全局配置)",
       "5q092waatnk0": "请输入源IP/端口/库名",
@@ -623,7 +624,7 @@
         "errorMsg": "验证失败，请稍后重试"
       },
       "portalInstall": {
-        "portalType": "Portal类型",
+        "portalType": "Portal版本",
         "portEmpty": "端口不可为空",
         "portalContent": "端口号必须是1-65535之间的数字"
       }
