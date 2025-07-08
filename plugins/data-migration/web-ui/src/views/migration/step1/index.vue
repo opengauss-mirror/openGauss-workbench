@@ -352,30 +352,24 @@ const syncTaskParams = (params: any) => {
     configType: params.basic.length || params.more.length ? 2 : 1,
     taskParamsObject: params
   }
-  const originData = toRaw(taskBasicInfo.value.subTaskData[curTableTabs.value].taskParamsObject)
   const result = {basic: [], more: []};
   ['basic', 'more'].forEach(key => {
-    const originMap = new Map(originData[key].map(item => [item.id, item]));
-    const paramsMap = new Map(params[key].map(item => [item.id, item]));
+    const paramsMap = new Map(params[key].map(item => [item.paramKey, item]));
     const defaultMap = key === 'basic'
-      ? new Map(defaultBasicData.value.map(item => [item.id, item]))
+      ? new Map(defaultBasicData.value.map(item => [item.paramKey, item]))
       : new Map();
     const allIds = new Set([
-      ...originMap.keys(),
       ...paramsMap.keys(),
       ...defaultMap.keys()
-    ]);
+    ])
     allIds.forEach(id => {
-      const paramsItem = paramsMap.get(id);
-      const originItem = originMap.get(id);
-      const defaultItem = defaultMap.get(id);
+      const paramsItem = paramsMap.get(id)
+      const defaultItem = defaultMap.get(id)
       if (key === 'basic' && paramsItem && defaultItem && (paramsItem.paramValue === defaultItem.paramValue)) {
-      } else if (key === 'basic' && !paramsItem && defaultItem && originItem && (originItem.paramValue === defaultItem.paramValue)) {
+      } else if (key === 'basic' && !paramsItem && defaultItem ) {
       } else {
         if (paramsItem) {
-          result[key].push({...paramsItem});
-        } else if (originItem) {
-          result[key].push({...originItem});
+          result[key].push({...paramsItem})
         }
       }
 

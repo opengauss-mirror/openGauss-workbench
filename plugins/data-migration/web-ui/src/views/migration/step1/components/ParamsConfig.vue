@@ -47,13 +47,14 @@
           <el-collapse-item :title="$t('components.ParamsConfig.5q0aazsppwg0')" name="1" :style="customStyle">
             <div class="super-params-table">
               <el-form :model="form" ref="moreFormRef" class="page-input-size">
-                <el-table :data="form.moreData" :hover="false" border :row-class-name="moreRowClass">
+                <el-table :data="form.moreData" :hover="false" border :row-class-name="moreRowClass" >
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppog0')" prop="paramKey"
                                    show-overflow-tooltip/>
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppr80')">
                     <template #default="{ row, $index }">
                       <el-form-item :prop="`moreData.${$index}.paramValue`" :rules="getValidator(row)">
-                        <el-select v-if="row.paramType === PORTAL_PARAM_TYPE.SELECT" v-model="row.paramValue">
+                        <el-select v-if="row.paramType === PORTAL_PARAM_TYPE.SELECT" v-model="row.paramValue"
+                                   class="input-center" >
                           <el-option v-for="item in JSON.parse(row.paramRules)" :key="item" :value="item"
                                      :label="item"/>
                         </el-select>
@@ -66,7 +67,7 @@
                         />
                         <el-switch v-else-if="row.paramType === PORTAL_PARAM_TYPE.BOOLEAN" v-model="row.paramValue"
                                    active-value="true" inactive-value="false"/>
-                        <el-input v-else v-model.trim="row.paramValue"/>
+                        <el-input v-else v-model.trim="row.paramValue" :input-style="{ textAlign: 'center' }" />
                       </el-form-item>
                     </template>
                   </el-table-column>
@@ -475,8 +476,8 @@ onMounted(() => {
     }
 
     :deep(.row-changed) {
-      .arco-table-td {
-        background: var(--color-neutral-3);
+      .el-table__cell {
+        background: var(--o-bg-color-light);
       }
     }
   }
@@ -484,7 +485,7 @@ onMounted(() => {
   .super-config-con {
     margin-top: 10px;
 
-    :deep(.arco-collapse-item-content) {
+    :deep(.el-collapse-item__content) {
       padding-left: 0;
       padding-right: 0;
       background-color: transparent;
@@ -495,8 +496,8 @@ onMounted(() => {
     }
 
     :deep(.row-changed) {
-      .arco-table-td {
-        background: var(--color-neutral-3);
+      .el-table__cell {
+        background: var(--o-bg-color-light);
       }
     }
   }
@@ -517,6 +518,9 @@ onMounted(() => {
   .el-form-item .el-input-number {
     width: 259px;
   }
+}
+:deep(.input-center .el-select__wrapper) {
+  text-align: center;
 }
 
 </style>
