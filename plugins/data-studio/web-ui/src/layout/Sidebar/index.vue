@@ -635,6 +635,7 @@
   const router = useRouter();
   const treeRef = ref<InstanceType<typeof ElTree>>();
   const filterTreeText = ref<string>('');
+  const isManualClearFilterText = ref(true); // Is manually change 'filterTreeText'
   const { t } = useI18n();
 
   /* There are the following types of nodeType:
@@ -1230,6 +1231,11 @@
   ) => {
     let nodeId = '';
     hideTreeContext();
+    isManualClearFilterText.value = false;
+    setTimeout(() => {
+      isManualClearFilterText.value = true;
+    }, 500);
+    filterTreeText.value = '';
     if (mode == 'connection') {
       await fetchRoot(
         options.connectInfo || currentContextNodeData.connectInfo,
@@ -2183,7 +2189,7 @@
   watch(filterTreeText, (val) => {
     treeRef.value!.filter(val);
     treeClass.value = treeRef.value.isEmpty ? 'no-tree' : 'tree';
-    if (!val) resetExpandNodes();
+    if (!val && isManualClearFilterText.value) resetExpandNodes();
   });
 
   onMounted(async () => {
