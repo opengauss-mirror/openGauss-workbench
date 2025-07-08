@@ -707,7 +707,8 @@
       "5m6ntgxo9vc0": "Close left tab",
       "5m6ntgxoa240": "Close right tab",
       "5m6ntgxoa540": "close other tabs",
-      "5m6ntgxoadc0": "close all tabs"
+      "5m6ntgxoadc0": "close all tabs",
+      "subTaskMigraTab": "The previous migration subtask details tab is closed, and only the current migration subtask details tab page is displayed"
     }
   },
   "sys-log": {
