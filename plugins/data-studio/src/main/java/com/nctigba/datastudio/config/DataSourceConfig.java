@@ -15,8 +15,6 @@
 
 package com.nctigba.datastudio.config;
 
-import com.gitee.starblues.bootstrap.PluginContextHolder;
-import com.gitee.starblues.spring.environment.EnvironmentProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.context.annotation.Bean;
@@ -24,8 +22,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
-import java.io.File;
-import java.io.IOException;
 
 /**
  * DataSourceConfig
@@ -35,11 +31,6 @@ import java.io.IOException;
  */
 @Configuration
 public class DataSourceConfig {
-    static final String GS_DRIVER = "org.opengauss.Driver";
-    static final String SQLITE_DRIVER = "org.sqlite.JDBC";
-    static final String DB_PATH = "data/ds.db";
-    static final String SQLITE_URL = "jdbc:sqlite:" + DB_PATH;
-
     @Autowired
     DataSourceProperties properties;
 
@@ -47,30 +38,10 @@ public class DataSourceConfig {
      * dataSource
      *
      * @return DataSource
-     * @throws IOException e
      */
     @Bean
     @Profile("!dev")
-    public DataSource dataSource() throws IOException {
-        EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();
-        // read config from dataKit platform
-        String driverClassName = environmentProvider.getString("spring.datasource.driver-class-name");
-        if (GS_DRIVER.equals(driverClassName)) {
-            properties.setDriverClassName(SQLITE_DRIVER);
-            properties.setUrl(SQLITE_URL);
-            initDbFile();
-        }
+    public DataSource dataSource() {
         return properties.initializeDataSourceBuilder().build();
-    }
-
-    private void initDbFile() throws IOException {
-        File dbFile = new File(DB_PATH);
-        File dbDir = dbFile.getParentFile();
-        if (!dbDir.exists()) {
-            dbDir.mkdirs();
-        }
-        if (!dbFile.exists()) {
-            dbFile.createNewFile();
-        }
     }
 }
