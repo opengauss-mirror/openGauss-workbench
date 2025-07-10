@@ -228,12 +228,11 @@ const statusColor = (execStatus, migrationModelId) => {
     13: 'primary',
     30: 'danger',
     40: 'danger',
-    100: migrationModelId === 2 ? 'info' : 'success', // 100 online is the stop, and 100 offline is the end
+    100: migrationModelId === 2 ? 'warning' : 'success', // 100 online is the stop, and 100 offline is the end
     500: 'danger',
     1000: 'primary',
     3000: 'danger'
   }
-  console.log(statuColorMap[execStatus], 'statuColorMap[execStatus]')
   return statuColorMap[execStatus]
 }
 
@@ -535,10 +534,20 @@ const handleLog = (row) => {
 // stop sub task full
 const stopSubTask = (row) => {
   subTaskFinish(row.id).then(() => {
-    showMessage('success', t('detail.index.subTaskFullStopSuccess'))
+    showMessage('success', t('detail.index.stopSuccess'))
     getSubTaskList()
   })
 }
+
+watch(() => props.listRefresh, () => {
+  if (props.listRefresh) {
+    getSubTaskList('loopQuery')
+  } else {
+    timerDown && clearTimeout(timerDown)
+  }
+})
+
+const isMountedStatus = ref(true)
 
 // stop sub task increase
 const stopSubIncrease = (row) => {
@@ -590,10 +599,13 @@ const getSubTaskList = (loopQuery) => {
       tableData.value = res.rows.map(item => {
         return item
       })
+      timerDown && clearTimeout(timerDown)
       if (task.value.execStatus !== 2) {
-        timerDown = setTimeout(() => {
-          getSubTaskList('loopQuery')
-        }, 5000)
+        if (isMountedStatus.value) {
+          timerDown = setTimeout(() => {
+            getSubTaskList('loopQuery')
+          }, 5000)
+        }
       }
     })
     .catch((err) => {
@@ -608,6 +620,7 @@ onMounted(() => {
 
 // Query the corresponding status and the corresponding one
 onBeforeUnmount(() => {
+  isMountedStatus.value = false;
   timerDown && clearTimeout(timerDown)
 })
 </script>
