@@ -23,6 +23,7 @@
 
 package org.opengauss.admin.plugin.domain.model.ops;
 
+import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
 import lombok.Data;
@@ -50,4 +51,18 @@ public class OpsClusterContext implements Cloneable {
     private List<OpsClusterNodeEntity> opsClusterNodeEntityList;
 
     private ClusterRoleEnum role;
+
+    /**
+     * Legal Cloning Methods
+     *
+     * @return OpsClusterContext
+     */
+    @Override
+    public OpsClusterContext clone() {
+        try {
+            return (OpsClusterContext) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new OpsException("Failed to clone OpsClusterContext" + e);
+        }
+    }
 }

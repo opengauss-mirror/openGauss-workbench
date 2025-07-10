@@ -23,6 +23,7 @@
 
 package org.opengauss.admin.plugin.domain.model.ops;
 
+import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
 import lombok.Data;
@@ -45,4 +46,18 @@ public class UnInstallContext implements Cloneable {
     private OpenGaussSupportOSEnum os;
 
     private List<OpsClusterNodeEntity> opsClusterNodeEntityList;
+
+    /**
+     * Legal Cloning Methods
+     *
+     * @return UnInstallContext
+     */
+    @Override
+    public UnInstallContext clone() {
+        try {
+            return (UnInstallContext) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new OpsException("Failed to clone UnInstallContext" + e);
+        }
+    }
 }

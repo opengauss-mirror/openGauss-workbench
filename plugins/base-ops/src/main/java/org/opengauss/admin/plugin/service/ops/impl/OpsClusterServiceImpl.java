@@ -26,7 +26,6 @@ package org.opengauss.admin.plugin.service.ops.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.lang.Assert;
-import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -189,7 +188,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             downloadInstallPackage(installBody);
         }
         checkInstallConfig(installContext);
-        InstallContext clone = ObjectUtil.clone(installContext);
+        InstallContext clone = installContext.clone();
         RequestAttributes context = RequestContextHolder.currentRequestAttributes();
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             RequestContextHolder.setRequestAttributes(context);
@@ -1189,7 +1188,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private void doRestart(OpsClusterContext opsClusterContext, boolean sync) {
         try {
-            OpsClusterContext clone = ObjectUtil.clone(opsClusterContext);
+            OpsClusterContext clone = opsClusterContext.clone();
             clusterOpsProviderManager.provider(clone.getOpsClusterEntity().getVersion())
                 .orElseThrow(() -> new OpsException("The current version does not support"))
                 .restart(clone);
@@ -1246,7 +1245,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private void doStart(OpsClusterContext opsClusterContext, boolean sync) {
         try {
-            OpsClusterContext clone = ObjectUtil.clone(opsClusterContext);
+            OpsClusterContext clone = opsClusterContext.clone();
             clusterOpsProviderManager.provider(clone.getOpsClusterEntity().getVersion())
                 .orElseThrow(() -> new OpsException("The current version does not support"))
                 .start(clone);
@@ -1304,7 +1303,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private void doStop(OpsClusterContext opsClusterContext, boolean sync) {
         try {
-            OpsClusterContext clone = ObjectUtil.clone(opsClusterContext);
+            OpsClusterContext clone = opsClusterContext.clone();
             clusterOpsProviderManager.provider(clone.getOpsClusterEntity().getVersion())
                 .orElseThrow(() -> new OpsException("The current version does not support"))
                 .stop(clone);
@@ -2172,7 +2171,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private void doUnInstall(UnInstallContext unInstallContext, Boolean force) {
         try {
-            UnInstallContext clone = ObjectUtil.clone(unInstallContext);
+            UnInstallContext clone = unInstallContext.clone();
             clusterOpsProviderManager.provider(clone.getOpsClusterEntity().getVersion())
                 .orElseThrow(() -> new OpsException("The current version does not support"))
                 .uninstall(clone);

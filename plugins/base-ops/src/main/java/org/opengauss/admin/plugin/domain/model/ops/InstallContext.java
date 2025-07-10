@@ -223,4 +223,18 @@ public class InstallContext implements Cloneable {
                 .stream()
                 .collect(Collectors.toMap(val -> val.getHostEntity().getHostId(), Function.identity()));
     }
+
+    /**
+     * Legal Cloning Methods
+     *
+     * @return InstallContext
+     */
+    @Override
+    public InstallContext clone() {
+        try {
+            return (InstallContext) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new OpsException("Failed to clone InstallContext" + e);
+        }
+    }
 }
