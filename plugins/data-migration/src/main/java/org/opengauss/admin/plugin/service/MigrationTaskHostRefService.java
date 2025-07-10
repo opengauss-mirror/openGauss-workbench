@@ -32,11 +32,11 @@ import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
-import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
 import org.opengauss.admin.plugin.dto.CustomDbResource;
 import org.opengauss.admin.plugin.dto.MigrationHostDto;
+import org.opengauss.admin.plugin.dto.PortalInstallHostDto;
 import org.opengauss.admin.plugin.exception.PortalInstallException;
 import org.opengauss.admin.plugin.vo.TargetClusterVO;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,13 +49,18 @@ import java.util.Map;
  * @date 2023/01/14 09:01
  */
 public interface MigrationTaskHostRefService extends IService<MigrationTaskHostRef> {
-
-
     void deleteByMainTaskId(Integer mainTaskId);
 
     List<MigrationTaskHostRef> listByMainTaskId(Integer mainTaskId);
 
-    List<MigrationHostDto> getHosts();
+    /**
+     * Get the host page list
+     *
+     * @param iPage page info
+     * @param portalInstallHostDto portal install host info
+     * @return host page list
+     */
+    IPage<MigrationHostDto> getHosts(IPage<MigrationHostDto> iPage, PortalInstallHostDto portalInstallHostDto);
 
     List<JdbcDbClusterVO> getSourceClusters();
 

@@ -99,6 +99,20 @@ public class HostFacade {
     }
 
     /**
+     * get host list
+     *
+     * @param hostname hostname
+     * @param publicIp public ip
+     * @return host list
+     */
+    public List<OpsHostEntity> getHostList(String hostname, String publicIp) {
+        LambdaQueryWrapper<OpsHostEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostEntity.class);
+        queryWrapper.like(isNotEmpty(hostname), OpsHostEntity::getHostname, hostname);
+        queryWrapper.like(isNotEmpty(publicIp), OpsHostEntity::getPublicIp, publicIp);
+        return hostService.list(queryWrapper);
+    }
+
+    /**
      * query host list by condition
      *
      * @param os os

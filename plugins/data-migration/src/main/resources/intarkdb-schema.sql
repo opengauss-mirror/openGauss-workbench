@@ -1060,6 +1060,8 @@ UPDATE "tb_migration_host_portal_install"
 SET "portal_type" = 'MYSQL_ONLY'
 WHERE "portal_type" IS NULL;
 
+DELETE FROM tb_migration_host_portal_install WHERE "install_status" = 0;
+
 -------------------------------------------
 -- ALTER TABLE tb_migration_tool_portal_download_info
 -------------------------------------------
