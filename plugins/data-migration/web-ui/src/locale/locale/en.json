@@ -585,6 +585,7 @@
       "migrationSubtask": "Migration subtasks：",
       "machineSelect": "Selected machine：",
       "portalVersion": "Portal Version",
+      "portalVersionContent": "Please select portal version",
       "5q092waasqk0": "Tip: Each migration process requires parameter configuration, and DataKit has configured default parameters for each migration process (ie, subtask). You can also modify the parameter configuration of a certain migration process (subtask) in the table below to ensure the smooth execution of the migration process.",
       "5q092waatio0": "Default task parameter configuration (global configuration)",
       "5q092waatnk0": "Source IP/port/name",

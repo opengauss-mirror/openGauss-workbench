@@ -8,8 +8,8 @@ export function targetClusters (payload) {
   return axios.get('/plugins/data-migration/resource/targetClusters', payload)
 }
 
-export function hostsData () {
-  return axios.get('/plugins/data-migration/resource/getHosts')
+export function hostsData (formData, pageSize, pageNum) {
+  return axios.post(`/plugins/data-migration/resource/getHosts?pageNum=${pageNum}&pageSize=${pageSize}`, formData)
 }
 
 export function sourceClusterDbsData (formData) {
