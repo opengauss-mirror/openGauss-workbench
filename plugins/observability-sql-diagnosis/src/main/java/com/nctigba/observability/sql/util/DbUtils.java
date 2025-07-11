@@ -88,7 +88,9 @@ public class DbUtils {
             JSONArray jsonArray = new JSONArray();
             jsonArray.add(dataList);
             data.setValue(jsonArray);
-            data.setTableName(item.substring(item.indexOf("from") + 4, item.indexOf("where")).trim());
+            if (item.contains("where")) {
+                data.setTableName(item.substring(item.indexOf("from") + 4, item.indexOf("where")).trim());
+            }
             list.add(data);
         } catch (SQLException e) {
             log.info(e.getMessage());

@@ -45,3 +45,9 @@
 --ParamTuning CENTER
 ---OsParam CENTER
 ---DatabaseParam CENTER
+--DbMemAnalysis DIAGNOSIS
+---DbDynamicMemory DIAGNOSIS
+----SqlUseDynamicMem DISPLAY
+---DbShareMemory DIAGNOSIS
+----ContextUseShareMem DISPLAY
+-----MemoryAccumulation DISPLAY

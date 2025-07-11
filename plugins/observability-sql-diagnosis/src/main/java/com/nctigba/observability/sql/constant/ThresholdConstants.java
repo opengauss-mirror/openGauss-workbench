@@ -56,4 +56,19 @@ public class ThresholdConstants {
      * Random Page Cost
      */
     public static final String RANDOM_PAGE_COST = "randomPageCost";
+
+    /**
+     * Db memory usage rate
+     */
+    public static final String DB_MEM_USAGE_RATE = "dbMemUsageRate";
+
+    /**
+     * Db dynamic memory usage rate
+     */
+    public static final String SESSION_MEM_USAGE_RATE = "sessionMemUsageRate";
+
+    /**
+     * Db share memory usage rate
+     */
+    public static final String SHARE_MEM_USAGE_RATE = "shareMemUsageRate";
 }

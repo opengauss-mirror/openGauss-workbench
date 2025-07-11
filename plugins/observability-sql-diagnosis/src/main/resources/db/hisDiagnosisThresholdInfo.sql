@@ -63,3 +63,15 @@ insert into his_diagnosis_threshold_info(
     id,threshold_type,threshold,threshold_name,threshold_value,threshold_unit,threshold_detail,sort_no,diagnosis_type)
 values(14,'EXPLAIN','randomPageCost','{{i18n,sql.threshold.randomPageCost.title}}','1.5','',
        '{{i18n,sql.threshold.randomPageCost.detail}}','2','sql');
+insert into his_diagnosis_threshold_info(
+    id,threshold_type,threshold,threshold_name,threshold_value,threshold_unit,threshold_detail,sort_no,diagnosis_type)
+values(15,'MEMORY','dbMemUsageRate','{{i18n,sql.threshold.dbMemUsageRate.title}}','80','',
+       '{{i18n,sql.threshold.dbMemUsageRate.detail}}','3','sql');
+insert into his_diagnosis_threshold_info(
+    id,threshold_type,threshold,threshold_name,threshold_value,threshold_unit,threshold_detail,sort_no,diagnosis_type)
+values(16,'MEMORY','sessionMemUsageRate','{{i18n,sql.threshold.sessionMemUsageRate.title}}','80','',
+       '{{i18n,sql.threshold.sessionMemUsageRate.detail}}','4','sql');
+insert into his_diagnosis_threshold_info(
+    id,threshold_type,threshold,threshold_name,threshold_value,threshold_unit,threshold_detail,sort_no,diagnosis_type)
+values(17,'MEMORY','shareMemUsageRate','{{i18n,sql.threshold.shareMemUsageRate.title}}','80','',
+       '{{i18n,sql.threshold.shareMemUsageRate.detail}}','5','sql');

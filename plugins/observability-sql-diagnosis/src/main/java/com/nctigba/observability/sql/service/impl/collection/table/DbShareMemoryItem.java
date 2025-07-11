@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) GBA-NCTI-ISDC. 2022-2024.
+ *  Copyright (c) GBA-NCTI-ISDC. 2022-2025.
  *
  *  openGauss DataKit is licensed under Mulan PSL v2.
  *  You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -13,30 +13,29 @@
  *  See the Mulan PSL v2 for more details.
  *  -------------------------------------------------------------------------
  *
- *  AnalysisDTO.java
+ *  DbShareMemoryItem.java
  *
  *  IDENTIFICATION
- *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/model/dto/point/AnalysisDTO.java
+ *  plugins/observability-sql-diagnosis/src/main/java/com/nctigba/observability/sql/service/impl/collection/table/DbShareMemoryItem.java
  *
  *  -------------------------------------------------------------------------
  */
 
-package com.nctigba.observability.sql.model.dto.point;
+package com.nctigba.observability.sql.service.impl.collection.table;
 
-import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
-import lombok.Data;
+import com.nctigba.observability.sql.constant.SqlConstants;
+import org.springframework.stereotype.Service;
 
 /**
- * Diagnosis analysis dto
+ * DbShareMemoryItem
  *
  * @author luomeng
- * @since 2023/6/15
+ * @since 2025/2/17
  */
-@Data
-public class AnalysisDTO {
-    private DiagnosisResultDO.PointType pointType;
-    private Object pointData;
-    private DiagnosisResultDO.ResultState isHint;
-    private String pointState;
-    private String suggestion;
+@Service
+public class DbShareMemoryItem extends DatabaseCollectionItem {
+    @Override
+    public String getDatabaseSql() {
+        return SqlConstants.GET_DB_SHARE_MEM_SQL;
+    }
 }

@@ -347,5 +347,50 @@ public class SqlConstants {
     /**
      * get database name sql
      */
-    public static final String GET_DATABASE_SQL = "SELECT datname FROM pg_database;";
+    public static final String GET_DATABASE_SQL = "SELECT datname FROM pg_database where 1=1;";
+
+    /**
+     * query database memory detail
+     */
+    public static final String GET_DATABASE_MEM_SQL = "select * from GS_TOTAL_MEMORY_DETAIL where 1=1;";
+
+    /**
+     * query database session memory detail
+     */
+    public static final String GET_DB_SESSION_MEM_SQL = "select pg_size_pretty(sum(totalsize)) as totalsize,"
+            + "pg_size_pretty(sum(freesize)) as freesize,pg_size_pretty(sum(usedsize)) as usedsize "
+            + "from gs_session_memory_detail where 1=1;";
+
+    /**
+     * query database session memory detail
+     */
+    public static final String GET_DB_SQL_MEM_SQL = "select a.sessionid,"
+            + "query,pg_size_pretty(sum(totalsize)) as totalsize,pg_size_pretty(sum(freesize)) as freesize"
+            + ",pg_size_pretty(sum(usedsize)) as usedsize "
+            + "from gs_session_memory_detail m,pg_stat_activity a  "
+            + "where substring_inner(sessid,position('.' in sessid)+1)=a.sessionid "
+            + "and trim(query) != ' ' "
+            + "group by a.sessionid,query "
+            + "order by sum(usedsize) desc limit 10;";
+
+    /**
+     * query database share memory detail
+     */
+    public static final String GET_DB_SHARE_MEM_SQL = "select pg_size_pretty(sum(totalsize)) as totalsize,"
+            + "pg_size_pretty(sum(freesize)) as freesize,pg_size_pretty(sum(usedsize)) as usedsize "
+            + "from gs_shared_memory_detail where 1=1;";
+
+    /**
+     * query context using shared memory
+     */
+    public static final String GET_DB_CONTEXT_MEM_SQL = "SELECT contextname,pg_size_pretty(sum(totalsize)) totalsize,"
+            + "pg_size_pretty(sum(freesize)) as freesize,pg_size_pretty(sum(usedsize)) usedsize,count(*) count "
+            + "FROM gs_shared_memory_detail where 1=1 "
+            + "GROUP BY contextname ORDER BY sum(usedsize) DESC limit 10;";
+
+    /**
+     * query context using shared memctx detail
+     */
+    public static final String GET_DB_CONTEXT_MEM_DETAIL_SQL = "select '%s' as contextname,file,line,"
+            + "pg_size_pretty(size) as size from gs_get_shared_memctx_detail('%s') ";
 }
