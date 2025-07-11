@@ -6,6 +6,7 @@
     trigger="click"
     :visible="visible"
     popper-style="padding: 0; border: 0"
+    :teleported="false"
   >
     <template #default>
       <div style="position: relative;">
@@ -56,8 +57,6 @@ const onClickOutside = () => {
 </script>
 <style scoped lang="scss">
 .show-info {
-  top: -18px;
-  left: 0px;
   .title-row {
     display: flex;
     flex-direction: row;
