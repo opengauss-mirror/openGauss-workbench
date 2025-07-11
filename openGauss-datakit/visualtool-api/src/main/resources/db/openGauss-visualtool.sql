@@ -186,7 +186,7 @@ CREATE TABLE IF NOT EXISTS "public"."ops_cluster" (
     "deploy_type" varchar(64) COLLATE "pg_catalog"."default",
     "cluster_name" varchar(255) COLLATE "pg_catalog"."default",
     "install_package_path" varchar(255) COLLATE "pg_catalog"."default",
-    "database_password" varchar(255) COLLATE "pg_catalog"."default",
+    "database_password" text COLLATE "pg_catalog"."default",
     "database_username" varchar(255) COLLATE "pg_catalog"."default",
     "remark" varchar(255) COLLATE "pg_catalog"."default",
     "create_by" varchar(64) COLLATE "pg_catalog"."default",
@@ -354,7 +354,7 @@ CREATE TABLE IF NOT EXISTS "public"."ops_cluster_task" (
     "package_id" varchar(255) COLLATE "pg_catalog"."default",
     "cluster_name" varchar(255) COLLATE "pg_catalog"."default",
     "database_username" varchar(255) COLLATE "pg_catalog"."default",
-    "database_password" varchar(255) COLLATE "pg_catalog"."default",
+    "database_password" text COLLATE "pg_catalog"."default",
     "database_port" int4 DEFAULT 5432,
     "install_package_path" varchar(255) COLLATE "pg_catalog"."default",
     "install_path" varchar(255) COLLATE "pg_catalog"."default",
@@ -484,9 +484,9 @@ CREATE TABLE IF NOT EXISTS "public"."ops_encryption"
 ),
     "update_by" varchar(64) COLLATE "pg_catalog"."default",
     "update_time" timestamp(6),
-    "encryption_key" varchar(255) COLLATE "pg_catalog"."default",
-    "public_key" varchar(1024) COLLATE "pg_catalog"."default",
-    "private_key" varchar(1024) COLLATE "pg_catalog"."default"
+    "encryption_key" text COLLATE "pg_catalog"."default",
+    "public_key" text COLLATE "pg_catalog"."default",
+    "private_key" text COLLATE "pg_catalog"."default"
     )
 ;
 COMMENT ON COLUMN "public"."ops_encryption"."remark" IS '描述';
@@ -532,7 +532,7 @@ COMMENT ON COLUMN "public"."ops_host"."update_time" IS '更新时间';
 CREATE TABLE IF NOT EXISTS "public"."ops_host_user" (
                                                         "host_user_id" int8 NOT NULL PRIMARY KEY,
                                                         "username" varchar(255) COLLATE "pg_catalog"."default" NOT NULL,
-    "password" varchar(255) COLLATE "pg_catalog"."default",
+    "password" text COLLATE "pg_catalog"."default",
     "host_id" int8 NOT NULL,
     "remark" varchar(255) COLLATE "pg_catalog"."default",
     "create_by" varchar(64) COLLATE "pg_catalog"."default",
@@ -2101,7 +2101,7 @@ CREATE TABLE IF NOT EXISTS "public"."ops_jdbcdb_cluster_node"
     "ip" varchar(255) COLLATE "pg_catalog"."default",
     "port" varchar(255) COLLATE "pg_catalog"."default",
     "username" varchar(255) COLLATE "pg_catalog"."default",
-    "password" varchar(255) COLLATE "pg_catalog"."default",
+    "password" text COLLATE "pg_catalog"."default",
     "url" varchar(255) COLLATE "pg_catalog"."default",
     "remark" varchar(255) COLLATE "pg_catalog"."default",
     "create_by" varchar(64) COLLATE "pg_catalog"."default",
@@ -2548,3 +2548,89 @@ CREATE TABLE IF NOT EXISTS "public"."agent_task_table_relation" (
 COMMENT ON COLUMN "public"."agent_task_table_relation"."task_id" IS 'Agent任务集群关联关系-任务ID';
 COMMENT ON COLUMN "public"."agent_task_table_relation"."task_table_name" IS '集群ID';
 COMMENT ON TABLE "public"."agent_task_table_relation" IS 'Agent任务集群关联表';
+
+CREATE OR REPLACE FUNCTION change_password_field_to_text() RETURNS integer AS 'BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ''public''
+          AND table_name = ''ops_encryption''
+          AND column_name = ''public_key''
+          AND data_type != ''text''
+    ) THEN
+        ALTER TABLE public.ops_encryption
+        ALTER COLUMN public_key TYPE text USING public_key::text;
+    END IF;
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ''public''
+          AND table_name = ''ops_encryption''
+          AND column_name = ''encryption_key''
+          AND data_type != ''text''
+    ) THEN
+        ALTER TABLE public.ops_encryption
+        ALTER COLUMN encryption_key TYPE text USING encryption_key::text;
+    END IF;
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ''public''
+          AND table_name = ''ops_encryption''
+          AND column_name = ''private_key''
+          AND data_type != ''text''
+    ) THEN
+        ALTER TABLE public.ops_encryption
+        ALTER COLUMN private_key TYPE text USING private_key::text;
+    END IF;
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ''public''
+          AND table_name = ''ops_jdbcdb_cluster_node''
+          AND column_name = ''password''
+          AND data_type != ''text''
+    ) THEN
+        ALTER TABLE public.ops_jdbcdb_cluster_node
+        ALTER COLUMN password TYPE text USING password::text;
+    END IF;
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ''public''
+          AND table_name = ''ops_host_user''
+          AND column_name = ''password''
+          AND data_type != ''text''
+    ) THEN
+        ALTER TABLE public.ops_host_user
+        ALTER COLUMN password TYPE text USING password::text;
+    END IF;
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ''public''
+          AND table_name = ''ops_cluster_task''
+          AND column_name = ''database_password''
+          AND data_type != ''text''
+    ) THEN
+        ALTER TABLE public.ops_cluster_task
+        ALTER COLUMN database_password TYPE text USING database_password::text;
+    END IF;
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ''public''
+          AND table_name = ''ops_cluster''
+          AND column_name = ''database_password''
+          AND data_type != ''text''
+    ) THEN
+        ALTER TABLE public.ops_cluster
+        ALTER COLUMN database_password TYPE text USING database_password::text;
+    END IF;
+    RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT change_password_field_to_text();
+
+DROP FUNCTION change_password_field_to_text;

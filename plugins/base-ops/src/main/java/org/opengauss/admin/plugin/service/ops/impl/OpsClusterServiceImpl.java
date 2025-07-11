@@ -63,6 +63,7 @@ import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
 import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerService;
 import org.opengauss.admin.plugin.utils.DBUtil;
 import org.opengauss.admin.plugin.utils.DownloadUtil;
+import org.opengauss.admin.plugin.utils.DecryptionUtil;
 import org.opengauss.admin.plugin.utils.JschUtil;
 import org.opengauss.admin.plugin.utils.OpsAssert;
 import org.opengauss.admin.plugin.utils.WsUtil;
@@ -150,6 +151,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private EncryptionUtils encryptionUtils;
     @Autowired
+    private DecryptionUtil decryptionUtil;
+    @Autowired
     private WsConnectorManager wsConnectorManager;
     @Autowired
     private ClusterOpsProviderManager clusterOpsProviderManager;
@@ -179,6 +182,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @Override
     public void install(InstallBody installBody) {
         log.info("install:{}", JSON.toJSONString(installBody));
+        decryptionUtil.decryptDatabasePassword(installBody);
         InstallContext installContext = installBody.getInstallContext();
         WsSession wsSession = wsConnectorManager.getSession(installBody.getBusinessId())
             .orElseThrow(() -> new OpsException("websocket session not exist"));

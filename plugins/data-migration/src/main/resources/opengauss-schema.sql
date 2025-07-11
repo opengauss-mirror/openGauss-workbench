@@ -1315,7 +1315,7 @@ CREATE TABLE IF NOT EXISTS "public"."tb_transcribe_replay_host"
     ip   VARCHAR(255) NOT NULL,
     port   INTEGER      NOT NULL,
     user_name   VARCHAR(255) NOT NULL,
-    passwd VARCHAR(255) NOT NULL,
+    passwd TEXT NOT NULL,
     db_type VARCHAR(50)  NOT NULL
     );
 
@@ -1685,3 +1685,23 @@ COMMENT
 ON COLUMN "public"."tb_migration_reverse_migration_progress"."sink_speed" IS '写入速度，条/s';
 COMMENT
 ON COLUMN "public"."tb_migration_reverse_migration_progress"."source_speed" IS '抽取速度，条/s';
+
+CREATE OR REPLACE FUNCTION change_password_field_to_text() RETURNS integer AS 'BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ''public''
+          AND table_name = ''tb_transcribe_replay_host''
+          AND column_name = ''passwd''
+          AND data_type != ''text''
+    ) THEN
+        ALTER TABLE public.tb_transcribe_replay_host
+        ALTER COLUMN passwd TYPE text USING passwd::text;
+    END IF;
+    RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT change_password_field_to_text();
+
+DROP FUNCTION change_password_field_to_text;

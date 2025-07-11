@@ -822,6 +822,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
 
     private void saveContext(InstallContext installContext) {
         OpsClusterEntity opsClusterEntity = installContext.toOpsClusterEntity();
+        opsClusterEntity.setDatabasePassword(encryptionUtils.encrypt(opsClusterEntity.getDatabasePassword()));
         List<OpsClusterNodeEntity> opsClusterNodeEntities = installContext.getEnterpriseInstallConfig().toOpsClusterNodeEntityList();
 
         opsClusterService.save(opsClusterEntity);

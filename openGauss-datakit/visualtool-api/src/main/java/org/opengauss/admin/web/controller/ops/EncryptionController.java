@@ -28,6 +28,7 @@ import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -46,6 +47,19 @@ public class EncryptionController {
     public AjaxResult getKey() {
         AjaxResult ajax = AjaxResult.success();
         ajax.put("key", encryptionUtils.getKey());
+        return ajax;
+    }
+
+    /**
+     * Get decrypt password
+     *
+     * @param password password
+     * @return ajax
+     */
+    @PostMapping("/getPassword")
+    public AjaxResult getPassword(String password) {
+        AjaxResult ajax = AjaxResult.success();
+        ajax.put("password", encryptionUtils.decrypt(password));
         return ajax;
     }
 }

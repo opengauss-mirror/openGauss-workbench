@@ -567,7 +567,7 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
             opsJdbcDbClusterNodeEntity.setIp(jdbcInfo.getIp());
             opsJdbcDbClusterNodeEntity.setPort(jdbcInfo.getPort());
             opsJdbcDbClusterNodeEntity.setUsername(node.getUsername());
-            opsJdbcDbClusterNodeEntity.setPassword(encryptionUtils.decrypt(node.getPassword()));
+            opsJdbcDbClusterNodeEntity.setPassword(node.getPassword());
             opsJdbcDbClusterNodeEntity.setUrl(url);
             opsJdbcDbClusterNodeEntity.setCreateTime(now);
             opsJdbcDbClusterNodeEntity.setUpdateTime(now);
