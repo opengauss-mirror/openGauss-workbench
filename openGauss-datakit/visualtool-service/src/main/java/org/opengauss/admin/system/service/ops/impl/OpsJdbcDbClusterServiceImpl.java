@@ -500,13 +500,13 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
         Map<String, List<OpsJdbcDbClusterNodeEntity>> clusterNodeMap = opsJdbcDbClusterNodeService.mapClusterNodesByClusterId(clusterIds);
         final Set<String> ipSet = clusterNodeMap.values().stream().flatMap(val -> val.stream()).map(OpsJdbcDbClusterNodeEntity::getIp).collect(Collectors.toSet());
         Map<String, String> ipOsMap = hostService.mapOsByIps(ipSet);
-        Connection conn = null;
         for (OpsJdbcDbClusterEntity record : records) {
             List<JdbcDbClusterNodeVO> nodes = new ArrayList<>();
             JdbcDbClusterVO jdbcDbClusterVO = JdbcDbClusterVO.of(record, nodes);
             String clusterId = record.getClusterId();
             List<OpsJdbcDbClusterNodeEntity> clusterNodeEntityList = clusterNodeMap.get(clusterId);
             if (CollUtil.isNotEmpty(clusterNodeEntityList)) {
+                Connection conn = null;
                 for (OpsJdbcDbClusterNodeEntity clusterNodeEntity : clusterNodeEntityList) {
                     nodes.add(JdbcDbClusterNodeVO.of(clusterNodeEntity, ipOsMap.get(clusterNodeEntity.getIp())));
                     try {
