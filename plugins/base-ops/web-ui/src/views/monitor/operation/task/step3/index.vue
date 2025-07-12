@@ -124,11 +124,10 @@
 import { reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router';
 import {KeyValue} from "@/types/global";
-import axios from "axios"
 import { defineProps } from 'vue'
 import {OpenGaussVersionEnum} from "@/types/ops/install";
 import {batchClusterNodes, getHostIp, getPackageList} from "@/api/ops";
-import {Message} from "@arco-design/web-vue";
+import { encryptPassword, decryptPassword } from "@/utils/jsencrypt";
 
 const props = defineProps({
   message: Array,
@@ -186,7 +185,7 @@ const hostIdIp = new FormData
 const hostPuPr = new FormData
 
 const init = () => {
-  batchClusterNodes(props.createClusterId) .then((res) => {
+  batchClusterNodes(props.createClusterId) .then(async (res) => {
     if (res.code === 200) {
       res.data.clusterNodes.forEach((item) => {
         const newData = {
@@ -215,7 +214,7 @@ const init = () => {
       list.packageName = res.data.packageName
       list.packageId = res.data.packageId
       list.clusterName = res.data.clusterName
-      list.databasePassword = res.data.databasePassword
+      list.databasePassword = await decryptPassword(res.data.databasePassword)
       list.port = Number(res.data.databasePort)
       list.installPackagePath = res.data.installPackagePath
       list.installPath = res.data.installPath

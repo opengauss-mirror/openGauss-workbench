@@ -379,6 +379,7 @@ import Socket from "@/utils/websocket"
 import { useRoute } from "vue-router";
 import downloadNotification from '@/components/downloadNotification'
 import { useI18n } from 'vue-i18n'
+import { encryptPassword, decryptPassword } from "@/utils/jsencrypt";
 const { t } = useI18n()
 const module1 = ref(null)
 const module2 = ref(null)
@@ -1735,7 +1736,7 @@ const init = () => {
   optionsCMMaster.value.push('否')
   if (props.clusterId && props.clusterId != '') {
     data.clusterNodes = []
-    batchClusterNodes(props.clusterId).then((res) => {
+    batchClusterNodes(props.clusterId).then(async (res) => {
       if (res.code === 200) {
         clusterOrder.value = 0
         res.data.clusterNodes.forEach((item) => {
@@ -1778,7 +1779,7 @@ const init = () => {
         data.packageName = res.data.packageName
         data.packageId = res.data.packageId
         data.clusterName = res.data.clusterName
-        data.databasePassword = res.data.databasePassword
+        data.databasePassword = await decryptPassword(res.data.databasePassword)
         data.port = Number(res.data.databasePort)
         data.installPackagePath = res.data.installPackagePath
         data.installPath = res.data.installPath

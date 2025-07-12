@@ -7,6 +7,13 @@ export const getEntryKey = () => {
   return axios.get('encryption/getKey')
 }
 
+// get decrypt password
+export const getDecryptKey = (password: string) => {
+  const formData = new FormData();
+  formData.append('password', password);
+  return axios.post('encryption/getPassword', formData)
+}
+
 // one check
 export const clusterCheck = (data: KeyValue) => {
   return axios.get('opsCluster/check', {

@@ -152,6 +152,7 @@ import {useRoute, useRouter} from 'vue-router';
 import {batchClusterNodes, batchDeleteTask, clusterLogDownload, copyTask, reExecuteTask} from "@/api/ops";
 import {Message} from "@arco-design/web-vue";
 import { useI18n } from 'vue-i18n'
+import { encryptPassword, decryptPassword } from "@/utils/jsencrypt";
 
 const { t } = useI18n()
 
@@ -220,10 +221,10 @@ const list = reactive({
 })
 
 const getListData = () => {
-  batchClusterNodes(route.query.clusterId).then((res) => {
+  batchClusterNodes(route.query.clusterId).then(async (res) => {
     if (Number(res.code) === 200) {
       list.data = res.data;
-      console.log(list.data);
+      list.data.databasePassword = await decryptPassword(res.data.databasePassword)
     }
   }).catch(error => {
     console.error("taskMenu infoError:"+error);

@@ -900,7 +900,8 @@
       "5oxhkhimz480": "Please enter the cluster name",
       "5oxhkhimzcg0": "The value cannot be pure space",
       "5oxhkhimzmw0": "Modify data source",
-      "5oxhkhimzww0": "Add data source"
+      "5oxhkhimzww0": "Add data source",
+      "checkPassword": "Please check if the password is empty"
     },
     "HostImportDlg": {
       "5oxhmjuzltc0": "Parsing result: The following error data exists. Please modify it and upload it again",
