@@ -1,72 +1,62 @@
 <template>
-  <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title"
-    :ok-loading="data.loading" :modal-style="{ width: '650px' }" @cancel="close" @close="close">
+  <el-dialog :mask-closable="false" :esc-to-close="false" v-model="data.show" :title="data.title" :z-index="1000"
+             v-loading="data.loading" :modal-style="{ width: '650px' }" @cancel="close" @close="close">
     <template #footer>
-      <div class="flex-between">
-        <div class="flex-row">
-          <div class="label-color mr" v-if="data.status !== hostStatusEnum.unTest">{{
-            $t('components.AddHost.currentStatus')
-          }}
-          </div>
-          <a-tag v-if="data.status === hostStatusEnum.success" color="green">{{
-            $t('components.AddHost.5mphy3snvg80')
-          }}</a-tag>
-          <a-tag v-if="data.status === hostStatusEnum.fail" color="red">{{
-            $t('components.AddHost.5mphy3snwq40')
-          }}</a-tag>
-        </div>
+      <div class="flex-center">
         <div>
-          <a-button class="mr" @click="close">{{
-            $t('components.AddHost.5mphy3snwxs0')
-          }}</a-button>
-          <a-button v-if="isAdd" :loading="data.testLoading" class="mr" @click="handleTestHost">{{
-            $t('components.AddHost.5mphy3snx3o0')
-          }}</a-button>
-          <a-button :loading="data.loading" type="primary" @click="submit">{{
-            $t('components.AddHost.5mphy3snx7c0')
-          }}</a-button>
+          <el-button class="mr" @click="close">{{
+              $t('components.AddHost.5mphy3snwxs0')
+            }}</el-button>
+          <el-button v-if="isAdd" :loading="data.testLoading" class="mr" @click="handleTestHost">{{
+              $t('components.AddHost.5mphy3snx3o0')
+            }}</el-button>
+          <el-button :loading="data.loading" type="primary" @click="submit">{{
+              $t('components.AddHost.5mphy3snx7c0')
+            }}</el-button>
         </div>
       </div>
-
     </template>
-    <a-form :model="data.formData" ref="formRef" auto-label-width :rules="formRules">
-      <a-form-item field="name" :label="$t('components.AddHost.name')" validate-trigger="blur">
-        <a-input v-model.trim="data.formData.name" :placeholder="$t('components.AddHost.namePlaceholder')"></a-input>
-      </a-form-item>
-      <a-form-item field="privateIp" :label="$t('components.AddHost.ipAddress')" validate-trigger="blur">
-        <a-input v-model.trim="data.formData.privateIp" :disabled="!isAdd"
-          :placeholder="$t('components.AddHost.5mphy3snxdo0')"></a-input>
-      </a-form-item>
-      <a-form-item field="publicIp" :label="$t('components.AddHost.5mphy3snxis0')" validate-trigger="blur">
-        <a-input v-model.trim="data.formData.publicIp" :disabled="!isAdd"
-          :placeholder="$t('components.AddHost.5mphy3snxmw0')" @blur="handleBlur"></a-input>
-      </a-form-item>
-      <a-form-item field="port" :label="$t('components.AddHost.5mphy3snxtc0')" validate-trigger="blur">
-        <a-input-number v-model="data.formData.port" :placeholder="$t('components.AddHost.5mphy3snxzk0')" :min="0"
-          :max="65535" />
-      </a-form-item>
-      <a-form-item field="username" :label="$t('components.AddHost.username')" validate-trigger="blur" v-if="isAdd">
-        <a-input v-model.trim="data.formData.username"
-          :placeholder="$t('components.AddHost.usernamePlaceholder')"></a-input>
-      </a-form-item>
-      <a-form-item v-if="isAdd" field="password" :label="$t('components.AddHost.5mphy3sny4w0')" validate-trigger="blur">
-        <a-input-password v-model="data.formData.password" :placeholder="$t('components.AddHost.5mphy3snyao0')"
-          @focus="passwordFocus" @blur="passwordBlur" :invisible-button="data.formData.password !== data.emptyPwd"
-          allow-clear ref="formPwdRef" />
-      </a-form-item>
-      <a-form-item field="tags" :label="$t('components.AddHost.tags')">
-        <a-select :loading="data.tagsLoading" v-model="data.formData.tags"
-          :placeholder="$t('components.AddHost.tagsPlaceholder')" allow-create multiple allow-clear @change="tagsChange">
-          <a-option v-for="item in data.tagsList" :key="item.value" :value="item.value">{{
-            item.label
-          }}</a-option>
-        </a-select>
-      </a-form-item>
-      <a-form-item :label="$t('components.AddHost.5mphy3snysg0')">
-        <a-textarea v-model.trim="data.formData.remark" :placeholder="$t('components.AddHost.5mphy3snyxc0')"></a-textarea>
-      </a-form-item>
-    </a-form>
-  </a-modal>
+
+    <el-form :model="data.formData" ref="formRef" label-position="left" label-width="150px" :rules="formRules">
+      <el-form-item prop="name" :label="$t('components.AddHost.name')" >
+        <el-input v-model.trim="data.formData.name" :placeholder="$t('components.AddHost.namePlaceholder')"
+                  maxlength="100" class="input-width" />
+      </el-form-item>
+      <el-form-item prop="privateIp" :label="$t('components.AddHost.ipAddress')" >
+        <el-input v-model.trim="data.formData.privateIp" :disabled="!isAdd" class="input-width"
+                  :placeholder="$t('components.AddHost.5mphy3snxdo0')" />
+      </el-form-item>
+      <el-form-item prop="publicIp" :label="$t('components.AddHost.5mphy3snxis0')" >
+        <el-input v-model.trim="data.formData.publicIp" :disabled="!isAdd" class="input-width"
+                  :placeholder="$t('components.AddHost.5mphy3snxmw0')" @blur="handleBlur" />
+      </el-form-item>
+      <el-form-item prop="port" :label="$t('components.AddHost.5mphy3snxtc0')" >
+        <el-input-number v-model="data.formData.port" :placeholder="$t('components.AddHost.5mphy3snxzk0')" min="0"
+                         max="65535" class="input-width inner-class" controls-position="right" />
+      </el-form-item>
+      <el-form-item prop="username" :label="$t('components.AddHost.username')" validate-trigger="blur" v-if="isAdd">
+        <el-input v-model.trim="data.formData.username" class="input-width"
+                  :placeholder="$t('components.AddHost.usernamePlaceholder')"  maxlength="100" />
+      </el-form-item>
+      <el-form-item v-if="isAdd" prop="password" :label="$t('components.AddHost.5mphy3sny4w0')" >
+        <el-input type="password" v-model="data.formData.password" :placeholder="$t('components.AddHost.5mphy3snyao0')"
+                  @focus="passwordFocus" @blur="passwordBlur" class="input-width"
+                  :invisible-button="data.formData.password !== data.emptyPwd" clearable ref="formPwdRef" />
+      </el-form-item>
+      <el-form-item prop="tags" :label="$t('components.AddHost.tags')">
+        <el-select :loading="data.tagsLoading" v-model="data.formData.tags" class="input-width"
+                   :placeholder="$t('components.AddHost.tagsPlaceholder')" allow-create multiple clearable @change="tagsChange">
+          <el-option v-for="item in data.tagsList" :key="item.value" :value="item.value">{{
+              item.label
+            }}</el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item :label="$t('components.AddHost.5mphy3snysg0')">
+        <el-input type="textarea" v-model.trim="data.formData.remark"
+                  :placeholder="$t('components.AddHost.5mphy3snyxc0')"  maxlength="255" />
+      </el-form-item>
+    </el-form>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -109,13 +99,14 @@ const data = reactive<KeyValue>({
 })
 
 import { IpRegex } from '@/types/global'
+import showMessage from "@/hooks/showMessage";
 
 const formRules = computed(() => {
   return {
     name: [
-      { required: true, 'validate-trigger': 'blur', message: t('components.AddHost.namePlaceholder') },
+      { required: true, trigger: 'blur', message: t('components.AddHost.namePlaceholder') },
       {
-        validator: (value: any, cb: any) => {
+        validator: (rule: any, value: any, cb: any) => {
           return new Promise(resolve => {
             if (!value.trim()) {
               cb(t('database.JdbcInstance.5oxhtcbobtc0'))
@@ -128,9 +119,9 @@ const formRules = computed(() => {
       }
     ],
     privateIp: [
-      { required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxdo0') },
+      { required: true, trigger: ['blur', 'change'], message: t('components.AddHost.5mphy3snxdo0') },
       {
-        validator: (value: any, cb: any) => {
+        validator: (rule: any, value: any, cb: any) => {
           return new Promise(resolve => {
             if (IpRegex.ipv4Reg.test(value) || IpRegex.ipv6Reg.test(value)) {
               resolve(true)
@@ -143,9 +134,9 @@ const formRules = computed(() => {
       }
     ],
     publicIp: [
-      { required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxmw0') },
+      { required: true, trigger: ['blur', 'change'], message: t('components.AddHost.5mphy3snxmw0') },
       {
-        validator: (value: any, cb: any) => {
+        validator: (rule: any, value: any, cb: any) => {
           return new Promise(resolve => {
             if (IpRegex.ipv4Reg.test(value) || IpRegex.ipv6Reg.test(value)) {
               resolve(true)
@@ -158,12 +149,12 @@ const formRules = computed(() => {
       }
     ],
     port: [
-      { required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snxzk0') }
+      { required: true, trigger: ['blur', 'change'], message: t('components.AddHost.5mphy3snxzk0') }
     ],
     username: [
-      { required: true, 'validate-trigger': 'blur', message: t('components.AddHost.usernamePlaceholder') },
+      { required: true, trigger: ['blur', 'change'], message: t('components.AddHost.usernamePlaceholder') },
       {
-        validator: (value: any, cb: any) => {
+        validator: (rule: any, value: any, cb: any) => {
           return new Promise(resolve => {
             if (!value.trim()) {
               cb(t('database.JdbcInstance.5oxhtcbobtc0'))
@@ -175,7 +166,7 @@ const formRules = computed(() => {
         }
       }
     ],
-    password: [{ required: true, 'validate-trigger': 'blur', message: t('components.AddHost.5mphy3snyao0') }]
+    password: [{ required: true, trigger: ['blur', 'change'], message: t('components.AddHost.5mphy3snyao0') }]
   }
 })
 
@@ -183,7 +174,7 @@ const emits = defineEmits([`finish`])
 const formRef = ref<null | FormInstance>(null)
 const submit = () => {
   formRef.value?.validate().then(result => {
-    if (!result) {
+    if (result) {
       data.loading = true
       if (data.formData.hostId) {
         const { privateIp, publicIp, port, remark, username, hostId, password, tags, name } = data.formData
@@ -191,37 +182,30 @@ const submit = () => {
         editHost(data.formData.hostId, param).then((res: KeyValue) => {
           data.loading = false
           if (Number(res.code) === 200) {
-            Message.success({ content: `Modified success` })
+            showMessage('success', t('components.AddHost.editServerSuc'))
             emits(`finish`)
+            close()
           }
-          close()
+        }).catch((error) => {
+          showMessage('error', error)
+          console.log(error)
         }).finally(() => {
           data.loading = false
         })
-      } else {
-        encryptPassword(data.formData.password).then((res) => {
-          const param = Object.assign({}, data.formData)
-          param.password = res
-          addHost(param).then((res: KeyValue) => {
-            data.loading = false
-            if (Number(res.code) === 200) {
-              Message.success({ content: `Create success` })
-              emits(`finish`)
-            }
-            close()
-          }).finally(() => {
-            data.loading = false
-          })
-        })
       }
+    } else {
+      showMessage('error', t('components.AddHost.unFill'))
     }
-  }).catch()
+  }).catch((error) => {
+    showMessage('error', t('components.AddHost.unFill'))
+    console.log(error)
+  })
 }
 const close = () => {
   data.show = false
   data.oldPwd = ''
-  data.formData.password = '';
-  data.formData.username = '';
+  data.formData.password = ''
+  data.formData.username = ''
   nextTick(() => {
     formRef.value?.clearValidate()
     formRef.value?.resetFields()
@@ -306,14 +290,14 @@ const getHostPassword = async (hostId: string) => {
   try {
     const res: KeyValue = await hostUserListAll(hostId)
     if (Number(res.code) === 200) {
-      const userEntity = res.data.find((e: any) => e && e.password);
+      const userEntity = res.data.find((e: any) => e && e.password)
       if (userEntity) {
-        data.formData.username = userEntity.username;
-        data.formData.password = userEntity.password;
+        data.formData.username = userEntity.username
+        data.formData.password = userEntity.password
       } else {
-        Message.error(t('components.AddHost.noPasswordTip'));
-      };
-    };
+        Message.error(t('components.AddHost.noPasswordTip'))
+      }
+    }
   } catch (error) {
 
   }
@@ -356,3 +340,13 @@ defineExpose({
 })
 
 </script>
+
+<style scoped>
+.input-width {
+  width: 400px;
+}
+.inner-class :deep(.el-input__inner) {
+  text-align: left !important;
+  padding-right: 30px;
+}
+</style>
