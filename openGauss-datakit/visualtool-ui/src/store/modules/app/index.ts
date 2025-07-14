@@ -32,10 +32,12 @@ const useAppStore = defineStore('app', {
       if (dark) {
         this.theme = 'dark'
         document.body.setAttribute('arco-theme', 'dark')
+        document.body.setAttribute('theme', 'dark')
         localStorage.setItem('opengauss-theme', 'dark')
       } else {
         this.theme = 'light'
         document.body.removeAttribute('arco-theme')
+        document.body.removeAttribute('theme')
         localStorage.removeItem('opengauss-theme')
       }
     },
