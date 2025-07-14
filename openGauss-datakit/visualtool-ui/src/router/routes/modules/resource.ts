@@ -44,6 +44,16 @@ const RESOURCE: AppRouteRecordRaw = {
       }
     },
     {
+      path: '/resource/physical/createserver',
+      name: 'CreateServer',
+      component: () => import('@/views/resource/physical/components/CreateServerPage.vue'),
+      meta: {
+        title: '创建服务器',
+        requiresAuth: true,
+        roles: ['*']
+      }
+    },
+    {
       path: '/resource/az',
       name: 'ResourceAz',
       component: () => import('@/views/resource/az/index.vue'),
