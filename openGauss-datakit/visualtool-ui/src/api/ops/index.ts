@@ -118,6 +118,10 @@ export const hostMonitor = (data: KeyValue) => {
   })
 }
 
+export const pageMonitor = (hostIds: string [], businessId: string) => {
+  return axios.post(`host/monitor?businessId=${businessId}`, hostIds)
+}
+
 export const hostPingById = (hostId: string, data: KeyValue) => {
   return axios.get(`host/ping/${hostId}`, {
     params: data
@@ -126,6 +130,24 @@ export const hostPingById = (hostId: string, data: KeyValue) => {
 
 export const delHost = (hostId: string) => {
   return axios.delete(`host/${hostId}`)
+}
+
+export const stopHostAgent = (agentId: string) => {
+  return axios.post(`agent/stop?agentId=${agentId}`)
+}
+
+export const startHostAgent = (agentId: string) => {
+  return axios.post(`agent/start?agentId=${agentId}`)
+}
+
+export const uninstallAgent = (agentId: string) => {
+  return axios.post(`agent/uninstall?agentId=${agentId}`)
+}
+
+export const listAgent = (data: KeyValue) => {
+  return axios.get(`agent/list`, {
+    params: data
+  })
 }
 
 // host tag
@@ -335,4 +357,8 @@ export const download = (data: downloadPackage) => {
 
 export const delPkgTar = (path: string, id?: string) => {
   return axios.delete('/plugins/base-ops/installPackageManager/delPkgTar', { params: { path: path, id: id }})
+}
+
+export const addAgent = (data: KeyValue) => {
+  return axios.post('/agent/install', data)
 }
