@@ -122,7 +122,7 @@ const clickNode = (index) => {
 .currentMark {
   position: absolute;
   left: 26px;
-  top: 40px;
+  top: -18px;
   width: 64px;
   height: 16px;
   background-color: transparent;

@@ -190,23 +190,23 @@ const descData = computed(() => [
 const getTopExpressInfo = (info) => {
   subTaskInfo.value.execStatus = info?.execStatus
   // Gets the state of the runtime returned by the current interface
-  let subTaskStatus = info?.execStatus;
+  let subTaskStatus = info?.execStatus
   // Determine whether to run success/failure status, these states cannot directly determine the step, you need to use the previous state
   if (stepJudge.has(subTaskStatus)) {
     subTaskStatus = info?.currentExecStatus
   }
   if (stepSet0.has(subTaskStatus)) {
-    subTaskStep.value = 0;
+    subTaskStep.value = 0
   } else if (stepSet5.has(subTaskStatus)) {
-    subTaskStep.value = 5;
+    subTaskStep.value = 5
   } else if (stepSet4.has(subTaskStatus)) {
-    subTaskStep.value = 4;
+    subTaskStep.value = 4
   } else if (stepSet3.has(subTaskStatus)) {
-    subTaskStep.value = 3;
+    subTaskStep.value = 3
   } else if (stepSet2.has(subTaskStatus)) {
-    subTaskStep.value = 2;
+    subTaskStep.value = 2
   } else {
-    subTaskStep.value = 1;
+    subTaskStep.value = 1
   }
   fullProcessCount.value.totalErrorCount = info?.totalErrorCount;
   fullProcessCount.value.totalRunningCount = info?.totalRunningCount;
@@ -232,10 +232,10 @@ const getExectedTime = (timer) => {
   if (!timer) {
     return '--'
   }
-  const hours = parseInt(timer / 3600);
-  const min = parseInt((timer % 3600) / 60);
-  const sec = timer - 3600 * hours - 60 * min;
-  let result = '';
+  const hours = parseInt(timer / 3600)
+  const min = parseInt((timer % 3600) / 60)
+  const sec = timer - 3600 * hours - 60 * min
+  let result = ''
   if (timer >= 3600) {
     // Turn to hours
     result = hours + t('components.SubTaskDetail.hour') + min + t('components.SubTaskDetail.min') + sec + t('components.SubTaskDetail.sec')
@@ -244,17 +244,16 @@ const getExectedTime = (timer) => {
   } else {
     result = sec + t('components.SubTaskDetail.sec')
   }
-  return result;
+  return result
 }
 
-const connectNums = ref(0);
-const maxConnectTimes = ref(15);
-
+const currentWsKey = ref(0)
 // Determine whether the object can be transferred
 const testWebsocketFunc = () => {
-  const socketUrl = `data-migration/taskInfo`
+  currentWsKey.value = new Date().getTime()
+  const socketUrl = `data-migration/taskInfo_${subTaskId.value}_${currentWsKey.value}`
   const websocket = new Socket({ url: socketUrl })
-  currentWS.value = websocket;
+  currentWS.value = websocket
   websocket.onopen(() => {
     connectWSTest(subTaskId.value)
   })
@@ -283,7 +282,7 @@ const testWebsocketFunc = () => {
 const isWSConnect = ref(false)
 const timer = ref()
 const connectWSTest = (id) => {
-  subTaskInfoDetail(subTaskId.value, 'taskInfo').then(res => {
+  subTaskInfoDetail(subTaskId.value, `taskInfo_${subTaskId.value}_${currentWsKey.value}`).then(res => {
     timer.value && clearTimeout(timer)
     if (!isWSConnect.value) {
       timer.value = setTimeout(() => {
@@ -310,8 +309,8 @@ onMounted(() => {
 const getSubTaskBasicInfo = () => {
   subTaskBasicInfo(subTaskId.value).then(res => {
     if (Number(res.code) === 200) {
-      descValueObj.value.subTaskName = res.data?.subTaskId;
-      descValueObj.value.fatherTask = res.data?.taskName;
+      descValueObj.value.subTaskName = res.data?.subTaskId
+      descValueObj.value.fatherTask = res.data?.taskName
       // offline = 1; online = 2;
       descValueObj.value.executionMode = res.data?.execMode
       descValueObj.value.sourceLibrary = res.data?.sourceDb
