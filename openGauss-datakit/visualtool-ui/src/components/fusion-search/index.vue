@@ -55,7 +55,7 @@ import { ClickOutside as vClickOutside } from 'element-plus'
 import { searchType } from '@/types/searchType'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
-const { labelOptions } = defineProps({
+const props = defineProps({
   labelOptions: {
     type: Object,
     required: true
@@ -66,7 +66,7 @@ const { labelOptions } = defineProps({
     default: 350
   }
 })
-
+const labelOptions = computed(() => props.labelOptions)
 const componentIds = {
   SELECT: fusionSelect,
   MULTIPLESELECT: fusionMulti,
@@ -114,15 +114,15 @@ const clearAll = () => {
 const options = ref([])
 const handleBlur = () => {
   if (isLabelSelect.value) {
-    componentId.value = labelOptions[selectValue.value]?.selectType
-    options.value = labelOptions[selectValue.value]?.options
+    componentId.value = labelOptions.value[selectValue.value]?.selectType
+    options.value = labelOptions.value[selectValue.value]?.options
     isLabelSelect.value = false
     currentKeyValue.value = selectValue.value
-    currentKeyLabel.value = labelOptions[selectValue.value].label
+    currentKeyLabel.value = labelOptions.value[selectValue.value].label
     selectValue.value = ''
     // The input field needs to set the maximum input length
     if (componentId.value === searchType.INPUT) {
-      maxLen.value = labelOptions[currentKeyValue.value]?.maxlength || '50'
+      maxLen.value = labelOptions.value[currentKeyValue.value]?.maxlength || '50'
     }
   }
 }

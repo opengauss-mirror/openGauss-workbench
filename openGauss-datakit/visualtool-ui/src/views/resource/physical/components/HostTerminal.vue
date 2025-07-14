@@ -1,29 +1,15 @@
 <template>
-  <a-modal
-    :mask-closable="false"
-    :visible="data.show"
-    :title="data.title"
-    :unmount-on-close="true"
-    :modal-style="{ width: '70%' }"
-    :footer="false"
-    @cancel="close"
-  >
-    <div class="flex-col-start">
+  <el-dialog class="o-dialog--large physicalTerminalDia" :mask-closable="false" v-model="data.show" :title="data.title" :before-close="close">
+    <div class="flex-col-start openDesignBody">
       <div class="flex-between mb-s full-w">
         <label class="mb-s">{{ $t('database.HostTerminal.else1') }} - {{ data.formData.ip }}</label>
-        <div
-          class="mb-s"
-          style="color: red; font-weight: bold;"
-        >
+        <div class="mb-s" style="color: red; font-weight: bold;">
           {{ $t('database.HostTerminal.else2') }}
         </div>
       </div>
-      <div
-        id="xterm"
-        class="xterm"
-      ></div>
+      <div id="xterm" class="xterm"></div>
     </div>
-  </a-modal>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -150,18 +136,29 @@ defineExpose({
 
 </script>
 
-<style lang="less" scoped>
-.body-c {
-  box-sizing: border-box;
-}
+<style lang="less">
+.physicalTerminalDia {
+  .el-dialog__body {
+    max-height: fit-content;
+    .openDesignBody {
+      max-height: fit-content;
+      overflow: auto;
+      .xterm-c {
+        width: 100%;
+        height: 100%;
+      }
 
-.xterm-c {
-  width: 100%;
-  height: 100%;
-}
-
-.xterm {
-  width: 100%;
-  height: 100%;
+      .xterm {
+        width: 100%;
+        height: calc(100% - 32px);
+        flex: 1;
+        max-height: 472px;
+        overflow: auto;
+      }
+    }
+    .body-c {
+      box-sizing: border-box;
+    }
+  }
 }
 </style>
