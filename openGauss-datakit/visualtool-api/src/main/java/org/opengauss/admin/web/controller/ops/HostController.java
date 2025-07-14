@@ -218,17 +218,15 @@ public class HostController extends BaseController {
     }
 
     /**
-     * montior host
+     * page monitor host lost
      *
-     * @param hostId host id
+     * @param hostIds host ids
      * @param businessId business id
-     * @param rootPassword pwd
      * @return monitor status
      */
-    @GetMapping("/monitor")
-    public AjaxResult monitor(@RequestParam String hostId, @RequestParam String businessId,
-        @RequestParam(value = "rootPassword", required = false) String rootPassword) {
-        return AjaxResult.success(hostService.monitor(hostId, businessId, rootPassword));
+    @PostMapping("/monitor")
+    public AjaxResult pageMonitor(@RequestBody List<String> hostIds, @RequestParam String businessId) {
+        return AjaxResult.success(hostService.pageMonitor(hostIds, businessId));
     }
 
     @GetMapping("/listSupportOsName")

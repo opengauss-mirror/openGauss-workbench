@@ -47,20 +47,46 @@ public class ThreadPoolConfig {
     private int queueCapacity = 2000;
     private int keepAliveSeconds = 300;
 
+    /**
+     * Agent Task Thread Pool Task Executor
+     *
+     * @return ThreadPoolTaskExecutor
+     */
+    @Bean(name = "agentTaskExecutor")
+    public ThreadPoolTaskExecutor agentTaskThreadPoolTaskExecutor() {
+        return buildThreadPoolTaskExecutor("agent-task-group");
+    }
+
+    /**
+     * Common Thread Pool Task Executor
+     *
+     * @return ThreadPoolTaskExecutor
+     */
     @Bean(name = "threadPoolTaskExecutor")
     public ThreadPoolTaskExecutor threadPoolTaskExecutor() {
+        return buildThreadPoolTaskExecutor("");
+    }
+
+    private ThreadPoolTaskExecutor buildThreadPoolTaskExecutor(String threadNamePrefix) {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setMaxPoolSize(maxPoolSize);
+        executor.setThreadNamePrefix(threadNamePrefix);
         executor.setCorePoolSize(corePoolSize);
         executor.setQueueCapacity(queueCapacity);
         executor.setKeepAliveSeconds(keepAliveSeconds);
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         return executor;
     }
+
+    /**
+     * Scheduled Thread Pool Task Executor
+     *
+     * @return ScheduledExecutorService
+     */
     @Bean(name = "scheduledExecutorService")
     protected ScheduledExecutorService scheduledExecutorService() {
         return new ScheduledThreadPoolExecutor(scheduledCorePoolSize,
-                new BasicThreadFactory.Builder().namingPattern("schedule-pool-%d").daemon(true).build()) {
+            new BasicThreadFactory.Builder().namingPattern("schedule-pool-%d").daemon(true).build()) {
             @Override
             protected void afterExecute(Runnable r, Throwable t) {
                 super.afterExecute(r, t);

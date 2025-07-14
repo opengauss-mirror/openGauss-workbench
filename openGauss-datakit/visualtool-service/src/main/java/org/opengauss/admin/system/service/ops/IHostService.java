@@ -114,7 +114,14 @@ public interface IHostService extends IService<OpsHostEntity> {
 
     List<OpsHostEntity> listAll(String azId);
 
-    Map<String,Object> monitor(String hostId, String businessId, String rootPassword);
+    /**
+     * page hosts monitor
+     *
+     * @param hostIds host ids
+     * @param businessId business id
+     * @return host status
+     */
+    Map<String, Object> pageMonitor(List<String> hostIds, String businessId);
 
     void updateHostOsVersion(OpsHostEntity opsHostEntity);
 

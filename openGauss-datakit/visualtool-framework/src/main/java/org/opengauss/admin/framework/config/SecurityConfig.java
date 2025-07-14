@@ -126,6 +126,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/login").anonymous()
                 .antMatchers("/modeling/visualization/report/share/**").permitAll()
                 .antMatchers("/prometheus").permitAll()
+                .antMatchers("/agent/**").permitAll()
+                .antMatchers("/receive/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .headers().frameOptions().disable();

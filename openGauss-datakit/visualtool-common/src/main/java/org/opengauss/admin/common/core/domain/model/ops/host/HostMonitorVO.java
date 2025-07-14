@@ -32,6 +32,7 @@ import lombok.Data;
  **/
 @Data
 public class HostMonitorVO {
+    private String hostId;
     private String upSpeed;
     private String downSpeed;
     private String cpu;

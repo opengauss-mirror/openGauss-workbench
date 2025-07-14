@@ -24,7 +24,10 @@
 package org.opengauss.admin.web.core.config;
 
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.enums.DbDataLocationEnum;
+import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.system.base.DbDataLocation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
@@ -37,12 +40,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * DataSourceConfig
@@ -58,7 +64,7 @@ public class DataSourceConfig {
     @Bean
     @Profile("!dev")
     DataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSourceProperties properties,
-                                                                            DataSource dataSource) {
+        DataSource dataSource) {
         String driverClassName = properties.getDriverClassName();
         if (DbDataLocationEnum.OPENGAUSS.getDriverClass().equals(driverClassName)) {
             checkDatabaseAvailability(properties);
@@ -86,8 +92,8 @@ public class DataSourceConfig {
     }
 
     private Connection createConnection(DataSourceProperties properties) throws SQLException {
-        Connection connection = DriverManager.getConnection(
-                properties.getUrl(), properties.getUsername(), properties.getPassword());
+        Connection connection = DriverManager.getConnection(properties.getUrl(), properties.getUsername(),
+            properties.getPassword());
         if (connection == null) {
             log.error("Failed to get connection to the database: connection is null.");
             System.exit(SpringApplication.exit(applicationContext, () -> 1));
@@ -95,16 +101,33 @@ public class DataSourceConfig {
         return connection;
     }
 
+    /**
+     * release the database location according to the database type
+     *
+     * @param properties properties
+     * @return DbDataLocation
+     */
+    @Bean
+    public DbDataLocation getDbDataLocation(DataSourceProperties properties) {
+        String driverClassName = properties.getDriverClassName();
+        return DbDataLocationEnum.of(driverClassName).map(DbDataLocation::new).orElseThrow(() -> {
+            String supportDrivers = Arrays.stream(DbDataLocationEnum.values())
+                .map(DbDataLocationEnum::getDriverClass)
+                .collect(Collectors.joining());
+            return new OpsException(
+                "Invalid driver class name: " + driverClassName + ", support drivers: " + supportDrivers);
+        });
+    }
+
     private void checkSqlCompatibility(Connection connection) throws SQLException {
         String showCompatibilitySql = "show sql_compatibility;";
-
         try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(showCompatibilitySql)) {
+            ResultSet resultSet = statement.executeQuery(showCompatibilitySql)) {
             if (resultSet.next()) {
                 String sqlCompatibility = resultSet.getString(1);
                 if (sqlCompatibility == null || !sqlCompatibility.equals("A")) {
                     log.error("The sql_compatibility type of the database does not meet requirements. "
-                            + "The required type is 'A', and the current type is '{}'.", sqlCompatibility);
+                        + "The required type is 'A', and the current type is '{}'.", sqlCompatibility);
                     System.exit(SpringApplication.exit(applicationContext, () -> 1));
                 }
             }
@@ -112,16 +135,14 @@ public class DataSourceConfig {
     }
 
     private void checkPermission(Connection connection, String username) throws SQLException {
-        String permissionSql = String.format(
-                "select rolsystemadmin from pg_roles where rolname= '%s';", username);
-
+        String permissionSql = String.format("select rolsystemadmin from pg_roles where rolname= '%s';", username);
         try (Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(permissionSql)) {
+            ResultSet resultSet = statement.executeQuery(permissionSql)) {
             if (resultSet.next()) {
                 String permissionResult = resultSet.getString(1);
                 if (permissionResult == null || !permissionResult.equals("t")) {
                     log.error("The database user permission does not meet requirements. "
-                            + "Please set the user as the sysadmin.");
+                        + "Please set the user as the sysadmin.");
                     System.exit(SpringApplication.exit(applicationContext, () -> 1));
                 }
             }

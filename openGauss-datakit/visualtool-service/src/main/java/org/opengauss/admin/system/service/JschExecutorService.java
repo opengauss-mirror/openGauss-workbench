@@ -25,10 +25,12 @@ package org.opengauss.admin.system.service;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpException;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.NumberUtil;
@@ -45,6 +47,8 @@ import org.opengauss.admin.system.plugin.beans.SshLogin;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -54,6 +58,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.function.Consumer;
 
 /**
  * JschExecutorService
@@ -176,6 +181,21 @@ public class JschExecutorService {
         OpsAssert.isTrue(port > 1024 && port < 65536, "port must be between 1024 and 65535");
         String command = String.format(SshCommandConstants.CHECK_OS_PORT_CONFLICT, port);
         String result = execCommand(sshLogin, command);
+        OpsAssert.isTrue(StrUtil.isNotEmpty(result) && NumberUtil.isInteger(result), "port conflict error :" + result);
+        return NumberUtil.parseInt(result) <= 0;
+    }
+
+    /**
+     * check port conflict
+     *
+     * @param session session
+     * @param port port
+     * @return true- not conflict, false - conflict
+     */
+    public boolean checkOsPortConflict(Session session, int port) {
+        OpsAssert.isTrue(port > 1024 && port < 65536, "port must be between 1024 and 65535");
+        String command = String.format(SshCommandConstants.CHECK_OS_PORT_CONFLICT, port);
+        String result = execCommand(session, command);
         OpsAssert.isTrue(StrUtil.isNotEmpty(result) && NumberUtil.isInteger(result), "port conflict error :" + result);
         return NumberUtil.parseInt(result) <= 0;
     }
@@ -486,6 +506,98 @@ public class JschExecutorService {
     }
 
     /**
+     * sftp file copy
+     *
+     * @param session session
+     * @param targetFile target file
+     * @param installPath file copy path
+     * @throws OpsException JSchException
+     */
+    public void scp(Session session, String targetFile, String installPath) {
+        ChannelSftp sftpChannel = null;
+        try {
+            Channel channel = session.openChannel("sftp");
+            if (channel instanceof ChannelSftp) {
+                sftpChannel = (ChannelSftp) channel;
+                sftpChannel.connect(5000); // 5秒超时
+                sftpChannel.put(targetFile, installPath, ChannelSftp.OVERWRITE);
+                String jarName = new File(targetFile).getName();
+                String verifyCmd = String.format("[ -f \"%s/%s\" ] && echo 'ok' || echo 'fail'", installPath, jarName);
+                String verifyResult = execCommand(session, verifyCmd);
+                if (!"ok".equals(verifyResult.trim())) {
+                    throw new OpsException("file check failed :" + session.getHost() + " fileName:" + targetFile);
+                }
+            } else {
+                if (channel != null) {
+                    channel.disconnect();
+                }
+                throw new JSchException("cannot open sftp channel" + session.getHost());
+            }
+        } catch (JSchException | SftpException e) {
+            throw new OpsException(e.getMessage());
+        } finally {
+            if (sftpChannel != null) {
+                sftpChannel.disconnect();
+            }
+        }
+    }
+
+    /**
+     * sftp file copy
+     *
+     * @param session session
+     * @param content file content
+     * @param installPath install path
+     */
+    public void remoteWrite(Session session, String content, String installPath) {
+        ChannelSftp sftpChannel = null;
+        try {
+            Channel channel = session.openChannel("sftp");
+            if (channel instanceof ChannelSftp) {
+                sftpChannel = (ChannelSftp) channel;
+                sftpChannel.connect(5000);
+                ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
+                sftpChannel.put(inputStream, installPath, ChannelSftp.OVERWRITE);
+            } else {
+                if (channel != null) {
+                    channel.disconnect();
+                }
+                throw new JSchException("cannot open sftp channel" + session.getHost());
+            }
+        } catch (JSchException | SftpException e) {
+            throw new OpsException(e.getMessage());
+        } finally {
+            if (sftpChannel != null) {
+                sftpChannel.disconnect();
+            }
+        }
+    }
+
+    /**
+     * execute with session
+     *
+     * @param sshLogin ssh login info
+     * @param action action
+     */
+    public void executeWithSession(SshLogin sshLogin, Consumer<Session> action) {
+        Session session = null;
+        try {
+            session = createSession(sshLogin);
+            if (!session.isConnected()) {
+                session.connect(3000);
+            }
+            action.accept(session);
+        } catch (JSchException | OpsException e) {
+            log.error("SSH create session error:", e);
+            throw new OpsException("AGENT_UPDATE_ERROR: execute jsch task failed " + e.getMessage());
+        } finally {
+            if (session != null) {
+                session.disconnect();
+            }
+        }
+    }
+
+    /**
      * Jsch 执行命令器
      */
     static class JschExecutor {
@@ -531,7 +643,8 @@ public class JschExecutorService {
                 // 连接会话
                 session.connect(SESSION_TIMEOUT);
             } catch (JSchException e) {
-                throw new OpsException("create jsch session error: " + e.getMessage());
+                String errorMessage = String.format("create jsch session error: %s", sshLogin);
+                throw new OpsException(errorMessage);
             }
             return session;
         }

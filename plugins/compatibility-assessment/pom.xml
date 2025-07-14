@@ -74,6 +74,7 @@
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
+            <version>${hutool.lower.version}</version>
         </dependency>
         <dependency>
             <groupId>org.opengauss</groupId>
