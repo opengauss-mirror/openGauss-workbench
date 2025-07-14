@@ -25,6 +25,13 @@ body {
 
   --padding-base: 20px; // Padding
   --padding-vertical: 15px; // Padding (vertical direction)
+  
+  --o-popconfirm-bg: #fff; //light theme el-popConfirm background-color
+}
+
+/********** css custom specification dark ***********/
+body.dark {
+  --o-popconfirm-bg: #373739; // dark theme el-popConfirm background-color
 }
 
 // body style
@@ -74,6 +81,18 @@ body {
 
 .z-auto {
   z-index: auto;
+}
+
+.mb16 {
+  margin-bottom: 16px;
+}
+
+.w550 {
+  width: 550px !important;
+}
+
+.w650 {
+  width: 650px !important;
 }
 
 // common style
@@ -281,4 +300,211 @@ input:-webkit-autofill:focus {
   padding-top: 4px;
   height: 16px;
   font-size: 12px;
+}
+
+// el-popConfirm style
+.el-popper.o-popper-confirm {
+  padding: 12px 8px !important;
+  width: fit-content !important;
+  min-width: 150px;
+
+  .el-popconfirm__action {
+    text-align: center !important;
+
+    >button {
+      height: 24px;
+      width: 48px;
+      font-size: 12px;
+    }
+
+    button.is-text {
+      border: 1px solid var(--o-button-border-color);
+
+      span {
+        color: var(--o-button-color) !important;
+      }
+
+      &:hover {
+        border-color: var(--o-button-border-color_hover);
+      }
+
+      &:active {
+        background-color: var(--o-button-bg-color_active);
+        color: var(--o-button-color_active);
+        border-color: var(--o-button-border-color_active);
+      }
+    }
+  }
+}
+
+.el-popper.operatePopper {
+  background-color: var(--o-bg-color-light2) !important;
+  padding: 12px 0 !important;
+  min-width: 100px !important;
+  height: 84px;
+  cursor: pointer;
+  border: 1px solid var(--o-color-primary-secondary) !important;
+
+  .operateItems {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+
+    .el-button {
+      margin-left: 0;
+      height: 22px;
+      width: 100%;
+      padding: 0 16px;
+      line-height: 22px;
+      font-size: 14px;
+      text-align: left;
+
+      span {
+        color: var(--o-text-color-secondary) !important;
+      }
+
+      &:hover {
+        span {
+          color: var(--o-color-primary-secondary) !important;
+        }
+      }
+
+      &:active {
+        span {
+          color: var(--o-color-primary) !important;
+        }
+      }
+    }
+  }
+}
+
+.openDesignTable {
+  font-size: 14px !important;
+
+  th,
+  .flex-row-start button {
+    font-size: 14px;
+    height: 24px;
+  }
+}
+
+.odDialogPagination {
+  margin-top: 24px !important;
+}
+
+.openDesignDrawer {
+  --el-drawer-bg-color: var(--o-bg-color-base) !important;
+
+  .el-drawer__header {
+    color: var(--o-text-color-primary) !important;
+  }
+
+  .el-drawer__body {
+    color: var(--o-text-color-secondary) !important;
+  }
+
+  .el-drawer__footer {
+    width: 100%;
+    height: 48px;
+    padding: 8px 20px;
+    box-shadow: 0 -1px 16px 0 rgba(0, 0, 0, 0.08);
+  }
+}
+
+.openDesignDialog {
+  .el-dialog__header {
+    height: 54px;
+  }
+
+  .el-dialog__body {
+
+    .el-form-item__label,
+    .el-form-item__content {
+      font-size: 14px;
+      justify-content: flex-start;
+    }
+
+    .el-form-item.is-required {
+      margin-left: -8px;
+
+      .el-input__inner {
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+.openDesignFooterButterGap {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  padding: 8px 26px;
+  width: 100%;
+  height: 48px;
+  box-shadow: 0 -1px 16px 0 rgba(0, 0, 0, 0.08);
+  background-color: var(--o-bg-color-base);
+
+  .footerButtonArea {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .el-button {
+    margin-right: 0;
+  }
+}
+
+.openDesignForm {
+  .el-form-item.is-required {
+    .el-form-item__label {
+      margin-left: -8px;
+      margin-right: 8px;
+    }
+  }
+}
+
+// el-header 
+.openDesignHeader.el-header {
+  background-color: var(--o-bg-color-base);
+  height: 50px;
+  padding-left: 24px;
+  overflow: auto;
+
+  .el-page-header {
+    padding: 11px 0px;
+
+    .el-page-header__header {
+      height: 28px;
+    }
+
+    .el-divider--vertical {
+      margin: 0 6px;
+    }
+  }
+
+  .text-color {
+    color: var(--o-text-color-primary);
+  }
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.runingColor {
+  background-color: var(--o-color-success);
+}
+
+.uninstallColor {
+  background-color: var(--o-color-info);
+}
+
+.offLineColor {
+  background-color: var(--o-color-danger);
 }

@@ -274,6 +274,10 @@
       "usernamePlaceholder": "请输入用户名称",
       "tags": "标签",
       "tagsPlaceholder": "请输入或者选择标签",
+      "addServerSuc": "创建服务器成功",
+      "editServerSuc": "编辑服务器成功",
+      "addAgentSuc": "创建服务器成功, 开始安装Agent",
+      "unFill": "当前页面有未填写项",
       "5mphy3snvg80": "可用",
       "5mphy3snwq40": "不可用",
       "5mphy3snwxs0": "取消",
@@ -295,6 +299,19 @@
       "5mphy3snzrk0": "编辑物理机",
       "noPasswordTip": "未保存用户密码，请重新添加用户"
     },
+    "AddAgent": {
+      "agentTitle": "Agent安装",
+      "agentName": "Agent名称",
+      "installPath": "安装路径",
+      "namePlaceholder": "请输入Agent名称",
+      "installPathPlaceholder": "请输入安装路径",
+      "userPlaceholder": "请输入安装用户",
+      "formaterror": "安装路径格式错误",
+      "portPlaceholder": "请输入端口号",
+      "stringLengthOver": "字符串长度超出限制",
+      "numberRangeOver": "端口号超出范围限制",
+      "insAgentSuc": "开始安装Agent"
+    },
     "HostUserChoose": {
       "title": "选择用户",
       "tip": "当前保存有多个用户，且无root用户，请选择登录终端的用户",
@@ -312,7 +329,9 @@
       "5mphzt9pec40": "请输入密码",
       "5mphzt9peog0": "新增用户",
       "updateUser": "编辑用户",
-      "5mphzt9pewg0": "传过来的数据"
+      "5mphzt9pewg0": "传过来的数据",
+      "createSuccess": "创建成功",
+      "modifySuccess": "修改成功"
     },
     "HostPwdDlg": {
       "else1": "root密码",
@@ -770,6 +789,7 @@
   },
   "physical": {
     "index": {
+      "createServer": "创建服务器",
       "ipAddress": "IP地址",
       "ipAddressPlaceholder": "请输入IP地址查询",
       "batchDel": "删除",
@@ -777,14 +797,31 @@
       "hostLabelPlaceholder": "请输入标签进行查询",
       "os": "操作系统",
       "osPlaceholder": "请选择操作系统进行查询",
+      "serverName": "服务器名称",
       "privateIp": "内网IP",
       "publicIp": "外网IP",
+      "privateAndPublicIP": "内网/外网IP",
       "cpuArch": "架构",
       "hostName": "主机名称",
       "net": "网络",
+      "realNetRate": "实时网络速率",
+      "upLink": "上行",
+      "downlink": "下行",
       "cpu": "CPU使用率",
       "memory": "内存使用率",
       "disk": "磁盘使用率",
+      "agentStatus": "Agent状态",
+      "running": "运行中",
+      "offline": "离线",
+      "uninstalled": "未安装",
+      "agentManager": "Agent管理",
+      "agentName": "Agent名称",
+      "operationStatus": "运行状态",
+      "serverIp": "服务器IP",
+      "port": "端口",
+      "installPath": "安装路径",
+      "userName": "用户名",
+      "osMetrics": "OS指标",
       "baseInfo": "基本信息",
       "diskInfo": "硬件信息",
       "noUserTip": "暂无用户，请先添加用户",
@@ -794,6 +831,17 @@
       "labelBatch": "标签设置",
       "labelManage": "标签管理",
       "else1": "请至少选一个主机信息",
+      "noData": "暂无数据",
+      "operateColumn": "操作",
+      "agentInstall": "Agent安装",
+      "installAgent": "安装Agent",
+      "userManage": "用户管理",
+      "more": "更多",
+      "reback": "返回",
+      "stopSuccess": "停止成功",
+      "startSuccess": "启动成功",
+      "uninstallSuccess": "卸载成功",
+      "serverConfig": "服务器配置",
       "5mphf11rr080": "创建",
       "5mphf11syw80": "测试连通性",
       "5mphf11szdk0": "搜索",
@@ -814,7 +862,14 @@
       "5mphf11rr090": "批量导入",
       "5mphf11rr590": "批量删除",
       "5mphf11rr890": "已删除所有选中主机",
-      "5mphf11rr990": "部分主机没有成功删除"
+      "5mphf11rr990": "部分主机没有成功删除",
+      "stop": "停止",
+      "start": "开始",
+      "close": "关闭",
+      "uninstall": "卸载",
+      "addNewUser": "新增用户",
+      "unInstalledAgent": "存在未卸载的agent",
+      "selectUserTable": "用户管理"
     }
   },
   "label": {
@@ -827,7 +882,11 @@
       "5pbjv7b0y0w0": "操作",
       "5pbjv7b0yd00": "创建标签",
       "5pbjv7b0yk40": "编辑标签",
-      "5pbjv7b0yso0": "标签管理"
+      "5pbjv7b0yso0": "标签管理",
+      "addLabel": "添加标签",
+      "tagNamePlaceholder": "请输入标签名称进行搜索",
+      "selectUserTable": "选择用户表",
+      "delWarning":"请先选择删除的用户"
     }
   },
   "bulk": {
@@ -863,7 +922,11 @@
       "5exv06n8x1kk1": "条",
       "5exv06n8x1kl1": "导入成功，",
       "5exv06n8x1km1": "导入失败",
-      "5exv06n8x1kn1": "下载错误报告"
+      "5exv06n8x1kn1": "下载错误报告",
+      "step1Content": "1.文件解析",
+      "step1Error": "1.文件解析(失败)",
+      "step2Content": "2.导入到服务器",
+      "step3Content": "3.导入完成"
     }
   },
   "az": {

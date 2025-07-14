@@ -274,6 +274,10 @@
       "usernamePlaceholder": "Please enter username",
       "tags": "label",
       "tagsPlaceholder": "Please enter or select a label",
+      "addServerSuc": "Server created successfully",
+      "editServerSuc": "Server edited successfully",
+      "addAgentSuc": "Server created successfully, starting Agent installation",
+      "unFill": "There are unfilled items on the current page",
       "5mphy3snvg80": "available",
       "5mphy3snwq40": "Not available",
       "5mphy3snwxs0": "cancel",
@@ -295,6 +299,19 @@
       "5mphy3snzrk0": "Edit Host",
       "noPasswordTip": "User password was not saved. Please add the user again."
     },
+    "AddAgent": {
+      "agentTitle": "Agent Installation",
+      "agentName": "Agent Name",
+      "installPath": "Installation Path",
+      "namePlaceholder": "Please enter the Agent name",
+      "installPathPlaceholder": "Please enter the installation path",
+      "userPlaceholder": "Please enter the installation user",
+      "formaterror": "Invalid installation path format",
+      "portPlaceholder": "Please enter the port number",
+      "stringLengthOver": "String length exceeds the limit",
+      "numberRangeOver": "Port number is out of range",
+      "insAgentSuc": "Starting Agent installation"
+    },
     "HostUserChoose": {
       "title": "Choose user",
       "tip": "There are currently multiple users, and there is no root user. Please select the user you want to log in to the terminal.",
@@ -312,7 +329,9 @@
       "5mphzt9pec40": "Please enter your password.",
       "5mphzt9peog0": "Add User",
       "updateUser": "Edit User",
-      "5mphzt9pewg0": "The data that came through"
+      "5mphzt9pewg0": "The data that came through",
+      "createSuccess": "Create Success",
+      "modifySuccess": "Modify Success"
     },
     "HostPwdDlg": {
       "else1": "RootPassword",
@@ -770,6 +789,7 @@
   },
   "physical": {
     "index": {
+      "createServer": "Create a server",
       "ipAddress": "IP address",
       "ipAddressPlaceholder": "Enter the IP address for query",
       "batchDel": "delete",
@@ -777,14 +797,31 @@
       "hostLabelPlaceholder": "Please select the label for query",
       "os": "system",
       "osPlaceholder": "Select an operating system",
+      "serverName": "Server name",
       "privateIp": "Intranet IP",
       "publicIp": "External IP",
+      "privateAndPublicIP": "Internal/public IP addresses",
       "cpuArch": "arch",
       "hostName": "HostName",
       "net": "network",
+      "realNetRate": "Real-time network rate",
+      "upLink": "UpLink",
+      "downlink": "Downlink",
       "cpu": "CPU usage",
       "memory": "Memory usage",
       "disk": "Disk usage",
+      "agentStatus": "Agent status",
+      "running": "Running",
+      "offline": "Offline",
+      "uninstalled": "Not installed",
+      "agentManager": "Agent manage",
+      "agentName": "Agent name",
+      "operationStatus": "Operational status",
+      "serverIp": "Server IP",
+      "port": "Port",
+      "installPath": "Install path",
+      "userName": "Username",
+      "osMetrics": "OS metrics",
       "baseInfo": "BaseInfo",
       "diskInfo": "DiskInfo",
       "realTime": "RealTime",
@@ -794,6 +831,17 @@
       "labelBatch": "Tag Setting",
       "labelManage": "Tag Manage",
       "else1": "Please select at least one host",
+      "noData": "No data",
+      "operateColumn": "Operate",
+      "agentInstall": "Agent Install",
+      "installAgent": "Install Agent",
+      "userManage": "User Manage",
+      "more": "More",
+      "reback": "Reback",
+      "stopSuccess": "Stop Success",
+      "startSuccess": "Start Success",
+      "uninstallSuccess": "Uninstall Success",
+      "serverConfig": "Server Config",
       "5mphf11rr080": "Add",
       "5mphf11syw80": "test",
       "5mphf11szdk0": "search",
@@ -814,7 +862,14 @@
       "5mphf11rr090": "Bulk Import",
       "5mphf11rr590": "Bulk Delete",
       "5mphf11rr890": "All selected hosts have been deleted.",
-      "5mphf11rr990": "Some hosts were not successfully deleted."
+      "5mphf11rr990": "Some hosts were not successfully deleted.",
+      "stop": "Stop",
+      "start": "Start",
+      "close": "Close",
+      "uninstall": "Uninstall",
+      "addNewUser": "Add a new user",
+      "unInstalledAgent": "There are agents that have not been uninstalled",
+      "selectUserTable": "User Manager"
     }
   },
   "label": {
@@ -827,7 +882,11 @@
       "5pbjv7b0y0w0": "Operation",
       "5pbjv7b0yd00": "Create Label",
       "5pbjv7b0yk40": "Edit Label",
-      "5pbjv7b0yso0": "Label Manage"
+      "5pbjv7b0yso0": "Label Manage",
+      "addLabel": "Add tags",
+      "tagNamePlaceholder": "Please enter the tag name to search",
+      "selectUserTable": "Select the Users table",
+      "delWarning":"Please select the deleted user first"
     }
   },
   "bulk": {
@@ -863,7 +922,11 @@
       "5exv06n8x1kk1": "entries",
       "5exv06n8x1kl1": "Import successful，",
       "5exv06n8x1km1": "Import failed",
-      "5exv06n8x1kn1": "Download Error Report"
+      "5exv06n8x1kn1": "Download Error Report",
+      "step1Content": "1. File parsing",
+      "step1Error": "1. File parsing (Failed)",
+      "step2Content": "2. Importing to server",
+      "step3Content": "3. Import completed"
     }
   },
   "az": {
