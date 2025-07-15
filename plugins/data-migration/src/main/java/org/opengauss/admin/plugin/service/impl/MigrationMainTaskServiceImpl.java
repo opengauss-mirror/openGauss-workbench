@@ -171,6 +171,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             subTasks.forEach(t -> {
                 if (t.getExecStatus() == 500) {
                     mainTask.setExecStatus(MainTaskStatus.FAIL.getCode());
+                    updateById(mainTask);
                 }
                 setOfflineMigrationTaskType(subTasks, mainTask);
             });
@@ -190,6 +191,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                     if (lastTaskStatus != null && lastTaskStatus.getStatusId() == 6 && "1.00".equals(mainTask
                             .getExecProgress())) {
                         mainTask.setExecStatus(MainTaskStatus.SUCCESS.getCode());
+                        updateById(mainTask);
                     }
                 });
         }
