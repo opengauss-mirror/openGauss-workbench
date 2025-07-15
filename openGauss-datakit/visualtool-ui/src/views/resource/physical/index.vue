@@ -147,7 +147,7 @@
           :total="list.page.total"></el-pagination>
         <add-host ref="addHostRef" @finish="labelClose"></add-host>
 
-        <!-- <add-agent ref="addAgentRef" @finish="labelClose" :hostId="rowHostId" :publicIp="rowPublicIp"></add-agent> -->
+        <add-agent ref="addAgentRef" @finish="labelClose" :hostId="rowHostId" :publicIp="rowPublicIp"></add-agent>
         <agent-drawer v-if="showAgentManagerDrawer" :rowInfo="rowInfo" @closeDrawer="closeDrawer"
           @updateTableData="updateTableData"></agent-drawer>
         <host-pwd-dlg ref="hostPwdRef" @finish="handleShowTerminal($event)"></host-pwd-dlg>
@@ -187,7 +187,7 @@ import fusionSearch from '@/components/fusion-search/index.vue'
 import { searchType } from '@/types/searchType'
 import { useRoute, useRouter, RouteRecordRaw } from 'vue-router'
 import { AgentStatus } from './physicalType/index.ts'
-// import AddAgent from "@/views/resource/physical/components/AddAgent.vue";
+import AddAgent from "@/views/resource/physical/components/AddAgent.vue";
 import showMessage from '@/hooks/showMessage'
 const { t } = useI18n()
 const { bus } = WujieVue
