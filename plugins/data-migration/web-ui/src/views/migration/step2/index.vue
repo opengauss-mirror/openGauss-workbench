@@ -98,6 +98,7 @@
         :data="tableData"
         v-loading="tableLoading"
         @selection-change="handleSelectionChange"
+        @filter-change="filterChange"
         style="width: 100%"
         border
       >
@@ -122,6 +123,7 @@
           ]"
           :filter-method="filterTag"
           filter-placement="bottom-end"
+
         >
           <template #default="{ row }">
             <el-row style="align-items: center">
@@ -342,8 +344,9 @@ import ToolsParamsConfig from './components/ToolsParamsConfig.vue'
 import {useI18n} from 'vue-i18n'
 import {INSTALL_TYPE, PORTAL_INSTALL_STATUS} from '@/utils/constants'
 import {Message} from '@arco-design/web-vue'
-import {Delete, Download, Filter, InfoFilled, Refresh, VideoPlay} from '@element-plus/icons-vue'
+import {Delete, Download, Filter, InfoFilled, Refresh, VideoPlay, Edit} from '@element-plus/icons-vue'
 import showMessage from "@/utils/showMessage";
+import {useRouter} from "vue-router";
 
 
 const { t } = useI18n()
@@ -537,6 +540,15 @@ const refreshSearchInfo = (hostIdList) => {
   searchAreaVisible.value = !searchAreaVisible.value
   resetQuery()
 }
+const activeFilters = ref([])
+const filterChange = (filterObj) => {
+  const columnKey = Object.keys(filterObj)[0]
+  activeFilters.value.length = 0
+  toRaw(filterObj[columnKey]).forEach((item) => {
+    activeFilters.value.push(item)
+  })
+  getHostsData()
+}
 
 const getHostsData = () => {
   timer && clearTimeout(timer)
@@ -553,10 +565,13 @@ const getHostsData = () => {
       if (Number(res.code) === 200) {
         loading.value = false
         pagination.total = res.data.total
-        tableData.value = res.data.records.map((item) => ({
+        tableData.value = res.data.records.map(item => ({
           ...item,
           hostId: item.hostInfo.hostId
-        }))
+        })) .filter(item =>
+        activeFilters.value.length === 0 ||
+        activeFilters.value.includes(item.installPortalStatus)
+        );
         originData.value = JSON.parse(JSON.stringify(tableData.value))
         selectionChange()
         timer = setTimeout(() => {
@@ -696,11 +711,20 @@ const refreshInstallStatus = (hostIdList) => {
   selectionChange()
 }
 
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  })
+}
+
 onMounted(() => {
   selectedKeys.value = toRaw(props.taskBasicInfo.selectedHosts).map(item => {
     return item.hostId ? item.hostId : item;
   })
   filterFlag.value = false
+  activeFilters.value.length = 0
+  scrollToTop()
   getHostsData()
   searchAreaVisible.value = false
 })
