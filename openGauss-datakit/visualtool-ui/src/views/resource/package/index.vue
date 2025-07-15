@@ -590,7 +590,7 @@ const getListData = (pageSize?:number, pageNum?:number, formData?: FormData) => 
       } else if (item.source && item.source === 'offline') {
         tempPackage.hostLabel = false
       } else if (item.source === null) {
-        let sysFilNam = item.packageUrl.split('/').pop()
+        let sysFilNam = item.packageUrl?.split('/').pop()
         if (item.fileName && item.fileName === sysFilNam) {
           tempPackage.hostLabel = true
         } else {
@@ -602,6 +602,9 @@ const getListData = (pageSize?:number, pageNum?:number, formData?: FormData) => 
       list.data.push({ ...tempPackage })
     })
     list.page.total = res.total
+    if (res.total > 0 && filter.pageNum !== 1 && list.data.length === 0) {
+      currentPage(1)
+    }
   }) .finally(() => {
     list.loading = false
     addSearchPackage(list.page.total)
