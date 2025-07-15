@@ -12,7 +12,8 @@
         <el-main  class="main-content">
           <div class="content-wrapper">
             <div class="content-box">
-              <step1 v-if="currentStep === 1" ref="stepOneComp" v-model="taskBasicInfo" :defaultBasicData="defaultBasicData" key="child-stable" />
+              <step1 v-if="currentStep === 1" ref="stepOneComp" v-model="taskBasicInfo"
+                     :defaultBasicData="defaultBasicData" key="child-stable" class="step1height" />
               <step2 v-if="currentStep === 2" ref="stepTwoComp" :taskBasicInfo="taskBasicInfo" @syncHost="syncHost" />
             </div>
           </div>
@@ -572,14 +573,16 @@ const backToIndex = () => {
 
 .content-wrapper {
   flex: 1;
-  overflow-y: auto;
   position: relative;
 
 }
 .content-box {
-  height: 1080px;
+  height: auto;
   background: var(--o-bg-color-light);
   border-radius: 4px;
+  .step1height {
+    height:1015px;
+  }
 }
 
 </style>

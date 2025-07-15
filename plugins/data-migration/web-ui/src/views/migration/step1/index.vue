@@ -1112,9 +1112,17 @@ const init = () => {
     taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDB : ''
 }
 
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  })
+}
+
 const initialized = ref();
 onMounted(() => {
   if (!initialized.value) {
+    scrollToTop()
     initialized.value = true
     getSourceClustersData()
     getTargetClustersData()
