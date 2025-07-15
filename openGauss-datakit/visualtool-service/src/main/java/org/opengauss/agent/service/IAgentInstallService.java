@@ -134,4 +134,12 @@ public interface IAgentInstallService extends IService<AgentInstallEntity> {
      * @return Map<String, AgentInstallEntity>
      */
     Map<String, AgentInstallEntity> queryAgentInstallInfo();
+
+    /**
+     * check agent install info
+     *
+     * @param hostId hostId
+     * @return boolean
+     */
+    boolean hasInstall(String hostId);
 }
