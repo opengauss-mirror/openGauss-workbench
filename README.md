@@ -149,9 +149,11 @@ sha256sum Datakit-6.0.0.tar.gz
    ```
    *注意*：此处使用`openGauss`作为后台数据库时，需要提前对数据库做一些参数配置，详细步骤请参考下方目录**补充：openGauss参数配置**
 5. 生成密钥信息\
-   修改并执行如下命令生成密钥信息。修改`-storepass`参数值与`application.yml`配置文件中的`key-store-password`值保持一致，默认时两者均为`123456`；修改`-keystore`路径值与配置文件中的`key-store`路径值保持一致，即第三步中修改`/ops`后的路径。
+   修改并执行如下命令生成密钥信息。
+   - 配置命令中`-storepass`参数值与`application-temp.yml`配置文件中的`server.ssl.key-store-password`参数值保持一致，参数取值支持字母、数字、符号等；
+   - 修改命令中`-keystore`路径值与配置文件中的`key-store`路径值保持一致，即第三步中修改`/ops`后的路径。
    ```shell
-   keytool -genkey -noprompt -dname "CN=opengauss, OU=opengauss, O=opengauss, L=Beijing, S=Beijing, C=CN" -alias opengauss -storetype PKCS12 -keyalg RSA -keysize 2048 -keystore /ops/ssl/keystore.p12 -validity 3650 -storepass 123456
+   keytool -genkey -noprompt -dname "CN=opengauss, OU=opengauss, O=opengauss, L=Beijing, S=Beijing, C=CN" -alias opengauss -storetype PKCS12 -keyalg RSA -keysize 2048 -keystore /ops/ssl/keystore.p12 -validity 3650 -storepass ******
    ```
    *注意*：此处为一条完整命令。
 6. 启动与日常运维\
