@@ -40,17 +40,17 @@ CREATE TABLE IF NOT EXISTS "tb_migration_task" (
     "source_db_host" varchar(50),
     "source_db_port" varchar(10),
     "source_db_user" varchar(50),
-    "source_db_pass" varchar(512),
+    "source_db_pass" text,
     "target_db_host" varchar(50),
     "target_db_port" varchar(10),
     "target_db_user" varchar(50),
-    "target_db_pass" varchar(512),
+    "target_db_pass" text,
     "create_time" timestamp,
     "exec_status" int4,
     "run_host" varchar(50),
     "run_port" varchar(50),
     "run_user" varchar(50),
-    "run_pass" varchar(512),
+    "run_pass" text,
     "exec_time" timestamp,
     "finish_time" timestamp,
     "main_task_id" int8,
@@ -442,7 +442,7 @@ CREATE TABLE IF NOT EXISTS "tb_main_task_env_error_host" (
     "run_host" varchar(64),
     "run_port" varchar(64),
     "run_user" varchar(64),
-    "run_pass" varchar(512),
+    "run_pass" text,
     "main_task_id" int8
     );
 
@@ -1247,3 +1247,7 @@ COMMENT
 ON COLUMN "tb_migration_reverse_migration_progress"."source_speed" IS '抽取速度，条/s';
 
 ALTER TABLE "tb_transcribe_replay_host" ALTER COLUMN "passwd" TYPE text;
+ALTER TABLE "tb_main_task_env_error_host" ALTER COLUMN "run_pass" TYPE text;
+ALTER TABLE "tb_migration_task" ALTER COLUMN "source_db_pass" TYPE text;
+ALTER TABLE "tb_migration_task" ALTER COLUMN "target_db_pass" TYPE text;
+ALTER TABLE "tb_migration_task" ALTER COLUMN "run_pass" TYPE text;

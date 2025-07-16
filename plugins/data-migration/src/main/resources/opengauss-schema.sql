@@ -215,17 +215,17 @@ CREATE TABLE IF NOT EXISTS "public"."tb_migration_task" (
   "source_db_host" varchar(50) COLLATE "pg_catalog"."default",
   "source_db_port" varchar(10) COLLATE "pg_catalog"."default",
   "source_db_user" varchar(50) COLLATE "pg_catalog"."default",
-  "source_db_pass" varchar(512) COLLATE "pg_catalog"."default",
+  "source_db_pass" text COLLATE "pg_catalog"."default",
   "target_db_host" varchar(50) COLLATE "pg_catalog"."default",
   "target_db_port" varchar(10) COLLATE "pg_catalog"."default",
   "target_db_user" varchar(50) COLLATE "pg_catalog"."default",
-  "target_db_pass" varchar(512) COLLATE "pg_catalog"."default",
+  "target_db_pass" text COLLATE "pg_catalog"."default",
   "create_time" timestamp(6),
   "exec_status" int4,
   "run_host" varchar(50) COLLATE "pg_catalog"."default",
   "run_port" varchar(50) COLLATE "pg_catalog"."default",
   "run_user" varchar(50) COLLATE "pg_catalog"."default",
-  "run_pass" varchar(512) COLLATE "pg_catalog"."default",
+  "run_pass" text COLLATE "pg_catalog"."default",
   "exec_time" timestamp(6),
   "finish_time" timestamp(6),
   "main_task_id" int8,
@@ -714,7 +714,7 @@ CREATE TABLE IF NOT EXISTS "public"."tb_main_task_env_error_host" (
     "run_host" varchar(64) COLLATE "pg_catalog"."default",
     "run_port" varchar(64) COLLATE "pg_catalog"."default",
     "run_user" varchar(64) COLLATE "pg_catalog"."default",
-    "run_pass" varchar(512) COLLATE "pg_catalog"."default",
+    "run_pass" text COLLATE "pg_catalog"."default",
     "main_task_id" int8,
     CONSTRAINT "tb_main_task_env_error_host_pkey" PRIMARY KEY ("id")
 );
@@ -1697,6 +1697,50 @@ CREATE OR REPLACE FUNCTION change_password_field_to_text() RETURNS integer AS 'B
     ) THEN
         ALTER TABLE public.tb_transcribe_replay_host
         ALTER COLUMN passwd TYPE text USING passwd::text;
+    END IF;
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ''public''
+          AND table_name = ''tb_main_task_env_error_host''
+          AND column_name = ''run_pass''
+          AND data_type != ''text''
+    ) THEN
+        ALTER TABLE public.tb_main_task_env_error_host
+        ALTER COLUMN run_pass TYPE text USING run_pass::text;
+    END IF;
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ''public''
+          AND table_name = ''tb_migration_task''
+          AND column_name = ''source_db_pass''
+          AND data_type != ''text''
+    ) THEN
+        ALTER TABLE public.tb_migration_task
+        ALTER COLUMN source_db_pass TYPE text USING source_db_pass::text;
+    END IF;
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ''public''
+          AND table_name = ''tb_migration_task''
+          AND column_name = ''target_db_pass''
+          AND data_type != ''text''
+    ) THEN
+        ALTER TABLE public.tb_migration_task
+        ALTER COLUMN target_db_pass TYPE text USING target_db_pass::text;
+    END IF;
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ''public''
+          AND table_name = ''tb_migration_task''
+          AND column_name = ''run_pass''
+          AND data_type != ''text''
+    ) THEN
+        ALTER TABLE public.tb_migration_task
+        ALTER COLUMN run_pass TYPE text USING run_pass::text;
     END IF;
     RETURN 0;
 END;'
