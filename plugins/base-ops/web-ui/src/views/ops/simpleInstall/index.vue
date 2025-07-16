@@ -53,6 +53,10 @@
           <a-input-number class="label-color" v-model="data.form.port" max="65535" min="0"
               :placeholder="$t('simple.InstallConfig.5mpmu0larmo0')"></a-input-number>
         </a-form-item>
+        <a-form-item field="password" :label="$t('simple.InstallConfig.5mpmu0larx00')" validate-trigger="blur">
+          <a-input-password class="label-color" v-model="data.form.password"
+                          :placeholder="$t('simple.InstallConfig.5mpmu0las0k0')" allow-clear></a-input-password>
+        </a-form-item>
       </a-form>
       <a-button type="primary" size="large" :loading="data.loading" @click="handleInstall">{{
         $t('simpleInstall.index.5mpn813gut00')
@@ -177,7 +181,8 @@ const data = reactive<KeyValue>({
     sysArch: '',
     install: null,
     port: 5432,
-    installPath: '/opt/openGauss'
+    installPath: '/opt/openGauss',
+    password: ''
   },
   installProgress: 0,
   port: 22,
@@ -502,7 +507,7 @@ const exeInstall = async (socket: Socket<any, any>, businessId: string, term: Te
         port: data.form.port,
         installPackagePath: '/opt/software/openGauss',
         databaseUsername: '',
-        databasePassword: '1qaz2wsx#EDC',
+        databasePassword: data.form.password,
         nodeConfigList: [{
           clusterRole: ClusterRoleEnum.MASTER,
           hostId: data.form.hostId,
