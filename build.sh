@@ -160,6 +160,13 @@ function get_git_log(){
     echo "$(git log -1)" >> build_commit_id.log
     echo "--------------------------------get_git_log finished---------------------------------"
 }
+function copy_agent_pkg() {
+    cd $root_path
+    mkdir -p output/agent
+    cp ./agent/datakit-agent-*.jar ${output_path}/agent
+    cp ./agent/application.yml ${output_path}/agent
+    echo "copy agent success!!!"
+}
 
 function build_pkg() {
     cd $root_path
@@ -208,6 +215,15 @@ prepare_env
 get_git_log
 build_pkg
 copy_plugin_pkg
+copy_agent_pkg
 cd $output_path
 tar -zcf Datakit-All-${pom_version}.tar.gz ./*
-tar -zcf Datakit-Mini-${pom_version}.tar.gz ./application-temp.yml ./build_commit_id.log ./doc ./openGauss-datakit* ./run.sh ./visualtool-plugin/webds-plugin* ./visualtool-plugin/base-ops*
+tar -zcf Datakit-Mini-${pom_version}.tar.gz \
+      ./application-temp.yml \
+      ./build_commit_id.log \
+      ./doc \
+      ./openGauss-datakit* \
+      ./run.sh \
+      ./visualtool-plugin/webds-plugin* \
+      ./visualtool-plugin/base-ops* \
+      ./agent/*
