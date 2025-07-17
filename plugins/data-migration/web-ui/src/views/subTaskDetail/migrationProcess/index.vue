@@ -140,33 +140,33 @@ watch(props, (newVal, oldVal) => {
     if (subTaskStore.subTaskData?.fullProcess?.execResultDetail) {
       const fullProcessObj = JSON.parse(subTaskStore.subTaskData.fullProcess.execResultDetail);
       if (fullProcessObj) {
-        totalProcessDesc.data = fullProcessObj.total.data;
-        totalProcessDesc.speed = fullProcessObj.total.speed;
-        totalProcessDesc.time = fullProcessObj.total.time;
+        totalProcessDesc.data = fullProcessObj.total?.data || 0;
+        totalProcessDesc.speed = fullProcessObj.total?.speed || 0;
+        totalProcessDesc.time = fullProcessObj.total?.time || 0;
       }
     }
     // Full check assignment
     if (subTaskStore.subTaskData?.dataCheckProcess?.execResultDetail) {
       const fullCheckProcessObj = JSON.parse(subTaskStore.subTaskData.dataCheckProcess.execResultDetail)
       if (fullCheckProcessObj) {
-        totalCheckDesc.data = fullCheckProcessObj.total;
-        totalCheckDesc.speed = fullCheckProcessObj.avgSpeed;
+        totalCheckDesc.data = fullCheckProcessObj.total || 0;
+        totalCheckDesc.speed = fullCheckProcessObj.avgSpeed || 0;
       }
     }
     // Incremental migration assignments
     if (subTaskStore.subTaskData?.incrementalProcess?.execResultDetail) {
       const increProcessObj = JSON.parse(subTaskStore.subTaskData.incrementalProcess.execResultDetail);
       if (increProcessObj) {
-        increaseProcessDesc.sourceSpeed = increProcessObj.sourceSpeed;
-        increaseProcessDesc.sinkSpeed = increProcessObj.sinkSpeed;
+        increaseProcessDesc.sourceSpeed = increProcessObj.sourceSpeed || 0;
+        increaseProcessDesc.sinkSpeed = increProcessObj.sinkSpeed || 0;
       }
     }
     // Reverse migration is currently empty [it is full migration reverse]
     if (subTaskStore.subTaskData?.reverseProcess?.execResultDetail) {
       const reverseProcessObj = JSON.parse(subTaskStore.subTaskData.reverseProcess.execResultDetail);
       if (reverseProcessObj) {
-        reverseProcess.sourceSpeed = reverseProcessObj.sourceSpeed;
-        reverseProcess.sinkSpeed = reverseProcessObj.sinkSpeed;
+        reverseProcess.sourceSpeed = reverseProcessObj.sourceSpeed || 0;
+        reverseProcess.sinkSpeed = reverseProcessObj.sinkSpeed || 0;
       }
     }
   } catch(err) {
