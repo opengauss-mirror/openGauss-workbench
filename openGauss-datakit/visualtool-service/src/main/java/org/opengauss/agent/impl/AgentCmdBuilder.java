@@ -35,7 +35,8 @@ public class AgentCmdBuilder {
     private static final String CHECK_DIR_WRITABLE_CMD_TEMPLATE = "[ -w \"%s\" ] && echo 'writable' || echo 'readonly'";
     private static final String SHA256SUM_CMD_TEMPLATE = "sha256sum '%s/%s' | cut -d ' ' -f 1";
     private static final String DELETE_AGENT_DIR_CMD_TEMPLATE = "rm -rf %s";
-    private static final String JAVA_VERSION_CMD_TEMPLATE = "java -version 2>&1 | awk -F\\\" '/version/ {print $2}'";
+    private static final String JAVA_VERSION_CMD_TEMPLATE = "source ~/.bashrc | java -version 2>&1 |"
+        + " awk -F\\\" '/version/ {print $2}'";
     private static final String CHECK_AGENT_RUNNING_CMD_TEMPLATE = "pgrep -f \"%s\"";
 
     /**

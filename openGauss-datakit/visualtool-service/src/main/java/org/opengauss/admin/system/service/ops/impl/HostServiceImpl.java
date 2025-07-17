@@ -434,6 +434,9 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         if (clusterService.countByHostId(hostId) > 0) {
             throw new OpsException("The host is being used by the cluster");
         }
+        if (agentInstallService.hasInstall(hostId)) {
+            throw new OpsException("The host must be uninstalled the agent before deleting host");
+        }
         removeById(hostId);
         hostUserService.removeByHostId(hostId);
         hostMonitorCacheService.deleteHostCache(hostId);

@@ -55,6 +55,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -383,6 +384,11 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
     @Override
     public Map<String, AgentInstallEntity> queryAgentInstallInfo() {
         return list().stream().collect(Collectors.toMap(AgentInstallEntity::getAgentId, Function.identity()));
+    }
+
+    @Override
+    public boolean hasInstall(String hostId) {
+        return !Objects.equals(AgentStatus.UNINSTALL, getAgentStatus(hostId));
     }
 
     private String getSha256SumOfLocalAgentFile(String agentLocalFilePath) {
