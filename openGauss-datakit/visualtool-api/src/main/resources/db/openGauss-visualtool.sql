@@ -2174,7 +2174,7 @@ ON COLUMN "public"."sys_setting"."upload_path" IS '文件上传目录';
 -- Records of sys_setting
 -- ----------------------------
 INSERT INTO "public"."sys_setting" VALUES (1, 1, '/ops/files/', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/', 'PortalControl-7.0.0rc2.tar.gz', 'portalControl-7.0.0rc2-exec.jar') ON DUPLICATE KEY UPDATE NOTHING;
-
+INSERT INTO "public"."sys_menu" VALUES (209, '创建服务器', 2, 9, '/resource/physical/createserver', 'resource/physical/components/CreateServerPage', NULL, 1, 0, 'C', '1', '0', NULL, NULL, 'admin', '2025-07-15 20:11:27.003', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 1, 'Create Server') ON DUPLICATE KEY UPDATE NOTHING;
 CREATE OR REPLACE FUNCTION add_user_field_func() RETURNS integer AS 'BEGIN
 IF
 ( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''sys_user'' AND COLUMN_NAME = ''update_pwd'' ) = 0

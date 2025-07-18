@@ -50,7 +50,7 @@
                 <el-form-item :label="$t('components.AddHost.tags')" prop="tags">
                   <el-select v-model="data.serverData.tags" :loading="data.tagsLoading"
                              :placeholder="$t('components.AddHost.tagsPlaceholder')"
-                             allow-create class="input-width" clearable multiple
+                             allow-create class="input-width" clearable multiple filterable
                              @change="tagsChange">
                     <el-option v-for="item in data.tagsList" :key="item.value" :value="item.value">{{
                         item.label
