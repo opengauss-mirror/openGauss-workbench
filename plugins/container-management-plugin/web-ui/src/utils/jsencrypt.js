@@ -1,8 +1,24 @@
 import JSEncrypt from 'jsencrypt/bin/jsencrypt.min'
 import { getEntryKey } from '@/api/detail'
 
+const isEncryptedData = (data) => {
+  if (!data) return false;
+  // Check Base64 format (encrypted data is usually Base64 encoded)
+  const base64Check = /^(?=.*[+/=])[A-Za-z0-9+/=]+$/.test(data) &&
+    data.length % 4 === 0 &&
+    /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(data)
+  return base64Check;
+}
+
 // host password encryption
 export async function encryptPassword (pwd) {
+  if (!pwd) {
+    return
+  }
+  const isEncryptTxt = isEncryptedData(pwd);
+  if (isEncryptTxt) {
+    return pwd;
+  }
   let publicKey = ''
   const getPublicKey = await getEntryKey()
   if (Number(getPublicKey.code) === 200 && getPublicKey.key) {
