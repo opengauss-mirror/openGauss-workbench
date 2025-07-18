@@ -7,7 +7,7 @@
           <div class="title-right">
             <TextTooltip class="name-text" :content="subTaskId"></TextTooltip>
             <el-tag v-if="execSubStatusMap(subTaskInfo.execStatus)"
-              :type="statusColorMap?.[subTaskInfo?.execStatus] || ''" class="status-tag">{{
+              :type="statusColorMap(subTaskInfo?.execStatus) || ''" class="status-tag">{{
                 execSubStatusMap(subTaskInfo.execStatus) }}
             </el-tag>
           </div>
@@ -189,6 +189,7 @@ const descData = computed(() => [
 // Obtain the current step and execution time of the step bar
 const getTopExpressInfo = (info) => {
   subTaskInfo.value.execStatus = info?.execStatus
+  subTaskInfo.value.currentExecStatus = info?.currentExecStatus
   // Gets the state of the runtime returned by the current interface
   let subTaskStatus = info?.execStatus
   // Determine whether to run success/failure status, these states cannot directly determine the step, you need to use the previous state
@@ -346,9 +347,7 @@ const transTimeType = (isoTypeTime) => {
 
 // Before/off the corresponding webscoket before leaving the page
 const closeWS = () => {
-  console.log('close', 'restart')
   if (currentWS.value) {
-    console.log(currentWS.value, 'current-ws')
     currentWS.value?.destroy()
     currentWS.value = null;
   }
@@ -382,35 +381,48 @@ const execSubStatusMap = (status) => {
     13: t('components.SubTaskDetail.5q09prnzp2k0'),
     30: t('components.SubTaskDetail.incrementError'),
     40: t('components.SubTaskDetail.reverseError'),
-    100: t('components.SubTaskDetail.5q09prnzp540'),
+    100: t('list.index.5q08sf2dhj00'),
     500: t('components.SubTaskDetail.5q09prnzp740'),
     1000: t('components.SubTaskDetail.5q09prnzp980'),
     3000: t('detail.index.5q09asiwlca0')
   };
+  if (status === 100 
+    && subTaskInfo.value.currentExecStatus === 6 
+    && descValueObj.value.executionMode === 1) {
+    return t('components.SubTaskDetail.5q09prnzp540')
+  }
   return maps[status];
 };
 
-const statusColorMap = {
-  0: 'info',
-  1: 'primary',
-  2: 'primary',
-  3: 'primary',
-  4: 'primary',
-  5: 'primary',
-  6: 'primary',
-  7: 'primary',
-  8: 'primary',
-  9: 'primary',
-  10: 'primary',
-  11: 'primary',
-  12: 'primary',
-  13: 'primary',
-  30: 'danger',
-  40: 'danger',
-  100: 'success',
-  500: 'danger',
-  1000: 'primary',
-  3000: 'danger'
+const statusColorMap = (status) => {
+  const maps = {
+    0: 'info',
+    1: 'primary',
+    2: 'primary',
+    3: 'primary',
+    4: 'primary',
+    5: 'primary',
+    6: 'primary',
+    7: 'primary',
+    8: 'primary',
+    9: 'primary',
+    10: 'primary',
+    11: 'primary',
+    12: 'primary',
+    13: 'primary',
+    30: 'danger',
+    40: 'danger',
+    100: 'warning',
+    500: 'danger',
+    1000: 'primary',
+    3000: 'danger'
+  }
+  if (status === 100 
+    && subTaskInfo.value.currentExecStatus === 6 
+    && descValueObj.value.executionMode === 1) {
+    return 'success'
+  }
+  return maps[status]
 };
 // timer
 const intervalid = ref(null);
