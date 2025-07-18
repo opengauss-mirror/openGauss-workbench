@@ -1723,7 +1723,7 @@ COMMENT ON COLUMN "sys_setting"."upload_path" IS '文件上传目录';
 -- Records of sys_setting
 -- ----------------------------
 INSERT INTO "sys_setting" VALUES (1, 1, '/ops/files/', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/', 'PortalControl-7.0.0rc2.tar.gz', 'portalControl-7.0.0rc2-exec.jar');
-
+INSERT INTO "sys_menu" VALUES (209, '创建服务器', 2, 9, '/resource/physical/createserver', 'resource/physical/components/CreateServerPage', NULL, 1, 0, 'C', '1', '0', NULL, NULL, 'admin', '2025-07-15 20:11:27.003', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 1, 'Create Server');
 ALTER TABLE sys_user ADD COLUMN update_pwd int2 DEFAULT 0;
 COMMENT ON COLUMN "sys_user"."update_pwd" IS '是否修改密码；1：是；0：否';
 
