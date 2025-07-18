@@ -987,7 +987,8 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         }
         Map<String, String> resultMap = new HashMap<>();
         resultMap.put("mysql.user.name", task.getSourceDbUser());
-        resultMap.put("mysql.user.password", encryptPassword(installHost, task.getSourceDbPass()));
+        resultMap.put("mysql.user.password",
+            encryptPassword(installHost, encryptionUtils.decrypt(task.getSourceDbPass())));
         resultMap.put("mysql.database.host", task.getSourceDbHost());
         resultMap.put("mysql.database.port", task.getSourceDbPort());
         resultMap.put("mysql.database.name", task.getSourceDb());
