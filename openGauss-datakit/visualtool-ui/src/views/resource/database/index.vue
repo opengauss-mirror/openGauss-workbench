@@ -33,9 +33,9 @@
               <a-form-item field="type" :label="$t('database.index.else3')">
                 <a-select v-model="filter.type" allow-clear :placeholder="$t('database.index.else3Placeholder')"
                   style="width: 150px;">
-                  <a-option value="OPENGAUSS">OPENGAUSS</a-option>
-                  <a-option value="MYSQL">MYSQL</a-option>
-                  <a-option value="POSTGRESQL">POSTGRESQL</a-option>
+                  <a-option value="OPENGAUSS">openGauss</a-option>
+                  <a-option value="MYSQL">MySQL</a-option>
+                  <a-option value="POSTGRESQL">PostgreSQL</a-option>
                 </a-select>
               </a-form-item>
               <a-form-item>
@@ -52,6 +52,11 @@
         <a-table style="height: 95%" :data="list.data" :columns="columns" :pagination="list.page" :loading="list.loading"
           @page-change="currentPage" @page-size-change="pageSizeChange" row-key="clusterId" @expand="handleExpand"
           :expandable="expandable">
+          <template #dbType="{ record }">
+            <a-text bordered v-if="record.dbType === 'MYSQL'">MySQL</a-text>
+            <a-text bordered v-if="record.dbType === 'OPENGAUSS'">openGauss</a-text>
+            <a-text bordered v-if="record.dbType === 'POSTGRESQL'">PostgreSQL</a-text>
+          </template>
           <template #status="{ record }">
             <a-tag bordered v-if="record.state === -1">checking</a-tag>
             <a-tag bordered color="red" v-if="record.state === 0">error</a-tag>
@@ -122,7 +127,7 @@ const handleExpand = (rowKey: string | number) => {
 
 const columns = computed(() => [
   { title: t('database.index.5oxhr0qz48w0'), dataIndex: 'name', width: 300, ellipsis: true, tooltip: true },
-  { title: t('database.index.5oxhr0qz4fs0'), dataIndex: 'dbType', width: 220 },
+  { title: t('database.index.5oxhr0qz4fs0'), dataIndex: 'dbType', width: 220, slotName: 'dbType' },
   { title: t('database.index.5oxhr0qz4no0'), dataIndex: 'status', width: 200, slotName: 'status' },
   { title: t('database.index.5oxhr0qz4zk0'), dataIndex: 'updateTime', width: 300 },
   { title: t('database.index.5oxhr0qz58o0'), slotName: 'operation', width: 300, fixed: 'right' }
