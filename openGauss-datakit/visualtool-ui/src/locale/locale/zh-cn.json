@@ -439,7 +439,18 @@
       "5mtcyb0rty49": "获取版本号失败",
       "5mtcyb0rty50": "添加安装包",
       "5mtcyb0rty51": "更新安装包",
-      "5mtcyb0rty52": "文件下载失败，请检查下载地址或者网络连接是否正确"
+      "5mtcyb0rty52": "文件下载失败，请检查下载地址或者网络连接是否正确",
+      "5mtcyb0rty53": "根据配置匹配到如下安装包并进行下载",
+      "5mtcyb0rty54": "将文件拖拽到此处 或",
+      "5mtcyb0rty55": "选择文件",
+      "5mtcyb0rty56": "请选择.jar文件",
+      "5mtcyb0rty57": "长时间无响应，将关闭下载进度悬浮框",
+      "5mtcyb0rty58": "请选择指定类型的文件",
+      "5mtcyb0rty59": "文件大小超过限制",
+      "5mtcyb0rty60": "请选择操作系统",
+      "5mtcyb0rty61": "请选择cpu架构",
+      "5mtcyb0rty62": "请选择openGauss版本",
+      "5mtcyb0rty63": "请输入安装包名称"
     },
     "SystemAlarm": {
       "cpuWarning": "CPU告警",

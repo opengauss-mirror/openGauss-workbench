@@ -439,7 +439,18 @@
       "5mtcyb0rty49": "Failed to get the version number",
       "5mtcyb0rty50": "Add package",
       "5mtcyb0rty51": "Update package",
-      "5mtcyb0rty52": "File download failed. Kindly verify the accuracy of the download link or ensure that network connection is functioning properly."
+      "5mtcyb0rty52": "File download failed. Kindly verify the accuracy of the download link or ensure that network connection is functioning properly.",
+      "5mtcyb0rty53": "Match the following installation package based on the configuration and download it",
+      "5mtcyb0rty54": "Drag and drop the file here or",
+      "5mtcyb0rty55": "Select the file",
+      "5mtcyb0rty56": "Please select the .jar file",
+      "5mtcyb0rty57": "No response for a long time, the download progress floating box will be closed",
+      "5mtcyb0rty58": "Please select the file of the specified type",
+      "5mtcyb0rty59": "The file size exceeds the limit",
+      "5mtcyb0rty60": "Please select an operating system",
+      "5mtcyb0rty61": "Select a CPU architecture",
+      "5mtcyb0rty62": "Please select the openGauss version",
+      "5mtcyb0rty63": "Please enter a package name"
     },
     "SystemAlarm": {
       "cpuWarning": "CPU Alarm",
