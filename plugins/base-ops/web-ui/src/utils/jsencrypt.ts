@@ -5,12 +5,13 @@ import { KeyValue } from '@/types/global'
 const isEncryptedData = (data: string | null) => {
   if (!data) return false;
   // Check Base64 format (encrypted data is usually Base64 encoded)
-  const base64Pattern = /^[A-Za-z0-9+/=]+$/;
-  const base64Check = base64Pattern.test(data);
+  const base64Check = /^(?=.*[+/=])[A-Za-z0-9+/=]+$/.test(data) &&
+    data.length % 4 === 0 &&
+    /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(data)
   return base64Check;
 }
 // host password encryption
-export async function encryptPassword (pwd: string) {
+export async function encryptPassword(pwd: string) {
   if (!pwd) {
     return
   }
@@ -31,7 +32,7 @@ export async function encryptPassword (pwd: string) {
 }
 
 // host password decryption
-export async function decryptPassword (encryPwd: string) {
+export async function decryptPassword(encryPwd: string) {
   const isEncryptTxt = isEncryptedData(encryPwd);
   if (!isEncryptTxt) return encryPwd;
   const res: KeyValue = await getDecryptKey(encryPwd);

@@ -4,13 +4,14 @@ import { getEntryKey } from '@/api/detail'
 const isEncryptedData = (data) => {
   if (!data) return false;
   // Check Base64 format (encrypted data is usually Base64 encoded)
-  const base64Pattern = /^[A-Za-z0-9+/=]+$/;
-  const base64Check = base64Pattern.test(data);
+  const base64Check = /^(?=.*[+/=])[A-Za-z0-9+/=]+$/.test(data) &&
+    data.length % 4 === 0 &&
+    /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(data)
   return base64Check;
 }
 
 // host password encryption
-export async function encryptPassword (pwd) {
+export async function encryptPassword(pwd) {
   const isEncryptTxt = isEncryptedData(pwd);
   if (isEncryptTxt) {
     return pwd;
