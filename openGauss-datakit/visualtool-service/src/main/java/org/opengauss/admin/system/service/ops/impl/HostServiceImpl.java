@@ -305,17 +305,14 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             throw new OpsException("Some attributes have not been filled in.");
         }
         OpsHostEntity hostEntity = getByPublicIp(hostRecord.getPublicIp());
-        if (isAdminUser(hostRecord)) {
-            handleAdminUser(hostRecord, hostEntity, uuid);
+        if (Objects.isNull(hostEntity)) {
+            addHostInfo(hostRecord, hostEntity, uuid);
         } else {
-            handleNonAdminUser(hostRecord, hostEntity);
+            addUserInfo(hostRecord, hostEntity);
         }
     }
 
-    private void handleAdminUser(HostRecord hostRecord, OpsHostEntity hostEntity, String uuid) {
-        if (!"root".equals(hostRecord.getUserName())) {
-            throw new OpsException("The user is not a root user.");
-        }
+    private void addHostInfo(HostRecord hostRecord, OpsHostEntity hostEntity, String uuid) {
         Session session = null;
         SshLogin sshLogin = new SshLogin(hostRecord.getPublicIp(), hostRecord.getPort(), hostRecord.getUserName(),
             encryptionUtils.decrypt(hostRecord.getPassword()));
@@ -324,11 +321,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             hostRecord.toHostEntity(getHostInfoVo(session));
             HostBody hostBody = hostRecord.toHostBody();
             hostBody.setPassword(encryptionUtils.encrypt(hostBody.getPassword()));
-            if (Objects.isNull(hostEntity)) {
-                add(hostBody);
-            } else {
-                edit(hostEntity.getHostId(), hostBody);
-            }
+            add(hostBody);
         } finally {
             if (Objects.nonNull(session) && session.isConnected()) {
                 session.disconnect();
@@ -336,18 +329,14 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         }
     }
 
-    private void handleNonAdminUser(HostRecord hostRecord, OpsHostEntity hostEntity) {
-        if (Objects.isNull(hostEntity)) {
-            throw new OpsException("Host information is not exits.");
-        } else {
-            HostUserBody hostUserBody = new HostUserBody();
-            hostUserBody.setHostId(hostEntity.getHostId());
-            hostUserBody.setUsername(hostRecord.getUserName());
-            hostUserBody.setPassword(encryptionUtils.encrypt(hostRecord.getPassword()));
-            hostUserService.add(hostUserBody);
-            List<String> tags = addAllTagsToNewCollection(hostRecord.getTags());
-            opsHostTagService.addTag(HostTagInputDto.of(tags, hostEntity.getHostId()));
-        }
+    private void addUserInfo(HostRecord hostRecord, OpsHostEntity hostEntity) {
+        HostUserBody hostUserBody = new HostUserBody();
+        hostUserBody.setHostId(hostEntity.getHostId());
+        hostUserBody.setUsername(hostRecord.getUserName());
+        hostUserBody.setPassword(encryptionUtils.encrypt(hostRecord.getPassword()));
+        hostUserService.add(hostUserBody);
+        List<String> tags = addAllTagsToNewCollection(hostRecord.getTags());
+        opsHostTagService.addTag(HostTagInputDto.of(tags, hostEntity.getHostId()));
     }
 
     private List<List<String>> createBaseHeaders() {
@@ -380,11 +369,6 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             hostRecord.getPublicIp()) && Objects.nonNull(hostRecord.getPrivateIp()) && Objects.nonNull(
             hostRecord.getPort()) && Objects.nonNull(hostRecord.getUserName()) && Objects.nonNull(
             hostRecord.getPassword());
-    }
-
-    private boolean isAdminUser(HostRecord hostRecord) {
-        String isAdmin = hostRecord.getIsAdmin();
-        return "是".equals(isAdmin) || "yes".equals(isAdmin);
     }
 
     private List<String> addAllTagsToNewCollection(List<String> tags) {
