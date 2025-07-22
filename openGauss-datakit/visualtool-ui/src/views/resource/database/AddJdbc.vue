@@ -99,9 +99,9 @@ const data = reactive<KeyValue>({
   hostList: [],
   activeTab: '',
   dbTypes: [
-    { label: 'MYSQL', value: 'MYSQL' },
-    { label: 'OPENGAUSS', value: 'OPENGAUSS' },
-    { label: 'POSTGRESQL', value: 'POSTGRESQL' }
+    { label: 'MySQL', value: 'MYSQL' },
+    { label: 'openGauss', value: 'OPENGAUSS' },
+    { label: 'PostgreSQL', value: 'POSTGRESQL' }
   ]
 })
 const formRef = ref<null | FormInstance>(null)
