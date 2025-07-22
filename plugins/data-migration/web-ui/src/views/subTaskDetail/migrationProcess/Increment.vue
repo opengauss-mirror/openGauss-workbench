@@ -8,14 +8,14 @@
           :description="t('components.SubTaskDetail.restWriteData')"></statistic-card>
       </div>
       <div class="button-area">
-        <el-button type="primary" v-if="showRepair" @click="handleFix('reset')">{{ t('components.SubTaskDetail.oneClickRepair')
+        <el-button type="primary" v-if="showRepair" :disabled="props.subTaskDbType?.toUpperCase() ==='POSTGRESQL'" @click="handleFix('reset')">{{ t('components.SubTaskDetail.oneClickRepair')
           }}</el-button>
         <el-button v-if="currentActive === 3 && subTaskMode === 2 &&
-          currentExecStatus === SUB_TASK_STATUS.INCREMENTAL_RUNNING" @click="stopSubIncrese">{{
+          currentExecStatus === SUB_TASK_STATUS.INCREMENTAL_RUNNING" @click="stopSubIncrese" :disabled="props.subTaskDbType?.toUpperCase() ==='POSTGRESQL'">{{
             t('components.SubTaskDetail.stopIncreaseMigration') }}</el-button>
         <el-button
           v-if="currentActive === 3 && subTaskMode === 2 && currentExecStatus === SUB_TASK_STATUS.INCREMENTAL_STOPPED"
-          @click="startSubReverse">{{ t('detail.index.5q09asiwkq40') }}</el-button>
+          @click="startSubReverse" :disabled="props.subTaskDbType?.toUpperCase() ==='POSTGRESQL'">{{ t('detail.index.5q09asiwkq40') }}</el-button>
       </div>
     </div>
     <div class="sub-tabs">
@@ -31,7 +31,7 @@
           </span>
           {{ t('components.SubTaskDetail.sourceRepair') }}
         </div>
-        <span class="fix-button" :class="showRepair ? '' : 'unableClick'" @click="handleFix('source')">{{ t('components.SubTaskDetail.oneClickRepair') }}</span>
+        <span class="fix-button" :class="showRepair ? '' : 'unableClick'" @click="handleFix('source')" v-if="props.subTaskDbType?.toUpperCase() !=='POSTGRESQL'">{{ t('components.SubTaskDetail.oneClickRepair') }}</span>
       </div>
       <div class="process-card">
         <div class="info">
@@ -45,7 +45,7 @@
           </span>
           {{ t('components.SubTaskDetail.targetRepair') }}
         </div>
-        <span class="fix-button" :class="showRepair ? '' : 'unableClick'" @click="handleFix('sink')">{{ t('components.SubTaskDetail.oneClickRepair') }}</span>
+        <span class="fix-button" :class="showRepair ? '' : 'unableClick'" @click="handleFix('sink')" v-if="props.subTaskDbType?.toUpperCase() !== 'POSTGRESQL'">{{ t('components.SubTaskDetail.oneClickRepair') }}</span>
       </div>
     </div>
     <ReverseDetail v-if="reverseVisible" @closeDialog="closeDialog" :replicationData="replicationData"
@@ -81,6 +81,9 @@ const props = defineProps(({
     type: Number,
     default: 1,
   },
+  subTaskDbType: {
+    type: String,
+  }
 }))
 const subTaskId = inject('subTaskId')
 const fixLoading = ref(false)

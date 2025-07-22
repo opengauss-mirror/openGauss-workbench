@@ -1,12 +1,12 @@
 <template>
   <div class="common-layout">
     <div class="steps">
-      <common-steps :steps="steps" :current="current" v-model:active="active" class="steps-content"></common-steps>
+      <common-steps :steps="steps" :current="current" :subTaskDbType="subTaskDbType" v-model:active="active" class="steps-content"></common-steps>
     </div>
     <div class="process-item">
       <full-migration v-if="active === 1"></full-migration>
       <full-check v-else-if="active === 2"></full-check>
-      <increment v-else :active="active" :subTaskMode="subTaskMode"></increment>
+      <increment v-else :active="active" :subTaskMode="subTaskMode" :subTaskDbType="subTaskDbType"></increment>
     </div>
   </div>
 </template>
@@ -34,6 +34,9 @@ const props = defineProps({
   },
   fullProcessCount: {
     type: Object
+  },
+  subTaskDbType :{
+    type: String,
   }
 })
 const subTaskId = inject('subTaskId');
@@ -87,7 +90,7 @@ const reverseProcess = reactive({
 })
 
 const subTaskMode = ref(2);
-
+const subTaskDbType = ref('')
 const steps = computed(() => {
   // A value is assigned to the full migration description
   const totalDesc = constantRate.value.dataName + totalProcessDesc.data + 'MB ' +
@@ -135,6 +138,7 @@ watch(props, (newVal, oldVal) => {
   }
   current.value = props.subTaskStep
   subTaskMode.value = props.subTaskMode;
+  subTaskDbType.value = props.subTaskDbType
   try {
     // Assign a value for full migration
     if (subTaskStore.subTaskData?.fullProcess?.execResultDetail) {
@@ -201,8 +205,6 @@ watch(props, (newVal, oldVal) => {
   .process-item {
     flex: 1;
   }
-
-
 
   :deep(.el-tabs--card>.el-tabs__header .el-tabs__item) {
     background-color: var(--o-bg-color-base);

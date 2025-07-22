@@ -15,6 +15,11 @@
         <template #icon v-else-if="item.stepIndex > props.current">
           <div class="circle"></div>
         </template>
+        <template #icon v-else-if="item.stepIndex === 2 && props.subTaskDbType?.toUpperCase() === 'POSTGRESQL'">
+          <div class="lockCircle">
+            <svg-icon icon-class="circleCheck"></svg-icon>
+          </div>
+        </template>
         <!-- checked node  -->
         <template #icon v-else>
           <div class="checkCircle">
@@ -41,6 +46,9 @@ const props = defineProps({
   current: {
     type: Number,
     required: true,
+  },
+  subTaskDbType: {
+    type: String,
   }
 })
 const getStatus = (index) => {
@@ -55,6 +63,9 @@ const getStatus = (index) => {
 
 const emits = defineEmits(['update:active'])
 const clickNode = (index) => {
+  if (index === 2 && props.subTaskDbType.toUpperCase() === 'POSTGRESQL') {
+    return
+  }
   if (index > props.current) {
     return
   }
@@ -111,10 +122,6 @@ const clickNode = (index) => {
   transform: scale(1)
 }
 
-:deep(.el-steps--horizontal:not(.o-cluster) .el-step__title.is-process) {
-  // color: var(--o-color-primary);
-}
-
 :deep(.el-steps--horizontal:not(.o-cluster) .el-step__line) {
   background: var(--o-border-color-lighter);
 }
@@ -129,11 +136,33 @@ const clickNode = (index) => {
   color: var(--o-color-primary);
 }
 
+.lockCircle {
+  position: relative;
+  display: inline-block;
+  box-sizing: border-box;
+  cursor: not-allowed;
+  &:before {
+    content: '';
+    position: absolute;
+    margin: 2px;
+    width: 80%;
+    height: 80%;
+    background-color: var(--o-border-color-base);
+    border-radius: 50%;
+    z-index: -1;
+  }
+
+  svg {
+    color: var(--o-border-color-lighter);
+    font-size: 20px;
+    border-radius: 50%;
+  }
+}
+
 .checkCircle {
   position: relative;
   display: inline-block;
   box-sizing: border-box;
-
   &:before {
     content: '';
     position: absolute;
@@ -150,4 +179,5 @@ const clickNode = (index) => {
     font-size: 20px;
     border-radius: 50%;
   }
-}</style>
+}
+</style>
