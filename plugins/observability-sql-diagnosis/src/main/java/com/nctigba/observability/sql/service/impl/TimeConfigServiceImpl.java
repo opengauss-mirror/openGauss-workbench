@@ -94,7 +94,7 @@ public class TimeConfigServiceImpl extends ServiceImpl<TimeConfigMapper, TimeCon
         if (monthCount > 0) {
             return monthCount + "month";
         }
-        return monthCount + "day";
+        return peroid + "day";
     }
 
     private String formatFrequency(Integer frequency) {
