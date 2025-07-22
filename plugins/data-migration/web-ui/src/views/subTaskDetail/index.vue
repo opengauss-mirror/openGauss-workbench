@@ -32,7 +32,7 @@
           <el-tabs stretch v-model="currentTab">
             <!-- with lazy attribute, this card would not render until first click,-->
             <el-tab-pane :label="t('components.SubTaskDetail.migrationProcess')" name="migrationProcess" lazy>
-              <MigrationProcess :subTaskMode="subTaskMode" v-if="currentTab === 'migrationProcess'"
+              <MigrationProcess :subTaskMode="subTaskMode" :subTaskDbType="subTaskDbType" v-if="currentTab === 'migrationProcess'"
                 :processObj="processObj" :subTaskStep="subTaskStep" :fullProcessCount="fullProcessCount">
               </MigrationProcess>
             </el-tab-pane>
@@ -84,6 +84,7 @@ const stepJudge = new Set([SUB_TASK_STATUS.MIGRATION_FINISH, SUB_TASK_STATUS.MIG
 const subTaskStore = useSubTaskStore();
 const subTaskStep = ref(1);
 const subTaskMode = ref(2);
+const subTaskDbType = ref('')
 const props = defineProps({
   open: Boolean,
   taskInfo: Object,
@@ -315,7 +316,13 @@ const getSubTaskBasicInfo = () => {
       // offline = 1; online = 2;
       descValueObj.value.executionMode = res.data?.execMode
       descValueObj.value.sourceLibrary = res.data?.sourceDb
-      descValueObj.value.sourceDbType = res.data?.sourceDbType
+      if (res.data?.sourceDbType.toUpperCase() === 'POSTGRESQL') {
+        descValueObj.value.sourceDbType = 'PostgreSQL'
+      } else if (res.data?.sourceDbType.toUpperCase() === 'MYSQL') {
+        descValueObj.value.sourceDbType = 'MySQL'
+      } else {
+        descValueObj.value.sourceDbType = ''
+      }
       descValueObj.value.sinkLibrary = res.data?.targetDb
       // The fifth one is assigned in the websocket
       if (res.data?.createTime) {
@@ -327,6 +334,7 @@ const getSubTaskBasicInfo = () => {
         descValueObj.value.initiateTime = transTimeType(res.data?.startTime)
       }
       subTaskMode.value = res.data?.execMode || 2;
+      subTaskDbType.value = res.data?.sourceDbType || ''
     }
   }).catch(error => {
     console.error(error)
@@ -483,7 +491,7 @@ onBeforeUnmount(() => {
     display: flex;
     gap: 24px;
     min-height: 100%;
-    min-width: 1000px;
+    min-width: 1060px;
 
     .leftContent {
       width: 292px;

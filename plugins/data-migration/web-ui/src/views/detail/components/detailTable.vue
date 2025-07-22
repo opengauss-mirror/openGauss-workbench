@@ -14,7 +14,7 @@
         </el-table-column>
         <el-table-column :label="$t('detail.index.sourceType')" ellipsis tooltip prop="sourceDbType">
           <template #default="scope">
-            {{ scope.row.sourceDbType || 'MySQL' }}
+            {{ scope.row?.sourceDbType?.toUpperCase() === 'POSTGRESQL' ? 'PostgreSQL' : 'MySQL' }}
           </template>
         </el-table-column>
         <el-table-column :label="$t('detail.index.5q09asiwgb40')" ellipsis tooltip>
@@ -57,36 +57,40 @@
                   size="14" style="color: #ff7d01; margin-left: 3px; cursor: pointer" />
               </template>
               <template #content>
-                <div v-if="scope.row.execStatus === SUB_TASK_STATUS.MIGRATION_ERROR" class="error-tips">{{
-                  scope.row.statusDesc }}</div>
-                <div v-if="scope.row.execStatus === SUB_TASK_STATUS.CHECK_FAILED" class="error-tips">
-                  <p v-if="judgeKeyExist(scope.row.statusDesc, 'service_availability')">{{
-                    parseServiceAvailability(scope.row.statusDesc) }}</p>
-                  <p v-if="judgeKeyExist(scope.row.statusDesc, 'database_connect')">{{
-                    parseDatabaseConnect(scope.row.statusDesc) }}</p>
-                  <p>{{ parseDatabasePermission(scope.row.statusDesc) }}</p>
-                  <p
-                    v-if="judgeKeyExist(scope.row.statusDesc, 'increment_param') || judgeKeyExist(scope.row.statusDesc, 'reverse_param')">
-                    {{ parselogParameter(scope.row.statusDesc) }}</p>
-                  <p v-if="judgeKeyExist(scope.row.statusDesc, 'lower_param')">{{
-                    parseLowerParameter(scope.row.statusDesc) }}</p>
-                  <p v-if="judgeKeyExist(scope.row.statusDesc, 'disk_space')">{{
-                    parseDiskSpace(scope.row.statusDesc)
-                  }}</p>
-                  <p v-if="judgeKeyExist(scope.row.statusDesc, 'mysql_encryption')">{{
-                    parseMysqlEncryption(scope.row.statusDesc) }}</p>
-                  <p v-if="judgeKeyExist(scope.row.statusDesc, 'sql_compatibility')">{{
-                    parseOpenGaussBDB(scope.row.statusDesc) }}</p>
-                  <p v-if="judgeKeyExist(scope.row.statusDesc, 'replication_slots')">{{
-                    parseReplicationNumber(scope.row.statusDesc) }}</p>
-                  <p v-if="judgeKeyExist(scope.row.statusDesc, 'enable_slot_log')">{{
-                    parseEnableSlotLog(scope.row.statusDesc) }}</p>
-                  <p v-if="judgeKeyExist(scope.row.statusDesc, 'hba_conf')">{{
-                    parseHbaConf(scope.row.statusDesc) }}
-                  </p>
-                  <p v-if="judgeKeyExist(scope.row.statusDesc, 'gtid_set')">{{
-                    parseGtidSet(scope.row.statusDesc) }}
-                  </p>
+                <div v-if="scope.row.sourceDbType.toUpperCase() === 'POSTGRESQL'" class="error-tips">{{
+                  scope.row.statusDesc}}</div>
+                <div v-else>
+                  <div v-if="scope.row.execStatus === SUB_TASK_STATUS.MIGRATION_ERROR" class="error-tips">{{
+                    scope.row.statusDesc }}</div>
+                  <div v-if="scope.row.execStatus === SUB_TASK_STATUS.CHECK_FAILED" class="error-tips">
+                    <p v-if="judgeKeyExist(scope.row.statusDesc, 'service_availability')">{{
+                      parseServiceAvailability(scope.row.statusDesc) }}</p>
+                    <p v-if="judgeKeyExist(scope.row.statusDesc, 'database_connect')">{{
+                      parseDatabaseConnect(scope.row.statusDesc) }}</p>
+                    <p>{{ parseDatabasePermission(scope.row.statusDesc) }}</p>
+                    <p
+                      v-if="judgeKeyExist(scope.row.statusDesc, 'increment_param') || judgeKeyExist(scope.row.statusDesc, 'reverse_param')">
+                      {{ parselogParameter(scope.row.statusDesc) }}</p>
+                    <p v-if="judgeKeyExist(scope.row.statusDesc, 'lower_param')">{{
+                      parseLowerParameter(scope.row.statusDesc) }}</p>
+                    <p v-if="judgeKeyExist(scope.row.statusDesc, 'disk_space')">{{
+                      parseDiskSpace(scope.row.statusDesc)
+                    }}</p>
+                    <p v-if="judgeKeyExist(scope.row.statusDesc, 'mysql_encryption')">{{
+                      parseMysqlEncryption(scope.row.statusDesc) }}</p>
+                    <p v-if="judgeKeyExist(scope.row.statusDesc, 'sql_compatibility')">{{
+                      parseOpenGaussBDB(scope.row.statusDesc) }}</p>
+                    <p v-if="judgeKeyExist(scope.row.statusDesc, 'replication_slots')">{{
+                      parseReplicationNumber(scope.row.statusDesc) }}</p>
+                    <p v-if="judgeKeyExist(scope.row.statusDesc, 'enable_slot_log')">{{
+                      parseEnableSlotLog(scope.row.statusDesc) }}</p>
+                    <p v-if="judgeKeyExist(scope.row.statusDesc, 'hba_conf')">{{
+                      parseHbaConf(scope.row.statusDesc) }}
+                    </p>
+                    <p v-if="judgeKeyExist(scope.row.statusDesc, 'gtid_set')">{{
+                      parseGtidSet(scope.row.statusDesc) }}
+                    </p>
+                  </div>
                 </div>
               </template>
             </el-tooltip>
@@ -147,7 +151,8 @@ import {
   subTaskList,
   subTaskFinish,
   subTaskStartReverse,
-  subTaskStopIncremental
+  subTaskStopIncremental,
+  refreshStatus
 } from '@/api/detail'
 import useTheme from '@/hooks/theme'
 import { useI18n } from 'vue-i18n'
@@ -602,9 +607,17 @@ const getSubTaskList = (loopQuery) => {
       timerDown && clearTimeout(timerDown)
       if (task.value.execStatus !== 2) {
         if (isMountedStatus.value) {
+          
           timerDown = setTimeout(() => {
             getSubTaskList('loopQuery')
           }, 5000)
+        }
+        console.log(tableData.value, 'result', tableData.value?.[0]?.execStatus)
+        if (tableData.value?.[0]?.execStatus === 0) {
+          // update status
+          refreshStatus(id)
+            .then(() => {
+            })
         }
       }
     })

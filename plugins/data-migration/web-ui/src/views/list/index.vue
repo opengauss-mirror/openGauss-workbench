@@ -56,7 +56,7 @@
         <el-table-column type="selection" :selectable="selectable" reverse-selection width="32"></el-table-column>
         <el-table-column :label="$t('list.index.5q08sf2dj8k0')" prop="taskName">
           <template #default="record">
-              <el-button size="small" v-if="record.row.execStatus === 0" text @click="goConfig(record.row)">
+            <el-button size="small" style="height: 24px; line-height: 24px;" v-if="record.row.execStatus === 0" text @click="goConfig(record.row)">
                 <TextTooltip class="textDetail" :content="record.row.taskName">
                   {{ record.row.taskName }}
                 </TextTooltip>

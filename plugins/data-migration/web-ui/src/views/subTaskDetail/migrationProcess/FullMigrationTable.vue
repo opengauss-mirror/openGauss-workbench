@@ -21,7 +21,28 @@
     <div class="main-table openDesignTableArea minWid680">
       <!-- This is the search -->
       <div class="mb16">
-        <fusion-search :label-options="labelOptions" @click-search="clickSearch" />
+        <el-form :model="filter" inline ref="formRef" class="processForm">
+          <el-form-item prop="schemaName" :label="$t('components.SubTaskDetail.source_schema')">
+            <el-input v-model.trim="filter.schemaName" clearable :placeholder="$t('transcribe.index.inputtaskname')"
+              @keyup.enter.native="getFilterData" @clear="resetQuery" style="width: 180px" maxlength="255" />
+              
+          </el-form-item>
+
+          <el-form-item prop="tableName" :label="$t('components.SubTaskDetail.source_db')">
+            <el-input v-model.trim="filter.tableName" clearable :placeholder="$t('transcribe.index.inputtaskname')"
+              @keyup.enter.native="getFilterData" @clear="resetQuery" style="width: 180px" maxlength="255" />
+          </el-form-item>
+          <div class="form-margin" style="flex: 1; text-align: right;">
+            <el-form-item>
+              <el-button type="primary" @click="getFilterData">
+                {{ $t('step3.index.5q093f8y8ss0') }}
+              </el-button>
+              <el-button style="margin-left: 10px" @click="resetQuery">
+                {{ $t('step3.index.5q093f8y8vk0') }}
+              </el-button>
+            </el-form-item>
+          </div>
+        </el-form>
       </div>
       <el-table v-loading="tableLoading" :data="tableData" :bordered="false" @filter-change="filterChange">
         <template #empty>
@@ -29,7 +50,11 @@
             <empty-page></empty-page>
           </div>
         </template>
+        <el-table-column :label="$t('components.SubTaskDetail.source_schema')" prop="sourceSchema" ellipsis
+          tooltip></el-table-column>
         <el-table-column :label="$t('components.SubTaskDetail.source_db')" prop="name" ellipsis
+          tooltip></el-table-column>
+        <el-table-column :label="$t('components.SubTaskDetail.target_schema')" prop="targetSchema" ellipsis
           tooltip></el-table-column>
         <el-table-column :label="$t('components.SubTaskDetail.target_db')" prop="name" ellipsis
           tooltip></el-table-column>
@@ -54,8 +79,7 @@
             <span v-if="row.status === SUB_TASK_STATUS.FULL_START || row.status === SUB_TASK_STATUS.FULL_RUNNING">
               {{ row.percent ? (row.percent * 100).toFixed(2) : '0' }}%
             </span>
-            <el-popover v-if="row.status === SUB_TASK_STATUS.FULL_CHECK_FINISH"
-              :content="row.errorMsg" position="top">
+            <el-popover v-if="row.status === SUB_TASK_STATUS.FULL_CHECK_FINISH" :content="row.errorMsg" position="top">
               <!-- This represents failure. -->
               <template #reference>
                 <div class="errorInfo">
@@ -88,7 +112,6 @@ import {
 } from '@/api/detail'
 import { IconSuccess, IconError, IconFilter } from '@computing/opendesign-icons';
 import { useSubTaskStore } from '@/store'
-import FusionSearch from "@/components/fusion-search/index.vue";
 import { searchType } from "@/types/searchType";
 type tabType = 'table' | 'view' | 'function' | 'trigger' | 'procedure'
 // Here, because the table interface passes parameters to the function and procedure fields, and the statistics are not func and produce, it is escaped here
@@ -114,23 +137,6 @@ const filter = reactive({
   tableName: '',
 })
 
-const labelOptions = computed(() => {
-  return {
-    tableName: {
-      label: t('components.SubTaskDetail.databaseName'),
-      value: 'tableName',
-      placeholder: t('transcribe.index.inputtaskname'),
-      selectType: searchType.INPUT
-    },
-    // The pgSQL adaptation will be shown in the future
-    // schemaName: {
-    //   label: t('components.SubTaskDetail.schemaName'),
-    //   value: 'schemaName',
-    //   placeholder: t('transcribe.index.inputtaskname'),
-    //   selectType: searchType.INPUT
-    // }
-  }
-})
 // Here is the displayed table data.
 const tableData = ref([]);
 // This is the table data returned by the storage interface, used for filtering.
@@ -164,14 +170,17 @@ onBeforeUnmount(() => {
   cancelInterval();
 })
 
-const clickSearch = (params) => {
-  const { tableName, schemaName } = params
-  filter.tableName = tableName || ''
-  filter.schemaName = schemaName || ''
+const getFilterData = () => {
   searchTable()
 }
 
-const tableLoading = computed(() =>{
+const resetQuery = () => {
+  filter.tableName = ''
+  filter.schemaName = ''
+  searchTable()
+}
+
+const tableLoading = computed(() => {
   if (subTaskStore.subTaskData?.execStatus && tableLoading.value) {
     searchTable();
   }
@@ -205,11 +214,17 @@ const searchTable = (loopQuery?) => {
 }
 
 // Get the current tab page table and its corresponding
-const getTableType = (type: string) => {
+const getTableType = (type: string, tabChange: string | undefined) => {
   tableType.value = type;
   // The query should not exceed the websocket of the group page, so the query time needs to be delayed
   let timer = null
   loading.value = true;
+  if (tabChange) {
+    filter.pageNum = 1
+    filter.pageSize = 10
+    filter.schemaName = ''
+    filter.tableName = ''
+  }
   timer = setTimeout(() => {
     searchTable();
     clearTimeout(timer)
@@ -285,6 +300,21 @@ const filterTableData = () => {
 
   .filterArea {
     display: flex;
+  }
+}
+
+.processForm {
+  display: flex;
+  height: 32px;
+  line-height: 32px;
+  gap: 24px;
+
+  .el-form-item {
+    margin-bottom: 0;
+    margin-right: 0;
+    .el-form-item__label {
+      padding-right: 16px;
+    }
   }
 }
 </style>

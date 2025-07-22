@@ -36,7 +36,7 @@ onMounted(async () => {
 })
 
 const tabTypeChange = () => {
-  fullMigrationTableRef.value?.getTableType(tabTypeVal.value)
+  fullMigrationTableRef.value?.getTableType(tabTypeVal.value, 'tabChange')
 }
 
 const cardConfigList = computed(() => {
