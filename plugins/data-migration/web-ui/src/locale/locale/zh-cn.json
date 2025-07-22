@@ -342,7 +342,7 @@
       "5q0aajl77lg12": "确定删除此文件？一旦删除将无法恢复",
       "5q0aajl77lg13": "请上传迁移套件安装包",
       "5q0aajl77lg14": "安装类型",
-      "5q0aajl77lg15": "导入安装",
+      "5q0aajl77lg15": "已安装",
       "5q0aajl77lg16": "zookeeper 端口",
       "5q0aajl77lg17": "kafka 端口",
       "5q0aajl77lg18": "2181",
@@ -568,13 +568,14 @@
     "index": {
       "advancedFilter": "高级筛选",
       "physicalIP": "物理机IP",
-      "hostNameOs": "物理机名称 + OS",
+      "hostNameOs": "物理机名称",
       "hostName": "物理机名称",
       "system": "系统",
       "architecture": "CPU架构",
       "remainMemory": "剩余内存",
       "remainHarddiskCapacity": "剩余硬盘容量",
       "CPUcores": "CPU核数",
+      "cpuUsing": "CPU利用率",
       "installStatus": "状态",
       "installYet": "未安装",
       "installAlready": "安装完成",
@@ -584,7 +585,7 @@
       "bulkInstallErrmsg": "请选择未安装迁移套件的服务器",
       "migrationSubtask": "迁移子任务：",
       "machineSelect": "已选择机器：",
-      "portalVersion": "Portal版本",
+      "portalVersion": "源端数据库类型",
       "portalVersionContent": "请选择Portal版本",
       "5q092waasqk0": "提示：每个迁移过程都需要有参数配置，DataKit已经为每一个迁移过程（即子任务）配置了默认参数。您也可以在下表中修改某个迁移过程（即子任务）的参数配置，来确保迁移过程顺利执行。",
       "5q092waatio0": "默认任务参数配置(全局配置)",
@@ -624,9 +625,13 @@
         "errorMsg": "验证失败，请稍后重试"
       },
       "portalInstall": {
-        "portalType": "Portal版本",
+        "installType": "安装版本",
+        "stable": "发布版",
+        "trial": "测试版",
+        "portalType": "源端数据库类型",
         "portEmpty": "端口不可为空",
-        "portalContent": "端口号必须是1-65535之间的数字"
+        "portalContent": "端口号必须是1-65535之间的数字",
+        "versionContent": "在线下载版本无法提供，请通过其他方式安装"
       }
     }
   },

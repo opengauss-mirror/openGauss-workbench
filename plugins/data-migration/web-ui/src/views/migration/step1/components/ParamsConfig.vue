@@ -407,7 +407,9 @@ const fillDefaultData = (data) => {
         .filter(([_, value]) => value != null)
         .map(([_, value]) => `${value}:${value}`)
         .join(',')
-      item.paramValue = result
+      if (item.paramValue === '' || item.paramValue === null) {
+        item.paramValue = result
+      }
       item.defaultParamValue = result
     }
     if (item && item.defaultParamValue === undefined && defaultBasicDataMap.get(item.paramKey)) {
@@ -426,7 +428,9 @@ const resetDefault = () => {
 const saveParams = async () => {
   try {
     await basicFormRef.value.validate()
-    await moreFormRef.value.validate()
+    if (defaultData.more.length) {
+      await moreFormRef?.value.validate()
+    }
     if (props.mode === 1) {
       emits('syncGlobalParams', {basic: basicEditData.value, more: moreEditData.value});
     } else {

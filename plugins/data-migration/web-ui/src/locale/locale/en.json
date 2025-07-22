@@ -342,7 +342,7 @@
       "5q0aajl77lg12": "Are you sure to delete this file? Once deleted, it cannot be restored",
       "5q0aajl77lg13": "Please upload the migration kit installation package",
       "5q0aajl77lg14": "Installation type",
-      "5q0aajl77lg15": "Import install",
+      "5q0aajl77lg15": "Installed",
       "5q0aajl77lg16": "zookeeper port",
       "5q0aajl77lg17": "kafka port",
       "5q0aajl77lg18": "2181",
@@ -568,13 +568,14 @@
     "index": {
       "advancedFilter": "Advanced Filter",
       "physicalIP": "Physical machine IP",
-      "hostNameOs": "Physical machine name + OS",
+      "hostNameOs": "Physical machine name",
       "hostName": "Physical machine name + OS",
       "system": "System",
       "architecture": "CPU architecture",
       "remainMemory": "Remaining Memory",
       "remainHarddiskCapacity": "Remaining Hard Disk Capacity",
       "CPUcores": "CPU cores",
+      "cpuUsing": "CPU utilization rate",
       "installStatus": "Migration status",
       "installYet": "Not Installed",
       "installAlready": "Installation Completed",
@@ -584,7 +585,7 @@
       "bulkInstallErrmsg": "Select a server that does not have migration kit installed",
       "migrationSubtask": "Migration subtasks：",
       "machineSelect": "Selected machine：",
-      "portalVersion": "Portal Version",
+      "portalVersion": "Migrate Database Type",
       "portalVersionContent": "Please select portal version",
       "5q092waasqk0": "Tip: Each migration process requires parameter configuration, and DataKit has configured default parameters for each migration process (ie, subtask). You can also modify the parameter configuration of a certain migration process (subtask) in the table below to ensure the smooth execution of the migration process.",
       "5q092waatio0": "Default task parameter configuration (global configuration)",
@@ -624,9 +625,13 @@
         "errorMsg": "Validation failed, please try again later"
       },
       "portalInstall": {
-        "portalType": "Portal Type",
+        "installType": "Installation Version",
+        "stable": "Release Version",
+        "trial": "Beta Version",
+        "portalType": "Migrate Database Type",
         "portEmpty": "Port cannot be empty",
-        "portalContent": "Port number must be a numeric value between 1 and 65535"
+        "portalContent": "Port number must be a numeric value between 1 and 65535",
+        "versionContent": "Online download version is unavailable, please install via alternative methods."
       }
     }
   },

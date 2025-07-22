@@ -100,9 +100,8 @@
                 <el-select v-model="taskBasicInfo.subTaskData[curTableTabs].sourceSchema"
                            :placeholder="t('step1.index.pleaseSelect')" filterable
                            multiple collapse-tags collapse-tags-tooltip :max-collapse-tags="3"
-                           class="select-width"
-                           :teleported="false">
-                  <el-option v-for="option in sourceSchemaOptions" :key="option.key" :label="option.value"
+                           class="select-width" :teleported="false">
+                  <el-option v-for="option in sourceSchemaOptions" :key="option.key" :label="option.label"
                              :value="option.value"/>
                 </el-select>
               </el-form-item>
@@ -583,6 +582,9 @@ const getSourceClustersData = () => {
     if (taskBasicInfo.value.subTaskData[curTableTabs.value].sourceIpPort !== '') {
       getSourceClusterDB("init")
     }
+    if (taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType.toUpperCase() === 'POSTGRESQL') {
+      getSourceSchema()
+    }
   })
 }
 
@@ -703,17 +705,17 @@ const loadTargetNode = (node: Node, resolve: (data: TreeNode[]) => void) => {
 
 const preSourceDb = ref<string>('')
 
-const changeSourceDb = () => {
+const changeSourceDb = async() => {
   if (preSourceDb.value !== '' && preSourceDb.value !== taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDBName) {
     taskBasicInfo.value.subTaskData[curTableTabs.value].seletedTbl.length = 0
     taskBasicInfo.value.subTaskData[curTableTabs.value].isSelectAlltables = true
   }
   preSourceDb.value = taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDBName
   if(taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType.toUpperCase() === "POSTGRESQL") {
-    getSourceSchema()
-    if(taskBasicInfo.value.subTaskData[curTableTabs.value].sourceSchema.length !== 0) {
-      taskBasicInfo.value.subTaskData[curTableTabs.value].sourceSchema.length = 0
-    }
+    await getSourceSchema()
+    const allSchemaValues = sourceSchemaOptions.value.map(opt => opt.value)
+    taskBasicInfo.value.subTaskData[curTableTabs.value].sourceSchema = [...allSchemaValues]
+
     const formRef = taskDataFormRef.value[curTableTabs.value]
     if (formRef) {
       formRef.clearValidate()
@@ -753,21 +755,29 @@ const sourceSchemaOptions = ref<{ [key: string]: string }[]>([])
 const getSourceSchema = async (type?: string) => {
   sourceSchemaOptions.value = []
   const subTask = taskBasicInfo.value.subTaskData[curTableTabs.value]
-  const {sourceIpPort} = subTask
-  const [ip, port] = await parseIpPort(sourceIpPort)
-  if (!ip || !port) return
-  const clusterInfo = {...sourceClusterInfo.value[sourceIpPort]} || []
+  const { sourceIpPort } = subTask;
+  const [ip, port] = await parseIpPort(sourceIpPort);
+  if (!ip || !port) return;
+  const clusterInfo = { ...sourceClusterInfo.value[sourceIpPort] } || []
   await updateNodeInfo(subTask, ip, port, clusterInfo, 'source')
   clusterInfo[1] = await encryptPassword(clusterInfo[1])
   const formData = createFormData(subTask, clusterInfo)
-  formData.append('dbName', taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDBName);
-  sourceClusterSchema(formData, taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType).then((res: any) => {
+  formData.append('dbName', taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDBName)
+  try {
+    const res = await sourceClusterSchema(
+      formData,
+      taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType
+    )
     if (Number(res.code) === 200) {
-      sourceSchemaOptions.value = res.data.map((db: any) => ({key: db, value: db}))
+      sourceSchemaOptions.value = res.data.map((db: any) => ({
+        key: db,
+        value: db,
+        label: db,
+      }))
     }
-  }).catch((error) => {
+  } catch (error) {
     console.error('获取源schema失败:', error)
-  })
+  }
 }
 
 const parseIpPort = (ipPort: string) => {

@@ -407,7 +407,7 @@ const getTaskDetail = async (id: number) => {
           sourceNodeName,
           sourceIpPort: sourceNodeName,
           sourceDbType: sourceDbType? sourceDbType: 'MYSQL',
-          sourceSchema: [],
+          sourceSchema: sourceSchemas.split(','),
           targetDBName: targetDb,
           targetNodeName,
           targetIpPort: targetNodeName,
