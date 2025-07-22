@@ -58,12 +58,16 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * OpsPackageManagerV2Service
@@ -179,13 +183,17 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
         packageEntityList.forEach(entry -> {
             UploadInfo packagePath = entry.getPackagePath();
             if (Objects.nonNull(packagePath)) {
-                try {
-                    File file = new File(packagePath.getRealPath() + File.separatorChar + packagePath.getName());
-                    if (!file.delete()) {
-                        log.info("delete packageId: {}, realPath: {}", entry.getPackageId(), entry.getRealPath());
-                    }
-                } catch (OpsException e) {
-                    log.error("delete error, packageId: {}, realPath: {}", entry.getPackageId(), entry.getRealPath());
+                Path dir = Paths.get(packagePath.getRealPath());
+                try (Stream<Path> pathStream = Files.walk(dir)) {
+                    pathStream.sorted(Comparator.reverseOrder()).forEach(path -> {
+                        try {
+                            Files.delete(path);
+                        } catch (IOException e) {
+                            log.error("Failed to delete: {}", path, e);
+                        }
+                    });
+                } catch (IOException e) {
+                    log.error("Failed to walk directory: {}", dir, e);
                 }
             }
             removeById(entry.getPackageId());
