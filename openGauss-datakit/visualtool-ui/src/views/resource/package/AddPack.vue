@@ -1,153 +1,105 @@
 <template>
-  <a-modal
-    :mask-closable="false"
-    :esc-to-close="false"
-    :visible="data.show"
-    :title="data.title"
-    :ok-loading="data.loading"
-    :modal-style="{ width: '650px' }"
-    @submit="submit"
-    @cancel="close"
-    @finish="close"
-  >
+  <el-dialog v-model="data.show" :title="data.title"
+    :ok-loading="data.loading" @submit="submit" @cancel="close" @finish="close" class="o-dialog--large">
     <template #footer>
-      <div class="flex-between">
+      <div class="flex-between dialog-footer justify-center">
         <div>
-          <a-button :loading="data.loading" type="primary" @click="submit">{{ $t('components.Package.5mtcyb0rty17') }}</a-button>
-          <a-button class="mr" @click="close">{{ $t('components.Package.5mtcyb0rty18') }}</a-button>
+          <el-button :loading="data.loading" type="primary" @click="debounceSubmit">{{ $t('components.Package.5mtcyb0rty17')
+          }}</el-button>
+          <el-button class="mr" @click="close">{{ $t('components.Package.5mtcyb0rty18') }}</el-button>
         </div>
       </div>
     </template>
-    <a-form
-      :model="data.formData"
-      :rules="formRules"
-      ref="formRef"
-      auto-label-width
-      labelAlign="left"
-    >
-      <a-form-item field="sysTem" :label="$t('components.Package.5mtcyb0rty07')" validate-trigger="blur" @change="updateOsData" name="sysTem">
-        <a-radio-group v-model="tempOs.value" button-style="solid" :disabled="editDisabledFlag">
-          <a-radio :value="OS.OPEN_EULER">openEuler20.03</a-radio>
-          <a-radio :value="OS.CENTOS">CentOS</a-radio>
-          <a-radio :value="OS.All">openEuler22.03</a-radio>
-        </a-radio-group>
-      </a-form-item>
-      <a-form-item field="arch" :label="$t('components.Package.5mtcyb0rty32')" validate-trigger="blur" @change="updateArchData" name="arch">
-        <a-radio-group v-model="tempArch.value" :disabled="editDisabledFlag">
-          <a-radio :value="CpuArch.X86_64">x86_64</a-radio>
-          <a-radio :disabled="OS.CENTOS === tempOs.value" :value="CpuArch.AARCH64">aarch64</a-radio>
-        </a-radio-group>
-      </a-form-item>
-      <a-form-item field="version" :label="$t('components.Package.5mtcyb0rty33')" validate-trigger="blur" @change="updateVersionData" name="version">
-        <a-radio-group v-model="tempVersion.value" :disabled="editDisabledFlag">
-          <a-radio :value="OpenGaussVersionEnum.MINIMAL_LIST">{{ $t('components.Package.MINIMAL_LIST') }}</a-radio>
-          <a-radio :value="OpenGaussVersionEnum.LITE">{{ $t('components.Package.LITE') }}</a-radio>
-          <a-radio :value="OpenGaussVersionEnum.ENTERPRISE">{{ $t('components.Package.ENTERPRISE') }}</a-radio>
-        </a-radio-group>
-      </a-form-item>
-      <a-form-item field="packageVersionNum" :label="$t('components.Package.5mtcyb0rty10')"  name="packageVersionNum">
-        <div class="item" >
-          <a-select
-            v-if="!editDisabledFlag"
-            v-model="tempVersionNum"
-            :ref="tempVersionNum"
-            :placeholder="$t('components.Package.5mtcyb0rty34')"
-            :options="packageVersionNum"
-            :inputmode="true"
-            @search="searchVersionNum"
-            @change="checkContains"
-          >
-          </a-select>
-          <a-input v-if="editDisabledFlag" disabled :default-value="tempVersionNum"></a-input>
-          <br><p class="ant-upload-hint" v-if="!contains">
-          {{ $t('components.Package.5mtcyb0rty35') }}
-          <a-button type="text" href="https://opengauss.org/zh/download/archive/">{{ $t('components.Package.5mtcyb0rty36') }}</a-button>
-          {{ $t('components.Package.5mtcyb0rty37') }} </p>
-        </div>
-      </a-form-item>
-      <a-form-item field="name" :label="$t('components.Package.5mtcyb0rty06')" name="name">
-        <a-input
-          v-model="data.formData.name"
-          :placeholder="$t('components.Package.5mtcyb0rty06')"
-          @input="data.isNameDirty = true"
-          :disabled="editDisabledFlag"
-        />
-      </a-form-item>
-      <a-form-item field="path" :label="$t('components.Package.5mtcyb0rty38')" name="path">
-        <div class="item" style="width:100%" >
-          <a-textarea v-model="tempPackageUrl" show-count :maxlength="1000" :default-value="data.formData.packageUrl"  readonly></a-textarea>
-          <p class="ant-upload-hint" v-if="data.formData.packageUrl && netStatus">
-            {{ $t('components.Package.5mtcyb0rty39') }}
-            <a-button type="text" @click="uploadStatusChange">{{ $t('components.Package.5mtcyb0rty22') }}</a-button>
-          </p>
-          <p v-if="!netStatus" class="ant-upload-hint">{{ $t('components.Package.5mtcyb0rty40') }}</p>
-        </div>
-      </a-form-item>
-      <a-form-item
-        v-if="uploadStatusTag.value === true || !netStatus"
-        field="packagePath"
-        :label="$t('components.Package.5mtcyb0rty41')"
-        name="packagePath"
-      >
-        <a-upload
-          v-model:file-list="fileListPPPP"
-          :limit="1"
-          :auto-upload="false"
-          draggable
-          @before-remove="handleBeforeRemove"
-          @change="handleFileUpload"
-        >
-          <template>
-            <div class="upload-info flex-col">
-              <div class="flex-col">
-                <div >
-                  <svg-icon icon-class="clouduploadsharp" class="icon-size image mb"></svg-icon>
-                </div>
-                <div class="tips-1">
-                  <span>{{
-                      $t('components.Package.5mtcyb0rty42')
-                    }}
-                    <a-button  #upload-button >{{ $t('components.Package.5mtcyb0rty43') }}</a-button>
-                  </span>
-                </div>
-              </div>
+    <div class="dlg-body" id="addPack">
+      <el-form :model="data.formData" :rules="formRules" ref="formRef" auto-label-width label-width="120px" label-position="left" class="addPackForm">
+        <el-form-item prop="sysTem" :label="$t('components.Package.5mtcyb0rty07')" validate-trigger="blur"
+          @change="updateOsData" name="sysTem">
+          <el-radio-group v-model="tempOs.value" button-style="solid" :disabled="editDisabledFlag">
+            <el-radio-button :value="OS.OPEN_EULER">openEuler20.03</el-radio-button>
+            <el-radio-button :value="OS.CENTOS">CentOS</el-radio-button>
+            <el-radio-button :value="OS.All">openEuler22.03</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item prop="arch" :label="$t('components.Package.5mtcyb0rty32')" validate-trigger="blur"
+          @change="updateArchData" name="arch">
+          <el-radio-group v-model="tempArch.value" :disabled="editDisabledFlag">
+            <el-radio-button :value="CpuArch.X86_64">x86_64</el-radio-button>
+            <el-radio-button :disabled="OS.CENTOS === tempOs.value" :value="CpuArch.AARCH64">aarch64</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item prop="version" :label="$t('components.Package.5mtcyb0rty33')" validate-trigger="blur"
+          @change="updateVersionData" name="version">
+          <el-radio-group v-model="tempVersion.value" :disabled="editDisabledFlag">
+            <el-radio-button :value="OpenGaussVersionEnum.MINIMAL_LIST">{{ $t('components.Package.MINIMAL_LIST')
+            }}</el-radio-button>
+            <el-radio-button :value="OpenGaussVersionEnum.LITE">{{ $t('components.Package.LITE') }}</el-radio-button>
+            <el-radio-button :value="OpenGaussVersionEnum.ENTERPRISE">{{ $t('components.Package.ENTERPRISE')
+            }}</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item prop="packageVersionNum" :label="$t('components.Package.5mtcyb0rty10')" name="packageVersionNum">
+          <div class="item">
+            <el-select :disabled="editDisabledFlag" v-model="tempVersionNum" :suffix-icon="IconCaretDown" class="w440"
+              :placeholder="$t('components.Package.5mtcyb0rty34')" :options="packageVersionNum"
+              @search="searchVersionNum" @change="checkContains" filterable>
+              <el-option v-for="item in packageVersionNum" :key="item" :label="item" :value="item"></el-option>
+            </el-select>
+            <br>
+            <div class="ant-upload-hint" v-if="!contains">
+              {{ $t('components.Package.5mtcyb0rty35') }}
+              <el-button type="text" @click="toGaussDownloadPage">{{
+                $t('components.Package.5mtcyb0rty36') }}</el-button>
+              {{ $t('components.Package.5mtcyb0rty37') }}
             </div>
-          </template>
-        </a-upload>
-      </a-form-item>
-      <a-form-item
-        v-if="(uploadStatusTag || !netStatus) && progressPercent.valueOf() > 0"
-      >
-        <a-progress :percent="progressPercent">{{progressPercent.valueOf()}}</a-progress>
-      </a-form-item>
-    </a-form>
-  </a-modal>
-
+          </div>
+        </el-form-item>
+        <el-form-item prop="name" :label="$t('components.Package.5mtcyb0rty06')" name="name">
+          <el-input v-model="data.formData.name" :placeholder="$t('components.Package.5mtcyb0rty06')" class="w440 nameInput"
+            @input="data.isNameDirty = true" :disabled="editDisabledFlag" :maxlength="255" />
+        </el-form-item>
+        <el-form-item prop="path" :label="$t('components.Package.5mtcyb0rty38')" name="path">
+          <div class="item" style="width:100%">
+            <el-input type="textarea" v-model="tempPackageUrl" show-count :maxlength="1000" class="textareaInput"
+              :default-value="data.formData.packageUrl" disabled></el-input>
+            <div class="ant-upload-hint" v-if="data.formData.packageUrl && netStatus">
+              {{ $t('components.Package.5mtcyb0rty39') }}
+              <el-button type="text" @click="uploadStatusChange">{{ $t('components.Package.5mtcyb0rty22') }}</el-button>
+            </div>
+            <div v-if="!netStatus" class="ant-upload-hint">{{ $t('components.Package.5mtcyb0rty40') }}</div>
+          </div>
+        </el-form-item>
+        <el-form-item v-if="uploadStatusTag === true || !netStatus" prop="packagePath"
+          :label="$t('components.Package.5mtcyb0rty41')" name="packagePath">
+<!--          :tips="t('components.Package.5mtcyb0rty56')"-->
+          <file-upload style="width: 100%;" :percentage="progressPercent" @changeFile="changeFile" ></file-upload>
+        </el-form-item>
+      </el-form>
+    </div>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
 import { FormInstance } from '@arco-design/web-vue/es/form'
-import { nextTick, reactive, ref, toRaw, computed, isReadonly, watch } from 'vue'
+import { nextTick, reactive, ref, computed, watch, h, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { CpuArch, OS } from '../../../../../../plugins/base-ops/web-ui/src/types/os'
 import { OpenGaussVersionEnum } from '@/types/ops/install'
 import {
   batchPackageOnline,
-  batchPackageUpload,
   getVersionNum,
   checkNetStatus,
   checkVersionNumber,
-  packageUploadUpdate,
-  delPkgTar, getSysUploadPath, hasPkgName, download, packageOnlineUpdate
+  delPkgTar, getSysUploadPath, hasPkgName, packageOnlineUpdate
 } from '@/api/ops'
-import dayjs from 'dayjs'
 import { FileItem, Message, Modal } from '@arco-design/web-vue'
 import message from '@arco-design/web-vue/es/message'
-import Socket from '@/utils/websocket'
 import axios from 'axios'
 import { Path } from '@antv/x6'
+import FileUpload from '@/components/file-upload'
 import isValid = Path.isValid;
+import { IconCaretDown } from '@computing/opendesign-icons'
+import { debounce } from '@/utils/debounce'
 const { t } = useI18n()
 
 const data = reactive<KeyValue>({
@@ -170,12 +122,11 @@ const data = reactive<KeyValue>({
   cpuArchList: [],
   packageVersionList: [],
   typeList: [],
-  fileList: [],
+  file:{},
   type: '',
   systemUploadPath: '',
   isNameDirty: false
 })
-
 interface UploadInfo {
   realPath: string,
   realName: string,
@@ -183,10 +134,13 @@ interface UploadInfo {
   file: File
 }
 
+// The first validation of the page is skipped during initialization
+const initNameValidateSkipFlag = ref(true);
+
 const tempVersionNum = ref('5.0.2')
 
 const contains = ref(true)
-const checkContains = (inputValue:any) => {
+const checkContains = (inputValue: any) => {
   tempVersionNum.value = inputValue
   if (inputValue && inputValue !== '') {
     data.formData.packageVersionNum = inputValue
@@ -208,7 +162,7 @@ const checkContains = (inputValue:any) => {
         } else {
           getPackageUrl()
         }
-      }) .catch(error => {
+      }).catch(error => {
         message.error({
           content: t('components.Package.5mtcyb0rty44', { versionNum: data.formData.packageVersionNum })
         })
@@ -221,8 +175,13 @@ const checkContains = (inputValue:any) => {
   }
 }
 
-const searchVersionNum = (value:any) => {
+const searchVersionNum = (value: any) => {
   data.formData.packageVersionNum = (value != null && value !== '') ? value : undefined
+}
+
+const toGaussDownloadPage = () => {
+  // Jump to the download page
+  window.open(t('openGaussDownloadPage'))
 }
 
 const formRules = computed(() => {
@@ -233,46 +192,37 @@ const formRules = computed(() => {
     name: [
       { required: true, message: t('components.Package.5mtcyb0rty46') },
       {
-        validator: (value: any, cb: any) => {
-          return new Promise((resolve) => {
-            hasPkgName(value).then((res: KeyValue) => {
-              if (res.data && !editDisabledFlag.value) {
-                cb(t('components.Package.5mtcyb0rty47'))
-                isValid.value = false
-                resolve(false)
-              } else {
-                resolve(true)
-              }
-            })
+        validator: (rule: any, value: any, cb: any) => {
+          hasPkgName(value).then((res: KeyValue) => {
+            if (initNameValidateSkipFlag.value) {
+              initNameValidateSkipFlag.value = false;
+              cb()
+              return;
+            }
+            if (res.data && !editDisabledFlag.value) {
+              return cb(new Error(t('components.Package.5mtcyb0rty47')))
+            } else {
+              cb()
+            }
           })
         }
       }
     ],
     packagePath: [{
-      validator: (value: any, cb: any) => {
-        return new Promise((resolve, reject) => {
-          if (data.fileList.length <= 0 && uploadStatusTag.value === true) {
-            cb(t('components.Package.5mtcyb0rty48'))
-            isValid.value = false
-            resolve(false)
-            return
-          } else {
-            resolve(true)
-          }
-        })
+      validator: (rule: any, value: any, cb: any) => {
+        if (!data.file.raw && uploadStatusTag.value === true) {
+          return cb(new Error(t('components.Package.5mtcyb0rty48')))
+        } else {
+          cb()
+        }
       }
     }]
   }
 })
 
-const fileListPPPP = ref([])
-const uploadStatusTag = reactive({ value: false })
+const uploadStatusTag = ref(false)
 const uploadStatusChange = () => {
   uploadStatusTag.value = true
-}
-const uploadFileTag = reactive({ value: true })
-const handleFileUpload = (file:any) => {
-  data.fileList = file[0]
 }
 
 const handleBeforeRemove = (file: FileItem) => {
@@ -280,9 +230,8 @@ const handleBeforeRemove = (file: FileItem) => {
     if (file.status === 'done') {
       Modal.confirm({
         title: t('packageManage.AddPackageDlg.5myq6nnecc45'),
-        content: `${t('packageManage.AddPackageDlg.5myq6nnecc45')}${
-          file.name
-        }${t('packageManage.AddPackageDlg.5myq6nnecc46')}`,
+        content: `${t('packageManage.AddPackageDlg.5myq6nnecc45')}${file.name
+          }${t('packageManage.AddPackageDlg.5myq6nnecc46')}`,
         onOk: () => {
           delPkgTar(
             data.formData.packagePath?.realPath,
@@ -302,9 +251,7 @@ const handleBeforeRemove = (file: FileItem) => {
 }
 
 // web socket
-const downloadWs = ref<Socket<any, any> | undefined>()
 const processVisible = ref(false)
-const percentLoading = ref(false)
 const currPercent = ref<number>(0)
 
 watch(currPercent, (newValue) => {
@@ -323,15 +270,6 @@ const getUploadPath = () => {
     })
 }
 
-// init
-const getSystemSetting = () => {
-  getSysUploadPath().then((res) => {
-    data.systemUploadPath = res.data
-  }) .catch(error => {
-    console.error('Error fetching 285:', error)
-  })
-}
-
 const packageVersionNum = ref([])
 const fetchVersionNum = () => {
   getVersionNum().then((res: KeyValue) => {
@@ -343,7 +281,7 @@ const fetchVersionNum = () => {
         content: t('components.Package.5mtcyb0rty49')
       })
     }
-  }) .catch(error => {
+  }).catch(error => {
     console.error(error)
   })
 }
@@ -368,27 +306,20 @@ const getPackageUrl = () => {
     } else {
       console.log('error')
     }
-    let noExtensionName = ''
-    let packageNameList = data.formData.packageUrl.split('/').pop()
-    let namelist = packageNameList?.split('.') || []
-    namelist.length && namelist.pop()
-    namelist.length && namelist.pop()
-    const now = dayjs();
-    const curTime = now.format('YYMMDD')
-    noExtensionName = namelist.join('.') + curTime
-    data.formData.name = noExtensionName
-  }) .catch(error => {
+    let name = data.formData.packageUrl.split('/')
+    data.formData.name = name.pop()
+  }).catch(error => {
     console.error({
       content: error + data.formData.packageVersionNum
     })
   })
 }
 
-const netStatus = ref(false)
+const netStatus = ref(true)
 const getConnectStatus = () => {
   checkNetStatus().then((res) => {
     netStatus.value = res.code === 200
-  }) .catch(error => {
+  }).catch(error => {
     console.error('net connect error:', error)
   })
 }
@@ -426,9 +357,8 @@ const open = (
       packageUrl: '',
       type: 'openGauss'
     })
-    data.fileList = []
+    data.file = {}
     data.formData.packagePath = {}
-    fileListPPPP.value = []
     tempVersionNum.value = data.formData.packageVersionNum
     getPackageUrl()
   } else {
@@ -453,11 +383,11 @@ const open = (
       data.formData.cpuArch = CpuArch.X86_64
     }
     if (data.formData.packagePath?.realPath) {
-      data.fileList = [{
+      data.file = {
         uid: '-1',
         name: data.formData.packagePath.name,
         url: data.formData.packagePath.realPath
-      }]
+      }
       uploadStatusTag.value = false
     }
     if (data.formData.name == '') {
@@ -487,7 +417,7 @@ defineExpose({
   open
 })
 const tempOs = reactive({ value: OS.CENTOS })
-const updateOsData = (value:string) => {
+const updateOsData = (value: string) => {
   tempOs.value = value.target.value
   if (tempOs.value === OS.CENTOS) {
     if (data.formData.cpuArch === CpuArch.AARCH64) {
@@ -506,7 +436,7 @@ const updateOsData = (value:string) => {
   getPackageUrl()
 }
 const tempArch = reactive({ value: CpuArch.X86_64 })
-const updateArchData = (value:string) => {
+const updateArchData = (value: string) => {
   if (data.formData.os === OS.CENTOS && value.target.value === CpuArch.AARCH64) {
     tempArch.value = CpuArch.X86_64
     data.formData.cpuArch = CpuArch.X86_64
@@ -517,18 +447,20 @@ const updateArchData = (value:string) => {
   getPackageUrl()
 }
 const tempVersion = reactive({ 'value': OpenGaussVersionEnum.MINIMAL_LIST })
-const updateVersionData = (value:string) => {
+const updateVersionData = (value: string) => {
   tempVersion.value = value.target.value
   data.formData.packageVersion = tempVersion.value
   getPackageUrl()
 }
 
+const changeFile = (file) => {
+  data.file = file
+}
 const formRef = ref<null | FormInstance>(null)
-const emits = defineEmits([`finish`, `downloadStart`])
-const submitLoading = ref(false)
+const emits = defineEmits([`finish`, 'downloadStart'])
 const progressPercent = ref(0)
 const submit = async () => {
-  let isisvalid = await formRef.value?.validate()
+  let isisvalid = !await formRef.value?.validate()
   if (isisvalid && editDisabledFlag.value !== true) {
     console.log('isValild false')
   } else {
@@ -537,7 +469,7 @@ const submit = async () => {
         if (progressPercent.value === 0) {
           const formData = new FormData
           formData.append('packageId', data.formData.packageId)
-          formData.append('uploadFile', data.fileList.file)
+          formData.append('uploadFile', data.file.raw)
           axios({
             url: `/plugins/base-ops/installPackageManager/v2/update/upload/`,
             method: 'POST',
@@ -549,7 +481,7 @@ const submit = async () => {
               if (event.lengthComputable) {
                 percent = Math.round((event.loaded * 100) / event.total)
               }
-              progressPercent.value = percent ? Number((percent * 0.01).toFixed(2)) : 0
+              progressPercent.value = percent ? Number(percent.toFixed(2)) : 0
             },
             data: formData
           }).then((res) => {
@@ -568,7 +500,7 @@ const submit = async () => {
         formData.append('packageVersionNum', data.formData.packageVersionNum)
         formData.append('packageUrl', data.formData.packageUrl)
         formData.append('packageVersion', data.formData.packageVersion)
-        formData.append('uploadFile', data.fileList.file)
+        formData.append('uploadFile', data.file.raw)
         formData.append('osVersion', data.formData.osVersion)
         if (progressPercent.value === 0) {
           axios({
@@ -578,11 +510,9 @@ const submit = async () => {
               'Content-Type': 'multipart/form-data'
             },
             onUploadProgress: (event) => {
-              let percent
               if (event.lengthComputable) {
-                percent = Math.round((event.loaded * 100) / event.total)
+                progressPercent.value = Math.round((event.loaded * 100) / event.total)
               }
-              progressPercent.value = percent ? Number((percent * 0.01).toFixed(2)) : 0
             },
             data: formData
           }).then((res) => {
@@ -606,10 +536,11 @@ const submit = async () => {
           downloadUrl: data.formData.packageUrl,
           wsBusinessId: wsBusinessId.value
         }
-        emits('downloadStart', data.formData.name)
         batchPackageOnline(params).then((res) => {
           if (res.code === 200) {
             data.show = false
+            initNameValidateSkipFlag.value = true;
+            emits('downloadStart', data.formData.name)
           }
         }).catch((error) => {
           console.log(error)
@@ -623,11 +554,11 @@ const submit = async () => {
             'Content-Type': 'application/x-www-form-urlencoded'
           }
         }
-        emits('downloadStart', data.formData.name)
         packageOnlineUpdate(params, config)
           .then(res => {
             if (res.code === 200) {
               data.show = false
+              initNameValidateSkipFlag.value = true;
             }
           })
           .catch(error => {
@@ -639,66 +570,89 @@ const submit = async () => {
     }
   }
 }
-const close = () => {
-  try {
-    if (downloadWs.value && downloadWs.value instanceof WebSocket && typeof downloadWs.value.close === 'function') {
-      downloadWs.value.close(1000, 'Normal closure')
-    }
-  } catch (error) {
-    console.error('Error closing WebSocket:', error)
-  } finally {
-    data.show = false
-    data.oldPwd = ''
-    Object.assign(data.formData, {
-      name: '',
-      type: 'openGauss',
-      packageId: '',
-      os: '',
-      cpuArch: '',
-      packageVersion: '',
-      packageVersionNum: '',
-      packageUrl: '',
-      packagePath: {},
-      remark: ''
-    })
-    tempOs.value = OS.CENTOS
-    tempArch.value = CpuArch.X86_64
-    tempVersion.value = OpenGaussVersionEnum.MINIMAL_LIST
-    tempVersionNum.value = ''
-    uploadStatusTag.value = false
-    nextTick(() => {
-      formRef.value?.clearValidate()
-      formRef.value?.resetFields()
-      data.fileList = []
-      data.formData.packagePath = {}
-      fileListPPPP.value = []
-    })
-  }
 
+// Submit button to add stabilization
+const debounceSubmit = debounce(submit)
+
+const close = () => {
+  data.show = false
+  data.oldPwd = ''
+  Object.assign(data.formData, {
+    name: '',
+    type: 'openGauss',
+    packageId: '',
+    os: '',
+    cpuArch: '',
+    packageVersion: '',
+    packageVersionNum: '',
+    packageUrl: '',
+    packagePath: {},
+    remark: ''
+  })
+  tempOs.value = OS.CENTOS
+  tempArch.value = CpuArch.X86_64
+  tempVersion.value = OpenGaussVersionEnum.MINIMAL_LIST
+  tempVersionNum.value = ''
+  uploadStatusTag.value = false
+  initNameValidateSkipFlag.value = true;
+  nextTick(() => {
+    formRef.value?.clearValidate()
+    formRef.value?.resetFields()
+    data.file = {}
+    data.formData.packagePath = {}
+  })
 }
+
 </script>
 
-<style scoped>
-:deep(.ant-upload-hint) {
-  color:lightgrey;
+
+<style lang="less" scoped>
+.justify-center {
+  justify-content: center;
+}
+.w440 {
+  width: 440px;
+}
+.nameInput {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-:deep(.arco-radio-checked.arco-radio-disabled .arco-radio-label) {
-  color: var(--color-hw-text-2);
-}
-
-:deep(.arco-radio-disabled .arco-radio-label) {
-  color: var(--color-text-3);
-}
-
-:deep(.arco-input-wrapper .arco-input[disabled]){
-  -webkit-text-fill-color: var(--color-text-3);
-}
-:deep(.arco-progress-type-circle) {
-  display: table-column;
-}
-
-:deep(.arco-upload-list-item-name-link .arco-upload-list-item-file-icon .arco-upload-list-item-file-icon) {
-  color: black;
+::v-deep(.addPackForm) {
+  // Set styles such as spacing for forms
+  .el-form-item {
+    .el-form-item__label-wrap {
+      margin-left: 0 !important;
+      width: 108px;
+    }
+    .el-form-item__content {
+      max-width: 708px;
+      .ant-upload-hint {
+        margin: 12px 0 0;
+        min-height: 22px;
+        line-height: 22px;
+      }
+    }
+  }
+  .el-form-item.is-required {
+    .el-form-item__label {
+      margin-left: -8px !important;
+    }
+  }
+  // Sets the selection style of the selection button
+  .el-radio-button__original-radio:checked+.el-radio-button__inner {
+    background-color: var(--o-radio-button-bg-color_checked) !important;
+    border-color: var(--o-radio-button-border-color_checked) !important;
+  }
+  .el-radio-button__original-radio:disabled:checked +.el-radio-button__inner {
+    background-color: var(--o-radio-button-bg-color_disabled_checked) !important;
+    border-color: var(--o-radio-button-border-color_disabled_checked) !important;
+  }
+  .textareaInput {
+    .el-textarea__inner {
+      min-height: 74px !important;
+    }
+  }
 }
 </style>
