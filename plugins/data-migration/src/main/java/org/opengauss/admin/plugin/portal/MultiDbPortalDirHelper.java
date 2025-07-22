@@ -168,6 +168,17 @@ public class MultiDbPortalDirHelper {
     }
 
     /**
+     * Get verify result file path
+     *
+     * @param portalInfo portal info
+     * @param taskId task id
+     * @return verify result file path
+     */
+    public static String getVerifyResultFilePath(MigrationHostPortalInstall portalInfo, int taskId) {
+        return String.format("%s/status/verify.txt", getTaskWorkspaceDirPath(portalInfo, taskId));
+    }
+
+    /**
      * Get portal home directory path
      *
      * @param portalInfo portal info

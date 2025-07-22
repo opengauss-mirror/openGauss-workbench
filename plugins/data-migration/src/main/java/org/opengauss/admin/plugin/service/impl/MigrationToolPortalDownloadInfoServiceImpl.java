@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.plugin.domain.MigrationToolPortalDownloadInfo;
 import org.opengauss.admin.plugin.enums.PortalType;
+import org.opengauss.admin.plugin.enums.PortalVersion;
 import org.opengauss.admin.plugin.exception.PortalInstallException;
 import org.opengauss.admin.plugin.mapper.MigrationToolPortalDownloadInfoMapper;
 import org.opengauss.admin.plugin.service.MigrationToolPortalDownloadInfoService;
@@ -18,6 +19,7 @@ import org.springframework.util.ObjectUtils;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * MigrationToolPortalDownloadInfoServiceImpl
@@ -69,6 +71,47 @@ public class MigrationToolPortalDownloadInfoServiceImpl extends ServiceImpl<Migr
             throw new PortalInstallException("The online installation package information list is empty");
         }
         return portalDownloadInfos;
+    }
+
+    @Override
+    public List<PortalVersion> getPortalSupportVersion(String hostId, PortalType portalType) {
+        OpsHostEntity opsHostEntity = checkHost(hostId);
+        LambdaQueryWrapper<MigrationToolPortalDownloadInfo> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(MigrationToolPortalDownloadInfo::getHostOs, opsHostEntity.getOs())
+                .eq(MigrationToolPortalDownloadInfo::getHostCpuArch, opsHostEntity.getCpuArch())
+                .eq(MigrationToolPortalDownloadInfo::getHostOsVersion, opsHostEntity.getOsVersion());
+        if (PortalType.MULTI_DB.equals(portalType)) {
+            queryWrapper.eq(MigrationToolPortalDownloadInfo::getPortalType, PortalType.MULTI_DB);
+        } else {
+            queryWrapper.eq(MigrationToolPortalDownloadInfo::getPortalType, PortalType.MYSQL_ONLY);
+        }
+
+        List<MigrationToolPortalDownloadInfo> portalDownloadInfos = list(queryWrapper);
+        if (ObjectUtils.isEmpty(portalDownloadInfos)) {
+            throw new PortalInstallException("The online installation package information list is empty");
+        }
+        return portalDownloadInfos.stream().map(MigrationToolPortalDownloadInfo::getPortalVersion)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public MigrationToolPortalDownloadInfo getPortalDownloadInfo(
+            OpsHostEntity opsHost, PortalType portalType, PortalVersion portalVersion) {
+        LambdaQueryWrapper<MigrationToolPortalDownloadInfo> queryWrapper = new LambdaQueryWrapper<>();
+        String os = opsHost.getOs();
+        String osVersion = opsHost.getOsVersion();
+        String cpuArch = opsHost.getCpuArch();
+        queryWrapper.eq(MigrationToolPortalDownloadInfo::getHostOs, os)
+                .eq(MigrationToolPortalDownloadInfo::getHostCpuArch, cpuArch)
+                .eq(MigrationToolPortalDownloadInfo::getHostOsVersion, osVersion)
+                .eq(MigrationToolPortalDownloadInfo::getPortalType, portalType)
+                .eq(MigrationToolPortalDownloadInfo::getPortalVersion, portalVersion);
+        MigrationToolPortalDownloadInfo portalDownloadInfo = getOne(queryWrapper);
+        if (ObjectUtils.isEmpty(portalDownloadInfo)) {
+            throw new PortalInstallException(
+                    "No matching installation package for this system architecture: " + os + osVersion + "_" + cpuArch);
+        }
+        return portalDownloadInfo;
     }
 
     private OpsHostEntity checkHost(String hostId) {

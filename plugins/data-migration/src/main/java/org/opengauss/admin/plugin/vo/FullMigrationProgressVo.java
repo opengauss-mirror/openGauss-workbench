@@ -7,6 +7,8 @@ package org.opengauss.admin.plugin.vo;
 import lombok.Data;
 import org.opengauss.admin.plugin.domain.FullMigrationProgress;
 
+import java.util.Map;
+
 /**
  * Full Migration Progress VO
  *
@@ -17,7 +19,8 @@ public class FullMigrationProgressVo {
     private Long id;
     private Integer taskId;
     private String name;
-    private String schema;
+    private String sourceSchema;
+    private String targetSchema;
     private Double percent;
     private String errorMsg;
 
@@ -31,14 +34,18 @@ public class FullMigrationProgressVo {
      */
     private Integer status;
 
-    public FullMigrationProgressVo(FullMigrationProgress fullMigrationProgress) {
+    public FullMigrationProgressVo() {
+    }
+
+    public FullMigrationProgressVo(FullMigrationProgress fullMigrationProgress, Map<String, String> schemaMapping) {
         this.id = fullMigrationProgress.getId();
         this.taskId = fullMigrationProgress.getTaskId();
         this.objectType = fullMigrationProgress.getObjectType();
         this.name = fullMigrationProgress.getName();
-        this.schema = fullMigrationProgress.getSchema();
         this.status = fullMigrationProgress.getStatus();
         this.percent = fullMigrationProgress.getPercent();
         this.errorMsg = fullMigrationProgress.getError();
+        this.sourceSchema = fullMigrationProgress.getSchema();
+        this.targetSchema = schemaMapping.get(sourceSchema);
     }
 }

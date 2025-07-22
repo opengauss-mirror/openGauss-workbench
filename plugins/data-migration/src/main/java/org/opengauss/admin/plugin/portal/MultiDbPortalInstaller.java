@@ -12,15 +12,19 @@ import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
+import org.opengauss.admin.common.utils.CommonUtils;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
+import org.opengauss.admin.plugin.domain.MigrationToolPortalDownloadInfo;
 import org.opengauss.admin.plugin.enums.MigrationErrorCode;
 import org.opengauss.admin.plugin.enums.PortalInstallStatus;
 import org.opengauss.admin.plugin.enums.PortalInstallType;
 import org.opengauss.admin.plugin.enums.PortalType;
+import org.opengauss.admin.plugin.enums.PortalVersion;
 import org.opengauss.admin.plugin.exception.PortalInstallException;
 import org.opengauss.admin.plugin.exception.ShellException;
 import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
+import org.opengauss.admin.plugin.service.MigrationToolPortalDownloadInfoService;
 import org.opengauss.admin.plugin.service.TbMigrationTaskGlobalToolsParamService;
 import org.opengauss.admin.plugin.utils.ShellUtil;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
@@ -29,6 +33,7 @@ import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.plugin.facade.JschExecutorFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,7 +45,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 /**
  * MULTI_DB portal installer
@@ -50,8 +54,6 @@ import java.util.regex.Pattern;
 @Slf4j
 @Component
 public class MultiDbPortalInstaller {
-    private static final Pattern PG_VERSION_PATTERN = Pattern.compile("version \"(1[1-9]|[2-9][0-9]+)\\.");
-
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostFacade hostFacade;
@@ -77,6 +79,9 @@ public class MultiDbPortalInstaller {
     @Resource
     private TbMigrationTaskGlobalToolsParamService toolsParamService;
 
+    @Autowired
+    private MigrationToolPortalDownloadInfoService portalDownloadInfoService;
+
     /**
      * install portal
      *
@@ -91,6 +96,17 @@ public class MultiDbPortalInstaller {
         if (opsHost == null) {
             log.error("Failed to find host with id {}", hostId);
             return AjaxResult.error("Failed to find host with id " + hostId);
+        }
+        if (PortalInstallType.ONLINE_INSTALL.getCode().equals(install.getInstallType())) {
+            PortalVersion portalVersion = install.getPortalVersion();
+            if (portalVersion == null) {
+                throw new PortalInstallException("portal version cannot be null");
+            }
+            MigrationToolPortalDownloadInfo portalDownloadInfo = portalDownloadInfoService.getPortalDownloadInfo(
+                    opsHost, PortalType.MULTI_DB, portalVersion);
+            install.setPkgDownloadUrl(portalDownloadInfo.getPortalPkgDownloadUrl());
+            install.setPkgName(portalDownloadInfo.getPortalPkgName());
+            install.setJarName(portalDownloadInfo.getPortalJarName());
         }
 
         OpsHostUserEntity hostUser = hostUserFacade.getById(install.getHostUserId());
@@ -411,7 +427,8 @@ public class MultiDbPortalInstaller {
 
     private void checkJavaEnv(SshLogin sshLogin) {
         String version = jschExecutorFacade.checkJavaVersion(sshLogin);
-        if (!PG_VERSION_PATTERN.matcher(version).find()) {
+        int javaVersionMajor = CommonUtils.getJavaVersionMajor(version);
+        if (javaVersionMajor < 11) {
             String errMsg = "The java version is not match 11+, "
                     + "please check environment JAVA_HOME,it must configuration in user ~/.bashrc";
             log.warn("{} {}", sshLogin, errMsg);

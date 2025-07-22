@@ -36,6 +36,7 @@ import lombok.Data;
 
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.plugin.enums.PortalType;
+import org.opengauss.admin.plugin.enums.PortalVersion;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -76,6 +77,8 @@ public class MigrationHostPortalInstall {
     private String pkgName;
     private String jarName;
     private PortalType portalType;
+    @TableField(exist = false)
+    private PortalVersion portalVersion;
 
     @TableField(exist = false)
     @JSONField(name = "thirdPartySoftwareConfig", serialize = false, deserialize = false)
@@ -125,8 +128,8 @@ public class MigrationHostPortalInstall {
         Optional<String[]> partsOptional = Optional.ofNullable(this.jarName).map(name -> name.split("-"));
         return partsOptional.map(parts -> {
             if (parts.length > 1) {
-                String portalVersion = parts[1];
-                String[] versionParts = portalVersion.split("\\.");
+                String parseVersion = parts[1];
+                String[] versionParts = parseVersion.split("\\.");
                 return Arrays.stream(versionParts).mapToInt(Integer::parseInt).findFirst().orElse(-1);
             } else {
                 return -1;

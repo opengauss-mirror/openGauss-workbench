@@ -20,11 +20,14 @@ import org.opengauss.admin.plugin.domain.MigrationTask;
 import org.opengauss.admin.plugin.domain.ReverseMigrationProgress;
 import org.opengauss.admin.plugin.dto.MultiDbPortalMigrationStatus;
 import org.opengauss.admin.plugin.enums.FullMigrationDbObjEnum;
+import org.opengauss.admin.plugin.enums.MainTaskStatus;
+import org.opengauss.admin.plugin.enums.MultiDbPortalStatusEnum;
 import org.opengauss.admin.plugin.enums.TaskStatus;
 import org.opengauss.admin.plugin.service.FullMigrationProgressService;
 import org.opengauss.admin.plugin.service.FullMigrationSummaryDataService;
 import org.opengauss.admin.plugin.service.IncrementalMigrationProgressService;
 import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
+import org.opengauss.admin.plugin.service.MigrationMainTaskService;
 import org.opengauss.admin.plugin.service.MigrationTaskService;
 import org.opengauss.admin.plugin.service.MigrationTaskStatusRecordService;
 import org.opengauss.admin.plugin.service.ReverseMigrationProgressService;
@@ -61,6 +64,9 @@ public class MultiDbPortalProgressLoader {
 
     @Autowired
     private MigrationTaskStatusRecordService migrationTaskStatusRecordService;
+
+    @Autowired
+    private MigrationMainTaskService migrationMainTaskService;
 
     @Autowired
     private MigrationTaskService migrationTaskService;
@@ -123,10 +129,6 @@ public class MultiDbPortalProgressLoader {
         if (TaskStatus.MIGRATION_ERROR.getCode().equals(latestStatus)) {
             String msg = MapUtil.getStr(lastStatus, "msg");
             update.setStatusDesc(msg);
-        } else {
-            if (!TaskStatus.CHECK_ERROR.getCode().equals(task.getExecStatus())) {
-                update.setStatusDesc("");
-            }
         }
         migrationTaskService.updateById(update);
     }
@@ -245,9 +247,14 @@ public class MultiDbPortalProgressLoader {
         List<MultiDbPortalMigrationStatus> migrationStatusEntryList =
                 JSON.parseArray(portalStatusContents, MultiDbPortalMigrationStatus.class);
         List<Map<String, Object>> dataKitStatusCodeList = new ArrayList<>();
+        boolean isPreMigrationVerifyFailed = false;
         for (MultiDbPortalMigrationStatus multiDbPortalMigrationStatus : migrationStatusEntryList) {
             Map<String, Object> datakitSatusCodeMap = new HashMap<>();
             int datakitStatus = multiDbPortalMigrationStatus.getStatus().getDatakitStatus();
+            if (datakitStatus == MultiDbPortalStatusEnum.PRE_MIGRATION_VERIFY_FAILED.getDatakitStatus()) {
+                isPreMigrationVerifyFailed = true;
+            }
+
             datakitSatusCodeMap.put("status", datakitStatus);
             long timestamp = multiDbPortalMigrationStatus.getTimestamp();
             datakitSatusCodeMap.put("timestamp", timestamp);
@@ -258,6 +265,15 @@ public class MultiDbPortalProgressLoader {
                 .sorted(Comparator.comparing(m -> MapUtil.getLong(m, "timestamp")))
                 .collect(Collectors.toList());
         migrationTaskStatusRecordService.saveTaskRecord(task.getId(), statusResultList);
+        if (isPreMigrationVerifyFailed) {
+            migrationMainTaskService.updateStatus(task.getMainTaskId(), MainTaskStatus.CHECK_MIGRATION);
+
+            String verifyResultFilePath = MultiDbPortalDirHelper.getVerifyResultFilePath(portalInfo, task.getId());
+            String verifyResultContents = FileUtils.catRemoteFileContents(verifyResultFilePath, shellInfo);
+            MigrationTask update = MigrationTask.builder().id(task.getId()).build();
+            update.setStatusDesc(verifyResultContents);
+            migrationTaskService.updateById(update);
+        }
         return statusResultList;
     }
 
