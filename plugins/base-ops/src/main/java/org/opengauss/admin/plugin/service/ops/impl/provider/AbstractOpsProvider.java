@@ -515,15 +515,19 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
         String command;
         if (gucSettingVO.getContext().equals(GucSettingContextEnum.POSTMASTER.getCode())) {
             if (isApplyToAllNode && clusterEntity.getVersion().equals(OpenGaussVersionEnum.ENTERPRISE)) {
-                command = String.format("gs_guc set -N all -I all -c \"%s=%s\"", gucSettingVO.getName(), gucSettingVO.getValue());
+                command = String.format("gs_guc set -N all -I all -c \"%s=\'%s\'\"", gucSettingVO.getName(),
+                        gucSettingVO.getValue());
             } else {
-                command = String.format("gs_guc set -D %s -c \"%s=%s\"", dataPath, gucSettingVO.getName(), gucSettingVO.getValue());
+                command = String.format("gs_guc set -D %s -c \"%s=\'%s\'\"", dataPath, gucSettingVO.getName(),
+                        gucSettingVO.getValue());
             }
         } else {
             if (isApplyToAllNode && clusterEntity.getVersion().equals(OpenGaussVersionEnum.ENTERPRISE)) {
-                command = String.format("gs_guc reload -N all -I all -c \"%s=%s\"", gucSettingVO.getName(), gucSettingVO.getValue());
+                command = String.format("gs_guc reload -N all -I all -c \"%s=\'%s\'\"", gucSettingVO.getName(),
+                        gucSettingVO.getValue());
             } else {
-                command = String.format("gs_guc reload -D %s -c \"%s=%s\"", dataPath, gucSettingVO.getName(), gucSettingVO.getValue());
+                command = String.format("gs_guc reload -D %s -c \"%s=\'%s\'\"", dataPath, gucSettingVO.getName(),
+                        gucSettingVO.getValue());
             }
         }
 
