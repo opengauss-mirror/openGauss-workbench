@@ -79,6 +79,7 @@ import org.opengauss.admin.plugin.service.MigrationTaskStatusRecordService;
 import org.opengauss.admin.plugin.service.TbMigrationTaskGlobalToolsParamService;
 import org.opengauss.admin.plugin.utils.ShellUtil;
 import org.opengauss.admin.plugin.vo.FullCheckParam;
+import org.opengauss.admin.plugin.vo.FullMigrationProgressVo;
 import org.opengauss.admin.plugin.vo.ProcessStatus;
 import org.opengauss.admin.plugin.vo.TaskProcessStatus;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
@@ -88,6 +89,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -401,21 +403,61 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             Map<String, Object> resultMap = objectMapper.readValue(jsonString, new TypeReference<>() {});
-            List<Map<String, String>> mapArray = (List<Map<String, String>>) resultMap.get(currentInfoType);
+            List<Map<String, Object>> mapArray = (List<Map<String, Object>>) resultMap.get(currentInfoType);
             if (mapArray == null) {
                 return filteredMap;
             }
-            mapArray = mapArray.stream().filter(entry -> entry.get("name").contains(info.getTableName()))
+
+            List<FullMigrationProgressVo> objectList = parseFullProgressJson(task, mapArray);
+            objectList = objectList.stream()
+                    .filter(entry -> entry.getName().contains(info.getTableName()))
+                    .filter(entry -> entry.getSourceSchema().contains(info.getSchemaName()))
                     .collect(Collectors.toList());
-            List<List<Map<String, String>>> pageList = Lists.partition(mapArray, info.getPageSize());
+            List<List<FullMigrationProgressVo>> pageList = Lists.partition(objectList, info.getPageSize());
             if (!pageList.isEmpty()) {
                 filteredMap.put(currentInfoType, pageList.get(info.getPageNum() - 1));
             }
-            filteredMap.put("total", mapArray.size());
+            filteredMap.put("total", objectList.size());
         } catch (JsonProcessingException e) {
             log.error("Read json value error:", e);
         }
         return filteredMap;
+    }
+
+    private List<FullMigrationProgressVo> parseFullProgressJson(
+            MigrationTask task, List<Map<String, Object>> mapArray) {
+        List<FullMigrationProgressVo> objectList = new ArrayList<>();
+        FullMigrationProgressVo progressVo;
+        String sourceSchema = task.getSourceDb();
+        String targetSchema = getTargetSchema(task);
+        for (Map<String, Object> stringMap : mapArray) {
+            progressVo = new FullMigrationProgressVo();
+            progressVo.setTaskId(task.getId());
+            progressVo.setSourceSchema(sourceSchema);
+            progressVo.setTargetSchema(targetSchema);
+            progressVo.setName(String.valueOf(stringMap.get("name")));
+            progressVo.setErrorMsg(String.valueOf(stringMap.get("errorMsg")));
+            String status = String.valueOf(stringMap.get("status"));
+            if (!ObjectUtils.isEmpty(status) && !"null".equals(status)) {
+                progressVo.setStatus(Integer.valueOf(status));
+            }
+            String percent = String.valueOf(stringMap.get("percent"));
+            if (!ObjectUtils.isEmpty(percent) && !"null".equals(percent)) {
+                progressVo.setPercent(Double.valueOf(percent));
+            }
+            objectList.add(progressVo);
+        }
+        return objectList;
+    }
+
+    private String getTargetSchema(MigrationTask task) {
+        List<MigrationTaskParam> migrationTaskParamList = migrationTaskParamService.selectByTaskId(task.getId())
+                .stream().filter(param -> param.getParamKey().equals("opengauss.database.schema"))
+                .toList();
+        if (!migrationTaskParamList.isEmpty()) {
+            return migrationTaskParamList.get(0).getParamValue();
+        }
+        return task.getSourceDb();
     }
 
     @Override
@@ -747,18 +789,22 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         boolean isMultiDbPortal = PortalType.MULTI_DB.equals(installHost.getPortalType());
         if (isMultiDbPortal) {
             multiDbPortal.startTask(installHost, t);
+            update = MigrationTask.builder()
+                    .id(t.getId())
+                    .execTime(Instant.now())
+                    .build();
         } else {
             if (!execMigrationCheck(installHost, t, globalParams, "verify_pre_migration")) {
                 return;
             }
             PortalHandle.startPortal(installHost, t, installHost.getJarName(),
                     getTaskParam(installHost, globalParams, t));
+            update = MigrationTask.builder()
+                    .id(t.getId())
+                    .execStatus(TaskStatus.FULL_START.getCode())
+                    .execTime(Instant.now())
+                    .build();
         }
-        update = MigrationTask.builder()
-            .id(t.getId())
-            .execStatus(TaskStatus.FULL_START.getCode())
-            .execTime(Instant.now())
-            .build();
         migrationTaskOperateRecordService.saveRecord(t.getId(), TaskOperate.RUN, operateUsername);
         updateById(update);
         if (isMultiDbPortal) {

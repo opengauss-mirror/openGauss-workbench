@@ -35,4 +35,16 @@ public class MigrationToolPortalDownloadInfoController {
             @PathVariable("hostId") String hostId, @RequestParam(required = false) PortalType portalType) {
         return AjaxResult.success(portalDownloadInfoService.getPortalDownloadInfoList(hostId, portalType));
     }
+
+    /**
+     * get portal support version list based on the hostId
+     *
+     * @param hostId Host ID
+     * @param portalType Portal Type
+     * @return AjaxResult Response
+     */
+    @GetMapping("/support/version")
+    public AjaxResult getPortalSupportVersion(String hostId, PortalType portalType) {
+        return AjaxResult.success(portalDownloadInfoService.getPortalSupportVersion(hostId, portalType));
+    }
 }

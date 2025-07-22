@@ -7,6 +7,8 @@ package org.opengauss.admin.plugin.dto;
 import lombok.Data;
 import org.opengauss.admin.plugin.enums.PortalType;
 
+import java.util.List;
+
 /**
  * Portal install host dto
  *
@@ -16,8 +18,10 @@ import org.opengauss.admin.plugin.enums.PortalType;
 public class PortalInstallHostDto {
     private String ip;
     private String hostname;
-    private Integer cpu;
-    private Double memory;
-    private Double disk;
     private PortalType portalType;
+
+    /**
+     * 0： not install, 1: installing, 2: Installed, 10: install error
+     */
+    private List<Integer> installStatusList;
 }

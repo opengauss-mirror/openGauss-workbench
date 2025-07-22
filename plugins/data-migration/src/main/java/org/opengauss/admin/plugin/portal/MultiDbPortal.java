@@ -14,6 +14,7 @@ import org.opengauss.admin.plugin.domain.FullMigrationSubProcessCounter;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTask;
 import org.opengauss.admin.plugin.domain.MigrationTaskExecResultDetail;
+import org.opengauss.admin.plugin.domain.MigrationTaskParam;
 import org.opengauss.admin.plugin.domain.MigrationTaskStatusRecord;
 import org.opengauss.admin.plugin.dto.MigrationCurrentCheckInfoDto;
 import org.opengauss.admin.plugin.dto.MigrationLogsInfoDto;
@@ -28,6 +29,7 @@ import org.opengauss.admin.plugin.service.FullMigrationSummaryDataService;
 import org.opengauss.admin.plugin.service.IncrementalMigrationProgressService;
 import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
 import org.opengauss.admin.plugin.service.MigrationMainTaskService;
+import org.opengauss.admin.plugin.service.MigrationTaskParamService;
 import org.opengauss.admin.plugin.service.MigrationTaskStatusRecordService;
 import org.opengauss.admin.plugin.service.ReverseMigrationProgressService;
 import org.opengauss.admin.plugin.vo.FullMigrationProgressVo;
@@ -93,6 +95,9 @@ public class MultiDbPortal extends MigrationPortal {
     @Autowired
     private MultiDbPortalMigrationController portalMigrationController;
 
+    @Autowired
+    private MigrationTaskParamService migrationTaskParamService;
+
     /**
      * get portal install info
      *
@@ -113,7 +118,7 @@ public class MultiDbPortal extends MigrationPortal {
         List<FullMigrationProgressVo> filterList = objectProgressList.stream()
                 .filter(objectProgress -> objectProgress.getName().contains(info.getTableName()))
                 .filter(objectProgress -> objectProgress.getSchema().contains(info.getSchemaName()))
-                .map(FullMigrationProgressVo::new)
+                .map(progress -> new FullMigrationProgressVo(progress, getSchemaMapping(task)))
                 .collect(Collectors.toList());
 
         Map<String, Object> filteredMap = new HashMap<>();
@@ -123,6 +128,47 @@ public class MultiDbPortal extends MigrationPortal {
         }
         filteredMap.put("total", filterList.size());
         return filteredMap;
+    }
+
+    private Map<String, String> getSchemaMapping(MigrationTask task) {
+        Map<String, String> schemaMappings = new HashMap<>();
+        List<String> sourceSchemas = Arrays.asList(task.getSourceSchemas().split(","));
+        for (String configSchema : sourceSchemas) {
+            schemaMappings.put(configSchema, configSchema);
+        }
+
+        List<MigrationTaskParam> migrationTaskParamList = migrationTaskParamService.selectByTaskId(task.getId())
+                .stream().filter(param -> param.getParamKey().equals("schema.mappings"))
+                .toList();
+        String schemaMappingStr = null;
+        if (!migrationTaskParamList.isEmpty()) {
+            schemaMappingStr = migrationTaskParamList.get(0).getParamValue();
+        }
+
+        String[] configMappingArray = null;
+        if (!ObjectUtils.isEmpty(schemaMappingStr)) {
+            configMappingArray = schemaMappingStr.split(",");
+        }
+
+        if (configMappingArray != null) {
+            for (String s : configMappingArray) {
+                if (ObjectUtils.isEmpty(s)) {
+                    continue;
+                }
+
+                String[] parts = s.split(":");
+                if (parts.length != 2) {
+                    log.error("Invalid schema mapping: {}", s);
+                    continue;
+                }
+
+                String sourceSchema = parts[0];
+                if (sourceSchemas.contains(sourceSchema)) {
+                    schemaMappings.put(sourceSchema, parts[1]);
+                }
+            }
+        }
+        return schemaMappings;
     }
 
     /**
@@ -171,9 +217,8 @@ public class MultiDbPortal extends MigrationPortal {
      * @return ws data
      */
     public MigrationTaskWebsocketInfoDto getWsData(MigrationTask task) {
-        migrationMainTaskService.refreshTaskStatusByPortal(task.getMainTaskId());
+        portalProgressLoader.refreshStatusAndProcess(task);
         MigrationTaskWebsocketInfoDto wsInfo = new MigrationTaskWebsocketInfoDto();
-
         Integer taskId = task.getId();
         MigrationTaskStatusRecord lastTaskStatus = migrationTaskStatusRecordService.getLagerStatusByTaskId(taskId);
         wsInfo.setCurrentExecStatus(lastTaskStatus.getStatusId());

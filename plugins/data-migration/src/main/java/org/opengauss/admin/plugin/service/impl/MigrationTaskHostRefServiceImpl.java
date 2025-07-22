@@ -25,7 +25,6 @@
 package org.opengauss.admin.plugin.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -48,6 +47,7 @@ import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterNodeIn
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcInfo;
+import org.opengauss.admin.common.utils.CommonUtils;
 import org.opengauss.admin.common.utils.OpsAssert;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.file.FileUploadUtils;
@@ -58,6 +58,7 @@ import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTask;
 import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
 import org.opengauss.admin.plugin.domain.MigrationThirdPartySoftwareConfig;
+import org.opengauss.admin.plugin.domain.MigrationToolPortalDownloadInfo;
 import org.opengauss.admin.plugin.domain.TbMigrationTaskGlobalToolsParam;
 import org.opengauss.admin.plugin.dto.CustomDbResource;
 import org.opengauss.admin.plugin.dto.MigrationHostDto;
@@ -67,6 +68,7 @@ import org.opengauss.admin.plugin.enums.MigrationErrorCode;
 import org.opengauss.admin.plugin.enums.PortalInstallStatus;
 import org.opengauss.admin.plugin.enums.PortalInstallType;
 import org.opengauss.admin.plugin.enums.PortalType;
+import org.opengauss.admin.plugin.enums.PortalVersion;
 import org.opengauss.admin.plugin.enums.ThirdPartySoftwareConfigType;
 import org.opengauss.admin.plugin.enums.ToolsConfigEnum;
 import org.opengauss.admin.plugin.exception.MigrationTaskException;
@@ -79,9 +81,11 @@ import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
 import org.opengauss.admin.plugin.service.MigrationMqInstanceService;
 import org.opengauss.admin.plugin.service.MigrationTaskHostRefService;
 import org.opengauss.admin.plugin.service.MigrationTaskService;
+import org.opengauss.admin.plugin.service.MigrationToolPortalDownloadInfoService;
 import org.opengauss.admin.plugin.service.TbMigrationTaskGlobalToolsParamService;
 import org.opengauss.admin.plugin.utils.JDBCUtils;
 import org.opengauss.admin.plugin.utils.ShellUtil;
+import org.opengauss.admin.plugin.vo.HostBaseInfoVo;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 import org.opengauss.admin.plugin.vo.TargetClusterNodeVO;
 import org.opengauss.admin.plugin.vo.TargetClusterVO;
@@ -125,7 +129,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.opengauss.admin.plugin.enums.DbTypeEnum.MYSQL;
@@ -192,6 +195,9 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     @Autowired
     private MultiDbPortal multiDbPortal;
 
+    @Autowired
+    private MigrationToolPortalDownloadInfoService portalDownloadInfoService;
+
     @Override
     public void deleteByMainTaskId(Integer mainTaskId) {
         LambdaQueryWrapper<MigrationTaskHostRef> query = new LambdaQueryWrapper<>();
@@ -233,64 +239,36 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 host.getHostId());
 
             PortalType portalType = portalInstallHostDto.getPortalType();
+            List<Integer> installStatus = portalInstallHostDto.getInstallStatusList();
             if (installHost == null) {
-                if (portalType != null) {
+                if (portalType != null || (installStatus != null && !installStatus.contains(0))) {
                     return;
                 }
-                String[] opsHosInfo = getHostBaseInfo(host.getHostId());
-                if (opsHosInfo.length == 0) {
+                HostBaseInfoVo opsHosInfo = getHostBaseInfo(host.getHostId());
+                if (opsHosInfo.isEmpty()) {
                     log.warn("Host no install , opsHostInfo is empty {}", host);
                     return;
                 }
-                eachOne.setBaseInfos(ListUtil.toList(opsHosInfo));
+                eachOne.setBaseInfos(opsHosInfo);
                 eachOne.setInstallPortalStatus(PortalInstallStatus.NOT_INSTALL.getCode());
             } else {
-                if (portalType != null && !installHost.getPortalType().equals(portalType)) {
+                if (portalType != null && !installHost.getPortalType().equals(portalType)
+                        || (installStatus != null && !installStatus.contains(installHost.getInstallStatus()))) {
                     return;
                 }
-                String[] hostInfo = getHostBaseInfo(host.getHostId());
-                if (hostInfo.length == 0) {
+                HostBaseInfoVo hostInfo = getHostBaseInfo(host.getHostId());
+                if (hostInfo.isEmpty()) {
                     log.warn("Host install , opsHostInfo is empty {}", host);
                     return;
                 }
-                eachOne.setBaseInfos(ListUtil.toList(hostInfo));
+                eachOne.setBaseInfos(hostInfo);
                 eachOne.setInstallInfo(installHost);
                 eachOne.setInstallPortalStatus(installHost.getInstallStatus());
             }
             hostDtoList.add(eachOne);
         });
-        hostDtoList.sort(Comparator.comparing(o -> o.getHostInfo().getPublicIp()));
-        List<MigrationHostDto> totalHostDto = filterBaseInfos(hostDtoList, portalInstallHostDto);
-        return getPageFromList(totalHostDto, iPage.getCurrent(), iPage.getSize());
-    }
-
-    private List<MigrationHostDto> filterBaseInfos(
-            List<MigrationHostDto> hostDtoList, PortalInstallHostDto portalInstallHostDto) {
-        List<MigrationHostDto> resultList = new ArrayList<>();
-        for (MigrationHostDto hostDto : hostDtoList) {
-            List<String> baseInfos = hostDto.getBaseInfos();
-            if (baseInfos.size() == 3) {
-                String cpu = baseInfos.get(0);
-                Integer expectCpu = portalInstallHostDto.getCpu();
-                if (cpu == null || (expectCpu != null && !Integer.valueOf(cpu).equals(expectCpu))) {
-                    continue;
-                }
-
-                String memory = baseInfos.get(1);
-                Double expectMemory = portalInstallHostDto.getMemory();
-                if (memory == null || (expectMemory != null && Double.parseDouble(memory) < expectMemory)) {
-                    continue;
-                }
-
-                String disk = baseInfos.get(2);
-                Double expectDisk = portalInstallHostDto.getDisk();
-                if (disk == null || (expectDisk != null && Double.parseDouble(disk) < expectDisk)) {
-                    continue;
-                }
-                resultList.add(hostDto);
-            }
-        }
-        return resultList;
+        hostDtoList.sort(Comparator.comparing(MigrationHostDto::getBaseInfos));
+        return getPageFromList(hostDtoList, iPage.getCurrent(), iPage.getSize());
     }
 
     private <T> Page<T> getPageFromList(List<T> sourceList, long current, long size) {
@@ -308,12 +286,18 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         return page;
     }
 
-    private String[] getHostBaseInfo(String hostId) {
+    private HostBaseInfoVo getHostBaseInfo(String hostId) {
+        HostBaseInfoVo result = new HostBaseInfoVo();
         String hostInfo = hostMonitorFacade.getMigrationHostInfo(hostId);
-        if (StrUtil.isEmpty(hostInfo)) {
-            return new String[3];
+        String[] parts = hostInfo.split("\n");
+        if (parts.length != 3) {
+            return result;
         }
-        return hostInfo.split("\n");
+        result.setCpuCoreNum(parts[0]);
+        result.setRemainingMemory(parts[1]);
+        result.setAvailableDiskSpace(parts[2]);
+        result.setCpuUsing(hostMonitorFacade.getCpuUsing(hostId));
+        return result;
     }
 
     @Override
@@ -629,10 +613,14 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
 
     @Override
     public List<String> getPgsqlDbSchemas(String url, String username, String password, String dbName) {
-        List<String> schemas = new ArrayList<>();
-
         JdbcInfo jdbcInfo = JdbcUtil.parseUrl(url);
-        String dbUrl = String.format("jdbc:postgresql://%s:%s/%s", jdbcInfo.getIp(), jdbcInfo.getPort(), dbName);
+        return getPgsqlDbSchemas(jdbcInfo.getIp(), jdbcInfo.getPort(), dbName, username, password);
+    }
+
+    @Override
+    public List<String> getPgsqlDbSchemas(String ip, String port, String dbName, String username, String password) {
+        List<String> schemas = new ArrayList<>();
+        String dbUrl = String.format("jdbc:postgresql://%s:%s/%s", ip, port, dbName);
         try (Connection connection = DriverManager.getConnection(dbUrl, username, encryptionUtils.decrypt(password));
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(SqlConstants.PGSQL_SELECT_ALL_SCHEMAS)) {
@@ -650,10 +638,8 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             schemas.remove("pg_catalog");
             schemas.remove("pg_toast");
         }
-
         return schemas;
     }
-
 
     /**
      * get the list of database names on a node.
@@ -876,6 +862,17 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult installPortalProc(String hostId, MigrationHostPortalInstall install, boolean isReInstall) {
         OpsHostEntity opsHost = hostFacade.getById(hostId);
+        if (PortalInstallType.ONLINE_INSTALL.getCode().equals(install.getInstallType())) {
+            PortalVersion portalVersion = install.getPortalVersion();
+            if (portalVersion == null) {
+                throw new PortalInstallException("portal version cannot be null");
+            }
+            MigrationToolPortalDownloadInfo portalDownloadInfo = portalDownloadInfoService.getPortalDownloadInfo(
+                    opsHost, PortalType.MYSQL_ONLY, portalVersion);
+            install.setPkgDownloadUrl(portalDownloadInfo.getPortalPkgDownloadUrl());
+            install.setPkgName(portalDownloadInfo.getPortalPkgName());
+            install.setJarName(portalDownloadInfo.getPortalJarName());
+        }
         if (!install.getInstallType().equals(PortalInstallType.IMPORT_INSTALL.getCode())) {
             preinstall(opsHost, install);
         }
@@ -1457,8 +1454,8 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         // Execute the java -version command. If the command fails, thrown an exception.
         String version = jschExecutorFacade.checkJavaVersion(sshLogin);
         // check the java version
-        Pattern pattern = Pattern.compile("version \"(1[1-9]|[2-9][0-9]+)\\.");
-        if (!pattern.matcher(version).find()) {
+        int javaVersionMajor = CommonUtils.getJavaVersionMajor(version);
+        if (javaVersionMajor < 11) {
             String errMsg = "The java version is not match 11+, "
                 + "please check environment JAVA_HOME,it must configuration in user ~/.bashrc";
             log.warn("{} {}", sshLogin, errMsg);

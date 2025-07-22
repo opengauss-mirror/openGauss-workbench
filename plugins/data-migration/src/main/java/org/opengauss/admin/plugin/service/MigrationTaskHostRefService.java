@@ -108,6 +108,18 @@ public interface MigrationTaskHostRefService extends IService<MigrationTaskHostR
      */
     List<String> getPgsqlDbSchemas(String url, String username, String password, String dbName);
 
+    /**
+     * Get the list of schema names on a PostgreSQL node.
+     *
+     * @param ip ip of node
+     * @param port port of node
+     * @param dbName database name
+     * @param username username of db connection
+     * @param password password of db connection
+     * @return schema name list
+     */
+    List<String> getPgsqlDbSchemas(String ip, String port, String dbName, String username, String password);
+
     List<Map<String, Object>> getOpsClusterDbNames(OpsClusterNodeVO clusterNode);
 
     /**

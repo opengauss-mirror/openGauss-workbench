@@ -33,6 +33,7 @@ public enum MultiDbPortalStatusEnum {
 
     MIGRATION_FINISHED(600, 100, "Migration finished"),
     PRE_MIGRATION_VERIFY_FAILED(601, 3000, "Pre migration verify failed"),
+    PRE_REVERSE_PHASE_VERIFY_FAILED(602, 3000, "Pre reverse phase verify failed"),
     MIGRATION_FAILED(500, 500, "Migration failed"),
 
     INCREMENTAL_MIGRATION_INTERRUPTED(501, 30, "Incremental migration interrupted"),

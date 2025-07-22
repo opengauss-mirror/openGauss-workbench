@@ -342,6 +342,11 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             t.setExecStatus(TaskStatus.NOT_RUN.getCode());
             MigrationTaskModel model = migrationTaskModelService.getById(t.getMigrationModelId());
             t.setMigrationOperations(model.getMigrationOperations());
+            if (DbTypeEnum.POSTGRESQL.equals(t.getSourceDbType()) && ObjectUtils.isEmpty(t.getSourceSchemas())) {
+                t.setSourceSchemas(String.join(",", migrationTaskHostRefService.getPgsqlDbSchemas(
+                        t.getSourceDbHost(), t.getSourceDbPort(), t.getSourceDb(), t.getSourceDbUser(),
+                        t.getSourceDbPass())));
+            }
             migrationTaskService.save(t);
             if (t.getTaskParams().size() > 0) {
                 t.getTaskParams().stream().forEach(param -> {
@@ -803,6 +808,14 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                     t.getExecStatus().equals(TaskStatus.REVERSE_START.getCode()) ||
                     t.getExecStatus().equals(TaskStatus.REVERSE_RUNNING.getCode());
         }).collect(Collectors.toList());
+        MigrationMainTask mainTask = getById(mainTaskId);
+        if (MainTaskStatus.RUNNING.getCode().equals(mainTask.getExecStatus())) {
+            if (tasks.stream().anyMatch((task) -> DbTypeEnum.POSTGRESQL.equals(task.getSourceDbType())
+                    && TaskStatus.NOT_RUN.getCode().equals(task.getExecStatus()))) {
+                runningTasks.addAll(tasks);
+            }
+        }
+
         if (runningTasks.size() > 0) {
             taskRefreshRecord.put(mainTaskId, DateUtil.date().getTime());
             runningTasks.forEach(t -> {
