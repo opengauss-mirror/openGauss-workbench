@@ -49,33 +49,10 @@
             <el-input v-model.trim="form.hostname" clearable :placeholder="$t('step3.index.5q093f8y8fs0')" style="width: 160px"
                       maxlength="255"/>
           </el-form-item>
-          <el-form-item prop="cpu" style="margin-left: -17px" :label="$t('step2.index.CPUcores')"
-                        :rules="[{ required: false, message: $t('step2.index.cpuRequired') },
-            { type: 'number', message: $t('components.ToolsParamsConfig.5q0toolspa32') }]"
-          >
-            <el-input v-model.number="form.cpu" maxlength="5" clearable
-                      :placeholder="$t('step3.index.5q093f8y8j40')" style="width: 160px"/>
-          </el-form-item>
-          <el-form-item prop="memory" style="margin-left: -17px" :label="$t('step2.index.remainMemory')"
-                        :rules="[{ required: false, message: $t('step2.index.memoryRequired') },
-            { type: 'number', message: $t('components.ToolsParamsConfig.5q0toolspa32') }]"
-          >
-            <el-input v-model.number="form.memory" maxlength="10" clearable
-                      :placeholder="$t('step3.index.5q093f8y8lw0')" style="width: 160px"
-            />
-          </el-form-item>
-          <el-form-item prop="disk" style="margin-left: -17px" :label="$t('step2.index.remainHarddiskCapacity')"
-                        :rules="[{ required: false, message: $t('step2.index.diskRequired') },
-                    { type: 'number', message: $t('components.ToolsParamsConfig.5q0toolspa32') }]"
-          >
-            <el-input v-model.number="form.disk" maxlength="10" clearable
-                      :placeholder="$t('step3.index.5q093f8y8p40')" style="width: 160px"
-            />
-          </el-form-item>
           <el-form-item prop="portalType" style="margin-left: -17px" :label="$t('step2.index.portalVersion')">
             <el-select v-model="form.portalType" clearable style="width: 160px" :placeholder="$t('step2.index.portalVersionContent')">
-              <el-option  label="MYSQL_ONLY" value="MYSQL_ONLY" />
-              <el-option  label="MULTI_DB" value="MULTI_DB" />
+              <el-option  label="MySQL" value="MYSQL_ONLY" />
+              <el-option  label="PostgreSQL" value="MULTI_DB" />
             </el-select>
           </el-form-item>
         </el-row>
@@ -152,9 +129,15 @@
           :label="$t('step2.index.portalVersion')"
           prop="installInfo.portalType"
           :formatter="(row) => row.installInfo?.portalType || ''"
-          :min-width="100"
-          show-overflow-tooltip
-        />
+          :min-width="110"
+        >
+          <template #default="{ row }">
+            <div v-if="row.installInfo?.portalType">
+              <p v-if="row.installInfo.portalType === 'MYSQL_ONLY'">MySQL</p>
+              <p v-if="row.installInfo.portalType === 'MULTI_DB'">PostgreSQL</p>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column
           :label="$t('step2.index.hostNameOs')"
           prop="hostInfo.hostname"
@@ -187,7 +170,16 @@
           show-overflow-tooltip
         >
           <template #default="{ row }">
-            {{row.baseInfos[0]}}
+            {{row.baseInfos.cpuCoreNum}}
+          </template>
+        </el-table-column>
+        <el-table-column
+          :label="$t('step2.index.cpuUsing')"
+          :min-width="120"
+          show-overflow-tooltip
+        >
+          <template #default="{ row }">
+            {{row.baseInfos.cpuUsing}}%
           </template>
         </el-table-column>
         <el-table-column
@@ -196,7 +188,7 @@
           show-overflow-tooltip
         >
           <template #default="{ row }">
-            {{row.baseInfos[1]}}M
+            {{row.baseInfos.remainingMemory}}M
           </template>
         </el-table-column>
         <el-table-column
@@ -205,7 +197,7 @@
           show-overflow-tooltip
         >
           <template #default="{ row }">
-            {{row.baseInfos[2]}}G
+            {{row.baseInfos.availableDiskSpace}}G
           </template>
         </el-table-column>
         <el-table-column
@@ -264,7 +256,8 @@
                 <el-icon><Delete /></el-icon>
                 {{ $t('step3.index.5q093f8y9zg1') }}
               </el-button>
-              <el-button size="small" type="primary" text @click="handleToolsParams(row)">
+              <el-button size="small" type="primary" text @click="handleToolsParams(row)"
+                         v-if="row.installInfo.portalType !== 'MULTI_DB'">
                 <el-icon><Edit /></el-icon>
                 {{ $t('components.ToolsParamsConfig.5q0toolspar0') }}
               </el-button>
@@ -395,7 +388,8 @@ const form = reactive({
   cpu: null,
   memory: null,
   disk: null,
-  portalType: null
+  portalType: null,
+  installStatus: null
 })
 const formRef = ref()
 
@@ -540,13 +534,16 @@ const refreshSearchInfo = (hostIdList) => {
   searchAreaVisible.value = !searchAreaVisible.value
   resetQuery()
 }
-const activeFilters = ref([])
+
 const filterChange = (filterObj) => {
   const columnKey = Object.keys(filterObj)[0]
-  activeFilters.value.length = 0
+  form.installStatus = []
   toRaw(filterObj[columnKey]).forEach((item) => {
-    activeFilters.value.push(item)
+    form.installStatus.push(item)
   })
+  if(filterObj[columnKey].length === 0) {
+    form.installStatus = null
+  }
   getHostsData()
 }
 
@@ -556,10 +553,8 @@ const getHostsData = () => {
   hostsData({
     ip: filterFlag.value? form.ip: null,
     hostname: filterFlag.value? form.hostname: null,
-    cpu: filterFlag.value? form.cpu: null,
-    memory: filterFlag.value? form.memory: null,
-    disk: filterFlag.value? form.disk: null,
-    portalType: filterFlag.value? form.portalType: null
+    portalType: filterFlag.value? form.portalType: null,
+    installStatusList: form.installStatus
   }, pagination.pageSize, pagination.current)
     .then((res) => {
       if (Number(res.code) === 200) {
@@ -568,10 +563,7 @@ const getHostsData = () => {
         tableData.value = res.data.records.map(item => ({
           ...item,
           hostId: item.hostInfo.hostId
-        })) .filter(item =>
-        activeFilters.value.length === 0 ||
-        activeFilters.value.includes(item.installPortalStatus)
-        );
+        }))
         originData.value = JSON.parse(JSON.stringify(tableData.value))
         selectionChange()
         timer = setTimeout(() => {
@@ -600,6 +592,7 @@ const resetQuery = () => {
   form.disk = undefined
   form.portalType = null
   filterFlag.value = false
+  form.installStatus = null
   getHostsData()
 }
 
@@ -723,7 +716,6 @@ onMounted(() => {
     return item.hostId ? item.hostId : item;
   })
   filterFlag.value = false
-  activeFilters.value.length = 0
   scrollToTop()
   getHostsData()
   searchAreaVisible.value = false

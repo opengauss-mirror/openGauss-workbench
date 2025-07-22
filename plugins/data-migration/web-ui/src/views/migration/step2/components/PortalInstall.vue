@@ -48,7 +48,7 @@
     </template>
 
     <el-skeleton :loading="loading">
-      <el-form ref="formRef" :model="form" label-width="130" class="page-input-size">
+      <el-form ref="formRef" :model="form" label-width="170" class="page-input-size">
         <el-form-item
           :label="$t('components.PortalInstall.5q0aajl76580')"
           :rules="[
@@ -103,16 +103,17 @@
         >
           <el-radio-group v-model="form.portalType">
             <el-radio-button label="MULTI_DB">
-              MULTI_DB
+              PostgreSQL
             </el-radio-button>
             <el-radio-button label="MYSQL_ONLY">
-              MYSQL_ONLY
+              MySQL
             </el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item
           :label="$t('components.PortalInstall.5q0aajl77lg33')"
           prop="installType"
+          @change="changeInstallType"
         >
           <el-radio-group v-model="form.installType">
             <el-radio-button :label="INSTALL_TYPE.ONLINE">
@@ -126,40 +127,20 @@
             </el-radio-button>
           </el-radio-group>
         </el-form-item>
-
         <template v-if="form.installType === INSTALL_TYPE.ONLINE">
           <el-form-item
-            v-if="false"
-            :label="$t('components.PortalInstall.5q0aajl77lg3')"
-            :rules="[
-            {
-              required: true,
-              message: $t('components.PortalInstall.5q0aajl77lg4'),
-            },
-          ]"
+            :label="$t('step2.compoents.portalInstall.installType')"
             prop="pkgDownloadUrl"
           >
-            <el-input v-model.trim="form.pkgDownloadUrl" maxlength="100" />
-          </el-form-item>
-
-          <el-form-item
-            :label="$t('components.PortalInstall.5q0aajl77lg5')"
-            :rules="[
-            {
-              required: true,
-              message: $t('components.PortalInstall.5q0aajl77lg6'),
-            },
-          ]"
-            prop="pkgName"
-          >
-            <el-select v-model="form.pkgName">
-              <el-option
-                v-for="packageInfo in packageInfos.value"
-                :key="packageInfo.portalPkgName"
-                :label="packageInfo.portalPkgName"
-                :value="packageInfo.portalPkgName"
-              />
-            </el-select>
+            <el-radio-group v-model="form.portalVersion">
+              <el-radio-button label="STABLE" v-if="versionTypeNum === 'both' || versionTypeNum === 'STABLE'">
+                {{ $t('step2.compoents.portalInstall.stable') }}
+              </el-radio-button>
+              <el-radio-button label="EXPERIMENTAL"  v-if="versionTypeNum === 'both' || versionTypeNum === 'EXPERIMENTAL'">
+                {{ $t('step2.compoents.portalInstall.trial') }}
+              </el-radio-button>
+              <el-text v-if="versionTypeNum === 'none'">{{ $t('step2.compoents.portalInstall.versionContent') }}</el-text>
+            </el-radio-group>
           </el-form-item>
         </template>
 
@@ -299,12 +280,13 @@
 
 <script setup>
 import {onMounted, reactive, ref, watch} from 'vue'
-import {deletePortal, hasRootPermission, hostUsers, installPortal, reInstallPortal} from '@/api/task'
+import { deletePortal, getInstallType, hasRootPermission, hostUsers, installPortal, reInstallPortal } from '@/api/task'
 import {getPortalDownloadInfoList} from '@/api/common'
 import {INSTALL_TYPE, KAFKA_CONFIG_TYPE} from '@/utils/constants'
 import {useI18n} from 'vue-i18n'
 import {Modal} from '@arco-design/web-vue'
 import {Plus} from '@element-plus/icons-vue'
+import showMessage from "@/utils/showMessage";
 const {t} = useI18n()
 
 const props = defineProps({
@@ -321,6 +303,7 @@ const form = reactive({
   hostUserId: undefined,
   installPath: '~',
   installType: INSTALL_TYPE.ONLINE,
+  portalVersion: '',
   pkgDownloadUrl: '',
   pkgName: '',
   jarName: 'portalControl-1.0-SNAPSHOT-exec.jar',
@@ -384,10 +367,8 @@ watch(
         thirdPartyParam.schemaRegistryPort = '8081'
         thirdPartyParam.kafkaInstallDir = form.installPath + KAFKA_CONFIG_TYPE.INSTALL_DIR_DEFAULT
       }
-      getPortalDownloadInfoList(props.hostId, form.portalType).then((res) => {
-        packageInfos.value = res.data
-        getHostUsers()
-      })
+      getHostUsers()
+      getVersionType(form.portalType)
     } else {
       form.hostUserId = ''
       form.installPath = ''
@@ -419,9 +400,16 @@ watch(
 const isMysqlPortaltype = ref(true)
 const changePortalType =() => {
   form.portalType === 'MULTI_DB'? isMysqlPortaltype.value = false: isMysqlPortaltype.value = true
-  getPortalDownloadInfoList(props.hostId, form.portalType).then((res) => {
-    packageInfos.value = res.data
-  })
+  getVersionType(form.portalType)
+}
+
+const changeInstallType =() => {
+  if (form.installType === INSTALL_TYPE.ONLINE) {
+    getVersionType(form.portalType)
+  } else {
+    versionTypeNum.value = 'none'
+    form.portalVersion = ''
+  }
 }
 
 const getHostUsers = () => {
@@ -470,8 +458,9 @@ const cancel = () => {
 }
 
 const confirmSubmit = () => {
+  const onloneTypeNull = versionTypeNum.value === 'none' && form.installType === INSTALL_TYPE.ONLINE? true: false
   formRef.value?.validate(async (valid) => {
-    if (valid) {
+    if (valid && !onloneTypeNull) {
       const params = await buildInstallReq()
       loading.value = true
       let method = props.mode === 'install' ? installPortal : reInstallPortal
@@ -484,6 +473,10 @@ const confirmSubmit = () => {
         .catch(() => {
           loading.value = false
         })
+    } else {
+      if (onloneTypeNull) {
+        showMessage('error', '在线下载版本无法提供，请通过其他方式安装')
+      }
     }
   })
 }
@@ -496,7 +489,7 @@ const buildInstallReq = () => {
   params.append('installType', form.installType)
   params.append('pkgDownloadUrl', form.pkgDownloadUrl)
   params.append('jarName', form.jarName)
-
+  params.append('portalVersion', form.portalVersion)
   params.append('thirdPartySoftwareConfig.thirdPartySoftwareConfigType', KAFKA_CONFIG_TYPE.INSTALL)
   params.append('thirdPartySoftwareConfig.zookeeperPort', thirdPartyParam.zookeeperPort)
   params.append('thirdPartySoftwareConfig.kafkaPort', thirdPartyParam.kafkaPort)
@@ -547,6 +540,40 @@ const validUpload = (rule, val, cb) => {
   } else {
     cb()
   }
+}
+const versionTypeNum = ref('')
+const getVersionType = (installType) => {
+  const hostId = props.hostId
+  getInstallType(hostId, installType) .then((res) => {
+    if(Number(res.code) === 200) {
+      const hasStable = res.data.includes("STABLE")
+      const hasExperimental = res.data.includes("EXPERIMENTAL")
+      console.log('1', hasStable, hasExperimental)
+      if (hasStable && hasExperimental) {
+        versionTypeNum.value = 'both'
+        form.portalVersion = 'STABLE'
+      } else if (hasStable) {
+        versionTypeNum.value = 'STABLE'
+        form.portalVersion = 'STABLE'
+      } else if (hasExperimental) {
+        versionTypeNum.value = 'EXPERIMENTAL'
+        form.portalVersion = 'EXPERIMENTAL'
+      } else {
+        versionTypeNum.value = 'none'
+        form.portalVersion = ''
+      }
+    } else {
+      versionTypeNum.value = 'none'
+      form.portalVersion = ''
+    }
+    console.log(res)
+    console.log('form.portalVersion', form.portalVersion)
+    console.log('versionTypeNum.value', versionTypeNum.value)
+  }) .catch((error) => {
+    versionTypeNum.value = 'none'
+    form.portalVersion = ''
+    console.log(error)
+  })
 }
 
 onMounted(() => {
@@ -605,7 +632,7 @@ onMounted(() => {
 .page-input-size :deep(.el-form-item .el-input),
 .page-input-size :deep(.el-form-item .el-select),
 .page-input-size :deep(.el-form-item .el-input-number){
-  width: 300px !important;
+  width: 450px !important;
 }
 
 </style>

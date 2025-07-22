@@ -60,6 +60,10 @@ export function installPortal (hostId, params) {
   return axios.post(`/plugins/data-migration/resource/installPortal/${hostId}`, params)
 }
 
+export function getInstallType (hostId,portalType) {
+  return axios.get(`/plugins/data-migration/portalDownloadInfo/support/version?hostId=${hostId}&portalType=${portalType}`)
+}
+
 export function installPortalFromDatakit (hostId, params) {
   return axios.post(`/plugins/data-migration/resource/installPortalFromDatakit/${hostId}`, params)
 }
