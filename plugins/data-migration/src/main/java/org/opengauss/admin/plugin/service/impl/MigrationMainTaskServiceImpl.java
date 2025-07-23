@@ -547,10 +547,13 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     public AjaxResult resetTask(Integer id) {
         MigrationMainTask mainTask = getById(id);
         if (mainTask == null || mainTask.getId() == null) {
-            return AjaxResult.error(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
+            return AjaxResult.error(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getCode(),
+                    MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
         }
-        if (!mainTask.getExecStatus().equals(MainTaskStatus.FINISH.getCode())) {
-            return AjaxResult.error(MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getMsg());
+        if (!mainTask.getExecStatus().equals(MainTaskStatus.FINISH.getCode())
+                && !mainTask.getExecStatus().equals(MainTaskStatus.SUCCESS.getCode())) {
+            return AjaxResult.error(MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getCode(),
+                    MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getMsg());
         }
         mainTask.setExecStatus(MainTaskStatus.NOT_RUN.getCode());
         mainTask.setFinishTime(null);
