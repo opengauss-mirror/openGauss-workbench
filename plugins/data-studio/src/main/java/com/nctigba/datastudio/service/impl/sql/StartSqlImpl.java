@@ -91,7 +91,7 @@ public class StartSqlImpl implements OperationInterface {
             return;
         }
         String sql = paramReq.getSql();
-        List<NativeQuery> nativeQueryList = Parser.parseJdbcSql(sql, false, false, true, false);
+        List<NativeQuery> nativeQueryList = Parser.parseJdbcSql(sql, false, false, true, false, true);
         StringJoiner joiner = new StringJoiner(";");
         for (NativeQuery query : nativeQueryList) {
             String nativeSql = query.nativeSql.trim();
