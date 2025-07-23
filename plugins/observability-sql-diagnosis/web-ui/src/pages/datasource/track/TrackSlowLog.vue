@@ -564,9 +564,23 @@ const getSqlDefaultConfig = () => {
 }
 const setSqlConfig = (type: 'peroid' | 'frequency') => {
   if (type === 'peroid') {
-    ogRequest.post(`/sqlDiagnosis/api/v1/peroid?peroid=${sqlPeroid.value.slice(-1)[0]}`).then(() => {
-      ElMessage.success(t('app.saveSuccess'))
-    })
+    const splitToArray = () => {
+      return sqlPeroid.value.slice(-1)[0].match(/[a-zA-Z]+|\d+/g) || [];
+    };
+    const periodArray = splitToArray()
+    if (periodArray.length === 2) {
+      let formattedPeriod = periodArray[0]
+      if (periodArray[1] === 'month') {
+        formattedPeriod = formattedPeriod + 'm'
+      } else {
+        formattedPeriod = formattedPeriod + 'd'
+      }
+      ogRequest.post(`/sqlDiagnosis/api/v1/peroid?peroid=${formattedPeriod}`).then(() => {
+        ElMessage.success(t('app.saveSuccess'))
+      })
+    } else {
+      ElMessage.error(t('app.saveFail'))
+    }
   }
   if (type === 'frequency') {
     ogRequest.post(`/sqlDiagnosis/api/v1/frequency?frequency=${sqlFrequency.value.slice(-1)[0]}`).then(() => {
