@@ -314,6 +314,8 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
                 doMonitorMysql(connection, jdbcMonitorVO);
             } else if (dbType == DbTypeEnum.OPENGAUSS) {
                 doMonitorOpenGauss(connection, jdbcMonitorVO);
+            } else {
+                doMonitorPostgresql(connection, jdbcMonitorVO);
             }
 
             wsUtil.sendText(wsSession, JSON.toJSONString(jdbcMonitorVO));
@@ -324,6 +326,10 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
                 throw new OpsException("thread is interrupted");
             }
         }
+    }
+
+    private void doMonitorPostgresql(Connection connection, JdbcMonitorVO jdbcMonitorVO) {
+        doMonitorOpenGauss(connection, jdbcMonitorVO);
     }
 
     private void doMonitorOpenGauss(Connection connection, JdbcMonitorVO jdbcMonitorVO) {

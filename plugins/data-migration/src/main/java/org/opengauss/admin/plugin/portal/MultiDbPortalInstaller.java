@@ -158,7 +158,7 @@ public class MultiDbPortalInstaller {
         String rmCommand = String.format("cd %s && rm -rf %s %s %s", portalInfo.getInstallPath(), "portal/",
                 portalInfo.getPkgName(), portalInfo.getDatakitLogPath());
         ShellUtil.execCommandGetResult(shellInfo, rmCommand);
-        portalInstallHostService.updateStatus(hostId, PortalInstallStatus.NOT_INSTALL.getCode());
+        portalInstallHostService.removeById(portalInfo.getId());
         portalInstallHostService.clearPkgUploadPath(hostId);
         toolsParamService.removeByHostId(portalInfo.getRunHostId());
         return AjaxResult.success();

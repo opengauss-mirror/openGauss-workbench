@@ -44,7 +44,7 @@
             <div class="monitor-data">{{ record.connNum ? record.connNum : '--' }}</div>
           </div>
         </div>
-        <div class="flex-col-start" v-if="jdbcData.dbType === 'OPENGAUSS'">
+        <div class="flex-col-start" v-if="jdbcData.dbType === 'OPENGAUSS' || jdbcData.dbType === 'POSTGRESQL'">
           <div class="flex-col">
             <div class="monitor-data">{{ record.connNum ? record.connNum : '--' }}</div>
             <div>{{ $t('database.JdbcNodeTable.5oxhv6qcnuk0') }}</div>
@@ -56,7 +56,7 @@
           <div class="monitor-data">{{ record.tableSpaceUsed ? record.tableSpaceUsed : '--' }}MB</div>
           <div>{{ $t('database.JdbcNodeTable.5oxhv6qco4c0') }}</div>
         </div>
-        <div class="flex-col mr" style="width: 130px;" v-if="jdbcData.dbType === 'OPENGAUSS'">
+        <div class="flex-col mr" style="width: 130px;" v-if="jdbcData.dbType === 'OPENGAUSS' || jdbcData.dbType === 'POSTGRESQL'">
           <div class="monitor-data">{{ record.sessionNum ? record.sessionNum : '--' }}</div>
           <div>{{ $t('database.JdbcNodeTable.else7') }}</div>
         </div>
@@ -66,7 +66,7 @@
           <div class="monitor-data">{{ record.memoryUsed ? record.memoryUsed : '--' }}GB</div>
           <div>{{ $t('database.JdbcNodeTable.5oxhv6qcobk0') }}</div>
         </div>
-        <div class="flex-col mr" style="width: 130px;" v-if="jdbcData.dbType === 'OPENGAUSS'">
+        <div class="flex-col mr" style="width: 130px;" v-if="jdbcData.dbType === 'OPENGAUSS' || jdbcData.dbType === 'POSTGRESQL'">
           <div class="monitor-data">{{ record.lockNum ? record.lockNum : '--' }}</div>
           <div>{{ $t('database.JdbcNodeTable.else8') }}</div>
         </div>
@@ -204,7 +204,7 @@ const openNodeMonitor = (nodeData: KeyValue, index: number) => {
     const eventData = JSON.parse(messageData)
     console.log('show jdbc ws data', props.jdbcData.dbType, data.nodeList, eventData)
     if (Object.keys(eventData).length) {
-      if (props.jdbcData.dbType === 'OPENGAUSS') {
+      if (props.jdbcData.dbType === 'OPENGAUSS' || props.jdbcData.dbType === 'POSTGRESQL') {
         data.nodeList[index].connNum = eventData.connNum
         data.nodeList[index].lockNum = eventData.lockNum
         data.nodeList[index].sessionNum = eventData.sessionNum
