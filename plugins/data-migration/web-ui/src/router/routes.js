@@ -75,6 +75,15 @@ const routes = [
       keepAlive: false
     }
   },
+  {
+    path: '/migrationToolManagement',
+    name: 'migrationToolManagement',
+    component: () => import('@/views/migrationTool/index'),
+    meta: {
+      title: '迁移工具管理',
+      keepAlive: false
+    }
+  },
 ]
 
 export default routes

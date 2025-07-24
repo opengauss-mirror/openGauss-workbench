@@ -244,6 +244,7 @@ const saveConfig = async () => {
         sourceDbUser: item.sourceNodeInfo.username,
         sourceNodeId: item.sourceNodeInfo.nodeId,
         sourceSchemas: item.sourceSchema? Object.values(item.sourceSchema).join(','): '',
+        seletedTbl: item.seletedTbl,
         sourceDbType: item.sourceDbType.toUpperCase(),
         targetDb: item.targetDBName,
         targetDbHost: item.targetNodeInfo.host,
