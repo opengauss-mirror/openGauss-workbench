@@ -120,7 +120,7 @@ public class ImportClusterService extends ServiceImpl<OpsClusterMapper, OpsClust
             throw e;
         } catch (Exception e) {
             log.error("get connection fail", e);
-            throw new OpsException("connection fail");
+            throw new OpsException("connection fail：" + e.getMessage());
         }
         OpsClusterEntity opsClusterEntity = importClusterBody.toOpsClusterEntity();
         opsClusterEntity.setDatabasePassword(encryptionUtils.encrypt(opsClusterEntity.getDatabasePassword()));
@@ -193,7 +193,7 @@ public class ImportClusterService extends ServiceImpl<OpsClusterMapper, OpsClust
             }
         } catch (SQLException e) {
             log.error("query version fail", e);
-            throw new OpsException("query version fail");
+            throw new OpsException("query version fail：" + e);
         }
         return false;
     }
