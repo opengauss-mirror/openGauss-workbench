@@ -2257,7 +2257,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
                 if (clusterEntity.getDeployType() == DeployTypeEnum.CLUSTER) {
                     dataPath = dataPath + "/master";
                 } else {
-                    dataPath = dataPath + "/single_node";
+                    dataPath = dataPath;
                 }
             }
             clusterOpsProviderManager.provider(clusterEntity.getVersion())
