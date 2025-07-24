@@ -11,11 +11,11 @@
         <el-button type="primary" v-if="showRepair" :disabled="props.subTaskDbType?.toUpperCase() ==='POSTGRESQL'" @click="handleFix('reset')">{{ t('components.SubTaskDetail.oneClickRepair')
           }}</el-button>
         <el-button v-if="currentActive === 3 && subTaskMode === 2 &&
-          currentExecStatus === SUB_TASK_STATUS.INCREMENTAL_RUNNING" @click="stopSubIncrese" :disabled="props.subTaskDbType?.toUpperCase() ==='POSTGRESQL'">{{
+          currentExecStatus === SUB_TASK_STATUS.INCREMENTAL_RUNNING" @click="stopSubIncrese" >{{
             t('components.SubTaskDetail.stopIncreaseMigration') }}</el-button>
         <el-button
           v-if="currentActive === 3 && subTaskMode === 2 && currentExecStatus === SUB_TASK_STATUS.INCREMENTAL_STOPPED"
-          @click="startSubReverse" :disabled="props.subTaskDbType?.toUpperCase() ==='POSTGRESQL'">{{ t('detail.index.5q09asiwkq40') }}</el-button>
+          @click="startSubReverse" >{{ t('detail.index.5q09asiwkq40') }}</el-button>
       </div>
     </div>
     <div class="sub-tabs">
@@ -111,16 +111,16 @@ watch(() => props.active, (newVal, oldVal) => {
 
 const showRepair = computed(() => {
   if (isReverse.value) {
-    // If it is a reverse migration currently, the repair button will not be displayed 
+    // If it is a reverse migration currently, the repair button will not be displayed
     // when the reverse migration is completed/when the migration is completed.
-    if (currentExecStatus.value === SUB_TASK_STATUS.REVERSE_STOP || 
-        currentExecStatus.value === SUB_TASK_STATUS.MIGRATION_FINISH || 
+    if (currentExecStatus.value === SUB_TASK_STATUS.REVERSE_STOP ||
+        currentExecStatus.value === SUB_TASK_STATUS.MIGRATION_FINISH ||
         props.active === 3
     ) {
       return false
     }
   } else {
-    // If it is an incremental migration currentlythe repair button will not be displayed 
+    // If it is an incremental migration currentlythe repair button will not be displayed
     // when the increment is completed/at the end of the increment/it is not in an incremental state.
     if (currentExecStatus.value === SUB_TASK_STATUS.INCREMENTAL_FINISHED ||
         currentExecStatus.value === SUB_TASK_STATUS.INCREMENTAL_STOPPED ||
@@ -135,9 +135,9 @@ const showRepair = computed(() => {
 
 // Judge the current state
 const curFixStatus = () => {
-  let curStatusFlag = false; 
+  let curStatusFlag = false;
   if (isReverse.value) {
-    curStatusFlag = currentExecStatus.value === SUB_TASK_STATUS.REVERSE_STOP 
+    curStatusFlag = currentExecStatus.value === SUB_TASK_STATUS.REVERSE_STOP
   } else {
     curStatusFlag = currentExecStatus.value === SUB_TASK_STATUS.INCREMENTAL_FINISHED ||
         currentExecStatus.value === SUB_TASK_STATUS.INCREMENTAL_STOPPED;

@@ -9,7 +9,7 @@
     :esc-to-close="false"
   >
     <el-spin :loading="loading" style="display: block">
-      <el-form ref="formRef" :model="form" label-width="auto" >
+      <el-form ref="formRef" :model="form" label-width="100px" >
         <el-form-item prop="pluginName"
           :rules="formRules">
           <file-upload :percentage="progressPercent" @changeFile="changeFile" accept=".gz" size-limit="300"
@@ -162,26 +162,4 @@ onMounted(() => {
   }
 }
 
-.upload-info {
-  border: 1px dotted var(--color-fill-4);
-  height: 120px;
-  width: 100%;
-  border-radius: 2px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  .tips-1 {
-    align-items: center;
-    font-size: 14px;
-    color: var(--color-text-2);
-
-    .highlight {
-      color: rgb(var(--primary-6));
-    }
-  }
-}
-:deep(.arco-upload-progress) {
-  display: none;
-}
 </style>
