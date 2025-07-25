@@ -48,4 +48,16 @@ public class MetricRealTimeStorageService extends ServiceImpl<MetricRealTimeMapp
         wrapper.eq(MetricRealTime::getClusterNodeId, clusterNodeId);
         return list(wrapper);
     }
+
+    /**
+     * query real time by agent id
+     *
+     * @param hostId agent id
+     * @return list
+     */
+    public List<MetricRealTime> listAgentHostInfo(String hostId) {
+        LambdaQueryWrapper<MetricRealTime> wrapper = Wrappers.lambdaQuery(MetricRealTime.class);
+        wrapper.eq(MetricRealTime::getAgentId, hostId);
+        return list(wrapper);
+    }
 }

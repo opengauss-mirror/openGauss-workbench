@@ -50,7 +50,12 @@ public class OpsHostEntity extends BaseEntity {
     private Integer port;
     private String os;
     private String osVersion;
+    private String osBuild;
     private String cpuArch;
+    private String cpuModel;
+    private long cpuFreq;
+    private int physicalCores;
+    private int logicalCores;
     @TableField(exist = false)
     private Boolean isRemember;
     private String name;
