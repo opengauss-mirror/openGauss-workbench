@@ -134,4 +134,30 @@ public interface IHostService extends IService<OpsHostEntity> {
      * @return host
      */
     OpsHostEntity getByPublicIp(String hostIp);
+
+    /**
+     * update host os name
+     *
+     * @param host host ip
+     * @param osName os name
+     */
+    void updateHostOsName(String host, String osName);
+
+    /**
+     * update host os version
+     *
+     * @param host host ip
+     * @param osVersion os version
+     */
+    void updateHostOsVersion(String host, String osVersion);
+
+    /**
+     * update host cpu info by host ip
+     *
+     * @param host host ip
+     * @param cpuArch cpu arch
+     * @param cpuCoreNum cpu core num
+     * @param cpuFreq cpu freq
+     */
+    void updateHostCpu(String host, String cpuArch, String cpuCoreNum, String cpuFreq);
 }

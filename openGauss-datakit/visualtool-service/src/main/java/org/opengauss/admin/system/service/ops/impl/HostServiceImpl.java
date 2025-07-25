@@ -32,6 +32,7 @@ import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.exception.ExcelDataConvertException;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -777,6 +778,36 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         opsHostEntity.setOs(osMapEnum.getOs());
         opsHostEntity.setOsVersion(osMapEnum.getOsVersion());
         return opsHostEntity;
+    }
+
+    @Override
+    public void updateHostOsName(String host, String osName) {
+        LambdaUpdateWrapper<OpsHostEntity> updateWrapper = Wrappers.lambdaUpdate(OpsHostEntity.class)
+            .set(OpsHostEntity::getOs, osName)
+            .eq(OpsHostEntity::getPublicIp, host);
+        update(updateWrapper);
+    }
+
+    @Override
+    public void updateHostOsVersion(String host, String osVersion) {
+        LambdaUpdateWrapper<OpsHostEntity> updateWrapper = Wrappers.lambdaUpdate(OpsHostEntity.class)
+            .set(OpsHostEntity::getOsVersion, osVersion)
+            .eq(OpsHostEntity::getPublicIp, host);
+        update(updateWrapper);
+    }
+
+    @Override
+    public void updateHostCpu(String host, String cpuArch, String cpuCoreNum, String cpuFreq) {
+        String cpuFreqNum = "";
+        if (StrUtil.isNotEmpty(cpuFreq)) {
+            cpuFreqNum = cpuFreq.replace("GHz", "");
+        }
+        LambdaUpdateWrapper<OpsHostEntity> updateWrapper = Wrappers.lambdaUpdate(OpsHostEntity.class)
+            .set(StrUtil.isNotEmpty(cpuArch), OpsHostEntity::getCpuArch, cpuArch)
+            .set(StrUtil.isNotEmpty(cpuCoreNum), OpsHostEntity::getLogicalCores, cpuCoreNum)
+            .set(StrUtil.isNotEmpty(cpuFreq), OpsHostEntity::getCpuFreq, cpuFreqNum)
+            .eq(OpsHostEntity::getPublicIp, host);
+        update(updateWrapper);
     }
 
     private OpsHostEntity checkHostExist(String hostId) {

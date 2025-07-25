@@ -314,12 +314,12 @@ public class OpsHostRemoteService {
             if (0 != jschResult.getExitCode()) {
                 log.error("Failed to execute command {} , exit code: {}, log: {}", command, jschResult.getExitCode(),
                     jschResult.getResult());
-                throw new OpsException("Failed to execute command");
+                throw new OpsException("Failed to execute command : " + command);
             }
             return jschResult.getResult().trim();
-        } catch (Exception e) {
+        } catch (IOException | InterruptedException | OpsException e) {
             log.error("Failed to execute command {} {}", desc, command, e);
-            throw new OpsException("Failed to execute command : " + desc);
+            throw new OpsException("Failed to execute command : " + command);
         }
     }
 

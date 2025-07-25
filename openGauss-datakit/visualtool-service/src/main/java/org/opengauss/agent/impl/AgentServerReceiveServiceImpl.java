@@ -64,10 +64,17 @@ public class AgentServerReceiveServiceImpl implements IAgentServerReceiveService
         String agentId = hostBaseInfo.getAgentId();
         OpsHostEntity host = hostService.getById(agentId);
         OpsAssert.nonNull(host, "agent id is not existed, agentId: " + agentId + " cannot find host info");
+        host.setHostname(hostBaseInfo.getHostName());
         host.setOs(hostBaseInfo.getOsName());
         host.setOsVersion(hostBaseInfo.getOsVersion());
+        host.setOsBuild(hostBaseInfo.getOsBuild());
+
         host.setCpuArch(hostBaseInfo.getCpuArchitecture());
-        host.setHostname(hostBaseInfo.getHostName());
+        host.setCpuModel(hostBaseInfo.getCpuModel());
+        host.setCpuFreq(hostBaseInfo.getCpuFreq());
+        host.setPhysicalCores(hostBaseInfo.getPhysicalCores());
+        host.setLogicalCores(hostBaseInfo.getLogicalCores());
+
         hostService.updateById(host);
         hostMonitorCacheService.updateHostMonitorCache(hostBaseInfo);
         log.info("refresh host info success,hostId:{} : {}", agentId, hostBaseInfo);
