@@ -506,6 +506,12 @@ CREATE TABLE IF NOT EXISTS "public"."ops_host" (
     "public_ip" varchar(64) COLLATE "pg_catalog"."default" NOT NULL,
     "port" int8 NOT NULL,
     "az_id" int8,
+    "os_build" varchar(255) ,
+    "cpu_model" varchar(255) ,
+    "cpu_arch" varchar(64) ,
+    "cpu_freq" varchar(64) ,
+    "physical_cores" varchar(64) ,
+    "logical_cores" varchar(64) ,
     "remark" varchar(255) COLLATE "pg_catalog"."default",
     "create_by" varchar(64) COLLATE "pg_catalog"."default",
     "create_time" timestamp(6),
@@ -2229,6 +2235,36 @@ IF
 THEN
 ALTER TABLE ops_host ADD COLUMN name varchar(255);
 COMMENT ON COLUMN "public"."ops_host"."name" IS ''名称'';
+END IF;
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host'' AND COLUMN_NAME = ''os_build'' ) = 0
+THEN
+ALTER TABLE ops_host ADD COLUMN os_build varchar(255);
+COMMENT ON COLUMN "public"."ops_host"."os_build" IS ''OS Build'';
+END IF;
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host'' AND COLUMN_NAME = ''cpu_model'' ) = 0
+THEN
+ALTER TABLE ops_host ADD COLUMN cpu_model varchar(255);
+COMMENT ON COLUMN "public"."ops_host"."cpu_model" IS ''CPU model'';
+END IF;
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host'' AND COLUMN_NAME = ''cpu_freq'' ) = 0
+THEN
+ALTER TABLE ops_host ADD COLUMN cpu_freq varchar(64);
+COMMENT ON COLUMN "public"."ops_host"."cpu_freq" IS ''CPU主频'';
+END IF;
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host'' AND COLUMN_NAME = ''physical_cores'' ) = 0
+THEN
+ALTER TABLE ops_host ADD COLUMN physical_cores varchar(64);
+COMMENT ON COLUMN "public"."ops_host"."physical_cores" IS ''CPU 物理核数'';
+END IF;
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host'' AND COLUMN_NAME = ''logical_cores'' ) = 0
+THEN
+ALTER TABLE ops_host ADD COLUMN logical_cores varchar(255);
+COMMENT ON COLUMN "public"."ops_host"."logical_cores" IS ''CPU逻辑核数'';
 END IF;
 RETURN 0;
 END;'
