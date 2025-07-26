@@ -153,7 +153,7 @@ sha256sum Datakit-6.0.0.tar.gz
    - 配置命令中`-storepass`参数值与`application-temp.yml`配置文件中的`server.ssl.key-store-password`参数值保持一致，参数取值支持字母、数字、符号等；
    - 修改命令中`-keystore`路径值与配置文件中的`key-store`路径值保持一致，即第三步中修改`/ops`后的路径。
    ```shell
-   keytool -genkey -noprompt -dname "CN=opengauss, OU=opengauss, O=opengauss, L=Beijing, S=Beijing, C=CN" -alias opengauss -storetype PKCS12 -keyalg RSA -keysize 2048 -keystore /ops/ssl/keystore.p12 -validity 3650 -storepass ******
+   keytool -genkey -noprompt -dname "CN=opengauss, OU=opengauss, O=opengauss, L=Beijing, S=Beijing, C=CN" -alias opengauss -storetype PKCS12 -keyalg RSA -keysize 4096 -keystore /ops/ssl/keystore.p12 -validity 365 -storepass ******
    ```
    *注意*：此处为一条完整命令。
 6. 启动与日常运维\
