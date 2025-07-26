@@ -12,10 +12,10 @@ targets:
     machineIP: 127.0.0.7
     machinePort: 22
     machineUser: omm
-    machinePassword: omm
+    machinePassword: ******
     dbIp: 127.0.0.7
     dbPort: 5432
     dbDatabase: postgres
     dbUserName: gaussdb
-    dbUserPassword: dbUserPassword
+    dbUserPassword: ******
     dbType: OPENGAUSS
