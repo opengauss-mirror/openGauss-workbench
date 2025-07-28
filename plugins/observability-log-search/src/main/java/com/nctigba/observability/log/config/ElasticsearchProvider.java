@@ -35,10 +35,6 @@ import com.nctigba.observability.log.model.entity.NctigbaEnvDO;
 import com.nctigba.observability.log.model.entity.NctigbaEnvDO.InstallType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.RestClient;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,14 +66,8 @@ public class ElasticsearchProvider {
         // Split ip when clustering
         HttpHost[] httpHosts = {new HttpHost(host.getPublicIp(), env.getPort())};
 
-        // Account and password authentication
-        final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("elastic", "changeme"));
-
         // Create the low-level client
         RestClient restClient = RestClient.builder(httpHosts)
-                .setHttpClientConfigCallback(
-                        httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider))
                 .setRequestConfigCallback(
                         requestConfigBuilder -> requestConfigBuilder.setConnectTimeout(100000).setSocketTimeout(100000))
                 .build();
