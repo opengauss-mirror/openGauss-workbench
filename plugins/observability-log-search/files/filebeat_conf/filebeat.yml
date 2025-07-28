@@ -242,7 +242,7 @@ output.elasticsearch:
   # Authentication credentials - either API key or username/password.
   #api_key: "id:api_key"
   username: "elastic"
-  password: "12345665"
+  password: ******
 
 # ------------------------------ Logstash Output -------------------------------
 #output.logstash:

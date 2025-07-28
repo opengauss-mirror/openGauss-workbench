@@ -13,7 +13,7 @@ spring:
           #          url: jdbc:opengauss://192.168.56.51:26000/postgres?currentSchema=public
           driverClassName: org.opengauss.Driver
           username: scott
-          password: Test@1234
+          password: ******
         embedded:
 #          url: jdbc:intarkdb:data/observability-instance-data
 #          driverClassName: org.intarkdb.Driver
@@ -28,7 +28,7 @@ spring:
 #    driver-class-name: org.opengauss.Driver
 #    url: jdbc:opengauss://192.168.110.31:5432/postgres?currentSchema=public
 #    username: scott
-#    password: Test@1234
+#    password: ******
     druid:
       test-while-idle: false
       test-on-borrow: true
