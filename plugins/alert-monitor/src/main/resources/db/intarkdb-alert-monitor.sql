@@ -505,12 +505,12 @@ CREATE TABLE IF NOT EXISTS "nctigba_env" (
 	"type" varchar NULL,
 	username varchar NULL,
 	"path" varchar NULL,
-	port int8 NULL,
-	nodeid varchar NULL
+	port int8 NULL
 );
-ALTER TABLE public.nctigba_env ADD status varchar NULL;
-ALTER TABLE public.nctigba_env ADD update_time timestamp NULL;
-ALTER TABLE public.nctigba_env ADD param varchar NULL;
+ALTER TABLE nctigba_env ADD COLUMN nodeid VARCHAR(255);
+ALTER TABLE nctigba_env ADD status varchar NULL;
+ALTER TABLE nctigba_env ADD update_time timestamp NULL;
+ALTER TABLE nctigba_env ADD param varchar NULL;
 
 INSERT into alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (1,'CPU使用率过高','warn','index','A','${nodeName}的CPU使用率超过90%',2,'m',1,0,null,null,'firing,recover','1',null,0,'2023-04-26 08:30:22.02',null);
@@ -578,7 +578,7 @@ insert into alert_rule_item_exp_src(id,rule_item_src_id,action,operate,limit_val
 create_time) values(16,6,'normal','',null,
 'max(rate(agent_network_receive_bytes_total{instance=~"${instances}"}[2m]))) by (instance)/1024/1024',
 1,now()) ;
-update public.alert_rule_item_exp_src set exp = 'max(rate(agent_network_receive_bytes_total{instance=~"$'||'{instances}"}[2m])) by (instance)/1024/1024'
+update alert_rule_item_exp_src set exp = 'max(rate(agent_network_receive_bytes_total{instance=~"$'||'{instances}"}[2m])) by (instance)/1024/1024'
 where id = 16;
 
 insert into alert_rule_item_src(id,name,unit,params,create_time) values (7,'networkTransmitRate',

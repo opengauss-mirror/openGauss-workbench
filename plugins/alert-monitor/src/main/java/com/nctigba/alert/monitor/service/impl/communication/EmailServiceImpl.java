@@ -26,6 +26,7 @@ package com.nctigba.alert.monitor.service.impl.communication;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.model.entity.NotifyConfigDO;
 import com.nctigba.alert.monitor.model.entity.NotifyMessageDO;
@@ -47,6 +48,7 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.ServiceException;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -71,6 +73,9 @@ public class EmailServiceImpl implements CommunicationService {
     private NotifyMessageService notifyMessageService;
     @Autowired
     private NotifyTemplateService notifyTemplateService;
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
 
     private Properties applyProperties(NotifyConfigDO notifyConfigDO) {
         Properties properties = new Properties();
@@ -104,7 +109,8 @@ public class EmailServiceImpl implements CommunicationService {
         Properties properties = this.applyProperties(notifyConfigDO);
         for (NotifyMessageDO notifyMessageDO : notifyMessageDOList) {
             try {
-                Session session = getSession(properties, notifyConfigDO.getAccount(), notifyConfigDO.getPasswd());
+                Session session = getSession(properties, notifyConfigDO.getAccount(),
+                    encryptionUtils.decrypt(notifyConfigDO.getPasswd()));
                 MimeMessage mimeMessage = new MimeMessage(session);
                 String[] receiverArr = notifyMessageDO.getEmail().split(",");
                 InternetAddress[] addresses = Stream.of(receiverArr).map(item -> {
@@ -133,7 +139,8 @@ public class EmailServiceImpl implements CommunicationService {
     public boolean sendTest(NotifyConfigDO notifyConfigDO, NotifyWayDO notifyWayDO) {
         Properties properties = this.applyProperties(notifyConfigDO);
         try {
-            Session session = getSession(properties, notifyConfigDO.getAccount(), notifyConfigDO.getPasswd());
+            Session session = getSession(properties, notifyConfigDO.getAccount(),
+                encryptionUtils.decrypt(notifyConfigDO.getPasswd()));
             MimeMessage mimeMessage = new MimeMessage(session);
             String[] receiverArr = notifyWayDO.getEmail().split(",");
             InternetAddress[] addresses = Stream.of(receiverArr).map(item -> {

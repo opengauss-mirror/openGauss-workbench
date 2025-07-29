@@ -25,6 +25,7 @@
 package com.nctigba.observability.instance.agent.pool;
 
 import com.nctigba.observability.instance.agent.config.model.TargetConfig;
+import com.nctigba.observability.instance.agent.util.RsaUtils;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 import java.time.Duration;
@@ -68,7 +69,7 @@ public class SshClientNodeSessionPool {
                     sshClientConfig.setMachineIP(targetConfig.getMachineIP());
                     sshClientConfig.setMachinePort(Integer.valueOf(targetConfig.getMachinePort()));
                     sshClientConfig.setMachineUser(targetConfig.getMachineUser());
-                    sshClientConfig.setMachinePassword(targetConfig.getMachinePassword());
+                    sshClientConfig.setMachinePassword(RsaUtils.decrypt(targetConfig.getMachinePassword()));
                     poolMap.put(nodeId, new SshClientSessionPool(sshClientConfig));
                 }
             }

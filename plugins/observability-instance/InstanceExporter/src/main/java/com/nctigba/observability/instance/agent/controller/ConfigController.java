@@ -24,6 +24,7 @@
 
 package com.nctigba.observability.instance.agent.controller;
 
+import cn.hutool.core.util.StrUtil;
 import com.nctigba.observability.instance.agent.config.model.TargetConfig;
 import com.nctigba.observability.instance.agent.model.dto.TargetConfigDTO;
 import com.nctigba.observability.instance.agent.service.ClientService;
@@ -31,6 +32,7 @@ import com.nctigba.observability.instance.agent.service.MetricCollectManagerServ
 import com.nctigba.observability.instance.agent.service.TargetService;
 import com.nctigba.observability.instance.agent.util.CmdUtils;
 import com.nctigba.observability.instance.agent.util.DbUtils;
+import com.nctigba.observability.instance.agent.util.RsaUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -99,5 +101,23 @@ public class ConfigController {
     @GetMapping("/list")
     public List<TargetConfig> list() {
         return targetService.getTargetConfigs();
+    }
+
+    /**
+     * pubkey
+     *
+     * @return String
+     */
+    @GetMapping("/pubkey")
+    public String pubkey() {
+        try {
+            if (StrUtil.isBlank(RsaUtils.getPublicKey())) {
+                RsaUtils.init();
+            }
+            return RsaUtils.getPublicKey();
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        }
+        return "";
     }
 }

@@ -708,12 +708,43 @@ CREATE TABLE IF NOT EXISTS "public"."nctigba_env" (
 	"type" varchar NULL,
 	username varchar NULL,
 	"path" varchar NULL,
-	port int8 NULL,
-	nodeid varchar NULL
+	port int8 NULL
 );
-ALTER TABLE public.nctigba_env ADD status varchar NULL;
-ALTER TABLE public.nctigba_env ADD update_time timestamp NULL;
-ALTER TABLE public.nctigba_env ADD param varchar NULL;
+CREATE OR REPLACE FUNCTION alter_nctigba_env() RETURNS integer AS '
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name=''nctigba_env'' AND column_name=''nodeid''
+    ) THEN
+        ALTER TABLE public.nctigba_env ADD COLUMN nodeid VARCHAR NULL;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name=''nctigba_env'' AND column_name=''status''
+    ) THEN
+        ALTER TABLE public.nctigba_env ADD COLUMN status VARCHAR NULL;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name=''nctigba_env'' AND column_name=''update_time''
+    ) THEN
+        ALTER TABLE public.nctigba_env ADD COLUMN update_time TIMESTAMP NULL;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name=''nctigba_env'' AND column_name=''param''
+    ) THEN
+        ALTER TABLE public.nctigba_env ADD COLUMN param VARCHAR NULL;
+    END IF;
+    RETURN 0;
+END'
+LANGUAGE plpgsql;
+
+SELECT alter_nctigba_env();
+DROP FUNCTION alter_nctigba_env();
 
 INSERT INTO public.alert_rule (id,rule_name,level,rule_type,rule_exp_comb,rule_content,notify_duration,notify_duration_unit,is_repeat,is_silence,silence_start_time,silence_end_time,alert_notify,notify_way_ids,alert_desc,is_deleted,create_time,update_time)
  VALUES (1,'CPU使用率过高','warn','index','A','$'||'{nodeName}的CPU使用率超过90%',2,'m',1,0,null,null,'firing,recover','1',null,0,'2023-04-26 08:30:22.02',null) ON DUPLICATE KEY UPDATE NOTHING;

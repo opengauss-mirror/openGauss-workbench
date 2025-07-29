@@ -47,6 +47,7 @@ import com.nctigba.observability.instance.service.AbstractInstaller.Step.Status;
 import com.nctigba.observability.instance.util.CommonUtils;
 import com.nctigba.observability.instance.util.DownloadUtils;
 import com.nctigba.observability.instance.util.MessageSourceUtils;
+import com.nctigba.observability.instance.util.RsaUtils;
 import com.nctigba.observability.instance.util.SshSessionUtils;
 import com.nctigba.observability.instance.util.SshSessionUtils.command;
 import com.nctigba.observability.instance.util.YamlUtils;
@@ -280,15 +281,16 @@ public class ExporterInstallService extends AbstractInstaller {
                 boolean isStop = AgentStatusEnum.MANUAL_STOP.getStatus().equalsIgnoreCase(expEnv.getStatus());
                 // set agent collect config: build param
                 sendMsg(null, "init exporter");
-                List<Map<String, Object>> param = getExporterParams(exporterInstallDTO.getNodeIds());
                 if (isStop) {
-                    initExporterParamsOffline(session, expEnv.getPath(), param);
                     startExporter(expEnv);
                 } else {
+                    // check status
+                    checkHealthStatus(expEnv);
+                    // init param
+                    String pubKey = getExpEnvPubKey(hostEntity.getPublicIp(), expEnv.getPort());
+                    List<Map<String, Object>> param = getExporterParams(exporterInstallDTO.getNodeIds(), pubKey);
                     initExporterParamsOnline(param, hostEntity.getPublicIp(), expEnv.getPort());
                 }
-                // check status
-                checkHealthStatus(expEnv);
                 // 重新分配agent
                 nextStep();
                 prometheusService.incAgentAlloc(expEnv);
@@ -399,7 +401,7 @@ public class ExporterInstallService extends AbstractInstaller {
         }
     }
 
-    private List<Map<String, Object>> getExporterParams(List<String> nodeIds) {
+    private List<Map<String, Object>> getExporterParams(List<String> nodeIds, String pubkey) {
         List<Map<String, Object>> param = new ArrayList<>();
         nodeIds.forEach(nodeId -> {
             ClusterManager.OpsClusterNodeVOSub nodeTemp = clusterManager.getOpsNodeById(nodeId);
@@ -419,8 +421,9 @@ public class ExporterInstallService extends AbstractInstaller {
             paramItem.put("hostId", nodeTemp.getHostId());
             paramItem.put("dbport", nodeTemp.getDbPort());
             paramItem.put("dbUsername", nodeTemp.getDbUser());
-            paramItem.put("dbPassword", encryptionUtils.decrypt(nodeTemp.getDbUserPassword()));
-            paramItem.put("pass", encryptionUtils.decrypt(targetUser.getPassword()));
+            paramItem.put("dbPassword", RsaUtils.encrypt(encryptionUtils.decrypt(nodeTemp.getDbUserPassword()),
+                pubkey));
+            paramItem.put("pass", RsaUtils.encrypt(encryptionUtils.decrypt(targetUser.getPassword()), pubkey));
             paramItem.put("user", nodeTemp.getInstallUserName());
             paramItem.put("machineIP", targetHostEntity.getPublicIp());
             paramItem.put("dbIp", targetHostEntity.getPublicIp());
@@ -430,6 +433,10 @@ public class ExporterInstallService extends AbstractInstaller {
         return param;
     }
 
+    private String getExpEnvPubKey(String ip, int port) {
+        String url = "http://" + IpUtils.formatIp(ip) + ":" + port + "/config/pubkey";
+        return HttpUtil.get(url);
+    }
     private void initExporterParamsOnline(List<Map<String, Object>> param, String ip, int port) {
         for (int i = 0; i < 11; i++) {
             try {
@@ -667,7 +674,6 @@ public class ExporterInstallService extends AbstractInstaller {
                 AgentExceptionVO check = checkPidStatus(env);
                 if (!check.isUpStatus()) {
                     startExporter(env);
-                    checkHealthStatus(env);
                     prometheusService.incAgentAlloc(env);
                 } else {
                     env.setStatus(getHealthStatus(env) ? AgentStatusEnum.NORMAL.getStatus()
@@ -735,7 +741,6 @@ public class ExporterInstallService extends AbstractInstaller {
             oldVersionAdapter(env);
         }
         startExporter(env);
-        checkHealthStatus(env);
         prometheusService.incAgentAlloc(env);
     }
 
@@ -794,6 +799,16 @@ public class ExporterInstallService extends AbstractInstaller {
             envMapper.updateById(env);
             throw new CustomException("exec failed:" + e.getMessage());
         }
+        // check status
+        checkHealthStatus(env);
+        // init param
+        String ip = env.getHost().getPublicIp();
+        String pubKey = getExpEnvPubKey(ip, env.getPort());
+        List<String> nodeIds = agentNodeRelationService.list(
+                Wrappers.<AgentNodeRelationDO>lambdaQuery().eq(AgentNodeRelationDO::getEnvId, env.getId()))
+            .stream().map(item -> item.getNodeId()).collect(Collectors.toList());
+        List<Map<String, Object>> param = getExporterParams(nodeIds, pubKey);
+        initExporterParamsOnline(param, ip, env.getPort());
     }
 
     /**

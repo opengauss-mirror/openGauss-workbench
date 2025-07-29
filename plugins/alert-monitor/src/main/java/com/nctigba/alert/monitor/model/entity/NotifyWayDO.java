@@ -28,6 +28,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.nctigba.alert.monitor.model.validator.annotation.EnumInteger;
@@ -106,8 +107,10 @@ public class NotifyWayDO {
     @NotBlankConditional(conditionalField = "notifyType", conditionalValues = {SnmpConstants.version3 + ""})
     private String snmpUsername;
     @NotBlankConditional(conditionalField = "notifyType", conditionalValues = {SnmpConstants.version3 + ""})
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String snmpAuthPasswd;
     @NotBlankConditional(conditionalField = "notifyType", conditionalValues = {SnmpConstants.version3 + ""})
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String snmpPrivPasswd;
     @NotNull
     @JsonSerialize(using = ToStringSerializer.class)

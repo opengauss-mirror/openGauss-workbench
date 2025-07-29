@@ -145,6 +145,7 @@ import request from "@/request";
 import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 import { cloneDeep } from 'lodash-es';
+import { encryptPassword } from '@/utils/jsencrypt'
 import type { FormInstance, FormRules } from 'element-plus'
 import { Delete, Plus } from "@element-plus/icons-vue";
 
@@ -365,7 +366,7 @@ const removeParam = (param: any) => {
 
 const testNotifyWay = () => {
   if (!formRef) return
-  formRef.value?.validate((valid, fields) => {
+  formRef.value?.validate(async (valid, fields) => {
     if (valid) {
       if ((formData.value.notifyType === 'WeCom' || formData.value.notifyType === 'DingTalk') && formData.sendWay === 0 && !formData.value.personId && !formData.value.deptId) {
         const msg = t("notifyWay.existOneOfTargetTip");
@@ -404,7 +405,14 @@ const testNotifyWay = () => {
         code[resultCode.value.key] = resultCode.value.val
         formData.value.resultCode = JSON.stringify(code)
       }
-      request.post(`/api/v1/notifyWay/test`, formData.value).then((res: any) => {
+      let param = cloneDeep(formData.value)
+      if (param.snmpAuthPasswd) {
+         param.snmpAuthPasswd = await encryptPassword(param.snmpAuthPasswd)
+      }
+      if (param.snmpPrivPasswd) {
+         param.snmpPrivPasswd = await encryptPassword(param.snmpPrivPasswd)
+      }
+      request.post(`/api/v1/notifyWay/test`, param).then((res: any) => {
         if (res && res.code === 200) {
           ElMessage({
             message: t('app.testSuccess'),
@@ -427,7 +435,7 @@ const testNotifyWay = () => {
 }
 const confirm = () => {
   if (!formRef) return
-  formRef.value?.validate((valid, fields) => {
+  formRef.value?.validate(async (valid, fields) => {
     if (valid) {
       if ((formData.value.notifyType === 'WeCom' || formData.value.notifyType === 'DingTalk') && formData.sendWay === 0 && !formData.value.personId && !formData.value.deptId) {
         const msg = t("notifyWay.existOneOfTargetTip");
@@ -466,7 +474,14 @@ const confirm = () => {
         code[resultCode.value.key] = resultCode.value.val
         formData.value.resultCode = JSON.stringify(code)
       }
-      request.post(`/api/v1/notifyWay`, formData.value).then((res: any) => {
+      let param = cloneDeep(formData.value)
+        if (param.snmpAuthPasswd) {
+           param.snmpAuthPasswd = await encryptPassword(param.snmpAuthPasswd)
+        }
+        if (param.snmpPrivPasswd) {
+           param.snmpPrivPasswd = await encryptPassword(param.snmpPrivPasswd)
+        }
+      request.post(`/api/v1/notifyWay`, param).then((res: any) => {
         if (res && res.code === 200) {
           ElMessage({
             message: t('app.saveSuccess'),

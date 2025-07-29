@@ -30,6 +30,7 @@ import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.model.entity.NotifyConfigDO;
 import com.nctigba.alert.monitor.model.entity.NotifyMessageDO;
@@ -40,6 +41,7 @@ import com.nctigba.alert.monitor.mapper.NotifyMessageMapper;
 import com.nctigba.alert.monitor.service.CommunicationService;
 import com.nctigba.alert.monitor.service.NotifyTemplateService;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -66,6 +68,9 @@ public class WeComServiceImpl implements CommunicationService {
     private NotifyMessageMapper notifyMessageMapper;
     @Autowired
     private NotifyTemplateService notifyTemplateService;
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
 
     /**
      * send messages
@@ -88,7 +93,8 @@ public class WeComServiceImpl implements CommunicationService {
             return;
         }
         NotifyConfigDO notifyConfigDO = weComConfigList.get(0);
-        String accessToken = getAccessToken(notifyConfigDO.getAppKey(), notifyConfigDO.getSecret());
+        String accessToken = getAccessToken(notifyConfigDO.getAppKey(),
+            encryptionUtils.decrypt(notifyConfigDO.getSecret()));
         for (NotifyMessageDO weComMessage : notifyMessageDOS) {
             boolean isSuccess = sendMsg(weComMessage, accessToken, notifyConfigDO.getAgentId());
             if (isSuccess) {
@@ -107,8 +113,8 @@ public class WeComServiceImpl implements CommunicationService {
         NotifyMessageDO notifyMessageDO = new NotifyMessageDO();
         notifyMessageDO.setWebhook(notifyWayDO.getWebhook()).setContent(notifyTemplateDO.getNotifyContent())
             .setPersonId(notifyWayDO.getPersonId()).setDeptId(notifyWayDO.getDeptId());
-        return sendMsg(notifyMessageDO, getAccessToken(notifyConfigDO.getAppKey(), notifyConfigDO.getSecret()),
-            notifyConfigDO.getAgentId());
+        return sendMsg(notifyMessageDO, getAccessToken(notifyConfigDO.getAppKey(),
+                encryptionUtils.decrypt(notifyConfigDO.getSecret())), notifyConfigDO.getAgentId());
     }
 
     @Override
@@ -141,8 +147,8 @@ public class WeComServiceImpl implements CommunicationService {
         NotifyMessageDO notifyMessageDO = new NotifyMessageDO();
         notifyMessageDO.setWebhook(notifyWayDO.getWebhook()).setContent(notifyContent)
             .setPersonId(notifyWayDO.getPersonId()).setDeptId(notifyWayDO.getDeptId());
-        return sendMsg(notifyMessageDO, getAccessToken(notifyConfigDO.getAppKey(), notifyConfigDO.getSecret()),
-            notifyConfigDO.getAgentId());
+        return sendMsg(notifyMessageDO, getAccessToken(notifyConfigDO.getAppKey(),
+                encryptionUtils.decrypt(notifyConfigDO.getSecret())), notifyConfigDO.getAgentId());
     }
 
     private boolean sendMsg(NotifyMessageDO notifyMessageDO, String accessToken, String agentId) {
