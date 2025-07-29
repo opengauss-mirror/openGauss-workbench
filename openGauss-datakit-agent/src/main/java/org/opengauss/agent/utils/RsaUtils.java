@@ -1,20 +1,19 @@
-/**
- * Copyright ruoyi.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
+ *
+ * openGauss is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *
+ * http://license.coscl.org.cn/MulanPSL2
+ *
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+ * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+ * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
  */
 
-package org.opengauss.admin.common.utils;
+package org.opengauss.agent.utils;
 
 import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.StrUtil;
@@ -24,18 +23,18 @@ import cn.hutool.crypto.asymmetric.RSA;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.codec.binary.Base64;
-import org.opengauss.admin.common.exception.SecureException;
+import org.opengauss.agent.exception.AgentException;
 
-import java.security.*;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Description: RSA encrypt and decode
+ * RsaUtils
  *
- * @author xielibo
- * @version 1.0
- * @date: 2021/9/28 11:40 PM
- * @since JDK 1.8
+ * @author wangchao
+ * @since 2024/10/29 09:26
  */
 @Slf4j
 public class RsaUtils {
@@ -55,7 +54,7 @@ public class RsaUtils {
             PRIVATE_KEY_CACHE.set(Base64.encodeBase64String(keyPair.getPrivate().getEncoded()));
         } catch (NoSuchAlgorithmException e) {
             log.error("RSA key pair generation failed", e);
-            throw new SecureException("Critical failure: RSA key generation failed: " + e.getMessage());
+            throw new AgentException("Critical failure: RSA key generation failed", e);
         }
     }
 
@@ -72,7 +71,7 @@ public class RsaUtils {
     }
 
     /**
-     * encrypt with default public key
+     * encrypt
      *
      * @param plainText plain text
      * @return cipher text
@@ -82,7 +81,7 @@ public class RsaUtils {
     }
 
     /**
-     * encrypt with public key
+     * encrypt
      *
      * @param plainText plain text
      * @param publicKey public key
@@ -95,7 +94,7 @@ public class RsaUtils {
     }
 
     /**
-     * decrypt with default private key
+     * decrypt
      *
      * @param cipherText cipher text
      * @return plain text
@@ -105,7 +104,7 @@ public class RsaUtils {
     }
 
     /**
-     * decrypt with private key
+     * decrypt
      *
      * @param cipherText cipher text
      * @param privateKey private key

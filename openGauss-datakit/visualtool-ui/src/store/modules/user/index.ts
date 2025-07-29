@@ -5,7 +5,7 @@ import {
   getUserInfo,
   LoginData
 } from '@/api/user'
-import { setToken, clearToken } from '@/utils/auth'
+import {setToken, clearToken, clearPublckey} from '@/utils/auth'
 import { removeRouteListener } from '@/utils/route-listener'
 import useAppStore from '../app'
 
@@ -50,6 +50,7 @@ const useUserStore = defineStore('user', {
         const res: any = await userLogin(loginForm)
         setToken(res.token)
       } catch (err) {
+        clearPublckey()
         clearToken()
         throw err
       }
@@ -57,6 +58,7 @@ const useUserStore = defineStore('user', {
     logoutCallBack () {
       const appStore = useAppStore()
       this.resetInfo()
+      clearPublckey()
       clearToken()
       removeRouteListener()
       appStore.clearServerMenu()

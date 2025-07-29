@@ -128,10 +128,6 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             '~', '*', '?', '>', '<', '|', '&', ';', '/', '.', '$'};
     private static final float SUB_PROCESS = 0.05f;
 
-    /**
-     * The constants AES secretKey
-     */
-    private static final String AES_SECRETKEY = "yykczOWf3hoHsOn6ADZcQKpAlck0ZRK12T9N3sf0WB4=";
     private static final List<Integer> INCREMENTAL_STATUS = Arrays.asList(TaskStatus.INCREMENTAL_START.getCode(),
         TaskStatus.INCREMENTAL_RUNNING.getCode(), TaskStatus.INCREMENTAL_PAUSE.getCode(),
         TaskStatus.INCREMENTAL_STOPPED.getCode());
@@ -1033,15 +1029,13 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         }
         Map<String, String> resultMap = new HashMap<>();
         resultMap.put("mysql.user.name", task.getSourceDbUser());
-        resultMap.put("mysql.user.password",
-            encryptPassword(installHost, encryptionUtils.decrypt(task.getSourceDbPass())));
+        resultMap.put("mysql.user.password", encryptionUtils.decrypt(task.getSourceDbPass()));
         resultMap.put("mysql.database.host", task.getSourceDbHost());
         resultMap.put("mysql.database.port", task.getSourceDbPort());
         resultMap.put("mysql.database.name", task.getSourceDb());
         resultMap.put("mysql.database.table", task.getSourceTables());
         resultMap.put("opengauss.user.name", task.getTargetDbUser());
-        resultMap.put("opengauss.user.password",
-            encryptPassword(installHost, encryptionUtils.decrypt(task.getTargetDbPass())));
+        resultMap.put("opengauss.user.password", encryptionUtils.decrypt(task.getTargetDbPass()));
         resultMap.put("opengauss.database.host", task.getTargetDbHost());
         resultMap.put("opengauss.database.port", task.getTargetDbPort());
         resultMap.put("opengauss.database.name", task.getTargetDb());
@@ -1057,19 +1051,6 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         setOpengaussClusterParams(resultMap, task.getTargetNodeId());
         setMigrationAlertParams(resultMap, installHost.getHost());
         return resultMap;
-    }
-
-    /**
-     * Encrypt password (AES) if version is match
-     *
-     * @param password password
-     * @return String
-     */
-    public String encryptPassword(MigrationHostPortalInstall installHost, String password) {
-        if (!installHost.isVersionGreaterThan(6)) {
-            return escapeChars(password);
-        }
-        return encryptionUtils.encrypt(password, AES_SECRETKEY);
     }
 
     /**

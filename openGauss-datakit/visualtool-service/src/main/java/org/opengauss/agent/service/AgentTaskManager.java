@@ -16,6 +16,7 @@
 package org.opengauss.agent.service;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
@@ -33,6 +34,7 @@ import org.opengauss.admin.common.exception.ops.AgentTaskException;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.ChainAssert;
 import org.opengauss.admin.common.utils.OpsAssert;
+import org.opengauss.admin.common.utils.RsaUtils;
 import org.opengauss.agent.data.ClusterOriginal;
 import org.opengauss.agent.repository.DynamicTableService;
 import org.opengauss.agent.repository.TaskInstanceService;
@@ -85,6 +87,8 @@ public class AgentTaskManager {
     private DynamicTableService dynamicTableService;
     @Resource
     private WebClient webClient;
+    @Resource
+    private AgentHttpProxy agentHttpProxy;
 
     /**
      * create task
@@ -266,6 +270,11 @@ public class AgentTaskManager {
     public void startAgentTaskByTaskId(AgentInstallEntity agent, Long id) {
         TaskInstanceEntity task = taskInstanceService.getById(id);
         AgentTaskConfig taskConfig = buildAgentTaskConfig(task);
+        if (StrUtil.isNotEmpty(agent.getPublicKey())) {
+            AgentClusterVo clusterConfig = taskConfig.getClusterConfig();
+            clusterConfig.setDbPassword(RsaUtils.encrypt(clusterConfig.getDbPassword(), agent.getPublicKey()));
+            taskConfig.setClusterConfig(clusterConfig);
+        }
         sendStartTaskRequest(agent, taskConfig);
         refreshTaskStatusToRunning(taskConfig.getTaskId());
     }
@@ -277,6 +286,7 @@ public class AgentTaskManager {
      * @return start task count
      */
     public int startAgentTask(AgentInstallEntity agent) {
+        agentHttpProxy.fetchAgentPubKey(agent);
         List<TaskInstanceEntity> list = taskInstanceService.queryAgentTaskInstance(agent.getAgentId());
         for (TaskInstanceEntity task : list) {
             AgentTaskConfig taskConfig = buildAgentTaskConfig(task);

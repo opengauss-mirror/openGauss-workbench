@@ -36,6 +36,7 @@ import org.opengauss.agent.entity.task.AgentTaskVo;
 import org.opengauss.agent.exception.AgentException;
 import org.opengauss.agent.service.task.TaskManager;
 import org.opengauss.agent.service.task.core.TaskExecutionRecordService;
+import org.opengauss.agent.utils.RsaUtils;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -122,6 +123,18 @@ public class TaskResource {
     public String health() {
         log.debug("agent health {}", Instant.now());
         return "success";
+    }
+
+    /**
+     * get secret rsa pub key
+     *
+     * @return pub key
+     */
+    @GET
+    @Path("/pubKey")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String pubKey() {
+        return RsaUtils.publicKey();
     }
 
     /**

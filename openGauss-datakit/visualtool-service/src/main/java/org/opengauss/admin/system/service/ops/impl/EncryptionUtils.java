@@ -16,7 +16,8 @@
  * EncryptionUtils.java
  *
  * IDENTIFICATION
- * openGauss-visualtool/visualtool-service/src/main/java/org/opengauss/admin/system/service/ops/impl/EncryptionUtils.java
+ * openGauss-visualtool/visualtool-service/src/main/java/org/opengauss/admin/system/service/ops/impl/EncryptionUtils
+ * .java
  *
  * -------------------------------------------------------------------------
  */
@@ -30,19 +31,15 @@ import cn.hutool.crypto.CryptoException;
 import cn.hutool.crypto.asymmetric.KeyType;
 import cn.hutool.crypto.asymmetric.RSA;
 import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.codec.binary.Base64;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsEncryptionEntity;
+import org.opengauss.admin.common.utils.AesGcmUtils;
 import org.opengauss.admin.system.mapper.ops.OpsEncryptionMapper;
 import org.opengauss.admin.system.service.ops.IEncryptionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.Objects;
 
@@ -53,11 +50,7 @@ import java.util.Objects;
 @Slf4j
 @Component
 public class EncryptionUtils {
-    private static final String GCM_ALGORITHM = "AES/GCM/NoPadding";
-    private static final int GCM_IV_LENGTH = 12;
-    private static final int GCM_TAG_LENGTH = 16;
-    private static final byte[] IV = new byte[GCM_IV_LENGTH];
-
+    private static final String SECRET = "secret";
     private static String publicKey;
     private static String privateKey;
 
@@ -83,95 +76,10 @@ public class EncryptionUtils {
         }
     }
 
-    public String decrypt(String cipherText, String keyStr) {
-        log.info("decrypt, cipherText:{},key:{}", cipherText, keyStr);
-        if (StrUtil.isEmpty(cipherText) || StrUtil.isEmpty(keyStr)) {
-            throw new RuntimeException("cipherText or key is empty");
-        }
-
-        byte[] decryptedText;
-        try {
-            SecretKey key = new SecretKeySpec(Base64.decodeBase64(keyStr), "AES");
-            // Get Cipher Instance
-            Cipher cipher = Cipher.getInstance(GCM_ALGORITHM);
-
-            // Create SecretKeySpec
-            SecretKeySpec keySpec = new SecretKeySpec(key.getEncoded(), "AES");
-
-            // Create GCMParameterSpec
-            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH * 8, IV);
-
-            // Initialize Cipher for DECRYPT_MODE
-            cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
-
-            // Perform Decryption
-            decryptedText = cipher.doFinal(Base64.decodeBase64(cipherText));
-        } catch (Exception e) {
-            log.error("decrypt fail", e);
-            throw new RuntimeException("decrypt fail");
-        }
-
-        return new String(decryptedText);
-    }
-
-    public String encrypt(String plainText, String keyStr) {
-        log.info("encrypt, plainText:{},key:{}", plainText, keyStr);
-        if (StrUtil.isEmpty(plainText) || StrUtil.isEmpty(keyStr)) {
-            throw new RuntimeException("cipherText or key is empty");
-        }
-        byte[] cipherText = null;
-        try {
-            SecretKey key = new SecretKeySpec(Base64.decodeBase64(keyStr), "AES");
-            // Get Cipher Instance
-            Cipher cipher = Cipher.getInstance(GCM_ALGORITHM);
-
-            // Create SecretKeySpec
-            SecretKeySpec keySpec = new SecretKeySpec(key.getEncoded(), "AES");
-
-            // Create GCMParameterSpec
-            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH * 8, IV);
-
-            // Initialize Cipher for ENCRYPT_MODE
-            cipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmParameterSpec);
-
-            // Perform Encryption
-            cipherText = cipher.doFinal(plainText.getBytes());
-        } catch (Exception e) {
-            log.error("encrypt fail", e);
-            throw new RuntimeException("encrypt fail");
-        }
-
-        return Base64.encodeBase64String(cipherText);
-    }
-
-    public static String generateSecretKey(String identity) {
-        KeyGenerator keyGener = null;
-        try {
-            keyGener = KeyGenerator.getInstance("AES");
-        } catch (NoSuchAlgorithmException e) {
-            log.error("NoSuchAlgorithmException", e);
-        }
-
-        if (StrUtil.isEmpty(identity)) {
-            keyGener.init(256);
-        } else {
-            try {
-                SecureRandom instanceStrong = SecureRandom.getInstanceStrong();
-                instanceStrong.setSeed(identity.getBytes(StandardCharsets.UTF_8));
-                keyGener.init(256, instanceStrong);
-            } catch (NoSuchAlgorithmException e) {
-                log.error("NoSuchAlgorithmException", e);
-            }
-        }
-
-        return Base64.encodeBase64String(keyGener.generateKey().getEncoded());
-    }
-
     public String getKey() {
         if (StrUtil.isEmpty(publicKey)) {
             refreshKeyPair();
         }
-
         return publicKey;
     }
 
@@ -207,8 +115,8 @@ public class EncryptionUtils {
             saveKeyPair(opsEncryptionEntity);
         } else if (StrUtil.isEmpty(publicKey) || isEnforce) {
             log.info("refresh encryption key.");
-            publicKey = opsEncryptionEntity.getPublicKey();
-            privateKey = opsEncryptionEntity.getPrivateKey();
+            publicKey = AesGcmUtils.decrypt(opsEncryptionEntity.getPublicKey());
+            privateKey = AesGcmUtils.decrypt(opsEncryptionEntity.getPrivateKey());
         } else {
             log.info("dont refresh encryption key.");
         }
@@ -216,8 +124,23 @@ public class EncryptionUtils {
 
     private void saveKeyPair(OpsEncryptionEntity opsEncryptionEntity) {
         opsEncryptionEntity.setEncryptionId("1");
-        opsEncryptionEntity.setPublicKey(publicKey);
-        opsEncryptionEntity.setPrivateKey(privateKey);
+        opsEncryptionEntity.setPublicKey(AesGcmUtils.encrypt(publicKey));
+        opsEncryptionEntity.setPrivateKey(AesGcmUtils.encrypt(privateKey));
+        opsEncryptionEntity.setKeySecurity(SECRET);
         encryptionService.save(opsEncryptionEntity);
+    }
+
+    /**
+     * update key pair secret
+     */
+    public void updateKeyPairSecret() {
+        OpsEncryptionEntity opsEncryptionEntity = encryptionMapper.selectOne(null);
+        if (Objects.nonNull(opsEncryptionEntity) && !StrUtil.equalsIgnoreCase(SECRET,
+            opsEncryptionEntity.getKeySecurity())) {
+            opsEncryptionEntity.setKeySecurity(SECRET);
+            opsEncryptionEntity.setPublicKey(AesGcmUtils.encrypt(opsEncryptionEntity.getPublicKey()));
+            opsEncryptionEntity.setPrivateKey(AesGcmUtils.encrypt(opsEncryptionEntity.getPrivateKey()));
+            encryptionMapper.updateById(opsEncryptionEntity);
+        }
     }
 }
