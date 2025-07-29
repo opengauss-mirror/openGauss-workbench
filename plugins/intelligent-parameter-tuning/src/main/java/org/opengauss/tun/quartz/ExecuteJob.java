@@ -32,6 +32,7 @@ import org.opengauss.tun.cache.TunCache;
 import org.opengauss.tun.common.FixedTuning;
 import org.opengauss.tun.domain.TrainingConfig;
 import org.opengauss.tun.domain.builder.TuningBuilder;
+import org.opengauss.tun.domain.dto.CommandExecution;
 import org.opengauss.tun.domain.dto.TuningDto;
 import org.opengauss.tun.enums.help.TuningHelper;
 import org.opengauss.tun.enums.impl.TuningEnum;
@@ -95,8 +96,11 @@ public class ExecuteJob implements Job {
             return;
         }
         String errMsg = "Failed to create python environment, updating task status to failed";
-        boolean isSuccess = CommandLineRunner.runCommand(FixedTuning.PYTHON3_ENV, workPath, config.getLogPath(),
-                FixedTuning.TIME_OUT);
+        CommandExecution pythonEnv = CommandExecution.builder().command(FixedTuning.PYTHON3_ENV)
+                .filePath(workPath)
+                .writePath(config.getLogPath())
+                .timeOut(FixedTuning.TIME_OUT).build();
+        boolean isSuccess = CommandLineRunner.runCommand(pythonEnv);
         String requirementsSuccMsg = "Successfully executed the installation commands:"
                 + "- pip3 install -r requirements.txt";
         handleRes(isSuccess, requirementsSuccMsg, errMsg, recordPath, config);
@@ -108,8 +112,11 @@ public class ExecuteJob implements Job {
         String heboEnvPath = workPath + FixedTuning.HEBO_ENV;
         if (!cache.includeKey(clusterName)) {
             TuningHelper.record("Start executing pip3 install -e .", recordPath);
-            Boolean isHebo = CommandLineRunner.runCommand(FixedTuning.HEBO_COMMAND, heboEnvPath, config.getLogPath(),
-                    FixedTuning.TIME_OUT);
+            CommandExecution heboEnv = CommandExecution.builder().command(FixedTuning.HEBO_COMMAND)
+                    .filePath(heboEnvPath)
+                    .writePath(config.getLogPath())
+                    .timeOut(FixedTuning.TIME_OUT).build();
+            Boolean isHebo = CommandLineRunner.runCommand(heboEnv);
             if (isHebo) {
                 cache.put(clusterName, clusterName);
             }
@@ -139,11 +146,11 @@ public class ExecuteJob implements Job {
                     .appendNote("# 数据库配置").appendProperty("host", "'" + train.getHost() + "'")
                     .appendProperty("port", train.getPort()).appendProperty("db", "'" + train.getDb() + "'")
                     .appendProperty("user", "'" + train.getUser() + "'")
-                    .appendProperty("password", "'" + train.getPassword() + "'")
+                    .appendProperty("password", "''")
                     .appendProperty("os_user", "'" + train.getOsUser() + "'")
-                    .appendProperty("omm_password", "'" + train.getOmmPassword() + "'")
+                    .appendProperty("omm_password", "''")
                     .appendProperty("opengauss_node_path", "'" + train.getOpengaussNodePath() + "'")
-                    .appendProperty("root_password", "'" + train.getRootPassword() + "'")
+                    .appendProperty("root_password", "''")
                     .appendNote("# 重启数据库的等待时间, 若超时仍未启动, 则恢复数据库").appendProperty("time_wait", "30")
                     .appendSectionBreak().appendSectionBreak().appendNote("# 所使用的压测工具 sysbench 或 dwg")
                     .appendProperty("benchmark", "'" + train.getBenchmark() + "'")

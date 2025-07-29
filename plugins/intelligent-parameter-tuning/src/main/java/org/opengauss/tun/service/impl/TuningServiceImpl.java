@@ -19,6 +19,7 @@
 
 package org.opengauss.tun.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -76,6 +77,7 @@ import org.opengauss.tun.domain.TrainingConfig;
 import org.opengauss.tun.domain.TrainingProgress;
 import org.opengauss.tun.domain.TuningLog;
 import org.opengauss.tun.domain.TuningLogDetails;
+import org.opengauss.tun.domain.dto.CommandExecution;
 import org.opengauss.tun.domain.dto.TuningDto;
 import org.opengauss.tun.domain.vo.ApplyVo;
 import org.opengauss.tun.domain.vo.LogVo;
@@ -165,19 +167,32 @@ public class TuningServiceImpl implements TuningService {
         String workPath = executePath + FixedTuning.MAIN_PATH;
         // Obtain node information
         OpsJdbcDbClusterNodeEntity node = getNode(config.getClusterName());
+        node.setPassword(encryptionUtils.decrypt(node.getPassword()));
         // Verify
         validate(config, FixedTuning.SYSBENCH_FILE_PATH);
         // Parsing custom payloads
-        AssertUtil.save(1, configMpper.insert(getConfig(config, node)), "Training task save failed");
-        TuningDto dto = new TuningDto(config, executePath, workPath, node, sysbenchCommand, sysbenchAddPermissions);
+        TrainingConfig dealConfig = getConfig(config, node);
+        TuningDto dto = new TuningDto(dealConfig, executePath, workPath, node, sysbenchCommand, sysbenchAddPermissions);
+        save(config);
         Map<String, Object> param = Map.of(FixedTuning.TUN_DTO, dto);
-        schedulerUtils.createScheduleJob(ExecuteJob.class, config.getTrainingId() + FixedTuning.EXECUTE_JOB,
+        schedulerUtils.createScheduleJob(ExecuteJob.class, dealConfig.getTrainingId() + FixedTuning.EXECUTE_JOB,
                 FixedTuning.JOB_DEFAULT, "", param);
-        Map<String, Object> id = Map.of(FixedTuning.TRAININGID, config.getTrainingId());
-        schedulerUtils.createScheduleJob(ProgressJob.class, config.getTrainingId() + FixedTuning.PROCESS_JOB,
+        Map<String, Object> id = Map.of(FixedTuning.TRAININGID, dealConfig.getTrainingId());
+        schedulerUtils.createScheduleJob(ProgressJob.class, dealConfig.getTrainingId() + FixedTuning.PROCESS_JOB,
                 FixedTuning.JOB_DEFAULT, processCron, id);
-        CacheFactory.getLogCache().put(config.getTrainingId(), FixedTuning.INIT_VALUE);
+        CacheFactory.getLogCache().put(dealConfig.getTrainingId(), FixedTuning.INIT_VALUE);
         return RespBean.success("The tuning task is currently in progress. Please go to the task list to view it");
+    }
+
+    private void save(TrainingConfig config) {
+        // copy
+        TrainingConfig prepareConfigForDb = new TrainingConfig();
+        BeanUtil.copyProperties(config, prepareConfigForDb);
+        // clear password
+        prepareConfigForDb.setPassword("");
+        prepareConfigForDb.setOmmPassword("");
+        prepareConfigForDb.setRootPassword("");
+        AssertUtil.save(1, configMpper.insert(prepareConfigForDb), "Training task save failed");
     }
 
     private void validate(TrainingConfig config, String workPath) {
@@ -219,13 +234,17 @@ public class TuningServiceImpl implements TuningService {
 
     private void checkTuning(TrainingConfig config, String workPath) {
         // check Python version
-        AssertUtil.isTrue(!CommandLineRunner.runCommand(FixedTuning.CHECK_PYTHON_VERSION,
-                workPath, "", 1), "Python 3 version must be greater than or equal to 3.7.0");
+        CommandExecution pythonExe = CommandExecution.builder()
+                .command(FixedTuning.CHECK_PYTHON_VERSION).filePath(workPath).writePath("").timeOut(1).build();
+        AssertUtil.isTrue(!CommandLineRunner.runCommand(pythonExe),
+                "Python 3 version must be greater than or equal to 3.7.0");
         // If it is sysbench, check if sysbench is installed
+        CommandExecution sysbenchExe = CommandExecution.builder()
+                .command(FixedTuning.CHECK_SYSBENCH).filePath(workPath).writePath("").timeOut(1).build();
         if (FixedTuning.SYSBENCH.equals(config.getBenchmark())) {
-            AssertUtil.isTrue(!CommandLineRunner.runCommand(FixedTuning.CHECK_SYSBENCH,
-                    workPath, "", 1), "The current pressure testing mode is sysbench. "
-                    + "Please install sysbench");
+            AssertUtil.isTrue(!CommandLineRunner.runCommand(sysbenchExe),
+                    "The current pressure testing mode is sysbench. "
+                            + "Please install sysbench");
         }
         // Check dependencies postgresql-devel
         String rely = CommandLineRunner.runCommand(FixedTuning.CHECK_RELY,
@@ -256,11 +275,11 @@ public class TuningServiceImpl implements TuningService {
         // Set server root connection information
         Optional<LinuxConfig> rootOpt = getLinuxConfig(node.getIp(), "root");
         AssertUtil.isTrue(!rootOpt.isPresent(), "Failed to obtain root server information");
-        config.setRootPassword(rootOpt.get().getPassword());
+        config.setRootPassword(encryptionUtils.decrypt(rootOpt.get().getPassword()));
         // Set the user connection information for installing the database
         Optional<LinuxConfig> dbOpt = getLinuxConfig(node.getIp(), config.getOsUser());
         AssertUtil.isTrue(!dbOpt.isPresent(), "Failed to obtain opengauss database server information");
-        config.setOmmPassword(dbOpt.get().getPassword());
+        config.setOmmPassword(encryptionUtils.decrypt(dbOpt.get().getPassword()));
         config.setStartTime(DateUtil.getTimeNow());
         config.setLogPath(getTuningLogPath(id));
         List<String> fileNames = parsingCustomPayloads(config, config.getLogPath());
@@ -321,7 +340,7 @@ public class TuningServiceImpl implements TuningService {
                     OpsHostUserEntity userEntity = userMap.get(entity.getHostId());
                     if (userEntity != null) {
                         config.setUserName(userEntity.getUsername());
-                        config.setPassword(encryptionUtils.decrypt(userEntity.getPassword()));
+                        config.setPassword(userEntity.getPassword());
                     }
                     return Optional.of(config);
                 });
@@ -363,7 +382,7 @@ public class TuningServiceImpl implements TuningService {
             node.setUrl(node.getUrl().replace("postgres", dbName));
         }
         SysConfig gaussConfig = buildSysConfig(DbTypeEnum.OPENGAUSS, node.getUrl(),
-                node.getUsername(), node.getPassword());
+                node.getUsername(), encryptionUtils.decrypt(node.getPassword()));
         return ConnectionUtils.getConnection(gaussConfig);
     }
 
@@ -465,7 +484,7 @@ public class TuningServiceImpl implements TuningService {
         // 获取omm用户session
         LinuxConfig dbUser = optional.get();
         dbUser.setUserName(config.getOsUser());
-        dbUser.setPassword(config.getOmmPassword());
+        dbUser.setPassword(encryptionUtils.decrypt(dbUser.getPassword()));
         Session session = JschUtil.obtainSession(dbUser);
         boolean isAll = applyVo.getData().stream().allMatch(s -> s.getRestart()
                 .equalsIgnoreCase(FixedTuning.NO));
@@ -634,7 +653,10 @@ public class TuningServiceImpl implements TuningService {
 
     @Override
     public RespBean deleteTasks(List<String> ids) {
-        CommandLineRunner.runCommand(FixedTuning.STOP, FixedTuning.WORK_PATH, "", FixedTuning.TIME_OUT);
+        CommandExecution stop = CommandExecution.builder()
+                .command(FixedTuning.STOP).filePath(FixedTuning.WORK_PATH).writePath("")
+                .timeOut(FixedTuning.TIME_OUT).build();
+        CommandLineRunner.runCommand(stop);
         return RespBean.success("success", configMpper.deleteBatchIds(ids));
     }
 
@@ -647,8 +669,12 @@ public class TuningServiceImpl implements TuningService {
             AssertUtil.isTrue(!config.getStatus().equals(FixedTuning.RUNING), "You cannot perform this operation"
                     + " on non running tasks");
             String path = String.format(FixedTuning.EXECUTE_FILE_PATH, config.getClusterName()) + FixedTuning.MAIN_PATH;
-            CommandLineRunner.runCommand(FixedTuning.STOP, path, "", FixedTuning.TIME_OUT);
-            CommandLineRunner.runCommand(killSysbench, path, "", FixedTuning.TIME_OUT);
+            CommandExecution stop = CommandExecution.builder().command(FixedTuning.STOP).filePath(path).writePath("")
+                    .timeOut(FixedTuning.TIME_OUT).build();
+            CommandLineRunner.runCommand(stop);
+            CommandExecution kill = CommandExecution.builder().command(killSysbench).filePath(path).writePath("")
+                    .timeOut(FixedTuning.TIME_OUT).build();
+            CommandLineRunner.runCommand(kill);
             TuningHelper.updateStatusFailed(item);
         });
         return RespBean.success("Stopped successfully");

@@ -21,6 +21,7 @@ package org.opengauss.tun.enums.help;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -29,6 +30,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsJdbcDbClusterNodeEntity;
 import org.opengauss.admin.common.exception.ServiceException;
@@ -37,6 +39,7 @@ import org.opengauss.tun.domain.ParameterRecommendation;
 import org.opengauss.tun.domain.TrainingConfig;
 import org.opengauss.tun.domain.TrainingProgress;
 import org.opengauss.tun.domain.TuningLog;
+import org.opengauss.tun.domain.dto.CommandExecution;
 import org.opengauss.tun.service.impl.ParameterRecommendationServiceImpl;
 import org.opengauss.tun.service.impl.TrainingConfigImpl;
 import org.opengauss.tun.service.impl.TrainingProgressServiceImpl;
@@ -71,8 +74,11 @@ public class TuningHelper {
         if (config.getStatus().equals(FixedTuning.RUN_FAILED)) {
             return;
         }
-        boolean isMain = CommandLineRunner.runCommand(FixedTuning.MAIN_COMMAND, workPath, trainingConfig
-                .getLogPath(), FixedTuning.TIME_OUT_MAIN);
+        CommandExecution main = CommandExecution.builder().command(FixedTuning.MAIN_COMMAND).filePath(workPath)
+                .writePath(trainingConfig.getLogPath()).dbPassword(trainingConfig.getPassword())
+                .installPassword(trainingConfig.getOmmPassword()).rootPassword(trainingConfig.getRootPassword())
+                .timeOut(FixedTuning.TIME_OUT_MAIN).build();
+        boolean isMain = CommandLineRunner.runCommand(main);
         if (!isMain) {
             TuningHelper.updateStatusFailed(trainingConfig.getTrainingId());
         }
@@ -149,8 +155,11 @@ public class TuningHelper {
      */
     public static String getSysBenchCommand(OpsJdbcDbClusterNodeEntity node, TrainingConfig trainingConfig,
                                             String sysbenchCommand) {
-        return String.format(sysbenchCommand, node.getIp(), node.getPort(),
-                node.getUsername(), node.getPassword(), trainingConfig.getDb(),
+        String modifiedCommand = sysbenchCommand.replace(
+                "--pgsql-password=%s",
+                "--pgsql-password=${dbPassword}");
+        return String.format(modifiedCommand, node.getIp(), node.getPort(),
+                node.getUsername(), trainingConfig.getDb(),
                 trainingConfig.getTables(), trainingConfig.getTableSize(), trainingConfig.getMode());
     }
 

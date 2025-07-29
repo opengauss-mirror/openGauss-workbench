@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.tun.common.FixedTuning;
+import org.opengauss.tun.domain.dto.CommandExecution;
 
 /**
  * CommandLineRunner
@@ -46,31 +47,38 @@ public class CommandLineRunner {
     /**
      * runCommand
      *
-     * @param command   command
-     * @param filePath  filePath
-     * @param writePath writePath
-     * @param timeOut   timeOut
+     * @param execution   execution
      * @return boolean
      */
-    public static boolean runCommand(String command, String filePath, String writePath, long timeOut) {
+    public static boolean runCommand(CommandExecution execution) {
         String timeNow = DateUtil.getTimeNow();
-        String execute = command;
+        String execute = execution.getCommand();
         // Unable to print password information for data bureau
-        if (command.contains("--pgsql-password")) {
+        if (execution.getCommand().contains("--pgsql-password")) {
             execute = "sysbench --db-driver=pgsql ........";
         }
-        String content = String.join(StrUtil.LF, timeNow, execute, filePath);
-        appendToFile(content, writePath);
+        String content = String.join(StrUtil.LF, timeNow, execute, execution.getFilePath());
+        appendToFile(content, execution.getWritePath());
         try {
-            ProcessBuilder builder = new ProcessBuilder("bash", "-c", "source /etc/profile && " + command);
-            builder.directory(new File(filePath));
+            ProcessBuilder builder = new ProcessBuilder("bash", "-c", "source /etc/profile && "
+                    + execution.getCommand());
+            if (StrUtil.isNotBlank(execution.getDbPassword())) {
+                builder.environment().put("dbPassword", execution.getDbPassword());
+            }
+            if (StrUtil.isNotBlank(execution.getInstallPassword())) {
+                builder.environment().put("installPassword", execution.getInstallPassword());
+            }
+            if (StrUtil.isNotBlank(execution.getRootPassword())) {
+                builder.environment().put("password", execution.getRootPassword());
+            }
+            builder.directory(new File(execution.getFilePath()));
             Process process = builder.start();
             String output = readFromStream(process.getInputStream());
             String error = readFromStream(process.getErrorStream());
-            process.waitFor(timeOut, TimeUnit.MINUTES);
+            process.waitFor(execution.getTimeOut(), TimeUnit.MINUTES);
             StringBuilder result = new StringBuilder();
             result.append(output).append(StrUtil.LF).append(error);
-            appendToFile(result.toString(), writePath);
+            appendToFile(result.toString(), execution.getWritePath());
             String res = result.toString();
             return res.contains(FixedTuning.SUCCESS_INSTALL) || res.trim().equals(FixedTuning.BOOL_TRUE);
         } catch (IOException | InterruptedException exception) {
