@@ -16,6 +16,11 @@
         <el-button
           v-if="currentActive === 3 && subTaskMode === 2 && currentExecStatus === SUB_TASK_STATUS.INCREMENTAL_STOPPED"
           @click="startSubReverse" >{{ t('detail.index.5q09asiwkq40') }}</el-button>
+        <el-button v-if="currentActive === 4 && currentExecStatus !== SUB_TASK_STATUS.MIGRATION_FINISH" @click="stopSubTask">
+          {{
+            $t('detail.index.5q09asiwl5g0')
+          }}
+        </el-button>
       </div>
     </div>
     <div class="sub-tabs">
@@ -57,7 +62,7 @@ import StatisticCard from '@/components/statisticCard'
 import { IconSuccess, IconError, IconAlertCircle, IconCheckCircle } from '@computing/opendesign-icons';
 import { computed, inject, onBeforeUnmount, onMounted, watch, ref } from 'vue'
 import {
-  getOnlineReverseStatus, queryFullCheckDetail,
+  getOnlineReverseStatus, queryFullCheckDetail, subTaskFinish,
   startOnlineReverseProcess, subTaskStartReverse, subTaskStopIncremental,
 } from '@/api/detail'
 import { useSubTaskStore } from '@/store';
@@ -154,8 +159,8 @@ const migrationCount = computed(() => {
   let sourceCount = 0;
   try {
     const processObj = props.active === 4 ?
-      JSON.parse(subTaskStore.subTaskData.reverseProcess?.execResultDetail || {}) :
-      JSON.parse(subTaskStore.subTaskData.incrementalProcess?.execResultDetail || {})
+      JSON.parse(subTaskStore.subTaskData.reverseProcess?.execResultDetail || '{}') :
+      JSON.parse(subTaskStore.subTaskData.incrementalProcess?.execResultDetail || '{}')
     sourceCount = processObj?.count || 0
     return sourceCount
   } catch (err) {
@@ -169,8 +174,8 @@ const restWriteInCount = computed(() => {
   let sourceCount = 0;
   try {
     const processObj = props.active === 4 ?
-      JSON.parse(subTaskStore.subTaskData.reverseProcess?.execResultDetail || {}) :
-      JSON.parse(subTaskStore.subTaskData.incrementalProcess?.execResultDetail || {})
+      JSON.parse(subTaskStore.subTaskData.reverseProcess?.execResultDetail || '{}') :
+      JSON.parse(subTaskStore.subTaskData.incrementalProcess?.execResultDetail || '{}')
     sourceCount = processObj?.rest || 0
     return sourceCount
   } catch (err) {
@@ -261,6 +266,16 @@ const getFixStatus = async () => {
   } catch (error) {
     console.error(error)
   }
+}
+
+// stop sub task full
+const stopSubTask = () => {
+  if (!subTaskId.value) {
+    return;
+  }
+  subTaskFinish(subTaskId.value).then(() => {
+    showMessage('success', t('detail.index.stopSuccess'))
+  })
 }
 </script>
 <style lang="less" scoped>
