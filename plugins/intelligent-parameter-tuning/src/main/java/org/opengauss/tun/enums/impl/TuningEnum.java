@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsJdbcDbClusterNodeEntity;
 import org.opengauss.tun.common.FixedTuning;
 import org.opengauss.tun.domain.TrainingConfig;
+import org.opengauss.tun.domain.dto.CommandExecution;
 import org.opengauss.tun.enums.TuningStrategy;
 import org.opengauss.tun.enums.help.TuningHelper;
 import org.opengauss.tun.utils.CommandLineRunner;
@@ -42,8 +43,11 @@ public enum TuningEnum implements TuningStrategy {
             // run sysbench command 创建压测的数据库
             CommandLineRunner.appendToFile("Create a database for stress testing using the sysbench command",
                     config.getLogPath());
-            boolean isSysbench = CommandLineRunner.runCommand(TuningHelper.getSysBenchCommand(node, config,
-                    sysbenchCommand), FixedTuning.SYSBENCH_EXECUTE_PATH, config.getLogPath(), FixedTuning.TIME_OUT);
+            CommandExecution sysbench = CommandExecution.builder().command(TuningHelper.getSysBenchCommand(node, config,
+                            sysbenchCommand)).dbPassword(config.getPassword())
+                    .filePath(FixedTuning.SYSBENCH_EXECUTE_PATH).writePath(config.getLogPath())
+                    .timeOut(FixedTuning.TIME_OUT).build();
+            boolean isSysbench = CommandLineRunner.runCommand(sysbench);
             if (isSysbench) {
                 CommandLineRunner.appendToFile("Successfully created the database for stress "
                         + "testing and started executing python3 main.py", config.getLogPath());
@@ -65,16 +69,28 @@ public enum TuningEnum implements TuningStrategy {
                 TuningHelper.appendRes(config, workPath);
                 String jsonHelpPath = workPath + "SuperWG/DWG/jsonHelper/";
                 CommandLineRunner.appendToFile("Start executing jsonHelper.py", config.getLogPath());
-                if (!CommandLineRunner.runCommand(FixedTuning.JSON_HELPER_COMMAND, jsonHelpPath, config.getLogPath(),
-                        FixedTuning.TIME_OUT)) {
+                CommandExecution jsonHelp = CommandExecution.builder().command(FixedTuning.JSON_HELPER_COMMAND)
+                        .filePath(jsonHelpPath)
+                        .dbPassword(config.getPassword())
+                        .installPassword(config.getOmmPassword())
+                        .rootPassword(config.getRootPassword())
+                        .writePath(config.getLogPath())
+                        .timeOut(FixedTuning.TIME_OUT).build();
+                if (!CommandLineRunner.runCommand(jsonHelp)) {
                     CommandLineRunner.appendToFile("Executing jsonHelper. py failed, "
                             + "modifying task status to failed", config.getLogPath());
                     TuningHelper.updateStatusFailed(config.getTrainingId());
                 }
                 String workLoadPath = workPath + "SuperWG/DWG/src/";
                 CommandLineRunner.appendToFile("Start executing WorkloadGenerator.py", config.getLogPath());
-                if (!CommandLineRunner.runCommand(FixedTuning.WORKLOAD_COMMAND, workLoadPath, config.getLogPath(),
-                        FixedTuning.TIME_OUT_MAIN)) {
+                CommandExecution workLoad = CommandExecution.builder().command(FixedTuning.WORKLOAD_COMMAND)
+                        .filePath(workLoadPath)
+                        .writePath(config.getLogPath())
+                        .dbPassword(config.getPassword())
+                        .installPassword(config.getOmmPassword())
+                        .rootPassword(config.getRootPassword())
+                        .timeOut(FixedTuning.TIME_OUT).build();
+                if (!CommandLineRunner.runCommand(workLoad)) {
                     CommandLineRunner.appendToFile("Executing WorkloadGenerator. py failed, "
                             + "modifying task status to failed", config.getLogPath());
                     TuningHelper.updateStatusFailed(config.getTrainingId());
