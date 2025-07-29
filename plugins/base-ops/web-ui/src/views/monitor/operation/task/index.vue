@@ -79,7 +79,7 @@ import {useRoute, useRouter} from "vue-router";
 import {OpenGaussVersionEnum} from "@/types/ops/install";
 import router from "@/router";
 import {map} from "lodash";
-import { encryptPassword, decryptPassword } from "@/utils/jsencrypt";
+import { encryptPassword } from "@/utils/jsencrypt";
 
 const currentStep = ref(1)
 const taskId = ref()

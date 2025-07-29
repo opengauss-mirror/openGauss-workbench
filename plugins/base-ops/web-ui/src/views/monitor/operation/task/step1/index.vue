@@ -379,7 +379,7 @@ import Socket from "@/utils/websocket"
 import { useRoute } from "vue-router";
 import downloadNotification from '@/components/downloadNotification'
 import { useI18n } from 'vue-i18n'
-import { encryptPassword, decryptPassword } from "@/utils/jsencrypt";
+import { encryptPassword } from "@/utils/jsencrypt";
 const { t } = useI18n()
 const module1 = ref(null)
 const module2 = ref(null)
@@ -1770,6 +1770,7 @@ const init = () => {
             }
           }
         })
+        Message.warning(t('operation.task.step1.index.passwdWarning'))
         currVersion.value = res.data.version
         data.clusterId = props.clusterId
         data.os = res.data.os
@@ -1779,7 +1780,7 @@ const init = () => {
         data.packageName = res.data.packageName
         data.packageId = res.data.packageId
         data.clusterName = res.data.clusterName
-        data.databasePassword = await decryptPassword(res.data.databasePassword)
+        data.databasePassword = ''
         data.port = Number(res.data.databasePort)
         data.installPackagePath = res.data.installPackagePath
         data.installPath = res.data.installPath

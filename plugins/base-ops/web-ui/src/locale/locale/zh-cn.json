@@ -466,7 +466,8 @@
               "onlineDownload": "在线下载",
               "ipNoticeError": " IP下",
               "portOccupied": "端口被占用，无法保存",
-              "notificationText": "根据配置匹配到如下安装包并进行下载:"
+              "notificationText": "根据配置匹配到如下安装包并进行下载:",
+              "passwdWarning": "出于安全考虑，密码信息无法回显，如需修改请重新输入"
             }
           },
             "step2s5cf2y0": "环境监测中...",
@@ -845,7 +846,8 @@
             "test16": "网络连接方式",
             "test17": "请输入RDMA绑定的CPU序列，用空格隔开",
             "test18": "RDMA网络配置",
-            "collapse1": "共享存储配置"
+            "collapse1": "共享存储配置",
+            "passwdWarning": "出于安全考虑，密码信息无法回显"
         },
         "EnterpriseInstall": {
             "else2": "提示",

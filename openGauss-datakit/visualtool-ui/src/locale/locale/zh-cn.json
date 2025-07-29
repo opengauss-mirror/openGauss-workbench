@@ -975,7 +975,7 @@
       "5oxhkhimzcg0": "不能为纯空格",
       "5oxhkhimzmw0": "修改数据源",
       "5oxhkhimzww0": "新增数据源",
-      "checkPassword": "请检查密码是否为空"
+      "checkPassword": "编辑时请重新输入密码"
     },
     "HostImportDlg": {
       "5oxhmjuzltc0": "解析结果：有以下错误数据，请修改后重新上传",
