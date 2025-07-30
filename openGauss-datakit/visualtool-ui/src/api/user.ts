@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { encrypt } from '@/utils/jsencrypt'
+import {encrypt, encryptWithPublicKey} from '@/utils/jsencrypt'
 
 export interface LoginData {
   username: string;
@@ -10,9 +10,9 @@ export interface LoginRes {
   token: string;
 }
 
-export function login (data: LoginData) {
-  const formatData = { ...data }
-  formatData.password = encrypt(formatData.password)
+export async function login(data: LoginData) {
+  const formatData = {...data}
+  formatData.password = await encrypt(formatData.password)
   return axios.post<LoginRes>('/login', formatData)
 }
 
@@ -45,7 +45,7 @@ export function getUserList (query: any) {
 
 export function createUser (payload: any) {
   const formData = { ...payload }
-  formData.password = encrypt(payload.password)
+  formData.password = encryptWithPublicKey(payload.password)
   return axios.post('/system/user', formData)
 }
 
@@ -63,14 +63,14 @@ export function updateUser (payload: any) {
 
 export function resetCode (payload: any) {
   const formData = { ...payload }
-  formData.password = encrypt(payload.password)
+  formData.password = encryptWithPublicKey(payload.password)
   return axios.put('/system/user/resetPwd', formData)
 }
 
-export function updateCode (data: any) { 
+export function updateCode (data: any) {
   const formatData = { ...data }
-  formatData.newPassword = encrypt(formatData.newPassword)
-  formatData.oldPassword = encrypt(formatData.oldPassword)
+  formatData.newPassword = encryptWithPublicKey(formatData.newPassword)
+  formatData.oldPassword = encryptWithPublicKey(formatData.oldPassword)
   return axios.put('/system/user/profile/updatePwd', formatData)
 }
 

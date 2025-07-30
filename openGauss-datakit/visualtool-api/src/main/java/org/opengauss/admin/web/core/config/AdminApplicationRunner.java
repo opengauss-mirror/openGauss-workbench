@@ -65,6 +65,7 @@ public class AdminApplicationRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        this.encryptionUtils.updateKeyPairSecret();
         this.encryptionUtils.refreshKeyPair(false);
         sysSettingService.initHttpProxy();
         List<TaskMetricsDefinition> metricsDefinitionList = agentTaskManager.queryHostMetricsDefinition();

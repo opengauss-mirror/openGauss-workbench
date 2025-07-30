@@ -43,6 +43,7 @@ public class MyPluginInitializerListener implements PluginInitializerListener {
     @Override
     public void before() {
         log.info("My plugin init before.");
+        this.encryptionUtils.updateKeyPairSecret();
         this.encryptionUtils.refreshKeyPair();
     }
 

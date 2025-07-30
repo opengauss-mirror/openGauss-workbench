@@ -32,6 +32,7 @@ import org.opengauss.admin.common.core.domain.entity.SysUser;
 import org.opengauss.admin.common.core.domain.model.LoginBody;
 import org.opengauss.admin.common.core.domain.model.LoginUser;
 import org.opengauss.admin.common.enums.SysMenuRouteOpenPosition;
+import org.opengauss.admin.common.utils.RsaUtils;
 import org.opengauss.admin.common.utils.ServletUtils;
 import org.opengauss.admin.framework.web.service.SysLoginService;
 import org.opengauss.admin.framework.web.service.SysPermissionService;
@@ -86,6 +87,15 @@ public class SysLoginController {
         return ajax;
     }
 
+    /**
+     * get login public key
+     *
+     * @return public key
+     */
+    @GetMapping("/pubKey")
+    public AjaxResult publicKey() {
+        return AjaxResult.success(RsaUtils.publicKey());
+    }
 
     /**
      * get user info

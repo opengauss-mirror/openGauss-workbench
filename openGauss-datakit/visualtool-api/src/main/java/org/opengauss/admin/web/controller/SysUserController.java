@@ -21,7 +21,6 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.web.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -42,8 +41,6 @@ import org.opengauss.admin.system.service.ISysRoleService;
 import org.opengauss.admin.system.service.ISysUserService;
 
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,29 +68,30 @@ public class SysUserController extends BaseController {
 
     /**
      * Query User Page List
+     *
+     * @param user user
+     * @return TableDataInfo
      */
-    @ApiOperation(value = "page list", notes = "page list")
-    @ApiImplicitParams ({
-    })
     @PreAuthorize("@ss.hasPermi('system:user:list')")
     @GetMapping("/list")
     public TableDataInfo list(SysUser user) {
-        IPage<SysUser> result = userService.selectUserList(user,startPage());
+        IPage<SysUser> result = userService.selectUserList(user, startPage());
         return getDataTable(result);
     }
 
     /**
-     * Get By Id
+     * Get User Info
+     *
+     * @param userId user id
+     * @return AjaxResult
      */
-    @ApiOperation(value = "get by id", notes = "get by id")
-    @ApiImplicitParams ({
-    })
     @PreAuthorize("@ss.hasPermi('system:user:query')")
     @GetMapping(value = {"/", "/{userId}"})
     public AjaxResult getInfo(@PathVariable(value = "userId", required = false) Integer userId) {
         AjaxResult ajax = AjaxResult.success();
         List<SysRole> roles = roleService.selectRoleAll();
-        ajax.put("roles", SysUser.isAdmin(userId) ? roles : roles.stream().filter(r -> !r.isAdmin()).collect(Collectors.toList()));
+        ajax.put("roles",
+            SysUser.isAdmin(userId) ? roles : roles.stream().filter(r -> !r.isAdmin()).collect(Collectors.toList()));
         if (StringUtils.isNotNull(userId)) {
             ajax.put(AjaxResult.DATA_TAG, userService.selectUserById(userId));
             ajax.put("roleIds", roleService.selectRoleListByUserId(userId));
@@ -103,21 +101,21 @@ public class SysUserController extends BaseController {
 
     /**
      * Save User
+     *
+     * @param user user
+     * @return AjaxResult
      */
     @Log(title = "users", businessType = BusinessType.INSERT)
-    @ApiOperation(value = "save", notes = "save")
-    @ApiImplicitParams ({
-    })
     @PreAuthorize("@ss.hasPermi('system:user:add')")
     @PostMapping
     public AjaxResult add(@Validated @RequestBody SysUser user) {
         if (UserConstants.NOT_UNIQUE.equals(userService.checkUserNameUnique(user.getUserName()))) {
             return AjaxResult.error(ResponseCode.USER_ACCOUNT_EXISTS_ERROR.code());
-        } else if (StringUtils.isNotEmpty(user.getPhonenumber())
-                && UserConstants.NOT_UNIQUE.equals(userService.checkPhoneUnique(user))) {
+        } else if (StringUtils.isNotEmpty(user.getPhonenumber()) && UserConstants.NOT_UNIQUE.equals(
+            userService.checkPhoneUnique(user))) {
             return AjaxResult.error(ResponseCode.USER_PHONE_EXISTS_ERROR.code());
-        } else if (StringUtils.isNotEmpty(user.getEmail())
-                && UserConstants.NOT_UNIQUE.equals(userService.checkEmailUnique(user))) {
+        } else if (StringUtils.isNotEmpty(user.getEmail()) && UserConstants.NOT_UNIQUE.equals(
+            userService.checkEmailUnique(user))) {
             return AjaxResult.error(ResponseCode.USER_EMAIL_EXISTS_ERROR.code());
         }
         if (user.getPhonenumber().length() > 11) {
@@ -133,27 +131,27 @@ public class SysUserController extends BaseController {
             return AjaxResult.error(ResponseCode.USER_REMARK_MAX_LENGTH_ERROR.code());
         }
         user.setCreateBy(getUsername());
-        user.setPassword(SecurityUtils.encryptPassword(RsaUtils.decryptByPrivateKey(user.getPassword())));
+        user.setPassword(SecurityUtils.encryptPassword(RsaUtils.decrypt(user.getPassword())));
         return toAjax(userService.insertUser(user));
     }
 
     /**
-     * update user
+     * Update User
+     *
+     * @param user user
+     * @return AjaxResult
      */
     @Log(title = "users", businessType = BusinessType.UPDATE)
-    @ApiOperation(value = "update", notes = "update")
-    @ApiImplicitParams ({
-    })
     @PreAuthorize("@ss.hasPermi('system:user:edit')")
     @PutMapping
     public AjaxResult edit(@Validated @RequestBody SysUser user) {
         user.setPassword(null);
         userService.checkUserAllowed(user);
-        if (StringUtils.isNotEmpty(user.getPhonenumber())
-                && UserConstants.NOT_UNIQUE.equals(userService.checkPhoneUnique(user))) {
+        if (StringUtils.isNotEmpty(user.getPhonenumber()) && UserConstants.NOT_UNIQUE.equals(
+            userService.checkPhoneUnique(user))) {
             return AjaxResult.error(ResponseCode.USER_PHONE_EXISTS_ERROR.code());
-        } else if (StringUtils.isNotEmpty(user.getEmail())
-                && UserConstants.NOT_UNIQUE.equals(userService.checkEmailUnique(user))) {
+        } else if (StringUtils.isNotEmpty(user.getEmail()) && UserConstants.NOT_UNIQUE.equals(
+            userService.checkEmailUnique(user))) {
             return AjaxResult.error(ResponseCode.USER_EMAIL_EXISTS_ERROR.code());
         }
         if (user.getPhonenumber().length() > 11) {
@@ -173,12 +171,12 @@ public class SysUserController extends BaseController {
     }
 
     /**
-     * delete user
+     * Delete User
+     *
+     * @param userIds user ids
+     * @return AjaxResult
      */
     @Log(title = "users", businessType = BusinessType.DELETE)
-    @ApiOperation(value = "delete", notes = "delete")
-    @ApiImplicitParams ({
-    })
     @PreAuthorize("@ss.hasPermi('system:user:remove')")
     @DeleteMapping("/{userIds}")
     public AjaxResult remove(@PathVariable Integer[] userIds) {
@@ -189,27 +187,27 @@ public class SysUserController extends BaseController {
     }
 
     /**
-     * reset password
+     * Reset Password
+     *
+     * @param user user
+     * @return AjaxResult
      */
     @Log(title = "users", businessType = BusinessType.UPDATE)
-    @ApiOperation(value = "reset pwd", notes = "reset pwd")
-    @ApiImplicitParams ({
-    })
     @PutMapping("/resetPwd")
     public AjaxResult resetPwd(@RequestBody SysUser user) {
         userService.checkUserAllowed(user);
-        user.setPassword(SecurityUtils.encryptPassword(RsaUtils.decryptByPrivateKey(user.getPassword())));
+        user.setPassword(SecurityUtils.encryptPassword(RsaUtils.decrypt(user.getPassword())));
         user.setUpdateBy(getUsername());
         return toAjax(userService.resetPwd(user));
     }
 
     /**
-     * update status
+     * Update Status
+     *
+     * @param user user
+     * @return AjaxResult
      */
     @Log(title = "users", businessType = BusinessType.UPDATE)
-    @ApiOperation(value = "update status", notes = "update status")
-    @ApiImplicitParams ({
-    })
     @PreAuthorize("@ss.hasPermi('system:user:edit')")
     @PutMapping("/changeStatus")
     public AjaxResult changeStatus(@RequestBody SysUser user) {
@@ -217,5 +215,4 @@ public class SysUserController extends BaseController {
         user.setUpdateBy(getUsername());
         return toAjax(userService.updateUserStatus(user));
     }
-
 }

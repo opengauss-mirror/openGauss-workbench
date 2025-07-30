@@ -288,6 +288,7 @@ CREATE TABLE IF NOT EXISTS "ops_encryption"
     "create_time" timestamp,
     "update_by" varchar(64),
     "update_time" timestamp,
+    "key_security" varchar(64),
     "encryption_key" text,
     "public_key" text,
     "private_key" text

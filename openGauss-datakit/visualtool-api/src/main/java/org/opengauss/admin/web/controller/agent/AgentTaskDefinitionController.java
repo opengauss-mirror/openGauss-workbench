@@ -25,6 +25,7 @@ import org.opengauss.admin.common.utils.ChainAssert;
 import org.opengauss.agent.repository.TaskMetricsDefinitionService;
 import org.opengauss.agent.repository.TaskSchemaDefinitionService;
 import org.opengauss.agent.repository.TaskTemplateDefinitionService;
+import org.opengauss.agent.service.AgentHttpProxy;
 import org.opengauss.agent.service.AgentTaskManager;
 import org.opengauss.agent.service.IAgentInstallService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,6 +60,8 @@ public class AgentTaskDefinitionController {
     private AgentTaskManager agentTaskManager;
     @Resource
     private IAgentInstallService agentInstallService;
+    @Resource
+    private AgentHttpProxy agentHttpProxy;
 
     /**
      * save task template definition
@@ -139,6 +142,7 @@ public class AgentTaskDefinitionController {
     @GetMapping("/start/task")
     public AjaxResult startTask(@RequestParam("agentId") String agentId, @RequestParam("id") Long id) {
         AgentInstallEntity agent = agentInstallService.getByAgentId(agentId);
+        agentHttpProxy.fetchAgentPubKey(agent);
         agentTaskManager.startAgentTaskByTaskId(agent, id);
         return AjaxResult.success();
     }

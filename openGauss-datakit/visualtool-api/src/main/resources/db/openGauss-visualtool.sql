@@ -464,26 +464,14 @@ COMMENT ON TABLE "public"."ops_cluster_task_node" IS '集群安装任务节点�
 -- Table structure for ops_encryption
 -- ----------------------------
 
-CREATE TABLE IF NOT EXISTS "public"."ops_encryption"
-(
-    "encryption_id" varchar
-(
-    255
-) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
-    "remark" varchar
-(
-    255
-) COLLATE "pg_catalog"."default",
-    "create_by" varchar
-(
-    64
-) COLLATE "pg_catalog"."default",
-    "create_time" timestamp
-(
-    6
-),
+CREATE TABLE IF NOT EXISTS "public"."ops_encryption" (
+    "encryption_id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
+    "remark" varchar(255) COLLATE "pg_catalog"."default",
+    "create_by" varchar(64) COLLATE "pg_catalog"."default",
+    "create_time" timestamp(6),
     "update_by" varchar(64) COLLATE "pg_catalog"."default",
     "update_time" timestamp(6),
+    "key_security" varchar(64) COLLATE "pg_catalog"."default",
     "encryption_key" text COLLATE "pg_catalog"."default",
     "public_key" text COLLATE "pg_catalog"."default",
     "private_key" text COLLATE "pg_catalog"."default"
@@ -494,6 +482,21 @@ COMMENT ON COLUMN "public"."ops_encryption"."create_by" IS '创建者';
 COMMENT ON COLUMN "public"."ops_encryption"."create_time" IS '创建时间';
 COMMENT ON COLUMN "public"."ops_encryption"."update_by" IS '更新者';
 COMMENT ON COLUMN "public"."ops_encryption"."update_time" IS '更新时间';
+
+CREATE OR REPLACE FUNCTION add_ops_encryption_field_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_encryption'' AND COLUMN_NAME = ''key_security'' ) = 0
+THEN
+ALTER TABLE ops_encryption ADD COLUMN key_security varchar(64);
+COMMENT ON COLUMN "public"."ops_encryption"."key_security" IS ''检查当前密钥是否安全存储'';
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_ops_encryption_field_func();
+
+DROP FUNCTION add_ops_encryption_field_func;
 
 -- ----------------------------
 -- Table structure for ops_host

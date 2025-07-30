@@ -31,6 +31,7 @@ import org.opengauss.agent.exception.TaskExecutionException;
 import org.opengauss.agent.service.task.TaskExecutor;
 import org.opengauss.agent.service.task.group.GroupKey;
 import org.opengauss.agent.service.task.group.OtelTaskGroup;
+import org.opengauss.agent.utils.RsaUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -198,7 +199,8 @@ public class DbMetricExecutor implements TaskExecutor {
          */
         private Connection createConnection(AgentClusterVo clusterConfig) throws SQLException {
             return DatabaseType.valueOf(clusterConfig.getDataBaseType())
-                .getConnection(clusterConfig.getUrl(), clusterConfig.getUsername(), clusterConfig.getDbPassword());
+                .getConnection(clusterConfig.getUrl(), clusterConfig.getUsername(),
+                    RsaUtils.decrypt(clusterConfig.getDbPassword()));
         }
     }
 

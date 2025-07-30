@@ -26,7 +26,6 @@ package org.opengauss.admin.common.core.domain.entity.ops;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import org.opengauss.admin.common.core.domain.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -36,10 +35,11 @@ import lombok.EqualsAndHashCode;
  **/
 @Data
 @TableName("ops_encryption")
-@EqualsAndHashCode(callSuper = true)
-public class OpsEncryptionEntity extends BaseEntity {
+@EqualsAndHashCode()
+public class OpsEncryptionEntity {
     @TableId
     private String encryptionId;
     private String publicKey;
     private String privateKey;
+    private String keySecurity;
 }

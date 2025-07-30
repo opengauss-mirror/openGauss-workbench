@@ -16,4 +16,16 @@ const clearToken = () => {
   localStorage.removeItem(TOKEN_KEY)
 }
 
-export { isLogin, getToken, setToken, clearToken }
+const getPublckey = () => {
+  return localStorage.getItem('publckey')
+}
+
+const setPublckey = (Publckey: string) => {
+  localStorage.setItem('publckey', Publckey)
+}
+
+const clearPublckey = () => {
+  localStorage.removeItem('publckey')
+}
+
+export { isLogin, getToken, setToken, clearToken, getPublckey, setPublckey, clearPublckey }

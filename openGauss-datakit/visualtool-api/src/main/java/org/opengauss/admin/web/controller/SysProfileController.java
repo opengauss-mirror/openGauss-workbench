@@ -127,8 +127,8 @@ public class SysProfileController extends BaseController {
         @ApiImplicitParam(name = "newPassword", value = "newPassword", required = true, dataType = "string")
     })
     public AjaxResult updatePwd(@RequestBody ModifyPasswordDto modifyPasswordDto) {
-        String oldPassword = RsaUtils.decryptByPrivateKey(modifyPasswordDto.getOldPassword());
-        String newPassword = RsaUtils.decryptByPrivateKey(modifyPasswordDto.getNewPassword());
+        String oldPassword = RsaUtils.decrypt(modifyPasswordDto.getOldPassword());
+        String newPassword = RsaUtils.decrypt(modifyPasswordDto.getNewPassword());
         LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
         String userName = loginUser.getUsername();
         String password = loginUser.getPassword();
