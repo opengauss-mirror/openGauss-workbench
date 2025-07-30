@@ -24,6 +24,7 @@
 
 package org.opengauss.admin.common.core.domain.model.ops.host;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
@@ -31,6 +32,7 @@ import lombok.Data;
  * @date 2022/8/8 13:57
  **/
 @Data
+@AllArgsConstructor
 public class SSHBody {
     private String ip;
 

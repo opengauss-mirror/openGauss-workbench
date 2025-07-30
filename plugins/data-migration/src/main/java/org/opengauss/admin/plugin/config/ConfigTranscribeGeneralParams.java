@@ -52,7 +52,6 @@ public class ConfigTranscribeGeneralParams implements TranscribeReplayConstants 
         this.sqlTranscribeMode = config.get(SQL_TRANSCRIBE_MODE);
         this.databaseUsername = config.get(GENERAL_DATABASE_USERNAME);
         this.fileCountLimit = config.get(FILE_COUNT_LIMIT);
-        this.databasePassword = config.get(GENERAL_DATABASE_PASSWORD);
         this.sqlBatch = config.get(GENERAL_SQL_BATCH);
         this.startTime = config.get(GENERAL_START_TIME);
         this.sqlStorageMode = config.get(SQL_STORAGE_MODE);

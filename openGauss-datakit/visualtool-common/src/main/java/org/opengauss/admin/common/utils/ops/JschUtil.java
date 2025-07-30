@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.model.ops.HostFile;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
+import org.opengauss.admin.common.core.domain.model.ops.host.SSHBody;
 import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
 import org.opengauss.admin.common.enums.ops.HostFileTypeEnum;
 import org.opengauss.admin.common.exception.ops.OpsException;
@@ -143,6 +144,23 @@ public class JschUtil {
     public JschResult executeCommand(String command, Session session,
                                      Map<String, String> autoResponse) throws IOException, InterruptedException {
         return executeCommand(command, session, null, autoResponse);
+    }
+
+    /**
+     * ChannelExec
+     *
+     * @param command Instructions to execute
+     * @param sshBody sshBody
+     * @param autoResponse autoResponse
+     * @return SSH Result
+     * @throws IOException IO Exception
+     * @throws InterruptedException Interrupted Exception
+     */
+    public JschResult executeCommand(String command, SSHBody sshBody,
+                                     Map<String, String> autoResponse) throws IOException, InterruptedException {
+        Optional<Session> session = getSession(sshBody.getIp(), sshBody.getSshPort(),
+                sshBody.getSshUsername(), sshBody.getSshPassword());
+        return executeCommand(command, session.get(), autoResponse);
     }
 
     /**
