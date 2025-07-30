@@ -26,6 +26,7 @@ package com.nctigba.alert.monitor.model.entity;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.nctigba.alert.monitor.model.validator.annotation.NotBlankConditional;
@@ -68,6 +69,7 @@ public class NotifyConfigDO {
     @NotBlankConditional(conditionalField = "type", conditionalValues = {CommonConstants.EMAIL})
     private String account;
     @NotBlankConditional(conditionalField = "type", conditionalValues = {CommonConstants.EMAIL})
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String passwd;
     @NotBlankConditional(conditionalField = "type",
         conditionalValues = {CommonConstants.WE_COM, CommonConstants.DING_TALK})
@@ -77,6 +79,7 @@ public class NotifyConfigDO {
     private String appKey;
     @NotBlankConditional(conditionalField = "type",
         conditionalValues = {CommonConstants.WE_COM, CommonConstants.DING_TALK})
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String secret;
     @NotNull
     private Integer enable;

@@ -31,6 +31,7 @@
           </el-form-item>
           <el-form-item :label="$t('notifyConfig.passwd')" prop="passwd">
             <el-input v-model="emailConfig.passwd" :disabled="emailConfig.enable === 0"
+              type="password"
               :placeholder="$t('notifyConfig.inputTip') + $t('notifyConfig.passwd')" />
           </el-form-item>
         </el-form>
@@ -58,7 +59,7 @@
               :placeholder="$t('notifyConfig.inputTip') + $t('notifyConfig.agentId')" />
           </el-form-item>
           <el-form-item :label="$t('notifyConfig.weComSecret')" prop="secret">
-            <el-input v-model="weComConfig.secret" :disabled="weComConfig.enable === 0"
+            <el-input v-model="weComConfig.secret" :disabled="weComConfig.enable === 0" type="password"
               :placeholder="$t('notifyConfig.inputTip') + $t('notifyConfig.weComSecret')" />
           </el-form-item>
         </el-form>
@@ -85,7 +86,7 @@
               :placeholder="$t('notifyConfig.inputTip') + $t('notifyConfig.agentId')" />
           </el-form-item>
           <el-form-item :label="$t('notifyConfig.dingSecret')" prop="secret">
-            <el-input v-model="dingTalkConfig.secret" :disabled="dingTalkConfig.enable === 0"
+            <el-input v-model="dingTalkConfig.secret" :disabled="dingTalkConfig.enable === 0" type="password"
               :placeholder="$t('notifyConfig.inputTip') + $t('notifyConfig.dingSecret')" />
           </el-form-item>
         </el-form>
@@ -123,6 +124,7 @@ import { useRequest } from "vue-request";
 import request from "@/request";
 import { useI18n } from "vue-i18n";
 import { cloneDeep } from 'lodash-es';
+import { encryptPassword } from '@/utils/jsencrypt'
 import type { FormInstance, FormRules } from 'element-plus'
 const { t } = useI18n();
 
@@ -249,14 +251,23 @@ const openLoading = () => {
 const closeLoading = () => {
   loading.value.close()
 }
-const testNotifyConfig = () => {
+const testNotifyConfig = async () => {
   let param = {}
   if (curType.value === 'email') {
     param = Object.assign(param, emailConfig.value)
+    if (param.passwd) {
+        param.passwd = await encryptPassword(param.passwd)
+    }
   } else if (curType.value === 'WeCom') {
     param = Object.assign(param, weComConfig.value)
+    if (param.secret) {
+        param.secret = await encryptPassword(param.secret)
+    }
   } else if (curType.value === 'DingTalk') {
     param = Object.assign(param, dingTalkConfig.value)
+    if (param.secret) {
+        param.secret = await encryptPassword(param.secret)
+    }
   }
   param = Object.assign(param, { notifyWayId: notifyWayId.value })
   openLoading()
@@ -312,7 +323,15 @@ const confirm = async () => {
       return
     }
   }
-  let params = [emailConfig.value, weComConfig.value, dingTalkConfig.value]
+  let params = cloneDeep([emailConfig.value, weComConfig.value, dingTalkConfig.value])
+  for(let param of params) {
+    if (param.passwd) {
+        param.passwd = await encryptPassword(param.passwd)
+    }
+    if (param.secret) {
+        param.secret = await encryptPassword(param.secret)
+    }
+  }
   request.post(`/api/v1/notifyConfig/list`, params).then((res: any) => {
     if (res && res.code === 200) {
       ElMessage({

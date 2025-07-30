@@ -24,18 +24,11 @@
 
 package com.nctigba.observability.instance.agent.config.runner;
 
-import cn.hutool.core.thread.ThreadUtil;
-import com.nctigba.observability.instance.agent.config.model.TargetConfig;
-import com.nctigba.observability.instance.agent.pool.SshClientNodeSessionPool;
 import com.nctigba.observability.instance.agent.service.ClientService;
-import com.nctigba.observability.instance.agent.service.TargetService;
-import com.nctigba.observability.instance.agent.util.DbUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 /**
  * Init Prometheus java client with yml file when startup
@@ -45,11 +38,7 @@ import java.util.List;
 @Component
 public class ClientInitRunner implements ApplicationRunner {
     @Autowired
-    TargetService targetService;
-    @Autowired
     ClientService clientService;
-    @Autowired
-    DbUtils dbUtils;
 
     /**
      * @inheritDoc
@@ -57,9 +46,5 @@ public class ClientInitRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         clientService.initClient();
-        List<TargetConfig> targetConfigs = targetService.getTargetConfigs();
-        for (TargetConfig targetConfig : targetConfigs) {
-            dbUtils.createDataSource(targetConfig.getNodeId());
-        }
     }
 }

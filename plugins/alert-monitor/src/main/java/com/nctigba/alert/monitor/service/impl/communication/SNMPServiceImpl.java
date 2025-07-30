@@ -27,6 +27,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.alert.monitor.constant.CommonConstants;
 import com.nctigba.alert.monitor.mapper.NotifyMessageMapper;
 import com.nctigba.alert.monitor.mapper.NotifyTemplateMapper;
@@ -37,6 +38,7 @@ import com.nctigba.alert.monitor.model.entity.NotifyTemplateDO;
 import com.nctigba.alert.monitor.model.entity.NotifyWayDO;
 import com.nctigba.alert.monitor.service.CommunicationService;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.snmp4j.AbstractTarget;
 import org.snmp4j.CommunityTarget;
 import org.snmp4j.PDU;
@@ -99,6 +101,9 @@ public class SNMPServiceImpl implements CommunicationService {
     private NotifyMessageMapper notifyMessageMapper;
     @Autowired
     private NotifyTemplateMapper templateMapper;
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
 
     @Override
     public void send(List<NotifyMessageDO> notifyMessageDOList) {
@@ -197,8 +202,8 @@ public class SNMPServiceImpl implements CommunicationService {
                         new OctetString(MPv3.createLocalEngineID()), 0);
                     SecurityModels.getInstance().addSecurityModel(usm);
                     OctetString userName = new OctetString(notifySnmpDto.getSnmpUsername());
-                    OctetString authPass = new OctetString(notifySnmpDto.getSnmpAuthPasswd());
-                    OctetString privPass = new OctetString(notifySnmpDto.getSnmpPrivPasswd());
+                    OctetString authPass = new OctetString(encryptionUtils.decrypt(notifySnmpDto.getSnmpAuthPasswd()));
+                    OctetString privPass = new OctetString(encryptionUtils.decrypt(notifySnmpDto.getSnmpPrivPasswd()));
                     snmp.getUSM().addUser(userName, new UsmUser(userName, AuthMD5.ID, authPass, PrivDES.ID, privPass));
                 }
                 snmp.send(pdu, target);

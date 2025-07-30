@@ -25,7 +25,6 @@
 package com.nctigba.observability.instance.agent.util;
 
 import cn.hutool.core.text.StrFormatter;
-import cn.hutool.core.thread.ThreadUtil;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.nctigba.observability.instance.agent.constant.CollectConstants;
 import com.nctigba.observability.instance.agent.enums.DbTypeEnum;
@@ -49,7 +48,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * Util to query database
@@ -183,7 +181,7 @@ public class DbUtils {
         String url = StrFormatter.format(dbTypeEnum.getUrlPattern(),
             targetConfig.getDbIp(), targetConfig.getDbPort());
         return DriverManager.getConnection(url, targetConfig.getDbUserName(),
-            targetConfig.getDbUserPassword());
+            RsaUtils.decrypt(targetConfig.getDbUserPassword()));
     }
 
     public void createDataSource(String nodeId) {
@@ -206,7 +204,7 @@ public class DbUtils {
             dataSource.setUrl(StrFormatter.format(dbTypeEnum.getUrlPattern(), targetConfig.getDbIp(),
                 targetConfig.getDbPort()));
             dataSource.setUsername(targetConfig.getDbUserName());
-            dataSource.setPassword(targetConfig.getDbUserPassword());
+            dataSource.setPassword(RsaUtils.decrypt(targetConfig.getDbUserPassword()));
             dataSource.setAsyncInit(true);
             dataSourceMap.put(nodeId, dataSource);
             dataSource.init();
