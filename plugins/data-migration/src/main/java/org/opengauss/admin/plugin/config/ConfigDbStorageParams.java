@@ -45,7 +45,6 @@ public class ConfigDbStorageParams implements TranscribeReplayConstants {
         this.sqlDatabasePort = config.get(SQL_DATABASE_PORT);
         this.sqlDatabaseUsername = config.get(SQL_DATABASE_USERNAME);
         this.sqlDatabaseName = config.get(SQL_DATABASE_NAME);
-        this.sqlDatabasePassword = config.get(SQL_DATABASE_PASSWORD);
         this.sqlTableName = config.get(SQL_TABLE_NAME);
     }
 }

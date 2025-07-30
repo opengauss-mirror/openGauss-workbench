@@ -15,6 +15,8 @@
 
 package org.opengauss.admin.plugin.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -24,11 +26,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.pagehelper.util.StringUtil;
-
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
-
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
@@ -37,19 +35,20 @@ import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.exception.ops.OpsException;
-import org.opengauss.admin.plugin.constants.TranscribeReplayConstants;
-import org.opengauss.admin.plugin.config.ConfigTranscribeTcpdumpParams;
-import org.opengauss.admin.plugin.config.ConfigTranscribeAttachParams;
-import org.opengauss.admin.plugin.config.ConfigTranscribeGeneralParams;
+import org.opengauss.admin.plugin.config.ConfigDbStorageParams;
 import org.opengauss.admin.plugin.config.ConfigParseParams;
 import org.opengauss.admin.plugin.config.ConfigReplayParams;
 import org.opengauss.admin.plugin.config.ConfigTcpdumpAndAttachSameParams;
-import org.opengauss.admin.plugin.config.ConfigDbStorageParams;
+import org.opengauss.admin.plugin.config.ConfigTranscribeAttachParams;
+import org.opengauss.admin.plugin.config.ConfigTranscribeGeneralParams;
+import org.opengauss.admin.plugin.config.ConfigTranscribeTcpdumpParams;
+import org.opengauss.admin.plugin.constants.TranscribeReplayConstants;
 import org.opengauss.admin.plugin.domain.FailSqlModel;
 import org.opengauss.admin.plugin.domain.SlowSqlModel;
 import org.opengauss.admin.plugin.domain.SqlDuration;
 import org.opengauss.admin.plugin.domain.TranscribeReplayHost;
 import org.opengauss.admin.plugin.domain.TranscribeReplayNodeInfo;
+import org.opengauss.admin.plugin.domain.TranscribeReplayPwdInfo;
 import org.opengauss.admin.plugin.domain.TranscribeReplaySlowSql;
 import org.opengauss.admin.plugin.domain.TranscribeReplayTask;
 import org.opengauss.admin.plugin.dto.TranscribeReplayTaskDto;
@@ -76,17 +75,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ListIterator;
-import java.util.Map;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
@@ -97,13 +98,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import javax.annotation.Resource;
-
-import java.nio.charset.StandardCharsets;
-
-import static org.opengauss.admin.plugin.enums.TranscribeReplaySqlTransMode.TCPDUMP;
 import static org.opengauss.admin.plugin.enums.TranscribeReplaySqlTransMode.ATTACH;
 import static org.opengauss.admin.plugin.enums.TranscribeReplaySqlTransMode.GENERAL;
+import static org.opengauss.admin.plugin.enums.TranscribeReplaySqlTransMode.TCPDUMP;
 
 /**
  * TranscribeReplay task Service
@@ -151,6 +148,8 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private OpsFacade opsFacade;
+    @Autowired
+    private TranscribeReplayHandle transcribeReplayHandle;
     @Autowired
     private Cache<Integer, Integer> resolvedObjectsNumberCache;
 
@@ -401,7 +400,6 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         sb.append(String.format(formatString, SHOULD_SEND_FILE, params.getShouldSendFile()));
         sb.append(String.format(formatString, REMOTE_RETRY_COUNT, params.getRemoteRetryCount()));
         sb.append(String.format(formatString, REMOTE_RECEIVER_NAME, params.getRemoteReceiverName()));
-        sb.append(String.format(formatString, REMOTE_RECEIVER_PASSWORD, remotePassword));
         sb.append(String.format(formatString, REMOTE_FILE_PATH, params.getRemoteFilePath()));
         sb.append(String.format(formatString, REMOTE_NODE_IP, params.getRemoteNodeIp()));
         sb.append(String.format(formatString, REMOTE_NODE_PORT, params.getRemoteNodePort()));
@@ -426,7 +424,6 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         sb.append(String.format(formatString, GENERAL_DATABASE_PORT, params.getDatabasePort()));
         sb.append(String.format(formatString, GENERAL_DATABASE_USERNAME, params.getDatabaseUsername()));
         String databasePassword = encryptionUtils.decrypt(params.getDatabasePassword());
-        sb.append(String.format(formatString, GENERAL_DATABASE_PASSWORD, databasePassword));
         return String.valueOf(sb);
     }
 
@@ -438,7 +435,6 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         sb.append(String.format(formatString, SQL_DATABASE_PORT, params.getSqlDatabasePort()));
         sb.append(String.format(formatString, SQL_DATABASE_USERNAME, params.getSqlDatabaseUsername()));
         String databasePassword = params.getSqlDatabasePassword();
-        sb.append(String.format(formatString, SQL_DATABASE_PASSWORD, databasePassword));
         sb.append(String.format(formatString, SQL_DATABASE_NAME, params.getSqlDatabaseName()));
         sb.append(String.format(formatString, SQL_TABLE_NAME, params.getSqlTableName()));
         return String.valueOf(sb);
@@ -505,7 +501,6 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         sb.append(String.format(formatString, SQL_REPLAY_SESSION_BLACK_LIST, params.getSqlReplaySessionBlackList()));
         sb.append(String.format(formatString, SQL_REPLAY_DATABASE_USERNAME, params.getSqlReplayDatabaseUsername()));
         String databasePassword = encryptionUtils.decrypt(params.getSqlReplayDatabasePassword());
-        sb.append(String.format(formatString, SQL_REPLAY_DATABASE_PASSWORD, databasePassword));
         sb.append(String.format(formatString, SQL_REPLAY_SLOW_SQL_CSV_DIR, params.getSqlReplaySlowSqlCsvDir()));
         sb.append(String.format(formatString, SQL_REPLAY_DATABASE_IP, params.getSqlReplayDatabaseIp()));
         sb.append(String.format(formatString, SQL_REPLAY_DATABASE_PORT, params.getSqlReplayDatabasePort()));
@@ -597,7 +592,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             TranscribeReplayTask transcribeReplayTask = getById(id);
             ShellInfoVo sourceShell = getShellInfo(id, transcribeReplayTask.getSourceDbType());
             if (Objects.nonNull(sourceShell)) {
-                JschResult result1 = TranscribeReplayHandle.removeSourcePath(sourceShell, transcribeReplayTask);
+                JschResult result1 = transcribeReplayHandle.removeSourcePath(sourceShell, transcribeReplayTask);
                 if (!result1.isOk()) {
                     transcribeReplayTask.setErrorMsg(result1.getResult());
                     updateStatus(transcribeReplayTask, TranscribeReplayStatus.RUN_FAIL);
@@ -606,7 +601,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             }
             ShellInfoVo targetShell = getShellInfo(id, TARGET_DB);
             if (Objects.nonNull(targetShell)) {
-                JschResult result2 = TranscribeReplayHandle.removeTargetPath(targetShell, transcribeReplayTask);
+                JschResult result2 = transcribeReplayHandle.removeTargetPath(targetShell, transcribeReplayTask);
                 if (!result2.isOk()) {
                     transcribeReplayTask.setErrorMsg(result2.getResult());
                     updateStatus(transcribeReplayTask, TranscribeReplayStatus.RUN_FAIL);
@@ -697,7 +692,8 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         ShellInfoVo shellInfo1 = getShellInfo(id, transcribeReplayTask.getSourceDbType());
         String jarName = String.format(JAR_NAME, transcribeReplayTask.getToolVersion());
         String sourceJarPath = transcribeReplayTask.getSourceInstallPath() + jarName;
-        JschResult result = TranscribeReplayHandle.startTranscribe(shellInfo1, transcribeReplayTask, sourceJarPath);
+        JschResult result = transcribeReplayHandle.startTranscribe(shellInfo1, transcribeReplayTask, sourceJarPath,
+                getPwdInfo(transcribeReplayTask));
         if (!result.isOk() || checkResult(result.getResult())) {
             transcribeReplayTask.setErrorMsg(result.getResult());
             updateStatus(transcribeReplayTask, TranscribeReplayStatus.RUN_FAIL);
@@ -712,7 +708,8 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             transcribeReplayTask.getSourceInstallPath());
         if ("tcpdump".equals(getTranscribeMode(FileUtils.catRemoteFileContents(transcribeFile, shellInfo1)))) {
             threadPoolTaskExecutor.submit(() -> checkTaskStatus(id, PARSE_RESULT_FILE));
-            JschResult parse = TranscribeReplayHandle.startParse(shellInfo2, transcribeReplayTask, targetJarPath);
+            JschResult parse = transcribeReplayHandle.startParse(shellInfo2, transcribeReplayTask, targetJarPath,
+                    getPwdInfo(transcribeReplayTask));
             if (!parse.isOk()) {
                 transcribeReplayTask.setErrorMsg(parse.getResult());
                 updateStatus(transcribeReplayTask, TranscribeReplayStatus.RUN_FAIL);
@@ -762,7 +759,8 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         String jarName = String.format(JAR_NAME, transcribeReplayTask.getToolVersion());
         String jarPath = transcribeReplayTask.getTargetInstallPath() + jarName;
         threadPoolTaskExecutor.submit(() -> checkTaskStatus(id, REPLAY_RESULT_FILE));
-        JschResult result = TranscribeReplayHandle.startReplay(targetShell, transcribeReplayTask, jarPath);
+        JschResult result = transcribeReplayHandle.startReplay(targetShell, transcribeReplayTask, jarPath,
+                getPwdInfo(transcribeReplayTask));
         if (!result.isOk()) {
             transcribeReplayTask.setErrorMsg(result.getResult());
             updateStatus(transcribeReplayTask, TranscribeReplayStatus.RUN_FAIL);
@@ -782,7 +780,8 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         ShellInfoVo sourceShell = getShellInfo(id, transcribeReplayTask.getSourceDbType());
         String jarName = String.format(JAR_NAME, transcribeReplayTask.getToolVersion());
         String sourceJarPath = transcribeReplayTask.getSourceInstallPath() + jarName;
-        JschResult result = TranscribeReplayHandle.startTranscribe(sourceShell, transcribeReplayTask, sourceJarPath);
+        JschResult result = transcribeReplayHandle.startTranscribe(sourceShell, transcribeReplayTask, sourceJarPath,
+                getPwdInfo(transcribeReplayTask));
         if (!result.isOk() || checkResult(result.getResult())) {
             transcribeReplayTask.setErrorMsg(result.getResult());
             updateStatus(transcribeReplayTask, TranscribeReplayStatus.RUN_FAIL);
@@ -796,7 +795,8 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             transcribeReplayTask.getSourceInstallPath());
         if ("tcpdump".equals(getTranscribeMode(FileUtils.catRemoteFileContents(transcribeFile, sourceShell)))) {
             threadPoolTaskExecutor.submit(() -> checkTaskStatus(id, PARSE_RESULT_FILE));
-            JschResult result2 = TranscribeReplayHandle.startParse(targetShell, transcribeReplayTask, targetJarPath);
+            JschResult result2 = transcribeReplayHandle.startParse(targetShell, transcribeReplayTask, targetJarPath,
+                    getPwdInfo(transcribeReplayTask));
             if (!result2.isOk()) {
                 transcribeReplayTask.setErrorMsg(result2.getResult());
                 updateStatus(transcribeReplayTask, TranscribeReplayStatus.RUN_FAIL);
@@ -809,10 +809,22 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         log.info("End task info: {}", JSON.toJSONString(transcribeReplayTask.getTaskName()));
     }
 
+    private TranscribeReplayPwdInfo getPwdInfo(TranscribeReplayTask transcribeReplayTask) {
+        String sourceNodeId = transcribeReplayTask.getSourceNodeId();
+        OpsJdbcDbClusterNodeEntity opsJdbcDbClusterNodeEntity = opsJdbcDbClusterNodeService.getById(sourceNodeId);
+        if (opsJdbcDbClusterNodeEntity == null) {
+            throw new OpsException("Source node " + sourceNodeId + " not found");
+        }
+        ShellInfoVo targetShell = getShellInfo(transcribeReplayTask.getId(), TARGET_DB);
+        return new TranscribeReplayPwdInfo(targetShell.getPassword(),
+                encryptionUtils.decrypt(opsJdbcDbClusterNodeEntity.getPassword()),
+                getNodeInfo(transcribeReplayTask).getPassword());
+    }
+
     private void clearTaskData(Integer id) {
         TranscribeReplayTask transcribeReplayTask = getById(id);
         ShellInfoVo targetShellInfo = getShellInfo(id, TARGET_DB);
-        TranscribeReplayHandle.removeData(targetShellInfo, transcribeReplayTask);
+        transcribeReplayHandle.removeData(targetShellInfo, transcribeReplayTask);
         deleteSlowTable(transcribeReplayTask);
         resolvedObjectsNumberCache.asMap().remove(id);
         transcribeReplayFailSqlService.deleteByTaskId(id);

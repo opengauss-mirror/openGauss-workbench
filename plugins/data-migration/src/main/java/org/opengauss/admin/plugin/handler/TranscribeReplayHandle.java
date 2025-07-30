@@ -25,17 +25,27 @@ package org.opengauss.admin.plugin.handler;
 
 import com.alibaba.fastjson.JSON;
 
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import lombok.extern.slf4j.Slf4j;
 
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
+import org.opengauss.admin.common.core.domain.model.ops.host.SSHBody;
+import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.common.utils.ops.JschUtil;
 import org.opengauss.admin.plugin.constants.TranscribeReplayConstants;
+import org.opengauss.admin.plugin.domain.TranscribeReplayPwdInfo;
 import org.opengauss.admin.plugin.domain.TranscribeReplayTask;
 import org.opengauss.admin.plugin.utils.ShellUtil;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * TranscribeReplay task Service
@@ -43,19 +53,25 @@ import java.util.Locale;
  * @since 2025/01/8
  * @author zzh
  */
+@Component
 @Slf4j
 public class TranscribeReplayHandle {
+    @Resource
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private JschUtil jschUtil;
+
     /**
      * startTranscribe
      *
      * @param shellInfoVo shellInfoVo
      * @param transcribeReplayTask transcribeReplayTask
      * @param jarPath jarPath
+     * @param pwdInfo pwdInfo
      * @return JschResult
      */
-    public static JschResult startTranscribe(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask,
-        String jarPath) {
-        return executeTask(shellInfoVo, transcribeReplayTask, jarPath, "transcribe");
+    public JschResult startTranscribe(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask,
+                                             String jarPath, TranscribeReplayPwdInfo pwdInfo) {
+        return executeTask(shellInfoVo, transcribeReplayTask, jarPath, "transcribe", pwdInfo);
     }
 
     /**
@@ -64,11 +80,12 @@ public class TranscribeReplayHandle {
      * @param shellInfoVo shellInfoVo
      * @param transcribeReplayTask transcribeReplayTask
      * @param jarPath jarPath
+     * @param pwdInfo pwdInfo
      * @return JschResult
      */
-    public static JschResult startParse(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask,
-        String jarPath) {
-        return executeTask(shellInfoVo, transcribeReplayTask, jarPath, "parse");
+    public JschResult startParse(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask,
+        String jarPath, TranscribeReplayPwdInfo pwdInfo) {
+        return executeTask(shellInfoVo, transcribeReplayTask, jarPath, "parse", pwdInfo);
     }
 
     /**
@@ -77,15 +94,16 @@ public class TranscribeReplayHandle {
      * @param shellInfoVo shellInfoVo
      * @param transcribeReplayTask transcribeReplayTask
      * @param jarPath jarPath
+     * @param pwdInfo pwdInfo
      * @return JschResult
      */
-    public static JschResult startReplay(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask,
-        String jarPath) {
-        return executeTask(shellInfoVo, transcribeReplayTask, jarPath, "replay");
+    public JschResult startReplay(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask,
+        String jarPath, TranscribeReplayPwdInfo pwdInfo) {
+        return executeTask(shellInfoVo, transcribeReplayTask, jarPath, "replay", pwdInfo);
     }
 
-    private static JschResult executeTask(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask,
-        String jarPath, String taskType) {
+    private JschResult executeTask(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask,
+        String jarPath, String taskType, TranscribeReplayPwdInfo pwdInfo) {
         log.info("Task host info: {}", JSON.toJSONString(shellInfoVo));
         StringBuilder commandSb = new StringBuilder();
         String installPath = getInstallPath(transcribeReplayTask, taskType);
@@ -97,10 +115,23 @@ public class TranscribeReplayHandle {
         commandSb.append(" 2>&1 | tee ").append(String.format("%s_result.log", taskType));
         commandSb.append("; exit ${PIPESTATUS[0]})");
         log.info("Start task {}, host: {}, command: {}", taskType, shellInfoVo.getIp(), commandSb.toString());
-        return ShellUtil.execCommandGetResult(shellInfoVo, commandSb.toString());
+        SSHBody sshBody = new SSHBody(shellInfoVo.getIp(),
+                shellInfoVo.getPort(),
+                shellInfoVo.getUsername(),
+                shellInfoVo.getPassword(), null);
+        Map<String, String> autoResponse = new HashMap<>();
+        autoResponse.put("(remote.receiver.password):", pwdInfo.getRemotePassword());
+        autoResponse.put("(general.database.password):", pwdInfo.getSourceNodePassword());
+        autoResponse.put("(sql.database.password):", pwdInfo.getTargetNodePassword());
+        autoResponse.put("(sql.replay.database.password):", pwdInfo.getTargetNodePassword());
+        try {
+            return jschUtil.executeCommand(commandSb.toString(), sshBody, autoResponse);
+        } catch (IOException | InterruptedException e) {
+            throw new OpsException(e.getMessage());
+        }
     }
 
-    private static String getInstallPath(TranscribeReplayTask transcribeReplayTask, String taskType) {
+    private String getInstallPath(TranscribeReplayTask transcribeReplayTask, String taskType) {
         switch (taskType.toLowerCase(Locale.ROOT)) {
             case "transcribe":
                 return transcribeReplayTask.getSourceInstallPath();
@@ -119,7 +150,7 @@ public class TranscribeReplayHandle {
      * @param transcribeReplayTask transcribeReplayTask
      * @return JschResult
      */
-    public static JschResult removeSourcePath(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask) {
+    public JschResult removeSourcePath(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask) {
         return removePath(shellInfoVo, transcribeReplayTask, "source");
     }
 
@@ -130,7 +161,7 @@ public class TranscribeReplayHandle {
      * @param transcribeReplayTask transcribeReplayTask
      * @return JschResult
      */
-    public static JschResult removeTargetPath(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask) {
+    public JschResult removeTargetPath(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask) {
         return removePath(shellInfoVo, transcribeReplayTask, "target");
     }
 
@@ -140,7 +171,7 @@ public class TranscribeReplayHandle {
      * @param shellInfoVo shellInfoVo
      * @param transcribeReplayTask transcribeReplayTask
      */
-    public static void removeData(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask) {
+    public void removeData(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask) {
         String removeProcess = String.format("rm -rf %s/%s %s/%s", transcribeReplayTask.getTargetInstallPath(),
             TranscribeReplayConstants.PARSE_PROCESS_FILE, transcribeReplayTask.getTargetInstallPath(),
             TranscribeReplayConstants.REPLAY_PROCESS_FILE);
@@ -153,7 +184,7 @@ public class TranscribeReplayHandle {
         ShellUtil.execCommand(shellInfoVo, removeTcpDumpFile);
     }
 
-    private static JschResult removePath(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask,
+    private JschResult removePath(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask,
         String pathType) {
         log.info("Remove {} host info: {}", pathType, JSON.toJSONString(shellInfoVo));
         String pathCmd = getPath(transcribeReplayTask, pathType);
@@ -163,7 +194,7 @@ public class TranscribeReplayHandle {
         return ShellUtil.execCommandGetResult(shellInfoVo, commandSb.toString());
     }
 
-    private static String getPath(TranscribeReplayTask transcribeReplayTask, String pathType) {
+    private String getPath(TranscribeReplayTask transcribeReplayTask, String pathType) {
         switch (pathType.toLowerCase(Locale.ROOT)) {
             case "source":
                 return getParentPath(transcribeReplayTask.getSourceInstallPath());
@@ -174,7 +205,7 @@ public class TranscribeReplayHandle {
         }
     }
 
-    private static String getParentPath(String path) {
+    private String getParentPath(String path) {
         Path fullPath = Paths.get(path);
         Path parentPath = fullPath.getParent();
         if (parentPath != null) {

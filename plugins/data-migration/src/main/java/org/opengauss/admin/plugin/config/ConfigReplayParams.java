@@ -84,7 +84,6 @@ public class ConfigReplayParams implements TranscribeReplayConstants {
         this.sqlReplaySessionWhiteList = config.get(SQL_REPLAY_SESSION_WHITE_LIST);
         this.sqlReplaySessionBlackList = config.get(SQL_REPLAY_SESSION_BLACK_LIST);
         this.sqlReplayDatabaseUsername = config.get(SQL_REPLAY_DATABASE_USERNAME);
-        this.sqlReplayDatabasePassword = config.get(SQL_REPLAY_DATABASE_PASSWORD);
         this.sqlReplaySlowSqlCsvDir = config.get(SQL_REPLAY_SLOW_SQL_CSV_DIR);
         if (GENERAL.getMode().equals(config.get(SQL_TRANSCRIBE_MODE))) {
             this.sqlReplaySlowSqlCsvDir = tp.getSourceInstallPath() + "/" + downloadId;
