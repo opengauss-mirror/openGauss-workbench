@@ -26,7 +26,14 @@ package org.opengauss.admin.plugin.utils;
 
 import cn.hutool.extra.ssh.JschRuntimeException;
 import cn.hutool.extra.ssh.JschUtil;
-import com.jcraft.jsch.*;
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpATTRS;
+import com.jcraft.jsch.SftpException;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.utils.StringUtils;
@@ -34,14 +41,18 @@ import org.opengauss.admin.plugin.exception.ShellException;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ByteArrayInputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.StringJoiner;
 
@@ -158,6 +169,142 @@ public class ShellUtil {
             }
         }
         return jschResult;
+    }
+
+    /**
+     * Execute interactive command
+     *
+     * @param shellInfo shell information
+     * @param command command
+     * @param inputMap input map, key is the prompt, value is the input
+     */
+    public static void execInteractiveCommand(
+            ShellInfoVo shellInfo, String command, LinkedHashMap<String, String> inputMap) {
+        Session session = null;
+        Channel channel = null;
+        try {
+            session = getSession(shellInfo);
+            channel = session.openChannel("exec");
+            if (channel instanceof ChannelExec) {
+                ((ChannelExec) channel).setCommand(command);
+            }
+
+            try (InputStream in = channel.getInputStream();
+                 OutputStream out = channel.getOutputStream()) {
+                channel.connect();
+                byte[] buffer = new byte[1024];
+                StringBuilder responseBuilder = new StringBuilder();
+                boolean shouldContinue = true;
+
+                while (shouldContinue && !channel.isClosed()) {
+                    while (in.available() > 0) {
+                        int len = in.read(buffer);
+                        if (len < 0) {
+                            break;
+                        }
+
+                        responseBuilder.append(new String(buffer, 0, len, StandardCharsets.UTF_8));
+                        shouldContinue = processInteractivePrompts(responseBuilder, out, inputMap);
+                        if (!shouldContinue) {
+                            break;
+                        }
+                    }
+
+                    if (shouldContinue && !channel.isClosed()) {
+                        Thread.sleep(100);
+                    }
+                }
+            }
+        } catch (JSchException | InterruptedException | IOException e) {
+            log.error("Failed to exec command: {}", command, e);
+        } finally {
+            if (channel != null && channel.isConnected()) {
+                channel.disconnect();
+            }
+            if (session != null && session.isConnected()) {
+                session.disconnect();
+            }
+        }
+    }
+
+    /**
+     * Execute interactive command with result
+     *
+     * @param shellInfo shell information
+     * @param command command
+     * @param inputMap input map, key is the prompt, value is the input
+     * @return command result
+     */
+    public static String execInteractiveCommandWithResult(
+            ShellInfoVo shellInfo, String command, LinkedHashMap<String, String> inputMap) {
+        Session session = null;
+        Channel channel = null;
+        StringBuilder responseBuilder = new StringBuilder();
+
+        try {
+            session = getSession(shellInfo);
+            channel = session.openChannel("exec");
+            if (channel instanceof ChannelExec) {
+                ((ChannelExec) channel).setCommand(command);
+            }
+
+            try (InputStream in = channel.getInputStream();
+                 OutputStream out = channel.getOutputStream()) {
+                channel.connect();
+                byte[] buffer = new byte[1024];
+
+                while (!channel.isClosed()) {
+                    while (in.available() > 0) {
+                        int len = in.read(buffer);
+                        if (len < 0) {
+                            break;
+                        }
+                        responseBuilder.append(new String(buffer, 0, len, StandardCharsets.UTF_8));
+                        if (!inputMap.isEmpty()) {
+                            processInteractivePrompts(responseBuilder, out, inputMap);
+                        }
+                    }
+
+                    if (!channel.isClosed()) {
+                        Thread.sleep(100);
+                    }
+                }
+            }
+        } catch (JSchException | InterruptedException | IOException e) {
+            log.error("Failed to exec command: {}", command, e);
+        } finally {
+            if (channel != null && channel.isConnected()) {
+                channel.disconnect();
+            }
+            if (session != null && session.isConnected()) {
+                session.disconnect();
+            }
+        }
+        return responseBuilder.toString();
+    }
+
+    private static boolean processInteractivePrompts(StringBuilder responseBuilder, OutputStream out,
+                                                     Map<String, String> inputMap) throws IOException {
+        for (Iterator<Map.Entry<String, String>> it = inputMap.entrySet().iterator(); it.hasNext();) {
+            Map.Entry<String, String> entry = it.next();
+            if (responseBuilder.toString().contains(entry.getKey())) {
+                out.write((entry.getValue() + "\n").getBytes(StandardCharsets.UTF_8));
+                out.flush();
+                it.remove();
+                responseBuilder.setLength(0);
+                break;
+            }
+        }
+        return !inputMap.isEmpty();
+    }
+
+    private static Session getSession(ShellInfoVo shellInfo) throws JSchException {
+        JSch jsch = new JSch();
+        Session session = jsch.getSession(shellInfo.getUsername(), shellInfo.getIp(), shellInfo.getPort());
+        session.setPassword(shellInfo.getPassword());
+        session.setConfig("StrictHostKeyChecking", "no");
+        session.connect();
+        return session;
     }
 
     private static int getExitCode(ChannelExec channelExec) {

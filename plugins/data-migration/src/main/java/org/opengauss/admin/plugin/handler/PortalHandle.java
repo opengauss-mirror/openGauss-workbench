@@ -37,6 +37,7 @@ import org.opengauss.admin.plugin.enums.ToolsConfigEnum;
 import org.opengauss.admin.plugin.exception.PortalInstallException;
 import org.opengauss.admin.plugin.utils.ShellUtil;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
+import org.springframework.util.ObjectUtils;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -259,19 +260,27 @@ public class PortalHandle {
                                                 String portalJarName, Map<String, String> paramMap, String command) {
         log.info("run host info: {}", JSON.toJSONString(host));
         String portalHome = host.getInstallPath() + "portal/";
-        String params = paramMap.entrySet().stream().map(p -> {
-            return " -D" + p.getKey() + "=" + p.getValue();
-        }).collect(Collectors.joining());
         StringBuilder commandSb = new StringBuilder();
         commandSb.append("java -Dpath=").append(portalHome);
         commandSb.append(" -Dworkspace.id=").append(task.getId());
-        commandSb.append(params);
+        setPortalParams(commandSb, paramMap);
         commandSb.append(" -Dorder.invoked.timestamp=").append(task.getOrderInvokedTimestamp());
         commandSb.append(" -Dorder=").append(command);
         commandSb.append(" -Dskip=true -jar ").append(portalHome).append(portalJarName);
         log.info("check before migration,host: {}, command: {}", host.getHost(), commandSb);
-        return ShellUtil.execCommandGetResult(host.getHost(), host.getPort(), host.getRunUser(),
-                host.getRunPassword(), commandSb.toString());
+
+        LinkedHashMap<String, String> inputMap = getInteractParams(paramMap);
+        String commandResult = ShellUtil.execInteractiveCommandWithResult(
+                new ShellInfoVo(host.getHost(), host.getPort(), host.getRunUser(), host.getRunPassword()),
+                commandSb.toString(), inputMap);
+        JschResult jschResult = new JschResult();
+        if (ObjectUtils.isEmpty(commandResult)) {
+            jschResult.setExitCode(1);
+            jschResult.setResult("check before migration failed");
+            return jschResult;
+        }
+        jschResult.setResult(commandResult);
+        return jschResult;
     }
 
     /**
@@ -282,22 +291,39 @@ public class PortalHandle {
      * @param paramMap parameter
      * @param portalJarName portalJarName
      */
-    public static void startPortal(MigrationHostPortalInstall host, MigrationTask task, String portalJarName, Map<String, String> paramMap) {
+    public static void startPortal(MigrationHostPortalInstall host, MigrationTask task, String portalJarName,
+                                   Map<String, String> paramMap) {
         log.info("run host info: {}", JSON.toJSONString(host));
         String portalHome = host.getInstallPath() + "portal/";
-        String params = paramMap.entrySet().stream().map(p -> {
-            return " -D" + p.getKey() + "=" + p.getValue();
-        }).collect(Collectors.joining());
         StringBuilder commandSb = new StringBuilder();
         commandSb.append("java -Dpath=").append(portalHome);
         commandSb.append(" -Dworkspace.id=").append(task.getId());
-        commandSb.append(params);
+        setPortalParams(commandSb, paramMap);
         commandSb.append(" -Dorder.invoked.timestamp=").append(task.getOrderInvokedTimestamp());
         commandSb.append(" -Ddatakit.timezone=").append(ZoneId.systemDefault().toString());
         commandSb.append(" -Dorder=").append(task.getMigrationOperations());
         commandSb.append(" -Dskip=true -jar ").append(portalHome).append(portalJarName);
         log.info("start portal,host: {}, command: {}", host.getHost(), commandSb.toString());
-        ShellUtil.execCommand(host.getHost(), host.getPort(), host.getRunUser(), host.getRunPassword(), commandSb.toString());
+        LinkedHashMap<String, String> inputMap = getInteractParams(paramMap);
+        ShellUtil.execInteractiveCommand(
+                new ShellInfoVo(host.getHost(), host.getPort(), host.getRunUser(), host.getRunPassword()),
+                commandSb.toString(), inputMap);
+    }
+
+    private static void setPortalParams(StringBuilder commandSb, Map<String, String> paramMap) {
+        for (Map.Entry<String, String> entry : paramMap.entrySet()) {
+            if (entry.getKey().contains("user.password")) {
+                continue;
+            }
+            commandSb.append(" -D").append(entry.getKey()).append("=").append(entry.getValue());
+        }
+    }
+
+    private static LinkedHashMap<String, String> getInteractParams(Map<String, String> paramMap) {
+        LinkedHashMap<String, String> inputMap = new LinkedHashMap<>();
+        inputMap.put("Please input your MySQL user password:", paramMap.remove("mysql.user.password"));
+        inputMap.put("Please input your openGauss user password:", paramMap.remove("opengauss.user.password"));
+        return inputMap;
     }
 
     /**
