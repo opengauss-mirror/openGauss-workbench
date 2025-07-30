@@ -102,7 +102,6 @@
   const confirmSubmit = () => {
     formRef.value?.validate(valid => {
       if (!valid) {
-        console.log(form)
         // return
         updateCode({
           oldPassword: form.oldPassword,

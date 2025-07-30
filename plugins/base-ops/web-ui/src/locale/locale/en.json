@@ -465,7 +465,8 @@
               "onlineDownload": "Online Download",
               "ipNoticeError": "IP Down",
               "portOccupied": "Port is occupied, unable to save",
-              "notificationText": "Match the following installation package based on the configuration and download it:"
+              "notificationText": "Match the following installation package based on the configuration and download it:",
+              "passwdWarning": "For security reasons, passwords cannot be displayed. Please re-enter your password to make changes。"
             }
           },
             "step2s5cf2y0": "Environmental monitoring in progress...",
@@ -844,7 +845,8 @@
             "test18": "RDMA working config",
             "collapse1": "sharing storage configuration",
             "option1": "Master Slave Arch",
-            "option2": "Sharing Storage Arch"
+            "option2": "Sharing Storage Arch",
+            "passwdWarning": "For security reasons, passwords cannot be displayed."
         },
         "EnterpriseInstall": {
             "else2": "prompt",

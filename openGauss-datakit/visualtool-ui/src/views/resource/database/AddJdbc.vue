@@ -425,14 +425,13 @@ const open = async (type: string, editData?: KeyValue) => {
       })
       let flag = true;
       for (const item of editData.nodes) {
-        const password = await decryptPassword(item.password)
         const temp = {
           id: item.clusterNodeId,
           url: item.url,
           ip: item.ip,
           port: Number(item.port),
           username: item.username,
-          password: password || '',
+          password: '',
           props: getProps(item.url),
           status: jdbcStatusEnum.unTest
         }

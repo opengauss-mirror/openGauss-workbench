@@ -1,5 +1,5 @@
 import JSEncrypt from 'jsencrypt/bin/jsencrypt.min'
-import { getEntryKey, getDecryptKey } from '@/api/ops'
+import { getEntryKey } from '@/api/ops'
 import { KeyValue } from '@/types/global'
 
 const isEncryptedData = (data: string | null) => {
@@ -31,10 +31,3 @@ export async function encryptPassword(pwd: string) {
 
 }
 
-// host password decryption
-export async function decryptPassword(encryPwd: string) {
-  const isEncryptTxt = isEncryptedData(encryPwd);
-  if (!isEncryptTxt) return encryPwd;
-  const res: KeyValue = await getDecryptKey(encryPwd);
-  return res.password // decrypt the data
-}

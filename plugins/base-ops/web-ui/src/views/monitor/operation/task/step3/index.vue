@@ -127,7 +127,7 @@ import {KeyValue} from "@/types/global";
 import { defineProps } from 'vue'
 import {OpenGaussVersionEnum} from "@/types/ops/install";
 import {batchClusterNodes, getHostIp, getPackageList} from "@/api/ops";
-import { encryptPassword, decryptPassword } from "@/utils/jsencrypt";
+import { encryptPassword } from "@/utils/jsencrypt";
 
 const props = defineProps({
   message: Array,
@@ -214,7 +214,7 @@ const init = () => {
       list.packageName = res.data.packageName
       list.packageId = res.data.packageId
       list.clusterName = res.data.clusterName
-      list.databasePassword = await decryptPassword(res.data.databasePassword)
+      list.databasePassword = res.data.databasePassword
       list.port = Number(res.data.databasePort)
       list.installPackagePath = res.data.installPackagePath
       list.installPath = res.data.installPath
