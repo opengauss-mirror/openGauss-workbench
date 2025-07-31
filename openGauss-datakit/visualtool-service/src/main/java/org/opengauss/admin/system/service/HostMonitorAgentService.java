@@ -29,10 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.opengauss.admin.common.constant.AgentConstants;
 import org.opengauss.admin.common.core.domain.entity.agent.MetricRealTime;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
-import org.opengauss.admin.common.core.domain.model.agent.HostBaseInfo;
 import org.opengauss.admin.common.utils.MathUtils;
-import org.opengauss.admin.system.service.ops.IHostService;
 import org.opengauss.agent.repository.MetricRealTimeStorageService;
 import org.springframework.stereotype.Service;
 
@@ -41,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
@@ -55,12 +51,10 @@ import javax.annotation.Resource;
 @Slf4j
 @Service
 public class HostMonitorAgentService {
-    // cacheMap  : hostId : item : value
-    private final Map<String, HostBaseInfo> hostBasicMap = new ConcurrentHashMap<>();
-    @Resource
-    private IHostService hostService;
     @Resource
     private MetricRealTimeStorageService metricRealTimeStorageService;
+    @Resource
+    private HostBasicService hostBasicService;
 
     /**
      * start agent host monitor scheduled
@@ -75,68 +69,19 @@ public class HostMonitorAgentService {
             .collect(Collectors.groupingBy(metric -> String.valueOf(metric.getAgentId()), Collectors.toList()));
         agentMetricsMap.forEach((hostId, metrics) -> {
             cacheMap.compute(hostId, (k, v) -> {
-                if (v == null) {
+                if (Objects.isNull(v)) {
                     v = new HashMap<>();
                 }
-                cacheHostBasicInfo(k, v);
+                // cache host basic info from local db cache ops_host
+                v.putAll(hostBasicService.getHostBasicInfoMap(k));
+                // if agent metrics has current host id, update cache
                 if (agentMetricsMap.containsKey(hostId)) {
-                    v = refreshHostMonitorCache(agentMetricsMap.get(hostId));
+                    v.putAll(refreshHostMonitorCache(agentMetricsMap.get(hostId)));
                 }
                 return v;
             });
         });
         return agentMetricsMap.keySet();
-    }
-
-    private void cacheHostBasicInfo(String hostId, Map<String, String> hostInfoMap) {
-        HostBaseInfo hostBaseInfo = hostBasicMap.compute(hostId, (k, v) -> {
-            if (v == null) {
-                OpsHostEntity host = hostService.getById(hostId);
-                return HostBaseInfo.builder()
-                    .hostName(host.getHostname())
-                    .agentId(host.getHostId())
-                    .cpuArchitecture(host.getCpuArch())
-                    .cpuModel(host.getCpuModel())
-                    .cpuFreq(host.getCpuFreq())
-                    .physicalCores(host.getPhysicalCores())
-                    .logicalCores(host.getLogicalCores())
-                    .osName(host.getOs())
-                    .osVersion(host.getOsVersion())
-                    .osBuild(host.getOsBuild())
-                    .build();
-            } else {
-                return v;
-            }
-        });
-        if (Objects.isNull(hostBaseInfo)) {
-            return;
-        }
-        hostBasicMap.put(hostBaseInfo.getAgentId(), hostBaseInfo);
-        updateHostMonitorCache(hostInfoMap, hostBaseInfo);
-    }
-
-    /**
-     * update HostMonitorCacheService
-     *
-     * @param hostInfoMap host info map
-     * @param hostBaseInfo hostBaseInfo
-     */
-    public void updateHostMonitorCache(Map<String, String> hostInfoMap, HostBaseInfo hostBaseInfo) {
-        // 1. 使用辅助方法处理键值对的插入
-        putIfValid(hostInfoMap, AgentConstants.HostMetric.CPU_ARCH, hostBaseInfo.getCpuArchitecture());
-        putIfValid(hostInfoMap, AgentConstants.HostMetric.CPU_CORE_NUM, String.valueOf(hostBaseInfo.getLogicalCores()));
-        // 2. 特殊处理 CPU_FREQUENCY
-        if (hostBaseInfo.getCpuFreq() > 0) {
-            String freqValue = hostBaseInfo.getCpuFreq() + "GHz";
-            if (StrUtil.isNotEmpty(freqValue)) {
-                hostInfoMap.put(AgentConstants.HostMetric.CPU_FREQUENCY, freqValue);
-            }
-        } else {
-            hostInfoMap.put(AgentConstants.HostMetric.CPU_FREQUENCY, "Unknown Frequency Of lscpu cmd");
-        }
-        // 3. 统一处理其他字段
-        putIfValid(hostInfoMap, AgentConstants.HostMetric.OS_NAME, hostBaseInfo.getOsName());
-        putIfValid(hostInfoMap, AgentConstants.HostMetric.OS_VERSION, hostBaseInfo.getOsVersion());
     }
 
     private Map<String, String> refreshHostMonitorCache(List<MetricRealTime> metrics) {
@@ -161,8 +106,28 @@ public class HostMonitorAgentService {
                 }
             }
         }
+        String networkName = extractNetworkInterfaceName(metrics);
+        refreshHostNetWork(cache, networkName);
         refreshHostDiskUsage(cache);
         return cache;
+    }
+
+    private String extractNetworkInterfaceName(List<MetricRealTime> metrics) {
+        return metrics.stream()
+            .filter(metric -> metric.getMetric().equalsIgnoreCase(AgentConstants.HostMetric.SYSTEM_NETWORK_SENT))
+            .map(MetricRealTime::getProperty)
+            .filter(prop -> StrUtil.isNotEmpty(prop) && !StrUtil.equalsIgnoreCase(prop, "none"))
+            .distinct()
+            .collect(Collectors.joining(":"));
+    }
+
+    private void refreshHostNetWork(Map<String, String> cache, String networkName) {
+        if (cache.containsKey(AgentConstants.HostMetric.SYSTEM_NETWORK_RECEIVED) && cache.containsKey(
+            AgentConstants.HostMetric.SYSTEM_NETWORK_SENT)) {
+            String netMonitor = networkName + "|" + cache.get(AgentConstants.HostMetric.SYSTEM_NETWORK_SENT) + "|"
+                + cache.get(AgentConstants.HostMetric.SYSTEM_NETWORK_RECEIVED);
+            cache.put(AgentConstants.HostMetric.NET_MONITOR, netMonitor);
+        }
     }
 
     /**
@@ -193,20 +158,5 @@ public class HostMonitorAgentService {
                 return MathUtils.add(v, metricValue);
             }
         });
-    }
-
-    private void putIfValid(Map<String, String> map, String key, String value) {
-        if (StrUtil.isNotEmpty(value)) {
-            map.put(key, value);
-        }
-    }
-
-    /**
-     * delete host cache
-     *
-     * @param hostId host id
-     */
-    public void deleteHostCache(String hostId) {
-        hostBasicMap.remove(hostId);
     }
 }

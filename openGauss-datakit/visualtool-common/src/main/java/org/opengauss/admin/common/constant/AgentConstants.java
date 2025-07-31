@@ -255,6 +255,11 @@ public interface AgentConstants {
         String CPU_FREQUENCY = "system.cpu.max.freq";
 
         /**
+         * system cpu min frequency regex
+         */
+        String CPU_FREQ_REGEX = "-?\\d+(\\.\\d+)?";
+
+        /**
          * system os name
          */
         String OS_NAME = "system.os.name";

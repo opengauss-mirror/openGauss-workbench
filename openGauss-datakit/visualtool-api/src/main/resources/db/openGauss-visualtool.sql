@@ -513,8 +513,8 @@ CREATE TABLE IF NOT EXISTS "public"."ops_host" (
     "cpu_model" varchar(255) ,
     "cpu_arch" varchar(64) ,
     "cpu_freq" varchar(64) ,
-    "physical_cores" varchar(64) ,
-    "logical_cores" varchar(64) ,
+    "physical_cores" int4 ,
+    "logical_cores" int4 ,
     "remark" varchar(255) COLLATE "pg_catalog"."default",
     "create_by" varchar(64) COLLATE "pg_catalog"."default",
     "create_time" timestamp(6),
@@ -2260,13 +2260,13 @@ END IF;
 IF
 ( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host'' AND COLUMN_NAME = ''physical_cores'' ) = 0
 THEN
-ALTER TABLE ops_host ADD COLUMN physical_cores varchar(64);
+ALTER TABLE ops_host ADD COLUMN physical_cores int4;
 COMMENT ON COLUMN "public"."ops_host"."physical_cores" IS ''CPU 物理核数'';
 END IF;
 IF
 ( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''ops_host'' AND COLUMN_NAME = ''logical_cores'' ) = 0
 THEN
-ALTER TABLE ops_host ADD COLUMN logical_cores varchar(255);
+ALTER TABLE ops_host ADD COLUMN logical_cores int4;
 COMMENT ON COLUMN "public"."ops_host"."logical_cores" IS ''CPU逻辑核数'';
 END IF;
 RETURN 0;

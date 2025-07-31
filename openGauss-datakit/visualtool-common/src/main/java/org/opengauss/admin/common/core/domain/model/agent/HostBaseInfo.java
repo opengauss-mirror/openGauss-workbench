@@ -35,7 +35,7 @@ public class HostBaseInfo {
     private String hostName;
     private String cpuModel;
     private String cpuArchitecture;
-    private long cpuFreq;
+    private String cpuFreq;
     private int physicalCores;
     private int logicalCores;
     private String osName;

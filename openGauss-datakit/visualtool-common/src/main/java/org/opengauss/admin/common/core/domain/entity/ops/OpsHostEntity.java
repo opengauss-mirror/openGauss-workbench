@@ -53,7 +53,7 @@ public class OpsHostEntity extends BaseEntity {
     private String osBuild;
     private String cpuArch;
     private String cpuModel;
-    private long cpuFreq;
+    private String cpuFreq;
     private int physicalCores;
     private int logicalCores;
     @TableField(exist = false)
