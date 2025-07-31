@@ -25,7 +25,7 @@ import java.io.File;
  * @since 7.0.0-RC2
  **/
 public class AgentCmdBuilder {
-    private static final String STOP_AGENT_CMD_TEMPLATE = "pgrep -f \"%s\" | xargs -r kill -9";
+    private static final String STOP_AGENT_CMD_TEMPLATE = "pgrep -f  %s/%s | xargs -r kill -9";
     private static final String START_AGENT_CMD_TEMPLATE
         = "nohup java -Dquarkus.config.locations=%s/application.yml -jar %s/%s >/dev/null 2>&1 &";
     private static final String CHECK_DIR_EXIST_CMD_TEMPLATE = "[ -d \"%s\" ] && echo 'exist' || echo 'not_exist'";
@@ -40,15 +40,14 @@ public class AgentCmdBuilder {
     private static final String CHECK_AGENT_RUNNING_CMD_TEMPLATE = "pgrep -f \"%s\"";
 
     /**
-     * stop Agent "pgrep -f \"%s\" | xargs -r kill -9"
+     * stop Agent "pgrep -f %s/%s | xargs -r kill -9"
      *
      * @param installPath installPath
      * @param agentName agentName
      * @return command
      */
     public static String buildStopAgentCommand(String installPath, String agentName) {
-        String agentPath = joinPath(installPath, agentName);
-        return String.format(STOP_AGENT_CMD_TEMPLATE, agentPath);
+        return String.format(STOP_AGENT_CMD_TEMPLATE, installPath, agentName);
     }
 
     /**

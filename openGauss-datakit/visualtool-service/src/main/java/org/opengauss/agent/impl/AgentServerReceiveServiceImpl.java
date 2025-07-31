@@ -21,7 +21,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.agent.AgentTaskConfig;
 import org.opengauss.admin.common.core.domain.model.agent.HostBaseInfo;
 import org.opengauss.admin.common.utils.OpsAssert;
-import org.opengauss.admin.system.service.HostMonitorCacheService;
+import org.opengauss.admin.system.service.HostBasicService;
 import org.opengauss.admin.system.service.ops.IHostService;
 import org.opengauss.agent.data.CustomEventConfig;
 import org.opengauss.agent.data.CustomMetricData;
@@ -50,7 +50,7 @@ public class AgentServerReceiveServiceImpl implements IAgentServerReceiveService
     @Resource
     private IHostService hostService;
     @Resource
-    private HostMonitorCacheService hostMonitorCacheService;
+    private HostBasicService hostBasicService;
     @Resource
     private AgentTaskConfigService agentTaskConfigService;
     @Resource
@@ -76,7 +76,7 @@ public class AgentServerReceiveServiceImpl implements IAgentServerReceiveService
         host.setLogicalCores(hostBaseInfo.getLogicalCores());
 
         hostService.updateById(host);
-        hostMonitorCacheService.updateHostMonitorCache(hostBaseInfo);
+        hostBasicService.getHostBasicInfo(agentId);
         log.info("refresh host info success,hostId:{} : {}", agentId, hostBaseInfo);
     }
 

@@ -29,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.opengauss.admin.common.constant.AgentConstants;
 import org.opengauss.admin.common.core.domain.entity.agent.TaskMetricsDefinition;
-import org.opengauss.admin.common.core.domain.model.agent.HostBaseInfo;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -63,6 +62,8 @@ public class HostMonitorCacheService {
     private HostMonitorAgentService hostMonitorAgentService;
     @Resource
     private ScheduledExecutorService scheduledExecutorService;
+    @Resource
+    private HostBasicService hostBasicService;
     private final List<TaskMetricsDefinition> metricsDefinitionList = new LinkedList<>();
 
     /**
@@ -101,7 +102,7 @@ public class HostMonitorCacheService {
         }
         // cache does not have host info, try to get from ssh
         if (!cacheMap.containsKey(hostId)) {
-            refreshCache(hostId, hostMonitorSshService.getHostBasicInfo(hostId));
+            refreshCache(hostId, hostBasicService.getHostBasicInfoMap(hostId));
         }
         // cache does not have host info, return empty
         if (!cacheMap.containsKey(hostId)) {
@@ -155,7 +156,7 @@ public class HostMonitorCacheService {
     public void deleteHostCache(String hostId) {
         cacheMap.remove(hostId);
         hostMonitorSshService.deleteHostCache(hostId);
-        hostMonitorAgentService.deleteHostCache(hostId);
+        hostBasicService.deleteHostCache(hostId);
     }
 
     /**
@@ -299,22 +300,6 @@ public class HostMonitorCacheService {
      */
     public String getDiskUse(String hostId) {
         return getCacheValue(hostId, AgentConstants.HostMetric.SYSTEM_DISK_USAGE);
-    }
-
-    /**
-     * update host monitor cache
-     *
-     * @param hostBaseInfo hostBaseInfo
-     */
-    public void updateHostMonitorCache(HostBaseInfo hostBaseInfo) {
-        String agentId = hostBaseInfo.getAgentId();
-        cacheMap.compute(agentId, (k, v) -> {
-            if (v == null) {
-                v = new HashMap<>();
-            }
-            hostMonitorAgentService.updateHostMonitorCache(v, hostBaseInfo);
-            return v;
-        });
     }
 
     /**

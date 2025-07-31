@@ -76,7 +76,6 @@ import javax.annotation.Resource;
 public class HostMonitorSshService {
     // cacheMap  : hostId : item : value
     private final Map<String, SshLogin> sshHostMap = new ConcurrentHashMap<>();
-    private final Map<String, HostBaseInfo> hostBasicMap = new ConcurrentHashMap<>();
     @Resource
     private IHostService hostService;
     @Resource
@@ -85,6 +84,8 @@ public class HostMonitorSshService {
     private EncryptionUtils encryptionUtils;
     @Resource
     private JschExecutorService jschExecutorService;
+    @Resource
+    private HostBasicService hostBasicService;
 
     /**
      * init host monitor cache environment
@@ -110,21 +111,26 @@ public class HostMonitorSshService {
      */
     public void startHostMonitorScheduled(Map<String, Map<String, String>> cacheMap, Set<String> agentSet) {
         for (Map.Entry<String, Map<String, String>> cacheEntry : cacheMap.entrySet()) {
-            if (agentSet.contains(cacheEntry.getKey())) {
+            String hostId = cacheEntry.getKey();
+            if (agentSet.contains(hostId)) {
                 continue;
             }
-            SshLogin sshLogin = getOpsHostSsh(cacheEntry.getKey());
+            SshLogin sshLogin = getOpsHostSsh(hostId);
             Map<String, String> value = cacheEntry.getValue();
-            cacheHostBasicInfo(cacheEntry.getKey(), value);
-            value.putAll(executeHostMonitorBySshCommand(sshLogin));
-            cacheMap.put(cacheEntry.getKey(), value);
+            value.putAll(executeHostMonitorBySshCommand(hostId, sshLogin));
+            cacheMap.put(hostId, value);
         }
     }
 
-    private Map<String, String> executeHostMonitorBySshCommand(SshLogin sshLogin) {
+    private Map<String, String> executeHostMonitorBySshCommand(String hostId, SshLogin sshLogin) {
         Map<String, String> cache = new HashMap<>();
         try {
-            cacheHostFixedInfo(cache, sshLogin);
+            HostBaseInfo hostBasicInfo = hostBasicService.getHostBasicInfo(hostId);
+            if (Objects.isNull(hostBasicInfo)) {
+                cacheHostFixedInfo(hostId, cache, sshLogin);
+            } else {
+                hostBasicService.updateHostMonitorCache(cache, hostBasicInfo);
+            }
             cacheHostRealtimeInfo(cache, sshLogin);
         } catch (OpsException ex) {
             log.error("executeHostMonitorBySshCommand error,hostId:{},error:{}", sshLogin.getHost(), ex.getMessage());
@@ -134,33 +140,10 @@ public class HostMonitorSshService {
         return cache;
     }
 
-    /**
-     * update HostMonitorCacheService
-     *
-     * @param hostInfoMap host info map
-     * @param hostBaseInfo hostBaseInfo
-     */
-    private void updateHostMonitorCache(Map<String, String> hostInfoMap, HostBaseInfo hostBaseInfo) {
-        // 1. 使用辅助方法处理键值对的插入
-        putIfValid(hostInfoMap, CPU_ARCH, hostBaseInfo.getCpuArchitecture());
-        if (hostBaseInfo.getLogicalCores() > 0) {
-            putIfValid(hostInfoMap, CPU_CORE_NUM, String.valueOf(hostBaseInfo.getLogicalCores()));
-        }
-        // 2. 特殊处理 CPU_FREQUENCY
-        if (hostBaseInfo.getCpuFreq() > 0) {
-            String freqValue = hostBaseInfo.getCpuFreq() + "GHz";
-            hostInfoMap.put(CPU_FREQUENCY, freqValue);
-            putIfValid(hostInfoMap, CPU_FREQUENCY, freqValue);
-        }
-        // 3. 统一处理其他字段
-        putIfValid(hostInfoMap, OS_NAME, hostBaseInfo.getOsName());
-        putIfValid(hostInfoMap, OS_VERSION, hostBaseInfo.getOsVersion());
-    }
-
-    private void cacheHostFixedInfo(Map<String, String> hostInfoMap, SshLogin sshLogin) {
-        os(sshLogin, hostInfoMap);
-        osVersion(sshLogin, hostInfoMap);
-        cpu(sshLogin, hostInfoMap);
+    private void cacheHostFixedInfo(String hostId, Map<String, String> hostInfoMap, SshLogin sshLogin) {
+        os(hostId, sshLogin, hostInfoMap);
+        osVersion(hostId, sshLogin, hostInfoMap);
+        cpu(hostId, sshLogin, hostInfoMap);
         disk(sshLogin, hostInfoMap);
     }
 
@@ -176,18 +159,6 @@ public class HostMonitorSshService {
     }
 
     /**
-     * get host basic info
-     *
-     * @param hostId host id
-     * @return host basic info
-     */
-    public Map<String, String> getHostBasicInfo(String hostId) {
-        Map<String, String> hostInfoMap = new HashMap<>();
-        cacheHostBasicInfo(hostId, hostInfoMap);
-        return hostInfoMap;
-    }
-
-    /**
      * cache host os name, os version, migration info
      *
      * @param hostId host id
@@ -195,12 +166,11 @@ public class HostMonitorSshService {
      * @return value
      */
     public String getSshHostSingleInfo(String hostId, String key) {
-        Map<String, String> hostInfoMap = new HashMap<>();
-        cacheHostBasicInfo(hostId, hostInfoMap);
+        Map<String, String> hostInfoMap = hostBasicService.getHostBasicInfoMap(hostId);
         SshLogin sshLogin = getOpsHostSsh(hostId);
         switch (key) {
-            case OS_NAME -> os(sshLogin, hostInfoMap);
-            case OS_VERSION -> osVersion(sshLogin, hostInfoMap);
+            case OS_NAME -> os(hostId, sshLogin, hostInfoMap);
+            case OS_VERSION -> osVersion(hostId, sshLogin, hostInfoMap);
             case MIGRATION_HOST -> hostForMigration(sshLogin, hostInfoMap);
             default -> ignoreEmpty("getSshHostSingleInfo not found " + sshLogin.toString() + " key " + key);
         }
@@ -219,11 +189,10 @@ public class HostMonitorSshService {
      * @return host info
      */
     public Map<String, String> getSshHostInfo(String hostId, String key) {
-        Map<String, String> hostInfoMap = new HashMap<>();
-        cacheHostBasicInfo(hostId, hostInfoMap);
+        Map<String, String> hostInfoMap = hostBasicService.getHostBasicInfoMap(hostId);
         SshLogin sshLogin = getOpsHostSsh(hostId);
         switch (key) {
-            case CPU_ARCH, CPU_CORE_NUM, CPU_FREQUENCY -> cpu(sshLogin, hostInfoMap);
+            case CPU_ARCH, CPU_CORE_NUM, CPU_FREQUENCY -> cpu(hostId, sshLogin, hostInfoMap);
             case DISK_MONITOR, SYSTEM_DISK_TOTAL, SYSTEM_DISK_USED, SYSTEM_DISK_FREE, SYSTEM_DISK_USAGE ->
                 disk(sshLogin, hostInfoMap);
             case SYSTEM_MEMORY_AVAILABLE, SYSTEM_MEMORY_TOTAL, SYSTEM_MEMORY_USAGE -> memory(sshLogin, hostInfoMap);
@@ -314,10 +283,11 @@ public class HostMonitorSshService {
     /**
      * get cpu info : CPU_ARCH, CPU_CORE_NUM, CPU_FREQUENCY
      *
+     * @param hostId hostId
      * @param sshLogin ssh login
      * @param hostInfoMap host info map
      */
-    private void cpu(SshLogin sshLogin, Map<String, String> hostInfoMap) {
+    private void cpu(String hostId, SshLogin sshLogin, Map<String, String> hostInfoMap) {
         if (hostInfoMap.containsKey(CPU_ARCH) && hostInfoMap.containsKey(CPU_CORE_NUM) && hostInfoMap.containsKey(
             CPU_FREQUENCY)) {
             return;
@@ -347,6 +317,7 @@ public class HostMonitorSshService {
             }
             hostService.updateHostCpu(sshLogin.getHost(), hostInfoMap.get(CPU_ARCH), hostInfoMap.get(CPU_CORE_NUM),
                 hostInfoMap.get(CPU_FREQUENCY));
+            hostBasicService.refreshCacheOfHostBasicInfo(hostId);
         } catch (OpsException ex) {
             throw new OpsException("get cpu " + ex.getMessage());
         }
@@ -356,7 +327,7 @@ public class HostMonitorSshService {
         return String.format("%.2fGHz", Float.parseFloat(cpuMHz) / 1000);
     }
 
-    private void osVersion(SshLogin sshLogin, Map<String, String> hostInfoMap) {
+    private void osVersion(String hostId, SshLogin sshLogin, Map<String, String> hostInfoMap) {
         if (hostInfoMap.containsKey(OS_VERSION)) {
             return;
         }
@@ -366,12 +337,13 @@ public class HostMonitorSshService {
                 hostInfoMap.put(OS_VERSION, res);
             }
             hostService.updateHostOsVersion(sshLogin.getHost(), res);
+            hostBasicService.refreshCacheOfHostBasicInfo(hostId);
         } catch (OpsException ex) {
             throw new OpsException("get os version " + ex.getMessage());
         }
     }
 
-    private void os(SshLogin sshLogin, Map<String, String> hostInfoMap) {
+    private void os(String hostId, SshLogin sshLogin, Map<String, String> hostInfoMap) {
         if (hostInfoMap.containsKey(OS_NAME)) {
             return;
         }
@@ -381,39 +353,10 @@ public class HostMonitorSshService {
                 hostInfoMap.put(OS_NAME, res);
             }
             hostService.updateHostOsName(sshLogin.getHost(), res);
+            hostBasicService.refreshCacheOfHostBasicInfo(hostId);
         } catch (OpsException ex) {
             throw new OpsException("get os " + ex.getMessage());
         }
-    }
-
-    /**
-     * cache host basic info
-     *
-     * @param hostId host id
-     * @param hostInfoMap host info map
-     */
-    public void cacheHostBasicInfo(String hostId, Map<String, String> hostInfoMap) {
-        HostBaseInfo hostBaseInfo = hostBasicMap.compute(hostId, (k, v) -> {
-            if (v == null) {
-                OpsHostEntity host = hostService.getById(hostId);
-                return HostBaseInfo.builder()
-                    .hostName(host.getHostname())
-                    .agentId(host.getHostId())
-                    .cpuArchitecture(host.getCpuArch())
-                    .cpuModel(host.getCpuModel())
-                    .cpuFreq(host.getCpuFreq())
-                    .physicalCores(host.getPhysicalCores())
-                    .logicalCores(host.getLogicalCores())
-                    .osName(host.getOs())
-                    .osVersion(host.getOsVersion())
-                    .osBuild(host.getOsBuild())
-                    .build();
-            } else {
-                return v;
-            }
-        });
-        hostBasicMap.put(hostBaseInfo.getAgentId(), hostBaseInfo);
-        updateHostMonitorCache(hostInfoMap, hostBaseInfo);
     }
 
     /**

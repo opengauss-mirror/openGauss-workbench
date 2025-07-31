@@ -76,6 +76,7 @@ public class AesGcmUtils {
                     aesKey = KeyLoader.loadOrGenerateKey();
                 }
             }
+            log.info("initialize AES key success");
         }
     }
 

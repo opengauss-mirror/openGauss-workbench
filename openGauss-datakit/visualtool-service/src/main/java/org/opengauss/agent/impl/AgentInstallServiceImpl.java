@@ -297,7 +297,7 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
     private void stopAgent(AgentInstallEntity agent) {
         String stopCmd = AgentCmdBuilder.buildStopAgentCommand(agent.getInstallPath(), agentName);
         String execResult = jschExecutorService.execCommand(agentSshLoginService.getSshLogin(agent), stopCmd);
-        log.info("stop agent result: {}", execResult);
+        log.info("stop agent result: {} {}", stopCmd, execResult);
         update(Wrappers.lambdaUpdate(AgentInstallEntity.class)
             .eq(AgentInstallEntity::getAgentId, agent.getAgentId())
             .set(AgentInstallEntity::getStatus, AgentStatus.STOP));

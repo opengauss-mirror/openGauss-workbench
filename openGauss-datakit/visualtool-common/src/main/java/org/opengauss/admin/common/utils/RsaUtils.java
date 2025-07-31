@@ -53,6 +53,7 @@ public class RsaUtils {
             KeyPair keyPair = gen.generateKeyPair();
             PUBLIC_KEY_CACHE.set(Base64.encodeBase64String(keyPair.getPublic().getEncoded()));
             PRIVATE_KEY_CACHE.set(Base64.encodeBase64String(keyPair.getPrivate().getEncoded()));
+            log.info("RSA key pair generation success");
         } catch (NoSuchAlgorithmException e) {
             log.error("RSA key pair generation failed", e);
             throw new SecureException("Critical failure: RSA key generation failed: " + e.getMessage());
