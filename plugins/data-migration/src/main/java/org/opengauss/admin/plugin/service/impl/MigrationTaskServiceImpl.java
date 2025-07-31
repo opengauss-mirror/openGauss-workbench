@@ -1042,6 +1042,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         resultMap.put("opengauss.database.schema", task.getSourceDb());
         resultMap.put("migration_mode", task.getMigrationModelId() + "");
         resultMap.put("is_adjustKernel_param", task.getIsAdjustKernelParam() + "");
+        resultMap.put("enable.stdin.password", "true");
 
         if (globalParamMap.keySet().size() > 0) {
             resultMap.putAll(globalParamMap);
