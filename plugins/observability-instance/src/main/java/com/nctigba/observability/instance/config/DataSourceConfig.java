@@ -23,19 +23,20 @@
 
 package com.nctigba.observability.instance.config;
 
-import com.alibaba.druid.pool.DruidDataSource;
-import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
 import com.baomidou.dynamic.datasource.creator.DruidDataSourceCreator;
 import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
 import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceProperties;
-import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.druid.DruidConfig;
 import com.gitee.starblues.bootstrap.PluginContextHolder;
 import com.gitee.starblues.spring.environment.EnvironmentProvider;
+import com.nctigba.observability.instance.enums.DbDataLocationEnum;
+import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.boot.jdbc.init.DataSourceScriptDatabaseInitializer;
+import org.springframework.boot.sql.init.DatabaseInitializationMode;
+import org.springframework.boot.sql.init.DatabaseInitializationSettings;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -43,6 +44,7 @@ import org.springframework.context.annotation.Profile;
 import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 /**
  * @author LZW
@@ -89,6 +91,35 @@ public class DataSourceConfig {
             initDbFile();
         }
         return d;
+    }
+
+    /**
+     * DataSourceScriptDatabaseInitializer
+     *
+     * @param dataSource DataSource
+     * @return DataSourceScriptDatabaseInitializer
+     */
+    @Bean
+    @Profile("!dev")
+    public DataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSource dataSource) {
+        EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();
+        String driverClassName = environmentProvider.getString("spring.datasource.driver-class-name");
+        Optional<DbDataLocationEnum> optional = DbDataLocationEnum.of(driverClassName);
+        if (!(dataSource instanceof DynamicRoutingDataSource)) {
+            throw new CustomException("datasource is not DynamicRoutingDataSource");
+        }
+        DynamicRoutingDataSource drds = (DynamicRoutingDataSource) dataSource;
+        DataSource primary = drds.getDataSource("primary");
+        DatabaseInitializationSettings settings = new DatabaseInitializationSettings();
+        settings.setContinueOnError(true);
+        settings.setSeparator(";");
+        settings.setMode(DatabaseInitializationMode.ALWAYS);
+        if (optional.isEmpty()) {
+            return new DataSourceScriptDatabaseInitializer(primary, new DatabaseInitializationSettings());
+        }
+        DbDataLocationEnum dataLocationEnum = optional.get();
+        settings.setDataLocations(dataLocationEnum.getLocations());
+        return new DataSourceScriptDatabaseInitializer(primary, settings);
     }
 
     private void initDbFile() throws IOException {
