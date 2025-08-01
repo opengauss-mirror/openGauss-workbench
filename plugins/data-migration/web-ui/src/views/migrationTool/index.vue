@@ -180,7 +180,7 @@
           show-overflow-tooltip
         >
           <template #default="{ row }">
-            {{row.baseInfos.cpuCoreNum}}
+            {{ row.baseInfos?.cpuCoreNum != null && row.baseInfos.cpuCoreNum !== '' ? `${row.baseInfos.cpuCoreNum}` : '--' }}
           </template>
         </el-table-column>
         <el-table-column
@@ -189,7 +189,7 @@
           show-overflow-tooltip
         >
           <template #default="{ row }">
-            {{row.baseInfos.cpuUsing}}%
+            {{ row.baseInfos?.cpuUsing != null && row.baseInfos.cpuUsing !== '' ? `${row.baseInfos.cpuUsing}%` : '--' }}
           </template>
         </el-table-column>
         <el-table-column
@@ -198,7 +198,7 @@
           show-overflow-tooltip
         >
           <template #default="{ row }">
-            {{row.baseInfos.remainingMemory}}M
+            {{ row.baseInfos?.remainingMemory != null && row.baseInfos.remainingMemory !== '' ? `${row.baseInfos.remainingMemory}M` : '--' }}
           </template>
         </el-table-column>
         <el-table-column
@@ -207,7 +207,7 @@
           show-overflow-tooltip
         >
           <template #default="{ row }">
-            {{row.baseInfos.availableDiskSpace}}G
+            {{ row.baseInfos?.availableDiskSpace != null && row.baseInfos.availableDiskSpace !== '' ? `${row.baseInfos.availableDiskSpace}G` : '--' }}
           </template>
         </el-table-column>
         <el-table-column
@@ -362,9 +362,6 @@ const handleCurrentChange = (val) => {
   pagination.current = val
   getHostsData()
 }
-
-
-const changeSubmitLoading = inject('changeSubmitLoading')
 
 const emits = defineEmits(['syncHost'])
 
@@ -587,7 +584,6 @@ const handlePkgDelete = () => {
 
 const handleDelete = (record) => {
   tableLoading.value = true
-  changeSubmitLoading(true)
   deletePortal(record.hostId)
     .then(() => {
       const deletedRow = tableData.value.find(
@@ -598,12 +594,10 @@ const handleDelete = (record) => {
       nextTick(() => {
         selectionChange()
         tableLoading.value = false
-        changeSubmitLoading(false)
       })
     })
     .catch(() => {
       tableLoading.value = false
-      changeSubmitLoading(false)
     })
 }
 
@@ -652,7 +646,6 @@ const handleBatchRemove = () => {
   })
   removeLoading.value = true
   tableLoading.value = true
-  changeSubmitLoading(true)
   Promise.all(removeReqList)
     .then((res) => {
       const deletedRows = tableData.value.filter(
@@ -665,13 +658,11 @@ const handleBatchRemove = () => {
         selectionChange()
         removeLoading.value = false
         tableLoading.value = false
-        changeSubmitLoading(false)
       })
     })
     .catch(() => {
       removeLoading.value = false
       tableLoading.value = false
-      changeSubmitLoading(false)
     })
 }
 
