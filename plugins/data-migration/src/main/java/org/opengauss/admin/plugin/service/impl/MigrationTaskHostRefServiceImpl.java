@@ -129,6 +129,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static org.opengauss.admin.plugin.enums.DbTypeEnum.MYSQL;
@@ -143,6 +151,15 @@ import static org.opengauss.admin.plugin.enums.DbTypeEnum.POSTGRESQL;
 @Slf4j
 public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHostRefMapper, MigrationTaskHostRef>
     implements MigrationTaskHostRefService {
+    private static final ExecutorService EXECUTOR_SERVICE = new ThreadPoolExecutor(
+            1,
+            1,
+            0L,
+            TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<>(10),
+            Executors.defaultThreadFactory(),
+            new ThreadPoolExecutor.AbortPolicy()
+    );
 
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
@@ -245,10 +262,6 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                     return;
                 }
                 HostBaseInfoVo opsHosInfo = getHostBaseInfo(host.getHostId());
-                if (opsHosInfo.isEmpty()) {
-                    log.warn("Host no install , opsHostInfo is empty {}", host);
-                    return;
-                }
                 eachOne.setBaseInfos(opsHosInfo);
                 eachOne.setInstallPortalStatus(PortalInstallStatus.NOT_INSTALL.getCode());
             } else {
@@ -257,10 +270,6 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                     return;
                 }
                 HostBaseInfoVo hostInfo = getHostBaseInfo(host.getHostId());
-                if (hostInfo.isEmpty()) {
-                    log.warn("Host install , opsHostInfo is empty {}", host);
-                    return;
-                }
                 eachOne.setBaseInfos(hostInfo);
                 eachOne.setInstallInfo(installHost);
                 eachOne.setInstallPortalStatus(installHost.getInstallStatus());
@@ -287,17 +296,30 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     }
 
     private HostBaseInfoVo getHostBaseInfo(String hostId) {
-        HostBaseInfoVo result = new HostBaseInfoVo();
-        String hostInfo = hostMonitorFacade.getMigrationHostInfo(hostId);
-        String[] parts = hostInfo.split("\n");
-        if (parts.length != 3) {
+        Future<HostBaseInfoVo> future = EXECUTOR_SERVICE.submit(() -> {
+            HostBaseInfoVo result = new HostBaseInfoVo();
+            String hostInfo = hostMonitorFacade.getMigrationHostInfo(hostId);
+            String[] parts = hostInfo.split("\n");
+            if (parts.length != 3) {
+                return result;
+            }
+            result.setCpuCoreNum(parts[0]);
+            result.setRemainingMemory(parts[1]);
+            result.setAvailableDiskSpace(parts[2]);
+            result.setCpuUsing(hostMonitorFacade.getCpuUsing(hostId));
             return result;
+        });
+
+        try {
+            return future.get(5, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            log.warn("get host base info timeout, hostId: {}", hostId);
+        } catch (ExecutionException | InterruptedException e) {
+            log.warn("get host base info error, hostId: {}, cause: {}", hostId, e.getMessage());
+        } finally {
+            future.cancel(true);
         }
-        result.setCpuCoreNum(parts[0]);
-        result.setRemainingMemory(parts[1]);
-        result.setAvailableDiskSpace(parts[2]);
-        result.setCpuUsing(hostMonitorFacade.getCpuUsing(hostId));
-        return result;
+        return new HostBaseInfoVo();
     }
 
     @Override

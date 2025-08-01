@@ -30,23 +30,43 @@ public class HostBaseInfoVo implements Comparable<HostBaseInfoVo> {
 
     @Override
     public int compareTo(@NotNull HostBaseInfoVo o) {
-        int cpuCoreNumCompare = Integer.compare(Integer.parseInt(o.getCpuCoreNum()), Integer.parseInt(getCpuCoreNum()));
-        if (cpuCoreNumCompare != 0) {
-            return cpuCoreNumCompare;
+        if (isEmpty() || o.isEmpty()) {
+            return 0;
         }
 
-        int cpuUsingCompare = Float.compare(Float.parseFloat(getCpuUsing()), Float.parseFloat(o.getCpuUsing()));
-        if (cpuUsingCompare != 0) {
-            return cpuUsingCompare;
+        try {
+            int compared = Integer.compare(Integer.parseInt(o.getCpuCoreNum()), Integer.parseInt(getCpuCoreNum()));
+            if (compared != 0) {
+                return compared;
+            }
+        } catch (NumberFormatException e) {
+            return 0;
         }
 
-        int remainingMemoryCompare = Double.compare(
-                Double.parseDouble(o.getRemainingMemory()), Double.parseDouble(getRemainingMemory()));
-        if (remainingMemoryCompare != 0) {
-            return remainingMemoryCompare;
+        try {
+            int cpuUsingCompare = Float.compare(Float.parseFloat(getCpuUsing()), Float.parseFloat(o.getCpuUsing()));
+            if (cpuUsingCompare != 0) {
+                return cpuUsingCompare;
+            }
+        } catch (NumberFormatException e) {
+            return 0;
         }
 
-        return Float.compare(
-                Float.parseFloat(o.getAvailableDiskSpace()), Float.parseFloat(getAvailableDiskSpace()));
+        try {
+            int remainingMemoryCompare = Double.compare(
+                    Double.parseDouble(o.getRemainingMemory()), Double.parseDouble(getRemainingMemory()));
+            if (remainingMemoryCompare != 0) {
+                return remainingMemoryCompare;
+            }
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+
+        try {
+            return Float.compare(
+                    Float.parseFloat(o.getAvailableDiskSpace()), Float.parseFloat(getAvailableDiskSpace()));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 }
