@@ -188,8 +188,11 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 .forEach(t -> {
                     MigrationTaskStatusRecord lastTaskStatus = migrationTaskStatusRecordService.getLastByTaskId(t
                             .getId());
-                    if (lastTaskStatus != null && lastTaskStatus.getStatusId() == 6 && "1.00".equals(mainTask
-                            .getExecProgress())) {
+                    if (lastTaskStatus == null || !"1.00".equals(mainTask.getExecProgress())) {
+                        return;
+                    }
+                    if ((lastTaskStatus.getStatusId() == 3 && DbTypeEnum.POSTGRESQL.equals(t.getSourceDbType()))
+                            || lastTaskStatus.getStatusId() == 6) {
                         mainTask.setExecStatus(MainTaskStatus.SUCCESS.getCode());
                         updateById(mainTask);
                     }
