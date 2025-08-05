@@ -75,7 +75,7 @@ sha256sum Datakit-6.0.0.tar.gz
 2. 插件开发脚手架项目是为了方便开发者快速开发与平台适配的插件，而搭建的插件开发脚手架，开发者可在此脚手架之上开发业务功能。该脚手架配置的各项依赖版本已经经过验证，和平台兼容性最好，因此建议不要修改依赖版本。
 
 ## 编译代码
-1. 请提前安装java 11+, maven 3.8.0+, node v18+(含npm)，并配置好maven镜像源和node镜像源
+1. 请提前安装java 17+, maven 3.9.0+, node v18+(含npm)，并配置好maven镜像源和node镜像源
 2. 执行`sh build.sh`
 3. 编译输出件在output/Datakit-${pom_version}.tar.gz
 
@@ -157,9 +157,9 @@ sha256sum Datakit-6.0.0.tar.gz
    ```
    *注意*：此处为一条完整命令。
 6. 启动与日常运维\
-   启动应用：
+   启动应用： 启动脚本增加`--aes-key`参数。 参数值为Datakit启动密码，用于内部加解密操作，datakit不保存该密码且暂不支持修改，对该密码需要妥善保管。
    ```shell
-   sh ./run.sh start
+   sh ./run.sh start --aes-key xxxxxx
    ```
    停止应用：
    ```shell
@@ -167,7 +167,7 @@ sha256sum Datakit-6.0.0.tar.gz
    ```
    重启应用：
    ```shell
-   sh ./run.sh restart
+   sh ./run.sh restart --aes-key xxxxxx
    ```
    检查应用状态：
    ```shell
