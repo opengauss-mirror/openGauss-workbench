@@ -73,7 +73,7 @@ stop() {
 
     if [ -s "${PID_FILE}" ]; then
         PID=$(cat "${PID_FILE}")
-        kill "${PID}" >/dev/null 2>&1
+        kill -9 "${PID}" >/dev/null 2>&1
         rm -f "${PID_FILE}"
         echo "${APP_NAME} stopped."
     else
