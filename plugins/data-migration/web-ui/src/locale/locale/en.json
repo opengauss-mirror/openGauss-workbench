@@ -771,7 +771,7 @@
       "5qofqisf68w0": "wal_level not found",
       "5qtkk99a2eo0": "The target data source does not support reverse migration, please select a data source imported or installed on the platform",
       "5qtkk88a2eo0": "Please confirm if the application has stopped?",
-      "5qtkk98a2eo0": "The incremental migration is abnormal, please confirm whether to stop?",
+      "5qtkk98a2eo0": "Please confirm whether you want to end the incremental migration?",
       "5qtkk97a2eo0": "The target end has not yet equalized the data, please confirm whether to stop?",
       "5qtkk97a2eo1": "Service Availability:  ",
       "5qtkk97a2eo2": "available;",
