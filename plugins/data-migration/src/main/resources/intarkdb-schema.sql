@@ -727,7 +727,7 @@ CREATE TABLE IF NOT EXISTS "tb_migration_task_check_progress_detail" (
     "failed_rows" int8,
     "repair_file_name" varchar(255),
     "message" text,
-    "create_time" timestamp DEFAULT CURRENT_TIMESTAMP
+    "create_time" timestamp DEFAULT now()
     );
 COMMENT ON COLUMN "tb_migration_task_check_progress_detail"."id" IS 'ID';
 COMMENT ON COLUMN "tb_migration_task_check_progress_detail"."task_id" IS '迁移任务ID';
