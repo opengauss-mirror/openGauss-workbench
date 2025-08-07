@@ -226,14 +226,7 @@ public class MultiDbPortal extends MigrationPortal {
         Integer execStatus = task.getExecStatus();
         wsInfo.setExecStatus(execStatus);
         wsInfo.setExceptionAlertTotalCount(0L);
-        if (task.getFinishTime() != null || TaskStatus.MIGRATION_FINISH.getCode().equals(execStatus)
-                || TaskStatus.MIGRATION_ERROR.getCode().equals(execStatus)
-                || TaskStatus.CHECK_ERROR.getCode().equals(execStatus)
-                || TaskStatus.WAIT_RESOURCE.getCode().equals(execStatus)) {
-            wsInfo.setExecutedTime(Duration.between(task.getExecTime(), task.getFinishTime()).toSeconds());
-        } else {
-            wsInfo.setExecutedTime(Duration.between(task.getExecTime(), Instant.now()).toSeconds());
-        }
+        setExecuteTime(wsInfo, task);
         setProcessDetailAndStatusRecord(wsInfo, task);
         setFullMigrationObjectCounter(wsInfo, task);
         wsInfo.setTask(task);
@@ -247,6 +240,27 @@ public class MultiDbPortal extends MigrationPortal {
         }
         wsInfo.setLogs(logPaths);
         return wsInfo;
+    }
+
+    private void setExecuteTime(MigrationTaskWebsocketInfoDto wsInfo, MigrationTask task) {
+        if (task.getExecTime() == null) {
+            log.error("task exec time is null, taskId={}", task.getId());
+            return;
+        }
+
+        Integer execStatus = task.getExecStatus();
+        if (TaskStatus.MIGRATION_FINISH.getCode().equals(execStatus)
+                || TaskStatus.MIGRATION_ERROR.getCode().equals(execStatus)
+                || TaskStatus.CHECK_ERROR.getCode().equals(execStatus)
+                || TaskStatus.WAIT_RESOURCE.getCode().equals(execStatus)) {
+            if (task.getFinishTime() == null) {
+                log.error("task finish time is null, taskId={}", task.getId());
+                return;
+            }
+            wsInfo.setExecutedTime(Duration.between(task.getExecTime(), task.getFinishTime()).toSeconds());
+        } else {
+            wsInfo.setExecutedTime(Duration.between(task.getExecTime(), Instant.now()).toSeconds());
+        }
     }
 
     /**

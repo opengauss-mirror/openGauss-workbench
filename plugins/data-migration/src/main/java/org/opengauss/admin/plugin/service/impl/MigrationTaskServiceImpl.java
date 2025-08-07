@@ -15,6 +15,7 @@ package org.opengauss.admin.plugin.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.thread.ThreadUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -29,6 +30,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
+import org.opengauss.admin.common.core.handler.ops.cache.TaskManager;
+import org.opengauss.admin.common.core.ws.WsConnectorManager;
 import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.OpsAssert;
@@ -60,6 +63,7 @@ import org.opengauss.admin.plugin.enums.ProcessType;
 import org.opengauss.admin.plugin.enums.TaskOperate;
 import org.opengauss.admin.plugin.enums.TaskStatus;
 import org.opengauss.admin.plugin.enums.ToolsConfigEnum;
+import org.opengauss.admin.plugin.exception.MigrationTaskException;
 import org.opengauss.admin.plugin.handler.MigrationRecoveryHandler;
 import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationSourceDbTypeMapper;
@@ -84,6 +88,7 @@ import org.opengauss.admin.plugin.vo.ProcessStatus;
 import org.opengauss.admin.plugin.vo.TaskProcessStatus;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
+import org.opengauss.admin.system.plugin.facade.WsFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -92,6 +97,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
+import javax.websocket.Session;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Path;
@@ -107,6 +113,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -200,6 +207,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
 
     @Autowired
     private MultiDbPortal multiDbPortal;
+
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private WsFacade wsFacade;
 
     @Override
     public void initMigrationTaskCheckProgressMonitor() {
@@ -323,15 +334,6 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             return multiDbPortal.getWsData(task);
         }
 
-        MigrationTaskStatusRecord lastTaskStatus = migrationTaskStatusRecordService.getLastByTaskId(taskId);
-        wsInfo.setCurrentExecStatus(lastTaskStatus.getStatusId());
-        wsInfo.setExecStatus(task.getExecStatus());
-        wsInfo.setExceptionAlertTotalCount(alertMapper.countGroupAlertByTaskId(taskId));
-        if (task.getFinishTime() == null) {
-            wsInfo.setExecutedTime(Duration.between(task.getExecTime(), task.getCurrentTime()).toSeconds());
-        } else {
-            wsInfo.setExecutedTime(Duration.between(task.getExecTime(), task.getFinishTime()).toSeconds());
-        }
         setProcessExecDetails(task, wsInfo);
         MigrationTaskExecResultDetail fullProcess = wsInfo.getFullProcess();
         if (fullProcess != null && StringUtils.isNotBlank(fullProcess.getExecResultDetail())) {
@@ -351,6 +353,15 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             wsInfo.setTotalRunningCount(processCounter.getTotalRunningCount());
             wsInfo.setTotalSuccessCount(processCounter.getTotalSuccessCount());
             wsInfo.setTotalErrorCount(processCounter.getTotalErrorCount());
+        }
+        MigrationTaskStatusRecord lastTaskStatus = migrationTaskStatusRecordService.getLastByTaskId(taskId);
+        wsInfo.setCurrentExecStatus(lastTaskStatus.getStatusId());
+        wsInfo.setExecStatus(task.getExecStatus());
+        wsInfo.setExceptionAlertTotalCount(alertMapper.countGroupAlertByTaskId(taskId));
+        if (task.getFinishTime() == null) {
+            wsInfo.setExecutedTime(Duration.between(task.getExecTime(), task.getCurrentTime()).toSeconds());
+        } else {
+            wsInfo.setExecutedTime(Duration.between(task.getExecTime(), task.getFinishTime()).toSeconds());
         }
         return wsInfo;
     }
@@ -483,6 +494,34 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             migLogsInfo.put("total", filterLogPaths.size());
         }
         return migLogsInfo;
+    }
+
+    @Override
+    public synchronized void sendMigrationDataByWebsocket(Integer id, String sessionId) {
+        Runnable worker = TaskManager.getRegistryWorker(sessionId);
+        if (worker != null) {
+            return;
+        }
+
+        String pluginId = "data-migration";
+        Session session = WsConnectorManager.getSession(pluginId, sessionId);
+        if (session == null) {
+            throw new MigrationTaskException("websocket session not exist");
+        }
+
+        worker = () -> {
+            while (session.isOpen()) {
+                try {
+                    wsFacade.sendMessage("data-migration", sessionId, JSON.toJSONString(getFullDataById(id)));
+                    ThreadUtil.safeSleep(1000L);
+                } catch (Exception e) {
+                    log.error("Send migration data by websocket error", e);
+                }
+            }
+        };
+        TaskManager.registryWorker(sessionId, worker);
+        Future<?> future = threadPoolTaskExecutor.submit(worker);
+        TaskManager.registry(sessionId, future);
     }
 
     private List<String> getFilterLogPaths(Map<String, String> logsMap, String fileName) {

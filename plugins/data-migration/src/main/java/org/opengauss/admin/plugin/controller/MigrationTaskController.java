@@ -25,7 +25,6 @@
 package org.opengauss.admin.plugin.controller;
 
 import cn.hutool.core.date.DateUtil;
-import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +32,6 @@ import org.opengauss.admin.common.annotation.Log;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.common.enums.BusinessType;
-import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.plugin.domain.MigrationMainTask;
@@ -48,12 +46,17 @@ import org.opengauss.admin.plugin.service.MigrationMainTaskService;
 import org.opengauss.admin.plugin.service.MigrationTaskService;
 import org.opengauss.admin.plugin.utils.FileUtils;
 import org.opengauss.admin.plugin.vo.FullCheckParam;
-import org.opengauss.admin.system.plugin.facade.WsFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedOutputStream;
@@ -61,7 +64,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author xielibo
@@ -71,8 +73,6 @@ import java.util.concurrent.TimeUnit;
 @RequestMapping("/migration")
 @Slf4j
 public class MigrationTaskController extends BaseController {
-    private static final String DATA_MIGRATION = "data-migration";
-
     @Autowired
     private MigrationTaskService migrationTaskService;
 
@@ -80,15 +80,8 @@ public class MigrationTaskController extends BaseController {
     private MigrationMainTaskService migrationMainTaskService;
 
     @Autowired
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
-
-    @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private EncryptionUtils encryptionUtils;
-
-    @Autowired
-    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-    private WsFacade wsFacade;
 
     /**
      * page list
@@ -245,17 +238,7 @@ public class MigrationTaskController extends BaseController {
     @GetMapping(value = "/subTaskInfo/{id}/{sessionId}")
     public AjaxResult sendMigrationDataByWebsocket(@PathVariable("id") Integer id,
                                                    @PathVariable("sessionId") String sessionId) {
-        threadPoolTaskExecutor.submit(() -> {
-            while (!sessionId.isEmpty()) {
-                wsFacade.sendMessage(DATA_MIGRATION, sessionId, JSON.toJSONString(migrationTaskService
-                    .getFullDataById(id)));
-                try {
-                    TimeUnit.SECONDS.sleep(5L);
-                } catch (InterruptedException e) {
-                    throw new OpsException("thread is interrupted");
-                }
-            }
-        });
+        migrationTaskService.sendMigrationDataByWebsocket(id, sessionId);
         return AjaxResult.success();
     }
 
