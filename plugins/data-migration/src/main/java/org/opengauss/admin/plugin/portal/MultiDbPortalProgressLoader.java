@@ -92,6 +92,13 @@ public class MultiDbPortalProgressLoader {
      * @param task migration task
      */
     public void refreshStatusAndProcess(MigrationTask task) {
+        Integer execStatus = task.getExecStatus();
+        if (TaskStatus.CHECK_ERROR.getCode().equals(execStatus)
+                || TaskStatus.MIGRATION_FINISH.getCode().equals(execStatus)
+                || TaskStatus.MIGRATION_ERROR.getCode().equals(execStatus)) {
+            return;
+        }
+
         MigrationHostPortalInstall portalInfo = portalInstallHostService.getOneByHostId(task.getRunHostId());
         List<Map<String, Object>> migrationStatusList = loadMigrationStatus(portalInfo, task);
         if (ObjectUtils.isEmpty(migrationStatusList)) {
@@ -116,7 +123,7 @@ public class MultiDbPortalProgressLoader {
             loadReverseMigrationProgress(portalInfo, task);
         }
         MigrationTask update = MigrationTask.builder().id(task.getId()).build();
-        if (task.getExecStatus() < TaskStatus.MIGRATION_FINISH.getCode()) {
+        if (execStatus < TaskStatus.MIGRATION_FINISH.getCode()) {
             update.setExecStatus(latestStatus);
         }
 
@@ -128,6 +135,8 @@ public class MultiDbPortalProgressLoader {
         }
         if (TaskStatus.MIGRATION_ERROR.getCode().equals(latestStatus)) {
             String msg = MapUtil.getStr(lastStatus, "msg");
+            update.setExecStatus(latestStatus);
+            update.setFinishTime(Instant.now());
             update.setStatusDesc(msg);
         }
         migrationTaskService.updateById(update);
@@ -272,6 +281,8 @@ public class MultiDbPortalProgressLoader {
             String verifyResultContents = FileUtils.catRemoteFileContents(verifyResultFilePath, shellInfo);
             MigrationTask update = MigrationTask.builder().id(task.getId()).build();
             update.setStatusDesc(verifyResultContents);
+            update.setFinishTime(Instant.now());
+            update.setExecStatus(TaskStatus.CHECK_ERROR.getCode());
             migrationTaskService.updateById(update);
         }
         return statusResultList;

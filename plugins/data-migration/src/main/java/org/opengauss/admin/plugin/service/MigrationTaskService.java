@@ -239,4 +239,12 @@ public interface MigrationTaskService extends IService<MigrationTask> {
      * @return MigrationLogsInfoMap
      */
     Map<String, Object> getMigLogsInfo(Integer id, MigrationLogsInfoDto info);
+
+    /**
+     * send migration detail by websocket
+     *
+     * @param id id
+     * @param sessionId sessionId
+     */
+    void sendMigrationDataByWebsocket(Integer id, String sessionId);
 }

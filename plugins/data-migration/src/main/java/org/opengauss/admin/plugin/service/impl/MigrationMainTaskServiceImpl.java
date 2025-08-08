@@ -611,7 +611,10 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         subTask.setOrderInvokedTimestamp(finishTaskTimestamp);
         doFinishTask(subTask);
         MigrationMainTask mainTask = getById(subTask.getMainTaskId());
-        doRefreshSingleMainTask(mainTask);
+        mainTask.setExecProgress("1.00");
+        mainTask.setExecStatus(MainTaskStatus.FINISH.getCode());
+        mainTask.setFinishTime(new Date());
+        updateById(mainTask);
         return AjaxResult.success();
     }
 
