@@ -683,26 +683,45 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             } else {
                 log.debug("task status {} : {}", t.getId(), state);
             }
-            if (t.getExecStatus() < TaskStatus.MIGRATION_FINISH.getCode()) {
-                update.setExecStatus(state);
-            }
 
-            if (TaskStatus.FULL_CHECK_FINISH.getCode().equals(state) && t.getMigrationModelId().equals(1)) {
-                update.setExecStatus(TaskStatus.MIGRATION_FINISH.getCode());
-                update.setFinishTime(Instant.now());
-            }
-            if (TaskStatus.MIGRATION_ERROR.getCode().equals(state)) {
-                String msg = MapUtil.getStr(lastStatus, "msg");
-                update.setStatusDesc(msg);
-            } else {
-                // not check failure
-                if (!TaskStatus.CHECK_ERROR.getCode().equals(t.getExecStatus())) {
-                    update.setStatusDesc("");
-                }
-            }
+            setUpdateStatus(update, t, lastStatus);
             updateById(update);
         }
         return result;
+    }
+
+    private void setUpdateStatus(MigrationTask update, MigrationTask task, Map<String, Object> lastStatus) {
+        Integer execStatus = task.getExecStatus();
+        if (execStatus >= TaskStatus.MIGRATION_FINISH.getCode()) {
+            return;
+        }
+
+        Integer state = MapUtil.getInt(lastStatus, "status");
+        if (state == null) {
+            return;
+        }
+
+        if (TaskStatus.INCREMENTAL_PAUSE.getCode().equals(execStatus)
+                || TaskStatus.REVERSE_PAUSE.getCode().equals(execStatus)
+                || state > execStatus) {
+            update.setExecStatus(state);
+        } else {
+            return;
+        }
+
+        if (TaskStatus.FULL_CHECK_FINISH.getCode().equals(state) && task.getMigrationModelId().equals(1)) {
+            update.setExecStatus(TaskStatus.MIGRATION_FINISH.getCode());
+            update.setFinishTime(Instant.now());
+        }
+        if (TaskStatus.MIGRATION_ERROR.getCode().equals(state)) {
+            String msg = MapUtil.getStr(lastStatus, "msg");
+            update.setStatusDesc(msg);
+        } else {
+            // not check failure
+            if (!TaskStatus.CHECK_ERROR.getCode().equals(task.getExecStatus())) {
+                update.setStatusDesc("");
+            }
+        }
     }
 
     /**
