@@ -253,7 +253,7 @@
       "dataTable": "Data Sheet",
       "dataTablesTotal": "Total number of datatables",
       "completedTablesTotal": "Number of tables completed",
-      "failTablesTotal": "Number of failed tables",
+      "failTablesTotal": "Checking",
       "onLineMigration": "Online migration",
       "offLineMigration": "Offline migration",
       "dataTotal": "Total amount of data",

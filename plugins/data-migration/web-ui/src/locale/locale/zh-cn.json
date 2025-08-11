@@ -253,7 +253,7 @@
       "dataTable": "数据表",
       "dataTablesTotal": "数据表总数",
       "completedTablesTotal": "已完成表数",
-      "failTablesTotal": "失败表数",
+      "failTablesTotal": "校验中",
       "onLineMigration": "在线迁移",
       "offLineMigration": "离线迁移",
       "dataTotal": "数据总量",
