@@ -340,95 +340,78 @@ const submit = async () => {
     await formServerRef.value?.validate()
     await formAgentRef.value?.validate()
     data.loading = true
-    encryptPassword(data.serverData.password).then((res) => {
+    encryptPassword(data.serverData.password).then(async (res) => {
       const param = Object.assign({}, data.serverData)
       param.password = res
-      if (data.serverData.hostId === '' && agentInstallError === false) {
-        addHost(param).then(async (res: KeyValue) => {
-          data.loading = false
-          if (Number(res.code) === 200) {
-            if (!data.agentData.isAgent) {
-              showMessage('success', t('components.AddHost.addServerSuc'))
-              emits(`finish`)
-            } else {
-              data.agentData.installUser = data.serverData.username
-              await hostPage({
-                name: data.serverData.privateIp,
-                tagIds: '',
-                os: '',
-                pageNum: 1,
-                pageSize: 10
-              }).then((res: KeyValue) => {
-                if (Number(res.code) === 200) {
-                  data.agentData.agentId = res.rows[0].hostId
-                  data.serverData.hostId = res.rows[0].hostId
-                }
-              }).catch((error) => {
-                console.log(error)
-                showMessage('error', error)
-                agentInstallError = true
-              })
-              await hostUserPage(data.agentData.agentId).then((res: KeyValue) => {
-                data.agentData.installUserId = res.rows[0].hostUserId
-              }).catch((error) => {
-                console.log(error)
-                showMessage('error', error)
-                agentInstallError = true
-              })
-              data.agentData.agentIp = data.serverData.privateIp
-              const agentData = {
-                agentId: data.agentData.agentId,
-                agentIp: data.agentData.agentIp,
-                agentName: data.agentData.agentName,
-                agentPort: data.agentData.agentPort,
-                installPath: data.agentData.installPath,
-                installUser: data.agentData.installUser,
-                installUserId: data.agentData.installUserId
-              }
-              addAgent(agentData).then((res: KeyValue) => {
-                if (Number(res.code) === 200) {
-                  showMessage('success', t('components.AddHost.addAgentSuc'))
-                  agentInstallError = false
-                  emits(`finish`)
-                }
-              }).catch((error) => {
-                console.log(error)
-                showMessage('error', error)
-                agentInstallError = true
-              })
-            }
-            close()
-          }
-        }) .catch((error) => {
-          console.log(error)
-        }).finally(() => {
-          data.loading = false
-        })
-      } else {
-        const agentData = {
-          agentId: data.agentData.agentId,
-          agentIp: data.agentData.agentIp,
-          agentName: data.agentData.agentName,
-          agentPort: data.agentData.agentPort,
-          installPath: data.agentData.installPath,
-          installUser: data.agentData.installUser,
-          installUserId: data.agentData.installUserId
+      const finishServer = (showMessageInfo: any) => {
+        if (showMessageInfo === '1') {
+          showMessage('success', t('components.AddHost.addAgentSuc'))
+        } else {
+          showMessage('success', t('components.AddHost.addServerSuc'))
         }
-        console.log('test', agentData)
-        addAgent(agentData).then((res: KeyValue) => {
-          if (Number(res.code) === 200) {
-            showMessage('success', t('components.AddHost.addAgentSuc'))
-            agentInstallError = false
-            emits(`finish`)
-            close()
+        emits('finish')
+        close()
+      }
+      const addAgentHandler = async () => {
+        try {
+          const agentData = {
+            agentId: data.agentData.agentId,
+            agentIp: data.agentData.agentIp,
+            agentName: data.agentData.agentName,
+            agentPort: data.agentData.agentPort,
+            installPath: data.agentData.installPath,
+            installUser: data.agentData.installUser,
+            installUserId: data.agentData.installUserId
           }
-        }).catch((error) => {
+          const res = await addAgent(agentData)
+          if (Number(res.code) === 200) {
+            agentInstallError = false
+            finishServer('1')
+          }
+        } catch (error) {
+          console.log(error)
+          agentInstallError = true
+        }
+      }
+      if (data.serverData.hostId === '' && !agentInstallError) {
+        try {
+          const res = await addHost(param)
+          data.loading = false
+          if (Number(res.code) !== 200) return
+          if (!data.agentData.isAgent) {
+            finishServer('2')
+            return
+          }
+          data.agentData.installUser = data.serverData.username
+          const hostRes = await hostPage({
+            name: data.serverData.privateIp,
+            tagIds: '',
+            os: '',
+            pageNum: 1,
+            pageSize: 10
+          })
+          if (Number(hostRes.code) === 200) {
+            data.agentData.agentId = hostRes.rows[0].hostId
+            data.serverData.hostId = hostRes.rows[0].hostId
+          }
+          const userRes = await hostUserPage(data.agentData.agentId)
+          data.agentData.installUserId = userRes.rows[0].hostUserId
+          data.agentData.agentIp = data.serverData.privateIp
+          await addAgentHandler()
+        } catch (error) {
           console.log(error)
           showMessage('error', error)
           agentInstallError = true
-        })
+        } finally {
+          data.loading = false
+        }
+      } else {
+        if (!data.agentData.isAgent) {
+          finishServer('2')
+        } else {
+          await addAgentHandler()
+        }
       }
-
     })
   } catch (error) {
     showMessage('error', t('components.AddHost.unFill'))
