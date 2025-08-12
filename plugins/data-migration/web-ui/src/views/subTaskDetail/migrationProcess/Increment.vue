@@ -8,15 +8,19 @@
           :description="t('components.SubTaskDetail.restWriteData')"></statistic-card>
       </div>
       <div class="button-area">
-        <el-button type="primary" v-if="showRepair" :disabled="props.subTaskDbType?.toUpperCase() ==='POSTGRESQL'" @click="handleFix('reset')">{{ t('components.SubTaskDetail.oneClickRepair')
+        <el-button type="primary" v-if="showRepair" :disabled="props.subTaskDbType?.toUpperCase() ==='POSTGRESQL'"
+          @click="handleFix('reset')" :loading="isButtonLoading">{{
+            t('components.SubTaskDetail.oneClickRepair')
           }}</el-button>
         <el-button v-if="currentActive === 3 && subTaskMode === 2 &&
-          currentExecStatus === SUB_TASK_STATUS.INCREMENTAL_RUNNING" @click="stopSubIncrese" >{{
+          currentExecStatus === SUB_TASK_STATUS.INCREMENTAL_RUNNING"
+          @click="stopSubIncrese" :loading="incrementalLoading" >{{
             t('components.SubTaskDetail.stopIncreaseMigration') }}</el-button>
         <el-button
           v-if="currentActive === 3 && subTaskMode === 2 && currentExecStatus === SUB_TASK_STATUS.INCREMENTAL_STOPPED"
-          @click="startSubReverse" >{{ t('detail.index.5q09asiwkq40') }}</el-button>
-        <el-button v-if="currentActive === 4 && currentExecStatus !== SUB_TASK_STATUS.MIGRATION_FINISH" @click="stopSubTask">
+          @click="startSubReverse" :loading="startReverseLoading" >{{ t('detail.index.5q09asiwkq40') }}</el-button>
+        <el-button v-if="currentActive === 4 && currentExecStatus !== SUB_TASK_STATUS.MIGRATION_FINISH"
+                   @click="stopSubTask" :loading="reverseLoading">
           {{
             $t('detail.index.5q09asiwl5g0')
           }}
@@ -183,23 +187,38 @@ const restWriteInCount = computed(() => {
     return sourceCount;
   }
 })
-
+const incrementalLoading = ref(false)
+const reverseLoading = ref(false)
 // Stop Increment - You need to determine whether it is a reverse migration
 const stopSubIncrese = () => {
+  incrementalLoading.value = true
   subTaskStopIncremental(subTaskId.value).then((res) => {
     if (res.code === 200) {
       showMessage('success', t('detail.index.stopSuccess'))
     }
+  }) .catch((error) => {
+    showMessage('error', error)
+    incrementalLoading.value = false
   })
 }
 
-// 这里是启动反向迁移
+ const isButtonLoading = computed(() => {
+   const caseIncremental = incrementalLoading.value &&
+     currentExecStatus.value === SUB_TASK_STATUS.INCREMENTAL_RUNNING
+   const caseReverse = currentExecStatus !== SUB_TASK_STATUS.MIGRATION_FINISH && reverseLoading.value
+   return caseIncremental || caseReverse;
+ })
+
+const startReverseLoading = ref(false)
 const startSubReverse = () => {
+  incrementalLoading.value = false
+  startReverseLoading.value = true
   subTaskStartReverse(subTaskId.value)
     .then(() => {
       showMessage('success', t('detail.index.startSuccess'))
     })
     .catch((e) => {
+      startReverseLoading.value = false
       if (e.code === 50154) {
         reverseConfig.value = e.data
         replicationData.value = [
@@ -240,6 +259,9 @@ const handleFix = async (type) => {
 }
 
 onMounted(() => {
+  incrementalLoading.value = false
+  reverseLoading.value = false
+  startReverseLoading.value = false
   // This is the initial time to determine whether the current migration is incremental or reverse, if there is any change, the watch will listen
   currentActive.value = props.active
   getFixStatus()
@@ -274,7 +296,11 @@ const stopSubTask = () => {
     return;
   }
   subTaskFinish(subTaskId.value).then(() => {
+    reverseLoading.value = true
     showMessage('success', t('detail.index.stopSuccess'))
+  }) .catch((error) => {
+    showMessage('error', error)
+    reverseLoading.value = false
   })
 }
 </script>

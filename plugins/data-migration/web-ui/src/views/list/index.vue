@@ -103,7 +103,7 @@
         </el-table-column>
         <el-table-column :label="$t('list.index.5q08sf2djyc0')" fixed="right">
           <template #default="record">
-            <el-button v-if="record.row.execStatus === 1 || record.row.execStatus === 3000" size="small" text
+            <el-button v-if="record.row.execStatus === 1 || record.row.execStatus === 3000 || record.row.execStatus === 4" size="small" text
               @click="stopTask(record.row)">
               <template #default>{{ $t('list.index.5q08sf2dk3c0') }}</template>
             </el-button>
@@ -118,7 +118,7 @@
               <el-button status="danger" text>{{ $t('list.index.5q08sf2dka40') }}</el-button>
             </a-popconfirm>
             <a-popconfirm
-              v-if="record.row.execStatus === 2 || record.row.execStatus === 3 || record.row.execStatus === 4"
+              v-if="record.row.execStatus === 2 || record.row.execStatus === 3"
               :content="$t('list.index.resetWarning')" type="warning" :ok-text="$t('list.index.confirm')"
               :cancel-text="$t('list.index.cancel')" @ok="resetTask(record.row)" class="aPopConfirmStyle">
               <el-button status="danger" text>{{ $t('list.index.5q08sf2diqs0') }}</el-button>
