@@ -14,6 +14,7 @@ import lombok.Getter;
 @Getter
 public enum MultiDbPortalStatusEnum {
     NOT_START(0, 0, "Migration not started"),
+    MIGRATION_STARTING(1, 0, "Migration starting"),
 
     START_FULL_MIGRATION(100, 1, "Full migration started"),
     FULL_MIGRATION_RUNNING(101, 2, "Full migration running"),
@@ -25,19 +26,23 @@ public enum MultiDbPortalStatusEnum {
 
     START_INCREMENTAL_MIGRATION(300, 7, "Incremental migration started"),
     INCREMENTAL_MIGRATION_RUNNING(301, 8, "Incremental migration running"),
-    INCREMENTAL_MIGRATION_FINISHED(302, 10, "Incremental migration finished"),
+    INCREMENTAL_MIGRATION_STOPPING(302, 9, "Incremental migration stopping"),
+    INCREMENTAL_MIGRATION_FINISHED(303, 10, "Incremental migration finished"),
 
-    START_REVERSE_MIGRATION(401, 11, "Reverse migration started"),
-    REVERSE_MIGRATION_RUNNING(402, 12, "Reverse migration running"),
+    START_REVERSE_MIGRATION(400, 11, "Reverse migration started"),
+    REVERSE_MIGRATION_RUNNING(401, 12, "Reverse migration running"),
+    REVERSE_MIGRATION_STOPPING(402, 13, "Reverse migration stopping"),
     REVERSE_MIGRATION_FINISHED(403, 13, "Reverse migration finished"),
 
     MIGRATION_FINISHED(600, 100, "Migration finished"),
-    PRE_MIGRATION_VERIFY_FAILED(601, 3000, "Pre migration verify failed"),
-    PRE_REVERSE_PHASE_VERIFY_FAILED(602, 3000, "Pre reverse phase verify failed"),
-    MIGRATION_FAILED(500, 500, "Migration failed"),
+    MIGRATION_STOPPING(601, 100, "Migration stopping"),
 
+    MIGRATION_FAILED(500, 500, "Migration failed"),
     INCREMENTAL_MIGRATION_INTERRUPTED(501, 30, "Incremental migration interrupted"),
     REVERSE_MIGRATION_INTERRUPTED(502, 40, "Reverse migration interrupted"),
+
+    PRE_MIGRATION_VERIFY_FAILED(700, 3000, "Pre migration verify failed"),
+    PRE_REVERSE_PHASE_VERIFY_FAILED(701, 3000, "Pre reverse phase verify failed"),
     ;
 
     MultiDbPortalStatusEnum(int status, int datakitStatus, String description) {

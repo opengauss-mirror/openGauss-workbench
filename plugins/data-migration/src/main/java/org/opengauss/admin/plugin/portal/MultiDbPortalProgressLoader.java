@@ -122,9 +122,23 @@ public class MultiDbPortalProgressLoader {
         if (TaskStatus.REVERSE_START.getCode() <= latestStatus) {
             loadReverseMigrationProgress(portalInfo, task);
         }
+        updateStatus(task, lastStatus);
+    }
+
+    private void updateStatus(MigrationTask task, Map<String, Object> lastStatus) {
+        Integer execStatus = task.getExecStatus();
+        if (execStatus >= TaskStatus.MIGRATION_FINISH.getCode()) {
+            return;
+        }
+
+        Integer latestStatus = MapUtil.getInt(lastStatus, "status");
         MigrationTask update = MigrationTask.builder().id(task.getId()).build();
-        if (execStatus < TaskStatus.MIGRATION_FINISH.getCode()) {
+        if (TaskStatus.INCREMENTAL_PAUSE.getCode().equals(execStatus)
+                || TaskStatus.REVERSE_PAUSE.getCode().equals(execStatus)
+                || latestStatus > execStatus) {
             update.setExecStatus(latestStatus);
+        } else {
+            return;
         }
 
         if ((TaskStatus.FULL_CHECK_FINISH.getCode().equals(latestStatus)
