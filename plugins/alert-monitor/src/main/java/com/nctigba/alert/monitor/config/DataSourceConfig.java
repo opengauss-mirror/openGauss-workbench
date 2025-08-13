@@ -31,7 +31,6 @@ import com.gitee.starblues.spring.environment.EnvironmentProvider;
 import com.nctigba.alert.monitor.enums.DbDataLocationEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.jdbc.init.DataSourceScriptDatabaseInitializer;
 import org.springframework.boot.sql.init.DatabaseInitializationMode;
 import org.springframework.boot.sql.init.DatabaseInitializationSettings;
