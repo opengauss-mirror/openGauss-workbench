@@ -42,6 +42,12 @@ import javax.annotation.Resource;
 @Service
 public class HostBasicService {
     private final Map<String, HostBaseInfo> hostBasicMap = new ConcurrentHashMap<>();
+    private final CheckValueValid valueChecker = (key, value) -> switch (key) {
+        case AgentConstants.HostMetric.CPU_CORE_NUM -> value.matches("\\d+") && Integer.parseInt(value) > 0;
+        case AgentConstants.HostMetric.CPU_FREQUENCY -> value.matches("\\d+") && Long.parseLong(value) > 0;
+        default -> true;
+    };
+
     @Resource
     private IHostService hostService;
 
@@ -130,7 +136,7 @@ public class HostBasicService {
     }
 
     private void putIfValid(Map<String, String> map, String key, String value) {
-        if (StrUtil.isNotEmpty(value)) {
+        if (StrUtil.isNotEmpty(value) && valueChecker.checked(key, value)) {
             map.put(key, value);
         }
     }
@@ -142,5 +148,17 @@ public class HostBasicService {
      */
     public void deleteHostCache(String hostId) {
         hostBasicMap.remove(hostId);
+    }
+
+    @FunctionalInterface
+    private interface CheckValueValid {
+        /**
+         * check value is valid
+         *
+         * @param key key
+         * @param value value
+         * @return true if valid
+         */
+        boolean checked(String key, String value);
     }
 }

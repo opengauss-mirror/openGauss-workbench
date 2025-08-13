@@ -48,6 +48,7 @@ public class OpsHostVO {
     private String os;
     private String cpuArch;
     private String name;
+    private String agentName;
     private AgentStatus agentStatus;
     private String agentInstallPath;
     private String agentInstallUsername;

@@ -307,27 +307,19 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         }
         OpsHostEntity hostEntity = getByPublicIp(hostRecord.getPublicIp());
         if (Objects.isNull(hostEntity)) {
-            addHostInfo(hostRecord, hostEntity, uuid);
+            addHostInfo(hostRecord);
         } else {
             addUserInfo(hostRecord, hostEntity);
         }
     }
 
-    private void addHostInfo(HostRecord hostRecord, OpsHostEntity hostEntity, String uuid) {
-        Session session = null;
+    private void addHostInfo(HostRecord hostRecord) {
         SshLogin sshLogin = new SshLogin(hostRecord.getPublicIp(), hostRecord.getPort(), hostRecord.getUserName(),
             encryptionUtils.decrypt(hostRecord.getPassword()));
-        try {
-            session = jschExecutorService.createSession(sshLogin);
-            hostRecord.toHostEntity(getHostInfoVo(session));
-            HostBody hostBody = hostRecord.toHostBody();
-            hostBody.setPassword(encryptionUtils.encrypt(hostBody.getPassword()));
-            add(hostBody);
-        } finally {
-            if (Objects.nonNull(session) && session.isConnected()) {
-                session.disconnect();
-            }
-        }
+        hostRecord.toHostEntity(getHostInfoVo(sshLogin));
+        HostBody hostBody = hostRecord.toHostBody();
+        hostBody.setPassword(encryptionUtils.encrypt(hostBody.getPassword()));
+        add(hostBody);
     }
 
     private void addUserInfo(HostRecord hostRecord, OpsHostEntity hostEntity) {
@@ -382,27 +374,21 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
 
     private HostInfoVo buildHostInfo(SshLogin sshLogin) {
         HostInfoVo hostInfoVo = new HostInfoVo();
-        // 创建Session异常，则
-        Session session = jschExecutorService.createSession(sshLogin);
         try {
             log.info("get host info {}", sshLogin);
-            hostInfoVo = getHostInfoVo(session);
+            hostInfoVo = getHostInfoVo(sshLogin);
         } catch (OpsException e) {
             log.error("Failed to get host info", e);
-        } finally {
-            if (Objects.nonNull(session)) {
-                session.disconnect();
-            }
         }
         return hostInfoVo;
     }
 
-    private HostInfoVo getHostInfoVo(Session session) {
+    private HostInfoVo getHostInfoVo(SshLogin sshLogin) {
         HostInfoVo hostInfoVo = new HostInfoVo();
-        hostInfoVo.setHostname(jschExecutorService.getHostname(session));
-        hostInfoVo.setCpuArch(jschExecutorService.getCpuArch(session));
-        hostInfoVo.setOs(jschExecutorService.getOs(session));
-        hostInfoVo.setOsVersion(jschExecutorService.getOsVersion(session));
+        hostInfoVo.setHostname(jschExecutorService.getHostname(sshLogin));
+        hostInfoVo.setCpuArch(jschExecutorService.getCpuArch(sshLogin));
+        hostInfoVo.setOs(jschExecutorService.getOs(sshLogin));
+        hostInfoVo.setOsVersion(jschExecutorService.getOsVersion(sshLogin));
         return hostInfoVo;
     }
 
@@ -463,7 +449,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         }
         SshLogin sshLogin = new SshLogin(hostBody.getPublicIp(), hostBody.getPort(), hostBody.getUsername(),
             encryptionUtils.decrypt(hostBody.getPassword()));
-        HostInfoVo hostInfoVo = getHostInfoVo(jschExecutorService.createSession(sshLogin));
+        HostInfoVo hostInfoVo = getHostInfoVo(sshLogin);
         hostEntity.setName(hostBody.getName());
         hostEntity.setPort(hostBody.getPort());
         hostEntity.setRemark(hostBody.getRemark());
@@ -497,6 +483,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
             if (Objects.isNull(agentInstall)) {
                 record.setAgentStatus(AgentStatus.UNINSTALL);
             } else {
+                record.setAgentName(agentInstall.getAgentName());
                 record.setAgentInstallPort(agentInstall.getAgentPort());
                 record.setAgentStatus(agentInstall.getStatus());
                 record.setAgentInstallPath(agentInstall.getInstallPath());

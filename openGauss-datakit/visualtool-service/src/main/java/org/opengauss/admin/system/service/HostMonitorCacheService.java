@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.opengauss.admin.common.constant.AgentConstants;
 import org.opengauss.admin.common.core.domain.entity.agent.TaskMetricsDefinition;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -51,7 +51,7 @@ import javax.annotation.Resource;
  * @since 2024/10/29 09:26
  */
 @Slf4j
-@Service
+@Component
 public class HostMonitorCacheService {
     // cacheMap  : hostId : item : value
     private final Map<String, Map<String, String>> cacheMap = new ConcurrentHashMap<>();
@@ -72,7 +72,6 @@ public class HostMonitorCacheService {
      * @param metricsDefinitionList metricsDefinitionList
      */
     public void initHostMonitorCacheEnvironment(List<TaskMetricsDefinition> metricsDefinitionList) {
-        hostMonitorSshService.initHostMonitorCacheEnvironment();
         if (ArrayUtil.isEmpty(metricsDefinitionList)) {
             return;
         }
@@ -81,17 +80,38 @@ public class HostMonitorCacheService {
 
     /**
      * init host cache scheduled
+     * <pre>
+     * Initialization Dependency
+     * The scheduled task (startHostMonitorScheduled) requires HostMonitorAgentService to be fully initialized before
+     * execution.
+     * If triggered prematurely, cryptographic components (e.g., EncryptionUtils) may not be ready,
+     * leading to decryption failures.
+     *
+     * Authentication Cascade Failure
+     * Failed decryption → authentication errors during session pool creation.
+     * Repeated errors → security policies (e.g., account lockout after N attempts) may activate.
+     *
+     * Irreversible Session Lock
+     * Once an account is locked subsequent successful decryption cannot resolve the lock.
+     * Manual intervention (e.g., unlocking the account) is required
+     * </pre>
      */
     public void startHostMonitorScheduled() {
+        lastedFetch.set(System.currentTimeMillis() / 1000);
         // host dynamic info,support seconds level data refresh
         scheduledExecutorService.scheduleWithFixedDelay(() -> {
             Thread.currentThread().setName("host-realtime-monitor");
             if (noUsing()) {
                 return;
             }
-            Set<String> agentSet = hostMonitorAgentService.startAgentHostMonitorScheduled(cacheMap);
-            hostMonitorSshService.startHostMonitorScheduled(cacheMap, agentSet);
-        }, 1, 5, TimeUnit.SECONDS);
+            try {
+                Set<String> agentSet = hostMonitorAgentService.startAgentHostMonitorScheduled(cacheMap);
+                hostMonitorSshService.startHostMonitorScheduled(cacheMap, agentSet);
+                log.info("host monitor cache scheduled ");
+            } catch (Exception e) {
+                log.error("host monitor cache scheduled error", e);
+            }
+        }, 5, 5, TimeUnit.SECONDS);
     }
 
     private synchronized String getCacheValue(String hostId, String key) {
@@ -111,12 +131,8 @@ public class HostMonitorCacheService {
         // cache has host info, try to get value
         Map<String, String> hostInfoMap = cacheMap.get(hostId);
         if (!hostInfoMap.containsKey(key)) {
-            synchronized (hostInfoMap) {
-                if (!hostInfoMap.containsKey(key)) {
-                    refreshCache(hostId, key, hostMonitorSshService.getSshHostSingleInfo(hostId, key));
-                    refreshCache(hostId, hostMonitorSshService.getSshHostInfo(hostId, key));
-                }
-            }
+            refreshCache(hostId, key, hostMonitorSshService.getSshHostSingleInfo(hostId, key));
+            refreshCache(hostId, hostMonitorSshService.getSshHostInfo(hostId, key));
         }
         return cacheMap.get(hostId).getOrDefault(key, "");
     }
@@ -155,7 +171,6 @@ public class HostMonitorCacheService {
      */
     public void deleteHostCache(String hostId) {
         cacheMap.remove(hostId);
-        hostMonitorSshService.deleteHostCache(hostId);
         hostBasicService.deleteHostCache(hostId);
     }
 
@@ -312,28 +327,8 @@ public class HostMonitorCacheService {
         String MIGRATION_HOST = "migrationHost";
 
         /**
-         * host network tx | rx
-         */
-        String NET_MONITOR = "netMonitor";
-
-        /**
-         * empty string
-         */
-        String EMPTY = "";
-
-        /**
          * spliter   |
          */
         String SPL = "\\|";
-
-        /**
-         * spliter  \n
-         */
-        String SPL_N = "\n";
-
-        /**
-         * host disk monitor
-         */
-        String DISK_MONITOR = "diskMonitor";
     }
 }

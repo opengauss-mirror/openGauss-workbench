@@ -37,7 +37,10 @@
             <groupId>com.gitee.starblues</groupId>
             <artifactId>spring-brick-bootstrap</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.opengauss</groupId>
+            <artifactId>jsch-session-pool</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.gitee.starblues</groupId>
             <artifactId>spring-brick-maven-packager</artifactId>

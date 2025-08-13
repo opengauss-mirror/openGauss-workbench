@@ -54,14 +54,19 @@ import org.opengauss.admin.system.plugin.beans.SshLogin;
 import org.opengauss.admin.system.service.ops.IHostService;
 import org.opengauss.admin.system.service.ops.IHostUserService;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
-import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 
 import javax.annotation.Resource;
 
@@ -72,10 +77,9 @@ import javax.annotation.Resource;
  * @since 2024/10/29 09:26
  */
 @Slf4j
-@Service
+@Component
+@DependsOn("encryptionUtils")
 public class HostMonitorSshService {
-    // cacheMap  : hostId : item : value
-    private final Map<String, SshLogin> sshHostMap = new ConcurrentHashMap<>();
     @Resource
     private IHostService hostService;
     @Resource
@@ -86,22 +90,8 @@ public class HostMonitorSshService {
     private JschExecutorService jschExecutorService;
     @Resource
     private HostBasicService hostBasicService;
-
-    /**
-     * init host monitor cache environment
-     */
-    public void initHostMonitorCacheEnvironment() {
-        hostService.list().forEach(host -> {
-            sshHostMap.compute(host.getHostId(), (k, v) -> {
-                if (v == null) {
-                    OpsHostUserEntity user = getHostUserRootOrNormal(host.getHostId());
-                    v = new SshLogin(host.getPublicIp(), host.getPort(), user.getUsername(),
-                        encryptionUtils.decrypt(user.getPassword()));
-                }
-                return v;
-            });
-        });
-    }
+    private ExecutorService customPool = Executors.newFixedThreadPool(4);
+    private Semaphore semaphore = new Semaphore(4);
 
     /**
      * start host monitor scheduled
@@ -110,13 +100,14 @@ public class HostMonitorSshService {
      * @param agentSet agent set
      */
     public void startHostMonitorScheduled(Map<String, Map<String, String>> cacheMap, Set<String> agentSet) {
-        for (Map.Entry<String, Map<String, String>> cacheEntry : cacheMap.entrySet()) {
-            String hostId = cacheEntry.getKey();
+        List<OpsHostEntity> hostList = hostService.list();
+        for (OpsHostEntity host : hostList) {
+            String hostId = host.getHostId();
             if (agentSet.contains(hostId)) {
                 continue;
             }
-            SshLogin sshLogin = getOpsHostSsh(hostId);
-            Map<String, String> value = cacheEntry.getValue();
+            SshLogin sshLogin = getOpsHostSsh(host);
+            Map<String, String> value = cacheMap.getOrDefault(hostId, new HashMap<>());
             value.putAll(executeHostMonitorBySshCommand(hostId, sshLogin));
             cacheMap.put(hostId, value);
         }
@@ -141,21 +132,34 @@ public class HostMonitorSshService {
     }
 
     private void cacheHostFixedInfo(String hostId, Map<String, String> hostInfoMap, SshLogin sshLogin) {
-        os(hostId, sshLogin, hostInfoMap);
-        osVersion(hostId, sshLogin, hostInfoMap);
-        cpu(hostId, sshLogin, hostInfoMap);
-        disk(sshLogin, hostInfoMap);
+        List<CompletableFuture<Void>> tasks = new LinkedList<>();
+        tasks.add(createSshTask(() -> os(hostId, sshLogin, hostInfoMap)));
+        tasks.add(createSshTask(() -> osVersion(hostId, sshLogin, hostInfoMap)));
+        tasks.add(createSshTask(() -> cpu(hostId, sshLogin, hostInfoMap)));
+        tasks.add(createSshTask(() -> disk(sshLogin, hostInfoMap)));
+        CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0])).join();
     }
 
     private void cacheHostRealtimeInfo(Map<String, String> hostInfoMap, SshLogin sshLogin) {
-        // cpu using
-        cpuUsing(sshLogin, hostInfoMap);
-        // memory using
-        memory(sshLogin, hostInfoMap);
-        // host base info for migration
-        hostForMigration(sshLogin, hostInfoMap);
-        // net monitor
-        netMonitor(sshLogin, hostInfoMap);
+        List<CompletableFuture<Void>> tasks = new LinkedList<>();
+        tasks.add(createSshTask(() -> cpuUsing(sshLogin, hostInfoMap)));
+        tasks.add(createSshTask(() -> memory(sshLogin, hostInfoMap)));
+        tasks.add(createSshTask(() -> hostForMigration(sshLogin, hostInfoMap)));
+        tasks.add(createSshTask(() -> netMonitor(sshLogin, hostInfoMap)));
+        CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0])).join();
+    }
+
+    private CompletableFuture<Void> createSshTask(Runnable task) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                semaphore.acquire();
+                task.run();
+            } catch (Exception tr) {
+                log.warn("run ssh task has some error {}", tr.getMessage());
+            } finally {
+                semaphore.release();
+            }
+        }, customPool);
     }
 
     /**
@@ -172,7 +176,7 @@ public class HostMonitorSshService {
             case OS_NAME -> os(hostId, sshLogin, hostInfoMap);
             case OS_VERSION -> osVersion(hostId, sshLogin, hostInfoMap);
             case MIGRATION_HOST -> hostForMigration(sshLogin, hostInfoMap);
-            default -> ignoreEmpty("getSshHostSingleInfo not found " + sshLogin.toString() + " key " + key);
+            default -> ignoreEmpty("getSshHostSingleInfo not found " + sshLogin + " key " + key);
         }
         return hostInfoMap.getOrDefault(key, "");
     }
@@ -360,15 +364,6 @@ public class HostMonitorSshService {
     }
 
     /**
-     * delete host cache
-     *
-     * @param hostId host id
-     */
-    public void deleteHostCache(String hostId) {
-        sshHostMap.remove(hostId);
-    }
-
-    /**
      * get host user,when has root ,return root user,otherwise return normal user
      *
      * @param hostId host id
@@ -398,21 +393,20 @@ public class HostMonitorSshService {
     }
 
     private SshLogin getOpsHostSsh(String hostId) {
-        return sshHostMap.compute(hostId, (k, v) -> {
-            if (v == null) {
-                OpsHostEntity host = hostService.getById(hostId);
-                if (host == null) {
-                    throw new OpsException("host not found,hostId:" + hostId);
-                }
-                OpsHostUserEntity user = getHostUserRootOrNormal(host.getHostId());
-                if (user == null) {
-                    throw new OpsException("host user not found or invalid,hostId:" + hostId);
-                }
-                v = new SshLogin(host.getPublicIp(), host.getPort(), user.getUsername(),
-                    encryptionUtils.decrypt(user.getPassword()));
-            }
-            return v;
-        });
+        OpsHostEntity host = hostService.getById(hostId);
+        if (host == null) {
+            throw new OpsException("host not found,hostId:" + hostId);
+        }
+        return getOpsHostSsh(host);
+    }
+
+    private SshLogin getOpsHostSsh(OpsHostEntity host) {
+        OpsHostUserEntity user = getHostUserRootOrNormal(host.getHostId());
+        if (user == null) {
+            throw new OpsException("host user not found or invalid : " + host.getHostId() + ":" + host.getPublicIp());
+        }
+        return new SshLogin(host.getPublicIp(), host.getPort(), user.getUsername(),
+            encryptionUtils.decrypt(user.getPassword()));
     }
 
     /**
