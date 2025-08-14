@@ -51,5 +51,5 @@ public interface MigrationTaskAlertMapper extends BaseMapper<MigrationTaskAlert>
      * @param alert alert entity
      * @return group alert id list
      */
-    List<Integer> getGroupAlertIds(MigrationTaskAlert alert);
+    List<Long> getGroupAlertIds(MigrationTaskAlert alert);
 }

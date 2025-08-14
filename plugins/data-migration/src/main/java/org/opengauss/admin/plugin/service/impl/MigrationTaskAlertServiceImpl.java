@@ -201,7 +201,7 @@ public class MigrationTaskAlertServiceImpl extends ServiceImpl<MigrationTaskAler
             return;
         }
 
-        List<Integer> alertIds = taskAlerts.stream().map(MigrationTaskAlert::getId).collect(Collectors.toList());
+        List<Long> alertIds = taskAlerts.stream().map(MigrationTaskAlert::getId).collect(Collectors.toList());
         removeBatchByIds(alertIds);
         alertDetailService.removeBatchByIds(alertIds);
     }
@@ -222,13 +222,13 @@ public class MigrationTaskAlertServiceImpl extends ServiceImpl<MigrationTaskAler
             return;
         }
 
-        List<Integer> alertIds = taskAlerts.stream().map(MigrationTaskAlert::getId).collect(Collectors.toList());
+        List<Long> alertIds = taskAlerts.stream().map(MigrationTaskAlert::getId).collect(Collectors.toList());
         removeBatchByIds(alertIds);
         alertDetailService.removeBatchByIds(alertIds);
     }
 
     @Override
-    public List<Integer> getGroupAlertIds(MigrationTaskAlert alert) {
+    public List<Long> getGroupAlertIds(MigrationTaskAlert alert) {
         return alertMapper.getGroupAlertIds(alert);
     }
 

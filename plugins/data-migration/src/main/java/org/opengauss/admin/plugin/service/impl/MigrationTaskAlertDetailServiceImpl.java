@@ -42,7 +42,7 @@ public class MigrationTaskAlertDetailServiceImpl
             throw new MigrationTaskException("Alert not found.");
         }
 
-        List<Integer> alertIds = alertService.getGroupAlertIds(taskAlert);
+        List<Long> alertIds = alertService.getGroupAlertIds(taskAlert);
 
         LambdaQueryWrapper<MigrationTaskAlertDetail> detailQueryWrapper = new LambdaQueryWrapper<>();
         detailQueryWrapper.in(MigrationTaskAlertDetail::getAlertId, alertIds);

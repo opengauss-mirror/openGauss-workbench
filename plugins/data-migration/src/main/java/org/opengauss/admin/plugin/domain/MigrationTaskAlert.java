@@ -23,7 +23,7 @@ import java.util.Locale;
 @TableName("tb_migration_task_alert")
 public class MigrationTaskAlert {
     @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+    private Long id;
     private int taskId;
     private int migrationPhase;
     private String dateTime;

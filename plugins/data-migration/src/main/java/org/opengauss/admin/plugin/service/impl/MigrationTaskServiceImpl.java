@@ -355,7 +355,11 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             wsInfo.setTotalErrorCount(processCounter.getTotalErrorCount());
         }
         MigrationTaskStatusRecord lastTaskStatus = migrationTaskStatusRecordService.getLastByTaskId(taskId);
-        wsInfo.setCurrentExecStatus(lastTaskStatus.getStatusId());
+        if (lastTaskStatus != null) {
+            wsInfo.setCurrentExecStatus(lastTaskStatus.getStatusId());
+        } else {
+            wsInfo.setCurrentExecStatus(task.getExecStatus());
+        }
         wsInfo.setExecStatus(task.getExecStatus());
         wsInfo.setExceptionAlertTotalCount(alertMapper.countGroupAlertByTaskId(taskId));
         if (task.getFinishTime() == null) {
@@ -558,8 +562,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         MigrationTaskExecResultDetail incrementalProcess = null;
         MigrationTaskExecResultDetail reverseProcess = null;
         MigrationTaskExecResultDetail dataCheckProcess = null;
-        if (!task.getExecStatus().equals(TaskStatus.MIGRATION_FINISH.getCode()) && !task.getExecStatus()
-            .equals(TaskStatus.FULL_CHECK_FINISH.getCode())) {
+        if (isRefreshTaskStatus(task)) {
             Map<String, Object> getResult = getSingleTaskStatusAndProcessByProtal(task);
             fullProcess = generateProcessDetail(getResult, "fullProcess");
             if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
@@ -601,6 +604,17 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                 .collect(Collectors.groupingBy(record -> record.getOperateType().toString()));
             wsInfo.setStatusRecords(recordMap);
         }
+    }
+
+    private boolean isRefreshTaskStatus(MigrationTask task) {
+        Integer execStatus = task.getExecStatus();
+        if (TaskStatus.MIGRATION_FINISH.getCode().equals(execStatus)
+                || TaskStatus.MIGRATION_ERROR.getCode().equals(execStatus)
+                || TaskStatus.CHECK_ERROR.getCode().equals(execStatus)) {
+            return false;
+        }
+        return !MigrationMode.OFFLINE.getCode().equals(task.getMigrationModelId())
+                || !TaskStatus.FULL_CHECK_FINISH.getCode().equals(execStatus);
     }
 
     private MigrationTaskExecResultDetail generateProcessDetail(Map<String, Object> detailsMap, String processKey) {

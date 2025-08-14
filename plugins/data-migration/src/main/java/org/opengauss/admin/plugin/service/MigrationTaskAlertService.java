@@ -72,5 +72,5 @@ public interface MigrationTaskAlertService extends IService<MigrationTaskAlert> 
      * @param alert alert entity
      * @return alert id list
      */
-    List<Integer> getGroupAlertIds(MigrationTaskAlert alert);
+    List<Long> getGroupAlertIds(MigrationTaskAlert alert);
 }

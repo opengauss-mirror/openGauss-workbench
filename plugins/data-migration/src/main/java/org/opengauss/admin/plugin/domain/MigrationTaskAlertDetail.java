@@ -19,6 +19,6 @@ import lombok.Data;
 @TableName("tb_migration_task_alert_detail")
 public class MigrationTaskAlertDetail {
     @TableId(value = "alert_id")
-    private int alertId;
+    private Long alertId;
     private String detail;
 }
