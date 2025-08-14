@@ -53,7 +53,10 @@ public class ExecOperations {
      * @throws JSchException exec exception
      */
     public static ExecResult executeCommand(SessionConfig config, String command) throws JSchException {
-        return executeCommand(config, command, DEFAULT_TIMEOUT);
+        if (command.contains("nohup")) {
+            executeCommand(config, command, DEFAULT_TIMEOUT, false);
+        }
+        return executeCommand(config, command, DEFAULT_TIMEOUT, true);
     }
 
     /**
@@ -82,7 +85,11 @@ public class ExecOperations {
         List<ExecResult> results = new ArrayList<>();
         for (String command : commands) {
             if (!command.trim().isEmpty()) {
-                results.add(executeCommand(config, command.trim(), timeout));
+                if (command.contains("nohup")) {
+                    results.add(executeCommand(config, command, DEFAULT_TIMEOUT, false));
+                } else {
+                    results.add(executeCommand(config, command, DEFAULT_TIMEOUT, true));
+                }
             }
         }
         return results;
@@ -94,10 +101,12 @@ public class ExecOperations {
      * @param config session config
      * @param command command
      * @param timeout timeout
+     * @param isPty isPty
      * @return exec result
      * @throws JSchException exec exception
      */
-    public static ExecResult executeCommand(SessionConfig config, String command, int timeout) throws JSchException {
+    public static ExecResult executeCommand(SessionConfig config, String command, int timeout, boolean isPty)
+        throws JSchException {
         Session session = null;
         ChannelExec channel = null;
         ExecResult result = new ExecResult();
@@ -109,7 +118,7 @@ public class ExecOperations {
             isAcquired = true;
             session = JschSessionPool.borrowSession(config);
             channel = ChannelProvider.getExecChannel(session);
-            channel.setPty(true);
+            channel.setPty(isPty);
             channel.setCommand(command);
             channel.connect();
             InputStream in = channel.getInputStream();
