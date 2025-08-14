@@ -28,6 +28,10 @@
             <artifactId>visualtool-common</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.opengauss</groupId>
+            <artifactId>jsch-session-pool</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid-spring-boot-starter</artifactId>
         </dependency>

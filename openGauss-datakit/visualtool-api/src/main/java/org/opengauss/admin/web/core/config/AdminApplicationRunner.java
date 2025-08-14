@@ -21,23 +21,16 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.web.core.config;
 
 import lombok.extern.slf4j.Slf4j;
-import org.opengauss.admin.common.core.domain.entity.agent.TaskMetricsDefinition;
-import org.opengauss.admin.system.service.HostMonitorCacheService;
+
 import org.opengauss.admin.system.service.ISysSettingService;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
-import org.opengauss.agent.service.AgentTaskManager;
 import org.opengauss.agent.service.IAgentInstallService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 import javax.annotation.Resource;
 
@@ -50,30 +43,18 @@ import javax.annotation.Resource;
 @Slf4j
 @Component
 public class AdminApplicationRunner implements ApplicationRunner {
-    @Autowired
+    @Resource
     private EncryptionUtils encryptionUtils;
     @Resource
     private IAgentInstallService agentInstallService;
     @Resource
-    private HostMonitorCacheService hostMonitorCacheService;
-    @Resource
-    private AgentTaskManager agentTaskManager;
-    @Resource
     private ISysSettingService sysSettingService;
-    @Resource
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
         this.encryptionUtils.updateKeyPairSecret();
         this.encryptionUtils.refreshKeyPair(false);
         sysSettingService.initHttpProxy();
-        List<TaskMetricsDefinition> metricsDefinitionList = agentTaskManager.queryHostMetricsDefinition();
-        hostMonitorCacheService.initHostMonitorCacheEnvironment(metricsDefinitionList);
-        threadPoolTaskExecutor.submit(() -> {
-            hostMonitorCacheService.startHostMonitorScheduled();
-            agentInstallService.startAllOfAgent();
-            log.info("start to activate all of agents and their tasks");
-        });
+        agentInstallService.startAllOfAgent();
     }
 }

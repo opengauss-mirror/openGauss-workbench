@@ -44,6 +44,10 @@ import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.OpsAssert;
 import org.opengauss.admin.system.plugin.beans.SshLogin;
+import org.opengauss.jsch.pool.ExecOperations;
+import org.opengauss.jsch.pool.JschSessionPool;
+import org.opengauss.jsch.pool.config.SessionConfig;
+import org.opengauss.jsch.pool.enums.ChannelType;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -55,10 +59,14 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import javax.annotation.PreDestroy;
 
 /**
  * JschExecutorService
@@ -112,11 +120,11 @@ public class JschExecutorService {
     /**
      * Get the hostname of the remote machine
      *
-     * @param session ssh session
+     * @param sshLogin ssh login info
      * @return hostname
      */
-    public String getHostname(Session session) {
-        return execCommand(session, SshCommandConstants.HOSTNAME);
+    public String getHostname(SshLogin sshLogin) {
+        return execCommand(sshLogin, SshCommandConstants.HOSTNAME);
     }
 
     /**
@@ -712,17 +720,38 @@ public class JschExecutorService {
          * @return result
          */
         public String execCommand(SshLogin sshLogin, String command) {
-            Session session = null;
+            SessionConfig execConfig = new SessionConfig(sshLogin.getHost(), sshLogin.getUsername(),
+                sshLogin.getPassword()).withChannelType(ChannelType.EXEC).withTimeout(15000);
             try {
-                session = createSession(sshLogin);
-                return execCommand(session, command);
-            } catch (OpsException e) {
-                throw new OpsException(e.getMessage());
-            } finally {
-                // 断开会话
-                if (Objects.nonNull(session)) {
-                    session.disconnect();
-                }
+                ExecOperations.ExecResult result = ExecOperations.executeCommand(execConfig, command);
+                return result.getResult();
+            } catch (Exception ex) {
+                throw new OpsException(
+                    "exec command failed, sshLogin:" + sshLogin + " command:" + command + " ex:" + ex.getMessage());
+            }
+        }
+
+        /**
+         * exec commands and session will be created and closed
+         *
+         * @param sshLogin sshLogin
+         * @param commands commands
+         * @return result
+         */
+        public String execCommands(SshLogin sshLogin, String commands) {
+            SessionConfig execConfig = new SessionConfig(sshLogin.getHost(), sshLogin.getUsername(),
+                sshLogin.getPassword()).withChannelType(ChannelType.EXEC).withTimeout(15000);
+            try {
+                List<ExecOperations.ExecResult> results = ExecOperations.executeCommands(execConfig, commands);
+                results.stream().filter(result -> result.getExitCode() != 0).findFirst().map(result -> {
+                    throw new OpsException(
+                        "exec command failed, sshLogin:" + sshLogin + " command:" + commands + " ex: "
+                            + result.getError().toString());
+                });
+                return results.stream().map(ExecOperations.ExecResult::getOutput).collect(Collectors.joining());
+            } catch (Exception ex) {
+                throw new OpsException(
+                    "exec command failed, sshLogin:" + sshLogin + " command:" + commands + " ex:" + ex.getMessage());
             }
         }
 
@@ -942,5 +971,10 @@ public class JschExecutorService {
                 });
             }
         }
+    }
+
+    @PreDestroy
+    private void destroy() {
+        JschSessionPool.closeAllPools();
     }
 }

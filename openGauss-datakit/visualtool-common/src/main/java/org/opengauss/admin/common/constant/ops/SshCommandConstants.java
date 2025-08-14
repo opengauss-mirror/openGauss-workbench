@@ -46,9 +46,9 @@ public interface SshCommandConstants {
     /**
      * CPU usage
      */
-    String CPU_USING =
-        "top -b -n2 -p 1 | fgrep \"Cpu(s)\" | tail -1 | awk -F'id,' -v prefix=\"$prefix\" '{ split($1, vs, \",\"); "
-            + "v=vs[length(vs)]; sub(\"%\",\"\", v); printf \"%s%.1f\\n\", prefix, 100 - v }'";
+    String CPU_USING
+        = "awk 'NR==1 {u=$2; n=$3; s=$4; i=$5; w=$6; x=$7; y=$8; z=$9} END {total=u+n+s+i+w+x+y+z; idle=i; printf \"%"
+        + ".1f\\n\", 100 - (idle*100/total)}' /proc/stat";
     /**
      * rely
      */

@@ -134,7 +134,11 @@
                 <artifactId>visualtool-common</artifactId>
                 <version>${admin.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.opengauss</groupId>
+                <artifactId>jsch-session-pool</artifactId>
+                <version>${admin.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.opengauss</groupId>
                 <artifactId>visualtool-framework</artifactId>
@@ -259,6 +263,7 @@
         <module>openGauss-datakit/visualtool-service</module>
         <module>openGauss-datakit/visualtool-common</module>
         <module>openGauss-datakit/cov-analysis</module>
+        <module>openGauss-datakit/jsch-session-pool</module>
         <module>openGauss-datakit-agent</module>
         <module>plugins/alert-monitor</module>
         <module>plugins/base-ops</module>

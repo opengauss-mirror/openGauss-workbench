@@ -26,6 +26,7 @@ package org.opengauss.admin.plugin.config;
 
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.opengauss.admin.common.utils.Threads;
+import org.opengauss.jsch.pool.JschSessionPool;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -34,6 +35,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import javax.annotation.PreDestroy;
+
 /**
  * ThreadPool Configuration
  *
@@ -41,6 +44,8 @@ import java.util.concurrent.ThreadPoolExecutor;
  **/
 @Configuration
 public class ThreadPoolConfig {
+    private ThreadPoolTaskExecutor executor;
+    private ScheduledExecutorService scheduledExecutor;
 
     private int corePoolSize = 10;
 
@@ -50,9 +55,14 @@ public class ThreadPoolConfig {
 
     private int keepAliveSeconds = 30;
 
+    /**
+     * thread pool task executor
+     *
+     * @return thread pool task executor
+     */
     @Bean(name = "threadPoolTaskExecutor")
     public ThreadPoolTaskExecutor threadPoolTaskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor = new ThreadPoolTaskExecutor();
         executor.setMaxPoolSize(maxPoolSize);
         executor.setCorePoolSize(corePoolSize);
         executor.setQueueCapacity(queueCapacity);
@@ -60,15 +70,33 @@ public class ThreadPoolConfig {
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         return executor;
     }
+
+    /**
+     * scheduled executor service
+     *
+     * @return scheduled executor service
+     */
     @Bean(name = "scheduledExecutorService")
     protected ScheduledExecutorService scheduledExecutorService() {
-        return new ScheduledThreadPoolExecutor(corePoolSize,
-                new BasicThreadFactory.Builder().namingPattern("schedule-pool-%d").daemon(true).build()) {
+        scheduledExecutor = new ScheduledThreadPoolExecutor(corePoolSize,
+            new BasicThreadFactory.Builder().namingPattern("schedule-pool-%d").daemon(true).build()) {
             @Override
             protected void afterExecute(Runnable r, Throwable t) {
                 super.afterExecute(r, t);
                 Threads.printException(r, t);
             }
         };
+        return scheduledExecutor;
+    }
+
+    @PreDestroy
+    private void destroyExecutor() {
+        if (executor != null) {
+            executor.shutdown();
+        }
+        if (scheduledExecutor != null) {
+            scheduledExecutor.shutdown();
+        }
+        JschSessionPool.closeAllPools();
     }
 }

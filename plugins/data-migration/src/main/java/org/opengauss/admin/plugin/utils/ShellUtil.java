@@ -21,11 +21,11 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.plugin.utils;
 
 import cn.hutool.extra.ssh.JschRuntimeException;
 import cn.hutool.extra.ssh.JschUtil;
+
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
@@ -34,11 +34,17 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
+import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.plugin.exception.ShellException;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
+import org.opengauss.jsch.pool.ExecOperations;
+import org.opengauss.jsch.pool.config.SessionConfig;
+import org.opengauss.jsch.pool.enums.ChannelType;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -57,6 +63,8 @@ import java.util.Properties;
 import java.util.StringJoiner;
 
 /**
+ * ShellUtil
+ *
  * @className: ShellUtil
  * @author: xielibo
  * @date: 2023-01-16 21:55
@@ -121,54 +129,27 @@ public class ShellUtil {
     /**
      * exec command and get result
      *
-     * @param host     connection host of the executing machine
-     * @param port     connection port of the executing machine
-     * @param user     connection username of the executing machine
+     * @param host connection host of the executing machine
+     * @param port connection port of the executing machine
+     * @param user connection username of the executing machine
      * @param password connection password of the executing machine
-     * @param command  execute command
+     * @param command execute command
      * @return exec result
      */
     public static JschResult execCommandGetResult(String host, Integer port, String user, String password,
-                                                    String command) {
-        Session session = null;
-        ChannelExec channelExec = null;
+        String command) {
         JschResult jschResult = new JschResult();
-        InputStream in = null;
-        InputStreamReader isr = null;
         try {
-            session = getSession(host, port, user, password, command);
-            channelExec = (ChannelExec) session.openChannel("exec");
-            channelExec.setCommand(command + " 2>&1");
-            channelExec.connect();
-            in = channelExec.getInputStream();
-            isr = new InputStreamReader(in, StandardCharsets.UTF_8);
-            String result = getResult(isr);
-            int exitCode = getExitCode(channelExec);
-            jschResult.setExitCode(exitCode);
-            jschResult.setResult(result);
-        } catch (JSchException | JschRuntimeException | IOException | InterruptedException e) {
-            log.error("exec command error, message: {}", e.getMessage());
-            jschResult.setExitCode(-1);
-            jschResult.setResult(e.getMessage());
-        } finally {
-            JschUtil.close(channelExec);
-            JschUtil.close(session);
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    log.error("close input stream error, message: {}", e.getMessage());
-                }
-            }
-            if (isr != null) {
-                try {
-                    isr.close();
-                } catch (IOException e) {
-                    log.error("close input stream reader error, message: {}", e.getMessage());
-                }
-            }
+            SessionConfig execConfig = new SessionConfig(host, port, user, password).withChannelType(ChannelType.EXEC)
+                .withTimeout(15000);
+            ExecOperations.ExecResult result = ExecOperations.executeCommand(execConfig, command + " 2>&1");
+            jschResult.setExitCode(result.getExitCode());
+            jschResult.setResult(result.getResult());
+            return jschResult;
+        } catch (Exception ex) {
+            throw new OpsException(
+                "exec command failed, host:" + host + " command:" + command + " ex:" + ex.getMessage());
         }
-        return jschResult;
     }
 
     /**
@@ -461,14 +442,11 @@ public class ShellUtil {
             log.warn("The list of dependencies to check is null or empty.");
             return Collections.emptyList();
         }
-
         String command = String.format("yum list installed | egrep '%s'", String.join("|", dependencies));
         String commandResult = execCommandGetResult(rootShellInfo, command).getResult();
-
         if (StringUtils.isEmpty(commandResult)) {
             return dependencies;
         }
-
         List<String> missingDependencies = new ArrayList<>();
         for (String dependency : dependencies) {
             if (!commandResult.contains(dependency)) {
@@ -489,18 +467,16 @@ public class ShellUtil {
             log.warn("The list of dependencies to install is null or empty.");
             return;
         }
-
         StringJoiner dependencyJoiner = new StringJoiner(" ");
         dependencies.forEach(dependencyJoiner::add);
-
         String command = "yum install -y " + dependencyJoiner.toString();
         JschResult jschResult = execCommandGetResult(rootShellInfo, command);
-
         if (jschResult.isOk()) {
             log.info("Dependencies installed successfully: {}", dependencyJoiner.toString());
         } else {
-            throw new ShellException(String.format(
-                    "Failed to install dependencies. Command: {%s}, Result: {%s}", command, jschResult.getResult()));
+            throw new ShellException(
+                String.format("Failed to install dependencies. Command: {%s}, Result: {%s}", command,
+                    jschResult.getResult()));
         }
     }
 

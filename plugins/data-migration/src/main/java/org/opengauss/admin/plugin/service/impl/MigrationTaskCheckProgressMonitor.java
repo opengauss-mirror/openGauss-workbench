@@ -26,6 +26,7 @@ package org.opengauss.admin.plugin.service.impl;
 import static org.opengauss.admin.plugin.enums.TaskStatus.FULL_CHECK_FINISH;
 import static org.opengauss.admin.plugin.enums.TaskStatus.FULL_CHECK_START;
 
+import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -48,9 +49,11 @@ import org.opengauss.admin.plugin.service.MigrationTaskCheckProgressSummaryServi
 import org.opengauss.admin.plugin.utils.ShellUtil;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -113,46 +116,63 @@ public class MigrationTaskCheckProgressMonitor implements Runnable {
         String successCmd = "cat " + installPath + "portal/workspace/" + taskId + "/check_result/result/success.log";
         String failedCmd = "cat " + installPath + "portal/workspace/" + taskId + "/check_result/result/failed.log";
         Map<String, String> commands = new HashMap<>();
-        Map<String, String> checkResultLogStatus = new HashMap<>();
+        Map<String, String> checkLogStatus = new HashMap<>();
         commands.put("success", successCmd);
         commands.put("failed", failedCmd);
         commands.forEach((key, value) -> {
             JschResult jschResult = ShellUtil.execCommandGetResult(installHost.getHost(), installHost.getPort(),
                 installHost.getRunUser(), password, value);
             String resultMsg = getResultMessage(jschResult);
-            if (jschResult.isOk()) {
-                String message = PortalHandle.replaceAllBlank(resultMsg);
-                if (StrUtil.isNotEmpty(message)) {
-                    if (message.endsWith(",")) {
-                        message = "[" + message.substring(0, message.length() - 1) + "]";
-                        List<DataCheckVo> detailList = JSONObject.parseArray(message, DataCheckVo.class);
-                        List<MigrationTaskCheckProgressDetail> details = detailList.stream().map(item -> {
-                            MigrationTaskCheckProgressDetail tableMsg = new MigrationTaskCheckProgressDetail();
-                            tableMsg.setId(taskId + "_" + item.getTable());
-                            tableMsg.setTaskId(taskId);
-                            tableMsg.setSchemaName(item.getSchema());
-                            tableMsg.setSourceName(item.getTable());
-                            tableMsg.setSinkName(item.getTable());
-                            tableMsg.setStatus(key);
-                            tableMsg.setMessage(item.getMessage());
-                            tableMsg.setFailedRows(item.getDiffCount());
-                            tableMsg.setRepairFileName(getFailedTableRepairName(key, item));
-                            return tableMsg;
-                        }).collect(Collectors.toList());
-                        detailService.saveOrUpdateBatch(details, 100);
-                        checkResultLogStatus.put(key, "success");
-                        log.info("refresh data check detail information: subTaskId: {}  {}", detailList.size(), taskId);
-                    } else {
-                        log.warn("fetch data check detail information is invalid , subTaskId: {}", taskId);
-                    }
-                } else {
-                    log.warn("fetch data check detail information empty , subTaskId: {}", taskId);
-                }
-            } else {
-                checkResultLogStatus.put(key, "failed");
-                log.warn("refresh data check detail information failed, subTaskId: {} {}", taskId, resultMsg);
+            if (!jschResult.isOk()) {
+                checkLogStatus.put(key, "failed");
+                log.warn("refresh data check detail information failed, subTaskId: {} {}", taskId, checkLogStatus);
+                return;
             }
+            String message = PortalHandle.replaceAllBlank(resultMsg);
+            if (StrUtil.isEmpty(message)) {
+                checkLogStatus.put(key, "failed");
+                log.warn("fetch data check detail information empty , subTaskId: {} {}", taskId, checkLogStatus);
+                return;
+            }
+            if (!message.endsWith(",")) {
+                checkLogStatus.put(key, "failed");
+                log.warn("fetch data check detail information is invalid , subTaskId: {} {}", taskId, checkLogStatus);
+                return;
+            }
+            message = "[" + message.substring(0, message.length() - 1) + "]";
+            List<DataCheckVo> detailList = parseDataCheckDetailList(message);
+            List<MigrationTaskCheckProgressDetail> details = detailList.stream().map(item -> {
+                MigrationTaskCheckProgressDetail tableMsg = new MigrationTaskCheckProgressDetail();
+                tableMsg.setId(taskId + "_" + item.getTable());
+                tableMsg.setTaskId(taskId);
+                tableMsg.setSchemaName(item.getSchema());
+                tableMsg.setSourceName(item.getTable());
+                tableMsg.setSinkName(item.getTable());
+                tableMsg.setStatus(key);
+                tableMsg.setMessage(item.getMessage());
+                tableMsg.setFailedRows(item.getDiffCount());
+                tableMsg.setRepairFileName(getFailedTableRepairName(key, item));
+                return tableMsg;
+            }).collect(Collectors.toList());
+            detailService.saveOrUpdateBatch(details, 100);
+            checkLogStatus.put(key, "success");
+            log.info("refresh data check detail success: subTaskId: {}  {}, detailSize: {} {}", taskId, key,
+                detailList.size(), checkLogStatus);
         });
+    }
+
+    private static List<DataCheckVo> parseDataCheckDetailList(String message) {
+        if (message == null || message.isBlank()) {
+            return Collections.emptyList();
+        }
+        try {
+            List<DataCheckVo> result = JSONObject.parseArray(message, DataCheckVo.class);
+            return result != null ? result : Collections.emptyList();
+        } catch (JSONException ex) {
+            log.warn("Failed to parse data check details. Message: '{}', Error: {}",
+                message.substring(0, Math.min(100, message.length())), ex.getMessage());
+        }
+        return Collections.emptyList();
     }
 
     private String getFailedTableRepairName(String key, DataCheckVo item) {
@@ -180,19 +200,30 @@ public class MigrationTaskCheckProgressMonitor implements Runnable {
             if (StrUtil.isEmpty(portalDataCheckProcess)) {
                 return;
             }
-            MigrationTaskCheckProgressSummary summary = JSONObject.parseObject(portalDataCheckProcess,
-                MigrationTaskCheckProgressSummary.class);
-            summary.setTaskId(taskId);
-            summary.setSourceDb(migrationTask.getSourceDb());
-            summary.setSinkDb(migrationTask.getTargetDb());
-            LambdaUpdateWrapper<MigrationTaskCheckProgressSummary> updateWrapper = Wrappers.lambdaUpdate(
-                MigrationTaskCheckProgressSummary.class);
-            updateWrapper.eq(MigrationTaskCheckProgressSummary::getTaskId, taskId);
-            summaryService.saveOrUpdate(summary, updateWrapper);
+            Optional<MigrationTaskCheckProgressSummary> summaryOptional = parseDataCheckSummary(portalDataCheckProcess);
+            summaryOptional.ifPresent(summary -> {
+                summary.setTaskId(taskId);
+                summary.setSourceDb(migrationTask.getSourceDb());
+                summary.setSinkDb(migrationTask.getTargetDb());
+                LambdaUpdateWrapper<MigrationTaskCheckProgressSummary> updateWrapper = Wrappers.lambdaUpdate(
+                    MigrationTaskCheckProgressSummary.class);
+                updateWrapper.eq(MigrationTaskCheckProgressSummary::getTaskId, taskId);
+                summaryService.saveOrUpdate(summary, updateWrapper);
+            });
             log.info("refresh data check summary information, subTaskId: {} ", taskId);
         } else {
             log.warn("refresh data check summary information failed, subTaskId: {} {}", taskId, resultMsg);
         }
+    }
+
+    private static Optional<MigrationTaskCheckProgressSummary> parseDataCheckSummary(String portalDataCheckProcess) {
+        try {
+            return Optional.ofNullable(
+                JSONObject.parseObject(portalDataCheckProcess, MigrationTaskCheckProgressSummary.class));
+        } catch (JSONException ex) {
+            log.warn("parse data check summary failed, {} {}", portalDataCheckProcess, ex.getMessage());
+        }
+        return Optional.empty();
     }
 
     /**
