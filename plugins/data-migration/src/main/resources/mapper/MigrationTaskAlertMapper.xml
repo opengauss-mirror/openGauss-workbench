@@ -37,7 +37,7 @@
             log_code
     </select>
 
-    <select id="getGroupAlertIds" resultType="Integer">
+    <select id="getGroupAlertIds" resultType="Long">
         SELECT id
         FROM tb_migration_task_alert
         WHERE migration_phase = #{migrationPhase}
