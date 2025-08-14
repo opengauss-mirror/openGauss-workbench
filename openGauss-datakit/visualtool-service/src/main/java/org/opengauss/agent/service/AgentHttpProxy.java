@@ -17,6 +17,7 @@ package org.opengauss.agent.service;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 import org.opengauss.admin.common.core.domain.entity.agent.AgentInstallEntity;
 import org.opengauss.admin.common.exception.ops.AgentTaskException;
@@ -25,9 +26,11 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.time.Duration;
 import java.util.Locale;
+import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Resource;
 
@@ -55,11 +58,14 @@ public class AgentHttpProxy {
         String url = String.format(Locale.getDefault(), AGENT_PUB_KEY_URL, agent.getAgentIp(), agent.getAgentPort());
         webClient.get()
             .uri(url)
-            .accept(MediaType.TEXT_PLAIN)
+            .accept(MediaType.APPLICATION_JSON)
             .retrieve()
             .onStatus(HttpStatus::isError, response -> handleHttpError(response, agent))
             .bodyToMono(String.class)
             .timeout(Duration.ofSeconds(2))
+            .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
+                .filter(throwable -> throwable instanceof TimeoutException || (
+                    throwable instanceof WebClientResponseException ex && ex.getStatusCode().is5xxServerError())))
             .doOnNext(agent::setPublicKey)
             .doOnError(error -> log.error("Failed to fetch public key from {}:{} - {}", agent.getAgentIp(),
                 agent.getAgentPort(), error.getMessage()))
