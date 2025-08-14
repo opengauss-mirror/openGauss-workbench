@@ -307,6 +307,7 @@
       "installPathPlaceholder": "请输入安装路径",
       "userPlaceholder": "请输入安装用户",
       "formaterror": "安装路径格式错误",
+      "pathDepthExceeded": "安装路径深度不能超过五层",
       "portPlaceholder": "请输入端口号",
       "stringLengthOver": "字符串长度超出限制",
       "numberRangeOver": "端口号超出范围限制",

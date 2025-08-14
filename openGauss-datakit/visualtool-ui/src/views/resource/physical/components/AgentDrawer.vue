@@ -25,7 +25,7 @@
             </template>
             <template #footer>
                 <div style="flex: auto" class="footerBtn">
-                    <el-button @click="unInstall">{{ $t('physical.index.uninstall') }}</el-button>
+                    <el-button @click="unInstall" :loading="unInstallLoading">{{ $t('physical.index.uninstall') }}</el-button>
                     <el-button type="primary" @click="emitClose">{{ $t('physical.index.close') }}</el-button>
                 </div>
             </template>
@@ -54,11 +54,11 @@ const drawer2 = ref(true)
 const expressList = computed(() => [
     {
         label: t('physical.index.agentName'),
-        value: props.rowInfo?.hostname || '--'
+        value: props.rowInfo?.agentName || '--'
     },
     {
-        label: t('physical.index.operationStatus'),
-        value: props.rowInfo?.agentStatus !== AgentStatus.STOP ? t('physical.index.running') : t('physical.index.offline')
+      label: t('physical.index.operationStatus'),
+      value: unInstallLoading.value ? '--' : (props.rowInfo?.agentStatus !== AgentStatus.STOP ? t('physical.index.running') : t('physical.index.offline'))
     },
     {
         label: t('physical.index.serverIp'),
@@ -104,7 +104,9 @@ const startAgent = () => {
     }
 }
 
+const unInstallLoading = ref(false)
 const unInstall = () => {
+  unInstallLoading.value = true
     if (props.rowInfo?.hostId) {
         uninstallAgent(props.rowInfo.hostId).then((res: KeyValue) => {
             if (res.code === 200) {
@@ -114,6 +116,9 @@ const unInstall = () => {
         })
     }
 }
+onMounted(() => {
+  unInstallLoading.value = false
+})
 
 </script>
 <style lang="less" scoped>

@@ -46,7 +46,9 @@
           <el-table-column :label="$t('physical.index.serverName')" prop="name">
             <template #default="{ row }">
               <div class="flex-col-start">
-                <div class="serverName">{{ row.name || '--' }}</div>
+                <div class="serverName" :title="row.name || ''"
+                     style=" overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;"
+                >{{ row.name || '--' }}</div>
                 <div class="flex-row" style="margin-top: 8px;" v-if="row.tags">
                   <div class="flex-row" style="flex-wrap: wrap;">
                     <el-tag v-for="(item, index) in row.tags" :key="index" class="mr-s mb-s">
@@ -81,8 +83,8 @@
           <el-table-column :label="$t('physical.index.realNetRate')" prop="Real-time network rate">
             <template #default="{ row }">
               <div class="netWorkSpeed">
-                <div class="upSpeed">{{ t('physical.index.upLink') }}: {{ row.upSpeed || '--' }}</div>
-                <div class="downSpeed">{{ t('physical.index.downlink') }}: {{ row.downSpeed || '--' }}</div>
+                <div class="upSpeed">{{ t('physical.index.upLink') }}: {{ row.upSpeed && Number(row.upSpeed) > 0? row.upSpeed : '--'  }}</div>
+                <div class="downSpeed">{{ t('physical.index.downlink') }}: {{ row.downSpeed && Number(row.downSpeed) > 0? row.downSpeed : '--'}}</div>
               </div>
             </template>
           </el-table-column>

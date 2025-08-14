@@ -307,6 +307,7 @@
       "installPathPlaceholder": "Please enter the installation path",
       "userPlaceholder": "Please enter the installation user",
       "formaterror": "Invalid installation path format",
+      "pathDepthExceeded": "The installation path depth cannot exceed five levels",
       "portPlaceholder": "Please enter the port number",
       "stringLengthOver": "String length exceeds the limit",
       "numberRangeOver": "Port number is out of range",

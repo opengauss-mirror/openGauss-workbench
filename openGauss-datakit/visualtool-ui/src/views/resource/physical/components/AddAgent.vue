@@ -85,6 +85,10 @@ const formAgentRules = computed(() => {
       {
         validator: (rule: any, value: any, cb: any) => {
           return new Promise(resolve => {
+            if (value.trim().length === 0 && value.length > 0) {
+              cb(t('components.AddAgent.namePlaceholder'))
+              return resolve(false)
+            }
             if (value.length < 100) {
               resolve(true)
             } else {
@@ -102,23 +106,38 @@ const formAgentRules = computed(() => {
       {required: true, trigger: 'blur', message: t('components.AddAgent.installPathPlaceholder')},
       {
         validator: (rule: any, value: any, callback: any) => {
-          if (value.length >= 100) {
+          if (value.length >= 255) {
             callback(new Error(t('components.AddAgent.stringLengthOver')))
             return
           }
           const isValidPath = (path: any) => {
-            if (path === '~') return true
+            if (path === '/' || path === '~') return true
             if (path.startsWith('~/')) {
               return !path.endsWith('/') && !path.includes('//')
             }
             const pathRegex = /^(?!.*\/\/)(?!.*\/$)(\/|\.\/)?([\w-]+(\/[\w-]+)*)?$/
             return pathRegex.test(path)
           }
-          if (isValidPath(value)) {
-            callback()
-          } else {
-            callback(new Error(t('components.AddAgent.formaterror')))
+          const isDepthValid = (path: string) => {
+            if (path === '/' || path === '~') return true
+            let pathToCheck = path
+            if (path.startsWith('~/')) {
+              pathToCheck = path.substring(1)
+            }
+            if (pathToCheck.startsWith('./')) pathToCheck = pathToCheck.substring(2)
+            if (pathToCheck.startsWith('../')) pathToCheck = pathToCheck.substring(3)
+            const components = pathToCheck.split('/').filter(comp => comp !== '')
+            return components.length <= 5
           }
+          if (!isValidPath(value)) {
+            callback(new Error(t('components.AddAgent.formaterror')))
+            return
+          }
+          if (!isDepthValid(value)) {
+            callback(new Error(t('components.AddAgent.pathDepthExceeded')))
+            return
+          }
+          callback()
         },
         trigger: ['blur', 'change']
       }
