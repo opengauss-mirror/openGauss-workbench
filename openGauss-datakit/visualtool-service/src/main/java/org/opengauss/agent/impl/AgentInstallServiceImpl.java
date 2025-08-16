@@ -106,6 +106,7 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
     public void installAgent(AgentInstallEntity agentInstall) {
         String agentId = agentInstall.getAgentId();
         log.info("start install Agent[{}]", agentId);
+        CommonUtils.pathValidate(agentInstall.getInstallPath());
         SshLogin sshLogin = agentSshLoginService.getSshLogin(agentInstall);
         jschExecutorService.executeWithSession(sshLogin, (session -> {
             agentInstall.setAgentIp(sshLogin.getHost());
