@@ -51,6 +51,7 @@ import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -68,6 +69,7 @@ import java.util.stream.Collectors;
  * @since 2024/7/22 17:37
  */
 @Supplier("alert")
+@Component
 public class AlertSupplier {
     @Autowired
     private AlertRuleService ruleService;
