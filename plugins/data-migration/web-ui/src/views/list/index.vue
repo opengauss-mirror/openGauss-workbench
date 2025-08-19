@@ -36,7 +36,7 @@
     <div class="table-con openDesignTableArea">
       <el-table ref="listTable" :loading="loading" row-key="id" :data="tableData" :expand-row-keys="expandRowIdList"
         @selection-change="handleSelectChange" :hoverable="!currentTheme" :row-class-name="handleRowClass"
-        @expand-change="handleExpand">
+        @expand-change="handleExpand" @row-click="handleRowClick">
         <template #empty>
           <div class="o-table-empty mt24">
             <el-icon class="o-empty-icon">
@@ -49,8 +49,11 @@
         </template>
         <el-table-column type="expand" width="32">
           <template #default="record">
-            <DetailTable v-if="record.row.expanded" :key="record.row?.id" :taskId="record.row?.id"
-              :listRefresh="listRefresh" @openTmerminal="openTmerminal"></DetailTable>
+            <div @click.stop>
+              <DetailTable v-if="expandRowIdList.includes(record.row.id) && record.row.expanded" :key="record.row?.id" :taskId="record.row?.id"
+                           :listRefresh="listRefresh" @openTmerminal="openTmerminal"></DetailTable>
+            </div>
+
           </template>
         </el-table-column>
         <el-table-column type="selection" :selectable="selectable" reverse-selection width="32"></el-table-column>
@@ -139,7 +142,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed, watch, provide, nextTick } from 'vue';
+import {reactive, ref, onMounted, computed, watch, provide, nextTick, onBeforeUnmount} from 'vue';
 import showMessage from '@/utils/showMessage';
 import FusionSearch from '@/components/fusion-search';
 import { searchType } from '@/types/searchType';
@@ -289,6 +292,70 @@ const openTmerminal = (row: any) => {
   terminalVisible.value = true
   macHost.value = row
 }
+
+const handleRowClick = (row: any) => {
+  const rowId = row.id;
+  const index = expandRowIdList.value.indexOf(rowId);
+
+  if (index > -1) {
+    expandRowIdList.value.splice(index, 1)
+    tableData.value.forEach(r => {
+      if (r.id === row.id) {
+        r.expanded = false
+      }
+    })
+  } else if (row.execStatus !== 0){
+    if (expandRowIdList.value.length >= maxExpandRow.value) {
+      const closeRowId = expandRowIdList.value[0]
+      expandRowIdList.value.shift()
+      tableData.value.forEach(r => {
+        if (r.id === closeRowId) {
+          r.expanded = false
+        }
+      })
+    }
+    expandRowIdList.value.push(rowId)
+    tableData.value.forEach(r => {
+      if (r.id === rowId) {
+        r.expanded = true
+      }
+    })
+  }
+}
+
+const handleDocumentClick = (event: MouseEvent) => {
+  if (!listTable.value) return;
+  const tableEl = listTable.value.$el
+  const clickTarget = event.target as HTMLElement
+  let isClickInsideTable = false
+  if (tableEl.contains(clickTarget)) {
+    isClickInsideTable = true
+  }
+  if (!isClickInsideTable) {
+    let currentElement: HTMLElement | null = clickTarget
+    while (currentElement) {
+      if (currentElement === tableEl) {
+        isClickInsideTable = true
+        break;
+      }
+      currentElement = currentElement.parentElement;
+    }
+  }
+  if (!isClickInsideTable) {
+    expandRowIdList.value = []
+    tableData.value.forEach(r => {
+        r.expanded = false
+    })
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleDocumentClick)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleDocumentClick)
+})
 
 const filter = reactive<any>({
   pageNum: 1,
