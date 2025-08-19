@@ -309,7 +309,8 @@
       "formaterror": "安装路径格式错误",
       "pathDepthExceeded": "安装路径深度不能超过五层",
       "portPlaceholder": "请输入端口号",
-      "stringLengthOver": "字符串长度超出限制",
+      "stringLengthOver": "路径长度不得超过255个字符",
+      "noChinesePath": "路径中请勿使用中文等非ASCII字符",
       "numberRangeOver": "端口号超出范围限制",
       "insAgentSuc": "开始安装Agent"
     },

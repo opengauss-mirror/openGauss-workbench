@@ -110,6 +110,10 @@ const formAgentRules = computed(() => {
             callback(new Error(t('components.AddAgent.stringLengthOver')))
             return
           }
+          if (/[\u4e00-\u9fa5]/.test(value)) {
+            callback(new Error(t('components.AddAgent.noChinesePath')))
+            return
+          }
           const isValidPath = (path: any) => {
             if (path === '/' || path === '~') return true
             if (path.startsWith('~/')) {

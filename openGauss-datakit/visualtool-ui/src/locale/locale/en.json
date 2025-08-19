@@ -309,7 +309,8 @@
       "formaterror": "Invalid installation path format",
       "pathDepthExceeded": "The installation path depth cannot exceed five levels",
       "portPlaceholder": "Please enter the port number",
-      "stringLengthOver": "String length exceeds the limit",
+      "stringLengthOver": "Path length must not exceed 255 characters",
+      "noChinesePath": "Please do not use non-ASCII characters (such as Chinese) in the path",
       "numberRangeOver": "Port number is out of range",
       "insAgentSuc": "Starting Agent installation"
     },
