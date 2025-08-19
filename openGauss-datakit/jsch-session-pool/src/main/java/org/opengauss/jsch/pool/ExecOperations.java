@@ -60,6 +60,23 @@ public class ExecOperations {
     }
 
     /**
+     * execute single command
+     *
+     * @param config session config
+     * @param command command
+     * @param commandTimeout command timeout
+     * @return exec result
+     * @throws JSchException exec exception
+     */
+    public static ExecResult executeCommand(SessionConfig config, String command, int commandTimeout)
+            throws JSchException {
+        if (command.contains("nohup")) {
+            executeCommand(config, command, commandTimeout, false);
+        }
+        return executeCommand(config, command, commandTimeout, true);
+    }
+
+    /**
      * execute multiple commands
      *
      * @param config session config
