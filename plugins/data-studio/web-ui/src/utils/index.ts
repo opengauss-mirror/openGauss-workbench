@@ -536,10 +536,29 @@ export const formatTableV2Data = (
   } else {
     columnWidth = 150;
   }
+  let colKeyMap = {};
   const myColumns: Column<any>[] = columns.map((col) => {
+    /**
+     * The query result may contain the same column with different values. 
+     * In this case, the column key needs to distinguish between them
+     * e.g. columns = ['CREATED_AT', '?column?', '?column?', '?column?', '?column?', '?column?']
+     * myColumns = [{title: 'CREATED_AT', key: 'CREATED_AT', dataKey: 'CREATED_AT', width: xxx}
+                {title: '?column?', key: '?column?', dataKey: '?column?', width: xxx}
+                {title: '?column?', key: '?column?1', dataKey: '?column?', width: xxx}
+                {title: '?column?', key: '?column?2', dataKey: '?column?', width: xxx}
+                {title: '?column?', key: '?column?3', dataKey: '?column?', width: xxx}
+                {title: '?column?', key: '?column?4', dataKey: '?column?', width: xxx}]
+     */
+      let colKey = col;
+      if (colKeyMap[col]) {
+        colKey += colKeyMap[col];
+        colKeyMap[col] ++;
+      } else {
+        colKeyMap[col] = 1;
+      }
     return {
       title: col,
-      key: col,
+      key: colKey,
       dataKey: col,
       width: columnWidth,
     };
@@ -547,7 +566,7 @@ export const formatTableV2Data = (
   const myData = data.map((rowData) => {
     const obj = {};
     myColumns.forEach((col, colIndex) => {
-      obj[col.dataKey] = rowData[colIndex];
+      obj[col.key] = rowData[colIndex];
     });
     return obj;
   });
