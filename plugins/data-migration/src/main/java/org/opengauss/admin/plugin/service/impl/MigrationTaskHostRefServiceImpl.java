@@ -47,6 +47,7 @@ import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterNodeIn
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcInfo;
+import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.CommonUtils;
 import org.opengauss.admin.common.utils.OpsAssert;
 import org.opengauss.admin.common.utils.StringUtils;
@@ -1062,6 +1063,10 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 isInstallSuccess = PortalHandle.installPortal(installParams);
             } catch (PortalInstallException e) {
                 log.error(e.getMessage());
+                installPortalLogTemp.append(e.getMessage()).append((char) 10);
+                isInstallSuccess = false;
+            } catch (OpsException e) {
+                log.error("install portal failed", e);
                 installPortalLogTemp.append(e.getMessage()).append((char) 10);
                 isInstallSuccess = false;
             }

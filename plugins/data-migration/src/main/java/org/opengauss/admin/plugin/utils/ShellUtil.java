@@ -153,6 +153,31 @@ public class ShellUtil {
     }
 
     /**
+     * exec command and get result
+     *
+     * @param shellInfo shell information
+     * @param command execute command
+     * @param commandTimeout command timeout
+     * @return exec result
+     */
+    public static JschResult execCommandGetResult(ShellInfoVo shellInfo, String command, int commandTimeout) {
+        JschResult jschResult = new JschResult();
+        try {
+            SessionConfig execConfig = new SessionConfig(shellInfo.getIp(), shellInfo.getPort(),
+                    shellInfo.getUsername(), shellInfo.getPassword()).withChannelType(ChannelType.EXEC)
+                    .withTimeout(15000);
+            ExecOperations.ExecResult result = ExecOperations.executeCommand(execConfig, command + " 2>&1",
+                    commandTimeout);
+            jschResult.setExitCode(result.getExitCode());
+            jschResult.setResult(result.getResult());
+            return jschResult;
+        } catch (Exception ex) {
+            throw new OpsException(
+                "exec command failed, host:" + shellInfo.getIp() + " command:" + command + " ex:" + ex.getMessage());
+        }
+    }
+
+    /**
      * Execute interactive command
      *
      * @param shellInfo shell information

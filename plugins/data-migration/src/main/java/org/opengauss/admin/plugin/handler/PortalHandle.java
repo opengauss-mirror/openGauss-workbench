@@ -140,6 +140,8 @@ public class PortalHandle {
     }
 
     public static boolean installPortal(MigrationHostPortalInstall installParams) throws PortalInstallException {
+        ShellInfoVo shellInfo = new ShellInfoVo(installParams.getHost(), installParams.getPort(),
+                installParams.getRunUser(), installParams.getRunPassword());
         ShellUtil.execCommandGetResult(installParams.getHost(), installParams.getPort(), installParams.getRunUser(), installParams.getRunPassword(),
                 "rm -rf  " + installParams.getInstallPath() + "portal");
         JschResult existsPortalInstallFileResult = ShellUtil.execCommandGetResult(installParams.getHost(), installParams.getPort(), installParams.getRunUser(), installParams.getRunPassword(), "[ -f " + installParams.getInstallPath() + installParams.getPkgName() + " ] && echo 1 || echo 0");
@@ -148,8 +150,7 @@ public class PortalHandle {
             String downloadCommand = String.format("wget -t 1 -P %s %s", installParams.getInstallPath(),
                     installParams.getPkgDownloadUrl() + installParams.getPkgName());
             log.info("wget download portal,command: {}", downloadCommand);
-            JschResult wgetResult = ShellUtil.execCommandGetResult(installParams.getHost(), installParams.getPort(),
-                    installParams.getRunUser(), installParams.getRunPassword(), downloadCommand);
+            JschResult wgetResult = ShellUtil.execCommandGetResult(shellInfo, downloadCommand, 600000);
             if (!wgetResult.isOk()) {
                 log.error("download pkg failed...");
                 throw new PortalInstallException("download portal package failed: " + wgetResult.getResult());
@@ -158,7 +159,7 @@ public class PortalHandle {
 
         String unzipShell = "tar -zxvf " + installParams.getInstallPath() + installParams.getPkgName() + " -C " + installParams.getInstallPath();
         log.info("unzip portal, {}", unzipShell);
-        JschResult unzipResult = ShellUtil.execCommandGetResult(installParams.getHost(), installParams.getPort(), installParams.getRunUser(), installParams.getRunPassword(), unzipShell);
+        JschResult unzipResult = ShellUtil.execCommandGetResult(shellInfo, unzipShell, 60000);
         if (!unzipResult.isOk()) {
             throw new PortalInstallException("unzip portal package failed: " + unzipResult.getResult());
         }
@@ -170,7 +171,7 @@ public class PortalHandle {
                 + "=install_mysql_all_migration_tools -Dskip=true -jar " + portalHome + installParams.getJarName();
         initPortalConfig(installParams.getHost(), installParams.getPort(), installParams.getRunUser(), installParams.getRunPassword(), portalHome);
         log.info("portal install, command: {}", installCommand);
-        JschResult installToolResult = ShellUtil.execCommandGetResult(installParams.getHost(), installParams.getPort(), installParams.getRunUser(), installParams.getRunPassword(), installCommand);
+        JschResult installToolResult = ShellUtil.execCommandGetResult(shellInfo, installCommand, 600000);
         if (!installToolResult.isOk()) {
             throw new PortalInstallException("install portal package failed: " + installToolResult.getResult());
         }
