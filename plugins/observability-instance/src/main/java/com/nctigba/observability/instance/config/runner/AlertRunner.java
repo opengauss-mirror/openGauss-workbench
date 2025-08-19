@@ -59,7 +59,7 @@ public class AlertRunner implements ApplicationRunner {
             paramMap.put("ruleContent", "${nodeName}状态异常，请相关人员检查该代理是否存在问题！");
             alertCaller.saveAlertRule(paramMap);
         } catch (Exception e) {
-            log.error("save the Exporter alert rule fail:{}, exception is {}", e.getMessage(), e);
+            log.warn("save the Exporter alert rule fail:{}", e.getMessage());
         }
     }
 }
