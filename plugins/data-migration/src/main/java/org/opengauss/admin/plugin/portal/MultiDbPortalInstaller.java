@@ -274,7 +274,7 @@ public class MultiDbPortalInstaller {
         String unzipCommand = String.format("tar -zxvf %s -C %s", installPkgPath, installInfo.getInstallPath());
         ShellInfoVo shellInfo = createShellInfo(installInfo);
 
-        JschResult unzipResult = ShellUtil.execCommandGetResult(shellInfo, unzipCommand);
+        JschResult unzipResult = ShellUtil.execCommandGetResult(shellInfo, unzipCommand, 60000);
         installLog.append("START_UNZIP_INSTALLATION_PACKAGE").append(System.lineSeparator());
         installLog.append(unzipResult.getResult()).append(System.lineSeparator());
         installLog.append("END_UNZIP_INSTALLATION_PACKAGE").append(System.lineSeparator());
@@ -298,7 +298,7 @@ public class MultiDbPortalInstaller {
 
         String installDependenciesCommand = String.format("cd %s && java -jar %s --install dependencies",
                 portalHome, jarName);
-        JschResult dependResult = ShellUtil.execCommandGetResult(shellInfo, installDependenciesCommand);
+        JschResult dependResult = ShellUtil.execCommandGetResult(shellInfo, installDependenciesCommand, 60000);
         installLog.append("START_INSTALL_PORTAL_DEPENDENCIES").append(System.lineSeparator());
         installLog.append(dependResult.getResult()).append(System.lineSeparator());
         installLog.append("END_INSTALL_PORTAL_DEPENDENCIES").append(System.lineSeparator());
@@ -306,7 +306,7 @@ public class MultiDbPortalInstaller {
 
         installLog.append("START_INSTALL_PORTAL").append(System.lineSeparator());
         String installCommand = String.format("cd %s && java -jar %s --install tools", portalHome, jarName);
-        JschResult jschResult = ShellUtil.execCommandGetResult(shellInfo, installCommand);
+        JschResult jschResult = ShellUtil.execCommandGetResult(shellInfo, installCommand, 600000);
         String installResult = jschResult.getResult();
         installLog.append(installResult).append(System.lineSeparator());
         installLog.append("END_INSTALL_PORTAL").append(System.lineSeparator());
@@ -328,7 +328,7 @@ public class MultiDbPortalInstaller {
                     installInfo.getPkgDownloadUrl() + installInfo.getPkgName());
             log.info("wget download portal, command: {}", downloadCommand);
             installLog.append(downloadCommand).append(System.lineSeparator());
-            JschResult wgetResult = ShellUtil.execCommandGetResult(shellInfo, downloadCommand);
+            JschResult wgetResult = ShellUtil.execCommandGetResult(shellInfo, downloadCommand, 600000);
             installLog.append(wgetResult.getResult()).append(System.lineSeparator());
 
             if (!wgetResult.isOk()) {
