@@ -50,13 +50,18 @@ import org.opengauss.admin.system.service.JschExecutorService;
 import org.opengauss.admin.system.service.ops.IHostService;
 import org.opengauss.admin.system.service.ops.IHostUserService;
 import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
+import org.opengauss.agent.service.IAgentInstallService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import javax.annotation.Resource;
 
@@ -78,6 +83,8 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
     private EncryptionUtils encryptionUtils;
     @Autowired
     private IOpsClusterNodeService opsClusterNodeService;
+    @Resource
+    private IAgentInstallService agentInstallService;
 
     @Override
     public List<OpsHostUserEntity> listHostUserByHostId(String hostId) {
@@ -248,12 +255,15 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean del(String hostUserId) {
-        if (opsClusterNodeService.countByHostUserId(hostUserId) > 0) {
-            throw new OpsException("User is being used by the cluster");
-        }
         OpsHostUserEntity hostUserEntity = getById(hostUserId);
         if (Objects.isNull(hostUserEntity)) {
             throw new OpsException("User information does not exist");
+        }
+        if (opsClusterNodeService.countByHostUserId(hostUserId) > 0) {
+            throw new OpsException("User is being used by the cluster");
+        }
+        if (agentInstallService.countByHostUserId(hostUserId) > 0) {
+            throw new OpsException("User is being used by the agent");
         }
         List<OpsHostUserEntity> list = listHostUserByHostId(hostUserEntity.getHostId());
         if (list.size() > 1) {

@@ -142,4 +142,12 @@ public interface IAgentInstallService extends IService<AgentInstallEntity> {
      * @return boolean
      */
     boolean hasInstall(String hostId);
+
+    /**
+     * count agent install info by hostUserId
+     *
+     * @param hostUserId hostUserId
+     * @return int
+     */
+    long countByHostUserId(String hostUserId);
 }

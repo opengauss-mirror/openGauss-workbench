@@ -18,9 +18,7 @@ package org.opengauss.admin.system.service;
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import org.jetbrains.annotations.Nullable;
 import org.opengauss.admin.common.constant.AgentConstants;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.model.agent.HostBaseInfo;
 import org.opengauss.admin.system.service.ops.IHostService;
 import org.springframework.stereotype.Service;
@@ -28,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Resource;
@@ -76,7 +75,7 @@ public class HostBasicService {
     public HostBaseInfo getHostBasicInfo(String hostId) {
         return hostBasicMap.compute(hostId, (k, v) -> {
             if (v == null) {
-                return convertHostBasicInfo(hostId);
+                return convertHostBasicInfo(hostId).orElse(null);
             } else {
                 return v;
             }
@@ -87,30 +86,25 @@ public class HostBasicService {
      * refresh host basic info by host id
      *
      * @param hostId host id
-     * @return host basic info
      */
-    public HostBaseInfo refreshCacheOfHostBasicInfo(String hostId) {
-        return hostBasicMap.compute(hostId, (k, v) -> convertHostBasicInfo(hostId));
+    public void refreshCacheOfHostBasicInfo(String hostId) {
+        hostBasicMap.compute(hostId, (k, v) -> convertHostBasicInfo(hostId).orElse(null));
     }
 
-    @Nullable
-    private HostBaseInfo convertHostBasicInfo(String hostId) {
-        OpsHostEntity host = hostService.getById(hostId);
-        if (Objects.isNull(host)) {
-            return null;
-        }
-        return HostBaseInfo.builder()
-            .hostName(host.getHostname())
-            .agentId(host.getHostId())
-            .cpuArchitecture(host.getCpuArch())
-            .cpuModel(host.getCpuModel())
-            .cpuFreq(host.getCpuFreq())
-            .physicalCores(host.getPhysicalCores())
-            .logicalCores(host.getLogicalCores())
-            .osName(host.getOs())
-            .osVersion(host.getOsVersion())
-            .osBuild(host.getOsBuild())
-            .build();
+    private Optional<HostBaseInfo> convertHostBasicInfo(String hostId) {
+        return Optional.ofNullable(hostService.getById(hostId))
+            .map(host -> HostBaseInfo.builder()
+                .hostName(host.getHostname())
+                .agentId(host.getHostId())
+                .cpuArchitecture(host.getCpuArch())
+                .cpuModel(host.getCpuModel())
+                .cpuFreq(host.getCpuFreq())
+                .physicalCores(host.getPhysicalCores())
+                .logicalCores(host.getLogicalCores())
+                .osName(host.getOs())
+                .osVersion(host.getOsVersion())
+                .osBuild(host.getOsBuild())
+                .build());
     }
 
     /**
