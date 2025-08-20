@@ -77,7 +77,7 @@
                 </el-form-item>
                 <div v-if="data.agentData.isAgent">
                   <el-form-item :label="$t('components.AddAgent.agentName')" prop="agentName">
-                    <el-input v-model.trim="data.agentData.agentName"  maxlength="101"
+                    <el-input v-model="data.agentData.agentName"  maxlength="101"
                               :placeholder="$t('components.AddAgent.namePlaceholder')" class="input-width"/>
                   </el-form-item>
                   <el-form-item :label="$t('components.AddAgent.installPath')" prop="installPath">
@@ -299,14 +299,13 @@ const formAgentRules = computed(() => {
     installPath: [
       { required: data.agentData.isAgent, trigger: 'blur', message: t('components.AddHost.5mphy3snxdo0') },
       {
-        pattern: /^([\/~])(?!\/)(?!.*\/\/).*$/,
-        message: t('transcribe.create.formaterror'),
-        trigger: ['blur', 'change']
-      },
-      {
         validator: (rule: any, value: any, callback: any) => {
           if (value.length >= 255) {
             callback(new Error(t('components.AddAgent.stringLengthOver')))
+            return
+          }
+          if (/[\u4e00-\u9fa5]/.test(value)) {
+            callback(new Error(t('components.AddAgent.noChinesePath')))
             return
           }
           const isValidPath = (path: any) => {
