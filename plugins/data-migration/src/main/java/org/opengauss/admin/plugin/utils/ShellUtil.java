@@ -495,7 +495,7 @@ public class ShellUtil {
         StringJoiner dependencyJoiner = new StringJoiner(" ");
         dependencies.forEach(dependencyJoiner::add);
         String command = "yum install -y " + dependencyJoiner.toString();
-        JschResult jschResult = execCommandGetResult(rootShellInfo, command);
+        JschResult jschResult = execCommandGetResult(rootShellInfo, command, 300000);
         if (jschResult.isOk()) {
             log.info("Dependencies installed successfully: {}", dependencyJoiner.toString());
         } else {
