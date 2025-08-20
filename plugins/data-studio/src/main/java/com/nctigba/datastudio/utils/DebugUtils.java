@@ -361,8 +361,8 @@ public class DebugUtils {
         List<List<Object>> dataList = new ArrayList<>();
         while (resultSet.next()) {
             List<Object> list = new ArrayList<>();
-            for (String column : columnList) {
-                Object columnValue = resultSet.getString(column);
+            for (int i = 0; i < columnList.size(); i++) {
+                Object columnValue = resultSet.getString(i + 1);
                 list.add(columnValue);
             }
             dataList.add(list);
