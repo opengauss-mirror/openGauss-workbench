@@ -15,6 +15,7 @@
 
 package org.opengauss.agent.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jcraft.jsch.Session;
@@ -390,6 +391,13 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
     @Override
     public boolean hasInstall(String hostId) {
         return !Objects.equals(AgentStatus.UNINSTALL, getAgentStatus(hostId));
+    }
+
+    @Override
+    public long countByHostUserId(String hostUserId) {
+        LambdaQueryWrapper<AgentInstallEntity> userInstallCounter = Wrappers.lambdaQuery(AgentInstallEntity.class)
+            .eq(AgentInstallEntity::getInstallUserId, hostUserId);
+        return count(userInstallCounter);
     }
 
     private String getSha256SumOfLocalAgentFile(String agentLocalFilePath) {

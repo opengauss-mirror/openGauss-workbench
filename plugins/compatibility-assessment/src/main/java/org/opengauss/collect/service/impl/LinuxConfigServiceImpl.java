@@ -107,10 +107,9 @@ public class LinuxConfigServiceImpl implements LinuxConfigService {
 
     @Override
     public RespBean deleteLinuxConfig(List<Integer> ids) {
-        ids.forEach(linuxConfigCache::invalidate);
+        ids.forEach(id -> linuxConfigCache.invalidate(Long.valueOf(id)));
         return RespBean.success("delete success");
     }
-
     @Override
     public RespBean getHostList() {
         List<String> list = linuxConfigCache.asMap().values().stream().map(LinuxConfig::getHost)
