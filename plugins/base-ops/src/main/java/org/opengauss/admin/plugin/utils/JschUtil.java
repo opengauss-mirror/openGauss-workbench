@@ -50,6 +50,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -452,6 +455,12 @@ public class JschUtil {
         log.info("Start uploading {} to {}", sourceFilePath, targetPath);
         synchronized (session) {
             try {
+                Path sourcePath = resolveSourcePath(sourceFilePath);
+                if (!Files.exists(sourcePath)) {
+                    log.error("Source file not found: {}", sourcePath);
+                    wsUtil.sendText(wsSession, "Source file not found: " + sourcePath);
+                    return;
+                }
                 ChannelSftp channel = null;
                 Channel sftpChannel = session.openChannel("sftp");
                 if (sftpChannel instanceof ChannelSftp) {
@@ -459,13 +468,22 @@ public class JschUtil {
                 }
                 channel.connect();
                 JschProgressMonitor jschProgressMonitor = new JschProgressMonitor(wsSession);
-                channel.put(sourceFilePath.trim(), targetPath.trim(), jschProgressMonitor, ChannelSftp.OVERWRITE);
+                channel.put(sourcePath.toString(), targetPath.trim(), jschProgressMonitor, ChannelSftp.OVERWRITE);
             } catch (JSchException | SftpException e) {
                 log.error("sftp upload Failure", e);
                 throw new OpsException("sftp upload Failure: " + e.getMessage());
             }
         }
         log.info("Upload End");
+    }
+
+    private Path resolveSourcePath(String sourceFilePath) {
+        Path path = Paths.get(sourceFilePath);
+        if (!path.isAbsolute()) {
+            Path baseDir = Paths.get(System.getProperty("user.dir"));
+            return baseDir.resolve(path).normalize();
+        }
+        return path.normalize();
     }
 
     /**
