@@ -77,7 +77,7 @@ public class AgentHeartbeatServiceImpl implements IAgentHeartbeatService {
             if (status.checkAndResetStatusChanged()) {
                 triggerStatusEvent(agentId, status.isOnline());
             }
-            if (!status.isOnline() && Duration.between(status.getLastHeartbeat(), now).getSeconds() > 600) {
+            if (!status.isOnline() && Duration.between(status.getLastHeartbeat(), now).getSeconds() > 10) {
                 agents.remove(agentId);
                 log.info("Removed offline agent: {}", agentId);
             }

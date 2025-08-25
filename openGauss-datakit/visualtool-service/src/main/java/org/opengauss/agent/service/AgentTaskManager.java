@@ -289,8 +289,12 @@ public class AgentTaskManager {
         agentHttpProxy.fetchAgentPubKey(agent);
         List<TaskInstanceEntity> list = taskInstanceService.queryAgentTaskInstance(agent.getAgentId());
         for (TaskInstanceEntity task : list) {
-            AgentTaskConfig taskConfig = buildAgentTaskConfig(task);
-            startAgentTask(agent, taskConfig);
+            try {
+                AgentTaskConfig taskConfig = buildAgentTaskConfig(task);
+                startAgentTask(agent, taskConfig);
+            } catch (OpsException e) {
+                log.error("start agent task failed, task id: {}", task.getId(), e);
+            }
         }
         return list.size();
     }

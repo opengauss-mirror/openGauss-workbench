@@ -270,7 +270,8 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
         String startAgentCmd = AgentCmdBuilder.buildStartAgentCommand(agentInstall.getInstallPath(), agentName);
         String execResult = jschExecutorService.execCommand(agentSshLoginService.getSshLogin(agentInstall),
             startAgentCmd);
-        log.info("start agent [{}] result: {}", startAgentCmd, execResult);
+        log.info("start agent {}/{} {} result: {}", agentInstall.getAgentIp(), agentInstall.getInstallUser(),
+            startAgentCmd, execResult);
         update(Wrappers.lambdaUpdate(AgentInstallEntity.class)
             .eq(AgentInstallEntity::getAgentId, agentInstall.getAgentId())
             .set(AgentInstallEntity::getStatus, AgentStatus.RUNNING)
@@ -299,7 +300,7 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
     private void stopAgent(AgentInstallEntity agent) {
         String stopCmd = AgentCmdBuilder.buildStopAgentCommand(agent.getInstallPath(), agentName);
         String execResult = jschExecutorService.execCommand(agentSshLoginService.getSshLogin(agent), stopCmd);
-        log.info("stop agent result: {} {}", stopCmd, execResult);
+        log.info("stop agent {} {} result: {} {}", agent.getAgentIp(), agent.getInstallUser(), stopCmd, execResult);
         update(Wrappers.lambdaUpdate(AgentInstallEntity.class)
             .eq(AgentInstallEntity::getAgentId, agent.getAgentId())
             .set(AgentInstallEntity::getStatus, AgentStatus.STOP));
@@ -338,7 +339,7 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
     public List<AgentInstallEntity> startAllOfAgent() {
         List<AgentInstallEntity> allAgents = list();
         List<AgentInstallEntity> startAgentList = new LinkedList<>();
-        log.info("start all agent, agent size: {}", allAgents.size());
+        log.info("start all agent, {} agent are starting", allAgents.size());
         CompletableFuture<Void> allFuture = CompletableFuture.allOf(
             allAgents.stream().map((agent -> CompletableFuture.supplyAsync(() -> {
                 if (restartAgent(agent)) {
