@@ -173,14 +173,18 @@ public class ImportClusterService extends ServiceImpl<OpsClusterMapper, OpsClust
 
     private boolean enterpriseVersion(SshLogin sshLogin, String envPath) {
         String command = "which gs_om";
-        boolean isEnterprise = false;
         try {
             String jschResult = jschExecutorFacade.execCommand(sshLogin, command, envPath);
-            isEnterprise = !jschResult.isEmpty();
+            if (jschResult.contains("script/gs_om")) {
+                return true;
+            }
+            if (jschResult.contains("command not found")) {
+                throw new OpsException("Failed to check openGauss version, detail: " + jschResult);
+            }
         } catch (OpsException opsException) {
             log.error("select enterprise version command error:", opsException);
         }
-        return isEnterprise;
+        return false;
     }
 
     private boolean liteVersion(Connection connection) {
