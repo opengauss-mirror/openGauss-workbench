@@ -422,7 +422,7 @@ import {IconHelpCircle} from "@computing/opendesign-icons"
 import showMessage from "@/utils/showMessage"
 import {useI18n} from 'vue-i18n'
 import JSEncrypt from "jsencrypt/bin/jsencrypt.min";
-import {initPublicKey} from "@/utils/jsencrypt";
+import { encryptPassword, initPublicKey } from "@/utils/jsencrypt";
 
 const {t} = useI18n()
 const addPlaybackRef = ref()
@@ -1058,41 +1058,39 @@ const sourceDbPort = computed(() => {
     return 0
   }
 })
-const getSourceClusterDB = () => {
+const getSourceClusterDB = async () => {
   sourceDBOptions.value = []
-  const tempformdata = new FormData()
-  const lastColonIndex = taskBasicInfo.value.sourceIp.lastIndexOf(':')
+  const tempformdata = new FormData ()
+  const lastColonIndex = taskBasicInfo.value.sourceIp.lastIndexOf ( ':' )
   let tempIp = ''
-  if (lastColonIndex !== -1) {
-    tempIp = taskBasicInfo.value.sourceIp.slice(0, lastColonIndex)
-  } else {
-    addHostVisible.value = true
+  if ( lastColonIndex !== - 1 ) {
+    tempIp = taskBasicInfo.value.sourceIp.slice ( 0, lastColonIndex )
   }
-  if (!hostIpId.get([tempIp])) {
+  if ( !hostIpId.get ( [tempIp] ) ) {
     addHostVisible.value = true
   } else {
     addHostVisible.value = false
-    validateSourcehostip()
-    sourceHostInfo.value.hostId = hostIpId.get([tempIp]).split(',')[0]
-    sourceHostInfo.value.publicIp = hostIpId.get([tempIp]).split(',')[1]
-    sourceHostInfo.value.privateIp = hostIpId.get([tempIp]).split(',')[2]
-    sourceHostInfo.value.port = hostIpId.get([tempIp]).split(',')[3]
-    getUserList(sourceHostInfo.value.hostId, 'source')
-    tempformdata.append('url', `jdbc:${taskBasicInfo.value.sourceDbType.toLowerCase()}://${taskBasicInfo.value.sourceIp}`)
-    tempformdata.append('username', sourceClusterInfo.value[taskBasicInfo.value.sourceIp][0])
-    const encryptUserPwd = encryptor.encrypt(sourceClusterInfo.value[taskBasicInfo.value.sourceIp][1])
-    tempformdata.append('password', encryptUserPwd)
+    validateSourcehostip ()
+    sourceHostInfo.value.hostId = hostIpId.get ( [tempIp] ).split ( ',' )[0]
+    sourceHostInfo.value.publicIp = hostIpId.get ( [tempIp] ).split ( ',' )[1]
+    sourceHostInfo.value.privateIp = hostIpId.get ( [tempIp] ).split ( ',' )[2]
+    sourceHostInfo.value.port = hostIpId.get ( [tempIp] ).split ( ',' )[3]
+    getUserList ( sourceHostInfo.value.hostId, 'source' )
+    tempformdata.append ( 'url', `jdbc:${taskBasicInfo.value.sourceDbType.toLowerCase ()}://${taskBasicInfo.value.sourceIp}` )
+    tempformdata.append ( 'username', sourceClusterInfo.value[taskBasicInfo.value.sourceIp][0] )
+    const encryptUserPwd = await encryptPassword ( sourceClusterInfo.value[taskBasicInfo.value.sourceIp][1] )
+    tempformdata.append ( 'password', encryptUserPwd )
     taskBasicInfo.value.sourceClusterId = sourceClusterInfo.value[taskBasicInfo.value.sourceIp][2]
-    sourceClusterDbsData(tempformdata).then(res => {
-      if (Number(res.code) === 200) {
+    sourceClusterDbsData ( tempformdata ).then ( res => {
+      if ( Number ( res.code ) === 200 ) {
         sourceDBOptions.value = []
-        res.data.forEach(item => {
-          sourceDBOptions.value.push({key: item, value: item})
-        })
+        res.data.forEach ( item => {
+          sourceDBOptions.value.push ( { key: item, value: item } )
+        } )
       }
-    }).catch(error => {
-      console.log('get source db error:', error)
-    })
+    } ).catch ( error => {
+      console.log ( 'get source db error:', error )
+    } )
   }
 }
 
@@ -1104,34 +1102,32 @@ const targetDbPort = computed(() => {
     return 0
   }
 })
-const getTargetClusterDB = () => {
+const getTargetClusterDB = async () => {
   targetDBOptions.value = []
-  const lastColonIndex = taskBasicInfo.value.targetIp.lastIndexOf(':')
+  const lastColonIndex = taskBasicInfo.value.targetIp.lastIndexOf ( ':' )
   let tempIp = ''
-  if (lastColonIndex !== -1) {
-    tempIp = taskBasicInfo.value.targetIp.slice(0, lastColonIndex)
+  if ( lastColonIndex !== - 1 ) {
+    tempIp = taskBasicInfo.value.targetIp.slice ( 0, lastColonIndex )
   }
-  targetHostInfo.value.hostId = hostIpId.get([tempIp]).split(',')[0]
-  targetHostInfo.value.publicIp = hostIpId.get([tempIp]).split(',')[1]
-  targetHostInfo.value.privateIp = hostIpId.get([tempIp]).split(',')[2]
-  targetHostInfo.value.port = hostIpId.get([tempIp]).split(',')[3]
+  targetHostInfo.value.hostId = hostIpId.get ( [tempIp] ).split ( ',' )[0]
+  targetHostInfo.value.publicIp = hostIpId.get ( [tempIp] ).split ( ',' )[1]
+  targetHostInfo.value.privateIp = hostIpId.get ( [tempIp] ).split ( ',' )[2]
+  targetHostInfo.value.port = hostIpId.get ( [tempIp] ).split ( ',' )[3]
   taskBasicInfo.value.targetClusterId = targetClusterInfo.value[taskBasicInfo.value.targetIp].nodeId
-  if (targetClusterInfo.value[taskBasicInfo.value.targetIp].dbUserPassword.length <= 50) {
-    targetClusterInfo.value[taskBasicInfo.value.targetIp].dbUserPassword =
-      encryptor.encrypt(targetClusterInfo.value[taskBasicInfo.value.targetIp].dbUserPassword)
-  }
-  getUserList(targetHostInfo.value.hostId, 'target')
-  targetClusterDbsData(targetClusterInfo.value[taskBasicInfo.value.targetIp]).then(res => {
-    if (Number(res.code) === 200) {
-      res.data.forEach(item => {
-        targetDBOptions.value.push({key: item.dbName, value: item.dbName, select: item.isSelect})
-      })
-      taskBasicInfo.value.targetDBuser = targetDBUserPwd.get(tempIp).split(',')[0]
-      taskBasicInfo.value.targetDBpwd = targetDBUserPwd.get(tempIp).split(',')[1]
+  targetClusterInfo.value[taskBasicInfo.value.targetIp].dbUserPassword =
+    await encryptPassword ( targetClusterInfo.value[taskBasicInfo.value.targetIp].dbUserPassword )
+  getUserList ( targetHostInfo.value.hostId, 'target' )
+  targetClusterDbsData ( targetClusterInfo.value[taskBasicInfo.value.targetIp] ).then ( res => {
+    if ( Number ( res.code ) === 200 ) {
+      res.data.forEach ( item => {
+        targetDBOptions.value.push ( { key: item.dbName, value: item.dbName, select: item.isSelect } )
+      } )
+      taskBasicInfo.value.targetDBuser = targetDBUserPwd.get ( tempIp ).split ( ',' )[0]
+      taskBasicInfo.value.targetDBpwd = targetDBUserPwd.get ( tempIp ).split ( ',' )[1]
     }
-  }).catch(error => {
-    console.log('get source db error:', error)
-  })
+  } ).catch ( error => {
+    console.log ( 'get source db error:', error )
+  } )
 }
 
 const getHostIp = () => {
