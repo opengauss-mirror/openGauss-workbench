@@ -36,7 +36,6 @@ import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import org.jetbrains.annotations.NotNull;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.plugin.context.MigrationTaskContext;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
@@ -182,7 +181,6 @@ public class MigrationTaskCheckProgressMonitor implements Runnable {
         return "";
     }
 
-    @NotNull
     private static String getResultMessage(JschResult jschResult) {
         String result = jschResult.getResult();
         return StrUtil.isNotEmpty(result) ? result.trim() : "";

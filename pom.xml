@@ -7,9 +7,6 @@
     <artifactId>visualtool-parent</artifactId>
     <version>${admin.version}</version>
 
-    <name>visualtool</name>
-    <description>openGauss All-in-one platform</description>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>17</java.version>
@@ -19,38 +16,79 @@
         <spring-brick.version>3.1.0</spring-brick.version>
         <spring-boot.version>2.5.6</spring-boot.version>
         <admin.version>7.0.0-RC2</admin.version>
-        <velocity.version>2.2</velocity.version>
+
         <knife4j.version>3.0.3</knife4j.version>
-        <druid.version>1.2.16</druid.version>
+        <druid.version>1.2.27</druid.version>
+        <!-- mybatis -->
         <mybatis-spring-boot.version>2.1.4</mybatis-spring-boot.version>
         <mybatis-plus.version>3.5.2</mybatis-plus.version>
-        <pagehelper.boot.version>1.3.1</pagehelper.boot.version>
+        <pagehelper.boot.version>1.4.3</pagehelper.boot.version>
+        <dynamic-datasource.version>3.5.2</dynamic-datasource.version>
+
+        <commons-validator.version>1.7</commons-validator.version>
         <commons.io.version>2.18.0</commons.io.version>
-        <commons.fileupload.version>1.4</commons.fileupload.version>
+        <commons.fileupload.version>1.6.0</commons.fileupload.version>
         <commons.collections.version>3.2.2</commons.collections.version>
+        <commons.compress.version>1.28.0</commons.compress.version>
+        <common.lang3.version>3.12.0</common.lang3.version>
+        <commons-net.version>3.11.1</commons-net.version>
+        <commons.exec.version>1.3</commons.exec.version>
+        <commons-codec.version>1.18.0</commons-codec.version>
+        <commons.pool2.version>2.11.1</commons.pool2.version>
+        <sshd.version>2.15.0</sshd.version>
+        <httpcore.version>4.4.16</httpcore.version>
+        <httpclient.version>4.5.13</httpclient.version>
+        <httpclient5.version>5.2.1</httpclient5.version>
+
+        <guava.version>23.0</guava.version>
         <fastjson.version>1.2.83</fastjson.version>
-        <lombok.version>1.18.24</lombok.version>
+        <lombok.version>1.18.34</lombok.version>
         <jwt.version>0.9.1</jwt.version>
-        <oshi.version>5.8.0</oshi.version>
         <bitwalker.version>1.21</bitwalker.version>
-        <jsch.version>0.2.9</jsch.version>
+        <jsch.version>2.27.2</jsch.version>
+        <snakeyaml.version>1.33</snakeyaml.version>
         <prometheus.version>1.8.1</prometheus.version>
-        <hutool.version>5.8.26</hutool.version>
+        <hutool.version>5.8.38</hutool.version>
         <hutool.lower.version>5.7.17</hutool.lower.version>
         <disruptor.version>4.0.0</disruptor.version>
         <opentelemetry.version>1.30.1</opentelemetry.version>
-        <commons-net.version>3.11.1</commons-net.version>
+
         <opengauss-jdbc.version>6.0.0-og</opengauss-jdbc.version>
-        <mysql-jdbc.version>8.0.33</mysql-jdbc.version>
-        <zero.allocation.hashing.version>1.30.1</zero.allocation.hashing.version>
+        <mysql-jdbc.version>9.4.0</mysql-jdbc.version>
+        <sqlite.version>3.49.1.0</sqlite.version>
+        <postgresql-jdbc.version>42.7.5</postgresql-jdbc.version>
         <servlet-api.version>4.0.1</servlet-api.version>
         <easyexcel.version>4.0.3</easyexcel.version>
         <poi.version>5.4.0</poi.version>
+
+        <oshi.version>6.4.6</oshi.version>
+        <slf4j.version>1.7.36</slf4j.version>
+        <gson.version>2.11.0</gson.version>
+        <hikaricp.version>5.0.1</hikaricp.version>
+        <istack-commons-runtime.version>3.0.6</istack-commons-runtime.version>
+        <mockito.version>5.14.2</mockito.version>
+        <junit.version>4.13.2</junit.version>
+
+        <log4j2.version>2.23.1</log4j2.version>
+        <jsoup.version>1.15.1</jsoup.version>
+        <quartz.version>2.5.0</quartz.version>
+        <caffeine.version>3.2.2</caffeine.version>
+        <jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
+        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+        <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
+        <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
+        <maven-clean-plugin.version>3.2.0</maven-clean-plugin.version>
+        <maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
+        <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
+        <versions-maven-plugin.version>2.7</versions-maven-plugin.version>
         <web.path/>
         <web.build.path/>
         <web.resources.path/>
         <build.frontend.skip>false</build.frontend.skip>
     </properties>
+    <name>visualtool</name>
+
+    <description>openGauss All-in-one platform</description>
 
     <dependencyManagement>
         <dependencies>
@@ -62,22 +100,19 @@
                 <scope>import</scope>
             </dependency>
 
-            <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>druid-spring-boot-starter</artifactId>
-                <version>${druid.version}</version>
-            </dependency>
+          <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <version>${spring-boot.version}</version>
+          </dependency>
 
+            <!--  spring boot actuator -->
             <dependency>
-                <groupId>org.mybatis.spring.boot</groupId>
-                <artifactId>mybatis-spring-boot-starter</artifactId>
-                <version>${mybatis-spring-boot.version}</version>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-actuator</artifactId>
+                <version>${spring-boot.version}</version>
             </dependency>
-            <dependency>
-                <groupId>commons-validator</groupId>
-                <artifactId>commons-validator</artifactId>
-                <version>1.7</version>
-            </dependency>
+            <!--  mybatis   -->
             <dependency>
                 <groupId>com.baomidou</groupId>
                 <artifactId>mybatis-plus-boot-starter</artifactId>
@@ -85,96 +120,145 @@
             </dependency>
             <dependency>
                 <groupId>com.baomidou</groupId>
-                <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+                <artifactId>mybatis-plus-generator</artifactId>
                 <version>${mybatis-plus.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>${lombok.version}</version>
+                <groupId>com.github.pagehelper</groupId>
+                <artifactId>pagehelper-spring-boot-starter</artifactId>
+                <version>${pagehelper.boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+                <version>${dynamic-datasource.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid-spring-boot-starter</artifactId>
+                <version>${druid.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.mwiede</groupId>
+                <artifactId>jsch</artifactId>
+                <version>${jsch.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.yaml</groupId>
+                <artifactId>snakeyaml</artifactId>
+                <version>${snakeyaml.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>commons-validator</groupId>
+              <artifactId>commons-validator</artifactId>
+              <version>${commons-validator.version}</version>
+            </dependency>
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
                 <version>${commons.io.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>commons-fileupload</groupId>
                 <artifactId>commons-fileupload</artifactId>
                 <version>${commons.fileupload.version}</version>
             </dependency>
-
-
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${commons.compress.version}</version>
+            </dependency>
             <dependency>
                 <groupId>commons-collections</groupId>
                 <artifactId>commons-collections</artifactId>
                 <version>${commons.collections.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-pool2</artifactId>
+                <version>${commons.pool2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${httpclient.version}</version>
+            </dependency>
+          <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>${httpcore.version}</version>
+          </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents.client5</groupId>
+                <artifactId>httpclient5</artifactId>
+                <version>${httpclient5.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents.client5</groupId>
+                <artifactId>httpclient5-fluent</artifactId>
+                <version>${httpclient5.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents.core5</groupId>
+                <artifactId>httpcore5-h2</artifactId>
+                <version>${httpclient5.version}</version>
+            </dependency>
+          <dependency>
+            <groupId>org.opengauss</groupId>
+            <artifactId>visualtool-api</artifactId>
+            <version>${admin.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.opengauss</groupId>
+            <artifactId>visualtool-framework</artifactId>
+            <version>${admin.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.opengauss</groupId>
+            <artifactId>visualtool-service</artifactId>
+            <version>${admin.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.opengauss</groupId>
+            <artifactId>visualtool-common</artifactId>
+            <version>${admin.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.opengauss</groupId>
+            <artifactId>jsch-session-pool</artifactId>
+            <version>${admin.version}</version>
+          </dependency>
+          <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>fastjson</artifactId>
                 <version>${fastjson.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.opengauss</groupId>
-                <artifactId>visualtool-api</artifactId>
-                <version>${admin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.opengauss</groupId>
-                <artifactId>visualtool-service</artifactId>
-                <version>${admin.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.opengauss</groupId>
-                <artifactId>visualtool-common</artifactId>
-                <version>${admin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.opengauss</groupId>
-                <artifactId>jsch-session-pool</artifactId>
-                <version>${admin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.opengauss</groupId>
-                <artifactId>visualtool-framework</artifactId>
-                <version>${admin.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>23.0</version>
+                <version>${guava.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>com.github.xiaoymin</groupId>
                 <artifactId>knife4j-spring-boot-starter</artifactId>
                 <version>${knife4j.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt</artifactId>
                 <version>${jwt.version}</version>
             </dependency>
-
-            <dependency>
-                <groupId>com.github.pagehelper</groupId>
-                <artifactId>pagehelper-spring-boot-starter</artifactId>
-                <version>${pagehelper.boot.version}</version>
-            </dependency>
-
             <dependency>
                 <groupId>com.github.oshi</groupId>
                 <artifactId>oshi-core</artifactId>
                 <version>${oshi.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>eu.bitwalker</groupId>
                 <artifactId>UserAgentUtils</artifactId>
@@ -185,11 +269,7 @@
                 <artifactId>jsch</artifactId>
                 <version>${jsch.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-actuator</artifactId>
-                <version>${spring-boot.version}</version>
-            </dependency>
+
             <dependency>
                 <groupId>io.micrometer</groupId>
                 <artifactId>micrometer-registry-prometheus</artifactId>
@@ -231,9 +311,19 @@
                 <version>${opengauss-jdbc.version}</version>
             </dependency>
             <dependency>
-                <groupId>mysql</groupId>
-                <artifactId>mysql-connector-java</artifactId>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
                 <version>${mysql-jdbc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.xerial</groupId>
+                <artifactId>sqlite-jdbc</artifactId>
+                <version>${sqlite.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql-jdbc.version}</version>
             </dependency>
             <dependency>
                 <groupId>javax.servlet</groupId>
@@ -255,6 +345,12 @@
                 <artifactId>commons-net</artifactId>
                 <version>${commons-net.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.quartz-scheduler</groupId>
+                <artifactId>quartz</artifactId>
+                <version>${quartz.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
     <modules>
@@ -265,8 +361,8 @@
         <module>openGauss-datakit/cov-analysis</module>
         <module>openGauss-datakit/jsch-session-pool</module>
         <module>openGauss-datakit-agent</module>
-        <module>plugins/alert-monitor</module>
         <module>plugins/base-ops</module>
+        <module>plugins/alert-monitor</module>
         <module>plugins/data-migration</module>
         <module>plugins/data-studio</module>
         <module>plugins/observability-instance</module>
@@ -275,11 +371,10 @@
         <module>plugins/compatibility-assessment</module>
         <module>plugins/intelligent-parameter-tuning</module>
         <module>plugins/openGauss-tools-monitor</module>
-        <module>plugins/oauth-login</module>
         <module>plugins/container-management-plugin</module>
     </modules>
     <packaging>pom</packaging>
-    
+
     <profiles>
         <profile>
             <id>dev</id>
@@ -331,7 +426,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.0.0-M7</version>
+                    <version>${maven-surefire-plugin.version}</version>
                     <configuration>
                         <!-- 限制测试进程内存 -->
                         <argLine>-Xmx512m</argLine>
@@ -340,7 +435,7 @@
                 <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
-                    <version>0.8.8</version>
+                    <version>${jacoco-maven-plugin.version}</version>
                     <executions>
                         <execution>
                             <id>default-prepare-agent</id>

@@ -27,7 +27,6 @@ import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionUrlDO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -109,7 +108,6 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
         return new ArrayList<>();
     }
 
-    @NotNull
     private static DatabaseConnectionDO getDatabaseConnectionDO(Map<String, Object> data) {
         DatabaseConnectionDO databaseConnectionDO = new DatabaseConnectionDO();
         databaseConnectionDO.setId(String.valueOf(data.get("id")));

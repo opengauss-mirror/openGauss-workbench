@@ -26,7 +26,6 @@ package org.opengauss.admin.plugin.service.oauth;
 import com.alibaba.fastjson.JSON;
 import com.github.benmanes.caffeine.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.plugin.constants.MyClientConfigConstants;
 import org.opengauss.admin.plugin.constants.MyConstants;
@@ -141,7 +140,7 @@ public class SsoRequestService {
      * @param ssoInfo ssoInfo
      * @return CancelTokenResponseBody
      */
-    public CancelTokenResponseBody cancelToken(@NotNull SsoInfo ssoInfo) {
+    public CancelTokenResponseBody cancelToken(SsoInfo ssoInfo) {
         // Build the url to cancel token.
         String cancelTokenUrl = MyClientConfigConstants.devKitUrl + MyConstants.CANCEL_TOKEN_URL;
 

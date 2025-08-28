@@ -23,7 +23,6 @@
 
 package org.opengauss.admin.container.task;
 
-import org.jetbrains.annotations.NotNull;
 import org.opengauss.admin.container.beans.mapper.TaskLock;
 import org.opengauss.admin.container.mapper.TaskLockMapper;
 import org.opengauss.admin.container.util.IpUtil;
@@ -106,7 +105,6 @@ public class ScheduleTaskLock {
         return false;
     }
 
-    @NotNull
     private static TaskLock getNewTaskLock(String lockKey, String localIp,
                                            Date expireDate, Date now) {
         TaskLock newTaskLock = new TaskLock();
