@@ -49,11 +49,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * ResourceCPUController
+ *
+ * @since 2022/9/15 17:00
+ */
 @RestController
 @RequestMapping("/instanceMonitoring/api/v1/")
 @Slf4j
@@ -134,7 +141,7 @@ public class ResourceCPUController extends ControllerConfig {
         var param = new HashMap<String, Object>();
         param.put("nodeId", id);
         if (StrUtil.isNotBlank(sort)) {
-            param.put("sort", sort);
+            param.put("sort", URLEncoder.encode(sort, StandardCharsets.UTF_8));
         }
         var host = hostFacade.getById(env.getHostid());
         var str = HttpUtil.get("http://"

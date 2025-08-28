@@ -967,7 +967,7 @@ public class PrometheusService extends AbstractInstaller {
                 return true;
             }
             JSONObject data = resJson.getJSONObject("data");
-            if (CollectionUtil.isEmpty(data)) {
+            if (data.isEmpty()) {
                 return true;
             }
             JSONArray result = data.getJSONArray("result");

@@ -1922,15 +1922,15 @@ gauss_workload_sql_count:
     - name: select_count
       description: Select count
       usage: GAUGE
-#    - name: update_count
-#      description: Update count
-#      usage: GAUGE
-#    - name: delete_count
-#      description: Delete count
-#      usage: GAUGE
-#    - name: insert_count
-#      description: Insert count
-#      usage: GAUGE
+    - name: update_count
+      description: Update count
+      usage: GAUGE
+    - name: delete_count
+      description: Delete count
+      usage: GAUGE
+    - name: insert_count
+      description: Insert count
+      usage: GAUGE
   status: enable
   ttl: 60
   timeout: 1
