@@ -46,6 +46,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -121,7 +123,8 @@ public class MetricsService {
             throw new NullPointerException("query null");
         }
         log.info("promQL:{}, time:{}", query, time);
-        var prometheusResult = query(PROMETHEUS_QUERY_POINT, query, Map.of("query", query, "time", time));
+        String query0 = URLEncoder.encode(query, StandardCharsets.UTF_8);
+        var prometheusResult = query(PROMETHEUS_QUERY_POINT, query, Map.of("query", query0, "time", time));
         return prometheusResult.getData().getResult();
     }
 
@@ -139,8 +142,9 @@ public class MetricsService {
             return Collections.emptyList();
         }
         log.info("promQL:{}, start:{}, end:{}, step:{}", query, start, end, step);
+        String query0 = URLEncoder.encode(query, StandardCharsets.UTF_8);
         var prometheusResult = query(PROMETHEUS_QUERY_RANGE, query,
-                Map.of("query", query, "start", start, "end", end, "step", step));
+                Map.of("query", query0, "start", start, "end", end, "step", step));
         return prometheusResult.getData().getResult();
     }
 

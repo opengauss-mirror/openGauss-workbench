@@ -297,14 +297,17 @@ public enum MetricsLine {
     NETWORK_UDP_SOCKET(Type.OS, "agent_network_socket{proto=~'udp|udp6',host='ogbrench'}"),
 
     // opengauss instance
-    INSTANCE_TPS_COMMIT(Type.DB, "sum(irate(pg_stat_database_xact_rollback_total{instanceId='ogbrench'}[5m]))"),
-    INSTANCE_TPS_ROLLBACK(Type.DB, "sum(irate(pg_stat_database_xact_commit_total{instanceId='ogbrench'}[5m]))"),
+    INSTANCE_TPS_COMMIT(Type.DB, "sum(irate(pg_stat_database_xact_commit_total{instanceId='ogbrench'}[5m]))"),
+    INSTANCE_TPS_ROLLBACK(Type.DB, "sum(irate(pg_stat_database_xact_rollback_total{instanceId='ogbrench'}[5m]))"),
     INSTANCE_TPS_CR(
             Type.DB,
             "sum(irate(pg_stat_database_xact_rollback_total{instanceId='ogbrench'}[5m])) "
                     + "+ sum(irate(pg_stat_database_xact_commit_total{instanceId='ogbrench'}[5m]))"),
 
-    INSTANCE_QPS(Type.DB, "sum(rate(gauss_workload_sql_count_select_count{instanceId='ogbrench'}[5m]))"),
+    INSTANCE_QPS(Type.DB, "sum(irate(gauss_workload_sql_count_select_count{instanceId='ogbrench'}[5m])) + "
+        + "sum(irate(gauss_workload_sql_count_insert_count{instanceId='ogbrench'}[5m])) + "
+        + "sum(irate(gauss_workload_sql_count_update_count{instanceId='ogbrench'}[5m])) + "
+        + "sum(irate(gauss_workload_sql_count_delete_count{instanceId='ogbrench'}[5m]))"),
     INSTANCE_DB_CONNECTION_ACTIVE(Type.DB, "sum(pg_stat_activity_count{instanceId='ogbrench',state='active'})"),
     INSTANCE_DB_CONNECTION_IDLE(Type.DB, "sum(pg_stat_activity_count{instanceId='ogbrench',state='idle'})"),
     INSTANCE_DB_CONNECTION_CURR(Type.DB, "sum(pg_stat_activity_count{instanceId='ogbrench'})"),
