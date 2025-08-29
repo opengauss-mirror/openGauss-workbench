@@ -121,9 +121,15 @@ public class OpsHostRemoteService {
      * @return host root user
      */
     public OpsHostUserEntity getHostRootUser(String hostId) {
+        OpsHostEntity hostEntity = hostFacade.getById(hostId);
+        OpsAssert.nonNull(hostEntity, "Host information does not exist, hostId: " + hostId);
+
         OpsHostUserEntity userEntity = hostUserFacade.getHostUserByUsername(hostId, "root");
+        if (Objects.isNull(userEntity)) {
+            throw new OpsException("Please add the host root user, host ip: " + hostEntity.getPublicIp());
+        }
         if (StrUtil.isEmpty(userEntity.getPassword())) {
-            throw new OpsException("root password cannot be empty");
+            throw new OpsException("The host root user password is empty, host ip: " + hostEntity.getPublicIp());
         }
         return userEntity;
     }
