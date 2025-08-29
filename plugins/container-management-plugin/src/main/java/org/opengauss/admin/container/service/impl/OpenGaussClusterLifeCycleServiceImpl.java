@@ -38,8 +38,6 @@ import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.opengauss.admin.container.beans.K8sCluster;
 import org.opengauss.admin.container.beans.OpenGaussCluster;
 import org.opengauss.admin.container.beans.OpenGaussClusterDetail;
@@ -86,6 +84,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -617,7 +616,6 @@ public class OpenGaussClusterLifeCycleServiceImpl implements OpenGaussClusterLif
         return podVoList;
     }
 
-    @Nullable
     private static List<OpenGaussPodVo> getOpenGaussPodVos(V1Pod v1Pod, OpenGaussPodVo vo,
                                                            List<OpenGaussPodVo> podVoList) {
         List<String> podIps = new ArrayList<>();
@@ -650,7 +648,7 @@ public class OpenGaussClusterLifeCycleServiceImpl implements OpenGaussClusterLif
                 vo.setLastRestartTime(lastRestartTime);
             }
         }
-        return null;
+        return new LinkedList<>();
     }
 
     private OpenGaussClusterCrd getCrByOpenGaussCluster(OpenGaussCluster openGaussCluster) {
@@ -850,7 +848,6 @@ public class OpenGaussClusterLifeCycleServiceImpl implements OpenGaussClusterLif
         return getFlag(buffer, k8sCluster, opengaussName);
     }
 
-    @NotNull
     private static ClusterCheckParams getClusterCheckParams(K8sCluster k8sCluster,
                                                             OpenGaussClusterCrd openGaussClusterCrd,
                                                             OpenGaussCluster openGaussCluster) {
@@ -862,7 +859,6 @@ public class OpenGaussClusterLifeCycleServiceImpl implements OpenGaussClusterLif
         return params;
     }
 
-    @NotNull
     private String getFlag(StringBuffer buffer, K8sCluster k8sCluster, String opengaussName) {
         Map<String, Object> rootData = new HashMap<>();
         Map<String, String> anno = new HashMap<>();
@@ -1098,7 +1094,6 @@ public class OpenGaussClusterLifeCycleServiceImpl implements OpenGaussClusterLif
         return getString(opengaussClusterPo, dto, oriRequestResource, shouldNeedUpdateCrd);
     }
 
-    @NotNull
     private String getString(OpenGaussCluster opengaussClusterPo, OpenGaussClusterDto dto,
                              Map<String, Object> oriRequestResource, boolean shouldNeedUpdateCrd) {
         Boolean shouldTempNeedUpdateCrd = shouldNeedUpdateCrd;
@@ -1147,7 +1142,6 @@ public class OpenGaussClusterLifeCycleServiceImpl implements OpenGaussClusterLif
         return getMemoryString(opengaussClusterPo, dto, shouldTempNeedUpdateCrd);
     }
 
-    @NotNull
     private String getMemoryString(OpenGaussCluster opengaussClusterPo, OpenGaussClusterDto dto,
                                    boolean shouldNeedUpdateCrd) {
         Boolean shouldTempNeedUpdateCrd = shouldNeedUpdateCrd;

@@ -20,8 +20,6 @@
         <web.build.skip>false</web.build.skip>
         <web.clean.skip>false</web.clean.skip>
 
-        <!-- dependency version -->
-        <junit.version>4.13</junit.version>
         <build.frontend.skip>false</build.frontend.skip>
         <es-java-client.version>8.3.3</es-java-client.version>
         <es-java-client-jackson-databind.version>2.12.3</es-java-client-jackson-databind.version>
@@ -29,7 +27,6 @@
     </properties>
 
     <dependencies>
-        <!-- same as framework -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
@@ -37,13 +34,6 @@
         <dependency>
             <groupId>org.opengauss</groupId>
             <artifactId>visualtool-framework</artifactId>
-            <exclusions>
-                <!--druid-spring-boot-starter removed-->
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-data-redis</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.sun.mail</groupId>
@@ -75,14 +65,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <!-- same as framework -->
-
-        <!-- common -->
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
@@ -102,8 +84,6 @@
             <version>${hutool.lower.version}</version>
         </dependency>
         <!-- common -->
-
-        <!-- data -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
@@ -119,33 +99,27 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.2.24</version>
         </dependency>
         <dependency>
             <groupId>org.opengauss</groupId>
             <artifactId>opengauss-jdbc</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.jcraft</groupId>
+            <groupId>com.github.mwiede</groupId>
             <artifactId>jsch</artifactId>
-            <version>0.1.55</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc -->
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
-            <version>3.39.3.0</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.sshd/sshd-scp -->
         <dependency>
             <groupId>org.apache.sshd</groupId>
             <artifactId>sshd-sftp</artifactId>
-            <version>2.9.2</version>
+            <version>${sshd.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.hibernate.validator</groupId>
-            <artifactId>hibernate-validator</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>co.elastic.clients</groupId>
             <artifactId>elasticsearch-java</artifactId>
@@ -360,7 +334,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.21.0</version>
+                <version>${maven-surefire-plugin.version}</version>
                 <configuration>
                     <skipTests>false</skipTests>
                 </configuration>
@@ -368,7 +342,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.6</version>
+                <version>${jacoco-maven-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>default-prepare-agent</id>

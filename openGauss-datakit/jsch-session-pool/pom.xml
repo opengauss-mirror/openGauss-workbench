@@ -18,16 +18,12 @@
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jsch.version>0.1.55</jsch.version>
-    <commons.pool2.version>2.11.1</commons.pool2.version>
-    <slf4j.version>1.7.36</slf4j.version>
-    <junit.version>5.9.2</junit.version>
   </properties>
 
   <dependencies>
     <!-- JSCH SFTP library -->
     <dependency>
-      <groupId>com.jcraft</groupId>
+      <groupId>com.github.mwiede</groupId>
       <artifactId>jsch</artifactId>
       <version>${jsch.version}</version>
     </dependency>
@@ -39,7 +35,6 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-pool2</artifactId>
-      <version>${commons.pool2.version}</version>
     </dependency>
     <dependency>
       <groupId>cn.hutool</groupId>
@@ -55,21 +50,8 @@
 
     <!-- Testing -->
     <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
-      <version>${junit.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-engine</artifactId>
-      <version>${junit.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>4.11.0</version>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -79,7 +61,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.11.0</version> <!-- 升级版本 -->
+        <version>${maven-compiler-plugin.version}</version> <!-- 升级版本 -->
         <configuration>
           <source>${java.version}</source>
           <target>${java.version}</target>
@@ -89,7 +71,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.3.0</version>
+        <version>${maven-resources-plugin.version}</version>
         <configuration>
           <encoding>${project.build.sourceEncoding}</encoding>
         </configuration>
@@ -97,7 +79,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>3.2.1</version>
+        <version>${maven-source-plugin.version}</version>
         <executions>
           <execution>
             <id>attach-sources</id>

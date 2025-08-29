@@ -71,35 +71,25 @@
         <!-- 配置 Hutool All 依赖 [END] -->
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
-            <artifactId>httpclient5-fluent</artifactId>
-            <version>5.0.3</version>
+            <artifactId>httpclient5</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
-            <artifactId>httpclient5</artifactId>
-            <version>5.1.2</version>
+            <artifactId>httpclient5-fluent</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents.core5</groupId>
             <artifactId>httpcore5-h2</artifactId>
-            <version>5.1.3</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents.core5</groupId>
-            <artifactId>httpcore5</artifactId>
-            <version>5.1.3</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.5</version>
         </dependency>
 
         <!--lombok 依赖-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.22</version>
             <optional>true</optional>
         </dependency>
 
@@ -109,25 +99,18 @@
         </dependency>
         <!-- 配置 MySQL Connector/J 依赖 [BEGIN] -->
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.29</version>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
         </dependency>
         <!-- pagehelper 分页插件 -->
         <dependency>
             <groupId>com.github.pagehelper</groupId>
             <artifactId>pagehelper-spring-boot-starter</artifactId>
-            <version>1.4.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mybatis</groupId>
-            <artifactId>mybatis</artifactId>
-            <version>3.5.7</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.13.2</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

@@ -17,9 +17,6 @@
 		<web.build.skip>false</web.build.skip>
 		<web.clean.skip>false</web.clean.skip>
 
-		<!-- dependency version -->
-		<junit.version>4.13</junit.version>
-
 		<es-java-client.version>8.3.3</es-java-client.version>
 		<es-java-client-jackson-databind.version>2.12.3</es-java-client-jackson-databind.version>
 		<es-java-client-jakarta.version>2.0.1</es-java-client-jakarta.version>
@@ -99,7 +96,6 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>42.2.24</version>
 		</dependency>
 		<dependency>
 			<groupId>org.opengauss</groupId>
@@ -130,7 +126,7 @@
 		<dependency>
 			<groupId>org.apache.sshd</groupId>
 			<artifactId>sshd-sftp</artifactId>
-			<version>2.9.2</version>
+			<version>${sshd.version}</version>
 		</dependency>
 	</dependencies>
 
@@ -328,7 +324,7 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<version>2.4.13</version>
+				<version>${spring-boot.version}</version>
 				<configuration>
 					<mainClass>com.nctigba.observability.log.ObservabilityPluginBootApplication</mainClass>
 				</configuration>

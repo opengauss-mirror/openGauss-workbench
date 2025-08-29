@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.ArchiveEntry;
-import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.utils.IOUtils;
@@ -70,7 +69,7 @@ public class FileUploadUtil {
                 }
             }
             ais.close();
-        } catch (ArchiveException | IOException e) {
+        } catch (IOException e) {
             log.error(e.getMessage());
         }
     }

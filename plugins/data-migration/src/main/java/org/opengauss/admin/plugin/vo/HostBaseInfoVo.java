@@ -5,7 +5,6 @@
 package org.opengauss.admin.plugin.vo;
 
 import lombok.Data;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Host base info vo
@@ -29,7 +28,7 @@ public class HostBaseInfoVo implements Comparable<HostBaseInfoVo> {
     }
 
     @Override
-    public int compareTo(@NotNull HostBaseInfoVo o) {
+    public int compareTo(HostBaseInfoVo o) {
         if (isEmpty() || o.isEmpty()) {
             return 0;
         }

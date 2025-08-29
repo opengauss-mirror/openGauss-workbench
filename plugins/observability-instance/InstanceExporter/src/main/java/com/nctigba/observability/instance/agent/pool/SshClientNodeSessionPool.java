@@ -28,7 +28,6 @@ import com.nctigba.observability.instance.agent.config.model.TargetConfig;
 import com.nctigba.observability.instance.agent.util.RsaUtils;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,7 +40,7 @@ public class SshClientNodeSessionPool {
     private static final int MAX_SESSION_FOR_ONE_CLIENT = 12;
     private static final int MAX_IDLE_FOR_ONE_NODE = 12;
     private static final int MIN_IDLE_FOR_ONE_NODE = 0;
-    private static final int MAX_GET_CONNECTION_WAIT_SECONDS = 3;
+    private static final long MAX_GET_CONNECTION_WAIT_MILLIS = 3000L;
     private static Map<String, SshClientSessionPool> poolMap = new HashMap<>();
 
     /**
@@ -60,7 +59,7 @@ public class SshClientNodeSessionPool {
                     objectPoolConfig.setMaxTotal(MAX_SESSION_FOR_ONE_CLIENT);
                     objectPoolConfig.setMaxIdle(MAX_IDLE_FOR_ONE_NODE);
                     objectPoolConfig.setMinIdle(MIN_IDLE_FOR_ONE_NODE);
-                    objectPoolConfig.setMaxWait(Duration.ofSeconds(MAX_GET_CONNECTION_WAIT_SECONDS));
+                    objectPoolConfig.setMaxWaitMillis(MAX_GET_CONNECTION_WAIT_MILLIS);
                     objectPoolConfig.setTestOnReturn(true);
                     objectPoolConfig.setTestOnBorrow(true);
                     objectPoolConfig.setTestOnCreate(true);

@@ -3,11 +3,12 @@
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.7.4</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<groupId>org.opengauss</groupId>
+		<artifactId>visualtool-parent</artifactId>
+		<version>${admin.version}</version>
+		<relativePath>../../../pom.xml</relativePath>
 	</parent>
+
 	<groupId>com.nctigba.ebpf</groupId>
 	<artifactId>opengauss-ebpf</artifactId>
 	<name>opengauss-ebpf</name>
@@ -33,7 +34,6 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.7.32</version>
 		</dependency>
 	</dependencies>
 
@@ -42,6 +42,14 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>${spring-boot.version}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
 				<configuration>
 					<excludes>
 						<exclude>
