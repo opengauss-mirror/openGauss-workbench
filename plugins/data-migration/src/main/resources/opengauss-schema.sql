@@ -515,6 +515,7 @@ COMMENT ON COLUMN "public"."tb_migration_task_param"."param_type" IS '参数类�
 
 COMMENT ON TABLE "public"."tb_migration_task_param" IS '任务参数配置表';
 
+ALTER TABLE "public"."tb_migration_task_param" ALTER COLUMN "param_value" type text;
 
 CREATE TABLE IF NOT EXISTS "public"."tb_migration_third_party_software_config" (
   "id" int8 NOT NULL DEFAULT nextval('sq_tb_migration_third_party_software_config_id'::regclass),
@@ -1409,28 +1410,6 @@ END;'
 SELECT add_tb_migration_tool_portal_download_info_field_func();
 
 DROP FUNCTION add_tb_migration_tool_portal_download_info_field_func;
-
-INSERT INTO "public"."tb_migration_tool_portal_download_info"
-("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(1, 'centos', '7', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/centos7/', 'PortalControl-7.0.0rc1-x86_64.tar.gz', 'portalControl-7.0.0rc1-exec.jar', 'MYSQL_ONLY', 'STABLE');
-INSERT INTO "public"."tb_migration_tool_portal_download_info"
-("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(2, 'openEuler', '20.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler20.03/', 'PortalControl-7.0.0rc1-x86_64.tar.gz', 'portalControl-7.0.0rc1-exec.jar', 'MYSQL_ONLY', 'STABLE');
-INSERT INTO "public"."tb_migration_tool_portal_download_info"
-("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(3, 'openEuler', '20.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler20.03/', 'PortalControl-7.0.0rc1-aarch64.tar.gz', 'portalControl-7.0.0rc1-exec.jar', 'MYSQL_ONLY', 'STABLE');
-INSERT INTO "public"."tb_migration_tool_portal_download_info"
-("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(4, 'openEuler', '22.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler22.03/', 'PortalControl-7.0.0rc1-x86_64.tar.gz', 'portalControl-7.0.0rc1-exec.jar', 'MYSQL_ONLY', 'STABLE');
-INSERT INTO "public"."tb_migration_tool_portal_download_info"
-("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(5, 'openEuler', '22.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler22.03/', 'PortalControl-7.0.0rc1-aarch64.tar.gz', 'portalControl-7.0.0rc1-exec.jar', 'MYSQL_ONLY', 'STABLE');
-INSERT INTO "public"."tb_migration_tool_portal_download_info"
-("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(6, 'openEuler', '24.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler24.03/', 'PortalControl-7.0.0rc1-x86_64.tar.gz', 'portalControl-7.0.0rc1-exec.jar', 'MYSQL_ONLY', 'STABLE');
-INSERT INTO "public"."tb_migration_tool_portal_download_info"
-("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(7, 'openEuler', '24.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler24.03/', 'PortalControl-7.0.0rc1-aarch64.tar.gz', 'portalControl-7.0.0rc1-exec.jar', 'MYSQL_ONLY', 'STABLE');
 
 INSERT INTO "public"."tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
