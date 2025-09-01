@@ -18,6 +18,7 @@ package org.opengauss.admin.web.controller.agent;
 import org.opengauss.admin.common.constant.AgentConstants;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.agent.AgentInstallEntity;
+import org.opengauss.admin.common.core.domain.model.agent.AgentStartResult;
 import org.opengauss.admin.common.core.domain.model.agent.AgentTaskParam;
 import org.opengauss.agent.event.AgentStatusEvent;
 import org.opengauss.agent.service.AgentTaskManager;
@@ -102,8 +103,12 @@ public class AgentInstallController {
      */
     @PostMapping("/start")
     public AjaxResult start(@RequestParam("agentId") String agentId) {
-        agentInstallService.startAgent(agentId);
-        return AjaxResult.success();
+        AgentStartResult agentStartStatus = agentInstallService.startAgent(agentId);
+        if (agentStartStatus.isSuccess()) {
+            return AjaxResult.success(agentStartStatus.message());
+        } else {
+            return AjaxResult.error(agentStartStatus.message());
+        }
     }
 
     /**

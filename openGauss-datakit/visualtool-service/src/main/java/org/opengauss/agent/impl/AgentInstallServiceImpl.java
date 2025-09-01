@@ -20,11 +20,13 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jcraft.jsch.Session;
 
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import org.opengauss.admin.common.constant.AgentConstants;
 import org.opengauss.admin.common.core.domain.entity.agent.AgentInstallEntity;
+import org.opengauss.admin.common.core.domain.model.agent.AgentStartResult;
 import org.opengauss.admin.common.core.domain.model.agent.HeartbeatReport;
 import org.opengauss.admin.common.enums.agent.AgentStatus;
 import org.opengauss.admin.common.exception.ops.OpsException;
@@ -80,6 +82,7 @@ import javax.annotation.Resource;
 public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, AgentInstallEntity>
     implements IAgentInstallService {
     private static final String AGENT_CONFIG_FILE_NAME = "application.yml";
+    private static final int AGENT_STATUS_CHECK_MAX_RETRIES = 3;
 
     private final Map<String, String> serverIpAndMask = new HashMap<>();
     @Value("${server.port}")
@@ -237,10 +240,10 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
     }
 
     @Override
-    public void startAgent(String agentId) {
+    public AgentStartResult startAgent(String agentId) {
         AgentInstallEntity agentInstall = getByAgentId(agentId);
         OpsAssert.nonNull(agentInstall, "start agent failed, agentId:" + agentId + " must be available");
-        startAgent(agentInstall);
+        return startAgent(agentInstall);
     }
 
     @Override
@@ -266,18 +269,44 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
      * @param agentInstall agent install info
      * @return true if start agent success
      */
-    public boolean startAgent(AgentInstallEntity agentInstall) {
+    public AgentStartResult startAgent(AgentInstallEntity agentInstall) {
         String startAgentCmd = AgentCmdBuilder.buildStartAgentCommand(agentInstall.getInstallPath(), agentName);
         String execResult = jschExecutorService.execCommand(agentSshLoginService.getSshLogin(agentInstall),
             startAgentCmd);
         log.info("start agent {}/{} {} result: {}", agentInstall.getAgentIp(), agentInstall.getInstallUser(),
             startAgentCmd, execResult);
-        update(Wrappers.lambdaUpdate(AgentInstallEntity.class)
-            .eq(AgentInstallEntity::getAgentId, agentInstall.getAgentId())
-            .set(AgentInstallEntity::getStatus, AgentStatus.RUNNING)
-            .set(AgentInstallEntity::getUpdateTime, Instant.now()));
-        log.info("start agent success, agentId: {}", agentInstall.getAgentId());
-        return true;
+        if (isAgentProcessAlive(agentInstall)) {
+            update(Wrappers.lambdaUpdate(AgentInstallEntity.class)
+                .eq(AgentInstallEntity::getAgentId, agentInstall.getAgentId())
+                .set(AgentInstallEntity::getStatus, AgentStatus.RUNNING)
+                .set(AgentInstallEntity::getUpdateTime, Instant.now()));
+            log.info("Agent process verified. Start success, agentId: {}", agentInstall.getAgentId());
+            return new AgentStartResult(agentInstall.getAgentId(), true, "start success");
+        } else {
+            update(Wrappers.lambdaUpdate(AgentInstallEntity.class)
+                .eq(AgentInstallEntity::getAgentId, agentInstall.getAgentId())
+                .set(AgentInstallEntity::getStatus, AgentStatus.STOP));
+            log.error("Agent process not found after {} retries. Start failed, agentId: {}",
+                AGENT_STATUS_CHECK_MAX_RETRIES, agentInstall.getAgentId());
+            return new AgentStartResult(agentInstall.getAgentId(), false,
+                "agent start failed,please check the agent start log.");
+        }
+    }
+
+    private boolean isAgentProcessAlive(AgentInstallEntity agentInstall) {
+        String checkStatusCmd = AgentCmdBuilder.buildCheckAgentRunningCommand(agentInstall.getInstallPath(), agentName);
+        String checkResult = "";
+        for (int i = 0; i < AGENT_STATUS_CHECK_MAX_RETRIES; i++) {
+            checkResult = jschExecutorService.execCommand(agentSshLoginService.getSshLogin(agentInstall),
+                checkStatusCmd);
+            if (checkResult != null && !checkResult.trim().isEmpty()) {
+                return true;
+            }
+            log.warn("Agent process not detected, retrying ({}/{}). AgentId: {}", i + 1, AGENT_STATUS_CHECK_MAX_RETRIES,
+                agentInstall.getAgentId());
+            ThreadUtil.sleep(1000);
+        }
+        return false;
     }
 
     @Override
@@ -309,7 +338,8 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
 
     private boolean restartAgent(AgentInstallEntity agent) {
         stopAgent(agent);
-        return startAgent(agent);
+        AgentStartResult agentStartStatus = startAgent(agent);
+        return agentStartStatus.isSuccess();
     }
 
     @Override
@@ -532,4 +562,3 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
         }
     }
 }
-

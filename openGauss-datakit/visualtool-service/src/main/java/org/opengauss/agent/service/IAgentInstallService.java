@@ -18,6 +18,7 @@ package org.opengauss.agent.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import org.opengauss.admin.common.core.domain.entity.agent.AgentInstallEntity;
+import org.opengauss.admin.common.core.domain.model.agent.AgentStartResult;
 import org.opengauss.admin.common.enums.agent.AgentStatus;
 
 import java.util.List;
@@ -73,8 +74,9 @@ public interface IAgentInstallService extends IService<AgentInstallEntity> {
      * start agent
      *
      * @param agentId agentId
+     * @return agent start result
      */
-    void startAgent(String agentId);
+    AgentStartResult startAgent(String agentId);
 
     /**
      * update agent port
