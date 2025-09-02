@@ -144,9 +144,7 @@ public class ImportClusterBody {
         opsClusterEntity.setInstallMode(installMode);
         opsClusterEntity.setDeployType(deployType);
         opsClusterEntity.setClusterName(clusterName);
-        if (StrUtil.isEmpty(envPath)) {
-            opsClusterEntity.setEnvPath(SshCommandConstants.DEFAULT_ENV_BASHRC);
-        } else {
+        if (!StrUtil.isEmpty(envPath)) {
             opsClusterEntity.setEnvPath(envPath);
         }
         if (openGaussVersion == OpenGaussVersionEnum.ENTERPRISE) {
