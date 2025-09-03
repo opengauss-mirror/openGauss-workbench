@@ -1,79 +1,79 @@
 <template>
   <div class="clusterManage" id="taskStep3">
     <div class="hostInfo">
-      <span style="font-weight: bold;">安装包配置</span><br><br>
+      <span style="font-weight: bold;">{{ $t('operation.task.step1.index.packageConfig') }}</span><br><br>
       <table>
         <tr>
-          <td class="key">安装包名称</td>
+          <td class="key">{{ $t('packageManage.AddPackageDlg.5myq5c8zpu93') }}</td>
           <td class="value">{{ list.packageName }}</td>
-          <td class="key">操作系统</td>
+          <td class="key">{{ $t('operation.task.step1.index.system') }}</td>
           <td class="value">{{ list.cpuArch }}</td>
-          <td class="key">系统架构</td>
+          <td class="key">{{ $t('operation.task.step1.index.cpuArch') }}</td>
           <td class="value">{{ list.os }}</td>
         </tr>
         <tr>
-          <td class="key">openGauss版本</td>
+          <td class="key">{{ $t('operation.task.step1.index.version') }}</td>
           <td class="value">
             <div v-if="list.packageVersion === OpenGaussVersionEnum.ENTERPRISE">
-              企业版
+              {{ $t('operation.task.step1.index.ENTERPRISE') }}
             </div>
             <div v-if="list.packageVersion === OpenGaussVersionEnum.LITE">
-              轻量版
+              {{ $t('operation.task.step1.index.LITE') }}
             </div>
             <div v-if="list.packageVersion === OpenGaussVersionEnum.MINIMAL_LIST">
-              极简版
+              {{ $t('operation.task.step1.index.MINIMAL_LIST') }}
             </div>
           </td>
-          <td class="key">openGauss版本号</td>
+          <td class="key">{{ $t('operation.task.step1.index.versionNum') }}</td>
           <td class="value">{{ list.packageVersionNum }}</td>
-          <td class="key">所选安装包</td>
+          <td class="key">{{ $t('operation.task.step1.index.selecPack') }}</td>
           <td class="value">{{ list.packageName }}</td>
         </tr>
       </table>
     </div>
     <br>
     <div class="clusterInfo">
-      <span style="font-weight: bold;">集群配置</span><br><br>
+      <span style="font-weight: bold;">{{ $t('operation.task.step1.index.clusterConfig') }}</span><br><br>
       <table>
         <tr>
-          <td class="key">集群标识</td>
+          <td class="key">{{ $t('operation.task.step1.index.clusterName') }}</td>
           <td class="value">{{ list.clusterName }}</td>
-          <td class="key">内核架构</td>
-          <td class="value" v-if="list.deployType === 'CLUSTER'">单主架构</td>
-          <td class="value" v-else>主备架构</td>
-          <td class="key">安装目录</td>
+          <td class="key">{{ $t('enterprise.ClusterConfig.test0') }}</td>
+          <td class="value" v-if="list.deployType === 'CLUSTER'">{{ $t('enterprise.ClusterConfig.option3') }}</td>
+          <td class="value" v-else>{{ $t('enterprise.ClusterConfig.option1') }}</td>
+          <td class="key">{{ $t('enterprise.ClusterConfig.5mpm3ku3hv40') }}</td>
           <td class="value">{{ list.installPath }}</td>
         </tr>
         <tr>
-          <td class="key">软件包路径</td>
+          <td class="key">{{ $t('operation.task.step1.index.installPackagePath') }}</td>
           <td class="value">{{ list.installPackagePath }}</td>
-          <td class="key">端口号</td>
+          <td class="key">{{ $t('operation.task.step1.index.port') }}</td>
           <td class="value">{{ list.port }}</td>
-          <td class="key">数据库密码</td>
+          <td class="key">{{ $t('operation.task.step1.index.dbPwd') }}</td>
           <td class="value">
             <span v-if="data.visible">******</span>
-            <span v-if="!data.visible">{{ list.databasePassword }}</span>
-            <button @click="changeVisible">{{data.visible?'显示':'隐藏'}} </button>
+            <span v-if="!data.visible">{{ $t('enterprise.ClusterConfig.passwdWarning') }}</span>
+            <button @click="changeVisible">{{data.visible? $t('operation.task.step1.index.visible') :$t('operation.task.step1.index.hide')}} </button>
           </td>
         </tr>
         <tr>
-          <td class="key">是否安装CM</td>
+          <td class="key">{{ $t('operation.task.step1.index.checkflagCM') }}</td>
           <td class="value">{{list.enableCmTool }}</td>
-          <td class="key">是否环境分离</td>
+          <td class="key">{{ $t('operation.task.step1.index.checkflagEnvSeqar') }}</td>
           <td class="value">{{ list.enableGenerateEnvironmentVariableFile }}</td>
-          <td class="key">环境分离路径</td>
+          <td class="key">{{ $t('operation.task.step1.index.envPath') }}</td>
           <td class="value">{{ list.envPath }}</td>
         </tr>
         <tr v-if="list.packageVersion === OpenGaussVersionEnum.ENTERPRISE">
-          <td class="key">日志目录</td>
+          <td class="key">{{ $t('operation.task.step1.index.logPath') }}</td>
           <td class="value">{{ list.logPath }}</td>
-          <td class="key">临时文件目录</td>
+          <td class="key">{{ $t('operation.task.step1.index.tmpPath') }}</td>
           <td class="value">{{ list.tmpPath }}</td>
-          <td class="key">数据库工具目录</td>
+          <td class="key">{{ $t('operation.task.step1.index.omToolsPath') }}</td>
           <td class="value">{{ list.omToolsPath }}</td>
         </tr>
         <tr v-if="props.clusterTaskList.version === OpenGaussVersionEnum.ENTERPRISE">
-          <td class="key">数据库core目录</td>
+          <td class="key">{{ $t('operation.task.step1.index.corePath') }}</td>
           <td class="value">{{ list.corePath }}</td>
           <td class="key"></td>
           <td class="value"></td>
@@ -84,33 +84,33 @@
     </div>
     <br>
     <div class="nodeInfo">
-      <span style="font-weight: bold;">节点配置</span><br><br>
+      <span style="font-weight: bold;">{{ $t('operation.task.step1.index.nodeConfig') }}</span><br><br>
       <div v-for="(item, index) in list.nodes" >
-        <span style="font-weight: bold;">节点{{index+1}}</span><br><br>
+        <span style="font-weight: bold;">{{ $t('wdr.GenerateWdrDlg.5mpm0eufzyg0') }}{{index+1}}</span><br><br>
         <table>
           <tr>
-            <td class="key">节点类型</td>
+            <td class="key">{{ $t('operation.task.step1.index.clusterType') }}</td>
             <td class="value">{{item.nodeType}}</td>
-            <td class="key">IP地址</td>
+            <td class="key">{{ $t('logCenter.index.else1') }}</td>
             <td class="value">{{item.hostIp}}</td>
-            <td class="key">安装用户</td>
+            <td class="key">{{ $t('operation.task.step1.index.installUser') }}</td>
             <td class="value">{{props.clusterTaskList.databaseUsername}}</td>
           </tr>
           <tr>
-            <td class="key">数据路径</td>
+            <td class="key">{{ $t('operation.task.step1.index.dataPath') }}</td>
             <td class="value">{{item.dataPath}}</td>
-            <td class="key">所属AZ</td>
+            <td class="key">{{ $t('operation.task.step1.index.azOwner') }}</td>
             <td class="value">{{item.azOwner}}</td>
-            <td class="key">AZ优先级</td>
+            <td class="key">{{ $t('operation.task.step1.index.azPriority') }}</td>
             <td class="value">{{item.azPriority}}</td>
           </tr>
           <tr v-if="props.clusterTaskList.enableCmTool">
-            <td class="key">CM节点类型</td>
-            <td class="value" v-if="item.isCMMaster === true">主节点</td>
-            <td class="value" v-else>备节点</td>
-            <td class="key">CM路径</td>
+            <td class="key">CM{{ $t('operation.task.step1.index.clusterType') }}</td>
+            <td class="value" v-if="item.isCMMaster === true">{{ $t('operation.task.step1.index.clusterMaster') }}</td>
+            <td class="value" v-else>{{ $t('operation.task.step1.index.clusterOthers') }}</td>
+            <td class="key">{{ $t('operation.task.step1.index.cmDataPath') }}</td>
             <td class="value">{{item.cmDataPath}}</td>
-            <td class="key">CM端口号</td>
+            <td class="key">{{ $t('operation.task.step1.index.cmPort') }}</td>
             <td class="value">{{item.cmPort}}</td>
           </tr>
         </table>

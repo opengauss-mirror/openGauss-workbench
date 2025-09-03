@@ -397,6 +397,7 @@
               "versionNum": "openGauss版本号",
               "versionPlaceholder": "请输入版本号",
               "selectedPackage": "已选择安装包",
+              "selecPack": "所选安装包",
               "morePackage": "未列出我想要的包?",
               "packageManagement": "安装包管理",
               "upload": "离线上传",
@@ -467,7 +468,9 @@
               "ipNoticeError": " IP下",
               "portOccupied": "端口被占用，无法保存",
               "notificationText": "根据配置匹配到如下安装包并进行下载:",
-              "passwdWarning": "出于安全考虑，密码信息无法回显，如需修改请重新输入"
+              "passwdWarning": "出于安全考虑，密码信息无法回显，如需修改请重新输入",
+              "visible": "显示",
+              "hide": "隐藏"
             }
           },
             "step2s5cf2y0": "环境监测中...",
@@ -828,6 +831,7 @@
             "test00": "请选择内核架构",
             "option1": "主备架构",
             "option2": "共享存储架构",
+            "option3": "单主架构",
             "test1": "请输入DSS实例目录",
             "test2": "DSS实例目录",
             "test3": "请输入DSS共享卷名",

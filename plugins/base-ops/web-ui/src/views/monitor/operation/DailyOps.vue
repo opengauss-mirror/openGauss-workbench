@@ -170,13 +170,16 @@
                     </span>
                   </a-space>
                 </a-doption>
-                <a-doption @click="singleRowDelete(record)">
-                  <a-space>
-                    <span>
-                      {{ $t('operation.DailyOps.sl3u5s5cf212') }}
-                    </span>
-                  </a-space>
-                </a-doption>
+                <a-popconfirm
+                  :content="$t('packageManage.index.5myq5c8zms40')"
+                  :ok-text="$t('packageManage.index.5myq5c8zn100')"
+                  :cancel-text="$t('packageManage.index.5myq5c8zn7k0')"
+                  @ok="singleRowDelete(record)"
+                >
+                  <a-button type="text" style="width: 100%; justify-content: left;">
+                    <span>{{ $t('operation.DailyOps.sl3u5s5cf212') }}</span>
+                  </a-button>
+                </a-popconfirm>
               </template>
             </a-dropdown>
           </div>
@@ -253,13 +256,16 @@
                     </span>
                   </a-space>
                 </a-doption>
-                <a-doption @click="singleRowDelete(record)">
-                  <a-space>
-                    <span>
-                      {{ $t('operation.DailyOps.sl3u5s5cf212') }}
-                    </span>
-                  </a-space>
-                </a-doption>
+                <a-popconfirm
+                  :content="$t('packageManage.index.5myq5c8zms40')"
+                  :ok-text="$t('packageManage.index.5myq5c8zn100')"
+                  :cancel-text="$t('packageManage.index.5myq5c8zn7k0')"
+                  @ok="singleRowDelete(record)"
+                >
+                  <a-button type="text" style="width: 100%; justify-content: left;">
+                    <span>{{ $t('operation.DailyOps.sl3u5s5cf212') }}</span>
+                  </a-button>
+                </a-popconfirm>
               </template>
             </a-dropdown>
           </div>

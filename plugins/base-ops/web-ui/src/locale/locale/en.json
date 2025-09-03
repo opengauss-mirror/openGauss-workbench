@@ -396,6 +396,7 @@
               "versionNum": "openGauss Version Number",
               "versionPlaceholder": "Enter version number",
               "selectedPackage": "Selected Package",
+              "selecPack": "Selected Package",
               "morePackage": "Package not listed?",
               "packageManagement": "Package Management",
               "upload": "Offline Upload",
@@ -466,7 +467,9 @@
               "ipNoticeError": "IP Down",
               "portOccupied": "Port is occupied, unable to save",
               "notificationText": "Match the following installation package based on the configuration and download it:",
-              "passwdWarning": "For security reasons, passwords cannot be displayed. Please re-enter your password to make changes。"
+              "passwdWarning": "For security reasons, passwords cannot be displayed. Please re-enter your password to make changes.",
+              "visible": "visible",
+              "hide": "hide"
             }
           },
             "step2s5cf2y0": "Environmental monitoring in progress...",
@@ -846,6 +849,7 @@
             "collapse1": "sharing storage configuration",
             "option1": "Master Slave Arch",
             "option2": "Sharing Storage Arch",
+            "option3": "Single-Master Architecture",
             "passwdWarning": "For security reasons, passwords cannot be displayed."
         },
         "EnterpriseInstall": {
