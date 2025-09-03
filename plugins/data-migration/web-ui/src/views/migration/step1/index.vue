@@ -375,6 +375,17 @@ const syncTaskParams = (params: any) => {
     });
   });
   taskBasicInfo.value.subTaskData[curTableTabs.value].taskParamsObject = {...result}
+  if (!taskBasicInfo.value.subTaskData[curTableTabs.value].more) {
+    taskBasicInfo.value.subTaskData[curTableTabs.value].more = []
+  }
+  const hasRulesEnable = taskBasicInfo.value.subTaskData[curTableTabs.value].more.some((param: any) => param.paramKey === "rules.enable")
+  if (!hasRulesEnable) {
+    taskBasicInfo.value.subTaskData[curTableTabs.value].more.push({
+      paramKey: "rules.enable",
+      paramValue: "true",
+      paramDesc: "规则过滤，true代表开启，false代表关闭"
+    })
+  }
 }
 
 const defaultParamsConfig = (type: string) => {
