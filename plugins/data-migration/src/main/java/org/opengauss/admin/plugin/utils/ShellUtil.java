@@ -48,6 +48,7 @@ import org.opengauss.jsch.pool.enums.ChannelType;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -198,25 +199,12 @@ public class ShellUtil {
             try (InputStream in = channel.getInputStream();
                  OutputStream out = channel.getOutputStream()) {
                 channel.connect();
-                byte[] buffer = new byte[1024];
-                StringBuilder responseBuilder = new StringBuilder();
-                boolean shouldContinue = true;
+                ByteArrayOutputStream responseBuffer = new ByteArrayOutputStream();
 
-                while (shouldContinue && !channel.isClosed()) {
-                    while (in.available() > 0) {
-                        int len = in.read(buffer);
-                        if (len < 0) {
-                            break;
-                        }
-
-                        responseBuilder.append(new String(buffer, 0, len, StandardCharsets.UTF_8));
-                        shouldContinue = processInteractivePrompts(responseBuilder, out, inputMap);
-                        if (!shouldContinue) {
-                            break;
-                        }
-                    }
-
-                    if (shouldContinue && !channel.isClosed()) {
+                while (!channel.isClosed() && !inputMap.isEmpty()) {
+                    readRemainingData(in, responseBuffer);
+                    processInteractivePrompts(responseBuffer, out, inputMap);
+                    if (!channel.isClosed()) {
                         Thread.sleep(100);
                     }
                 }
@@ -245,7 +233,7 @@ public class ShellUtil {
             ShellInfoVo shellInfo, String command, LinkedHashMap<String, String> inputMap) {
         Session session = null;
         Channel channel = null;
-        StringBuilder responseBuilder = new StringBuilder();
+        ByteArrayOutputStream responseBuffer = new ByteArrayOutputStream();
 
         try {
             session = getSession(shellInfo);
@@ -257,23 +245,17 @@ public class ShellUtil {
             try (InputStream in = channel.getInputStream();
                  OutputStream out = channel.getOutputStream()) {
                 channel.connect();
-                byte[] buffer = new byte[1024];
-
-                while (!channel.isClosed()) {
-                    while (in.available() > 0) {
-                        int len = in.read(buffer);
-                        if (len < 0) {
-                            break;
-                        }
-                        responseBuilder.append(new String(buffer, 0, len, StandardCharsets.UTF_8));
-                        if (!inputMap.isEmpty()) {
-                            processInteractivePrompts(responseBuilder, out, inputMap);
-                        }
+                while (true) {
+                    readRemainingData(in, responseBuffer);
+                    if (!inputMap.isEmpty()) {
+                        processInteractivePrompts(responseBuffer, out, inputMap);
                     }
 
-                    if (!channel.isClosed()) {
-                        Thread.sleep(100);
+                    if (channel.isClosed()) {
+                        readRemainingData(in, responseBuffer);
+                        break;
                     }
+                    Thread.sleep(100);
                 }
             }
         } catch (JSchException | InterruptedException | IOException e) {
@@ -286,22 +268,31 @@ public class ShellUtil {
                 session.disconnect();
             }
         }
-        return responseBuilder.toString();
+        return responseBuffer.toString(StandardCharsets.UTF_8);
     }
 
-    private static boolean processInteractivePrompts(StringBuilder responseBuilder, OutputStream out,
+    private static void readRemainingData(InputStream in, ByteArrayOutputStream responseBuffer) throws IOException {
+        byte[] buffer = new byte[1024];
+        while (in.available() > 0) {
+            int len = in.read(buffer);
+            if (len < 0) {
+                break;
+            }
+            responseBuffer.write(buffer, 0, len);
+        }
+    }
+
+    private static void processInteractivePrompts(ByteArrayOutputStream responseBuffer, OutputStream out,
                                                      Map<String, String> inputMap) throws IOException {
         for (Iterator<Map.Entry<String, String>> it = inputMap.entrySet().iterator(); it.hasNext();) {
             Map.Entry<String, String> entry = it.next();
-            if (responseBuilder.toString().contains(entry.getKey())) {
+            if (responseBuffer.toString(StandardCharsets.UTF_8).contains(entry.getKey())) {
                 out.write((entry.getValue() + "\n").getBytes(StandardCharsets.UTF_8));
                 out.flush();
                 it.remove();
-                responseBuilder.setLength(0);
                 break;
             }
         }
-        return !inputMap.isEmpty();
     }
 
     private static Session getSession(ShellInfoVo shellInfo) throws JSchException {

@@ -81,10 +81,12 @@ import org.opengauss.admin.plugin.service.MigrationTaskParamService;
 import org.opengauss.admin.plugin.service.MigrationTaskService;
 import org.opengauss.admin.plugin.service.MigrationTaskStatusRecordService;
 import org.opengauss.admin.plugin.service.TbMigrationTaskGlobalToolsParamService;
+import org.opengauss.admin.plugin.utils.FileUtils;
 import org.opengauss.admin.plugin.utils.ShellUtil;
 import org.opengauss.admin.plugin.vo.FullCheckParam;
 import org.opengauss.admin.plugin.vo.FullMigrationProgressVo;
 import org.opengauss.admin.plugin.vo.ProcessStatus;
+import org.opengauss.admin.plugin.vo.ShellInfoVo;
 import org.opengauss.admin.plugin.vo.TaskProcessStatus;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
@@ -900,21 +902,31 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         List<MigrationTaskGlobalParam> globalParams, String command) {
         JschResult checkResult = PortalHandle.checkBeforeMigration(installHost, t, installHost.getJarName(),
             getTaskParam(installHost, globalParams, t), command);
-        MigrationTask update = MigrationTask.builder().id(t.getId()).build();
-        if (checkResult.getResult().contains("verify migration success.")) {
+        String logContent = checkResult.getResult();
+        if (logContent.contains("verify migration success.")) {
             return true;
         }
-        if (!checkResult.isOk()) {
-            log.error("exec checkBeforeMigration command failed.");
-            update.setExecStatus(TaskStatus.MIGRATION_ERROR.getCode());
-            update.setStatusDesc(checkResult.getResult());
+
+        ShellInfoVo shellInfo = new ShellInfoVo(installHost.getHost(), installHost.getPort(), installHost.getRunUser(),
+                installHost.getRunPassword());
+        String logPath = String.format("%sportal/logs/portal_%s.log", installHost.getInstallPath(), t.getId());
+        String fileContents = FileUtils.catRemoteFileContents(logPath, shellInfo);
+        if (!ObjectUtils.isEmpty(fileContents)) {
+            logContent = fileContents;
         }
-        if (checkResult.getResult().contains("verify migration failed.")) {
-            log.info("exec checkBeforeMigration command result {}", checkResult.getResult());
+
+        MigrationTask update = MigrationTask.builder().id(t.getId()).build();
+        if (logContent.contains("verify migration success.")) {
+            return true;
+        } else if (logContent.contains("verify migration failed.")) {
             update.setExecStatus(TaskStatus.CHECK_ERROR.getCode());
             String result = PortalHandle.getPortalCheckResult(installHost, t.getId());
             update.setStatusDesc(result);
             migrationMainTaskService.updateStatus(t.getMainTaskId(), MainTaskStatus.CHECK_MIGRATION);
+        } else {
+            log.error("exec checkBeforeMigration command failed. logContent: {}", logContent);
+            update.setExecStatus(TaskStatus.MIGRATION_ERROR.getCode());
+            update.setStatusDesc(logContent);
         }
         updateById(update);
         return false;

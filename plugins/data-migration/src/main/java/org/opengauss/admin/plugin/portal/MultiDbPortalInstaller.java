@@ -428,8 +428,8 @@ public class MultiDbPortalInstaller {
     private void checkJavaEnv(SshLogin sshLogin) {
         String version = jschExecutorFacade.checkJavaVersion(sshLogin);
         int javaVersionMajor = CommonUtils.getJavaVersionMajor(version);
-        if (javaVersionMajor < 11) {
-            String errMsg = "The java version is not match 11+, "
+        if (javaVersionMajor < 17) {
+            String errMsg = "The java version is not match 17+, "
                     + "please check environment JAVA_HOME,it must configuration in user ~/.bashrc";
             log.warn("{} {}", sshLogin, errMsg);
             throw new PortalInstallException(errMsg);

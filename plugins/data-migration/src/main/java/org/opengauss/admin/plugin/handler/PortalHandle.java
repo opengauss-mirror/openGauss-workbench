@@ -259,7 +259,6 @@ public class PortalHandle {
      */
     public static JschResult checkBeforeMigration(MigrationHostPortalInstall host, MigrationTask task,
                                                 String portalJarName, Map<String, String> paramMap, String command) {
-        log.info("run host info: {}", JSON.toJSONString(host));
         String portalHome = host.getInstallPath() + "portal/";
         StringBuilder commandSb = new StringBuilder();
         commandSb.append("java -Dpath=").append(portalHome);
