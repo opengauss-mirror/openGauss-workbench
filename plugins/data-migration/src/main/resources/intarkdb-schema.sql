@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS "tb_migration_task" (
     "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "source_node_id" varchar(64),
     "source_db" varchar(255),
-    "source_tables" text,
+    "source_tables" clob,
     "target_node_id" varchar(64),
     "target_db" varchar(255),
     "migration_operations" varchar(255),
@@ -125,13 +125,13 @@ UPDATE sys_menu SET menu_en_name = 'Transcribe Replay Task Detail' WHERE menu_na
 
 UPDATE sys_menu SET menu_en_name = 'Create Data Migration Task' WHERE menu_name = '创建迁移任务';
 
-ALTER TABLE tb_migration_task ADD COLUMN source_tables text;
+ALTER TABLE tb_migration_task ADD COLUMN source_tables clob;
 COMMENT ON COLUMN "tb_migration_task"."source_tables" IS '源端表';
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task_exec_result_detail" (
     "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "task_id" int8,
-    "exec_result_detail" text,
+    "exec_result_detail" clob,
     "create_time" timestamp,
     "process_type" int2
     );
@@ -257,7 +257,7 @@ CREATE TABLE IF NOT EXISTS "tb_migration_task_param" (
     "main_task_id" int8,
     "task_id" int8,
     "param_key" varchar(255),
-    "param_value" varchar(255),
+    "param_value" clob,
     "param_desc" varchar(512),
     "param_type" int2
     );
@@ -706,7 +706,7 @@ COMMENT ON COLUMN "tb_migration_task_alert"."log_source" IS '告警对应的日�
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task_alert_detail" (
     "alert_id" int8 NOT NULL PRIMARY KEY,
-    "detail" text NOT NULL
+    "detail" clob NOT NULL
     );
 
 COMMENT ON COLUMN "tb_migration_task_alert_detail"."alert_id" IS '告警信息主键ID';
@@ -794,7 +794,7 @@ CREATE TABLE IF NOT EXISTS "tb_transcribe_replay_task"
     replay_num         BIGINT       NOT NULL DEFAULT 0,
     source_node_id         VARCHAR(50),
     target_node_id         VARCHAR(50),
-    error_msg         text,
+    error_msg         clob,
     task_start_time     TIMESTAMP    ,
     task_end_time       TIMESTAMP
     );
@@ -850,7 +850,7 @@ CREATE TABLE IF NOT EXISTS "tb_transcribe_replay_slow_sql"
     sql_str TEXT,
     source_duration BIGINT,
     target_duration BIGINT,
-    explain_str TEXT,
+    explain_str clob,
     count_str BIGINT
 );
 
@@ -868,7 +868,7 @@ CREATE TABLE IF NOT EXISTS  "tb_transcribe_replay_fail_sql"
     id       int8 PRIMARY KEY AUTOINCREMENT,
     task_id  INT  NOT NULL,
     sql TEXT NOT NULL,
-    message  TEXT
+    message  clob
 );
 
 COMMENT ON TABLE tb_transcribe_replay_fail_sql IS '记录失败 SQL 的表';
@@ -967,28 +967,6 @@ COMMENT ON COLUMN "tb_migration_tool_portal_download_info"."portal_version" IS '
 
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(1, 'centos', '7', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/centos7/', 'PortalControl-7.0.0rc1-x86_64.tar.gz', 'portalControl-7.0.0rc1-exec.jar', 'MYSQL_ONLY', 'STABLE');
-INSERT INTO "tb_migration_tool_portal_download_info"
-("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(2, 'openEuler', '20.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler20.03/', 'PortalControl-7.0.0rc1-x86_64.tar.gz', 'portalControl-7.0.0rc1-exec.jar', 'MYSQL_ONLY', 'STABLE');
-INSERT INTO "tb_migration_tool_portal_download_info"
-("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(3, 'openEuler', '20.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler20.03/', 'PortalControl-7.0.0rc1-aarch64.tar.gz', 'portalControl-7.0.0rc1-exec.jar', 'MYSQL_ONLY', 'STABLE');
-INSERT INTO "tb_migration_tool_portal_download_info"
-("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(4, 'openEuler', '22.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler22.03/', 'PortalControl-7.0.0rc1-x86_64.tar.gz', 'portalControl-7.0.0rc1-exec.jar', 'MYSQL_ONLY', 'STABLE');
-INSERT INTO "tb_migration_tool_portal_download_info"
-("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(5, 'openEuler', '22.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler22.03/', 'PortalControl-7.0.0rc1-aarch64.tar.gz', 'portalControl-7.0.0rc1-exec.jar', 'MYSQL_ONLY', 'STABLE');
-INSERT INTO "tb_migration_tool_portal_download_info"
-("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(6, 'openEuler', '24.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler24.03/', 'PortalControl-7.0.0rc1-x86_64.tar.gz', 'portalControl-7.0.0rc1-exec.jar', 'MYSQL_ONLY', 'STABLE');
-INSERT INTO "tb_migration_tool_portal_download_info"
-("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(7, 'openEuler', '24.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/openEuler24.03/', 'PortalControl-7.0.0rc1-aarch64.tar.gz', 'portalControl-7.0.0rc1-exec.jar', 'MYSQL_ONLY', 'STABLE');
-
-INSERT INTO "tb_migration_tool_portal_download_info"
-("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
 VALUES(8, 'centos', '7', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/centos7/', 'PortalControl-7.0.0rc2-x86_64.tar.gz', 'portalControl-7.0.0rc2-exec.jar', 'MYSQL_ONLY', 'EXPERIMENTAL');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
@@ -1035,7 +1013,7 @@ VALUES(21, 'openEuler', '24.03', 'aarch64', 'https://opengauss.obs.cn-south-1.my
 -- ALTER TABLE tb_migration_task
 -------------------------------------------
 
-ALTER TABLE tb_migration_task ADD COLUMN source_schemas text;
+ALTER TABLE tb_migration_task ADD COLUMN source_schemas clob;
 COMMENT ON COLUMN "tb_migration_tool_portal_download_info"."source_schemas" IS '源端schema列表，多个schema以英文逗号分隔';
 
 ALTER TABLE tb_migration_task ADD COLUMN source_db_type varchar(255);
@@ -1058,7 +1036,7 @@ CREATE TABLE IF NOT EXISTS tb_migration_full_migration_progress
     schema  VARCHAR(255)     NOT NULL,
     status  INT              NOT NULL,
     percent DOUBLE PRECISION NOT NULL,
-    error   TEXT
+    error   clob
     );
 
 COMMENT
