@@ -666,8 +666,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         }
 
         MigrationTask update = MigrationTask.builder().id(subTask.getId())
-                .execStatus(TaskStatus.INCREMENTAL_FINISHED.getCode())
-                .execTime(Instant.now()).build();
+                .execStatus(TaskStatus.INCREMENTAL_FINISHED.getCode()).build();
         migrationTaskService.updateById(update);
         LoginUser loginUser = SecurityUtils.getLoginUser();
         migrationTaskOperateRecordService.saveRecord(subTask.getId(), TaskOperate.STOP_INCREMENTAL, loginUser.getUsername());
@@ -765,7 +764,6 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         MigrationTask update = MigrationTask.builder()
             .id(subTask.getId())
             .execStatus(TaskStatus.REVERSE_START.getCode())
-            .execTime(Instant.now())
             .build();
         migrationTaskService.updateById(update);
         LoginUser loginUser = SecurityUtils.getLoginUser();

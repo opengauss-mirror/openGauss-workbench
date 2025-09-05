@@ -1482,8 +1482,8 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         String version = jschExecutorFacade.checkJavaVersion(sshLogin);
         // check the java version
         int javaVersionMajor = CommonUtils.getJavaVersionMajor(version);
-        if (javaVersionMajor < 11) {
-            String errMsg = "The java version is not match 11+, "
+        if (javaVersionMajor < 17) {
+            String errMsg = "The java version is not match 17+, "
                 + "please check environment JAVA_HOME,it must configuration in user ~/.bashrc";
             log.warn("{} {}", sshLogin, errMsg);
             throw new PortalInstallException(errMsg);
