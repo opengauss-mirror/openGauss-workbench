@@ -44,7 +44,7 @@ import io.prometheus.metrics.core.metrics.Gauge;
 import io.prometheus.metrics.model.snapshots.MetricSnapshot;
 import lombok.Data;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -72,7 +72,7 @@ import java.util.concurrent.TimeUnit;
  * @since 2023/12/1
  */
 @Service
-@Log4j2
+@Slf4j
 public class OpengaussMetrics {
     // validity period of cached data
     static final long CACHE_TIME_OUT = 3000L;
@@ -93,9 +93,9 @@ public class OpengaussMetrics {
     }
 
     private String getMetricKey(
-            String nodeId, String exporterKey, String exporterName, String dbRole, String metricName) {
+        String nodeId, String exporterKey, String exporterName, String dbRole, String metricName) {
         return nodeId + SEPARATOR + exporterKey + SEPARATOR + exporterName + SEPARATOR + dbRole + SEPARATOR
-                + metricName;
+            + metricName;
     }
 
     private String getGroupCollectKey(String nodeId, String exporterKey, String exporterName, String dbRole) {
@@ -180,7 +180,7 @@ public class OpengaussMetrics {
                                         }
                                     } catch (IllegalStateException e) {
                                         log.error("The scheduled collection task for the metric [{}] of node {}"
-                                                + " is fail", entry.getKey(), target.getTargetConfig().getNodeId());
+                                            + " is fail", entry.getKey(), target.getTargetConfig().getNodeId());
                                         log.error(e.getMessage());
                                     } finally {
                                         executor.shutdown();
@@ -325,10 +325,10 @@ public class OpengaussMetrics {
             for (int i = 0; i < b.getQuery().size(); i++) {
                 b.getMetrics().forEach(metric -> {
                     if (metric.getUsage() == QueryInstance.MetricInfo.Usage.COUNTER
-                            || metric.getUsage() == QueryInstance.MetricInfo.Usage.GAUGE) {
+                        || metric.getUsage() == QueryInstance.MetricInfo.Usage.GAUGE) {
                         matchMetricsName.add(
-                                b.name + CollectConstants.SEPARATOR + metric.getName() + CollectConstants.SEPARATOR
-                                        + "_total");
+                            b.name + CollectConstants.SEPARATOR + metric.getName() + CollectConstants.SEPARATOR
+                                + "_total");
                     }
                 });
             }
@@ -380,7 +380,7 @@ public class OpengaussMetrics {
             getMetrics().forEach(metric -> {
                 if (metric.getUsage().getType() != null) {
                     result.put(base + "_" + metric.getName(),
-                            new MetricTypeAndLabels(metric.getUsage().type, labelNames));
+                        new MetricTypeAndLabels(metric.getUsage().type, labelNames));
                 }
             });
             return result;

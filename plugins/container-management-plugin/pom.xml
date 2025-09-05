@@ -13,7 +13,7 @@
     </parent>
     <packaging>jar</packaging>
     <properties>
-        <kubernetes-client.version>18.0.0</kubernetes-client.version>
+        <kubernetes-client.version>24.0.0</kubernetes-client.version>
         <build.frontend.skip>false</build.frontend.skip>
     </properties>
 
@@ -22,6 +22,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.opengauss</groupId>
             <artifactId>visualtool-framework</artifactId>
@@ -131,7 +136,7 @@
         </profile>
     </profiles>
     <build>
-         <resources>
+        <resources>
             <resource>
                 <directory>src/main/resources</directory>
                 <includes>
@@ -143,13 +148,6 @@
                 </includes>
                 <filtering>true</filtering>
             </resource>
-             <!--<resource>
-                 <directory>src/main/resources/resources</directory>
-                 <includes>
-                     <include>**/*</include>
-                 </includes>
-                 <filtering>true</filtering>
-             </resource>-->
         </resources>
         <pluginManagement>
             <plugins>

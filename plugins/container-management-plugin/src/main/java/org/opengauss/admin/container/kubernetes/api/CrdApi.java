@@ -30,7 +30,6 @@ import io.kubernetes.client.custom.V1Patch;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.ApiResponse;
 import io.kubernetes.client.openapi.apis.CustomObjectsApi;
-import io.kubernetes.client.openapi.models.V1DeleteOptions;
 import io.kubernetes.client.util.PatchUtils;
 import okhttp3.Call;
 import org.opengauss.admin.container.beans.K8sCluster;
@@ -77,8 +76,8 @@ public class CrdApi {
                 K8sClientBuilder.builder().apiServer(apiServerUrl).token(token).buildCustomObjectsApi(clusterId);
 
         try {
-            Call localVarCall = customObjectsApi.getNamespacedCustomObjectCall(crdDefinition.getGroup(),
-                    crdDefinition.getVersion(), namespace, crdDefinition.getPlural(), name, null);
+            Call localVarCall = customObjectsApi.getNamespacedCustomObject(crdDefinition.getGroup(),
+                crdDefinition.getVersion(), namespace, crdDefinition.getPlural(), name).buildCall(null);
             Type localVarReturnType = K8sTypeTokenRegister.getType(tClass);
             ApiResponse<Object> apiResponse = customObjectsApi.getApiClient().execute(localVarCall, localVarReturnType);
             if (HttpsUtil.isSuccess(apiResponse.getStatusCode())) {
@@ -109,10 +108,9 @@ public class CrdApi {
         CustomObjectsApi customObjectsApi =
                 K8sClientBuilder.builder().apiServer(apiServerUrl).token(token).buildCustomObjectsApi(clusterId);
         try {
-            ApiResponse<Object> response =
-                    customObjectsApi.listNamespacedCustomObjectWithHttpInfo(crdDefinition.getGroup(),
-                            crdDefinition.getVersion(), crdDefinition.getNamespace(), crdDefinition.getPlural(), null,
-                            null, null, fieldSelector, labelSelector, null, null, null, null, false);
+            ApiResponse<Object> response = customObjectsApi.listNamespacedCustomObject(crdDefinition.getGroup(),
+                    crdDefinition.getVersion(), crdDefinition.getNamespace(), crdDefinition.getPlural())
+                .executeWithHttpInfo();
             if (HttpsUtil.isSuccess(response.getStatusCode())) {
                 Object data = response.getData();
                 if (data instanceof LinkedTreeMap) {
@@ -149,10 +147,9 @@ public class CrdApi {
         CustomObjectsApi customObjectsApi =
                 K8sClientBuilder.builder().apiServer(apiServerUrl).token(token).buildCustomObjectsApi(clusterId);
         try {
-            ApiResponse<Object> info =
-                    customObjectsApi.createNamespacedCustomObjectWithHttpInfo(crdDefinition.getGroup(),
-                            crdDefinition.getVersion(), crdDefinition.getNamespace(), crdDefinition.getPlural(), body,
-                            null, null, null);
+            ApiResponse<Object> info = customObjectsApi.createNamespacedCustomObject(crdDefinition.getGroup(),
+                    crdDefinition.getVersion(), crdDefinition.getNamespace(), crdDefinition.getPlural(), body)
+                .executeWithHttpInfo();
             if (HttpsUtil.isSuccess(info.getStatusCode())) {
                 logger.info("create crd success");
                 return Boolean.TRUE;
@@ -178,11 +175,9 @@ public class CrdApi {
         CustomObjectsApi customObjectsApi =
                 K8sClientBuilder.builder().apiServer(apiServerUrl).token(token).buildCustomObjectsApi(clusterId);
         try {
-            V1DeleteOptions v1DeleteOptions = new V1DeleteOptions();
-            ApiResponse<Object> info =
-                    customObjectsApi.deleteNamespacedCustomObjectWithHttpInfo(crdDefinition.getGroup(),
-                            crdDefinition.getVersion(), crdDefinition.getNamespace(), crdDefinition.getPlural(), name,
-                            0, false, null, null, v1DeleteOptions);
+            ApiResponse<Object> info = customObjectsApi.deleteNamespacedCustomObject(crdDefinition.getGroup(),
+                    crdDefinition.getVersion(), crdDefinition.getNamespace(), crdDefinition.getPlural(), name)
+                .executeWithHttpInfo();
             if (HttpsUtil.isSuccess(info.getStatusCode())) {
                 logger.info("delete crd success : {}/{}", crdDefinition, name);
                 return Boolean.TRUE;
@@ -211,10 +206,10 @@ public class CrdApi {
         logger.info("start update crd : {}", JsonUtils.objToStrWithTZ(body));
         try {
             PatchUtils.patch(Object.class,
-                    () -> customObjectsApi.patchNamespacedCustomObjectCall(crdDefinition.getGroup(),
-                            crdDefinition.getVersion(), crdDefinition.getNamespace(), crdDefinition.getPlural(), name,
-                            new V1Patch(JsonUtils.objToStrWithTZ(body)), null, null, null, null),
-                    V1Patch.PATCH_FORMAT_JSON_MERGE_PATCH, customObjectsApi.getApiClient());
+                () -> customObjectsApi.patchNamespacedCustomObject(crdDefinition.getGroup(), crdDefinition.getVersion(),
+                    crdDefinition.getNamespace(), crdDefinition.getPlural(), name,
+                    new V1Patch(JsonUtils.objToStrWithTZ(body))).buildCall(null), V1Patch.PATCH_FORMAT_JSON_MERGE_PATCH,
+                customObjectsApi.getApiClient());
             return Boolean.TRUE;
         } catch (ApiException e) {
             logger.error("update crd error", e.getMessage());

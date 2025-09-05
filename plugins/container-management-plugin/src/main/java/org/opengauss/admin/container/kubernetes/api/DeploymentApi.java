@@ -64,9 +64,10 @@ public class DeploymentApi {
         AppsV1Api api =
                 K8sClientBuilder.builder().apiServer(apiServerUrl).token(k8sCluster.getToken()).buildAppsV1Api(k8sCluster.getId());
         try {
-            ApiResponse<V1DeploymentList> v1DeploymentListApiResponse =
-                    api.listNamespacedDeploymentWithHttpInfo(namespace, null, null, null, fieldSelector,
-                            labelSelector, null, null, null, null, false);
+            ApiResponse<V1DeploymentList> v1DeploymentListApiResponse = api.listNamespacedDeployment(namespace)
+                .fieldSelector(fieldSelector)
+                .labelSelector(labelSelector)
+                .executeWithHttpInfo();
             if (HttpsUtil.isSuccess(v1DeploymentListApiResponse.getStatusCode())) {
                 return v1DeploymentListApiResponse.getData().getItems();
             } else {

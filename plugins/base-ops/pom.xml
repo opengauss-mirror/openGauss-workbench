@@ -35,6 +35,10 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>easyexcel</artifactId>
         </dependency>
@@ -54,7 +58,6 @@
             <groupId>com.gitee.starblues</groupId>
             <artifactId>spring-brick-bootstrap</artifactId>
         </dependency>
-
         <dependency>
             <groupId>com.gitee.starblues</groupId>
             <artifactId>spring-brick-maven-packager</artifactId>

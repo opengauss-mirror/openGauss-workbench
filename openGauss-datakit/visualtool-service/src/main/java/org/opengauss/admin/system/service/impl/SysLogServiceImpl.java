@@ -21,25 +21,28 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.system.service.impl;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.rolling.RollingFileAppender;
-import ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy;
-import ch.qos.logback.core.util.FileSize;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.appender.RollingFileAppender;
+import org.apache.logging.log4j.core.appender.rolling.DefaultRolloverStrategy;
+import org.apache.logging.log4j.core.appender.rolling.SizeBasedTriggeringPolicy;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.opengauss.admin.common.constant.LogConstants;
 import org.opengauss.admin.common.core.dto.SysLogConfigDto;
 import org.opengauss.admin.common.core.vo.SysLogConfigVo;
 import org.opengauss.admin.system.domain.SysLogConfig;
 import org.opengauss.admin.system.mapper.SysLogConfigMapper;
 import org.opengauss.admin.system.service.ISysLogService;
+
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -59,9 +62,6 @@ import java.util.Map;
 @Slf4j
 @Service
 public class SysLogServiceImpl implements ISysLogService {
-
-    LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
-
     @Value("${logging.file.path}")
     private String loggingFilePath;
 
@@ -73,60 +73,75 @@ public class SysLogServiceImpl implements ISysLogService {
      */
     @Override
     public void init() {
-
         String level = getConfigByKey(LogConstants.SYS_LOG_CONFIG_KEY_LEVEL);
         String maxFileSize = getConfigByKey(LogConstants.SYS_LOG_CONFIG_KEY_MAX_FILE_SIZE);
         String totalSizeCap = getConfigByKey(LogConstants.SYS_LOG_CONFIG_KEY_TOTAL_SIZE_CAP);
         String maxHistory = getConfigByKey(LogConstants.SYS_LOG_CONFIG_KEY_MAX_HISTORY);
-        if(null == level){
+        if (level == null) {
             level = LogConstants.DEFAULT_LEVEL;
-            saveLogConfig(LogConstants.SYS_LOG_CONFIG_KEY_LEVEL, LogConstants.DEFAULT_LEVEL);
+            saveLogConfig(LogConstants.SYS_LOG_CONFIG_KEY_LEVEL, level);
         }
-        if(null == maxHistory){
+        if (maxHistory == null) {
             maxHistory = LogConstants.DEFAULT_MAX_HISTORY.toString();
-            saveLogConfig(LogConstants.SYS_LOG_CONFIG_KEY_MAX_HISTORY,LogConstants.DEFAULT_MAX_HISTORY.toString());
+            saveLogConfig(LogConstants.SYS_LOG_CONFIG_KEY_MAX_HISTORY, maxHistory);
         }
-        if(null == maxFileSize){
+        if (maxFileSize == null) {
             maxFileSize = LogConstants.DEFAULT_MAX_FILE_SIZE;
-            saveLogConfig(LogConstants.SYS_LOG_CONFIG_KEY_MAX_FILE_SIZE, LogConstants.DEFAULT_MAX_FILE_SIZE);
+            saveLogConfig(LogConstants.SYS_LOG_CONFIG_KEY_MAX_FILE_SIZE, maxFileSize);
         }
-        if(null == totalSizeCap){
+        if (totalSizeCap == null) {
             totalSizeCap = LogConstants.DEFAULT_TOTAL_SIZE_CAP;
             saveLogConfig(LogConstants.SYS_LOG_CONFIG_KEY_TOTAL_SIZE_CAP, totalSizeCap);
         }
-
         changeLogLevel(level);
-        changeLogAppender(totalSizeCap,maxFileSize,Integer.parseInt(maxHistory));
+        changeLogAppender(totalSizeCap, maxFileSize, Integer.parseInt(maxHistory));
     }
-
 
     /**
      * Change logback print level
+     *
      * @param level the log level
      */
     public void changeLogLevel(String level) {
-        List<Logger> loggers = loggerContext.getLoggerList();
-        Level parsedLevel = Level.toLevel(level);
-        for(Logger logger : loggers){
-            logger.setLevel(parsedLevel);
+        Configurator.setRootLevel(org.apache.logging.log4j.Level.valueOf(level));
+        if (LogManager.getContext(false) instanceof LoggerContext ctx) {
+            for (LoggerConfig loggerConfig : ctx.getConfiguration().getLoggers().values()) {
+                loggerConfig.setLevel(org.apache.logging.log4j.Level.valueOf(level));
+            }
+            ctx.updateLoggers();
         }
     }
 
     /**
      * Change default logback appender
+     *
      * @param totalSizeCap
      * @param maxFileSize
      * @param maxHistory
      */
     public void changeLogAppender(String totalSizeCap, String maxFileSize, Integer maxHistory) {
-        Logger rootLogger = loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
-        RollingFileAppender<ILoggingEvent> appender = (RollingFileAppender<ILoggingEvent>) rootLogger.getAppender(LogConstants.DEFAULT_APPENDER);
-        SizeAndTimeBasedRollingPolicy policy = (SizeAndTimeBasedRollingPolicy) appender.getRollingPolicy();
-        policy.setMaxFileSize(FileSize.valueOf(maxFileSize));
-        policy.setTotalSizeCap(FileSize.valueOf(totalSizeCap));
-        policy.setMaxHistory(maxHistory);
-        policy.start();
-        appender.start();
+        if (LogManager.getContext(false) instanceof LoggerContext ctx) {
+            Configuration config = ctx.getConfiguration();
+            SizeBasedTriggeringPolicy sizePolicy = SizeBasedTriggeringPolicy.createPolicy(maxFileSize);
+            DefaultRolloverStrategy rolloverStrategy = DefaultRolloverStrategy.newBuilder()
+                .withMax(Integer.toString(maxHistory))
+                .build();
+            String filePattern = loggingFilePath + File.separator + "sys-%d{yyyy-MM-dd}-%i.log";
+            RollingFileAppender appender = RollingFileAppender.newBuilder()
+                .withFileName(loggingFilePath + File.separator + "sys.log")
+                .withFilePattern(filePattern)
+                .withPolicy(sizePolicy)
+                .withStrategy(rolloverStrategy)
+                .setLayout(PatternLayout.createDefaultLayout(config))
+                .setName("RollingFile")
+                .setConfiguration(config)
+                .build();
+            appender.start();
+            config.addAppender(appender);
+            LoggerConfig rootLogger = config.getRootLogger();
+            rootLogger.addAppender(appender, null, null);
+            ctx.updateLoggers();
+        }
     }
 
     /**
@@ -213,9 +228,9 @@ public class SysLogServiceImpl implements ISysLogService {
                     file.put("name",childFile.getName());
                     file.put("size", childFile.length());
                     try {
-                      BasicFileAttributes attrs = Files.readAttributes(childFile.toPath(), BasicFileAttributes.class);
-                      file.put("createdAt", attrs.creationTime().toMillis());
-                      file.put("updatedAt", attrs.lastModifiedTime().toMillis());
+                        BasicFileAttributes attrs = Files.readAttributes(childFile.toPath(), BasicFileAttributes.class);
+                        file.put("createdAt", attrs.creationTime().toMillis());
+                        file.put("updatedAt", attrs.lastModifiedTime().toMillis());
                     } catch (IOException e) {
                         log.error("list all log error, message: {}", e.getMessage());
                     }
