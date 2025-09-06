@@ -24,6 +24,8 @@
 package org.opengauss.admin.plugin.service.ops.impl.provider;
 
 import cn.hutool.core.util.StrUtil;
+
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -36,6 +38,7 @@ import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.service.ops.ClusterTaskProvider;
 import org.opengauss.admin.plugin.service.ops.impl.ClusterTaskProviderManager;
 import org.opengauss.admin.plugin.service.ops.impl.OpsHostRemoteService;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.InitializingBean;
 
 import javax.annotation.Resource;
@@ -55,6 +58,13 @@ import java.util.stream.Collectors;
 public abstract class AbstractTaskProvider implements ClusterTaskProvider, InitializingBean {
     @Resource
     protected OpsHostRemoteService opsHostRemoteService;
+
+    /**
+     * encryption utils
+     */
+    @Resource
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    protected EncryptionUtils encryptionUtils;
 
     /**
      * before install config
@@ -618,17 +628,14 @@ public abstract class AbstractTaskProvider implements ClusterTaskProvider, Initi
             listenerAddress = addCommandOfLoadEnvironmentVariable(listenerAddress, installContext.getEnvPath());
             opsHostRemoteService.executeCommand(listenerAddress, session, retSession, "modify listening address");
 
-
             String hba = MessageFormat.format(SshCommandConstants.HBA, dataPath);
             hba = addCommandOfLoadEnvironmentVariable(hba, installContext.getEnvPath());
             opsHostRemoteService.executeCommand(hba, session, retSession, "modify hba host");
-
-
             String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(port));
             try {
                 Map<String, String> response = new HashMap<>();
                 String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN AUDITADMIN " +
-                        "SYSADMIN PASSWORD \"{0}\";\\q", databasePassword);
+                        "SYSADMIN PASSWORD \"{0}\";\\q", encryptionUtils.decrypt(databasePassword));
                 response.put("openGauss=#", createUser);
                 if (enterpriseInstallConfig.getDatabaseKernelArch().equals(DatabaseKernelArch.MASTER_SLAVE)
                         || enterpriseInstallNodeConfig.getIsCMMaster()) {

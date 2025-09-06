@@ -25,7 +25,6 @@ package org.opengauss.admin.plugin.service.ops.impl.provider;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -39,7 +38,6 @@ import org.opengauss.admin.plugin.enums.ops.*;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
 import org.opengauss.admin.plugin.service.ops.impl.function.GenerateClusterConfigXmlInstance;
-import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
@@ -61,9 +59,6 @@ public class TaskEnterpriseProvider extends AbstractTaskProvider {
     private IOpsClusterService opsClusterService;
     @Resource
     private IOpsClusterNodeService opsClusterNodeService;
-    @Resource
-    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-    private EncryptionUtils encryptionUtils;
     @Resource
     private GenerateClusterConfigXmlInstance generateClusterConfigXmlInstance;
 
@@ -204,8 +199,7 @@ public class TaskEnterpriseProvider extends AbstractTaskProvider {
         sendOperateLog(installContext, "START_EXE_PREINSTALL_COMMAND");
         String group = checkInstallUserGroup(installUsername, rootSession, retBuffer);
         preInstall(group, pkgPath, masterNodeConfig, xmlConfigFullPath, rootSession, retBuffer,
-                encryptionUtils.decrypt(masterRootUserInfo.getPassword()),
-                encryptionUtils.decrypt(installUserInfo.getPassword()), installContext.getEnvPath());
+            masterRootUserInfo.getPassword(), installUserInfo.getPassword(), installContext.getEnvPath());
         sendOperateLog(installContext, "END_EXE_PREINSTALL_COMMAND");
 
         Session ommSession = createSessionWithUserId(masterHostHolder, false, masterNodeConfig.getInstallUserId());
@@ -252,7 +246,8 @@ public class TaskEnterpriseProvider extends AbstractTaskProvider {
         try {
             Map<String, String> autoResponse = new HashMap<>();
             autoResponse.put("(yes/no)?", "yes");
-            String databasePassword = installContext.getEnterpriseInstallConfig().getDatabasePassword();
+            String databasePassword = encryptionUtils.decrypt(
+                installContext.getEnterpriseInstallConfig().getDatabasePassword());
             autoResponse.put("Please enter password for database:", databasePassword);
             autoResponse.put("Please repeat for database:", databasePassword);
 
@@ -300,19 +295,19 @@ public class TaskEnterpriseProvider extends AbstractTaskProvider {
 
 
     private void preInstall(String group, String pkgPath, EnterpriseInstallNodeConfig masterNodeConfig, String xmlConfigFullPath, Session rootSession, RetBuffer retBuffer, String rootPassword, String installUserPassword, String envPath) {
+        String installUsername = masterNodeConfig.getInstallUsername();
         String gsPreInstall = MessageFormat.format(SshCommandConstants.GS_PREINSTALL_INTERACTIVE,
-                pkgPath + "script/",
-                masterNodeConfig.getInstallUsername(),
+                pkgPath + "script/", installUsername,
                 group, xmlConfigFullPath);
         gsPreInstall = wrapperEnvSep(gsPreInstall, envPath);
         Map<String, String> autoResponse = new HashMap<>();
         autoResponse.put("(yes/no)?", "yes");
-        autoResponse.put("Please enter password for root\r\nPassword:", rootPassword);
-        autoResponse.put("Please enter password for current user["
-                + masterNodeConfig.getInstallUsername()
-                + "].\r\nPassword:", installUserPassword);
+        autoResponse.put("Please enter password for root\r\nPassword:", encryptionUtils.decrypt(rootPassword));
+        autoResponse.put("Please enter password for current user[" + installUsername + "].\r\nPassword:",
+            encryptionUtils.decrypt(installUserPassword));
         // for compatibility with 5.1.0
-        autoResponse.put("Please enter password for current user[root].\r\nPassword:", rootPassword);
+        autoResponse.put("Please enter password for current user[root].\r\nPassword:",
+            encryptionUtils.decrypt(rootPassword));
         opsHostRemoteService.executeCommand(gsPreInstall, rootSession, retBuffer, autoResponse);
     }
 
