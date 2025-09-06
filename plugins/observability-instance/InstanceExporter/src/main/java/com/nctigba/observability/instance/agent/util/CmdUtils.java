@@ -34,7 +34,7 @@ import com.nctigba.observability.instance.agent.exception.InitClientException;
 import com.nctigba.observability.instance.agent.pool.SshClientNodeSessionPool;
 import com.nctigba.observability.instance.agent.pool.SshClientSessionPool;
 import com.nctigba.observability.instance.agent.service.TargetService;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.apache.sshd.client.channel.ChannelExec;
 import org.apache.sshd.client.channel.ClientChannelEvent;
@@ -59,7 +59,7 @@ import java.util.function.Consumer;
  *
  * @since 2023/12/1
  */
-@Log4j2
+@Slf4j
 @Component
 public class CmdUtils {
     private static final int CHANNEL_TIMEOUT = 1000 * 3;

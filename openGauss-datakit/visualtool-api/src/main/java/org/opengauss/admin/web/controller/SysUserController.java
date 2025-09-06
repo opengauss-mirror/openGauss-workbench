@@ -40,6 +40,7 @@ import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.system.service.ISysRoleService;
 import org.opengauss.admin.system.service.ISysUserService;
 
+import cn.hutool.core.util.StrUtil;
 import io.swagger.annotations.Api;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -108,7 +109,7 @@ public class SysUserController extends BaseController {
     @Log(title = "users", businessType = BusinessType.INSERT)
     @PreAuthorize("@ss.hasPermi('system:user:add')")
     @PostMapping
-    public AjaxResult add(@Validated @RequestBody SysUser user) {
+    public AjaxResult add(@RequestBody SysUser user) {
         if (UserConstants.NOT_UNIQUE.equals(userService.checkUserNameUnique(user.getUserName()))) {
             return AjaxResult.error(ResponseCode.USER_ACCOUNT_EXISTS_ERROR.code());
         } else if (StringUtils.isNotEmpty(user.getPhonenumber()) && UserConstants.NOT_UNIQUE.equals(
@@ -126,6 +127,9 @@ public class SysUserController extends BaseController {
         }
         if (user.getNickName().length() > 30) {
             return AjaxResult.error(ResponseCode.USER_NICKNAME_MAX_LENGTH_ERROR.code());
+        }
+        if (StrUtil.isEmpty(user.getPassword())) {
+            return AjaxResult.error(ResponseCode.USER_PASS_SAME_ERROR.code());
         }
         if (StringUtils.isNotEmpty(user.getRemark()) && user.getRemark().length() > 200) {
             return AjaxResult.error(ResponseCode.USER_REMARK_MAX_LENGTH_ERROR.code());

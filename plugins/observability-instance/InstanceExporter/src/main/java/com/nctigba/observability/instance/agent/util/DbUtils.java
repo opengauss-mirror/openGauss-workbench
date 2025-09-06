@@ -32,7 +32,7 @@ import com.nctigba.observability.instance.agent.config.model.TargetConfig;
 import com.nctigba.observability.instance.agent.exception.CollectException;
 import com.nctigba.observability.instance.agent.service.TargetService;
 import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.springframework.stereotype.Component;
 
@@ -55,10 +55,9 @@ import java.util.Optional;
  * @since 2023/12/1
  */
 @Component
-@Log4j2
+@Slf4j
 @AllArgsConstructor
 public class DbUtils {
-
     private static Map<String, DataSource> dataSourceMap = new HashMap<>();
 
     private final TargetService targetService;

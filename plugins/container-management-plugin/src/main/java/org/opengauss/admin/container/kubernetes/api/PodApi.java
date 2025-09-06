@@ -63,7 +63,7 @@ public class PodApi {
         String clusterId = k8sCluster.getId();
         CoreV1Api coreV1Api = K8sClientBuilder.builder().apiServer(apiServerUrl).token(token).buildCoreV1Api(clusterId);
         try {
-            ApiResponse<V1Pod> apiResponse = coreV1Api.readNamespacedPodWithHttpInfo(podName, namespace, null);
+            ApiResponse<V1Pod> apiResponse = coreV1Api.readNamespacedPod(podName, namespace).executeWithHttpInfo();
             if (HttpsUtil.isSuccess(apiResponse.getStatusCode())) {
                 return Optional.ofNullable(apiResponse.getData());
             }
@@ -91,8 +91,10 @@ public class PodApi {
         String clusterId = k8sCluster.getId();
         CoreV1Api coreV1Api = K8sClientBuilder.builder().apiServer(apiServerUrl).token(token).buildCoreV1Api(clusterId);
         try {
-            ApiResponse<V1PodList> apiResponse = coreV1Api.listNamespacedPodWithHttpInfo(namespace, null, null, null,
-                    fieldSelector, labelSelector, null, null, null, null, false);
+            ApiResponse<V1PodList> apiResponse = coreV1Api.listNamespacedPod(namespace)
+                .fieldSelector(fieldSelector)
+                .labelSelector(labelSelector)
+                .executeWithHttpInfo();
             if (HttpsUtil.isSuccess(apiResponse.getStatusCode())) {
                 return apiResponse.getData().getItems();
             }
@@ -118,8 +120,9 @@ public class PodApi {
         String clusterId = k8sCluster.getId();
         CoreV1Api coreV1Api = K8sClientBuilder.builder().apiServer(apiServerUrl).token(token).buildCoreV1Api(clusterId);
         try {
-            ApiResponse<V1Pod> apiResponse = coreV1Api.deleteNamespacedPodWithHttpInfo(podName, namespace, null,
-                    null, null, null, null, null);
+            CoreV1Api.APIdeleteNamespacedPodRequest apIdeleteNamespacedPodRequest = coreV1Api.deleteNamespacedPod(
+                podName, namespace);
+            ApiResponse<V1Pod> apiResponse = apIdeleteNamespacedPodRequest.executeWithHttpInfo();
             if (HttpsUtil.isSuccess(apiResponse.getStatusCode())) {
                 return Boolean.TRUE;
             }
