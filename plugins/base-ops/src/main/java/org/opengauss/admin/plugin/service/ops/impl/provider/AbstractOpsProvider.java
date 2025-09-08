@@ -24,6 +24,8 @@
 package org.opengauss.admin.plugin.service.ops.impl.provider;
 
 import cn.hutool.core.util.StrUtil;
+
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -52,12 +54,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import javax.annotation.Resource;
+
 /**
  * @author lhf
  * @date 2022/8/12 09:20
  **/
 @Slf4j
 public abstract class AbstractOpsProvider implements ClusterOpsProvider, InitializingBean {
+    /**
+     * encryption utils
+     */
+    @Resource
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    protected EncryptionUtils encryptionUtils;
 
     @Autowired
     private OpsClusterEnvService opsClusterEnvService;
@@ -493,7 +503,9 @@ public abstract class AbstractOpsProvider implements ClusterOpsProvider, Initial
             String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(port));
             try {
                 Map<String, String> response = new HashMap<>();
-                String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN AUDITADMIN SYSADMIN PASSWORD \"{0}\";\\q", databasePassword);
+                String createUser = MessageFormat.format(
+                    "CREATE USER gaussdb WITH MONADMIN AUDITADMIN SYSADMIN PASSWORD \"{0}\";\\q",
+                    encryptionUtils.decrypt(databasePassword));
                 response.put("openGauss=#", createUser);
                 if (enterpriseInstallConfig.getDatabaseKernelArch().equals(DatabaseKernelArch.MASTER_SLAVE)
                         || enterpriseInstallNodeConfig.getIsCMMaster()) {

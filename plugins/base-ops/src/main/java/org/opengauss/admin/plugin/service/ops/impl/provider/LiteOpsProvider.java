@@ -163,7 +163,9 @@ public class LiteOpsProvider extends AbstractOpsProvider {
             String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(port));
             try {
                 Map<String, String> response = new HashMap<>();
-                String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN AUDITADMIN SYSADMIN PASSWORD \"{0}\";\\q", databasePassword);
+                String createUser = MessageFormat.format(
+                    "CREATE USER gaussdb WITH MONADMIN AUDITADMIN SYSADMIN PASSWORD \"{0}\";\\q",
+                    encryptionUtils.decrypt(databasePassword));
                 response.put("openGauss=#", createUser);
                 JschResult jschResult = jschUtil.executeCommand(installContext.getEnvPath(), clientLoginOpenGauss, session, retSession, response);
                 if (0 != jschResult.getExitCode()) {

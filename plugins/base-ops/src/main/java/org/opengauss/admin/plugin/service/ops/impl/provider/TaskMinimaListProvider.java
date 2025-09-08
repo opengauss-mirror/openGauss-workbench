@@ -39,7 +39,6 @@ import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
-import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -62,9 +61,6 @@ public class TaskMinimaListProvider extends AbstractTaskProvider {
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostUserFacade hostUserFacade;
-    @Resource
-    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-    private EncryptionUtils encryptionUtils;
 
     @Override
     public OpenGaussVersionEnum version() {
@@ -179,7 +175,9 @@ public class TaskMinimaListProvider extends AbstractTaskProvider {
         try {
             String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(installContext.getMinimalistInstallConfig().getPort()));
             Map<String, String> response = new HashMap<>();
-            String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN AUDITADMIN SYSADMIN PASSWORD \"{0}\";\\q", installContext.getMinimalistInstallConfig().getDatabasePassword());
+            String createUser = MessageFormat.format(
+                "CREATE USER gaussdb WITH MONADMIN AUDITADMIN SYSADMIN PASSWORD \"{0}\";\\q",
+                encryptionUtils.decrypt(installContext.getMinimalistInstallConfig().getDatabasePassword()));
             response.put("openGauss=#", createUser);
             opsHostRemoteService.executeCommand(clientLoginOpenGauss, installUserSession, retBuffer, response);
         } catch (Exception e) {
@@ -370,8 +368,8 @@ public class TaskMinimaListProvider extends AbstractTaskProvider {
                            InstallContext installContext, MinimalistInstallNodeConfig nodeConfig) {
         Integer port = installContext.getMinimalistInstallConfig().getPort();
         String databasePassword = installContext.getMinimalistInstallConfig().getDatabasePassword();
-        String command = getMinimaLitInstallCommandTemplate(installContext.getDeployType(),
-                pkgPath, databasePassword, port);
+        String command = getMinimaLitInstallCommandTemplate(installContext.getDeployType(), pkgPath,
+            encryptionUtils.decrypt(databasePassword), port);
         HashMap<String, String> autoResponse = new HashMap<>();
         autoResponse.put("Would you like to create a demo database (yes/no)? ",
                 (nodeConfig.getIsInstallDemoDatabase() ? "yes" : "no"));

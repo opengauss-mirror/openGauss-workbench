@@ -439,7 +439,8 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         OpsHostUserEntity installUserInfo = masterHostHolder.getHostUserEntities().stream().filter(hostUser -> hostUser.getHostUserId().equals(masterNodeConfig.getInstallUserId())).findFirst().orElseThrow(() -> new OpsException("No installation user information found"));
 
         wsUtil.sendText(installContext.getRetSession(), "START_EXE_PREINSTALL_COMMAND");
-        preInstall(group, pkgPath, masterNodeConfig, xmlConfigFullPath, rootSession, retSession, encryptionUtils.decrypt(masterRootUserInfo.getPassword()), encryptionUtils.decrypt(installUserInfo.getPassword()), installContext.getEnvPath());
+        preInstall(group, pkgPath, masterNodeConfig, xmlConfigFullPath, rootSession, retSession,
+            masterRootUserInfo.getPassword(), installUserInfo.getPassword(), installContext.getEnvPath());
         wsUtil.sendText(installContext.getRetSession(), "END_EXE_PREINSTALL_COMMAND");
 
         Session ommSession = loginWithUser(jschUtil, encryptionUtils, installContext.getHostInfoHolders(), false, masterHostId, masterNodeConfig.getInstallUserId());
@@ -448,12 +449,12 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         wsUtil.sendText(installContext.getRetSession(), "START_EXE_INSTALL_COMMAND");
         String installCommand = MessageFormat.format(SshCommandConstants.ENTERPRISE_INSTALL, xmlConfigFullPath);
         try {
+            String dbPassport = encryptionUtils.decrypt(
+                installContext.getEnterpriseInstallConfig().getDatabasePassword());
             Map<String, String> autoResponse = new HashMap<>();
             autoResponse.put("(yes/no)?", "yes");
-            autoResponse.put("Please enter password for database:", installContext
-                    .getEnterpriseInstallConfig()
-                    .getDatabasePassword());
-            autoResponse.put("Please repeat for database:", installContext.getEnterpriseInstallConfig().getDatabasePassword());
+            autoResponse.put("Please enter password for database:", dbPassport);
+            autoResponse.put("Please repeat for database:", dbPassport);
 
             JschResult jschResult = jschUtil.executeCommand(installContext.getEnvPath(), installCommand, ommSession, retSession, autoResponse);
             if (0 != jschResult.getExitCode()) {
@@ -795,20 +796,20 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
     }
 
     private void preInstall(String group, String pkgPath, EnterpriseInstallNodeConfig masterNodeConfig, String xmlConfigFullPath, Session rootSession, WsSession retSession, String rootPassword, String installUserPassword, String envPath) {
+        String installUsername = masterNodeConfig.getInstallUsername();
         String gsPreInstall = MessageFormat.format(SshCommandConstants.GS_PREINSTALL_INTERACTIVE,
-                pkgPath + "/script/",
-                masterNodeConfig.getInstallUsername(),
+                pkgPath + "/script/", installUsername,
                 group, xmlConfigFullPath);
         gsPreInstall = wrapperEnvSep(gsPreInstall, envPath);
         try {
             Map<String, String> autoResponse = new HashMap<>();
             autoResponse.put("(yes/no)?", "yes");
-            autoResponse.put("Please enter password for root\r\nPassword:", rootPassword);
-            autoResponse.put("Please enter password for current user["
-                    + masterNodeConfig.getInstallUsername()
-                    + "].\r\nPassword:", installUserPassword);
+            autoResponse.put("Please enter password for root\r\nPassword:", encryptionUtils.decrypt(rootPassword));
+            autoResponse.put("Please enter password for current user[" + installUsername + "].\r\nPassword:",
+                encryptionUtils.decrypt(installUserPassword));
             // for compatibility with 5.1.0
-            autoResponse.put("Please enter password for current user[root].\r\nPassword:", rootPassword);
+            autoResponse.put("Please enter password for current user[root].\r\nPassword:",
+                encryptionUtils.decrypt(rootPassword));
             JschResult jschResult = jschUtil.executeCommand(gsPreInstall, rootSession, retSession, autoResponse);
             if (0 != jschResult.getExitCode()) {
                 log.error("gs_preinstall failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());

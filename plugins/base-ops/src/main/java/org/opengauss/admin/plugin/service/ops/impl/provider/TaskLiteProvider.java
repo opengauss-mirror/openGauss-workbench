@@ -42,7 +42,6 @@ import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
-import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -78,9 +77,6 @@ public class TaskLiteProvider extends AbstractTaskProvider {
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostFacade hostFacade;
-    @Resource
-    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-    private EncryptionUtils encryptionUtils;
 
     @Override
     public OpenGaussVersionEnum version() {
@@ -136,8 +132,9 @@ public class TaskLiteProvider extends AbstractTaskProvider {
             String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(port));
             try {
                 Map<String, String> response = new HashMap<>();
-                String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN AUDITADMIN SYSADMIN" +
-                        " PASSWORD \"{0}\";\\q", databasePassword);
+                String createUser = MessageFormat.format(
+                    "CREATE USER gaussdb WITH MONADMIN AUDITADMIN SYSADMIN" + " PASSWORD \"{0}\";\\q",
+                    encryptionUtils.decrypt(databasePassword));
                 response.put("openGauss=#", createUser);
                 clientLoginOpenGauss = addCommandOfLoadEnvironmentVariable(clientLoginOpenGauss, installContext.getEnvPath());
                 opsHostRemoteService.executeCommand(clientLoginOpenGauss, session, retBuffer, response);
@@ -190,8 +187,8 @@ public class TaskLiteProvider extends AbstractTaskProvider {
             String databasePassword = installContext.getLiteInstallConfig().getDatabasePassword();
             Integer port = installContext.getLiteInstallConfig().getPort();
             String installPath = preparePath(installNodeConfig.getInstallPath());
-            String command = MessageFormat.format(LITE_SINGLE_INSTALL, databasePassword, pkgPath,
-                    dataPath, installPath, String.valueOf(port));
+            String command = MessageFormat.format(LITE_SINGLE_INSTALL, encryptionUtils.decrypt(databasePassword),
+                pkgPath, dataPath, installPath, String.valueOf(port));
             command = wrapperLiteEnvSep(command, installContext.getEnvPath());
             opsHostRemoteService.executeCommand(command, installUserSession, installContext.getRetBuffer(),
                     "Lite single node installation");

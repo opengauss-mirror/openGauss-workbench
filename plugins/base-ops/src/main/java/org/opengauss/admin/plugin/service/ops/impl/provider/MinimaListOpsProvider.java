@@ -243,7 +243,9 @@ public class MinimaListOpsProvider extends AbstractOpsProvider {
         String clientLoginOpenGauss = MessageFormat.format(SshCommandConstants.LOGIN, String.valueOf(installContext.getMinimalistInstallConfig().getPort()));
         try {
             Map<String, String> response = new HashMap<>();
-            String createUser = MessageFormat.format("CREATE USER gaussdb WITH MONADMIN AUDITADMIN SYSADMIN PASSWORD \"{0}\";\\q", installContext.getMinimalistInstallConfig().getDatabasePassword());
+            String createUser = MessageFormat.format(
+                "CREATE USER gaussdb WITH MONADMIN AUDITADMIN SYSADMIN PASSWORD \"{0}\";\\q",
+                encryptionUtils.decrypt(installContext.getMinimalistInstallConfig().getDatabasePassword()));
             response.put("openGauss=#", createUser);
             JschResult jschResult = jschUtil.executeCommand(clientLoginOpenGauss, installUserSession, retSession, response);
             if (0 != jschResult.getExitCode()) {
