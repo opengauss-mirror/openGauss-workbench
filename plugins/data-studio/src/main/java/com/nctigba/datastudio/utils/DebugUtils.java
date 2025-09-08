@@ -884,7 +884,7 @@ public class DebugUtils {
                 break;
             }
             default: {
-                if (StringUtils.isEmpty(value)) {
+                if (value == null) {
                     newValue = value;
                 } else {
                     newValue = QUOTES + value + QUOTES;
