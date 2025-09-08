@@ -46,4 +46,18 @@ public class CacheConfig {
                 .maximumSize(10000)
                 .build();
     }
+
+    /**
+     * Set a caffeine cache instance to store the restart incremental or reverse task cache
+     *
+     * @return Cache<Integer, String>
+     */
+    @Bean
+    public Cache<Integer, String> restartIncrementalOrReverseTaskCache() {
+        return Caffeine.newBuilder()
+                .expireAfterWrite(60, TimeUnit.SECONDS)
+                .initialCapacity(10)
+                .maximumSize(100)
+                .build();
+    }
 }

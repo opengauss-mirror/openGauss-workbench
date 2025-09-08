@@ -24,6 +24,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.github.benmanes.caffeine.cache.Cache;
 import com.google.common.collect.Lists;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -144,6 +145,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     private static final List<Integer> REVERSE_STATUS = Arrays.asList(TaskStatus.REVERSE_START.getCode(),
         TaskStatus.REVERSE_RUNNING.getCode(), TaskStatus.REVERSE_PAUSE.getCode(), TaskStatus.REVERSE_STOP.getCode());
 
+    private static final String RESTART_INCREMENTAL_SIGN = "restart_incremental";
+
+    private static final String RESTART_REVERSE_SIGN = "restart_reverse";
+
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostUserFacade hostUserFacade;
@@ -213,6 +218,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private WsFacade wsFacade;
+
+    @Autowired
+    private Cache<Integer, String> restartIncrementalOrReverseTaskCache;
 
     @Override
     public void initMigrationTaskCheckProgressMonitor() {
@@ -719,7 +727,8 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
 
         if (TaskStatus.INCREMENTAL_PAUSE.getCode().equals(execStatus)
                 || TaskStatus.REVERSE_PAUSE.getCode().equals(execStatus)
-                || state > execStatus) {
+                || state > execStatus
+                || isIncrementalOrReverseRestart(task.getId(), execStatus, state)) {
             update.setExecStatus(state);
         } else {
             return;
@@ -738,6 +747,24 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                 update.setStatusDesc("");
             }
         }
+    }
+
+    private boolean isIncrementalOrReverseRestart(Integer taskId, Integer taskStatus, Integer portalStatus) {
+        if (taskStatus <= portalStatus) {
+            return false;
+        }
+
+        String restartSign = restartIncrementalOrReverseTaskCache.getIfPresent(taskId);
+        if (ObjectUtils.isEmpty(restartSign)) {
+            return false;
+        }
+
+        if ((RESTART_INCREMENTAL_SIGN.equals(restartSign) && INCREMENTAL_STATUS.contains(portalStatus))
+                || (RESTART_REVERSE_SIGN.equals(restartSign) && REVERSE_STATUS.contains(portalStatus))) {
+            restartIncrementalOrReverseTaskCache.invalidate(taskId);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -1013,10 +1040,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         // 未流转到增量迁移阶段，或者迁移任务已结束，则直接返回
         if (INCREMENTAL_STATUS.contains(lastTaskStatus.getStatusId())) {
             migrationRecoveryHandler.startProcessOfIncrementalMigration(migrationTask, installHost, name);
-            updateStatus(migrationTask.getId(), TaskStatus.INCREMENTAL_RUNNING);
+            restartIncrementalOrReverseTaskCache.put(migrationTask.getId(), RESTART_INCREMENTAL_SIGN);
         } else if (REVERSE_STATUS.contains(lastTaskStatus.getStatusId())) {
             migrationRecoveryHandler.startProcessOfReverseMigration(migrationTask, installHost, name);
-            updateStatus(migrationTask.getId(), TaskStatus.REVERSE_RUNNING);
+            restartIncrementalOrReverseTaskCache.put(migrationTask.getId(), RESTART_REVERSE_SIGN);
         } else {
             log.debug("The current portal process does not exist.");
         }
