@@ -169,8 +169,7 @@ public class CommonUtils {
             return PATH_NULL_CHECK.andThen(PATH_ILLEGAL_CHECK)
                 .andThen(PATH_LENGTH_CHECK)
                 .andThen(PATH_NORMALIZE_CHECK)
-                .andThen(PATH_DEEP_CHECK)
-                .andThen(PATH_OS_REGEX_CHECK);
+                .andThen(PATH_DEEP_CHECK);
         }
 
         /**

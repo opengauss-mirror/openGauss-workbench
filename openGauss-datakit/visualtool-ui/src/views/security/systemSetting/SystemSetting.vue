@@ -28,6 +28,11 @@
                    :rules="[{required: true, message: $t('components.EditSysSettings.5mpivn7fwj16')}]">
         <a-input v-model.trim="form.portalJarName" :placeholder="$t('components.EditSysSettings.5mpivn7fwj16')"/>
       </a-form-item>
+        <a-form-item field="serverHost"
+                     :label="$t('components.EditSysSettings.5mpivn7fwj17')"
+                     :rules="[{required: false, message: $t('components.EditSysSettings.5mpivn7fwj18')}]">
+          <a-input v-model.trim="form.serverHost" :placeholder="$t('components.EditSysSettings.5mpivn7fwj18')"/>
+      </a-form-item>
     </a-form>
     <template #footer>
       <div class="modal-footer">
@@ -67,7 +72,8 @@ let form = reactive<SysSetting>({
   uploadPath: '',
   portalPkgDownloadUrl: '',
   portalPkgName: '',
-  portalJarName: ''
+  portalJarName: '',
+  serverHost: ''
 })
 const visible = ref<boolean>(false)
 const loading = ref<boolean>(false)
@@ -128,6 +134,7 @@ const querySystemSetting = () => {
     form.portalPkgDownloadUrl = res.data?.portalPkgDownloadUrl
     form.portalPkgName = res.data?.portalPkgName
     form.portalJarName = res.data?.portalJarName
+    form.serverHost = res.data?.serverHost
   })
 }
 

@@ -21,4 +21,5 @@ public class SysSetting {
     private String portalPkgDownloadUrl;
     private String portalPkgName;
     private String portalJarName;
+    private String serverHost;
 }

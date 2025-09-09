@@ -40,4 +40,14 @@ public interface CommonConstants {
      * line split \n
      */
     String LINE_SPLITTER = "\n";
+
+    /**
+     * datakit sys_setting ext param :datakit server host name
+     */
+    String SETTING_SERVER_HOST_NAME = "datakit_server_host";
+
+    /**
+     * admin user id
+     */
+    Integer ADMIN_USER_ID = 1;
 }

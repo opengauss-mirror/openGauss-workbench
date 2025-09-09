@@ -634,7 +634,9 @@
       "5mpivn7fwj13": "迁移套件安装包名称",
       "5mpivn7fwj14": "请输入迁移套件安装包名称",
       "5mpivn7fwj15": "迁移套件jar包名称",
-      "5mpivn7fwj16": "请输入迁移套件jar包名称"
+      "5mpivn7fwj16": "请输入迁移套件jar包名称",
+      "5mpivn7fwj17": "DataKit服务地址",
+      "5mpivn7fwj18": "请输入DataKit服务器地址"
     }
   },
   "user": {

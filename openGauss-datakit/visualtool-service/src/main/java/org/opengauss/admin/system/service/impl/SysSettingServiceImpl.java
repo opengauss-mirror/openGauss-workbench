@@ -30,10 +30,14 @@ import cn.hutool.core.util.StrUtil;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+
+import org.opengauss.admin.common.constant.CommonConstants;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
+import org.opengauss.admin.common.core.domain.entity.SysSettingExtEntity;
 import org.opengauss.admin.common.core.domain.entity.SysUser;
 import org.opengauss.admin.common.utils.http.HttpUtils;
 import org.opengauss.admin.system.mapper.SysSettingMapper;
+import org.opengauss.admin.system.service.ISysSettingExtService;
 import org.opengauss.admin.system.service.ISysSettingService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -43,6 +47,9 @@ import java.io.File;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.List;
+import java.util.Optional;
+
+import javax.annotation.Resource;
 
 /**
  * System Setting Service
@@ -55,6 +62,8 @@ public class SysSettingServiceImpl extends ServiceImpl<SysSettingMapper, SysSett
     private String proxyHostname;
     @Value("${server.proxy.port}")
     private Integer proxyPort;
+    @Resource
+    private ISysSettingExtService sysSettingExtService;
 
     @Override
     public void initHttpProxy() {
@@ -71,6 +80,7 @@ public class SysSettingServiceImpl extends ServiceImpl<SysSettingMapper, SysSett
         if (!(!file.exists() && file.mkdirs())) {
             log.error(String.format("System setting update failed: folder %s create failed", uploadPath));
         }
+        sysSettingExtService.updateExtSettingDataKitServerHost(setting);
         return saveOrUpdate(setting);
     }
 
@@ -79,12 +89,18 @@ public class SysSettingServiceImpl extends ServiceImpl<SysSettingMapper, SysSett
         LambdaQueryWrapper<SysSettingEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SysSettingEntity::getUserId, SysUser.getAdminUserId());
         SysSettingEntity adminResult = getOne(queryWrapper);
+        List<SysSettingExtEntity> extList = sysSettingExtService.queryCurrentUserExtParam(userId);
+        Optional<SysSettingExtEntity> sysSettingExt = extList.stream()
+            .filter(ext -> ext.getParamName().equals(CommonConstants.SETTING_SERVER_HOST_NAME))
+            .findFirst();
+        refreshServerHostSetting(sysSettingExt, adminResult);
         if (SysUser.isAdmin(userId)) {
             return adminResult;
         }
         LambdaQueryWrapper<SysSettingEntity> userQueryWrapper = new LambdaQueryWrapper<>();
         userQueryWrapper.eq(SysSettingEntity::getUserId, userId);
         SysSettingEntity userResult = getOne(userQueryWrapper);
+        refreshServerHostSetting(sysSettingExt, userResult);
         // if current user is not admin and there is no setting data
         // return admin setting to user for save
         if (ObjectUtil.isNull(userResult)) {
@@ -93,6 +109,16 @@ public class SysSettingServiceImpl extends ServiceImpl<SysSettingMapper, SysSett
             return adminResult;
         }
         return userResult;
+    }
+
+    private void refreshServerHostSetting(Optional<SysSettingExtEntity> sysSettingExt, SysSettingEntity adminResult) {
+        sysSettingExt.ifPresent(ext -> {
+            if (ext.getParamValue() == null) {
+                adminResult.setServerHost("");
+            } else {
+                adminResult.setServerHost(ext.getParamValue());
+            }
+        });
     }
 
     @Override
