@@ -822,6 +822,8 @@
             "5mpm3ku3jyx0": "The CM port and the database port cannot be the same",
             "5mpm3ku3jzx0": "The CM port and the DCF port cannot be the same",
             "5mpm3ku3jvx0": "The path format is incorrect",
+            "5mpm3ku3jvx5": "The installation path cannot intersect with the software package path. Please set up a separate folder.",
+            "5mpm3ku3jvx6": "The installation path cannot intersect with the advanced parameter configuration path. Please set up a separate app folder.",
             "else1": "Please enter numbers, letters or underscores",
             "else2": "The value cannot be pure space",
             "else3": "Master",

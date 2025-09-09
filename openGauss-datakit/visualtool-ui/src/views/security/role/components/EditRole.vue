@@ -143,7 +143,6 @@
   const confirmSubmit = () => {
     formRef.value?.validate(valid => {
       if (!valid) {
-        console.log(form)
         const menuIds = [...halfCheckedKeys.value, ...checkedKeys.value]
 
         if (props.options.roleId) {
