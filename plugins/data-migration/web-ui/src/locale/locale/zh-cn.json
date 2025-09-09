@@ -397,7 +397,7 @@
       "5q0aazspqd00": "源库名：",
       "5q0aazspqfs0": "目的库名：",
       "5q0aazspqfs1": "请输入",
-      "5q0aazspqfs2": "不是一个有效的Java正则表达式",
+      "5q0aazspqfs2": "不可以为空",
       "5q0aazspqfs3": "必须大于{count}个字符",
       "5q0aazspqfs4": "必须小于{count}个字符",
       "5q0aazspqfs5": "必须输入两个数字，并且以,分割",
