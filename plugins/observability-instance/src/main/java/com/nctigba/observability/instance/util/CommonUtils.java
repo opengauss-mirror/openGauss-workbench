@@ -33,6 +33,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * CommonUtils
@@ -40,6 +41,11 @@ import java.util.concurrent.TimeUnit;
  * @since 2024/2/6 15:18
  */
 public class CommonUtils {
+    /**
+     * check path regex
+     */
+    private static final String PATH_REGEX = "^(/[a-zA-Z0-9\u4e00-\u9fa5_-]+)+/?$";
+
     /**
      * parseText
      *
@@ -135,5 +141,19 @@ public class CommonUtils {
             }
         }
         return strBuilder.toString();
+    }
+
+    /**
+     * check path is valid
+     *
+     * @param path String
+     * @return boolean
+     */
+    public static boolean isValidPath(String path) {
+        if (StrUtil.isBlank(path)) {
+            return false;
+        }
+        Pattern pattern = Pattern.compile(PATH_REGEX);
+        return pattern.matcher(path).matches();
     }
 }

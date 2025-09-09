@@ -154,7 +154,10 @@ const connectionFormRules = reactive<FormRules>({
   username: [{ required: true, message: t('install.collectorRules[6]'), trigger: 'blur' }],
   nodeIds: [{ required: true, message: t('install.collectorRules[0]'), trigger: 'blur' }],
   httpPort: [{ required: true, message: t('install.collectorRules[3]'), trigger: 'blur' }],
-  path: [{ required: true, message: t('install.collectorRules[4]'), trigger: 'blur' }],
+  path: [
+    { required: true, message: t('install.collectorRules[4]'), trigger: 'blur' },
+    { pattern: /^([\/][a-zA-Z0-9\u4e00-\u9fa5_-]+)+\/?$/, message: t('install.collectorRules[7]'), trigger: 'blur' }
+  ],
 })
 
 // cluster component

@@ -92,7 +92,7 @@ public class PrometheusConfigDTO implements Serializable {
             @JsonProperty("follow_redirects")
             private Boolean isFollowRedirects;
             @JsonProperty("enable_http2")
-            private Boolean isEnableHttp2;
+            private Boolean isEnableHttp2 = false;
             private String timeout;
             @JsonProperty("tls_config")
             private TlsConfig tlsConfig = new TlsConfig();
@@ -133,7 +133,7 @@ public class PrometheusConfigDTO implements Serializable {
         @JsonProperty("follow_redirects")
         private Boolean isFollowRedirects;
         @JsonProperty("enable_http2")
-        private Boolean isEnableHttp2;
+        private Boolean isEnableHttp2 = false;
         private Map params;
 
         @Data
@@ -163,5 +163,7 @@ public class PrometheusConfigDTO implements Serializable {
     public static class RemoteRead implements Serializable {
         private String url;
         private Boolean read_recent;
+        @JsonProperty("enable_http2")
+        private Boolean isEnableHttp2 = false;
     }
 }

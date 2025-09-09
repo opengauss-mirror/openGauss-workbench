@@ -143,7 +143,10 @@ public class ExporterInstallService extends AbstractInstaller {
     public void install(ExporterInstallDTO exporterInstallDTO) {
         nextStep();
         String path = exporterInstallDTO.getPath();
-        if (StrUtil.isNotBlank(path) && path.endsWith("/")) {
+        if (!CommonUtils.isValidPath(path)) {
+            throw new CustomException("The path is invalid.");
+        }
+        if (path.endsWith("/")) {
             path = path.substring(0, path.length() - 1);
             exporterInstallDTO.setPath(path);
         }
@@ -202,7 +205,9 @@ public class ExporterInstallService extends AbstractInstaller {
 
                 List<AgentNodeRelationDO> relList =
                     agentNodeRelationService.list(Wrappers.<AgentNodeRelationDO>lambdaQuery()
-                        .in(AgentNodeRelationDO::getNodeId, exporterInstallDTO.getNodeIds()));
+                        .in(AgentNodeRelationDO::getNodeId, exporterInstallDTO.getNodeIds())
+                        .ne(StrUtil.isNotBlank(exporterInstallDTO.getEnvId()), AgentNodeRelationDO::getEnvId,
+                            exporterInstallDTO.getEnvId()));
                 List<OpsClusterNodeEntity> clusterNodes = null;
                 List<NctigbaEnvDO> expEnvList = null;
                 Map<String, List<String>> envNodeMap = new HashMap<>();
