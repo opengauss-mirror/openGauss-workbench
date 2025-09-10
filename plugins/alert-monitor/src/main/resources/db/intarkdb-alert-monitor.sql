@@ -1478,7 +1478,7 @@ update alert_record_detail set type = 'plugin' where type = 'noninstance';
 ALTER TABLE alert_record_detail ADD COLUMN ip varchar(100);
 ALTER TABLE alert_record_detail ADD COLUMN port varchar(100);
 ALTER TABLE alert_record_detail ADD COLUMN node_name varchar(200);
-CREATE TABLE IF NOT alert_shielding (
+CREATE TABLE IF NOT EXISTS alert_shielding (
 	id int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
 	rule_name varchar(50) NOT NULL,
 	rule_detail varchar(300) NULL,
@@ -1486,8 +1486,8 @@ CREATE TABLE IF NOT alert_shielding (
 	type varchar(32) NOT NULL,
 	start_date date NULL,
 	end_date date NULL,
-	start_time time NULL,
-	end_time time NULL,
+	start_time date NULL,
+	end_time date NULL,
 	is_enable int8 NULL DEFAULT 1,
 	is_deleted int8 NULL DEFAULT 0,
 	create_time timestamp NULL,

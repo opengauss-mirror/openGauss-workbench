@@ -39,6 +39,7 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import cn.hutool.core.util.StrUtil;
 import com.nctigba.observability.instance.enums.SshSessionPool;
 import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.channel.ClientChannelEvent;
@@ -67,7 +68,8 @@ public class SshSessionUtils implements AutoCloseable {
         CREATE_USER("useradd omm && echo ''{0} ALL=(ALL) ALL'' >> /etc/sudoers"),
         CHANGE_PASSWORD("passwd {1}"),
         PS("ps -ef|grep {0} |grep -v grep |grep {1,number,#}|awk '''{print $2}''"),
-        KILL("kill -9 {0}");
+        KILL("kill -9 {0}"),
+        ECHO_NULL("echo");
 
         private String cmd;
 
@@ -172,7 +174,11 @@ public class SshSessionUtils implements AutoCloseable {
             ThreadUtil.sleep(100L);
         if (ec.getExitStatus() != null && ec.getExitStatus() != 0)
             throw new CustomException(command + " \n " + os.toString().trim());
-        return os.toString().trim();
+        String result = os.toString();
+        if (StrUtil.isNotBlank(excessStr)) {
+            result = result.replaceAll(excessStr, "");
+        }
+        return result.trim();
     }
 
     public void executeNoWait(String command) throws IOException {
@@ -203,6 +209,7 @@ public class SshSessionUtils implements AutoCloseable {
 
     private static SshClient cli;
     private ClientSession session;
+    private String excessStr;
 
     private static final synchronized SshClient getClient() {
         if (cli == null) {
@@ -218,6 +225,7 @@ public class SshSessionUtils implements AutoCloseable {
         try {
             session.addPasswordIdentity(password);
             session.auth().verify(SESSION_TIMEOUT);
+            excessStr = execute(command.ECHO_NULL);
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }

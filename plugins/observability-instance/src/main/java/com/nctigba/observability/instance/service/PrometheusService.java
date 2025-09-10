@@ -309,7 +309,10 @@ public class PrometheusService extends AbstractInstaller {
      */
     public void install(PromInstallDTO promInstall) {
         String path = promInstall.getPath();
-        if (StrUtil.isNotBlank(path) && path.endsWith("/")) {
+        if (!CommonUtils.isValidPath(path)) {
+            throw new CustomException("The path is invalid.");
+        }
+        if (path.endsWith("/")) {
             path = path.substring(0, path.length() - 1);
             promInstall.setPath(path);
         }
@@ -1323,6 +1326,9 @@ public class PrometheusService extends AbstractInstaller {
      */
     public void reinstall(PromInstallDTO promInstall) {
         try {
+            if (!CommonUtils.isValidPath(promInstall.getPath())) {
+                throw new CustomException("The path is invalid.");
+            }
             if (promInstall.getPort() <= 1024) {
                 throw new CustomException("The port number must be greater than 1024.");
             }
@@ -1492,7 +1498,7 @@ public class PrometheusService extends AbstractInstaller {
                 private Authorization authorization;
                 private List<Conf> static_configs;
                 private Boolean follow_redirects;
-                private Boolean enable_http2;
+                private Boolean enable_http2 = false;
                 private String timeout;
                 private TlsConfig tls_config;
 
@@ -1531,7 +1537,7 @@ public class PrometheusService extends AbstractInstaller {
             private String metrics_path;
             private String scheme;
             private Boolean follow_redirects;
-            private Boolean enable_http2;
+            private Boolean enable_http2 = false;
             private Map<String, String[]> params;
 
             @Data
@@ -1558,6 +1564,7 @@ public class PrometheusService extends AbstractInstaller {
         public static class remoteRead {
             private String url;
             private Boolean read_recent;
+            private Boolean enable_http2 = false;
         }
     }
 

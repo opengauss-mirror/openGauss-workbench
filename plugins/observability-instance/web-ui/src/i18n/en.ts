@@ -659,6 +659,7 @@ export default {
       'input install path please',
       'select install machine please',
       'select install user please',
+      'The path is invalid'
     ],
     tip: 'Tip',
     delInstanceTip: 'The proxy must retain at least one monitoring target. If monitoring is not required, please uninstall the proxy.',

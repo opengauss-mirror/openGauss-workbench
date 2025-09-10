@@ -231,7 +231,10 @@ const connectionFormRules = reactive<FormRules>({
   rootPassword: [{ required: false, message: t('install.proxyRules[1]'), trigger: 'blur' }],
   port: [{ required: true, message: t('install.proxyRules[2]'), trigger: 'blur' }],
   storageDays: [{ required: true, message: t('install.proxyRules[4]'), trigger: 'blur' }],
-  path: [{ required: true, message: t('install.collectorRules[4]'), trigger: 'blur' }],
+  path: [
+    { required: true, message: t('install.collectorRules[4]'), trigger: 'blur' },
+    { pattern: /^([\/][a-zA-Z0-9\u4e00-\u9fa5_-]+)+\/?$/, message: t('install.collectorRules[7]'), trigger: 'blur' }
+  ],
 })
 
 watch(
