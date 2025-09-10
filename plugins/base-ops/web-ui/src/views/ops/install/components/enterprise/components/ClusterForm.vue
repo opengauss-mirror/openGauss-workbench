@@ -304,12 +304,28 @@ const formRules = computed(() => {
       {
         validator: (value: any, cb: any) => {
           return new Promise(resolve => {
-            console.log("value11 = ", LINUX_PATH.test(value))
+            const otherPaths = [
+              data.value.logPath,
+              data.value.tmpPath,
+              data.value.omToolsPath,
+              data.value.corePath,
+              data.value.envPath
+            ].filter(path => path && path.trim() !== '');
+
+            const isParentOfOther = otherPaths.some(otherPath =>
+              otherPath.startsWith(value + '/') || otherPath === value
+            )
             if (!value.trim()) {
               cb(t('enterprise.ClusterConfig.else2'))
               resolve(false)
             } else if (!LINUX_PATH.test(value)) {
               cb(t('enterprise.ClusterConfig.5mpm3ku3jvx0'))
+              resolve(false)
+            }  else if (isParentOfOther ) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jvx6'))
+              resolve(false)
+            } else if (data.value.installPackagePath === value) {
+              cb(t('enterprise.ClusterConfig.5mpm3ku3jvx5'))
               resolve(false)
             } else {
               resolve(true)

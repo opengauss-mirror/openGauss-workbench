@@ -231,7 +231,6 @@ const showTerminal = (ip: string) => {
 
 const hostTerminalRef = ref<null | InstanceType<typeof HostTerminal>>(null)
 const handleShowTerminal = (sshData: KeyValue) => {
-  console.log('show password', sshData)
   hostTerminalRef.value?.open(sshData)
 }
 
