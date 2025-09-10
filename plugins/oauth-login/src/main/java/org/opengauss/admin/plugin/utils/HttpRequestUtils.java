@@ -107,7 +107,6 @@ public class HttpRequestUtils {
                     HttpSslUtils.setSSLCert();
                 } catch (FileNotFoundException e) {
                     log.error("Failed to establish mutual trust using the SSL certificate.", e);
-                    HttpSslUtils.ignoreSslVerify();
                 }
             }
 

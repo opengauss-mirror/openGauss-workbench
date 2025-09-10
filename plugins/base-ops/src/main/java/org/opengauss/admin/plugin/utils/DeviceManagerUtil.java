@@ -45,6 +45,10 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
@@ -104,7 +108,6 @@ public class DeviceManagerUtil {
      * @return Map
      */
     public static Map<String, String> authenticate(OpsDeviceManagerEntity deviceManagerEntity) {
-        log.error("device manager password is {}", deviceManagerEntity.getPassword());
         // 组装数据
         JSONObject paramJson = new JSONObject();
         paramJson.put("username", deviceManagerEntity.getUserName());
@@ -313,15 +316,48 @@ public class DeviceManagerUtil {
         Map<String, String> headers = new HashMap<>();
         headers.put("iBaseToken", authenticateMap.get("iBaseToken"));
         headers.put("Cookie", authenticateMap.get("cookie"));
+        String hostIp = deviceManagerEntity.getHostIp();
+        String port = deviceManagerEntity.getPort();
+        if (!checkHostIp(hostIp) || !checkPort(port)) {
+            return false;
+        }
+
         JSONObject resultJson = send(
-            String.format(url, deviceManagerEntity.getHostIp(), deviceManagerEntity.getPort(), authenticateMap.get(
-                    "deviceId")), paramJson, headers, PUT_METHOD);
+            String.format(url, hostIp, port, authenticateMap.get("deviceId")), paramJson, headers, PUT_METHOD);
         log.info("resultJson is {}", resultJson);
         // 解析取出所需内容
         if (!resultJson.isEmpty() && resultJson.getJSONObject("error").getInteger("code") != 0) {
             log.error("sendRequest failed, message is {}, suggestion is {}",
                 resultJson.getJSONObject("error").getString("description"),
                 resultJson.getJSONObject("error").getString("suggestion"));
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean checkHostIp(String hostIp) {
+        try {
+            InetAddress inetAddress = InetAddress.getByName(hostIp);
+            if (!(inetAddress instanceof Inet4Address) && !(inetAddress instanceof Inet6Address)) {
+                log.error("Host ip is invalid, hostIp:{}", hostIp);
+                return false;
+            }
+        } catch (UnknownHostException e) {
+            log.error("Host ip is invalid, hostIp: {}", hostIp, e);
+            return false;
+        }
+        return true;
+    }
+
+    private static boolean checkPort(String port) {
+        try {
+            int portNum = Integer.parseInt(port);
+            if (portNum < 0 || portNum > 65535) {
+                log.error("Port is invalid, port: {}", port);
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            log.error("Port is invalid, port: {}", port, e);
             return false;
         }
         return true;

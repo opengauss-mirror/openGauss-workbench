@@ -56,14 +56,14 @@ public class WebSocketEndpoint {
     public void onOpen(Session session,
                        @PathParam("pluginId") String pluginId,
                        @PathParam("sessionId") String sessionId) {
-        log.info("onOpen, pluginId:{},sessionId:{}",pluginId,sessionId);
+        log.info("WebSocket onOpen, pluginId: {}", pluginId);
         wsService.onOpen(pluginId,sessionId,session);
     }
 
     @OnClose
     public void onClose(@PathParam("pluginId") String pluginId,
                         @PathParam("sessionId") String sessionId) {
-        log.info("onClose, pluginId:{},sessionId:{}",pluginId,sessionId);
+        log.info("WebSocket onClose, pluginId: {}", pluginId);
         wsService.onClose(pluginId,sessionId);
     }
 
@@ -71,14 +71,14 @@ public class WebSocketEndpoint {
     public void onError(@PathParam("pluginId") String pluginId,
                         @PathParam("sessionId") String sessionId,
                         Throwable error) {
-        log.error("onError，pluginId:{},sessionId:{},errorMessage:{}",pluginId,sessionId,error.getMessage());
+        log.error("WebSocket onError, pluginId: {}, errorMessage: {}", pluginId, error.getMessage());
     }
 
     @OnMessage(maxMessageSize = 10 * 1024 * 1024)
     public void onMessage(@PathParam("pluginId") String pluginId,
                           @PathParam("sessionId") String sessionId,
                           String message, Session session) {
-        log.info("onMessage，pluginId:{},sessionId:{}",pluginId,sessionId);
+        log.info("WebSocket onMessage, pluginId: {}", pluginId);
         wsService.onMessage(pluginId,sessionId,message);
     }
 }

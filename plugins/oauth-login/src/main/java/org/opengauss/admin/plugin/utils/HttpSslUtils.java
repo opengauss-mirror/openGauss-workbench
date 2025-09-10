@@ -27,9 +27,7 @@ import org.opengauss.admin.plugin.constants.MyClientConfigConstants;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -39,48 +37,15 @@ import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 
 /**
  * @date 2024/5/31 16:41
  * @since 0.0
  */
 public class HttpSslUtils {
-    /**
-     * ignore ssl authentication
-     */
-    public static void ignoreSslVerify() {
-        try {
-            // Ignore SSL authentication.
-            // Create a TrustManager that trusts all certificates.
-            TrustManager[] trustAllCerts = new TrustManager[]{
-                    new X509TrustManager() {
-                        public X509Certificate[] getAcceptedIssuers() {
-                            return null;
-                        }
-
-                        public void checkClientTrusted(X509Certificate[] certs, String authType) {
-                        }
-
-                        public void checkServerTrusted(X509Certificate[] certs, String authType) {
-                        }
-                    }
-            };
-
-            // Setting SSL context.
-            SSLContext sc = null;
-            sc = SSLContext.getInstance("SSL");
-            sc.init(null, trustAllCerts, new SecureRandom());
-            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-        } catch (NoSuchAlgorithmException | KeyManagementException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     /**
      * set ssl certificate
      */

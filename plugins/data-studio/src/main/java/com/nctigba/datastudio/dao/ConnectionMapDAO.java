@@ -81,7 +81,6 @@ public class ConnectionMapDAO {
         log.info("conMap is: {}", conMap);
         for (String key : conMap.keySet()) {
             ConnectionDTO connectionDTO = conMap.get(key);
-            log.info("connectionDTO is: " + connectionDTO);
             Date lastDate = connectionDTO.getLastDate();
             long diff = nowData.getTime() - lastDate.getTime();
             log.info("diff is: " + diff);
@@ -108,11 +107,8 @@ public class ConnectionMapDAO {
     public void deleteConnection(String uuid) throws SQLException {
         if (conMap.containsKey(uuid)) {
             ConnectionDTO connectionDTO = conMap.get(uuid);
-            log.info("connectionDTO is: " + connectionDTO);
             overtimeCloseSocket(connectionDTO.getSocketSet());
-            log.info("old conMap is: " + conMap);
             conMap.remove(uuid);
-            log.info("new conMap is: " + conMap);
         }
     }
 

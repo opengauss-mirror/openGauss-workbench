@@ -60,20 +60,20 @@ public class WsServiceImpl implements SocketExtract {
 
     @Override
     public void onOpen(String pluginId, String sessionId, Session session) {
-        log.info("onOpen,pluginId:{},sessionId:{}",pluginId,session);
+        log.info("WebSocket onOpen, pluginId: {}", pluginId);
         wsConnectorManager.register(sessionId,new WsSession(session,sessionId));
     }
 
     @Override
     public void processMessage(String sessionId, String message) {
-        log.info("processMessage, sessionId:{},message:{}",sessionId,message);
+        log.info("WebSocket processMessage, message: {}", message);
         ChannelShell channelShell = sshChannelManager.getChannelShell(sessionId).orElseThrow(() -> new OpsException("No connection information found"));
         jschUtil.sendToChannelShell(channelShell, message);
     }
 
     @Override
     public void onClose(String pluginId, String sessionId) {
-        log.info("onClose,pluginId:{},sessionId:{}",pluginId,sessionId);
+        log.info("WebSocket onClose, pluginId: {}", pluginId);
         sshChannelManager.getChannelShell(sessionId).ifPresent(channelShell -> {
             com.jcraft.jsch.Session session = null;
             try {
