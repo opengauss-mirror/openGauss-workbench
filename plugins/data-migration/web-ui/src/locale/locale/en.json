@@ -397,7 +397,7 @@
       "5q0aazspqd00": "Source library name: ",
       "5q0aazspqfs0": "Destination library name: ",
       "5q0aazspqfs1": "Please input",
-      "5q0aazspqfs2": "Not a valid Java regex",
+      "5q0aazspqfs2": "Cannot be empty",
       "5q0aazspqfs3": "Must more than {count} characters",
       "5q0aazspqfs4": "Must less than {count} characters",
       "5q0aazspqfs5": "Must input two number，split with ,",

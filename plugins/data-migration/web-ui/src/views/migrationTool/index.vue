@@ -266,11 +266,6 @@
                 <el-icon><Delete /></el-icon>
                 {{ $t('step3.index.5q093f8y9zg1') }}
               </el-button>
-              <el-button size="small" type="primary" text @click="handleToolsParams(row)"
-                         v-if="row.installInfo.portalType !== 'MULTI_DB'">
-                <el-icon><Edit /></el-icon>
-                {{ $t('components.ToolsParamsConfig.5q0toolspar0') }}
-              </el-button>
             </template>
 
             <el-button
