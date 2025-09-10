@@ -21,6 +21,7 @@
         <test.skip>false</test.skip>
         <web.build.skip>false</web.build.skip>
         <build.frontend.skip>false</build.frontend.skip>
+		<common-lang3.high.verson>3.18.0</common-lang3.high.verson>
     </properties>
     <dependencies>
         <!-- same as framework -->
@@ -128,6 +129,11 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
+        </dependency>
+		<dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+			<version>${common-lang3.high.verson}</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
