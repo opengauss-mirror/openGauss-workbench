@@ -36,6 +36,7 @@ import org.opengauss.admin.common.utils.YamlUtils;
 import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.system.mapper.agent.AgentInstallMapper;
 import org.opengauss.admin.system.plugin.beans.SshLogin;
+import org.opengauss.admin.system.service.ISysSettingExtService;
 import org.opengauss.admin.system.service.JschExecutorService;
 import org.opengauss.agent.service.IAgentHeartbeatService;
 import org.opengauss.agent.service.IAgentInstallService;
@@ -97,6 +98,8 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
     private AgentSshLoginService agentSshLoginService;
     @Resource
     private IAgentHeartbeatService agentHeartbeatService;
+    @Resource
+    private ISysSettingExtService sysSettingExtService;
 
     /**
      * init ServerIp and Mask
@@ -162,7 +165,9 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
     }
 
     private void configAgentProperties(Map<String, Object> properties, AgentInstallEntity install) {
-        ConfigAgentProperties configAgentProperties = new ConfigAgentProperties(serverIpAndMask, serverPort);
+        String serverHost = sysSettingExtService.queryAdminServerHost();
+        ConfigAgentProperties configAgentProperties = new ConfigAgentProperties(serverHost, serverIpAndMask,
+            serverPort);
         configAgentProperties.configAgentProperties(properties, install);
     }
 
@@ -504,16 +509,19 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
         private final String agentPort = "quarkus.http.port";
         private final String agentLogPath = "quarkus.log.file.path";
         private Map<String, String> serverIpAndMaskMap;
+        private String defaultServerHost;
         private String serverPort;
 
         /**
          * constructor
          *
+         * @param serverHost serverHost
          * @param serverIpAndMask server ip and mask map
          * @param serverPort server port
          */
-        public ConfigAgentProperties(Map<String, String> serverIpAndMask, String serverPort) {
+        public ConfigAgentProperties(String serverHost, Map<String, String> serverIpAndMask, String serverPort) {
             this.serverIpAndMaskMap = serverIpAndMask;
+            this.defaultServerHost = serverHost;
             this.serverPort = serverPort;
         }
 
@@ -544,6 +552,9 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
         }
 
         private String loadServerUrl(String agentIp) {
+            if (StrUtil.isNotEmpty(defaultServerHost)) {
+                return "http://" + defaultServerHost + ":" + this.serverPort;
+            }
             return this.serverIpAndMaskMap.entrySet().stream().filter(entry -> {
                 try {
                     return IpUtils.isIpInSubnet(agentIp, entry.getKey(), entry.getValue());

@@ -58,6 +58,7 @@ public class SysSettingController extends BaseController {
     @ApiOperation(value = "update", notes = "update")
     @PutMapping
     public AjaxResult update(@RequestBody @Validated SysSettingEntity setting) {
+        setting.setUserId(getUserId());
         boolean res = sysSettingService.updateSetting(setting);
         return res ? AjaxResult.success() : AjaxResult.error();
     }

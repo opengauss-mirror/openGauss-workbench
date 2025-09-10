@@ -634,7 +634,9 @@
       "5mpivn7fwj13": "MigrationKit Package Name",
       "5mpivn7fwj14": "please input migration kit package name",
       "5mpivn7fwj15": "MigrationKit Jar Name",
-      "5mpivn7fwj16": "please input migration kit jar name"
+      "5mpivn7fwj16": "please input migration kit jar name",
+      "5mpivn7fwj17": "datakit server host",
+      "5mpivn7fwj18": "please input datakit server host"
     }
   },
   "user": {

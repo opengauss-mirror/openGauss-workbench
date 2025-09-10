@@ -2062,3 +2062,13 @@ ALTER TABLE "ops_jdbcdb_cluster_node" ALTER COLUMN "password" TYPE text;
 ALTER TABLE "ops_host_user" ALTER COLUMN "password" TYPE text;
 ALTER TABLE "ops_cluster_task" ALTER COLUMN "database_password" TYPE text;
 ALTER TABLE "ops_cluster" ALTER COLUMN "database_password" TYPE text;
+
+
+CREATE TABLE IF NOT EXISTS "sys_setting_ext" (
+    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "user_id" int8 NOT NULL,
+    "param_name" varchar(64)  NOT NULL,
+    "param_value" varchar(64),
+    "remark" varchar(128)
+);
+insert into "sys_setting_ext" values(1,1,'datakit_server_host','','');

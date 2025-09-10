@@ -4,5 +4,6 @@ export interface SysSetting {
   uploadPath: string,
   portalPkgDownloadUrl: string,
   portalPkgName: string,
-  portalJarName: string
+  portalJarName: string,
+  serverHost: string
 }

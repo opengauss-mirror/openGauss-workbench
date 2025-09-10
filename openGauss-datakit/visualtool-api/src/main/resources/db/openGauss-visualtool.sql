@@ -2673,3 +2673,13 @@ LANGUAGE plpgsql;
 SELECT change_password_field_to_text();
 
 DROP FUNCTION change_password_field_to_text;
+
+
+CREATE TABLE IF NOT EXISTS "public"."sys_setting_ext"(
+    "id" BIGSERIAL PRIMARY KEY,
+    "user_id" int8 NOT NULL,
+    "param_name" varchar(64) NOT NULL COLLATE "pg_catalog"."default",
+    "param_value" varchar(64)  COLLATE "pg_catalog"."default",
+    "remark" varchar(128)  COLLATE "pg_catalog"."default"
+);
+insert into "public"."sys_setting_ext" values(1,1,'datakit_server_host','','') ON DUPLICATE KEY UPDATE NOTHING;
