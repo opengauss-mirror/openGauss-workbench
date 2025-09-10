@@ -6,6 +6,7 @@ package com.tools.monitor.quartz.task;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.tools.monitor.entity.SysConfig;
 import com.tools.monitor.mapper.SysConfigMapper;
 import com.tools.monitor.mapper.SysJobMapper;
@@ -13,10 +14,10 @@ import com.tools.monitor.mapper.SysSourceTargetMapper;
 import com.tools.monitor.quartz.domain.SysJob;
 import com.tools.monitor.service.impl.MeterServiceImpl;
 import com.tools.monitor.service.impl.SysJobServiceImpl;
-import com.tools.monitor.util.Base64;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -48,6 +49,10 @@ public class MonitorTask {
 
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
+
     /**
      * targetParams
      *
@@ -63,7 +68,7 @@ public class MonitorTask {
         if (CollectionUtil.isNotEmpty(sysConfigs) && ObjectUtil.isNotEmpty(sysJob)) {
             for (SysConfig sysConfig : sysConfigs) {
                 SysConfig entity = sysConfig;
-                entity.setPassword(Base64.decode(entity.getPassword()));
+                entity.setPassword(encryptionUtils.decrypt(entity.getPassword()));
                 DriverManagerDataSource dataSource = jobService.getDataSource(entity);
                 jdbcTemplate = new JdbcTemplate(dataSource);
                 List<Map<String, Object>> list = jobService.executeSql(jdbcTemplate, params);

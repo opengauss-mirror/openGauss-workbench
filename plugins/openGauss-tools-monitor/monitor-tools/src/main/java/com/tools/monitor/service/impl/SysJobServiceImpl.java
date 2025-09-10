@@ -8,6 +8,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpStatus;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.tools.monitor.common.contant.ConmmonShare;
 import com.tools.monitor.common.contant.ScheduleCommon;
 import com.tools.monitor.config.NagiosConfig;
@@ -29,7 +30,6 @@ import com.tools.monitor.service.ISysJobService;
 import com.tools.monitor.service.MonitorFlake;
 import com.tools.monitor.service.MonitorService;
 import com.tools.monitor.util.AssertUtil;
-import com.tools.monitor.util.Base64;
 import com.tools.monitor.util.HandleUtils;
 import com.tools.monitor.util.SqlUtil;
 import java.text.ParseException;
@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.quartz.JobDataMap;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -97,6 +98,10 @@ public class SysJobServiceImpl implements ISysJobService {
 
     @Autowired
     private NagiosServiceImpl nagiosService;
+
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
 
     @Value("${date.pattern}")
     private String dataPattern;
@@ -383,7 +388,7 @@ public class SysJobServiceImpl implements ISysJobService {
      */
     public void publishNagios(List<SysJob> nagios, SysConfig sysConfig, SysConfig nagiosConfig) {
         Map<String, Object> all = new HashMap<>();
-        sysConfig.setPassword(Base64.decode(sysConfig.getPassword()));
+        sysConfig.setPassword(encryptionUtils.decrypt(sysConfig.getPassword()));
         for (SysJob sysJob : nagios) {
             DriverManagerDataSource dataSource = getDataSource(sysConfig);
             jdbcTemplate = new JdbcTemplate(dataSource);
@@ -765,7 +770,7 @@ public class SysJobServiceImpl implements ISysJobService {
         SysConfig sysConfig = sysConfigs.stream().filter(item -> ObjectUtil.isNotEmpty(item.getDataSourceId())
                 && item.getDataSourceId().equals(job.getDataSourceId())).findFirst().orElse(null);
         if (sysConfig != null) {
-            sysConfig.setPassword(Base64.decode(sysConfig.getPassword()));
+            sysConfig.setPassword(encryptionUtils.decrypt(sysConfig.getPassword()));
         }
         return sysConfig;
     }
