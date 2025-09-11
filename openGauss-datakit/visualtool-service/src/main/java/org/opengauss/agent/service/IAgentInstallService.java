@@ -101,6 +101,14 @@ public interface IAgentInstallService extends IService<AgentInstallEntity> {
     void updateAgent(String agentId);
 
     /**
+     * refresh agent status
+     *
+     * @param agentId agent id
+     * @param status agnet status
+     */
+    void refreshAgentStatus(String agentId, AgentStatus status);
+
+    /**
      * start all of agents
      *
      * @return List<AgentInstallEntity>

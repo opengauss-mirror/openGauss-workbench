@@ -36,6 +36,10 @@ public enum AgentStatus implements IEnum<String> {
      */
     UNINSTALL("uninstall"),
     /**
+     * agent status starting
+     */
+    STARTING("starting"),
+    /**
      * AgentStatus install but it's stop
      */
     STOP("stop"),

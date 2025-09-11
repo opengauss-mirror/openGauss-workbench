@@ -52,7 +52,7 @@ public class HeartbeatScheduler {
     private static final String INSTANCE_ID = UUID.randomUUID().toString(); // 生成实例ID
     private static final AtomicInteger HEARTBEAT_BREAK_TIMES = new AtomicInteger(0);
 
-    String heartbeatHeader;
+    HeartbeatHeader heartbeatHeader;
     ScheduledExecutorService scheduler;
     @Inject
     AppConfig appConfig;
@@ -84,7 +84,7 @@ public class HeartbeatScheduler {
         HeartbeatReport report = new HeartbeatReport(appConfig.getAgentId(), Instant.now());
         try {
             report.setStatus(AgentConstants.HEARTBEAT_STATUS_DOWN);
-            heartbeatServerClient.deregister(heartbeatHeader, report);
+            heartbeatServerClient.deregister(heartbeatHeader.toHeartbeatHeader(), report);
             log.info("server deregister");
         } catch (Exception ex) {
             log.warn("Failed to deregister server:" + report);
@@ -93,19 +93,22 @@ public class HeartbeatScheduler {
 
     private void initHeartbeatHeader() {
         heartbeatHeader = new HeartbeatHeader(appConfig.getAppName(), INSTANCE_ID, NetUtil.getLocalhostStr(),
-            appConfig.getAppServerUrl()).toHeartbeatHeader();
+            appConfig.getAppServerUrl());
     }
 
     private void sendHeartbeat() {
         HeartbeatReport report = new HeartbeatReport(appConfig.getAgentId(), Instant.now());
         try {
-            heartbeatServerClient.heartbeat(heartbeatHeader, report);
+            heartbeatServerClient.heartbeat(heartbeatHeader.toHeartbeatHeader(), report);
             HEARTBEAT_BREAK_TIMES.set(0);
-            log.debug("agent heartbeat header {} body {} ", heartbeatHeader, report.toHeartbeat());
+            log.info("agent heartbeat name=[{}] local=[{}] server=[{}]", heartbeatHeader.getAgentName(),
+                heartbeatHeader.getAgentAddress(), heartbeatHeader.getTarget());
         } catch (Exception e) {
             if (HEARTBEAT_BREAK_TIMES.get() <= appConfig.getHeartbeatBreakWaitMaxTimes()) {
                 HEARTBEAT_BREAK_TIMES.incrementAndGet();
-                log.error("Failed to send heartbeat to server {}", report.toHeartbeat());
+                log.error("Failed to send heartbeat name=[{}] local=[{}] server=[{}] {}",
+                    heartbeatHeader.getAgentName(), heartbeatHeader.getAgentAddress(), heartbeatHeader.getTarget(),
+                    e.getMessage());
             } else {
                 log.error("Heartbeat detection failure count exceeds limit, process will exit soon");
                 Quarkus.asyncExit(1); // 优雅关闭

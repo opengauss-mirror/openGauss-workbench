@@ -71,7 +71,7 @@ public class SysLogControllerTest {
     @Test(dependsOnMethods = "filesTest")
     public void downLoadTest() {
         getRequestSpecification()
-                .param("filename", fileNames.get(0))
+                .param("filename", "sys.log")
                 .when()
                 .head("/download")
                 .then()
