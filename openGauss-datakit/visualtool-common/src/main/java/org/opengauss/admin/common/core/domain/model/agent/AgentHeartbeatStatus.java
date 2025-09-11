@@ -29,7 +29,7 @@ import java.time.Instant;
 public class AgentHeartbeatStatus {
     private static final long TIMEOUT_SEC = 3L;
 
-    private volatile Instant lastHeartbeat;
+    private volatile Instant lastHeartbeat = Instant.now();
     private volatile boolean isOnline;
     private volatile boolean isStatusChanged;
 
@@ -45,6 +45,11 @@ public class AgentHeartbeatStatus {
             isOnline = true;
             isStatusChanged = true;
         }
+    }
+
+    @Override
+    public String toString() {
+        return "[isOnline=" + isOnline + ", isChanged=" + isStatusChanged + " lastHeartbeat=" + lastHeartbeat + ']';
     }
 
     /**

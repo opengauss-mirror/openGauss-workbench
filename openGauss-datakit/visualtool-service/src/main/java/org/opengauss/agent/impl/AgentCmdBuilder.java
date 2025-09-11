@@ -15,8 +15,6 @@
 
 package org.opengauss.agent.impl;
 
-import java.io.File;
-
 /**
  * AgentCmdBuilder
  *
@@ -125,7 +123,7 @@ public class AgentCmdBuilder {
 
     // 路径拼接工具方法（兼容多平台）
     private static String joinPath(String... paths) {
-        return String.join(File.separator, paths);
+        return String.join("/", paths);
     }
 
     /**

@@ -17,15 +17,20 @@ package org.opengauss.agent.impl;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.opengauss.admin.common.core.domain.entity.agent.AgentInstallEntity;
 import org.opengauss.admin.common.core.domain.model.agent.AgentHeartbeatStatus;
 import org.opengauss.admin.common.core.domain.model.agent.HeartbeatReport;
+import org.opengauss.admin.common.enums.agent.AgentStatus;
 import org.opengauss.agent.event.AgentStatusEvent;
 import org.opengauss.agent.service.IAgentHeartbeatService;
+import org.opengauss.agent.service.IAgentInstallService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
@@ -46,10 +51,12 @@ import javax.annotation.Resource;
 @Slf4j
 @Service
 public class AgentHeartbeatServiceImpl implements IAgentHeartbeatService {
-    private final ConcurrentMap<String, AgentHeartbeatStatus> agents = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, AgentHeartbeatStatus> agentStatusCache = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     @Resource
     private ApplicationEventPublisher eventPublisher;
+    @Resource
+    private IAgentInstallService agentInstallService;
 
     /**
      * init heartbeat service
@@ -64,7 +71,7 @@ public class AgentHeartbeatServiceImpl implements IAgentHeartbeatService {
      */
     @Override
     public void startHeartbeatService() {
-        scheduler.scheduleAtFixedRate(this::checkAgentsStatus, 0, 300, TimeUnit.MILLISECONDS);
+        scheduler.scheduleAtFixedRate(this::checkAgentsStatus, 5, 2, TimeUnit.SECONDS);
     }
 
     /**
@@ -72,21 +79,30 @@ public class AgentHeartbeatServiceImpl implements IAgentHeartbeatService {
      */
     public void checkAgentsStatus() {
         Instant now = Instant.now();
-        agents.forEach((agentId, status) -> {
-            status.updateOnlineStatus();
-            if (status.checkAndResetStatusChanged()) {
-                triggerStatusEvent(agentId, status.isOnline());
+        List<AgentInstallEntity> list = agentInstallService.list();
+        list.forEach(agent -> {
+            String agentId = agent.getAgentId();
+            AgentHeartbeatStatus heartbeatStatus = agentStatusCache.get(agentId);
+            if (Objects.isNull(heartbeatStatus)) {
+                agentInstallService.refreshAgentStatus(agentId, AgentStatus.STOP);
+                return;
             }
-            if (!status.isOnline() && Duration.between(status.getLastHeartbeat(), now).getSeconds() > 10) {
-                agents.remove(agentId);
-                log.info("Removed offline agent: {}", agentId);
+            heartbeatStatus.updateOnlineStatus();
+            // last heartbeat time older 5sec ,status mark down
+            if (Duration.between(heartbeatStatus.getLastHeartbeat(), now).getSeconds() > 6) {
+                heartbeatStatus.markAsDown();
+                log.warn("agent health status is down {}:{}:{}", agent.getAgentIp(), agent.getInstallUser(),
+                    agent.getInstallPath());
+            }
+            if (heartbeatStatus.checkAndResetStatusChanged()) {
+                triggerStatusEvent(agentId, heartbeatStatus.isOnline());
             }
         });
     }
 
     @Override
     public boolean isAgentOnline(String agentId) {
-        AgentHeartbeatStatus status = agents.get(agentId);
+        AgentHeartbeatStatus status = agentStatusCache.get(agentId);
         return status != null && status.isOnline();
     }
 
@@ -97,7 +113,12 @@ public class AgentHeartbeatServiceImpl implements IAgentHeartbeatService {
             log.warn("Invalid heartbeat: missing agentId");
             return;
         }
-        agents.compute(agentId, (id, status) -> {
+        AgentInstallEntity agent = agentInstallService.getByAgentId(agentId);
+        if (Objects.isNull(agent)) {
+            log.warn("Invalid heartbeat: agentId {}", agentId);
+            return;
+        }
+        AgentHeartbeatStatus agentStatus = agentStatusCache.compute(agentId, (id, status) -> {
             if (status == null) {
                 status = new AgentHeartbeatStatus();
                 log.info("New agent registered: {}", agentId);
@@ -105,6 +126,8 @@ public class AgentHeartbeatServiceImpl implements IAgentHeartbeatService {
             status.updateFromHeartbeat(heart.getTimestamps());
             return status;
         });
+        log.info("receive heartbeat agent=[{} : {} : {}] ,status={}", agent.getAgentIp(), agent.getInstallUser(),
+            agent.getInstallPath(), agentStatus);
     }
 
     /**
@@ -115,14 +138,15 @@ public class AgentHeartbeatServiceImpl implements IAgentHeartbeatService {
      */
     private void triggerStatusEvent(String agentId, boolean isOnline) {
         eventPublisher.publishEvent(new AgentStatusEvent(this, agentId, isOnline));
-        log.info("Agent status changed: {} -> {}", agentId, isOnline ? "ONLINE" : "OFFLINE");
+        agentInstallService.refreshAgentStatus(agentId, isOnline ? AgentStatus.RUNNING : AgentStatus.STOP);
+        log.info("agent status changed and trigger status event {} -> {}", agentId, isOnline ? "ONLINE" : "OFFLINE");
     }
 
     @Override
     public void deregister(HeartbeatReport requestDown) {
         String agentId = requestDown.getAgentId();
         if (agentId != null) {
-            agents.remove(agentId);
+            agentStatusCache.remove(agentId);
             triggerStatusEvent(agentId, false);
             log.info("Agent deregistered: {}", agentId);
         }
