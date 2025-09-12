@@ -152,7 +152,6 @@ public class TableColumnSQLServiceImpl implements TableColumnSQLService {
     @Override
     public void editConstraint(DatabaseConstraintDTO request) throws SQLException {
         List<ConstraintDTO> list = request.getConstraints();
-        log.info("List<ConstraintDTO> request is: " + list.toString());
         Connection connection = null;
         Statement statement = null;
         try {

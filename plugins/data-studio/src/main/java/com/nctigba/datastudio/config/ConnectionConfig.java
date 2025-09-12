@@ -86,7 +86,6 @@ public class ConnectionConfig {
                 connectionDTO.getDbPassword());
         connectionDTO.updateConnectionDTO(connectionDTO, winName);
         ConnectionMapDAO.setConMap(uuid, connectionDTO);
-        log.error("connectionDTO SQLException is: {}", connectionDTO);
         return connection;
     }
 }

@@ -239,7 +239,6 @@ public class UserObjectSQLServiceImpl implements UserObjectSQLService {
                 List<String> belongList = cutBrace(resultSet.getString("belong"));
                 databaseUserInfoDTO.setBelong(belongList);
                 databaseUserInfoDTO.setType(request.getType());
-                log.info("databaseUserInfoDTO is: {}", databaseUserInfoDTO);
                 return databaseUserInfoDTO;
             }
         }

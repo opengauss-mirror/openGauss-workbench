@@ -77,30 +77,17 @@ public class DatabaseUserServiceImpl implements DatabaseUserService {
 
     @Override
     public String createUserPreviewDDL(DatabaseCreateUserDTO request) {
-        log.info("createUserPreviewDDL request is: " + request);
-        String ddl =
-                userObjectSQLServiceMap.get(comGetUuidType(request.getUuid())).createUserPreviewDDL(request,
-                        "true");
-        log.info("createUserPreviewDDL response is: " + ddl);
-        return ddl;
+        return userObjectSQLServiceMap.get(comGetUuidType(request.getUuid())).createUserPreviewDDL(request, "true");
     }
 
     @Override
     public String userPreviewDDL(DatabaseReturnUserDdlDTO request) throws SQLException {
-        log.info("createUserPreviewDDL request is: " + request);
-        String ddl =
-                userObjectSQLServiceMap.get(comGetUuidType(request.getUuid())).userPreviewDDL(request);
-        log.info("createUserPreviewDDL response is: " + ddl);
-        return ddl;
+        return userObjectSQLServiceMap.get(comGetUuidType(request.getUuid())).userPreviewDDL(request);
     }
 
     @Override
     public DatabaseUserInfoDTO userInfo(DatabaseReturnUserDdlDTO request) throws SQLException {
-        log.info("createUserPreviewDDL request is: " + request);
-        DatabaseUserInfoDTO databaseUserInfoDTO =
-                userObjectSQLServiceMap.get(comGetUuidType(request.getUuid())).userInfo(request);
-        log.info("createUserPreviewDDL response is: " + databaseUserInfoDTO);
-        return databaseUserInfoDTO;
+        return userObjectSQLServiceMap.get(comGetUuidType(request.getUuid())).userInfo(request);
     }
 
     @Override
