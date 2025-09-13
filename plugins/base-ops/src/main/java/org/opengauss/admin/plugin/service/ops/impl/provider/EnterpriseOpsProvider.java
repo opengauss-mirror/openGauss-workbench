@@ -55,6 +55,8 @@ import org.springframework.util.ObjectUtils;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -588,10 +590,9 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
     private void upgradePreinstall(Session rootSession, UpgradeContext upgradeContext) {
         wsUtil.sendText(upgradeContext.getRetSession(), "PREINSTALL");
 
-        String targetPath = "/opt/software/gaussdb_upgrade";
-
         String group = null;
-        String userGroupCommand = "groups " + upgradeContext.getInstallUsername()
+        String installUser = upgradeContext.getInstallUsername();
+        String userGroupCommand = "groups " + installUser
                 + " | awk -F ':' '{print $2}' | sed 's/\\\"//g'";
         try {
             JschResult jschResult = jschUtil.executeCommand(userGroupCommand, upgradeContext.getSepEnvFile(), rootSession, upgradeContext.getRetSession());
@@ -606,6 +607,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
             throw new OpsException("Failed to query user group");
         }
 
+        String targetPath = generateTargetPath(installUser);
         try {
             String command = "mkdir -p " + targetPath;
             JschResult jschResult = jschUtil.executeCommand(command,upgradeContext.getSepEnvFile(), rootSession, upgradeContext.getRetSession());
@@ -632,7 +634,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
 
         try {
-            String command = "chown -R " + upgradeContext.getInstallUsername() + " " + targetPath;
+            String command = "chown -R " + installUser + " " + targetPath;
             JschResult jschResult = jschUtil.executeCommand(command,upgradeContext.getSepEnvFile(), rootSession, upgradeContext.getRetSession());
             if (0 != jschResult.getExitCode()) {
                 log.error("chown failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
@@ -657,7 +659,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
             String command = "cd "
                     + targetPath
                     + "/script && ./gs_preinstall -U "
-                    + upgradeContext.getInstallUsername()
+                    + installUser
                     + " -G "
                     + group + "  -X "
                     + upgradeContext.getClusterConfigXmlPath() + " --non-interactive";
@@ -676,6 +678,11 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
     }
 
+    private String generateTargetPath(String installUser) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
+        return String.format("/home/%s/gaussdb_upgrade/%s", installUser, LocalDateTime.now().format(formatter));
+    }
+
     private String getOMPackage(String path, Session rootSession) {
         String command = MessageFormat.format(SshCommandConstants.GET_OM_PACKAGE, path);
 
@@ -691,7 +698,8 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
             String commandResult = jschResult.getResult().trim();
 
             if (commandResult.contains(String.valueOf((char) 10))) {
-                String errorMsg = "One OM package is expected to be queried, but multiple OM packages are queried.";
+                String errorMsg = "One OM package is expected to be queried, but multiple OM packages are queried. "
+                        + "Please check the package path: " + path;
                 log.error(errorMsg);
                 throw new OpsException(errorMsg);
             }
