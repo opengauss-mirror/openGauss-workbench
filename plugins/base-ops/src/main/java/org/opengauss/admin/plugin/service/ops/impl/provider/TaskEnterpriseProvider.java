@@ -264,7 +264,8 @@ public class TaskEnterpriseProvider extends AbstractTaskProvider {
         try {
             String commandResult = opsHostRemoteService.executeCommand(command, rootSession, "get om package name");
             if (commandResult.contains(String.valueOf((char) 10))) {
-                String errorMsg = "One OM package is expected to be queried, but multiple OM packages are queried.";
+                String errorMsg = "One OM package is expected to be queried, but multiple OM packages are queried. "
+                        + "Please check the package path: " + path;
                 log.error(errorMsg);
                 throw new OpsException(errorMsg);
             }
