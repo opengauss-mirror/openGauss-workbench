@@ -359,28 +359,6 @@ CREATE TABLE IF NOT EXISTS "ops_package_manager" (
     )
 ;
 
-CREATE TABLE IF NOT EXISTS "ops_device_manager" (
-    "name" varchar(64) NOT NULL PRIMARY KEY,
-    "host_ip" varchar(64),
-    "port" varchar(5),
-    "user_name" varchar(64),
-    "password" text,
-    "pair_id" varchar(256)
-    )
-;
-
-CREATE TABLE IF NOT EXISTS "ops_disaster_cluster" (
-    "cluster_id" varchar(255) NOT NULL PRIMARY KEY,
-    "primary_cluster_id" varchar(255),
-    "primary_cluster_device_manager_name" varchar(64),
-    "standby_cluster_id" varchar(255),
-    "standby_cluster_device_manager_name" varchar(64),
-    "primary_json_path" varchar(255),
-    "standby_json_path" varchar(255)
-    )
-;
-
-
 CREATE TABLE IF NOT EXISTS "ops_olk" (
     "id" VARCHAR(64) NOT NULL PRIMARY KEY,
     "name" VARCHAR(255) NOT NULL,
@@ -413,5 +391,3 @@ CREATE TABLE IF NOT EXISTS "ops_olk" (
     "create_time" TIMESTAMP NULL DEFAULT NULL,
     "dad_install_password" TEXT NULL DEFAULT NULL
     );
-
-ALTER TABLE "ops_device_manager" ALTER COLUMN "password" TYPE text;

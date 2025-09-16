@@ -430,28 +430,6 @@ CREATE TABLE IF NOT EXISTS "public"."ops_package_manager" (
     )
 ;
 
-CREATE TABLE IF NOT EXISTS "public"."ops_device_manager" (
-    "name" varchar(64) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
-    "host_ip" varchar(64) COLLATE "pg_catalog"."default",
-    "port" varchar(5) COLLATE "pg_catalog"."default",
-    "user_name" varchar(64) COLLATE "pg_catalog"."default",
-    "password" text COLLATE "pg_catalog"."default",
-    "pair_id" varchar(256) COLLATE "pg_catalog"."default"
-    )
-;
-
-CREATE TABLE IF NOT EXISTS "public"."ops_disaster_cluster" (
-    "cluster_id" varchar(255) COLLATE "pg_catalog"."default" NOT NULL PRIMARY KEY,
-    "primary_cluster_id" varchar(255) COLLATE "pg_catalog"."default",
-    "primary_cluster_device_manager_name" varchar(64) COLLATE "pg_catalog"."default",
-    "standby_cluster_id" varchar(255) COLLATE "pg_catalog"."default",
-    "standby_cluster_device_manager_name" varchar(64) COLLATE "pg_catalog"."default",
-    "primary_json_path" varchar(255) COLLATE "pg_catalog"."default",
-    "standby_json_path" varchar(255) COLLATE "pg_catalog"."default"
-    )
-;
-
-
 CREATE TABLE IF NOT EXISTS "public"."ops_olk" (
     "id" VARCHAR(64) NOT NULL PRIMARY KEY,
     "name" VARCHAR(255) NOT NULL,
@@ -502,22 +480,4 @@ SELECT add_field_db_name();
 
 DROP FUNCTION add_field_db_name;
 
-CREATE OR REPLACE FUNCTION change_password_field_to_text() RETURNS integer AS 'BEGIN
-    IF EXISTS (
-        SELECT 1
-        FROM information_schema.columns
-        WHERE table_schema = ''public''
-          AND table_name = ''ops_device_manager''
-          AND column_name = ''password''
-          AND data_type != ''text''
-    ) THEN
-        ALTER TABLE public.ops_device_manager
-        ALTER COLUMN password TYPE text USING password::text;
-    END IF;
-    RETURN 0;
-END;'
-LANGUAGE plpgsql;
-
-SELECT change_password_field_to_text();
-
-DROP FUNCTION change_password_field_to_text;
+DELETE FROM sys_menu WHERE menu_name IN ('磁阵管理', '容灾集群管理', '容灾集群安装');

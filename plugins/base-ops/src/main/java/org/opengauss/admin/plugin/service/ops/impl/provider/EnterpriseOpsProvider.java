@@ -254,6 +254,16 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
     }
 
+    /**
+     * create soft link
+     *
+     * @param path        lun path
+     * @param prefix      link path prefix
+     * @param rootSession session
+     * @param isDisasterNeed this parameter function has been deprecated
+     * @param installUser install user
+     * @return link path
+     */
     private String createSoftLink(LunPathManager path, String prefix, Session rootSession, boolean isDisasterNeed,
         String installUser) {
         try {
