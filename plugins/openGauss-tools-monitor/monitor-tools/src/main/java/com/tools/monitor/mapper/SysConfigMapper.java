@@ -8,6 +8,7 @@ import ch.ethz.ssh2.Connection;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.tools.monitor.common.contant.ConmmonShare;
 import com.tools.monitor.config.FileConfig;
 import com.tools.monitor.config.PostgresqlConfig;
@@ -17,7 +18,6 @@ import com.tools.monitor.entity.SysConfig;
 import com.tools.monitor.entity.SysSourceTarget;
 import com.tools.monitor.service.MonitorFlake;
 import com.tools.monitor.service.impl.NagiosServiceImpl;
-import com.tools.monitor.util.Base64;
 import com.tools.monitor.util.ConnectionUtil;
 import com.tools.monitor.util.JsonUtilData;
 import java.io.IOException;
@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -65,6 +66,10 @@ public class SysConfigMapper {
 
     @Autowired
     private SysSourceTargetMapper sourceTargetMapper;
+
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
 
     /**
      * getAllConfig
@@ -110,7 +115,7 @@ public class SysConfigMapper {
         }
         if (CollectionUtil.isNotEmpty(zabbix)) {
             config = zabbix.get(0);
-            config.setPassword(Base64.decode(config.getPassword()));
+            config.setPassword(encryptionUtils.encrypt(config.getPassword()));
         }
         return config;
     }
@@ -179,8 +184,8 @@ public class SysConfigMapper {
             } else {
                 log.info("saveConfig");
             }
-            sysConfig.setClientPassword(Base64.encode(sysConfig.getClientPassword()));
-            sysConfig.setServerPassword(Base64.encode(sysConfig.getServerPassword()));
+            sysConfig.setClientPassword(encryptionUtils.encrypt(sysConfig.getClientPassword()));
+            sysConfig.setServerPassword(encryptionUtils.encrypt(sysConfig.getServerPassword()));
             sysConfig.setDataSourceId(MonitorFlake.nextId());
         } else {
             dealSysConfig(sysConfig);
@@ -192,7 +197,7 @@ public class SysConfigMapper {
             if (StrUtil.isNotBlank(msg)) {
                 return msg;
             }
-            sysConfig.setPassword(Base64.encode(sysConfig.getPassword()));
+            sysConfig.setPassword(encryptionUtils.encrypt(sysConfig.getPassword()));
         }
         List<SysConfig> zabbix = sysConfigList.stream()
                 .filter(item -> item.getPlatform().equals(ConmmonShare.ZABBIX)).collect(Collectors.toList());
@@ -324,7 +329,7 @@ public class SysConfigMapper {
         if (StrUtil.isNotBlank(msg)) {
             return msg;
         }
-        sysConfig.setPassword(Base64.encode(sysConfig.getPassword()));
+        sysConfig.setPassword(encryptionUtils.encrypt(sysConfig.getPassword()));
         List<SysConfig> newList = deleteBatchByIds(Arrays.asList(sysConfig.getDataSourceId()));
         newList.add(sysConfig);
         JsonConfig jsonConfig = new JsonConfig();
