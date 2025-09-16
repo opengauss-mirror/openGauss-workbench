@@ -19,8 +19,6 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
 import org.apache.ibatis.annotations.Mapper;
 
-import java.util.List;
-
 /**
  * cluster node mapper
  *
@@ -29,10 +27,4 @@ import java.util.List;
  **/
 @Mapper
 public interface OpsClusterNodeMapper extends BaseMapper<OpsClusterNodeEntity> {
-    /**
-     * query sharing resource cluster id
-     *
-     * @return List
-     */
-    List<String> queryDssCluster();
 }

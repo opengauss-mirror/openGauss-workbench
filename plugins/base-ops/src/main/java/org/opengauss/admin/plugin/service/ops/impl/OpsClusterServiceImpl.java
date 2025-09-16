@@ -56,7 +56,6 @@ import org.opengauss.admin.plugin.domain.model.ops.node.LiteInstallNodeConfig;
 import org.opengauss.admin.plugin.domain.model.ops.node.MinimalistInstallNodeConfig;
 import org.opengauss.admin.plugin.enums.ops.*;
 import org.opengauss.admin.plugin.mapper.ops.OpsClusterMapper;
-import org.opengauss.admin.plugin.mapper.ops.OpsDisasterClusterMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
 import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerService;
@@ -164,9 +163,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private IOpsPackageManagerService pkgManagerService;
-
-    @Autowired
-    private OpsDisasterClusterMapper disasterClusterMapper;
 
     @Override
     public void download(DownloadBody downloadBody) {
@@ -1070,9 +1066,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     @Override
     public void uninstall(UnInstallBody unInstallBody) {
-        if (disasterClusterMapper.queryDisasterClusterCountByClusterName(unInstallBody.getClusterId()) != 0) {
-            throw new OpsException("the cluster is used by disaster cluster,can't uninstall");
-        }
         UnInstallContext unInstallContext = new UnInstallContext();
         OpsClusterEntity clusterEntity = getById(unInstallBody.getClusterId());
         if (Objects.isNull(clusterEntity)) {
@@ -1753,9 +1746,6 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void removeCluster(String clusterId) {
-        if (disasterClusterMapper.queryDisasterClusterCountByClusterName(clusterId) != 0) {
-            throw new OpsException("the cluster is used by disaster cluster,can't delete");
-        }
         List<OpsClusterNodeEntity> opsClusterNodeEntities = opsClusterNodeService.listClusterNodeByClusterId(clusterId);
         if (CollUtil.isNotEmpty(opsClusterNodeEntities)) {
             opsClusterNodeService.removeBatchByIds(opsClusterNodeEntities.stream()

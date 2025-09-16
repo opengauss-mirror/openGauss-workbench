@@ -110,7 +110,7 @@ public class LunPathManager {
      *
      * @param path lun path Manager
      * @param prefix prefix of link path
-     * @param isDisasterNeed is disaster cluster require
+     * @param isDisasterNeed this parameter function has been deprecated
      * @param installUser install user
      * @return soft link path of LUN
      */
