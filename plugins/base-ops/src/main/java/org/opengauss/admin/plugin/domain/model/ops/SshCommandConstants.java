@@ -256,4 +256,9 @@ public interface SshCommandConstants {
      */
     String CREATE_DIR_AND_CHECK_WRITE_PERM = "if [ ! -d \"{0}\" ]; then mkdir -p \"{0}\"; fi\n"
             + "if [ -w \"{0}\" ]; then echo \"had write permission\"; else echo \"{1}\"; fi";
+
+    /**
+     * command to get user home
+     */
+    String GET_INSTALL_USER_HOME = "getent passwd {0} | cut -d: -f6";
 }

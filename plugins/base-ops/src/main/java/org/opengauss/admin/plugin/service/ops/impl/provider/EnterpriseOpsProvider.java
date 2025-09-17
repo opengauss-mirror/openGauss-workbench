@@ -38,15 +38,29 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
-import org.opengauss.admin.plugin.domain.model.ops.*;
+import org.opengauss.admin.plugin.domain.model.ops.HostInfoHolder;
+import org.opengauss.admin.plugin.domain.model.ops.InstallContext;
+import org.opengauss.admin.plugin.domain.model.ops.JschResult;
+import org.opengauss.admin.plugin.domain.model.ops.LunPathManager;
+import org.opengauss.admin.plugin.domain.model.ops.OmStatusModel;
+import org.opengauss.admin.plugin.domain.model.ops.OpsClusterContext;
+import org.opengauss.admin.plugin.domain.model.ops.SharingStorageInstallConfig;
+import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
+import org.opengauss.admin.plugin.domain.model.ops.UnInstallContext;
+import org.opengauss.admin.plugin.domain.model.ops.UpgradeContext;
+import org.opengauss.admin.plugin.domain.model.ops.WsSession;
 import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
-import org.opengauss.admin.plugin.enums.ops.*;
+import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
+import org.opengauss.admin.plugin.enums.ops.DatabaseKernelArch;
+import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
+import org.opengauss.admin.plugin.enums.ops.UpgradeTypeEnum;
+import org.opengauss.admin.plugin.enums.ops.WdrScopeEnum;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
 import org.opengauss.admin.plugin.service.ops.impl.function.GenerateClusterConfigXmlInstance;
 import org.opengauss.admin.plugin.utils.JschUtil;
 import org.opengauss.admin.plugin.utils.WsUtil;
-import org.opengauss.admin.system.plugin.facade.HostUserFacade;
+import org.opengauss.admin.system.service.ISysSettingService;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -54,10 +68,16 @@ import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -74,7 +94,7 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
     private IOpsClusterNodeService opsClusterNodeService;
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-    private HostUserFacade hostUserFacade;
+    private ISysSettingService sysSettingService;
     @Autowired
     private JschUtil jschUtil;
     @Autowired
@@ -503,6 +523,8 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
 
     @Override
     public void upgrade(UpgradeContext upgradeContext) {
+        checkUpgrade(upgradeContext);
+
         Session rootSession = null;
         Session ommSession = null;
         try {
@@ -597,63 +619,55 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
         }
     }
 
+    private void checkUpgrade(UpgradeContext upgradeContext) {
+        if (upgradeContext.getUpgradeType() == null) {
+            throw new OpsException("Upgrade context is null");
+        }
+
+        if (upgradeContext.getClusterEntity() == null) {
+            throw new OpsException("Upgrade cluster entity is null");
+        }
+        String clusterId = upgradeContext.getClusterEntity().getClusterId();
+        if (StrUtil.isEmpty(clusterId)) {
+            throw new OpsException("Upgrade cluster id is null");
+        }
+        OpsClusterEntity clusterEntity = opsClusterService.getById(clusterId);
+        if (clusterEntity == null) {
+            throw new OpsException("Upgrade cluster entity not exist, cluster id: " + clusterId);
+        }
+        upgradeContext.setClusterConfigXmlPath(clusterEntity.getXmlConfigPath());
+        upgradeContext.setSepEnvFile(clusterEntity.getEnvPath());
+
+        String upgradePackagePath = upgradeContext.getUpgradePackagePath();
+        Integer adminId = 1;
+        String uploadPath = sysSettingService.getSetting(adminId).getUploadPath();
+        if (StrUtil.isEmpty(upgradePackagePath)) {
+            throw new OpsException("Upgrade package path is null");
+        }
+        if (!upgradePackagePath.startsWith(uploadPath)) {
+            throw new OpsException("Upgrade package path is not invalid, package path is not in datakit system upload "
+                    + "path, upload path: " + uploadPath + ", upgrade package path: " + upgradePackagePath);
+        }
+        Path sourcePath = Paths.get(upgradePackagePath);
+        if (!Files.exists(sourcePath) || !Files.isRegularFile(sourcePath)) {
+            log.error("Upgrade source package not found, source path: {}", sourcePath);
+            throw new OpsException("Upgrade source package not found, source path: " + sourcePath);
+        }
+
+        if (upgradeContext.getRetSession() == null) {
+            throw new OpsException("Upgrade ret session is null");
+        }
+    }
+
     private void upgradePreinstall(Session rootSession, UpgradeContext upgradeContext) {
         wsUtil.sendText(upgradeContext.getRetSession(), "PREINSTALL");
-
-        String group = null;
         String installUser = upgradeContext.getInstallUsername();
-        String userGroupCommand = "groups " + installUser
-                + " | awk -F ':' '{print $2}' | sed 's/\\\"//g'";
-        try {
-            JschResult jschResult = jschUtil.executeCommand(userGroupCommand, upgradeContext.getSepEnvFile(), rootSession, upgradeContext.getRetSession());
-            if (0 != jschResult.getExitCode()) {
-                log.error("Querying user group failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("Failed to query user group");
-            }
+        String installUserHome = getInstallUserHome(installUser, rootSession, upgradeContext);
+        String targetPath = generateTargetPath(installUser, installUserHome);
 
-            group = jschResult.getResult();
-        } catch (Exception e) {
-            log.error("Failed to query user group：", e);
-            throw new OpsException("Failed to query user group");
-        }
-
-        String targetPath = generateTargetPath(installUser);
-        try {
-            String command = "mkdir -p " + targetPath;
-            JschResult jschResult = jschUtil.executeCommand(command,upgradeContext.getSepEnvFile(), rootSession, upgradeContext.getRetSession());
-            if (0 != jschResult.getExitCode()) {
-                log.error("mkdir failed, exit code: {}, error message: {}",
-                        jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("mkdir failed");
-            }
-        } catch (Exception e) {
-            log.error("mkdir failed", e);
-            throw new OpsException("mkdir failed");
-        }
-
-        try {
-            wsUtil.sendText(upgradeContext.getRetSession(), "BEFORE_UPLOAD_PACKAGE");
-            jschUtil.upload(rootSession, upgradeContext.getRetSession(),
-                    upgradeContext.getUpgradePackagePath(), targetPath
-                            + System.getProperty("file.separator")
-                            + FileUtil.getName(upgradeContext.getUpgradePackagePath()));
-            wsUtil.sendText(upgradeContext.getRetSession(), "END_UPLOAD_PACKAGE");
-        } catch (Exception e) {
-            log.error("upload failed", e);
-            throw new OpsException("upload failed");
-        }
-
-        try {
-            String command = "chown -R " + installUser + " " + targetPath;
-            JschResult jschResult = jschUtil.executeCommand(command,upgradeContext.getSepEnvFile(), rootSession, upgradeContext.getRetSession());
-            if (0 != jschResult.getExitCode()) {
-                log.error("chown failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("chown failed");
-            }
-        } catch (Exception e) {
-            log.error("chown failed", e);
-            throw new OpsException("chown failed");
-        }
+        prepareUpgradePkgPath(targetPath, rootSession, upgradeContext);
+        checkUpgradePkgPathSize(targetPath, rootSession, upgradeContext);
+        uploadUpgradePackage(targetPath, rootSession, upgradeContext);
 
         decompress(jschUtil, rootSession, targetPath,
                 targetPath + System.getProperty("file.separator")
@@ -665,32 +679,149 @@ public class EnterpriseOpsProvider extends AbstractOpsProvider {
                 targetPath + System.getProperty("file.separator") + omPackage,
                 upgradeContext.getRetSession(), "-zxvf");
 
+        String group = getUserGroup(installUser, rootSession, upgradeContext);
+        changeUpgradePathPermission(installUser, group, targetPath, rootSession, upgradeContext);
+        executeUpgradePreinstall(installUser, group, targetPath, rootSession, upgradeContext);
+    }
+
+    private void executeUpgradePreinstall(
+            String installUser, String group, String targetPath, Session rootSession, UpgradeContext upgradeContext) {
         try {
-            String command = "cd "
-                    + targetPath
-                    + "/script && ./gs_preinstall -U "
-                    + installUser
-                    + " -G "
-                    + group + "  -X "
-                    + upgradeContext.getClusterConfigXmlPath() + " --non-interactive";
-            if (StrUtil.isNotEmpty(upgradeContext.getSepEnvFile())) {
-                command = command + " --sep-env-file=" + upgradeContext.getSepEnvFile();
+            StringBuilder commandBuilder = new StringBuilder();
+            commandBuilder.append("cd ").append(targetPath).append("/script && ./gs_preinstall -U ").append(installUser)
+                    .append(" -G ").append(group).append("  -X ").append(upgradeContext.getClusterConfigXmlPath())
+                    .append(" --non-interactive");
+            String sepEnvFile = upgradeContext.getSepEnvFile();
+            if (StrUtil.isNotEmpty(sepEnvFile)) {
+                commandBuilder.append(" --sep-env-file=").append(sepEnvFile);
             }
 
-            JschResult jschResult = jschUtil.executeCommand(command,upgradeContext.getSepEnvFile(), rootSession, upgradeContext.getRetSession());
-            if (0 != jschResult.getExitCode()) {
-                log.error("gs_preinstall failed, exit code: {}, error message: {}", jschResult.getExitCode(), jschResult.getResult());
-                throw new OpsException("gs_preinstall failed");
+            JschResult jschResult = jschUtil.executeCommand(commandBuilder.toString(), sepEnvFile,
+                    rootSession, upgradeContext.getRetSession());
+            if (jschResult.getExitCode() != 0) {
+                log.error("Execute upgrade preinstall failed, exit code: {}, error message: {}",
+                        jschResult.getExitCode(), jschResult.getResult());
+                throw new OpsException("Execute upgrade preinstall failed");
             }
-        } catch (Exception e) {
-            log.error("gs_preinstall failed", e);
-            throw new OpsException("gs_preinstall failed");
+        } catch (IOException | InterruptedException e) {
+            log.error("Execute upgrade preinstall failed", e);
+            throw new OpsException("Execute upgrade preinstall failed");
         }
     }
 
-    private String generateTargetPath(String installUser) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
-        return String.format("/home/%s/gaussdb_upgrade/%s", installUser, LocalDateTime.now().format(formatter));
+    private void changeUpgradePathPermission(
+            String installUser, String group, String targetPath, Session rootSession, UpgradeContext upgradeContext) {
+        try {
+            String chmod = MessageFormat.format(SshCommandConstants.CHMOD, targetPath);
+            String chown = MessageFormat.format(SshCommandConstants.CHOWN_USER_GROUP, installUser, group, targetPath);
+            JschResult jschResult = jschUtil.executeCommand(chmod + " && " + chown, upgradeContext.getSepEnvFile(),
+                    rootSession, upgradeContext.getRetSession());
+            if (jschResult.getExitCode() != 0) {
+                log.error("Change upgrade path permission failed, exit code: {}, error message: {}",
+                        jschResult.getExitCode(), jschResult.getResult());
+                throw new OpsException("Change upgrade path permission failed");
+            }
+        } catch (IOException | InterruptedException e) {
+            log.error("Change upgrade path permission failed", e);
+            throw new OpsException("Change upgrade path permission failed");
+        }
+    }
+
+    private void uploadUpgradePackage(String targetPath, Session rootSession, UpgradeContext upgradeContext) {
+        wsUtil.sendText(upgradeContext.getRetSession(), "BEFORE_UPLOAD_PACKAGE");
+        jschUtil.upload(rootSession, upgradeContext.getRetSession(), upgradeContext.getUpgradePackagePath(),
+                String.format("%s/%s", targetPath, FileUtil.getName(upgradeContext.getUpgradePackagePath())));
+        wsUtil.sendText(upgradeContext.getRetSession(), "END_UPLOAD_PACKAGE");
+    }
+
+    private void checkUpgradePkgPathSize(String targetPath, Session rootSession, UpgradeContext upgradeContext) {
+        try {
+            String command = String.format("df %s | awk 'NR==2 {print $4}'", targetPath);
+            JschResult jschResult = jschUtil.executeCommand(command, upgradeContext.getSepEnvFile(), rootSession,
+                    upgradeContext.getRetSession());
+            if (jschResult.getExitCode() != 0) {
+                log.error("Failed to check the remaining space in upgrade package storage directory, path: {}, "
+                        + "error: {}", targetPath, jschResult.getResult());
+                throw new OpsException("Failed to check the remaining space in upgrade package storage directory");
+            }
+            long targetPathSize = Long.parseLong(jschResult.getResult().trim());
+
+            Path sourcePath = Paths.get(upgradeContext.getUpgradePackagePath());
+            if (!Files.exists(sourcePath) || !Files.isRegularFile(sourcePath)) {
+                log.error("Upgrade source package not found, source path: {}", sourcePath);
+                throw new OpsException("Upgrade source package not found, source path: " + sourcePath);
+            }
+            long sourcePkgSize = Files.size(sourcePath);
+
+            if (targetPathSize * 1024 <= sourcePkgSize * 3) {
+                String errorMsg = String.format("The remaining space is not enough to upload upgrade package, "
+                                + "path: %s, at least: %sB", targetPath, sourcePkgSize * 3);
+                log.error(errorMsg);
+                throw new OpsException(errorMsg);
+            }
+        } catch (IOException | InterruptedException e) {
+            log.error("Failed to check the remaining space in upgrade package storage directory", e);
+            throw new OpsException("Failed to check the remaining space in upgrade package storage directory");
+        }
+    }
+
+    private void prepareUpgradePkgPath(String targetPath, Session rootSession, UpgradeContext upgradeContext) {
+        try {
+            String command = MessageFormat.format("[ -d \"{0}\" ] && rm -rf \"{0}\"/* 2>/dev/null || mkdir -p \"{0}\"",
+                    targetPath);
+            JschResult jschResult = jschUtil.executeCommand(command, upgradeContext.getSepEnvFile(), rootSession,
+                    upgradeContext.getRetSession());
+            if (jschResult.getExitCode() != 0) {
+                log.error("Prepare upgrade package path failed, exit code: {}, error message: {}",
+                        jschResult.getExitCode(), jschResult.getResult());
+                throw new OpsException("Prepare upgrade package path failed");
+            }
+        } catch (IOException | InterruptedException e) {
+            log.error("Prepare upgrade package path failed", e);
+            throw new OpsException("Prepare upgrade package path failed");
+        }
+    }
+
+    private String getUserGroup(String installUser, Session rootSession, UpgradeContext upgradeContext) {
+        String userGroupCommand = "groups " + installUser + " | awk -F ':' '{print $2}' | sed 's/\\\"//g'";
+        try {
+            JschResult jschResult = jschUtil.executeCommand(userGroupCommand, upgradeContext.getSepEnvFile(),
+                    rootSession, upgradeContext.getRetSession());
+            if (jschResult.getExitCode() != 0) {
+                log.error("Querying user group failed, exit code: {}, error message: {}", jschResult.getExitCode(),
+                        jschResult.getResult());
+                throw new OpsException("Failed to query user group");
+            }
+            return jschResult.getResult().trim();
+        } catch (IOException | InterruptedException e) {
+            log.error("Failed to query user group. Error: {}", e.getMessage());
+            throw new OpsException("Failed to query user group.");
+        }
+    }
+
+    private String generateTargetPath(String installUser, String installUserHome) {
+        String homePath = installUserHome.trim();
+        if (StrUtil.isEmpty(homePath)) {
+            homePath = "/home/" + installUser;
+        }
+        return String.format("%s/gaussdb_upgrade", homePath);
+    }
+
+    private String getInstallUserHome(String installUser, Session rootSession, UpgradeContext upgradeContext) {
+        String command = MessageFormat.format(SshCommandConstants.GET_INSTALL_USER_HOME, installUser);
+        try {
+            JschResult jschResult = jschUtil.executeCommand(command, upgradeContext.getSepEnvFile(), rootSession,
+                    upgradeContext.getRetSession());
+            if (jschResult.getExitCode() != 0) {
+                log.error("Failed to obtain the install user home by command: {}. Exit code: {}",
+                        command, jschResult.getExitCode());
+                throw new OpsException("Failed to obtain the install user home.");
+            }
+            return jschResult.getResult().trim();
+        } catch (IOException | InterruptedException e) {
+            log.error("Failed to obtain the install user home by command: {}. Error: {}", command, e.getMessage());
+            throw new OpsException("Failed to obtain the install user home.");
+        }
     }
 
     private String getOMPackage(String path, Session rootSession) {
