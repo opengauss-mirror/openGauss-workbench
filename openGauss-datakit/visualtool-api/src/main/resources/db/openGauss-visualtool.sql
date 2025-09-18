@@ -876,15 +876,7 @@ VALUES ('webds-plugin', 1, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaw
 UPDATE NOTHING;
 
 INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES ('oauth-login', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/oauth-login-7.0.0-RC2-repackage.jar', '统一登录插件', 'Oauth Login Plugin') ON DUPLICATE KEY
-UPDATE NOTHING;
-
-INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
 VALUES ('observability-log-search', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-log-search-7.0.0-RC2-repackage.jar', '日志检索插件', 'Log Retrieval Plugin') ON DUPLICATE KEY
-UPDATE NOTHING;
-
-INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES ('MetaTune', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/MetaTune-7.0.0-RC2-repackage.jar', '数据库智能参数调优', 'The database intelligent parameter tuning tool') ON DUPLICATE KEY
 UPDATE NOTHING;
 
 INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
@@ -904,12 +896,11 @@ VALUES ('observability-sql-diagnosis', 0, '7.0.0-RC2', 'https://opengauss.obs.cn
 UPDATE NOTHING;
 
 INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES ('monitor-tools', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/monitor-tools-7.0.0-RC2-repackage.jar', '数据库监控插件生成工具', 'Database monitoring plugin generation tool') ON DUPLICATE KEY
-UPDATE NOTHING;
-
-INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
 VALUES ('compatibility-assessment', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/compatibility-assessment-7.0.0-RC2-repackage.jar', 'openGauss兼容性评估工具', 'The openGauss compatibility evaluation tool') ON DUPLICATE KEY
 UPDATE NOTHING;
+
+DELETE FROM sys_plugins_repository WHERE plugin_id IN ('oauth-login', 'MetaTune', 'monitor-tools');
+
 -- ----------------------------
 -- Table structure for sys_role
 -- ----------------------------
