@@ -139,8 +139,6 @@ public class ClientServiceImpl implements ClientService {
             JSONObject mapTargets = new JSONObject(targetConfigs);
             mapConfig.put("targets", mapTargets.toString());
 
-            log.debug("mapConfig:{}", mapConfig);
-
             // overwrite application.yml
             try (FileWriter writer = new FileWriter(application)) {
                 writer.write(yaml.dumpAsMap(mapConfig));
@@ -185,7 +183,6 @@ public class ClientServiceImpl implements ClientService {
 
             JSONArray mapTargets = new JSONArray(targetConfigs);
             mapConfig.put("targets", mapTargets);
-            log.info("mapConfig:{}", mapConfig);
 
             // overwrite application.yml
             try (FileWriter writer = new FileWriter(application)) {

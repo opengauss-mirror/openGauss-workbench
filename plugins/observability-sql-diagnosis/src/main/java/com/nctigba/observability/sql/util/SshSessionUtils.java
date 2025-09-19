@@ -59,7 +59,7 @@ public class SshSessionUtils implements AutoCloseable {
             session.addPasswordIdentity(password);
             session.auth().verify(SESSION_TIMEOUT);
         } catch (IOException e) {
-            throw new CustomException(username + " password error");
+            throw new CustomException("Create ssh session failed", e);
         }
     }
 
