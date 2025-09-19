@@ -29,6 +29,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -79,7 +80,7 @@ public class MultiDbPortalMigrationController {
         configTask(shellInfo, workspacePath, task);
         String startCommand = String.format(Locale.ROOT, "cd %s && java -jar %s --migration start %d",
                 workspacePath, jarPath, task.getId());
-        ShellUtil.execCommand(shellInfo, startCommand);
+        ShellUtil.execInteractiveCommand(shellInfo, startCommand, getInteractParams(task));
     }
 
     /**
@@ -182,13 +183,12 @@ public class MultiDbPortalMigrationController {
         migrationConfig.put("pgsql.database.port", task.getSourceDbPort());
         migrationConfig.put("pgsql.database.name", task.getSourceDb());
         migrationConfig.put("pgsql.database.username", task.getSourceDbUser());
-        migrationConfig.put("pgsql.database.password", encryptionUtils.decrypt(task.getSourceDbPass()));
         migrationConfig.put("pgsql.database.schemas", task.getSourceSchemas());
         migrationConfig.put("opengauss.database.ip", task.getTargetDbHost());
         migrationConfig.put("opengauss.database.port", task.getTargetDbPort());
         migrationConfig.put("opengauss.database.name", task.getTargetDb());
         migrationConfig.put("opengauss.database.username", task.getTargetDbUser());
-        migrationConfig.put("opengauss.database.password", encryptionUtils.decrypt(task.getTargetDbPass()));
+        migrationConfig.put("use.interactive.password", "true");
 
         migrationConfig.put("is.adjust.kernel.param", task.getIsAdjustKernelParam() + "");
         if (MigrationMode.ONLINE.getCode().equals(task.getMigrationModelId())) {
@@ -196,6 +196,13 @@ public class MultiDbPortalMigrationController {
         } else {
             migrationConfig.put("migration.mode", "plan1");
         }
+    }
+
+    private LinkedHashMap<String, String> getInteractParams(MigrationTask task) {
+        LinkedHashMap<String, String> inputMap = new LinkedHashMap<>();
+        inputMap.put("Please input PostgreSQL database password: ", encryptionUtils.decrypt(task.getSourceDbPass()));
+        inputMap.put("Please input openGauss database password: ", encryptionUtils.decrypt(task.getTargetDbPass()));
+        return inputMap;
     }
 
     private void setMigrationTaskParams(Map<String, String> migrationConfig, MigrationTask task) {

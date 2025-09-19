@@ -23,6 +23,14 @@
 
 package com.nctigba.observability.log.util;
 
+import cn.hutool.core.thread.ThreadUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.sshd.client.SshClient;
+import org.apache.sshd.client.channel.ClientChannelEvent;
+import org.apache.sshd.client.session.ClientSession;
+import org.apache.sshd.sftp.client.SftpClientFactory;
+import org.opengauss.admin.common.exception.CustomException;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,14 +43,11 @@ import java.nio.file.StandardCopyOption;
 import java.text.MessageFormat;
 import java.util.EnumSet;
 
-import org.apache.sshd.client.SshClient;
-import org.apache.sshd.client.channel.ClientChannelEvent;
-import org.apache.sshd.client.session.ClientSession;
-import org.apache.sshd.sftp.client.SftpClientFactory;
-
-import cn.hutool.core.thread.ThreadUtil;
-import lombok.extern.slf4j.Slf4j;
-
+/**
+ * SshSession
+ *
+ * @since 2025-09-19
+ */
 @Slf4j
 public class SshSession implements AutoCloseable {
 	private static final int SESSION_TIMEOUT = 10000;
@@ -152,7 +157,7 @@ public class SshSession implements AutoCloseable {
 			session.addPasswordIdentity(password);
 			session.auth().verify(SESSION_TIMEOUT);
 		} catch (Exception e) {
-			throw new RuntimeException(username + " password error");
+            throw new CustomException("Create ssh session failed", e);
 		}
 	}
 
