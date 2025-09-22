@@ -30,9 +30,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Locale;
 
+/**
+ * MessageSourceUtils
+ *
+ * @author: wangchao
+ * @Date: 2025/9/11 21:21
+ * @since 7.0.0-RC2
+ **/
 @Component
 public class MessageSourceUtils {
     private static MessageSource messageSource;

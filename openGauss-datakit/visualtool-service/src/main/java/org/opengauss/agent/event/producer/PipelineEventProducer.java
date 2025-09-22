@@ -40,7 +40,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PreDestroy;
 
 /**
  * PipelineEventProducer

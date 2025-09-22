@@ -62,6 +62,7 @@ public class LoginUser implements UserDetails {
      * User
      */
     private SysUser user;
+    private Collection<? extends GrantedAuthority> authorities;
 
     public String getToken() {
         return token;
@@ -79,6 +80,15 @@ public class LoginUser implements UserDetails {
         this.permissions = permissions;
     }
 
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
+    }
+
+    // 添加权限设置方法
+    public void setAuthorities(Collection<? extends GrantedAuthority> authorities) {
+        this.authorities = authorities;
+    }
     @JsonIgnore
     @Override
     public String getPassword() {
@@ -130,10 +140,5 @@ public class LoginUser implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
-    }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
     }
 }

@@ -1,14 +1,12 @@
-context:
-  listener:
-    classes: org.opengauss.admin.plugin.listener.BaseOpsPluginListener
+#context:
+#  listener:
+#    classes: org.opengauss.admin.plugin.listener.BaseOpsPluginListener
 install:
   package:
     upgrade:
       old-history-version: 3.0.0;3.0.3;3.0.5;3.1.0;3.1.1;5.0.0;5.0.1;5.0.2;5.0.3;5.1.0;6.0.0-RC1
       history-version: 6.0.0;7.0.0-RC1
 spring:
-  resources:
-    static-locations: classpath:resources
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
@@ -16,6 +14,9 @@ spring:
       test-on-borrow: true
       validation-query: "select 1"
       validation-query-timeout: 30000
+  web:
+    resources:
+      static-locations: classpath:resources
 system:
   defaultStoragePath: /Users/xielibo/uploadPath/gausstool
 # log config

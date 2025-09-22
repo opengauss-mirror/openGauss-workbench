@@ -21,6 +21,15 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.gitee.starblues</groupId>
+            <artifactId>spring-brick-bootstrap</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.gitee.starblues</groupId>
+            <artifactId>spring-brick-maven-packager</artifactId>
         </dependency>
         <!-- 系统模块-->
         <dependency>
@@ -30,13 +39,39 @@
             <exclusions>
                 <exclusion>
                     <groupId>com.alibaba</groupId>
-                    <artifactId>druid-spring-boot-starter</artifactId>
+                    <artifactId>druid-spring-boot-3-starter</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>jakarta.websocket</groupId>-->
+<!--            <artifactId>jakarta.websocket-api</artifactId>-->
+<!--            <version>${jakarta.websocket.version}</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>jakarta.websocket</groupId>
+            <artifactId>jakarta.websocket-client-api</artifactId>
+            <version>${jakarta.websocket.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.boot</groupId>-->
+<!--            <artifactId>spring-boot-starter-websocket</artifactId>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.tomcat.embed</groupId>-->
+<!--            <artifactId>tomcat-embed-websocket</artifactId>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>${snakeyaml.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
@@ -54,14 +89,7 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.gitee.starblues</groupId>
-            <artifactId>spring-brick-bootstrap</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.gitee.starblues</groupId>
-            <artifactId>spring-brick-maven-packager</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
@@ -88,7 +116,7 @@
         <!-- 阿里数据库连接池 -->
         <dependency>
             <groupId>com.alibaba</groupId>
-            <artifactId>druid-spring-boot-starter</artifactId>
+            <artifactId>druid-spring-boot-3-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.opengauss</groupId>
@@ -97,9 +125,16 @@
 
         <dependency>
             <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-extension</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-jsqlparser</artifactId>
+        </dependency>
         <!-- 阿里JSON解析器 -->
         <dependency>
             <groupId>com.alibaba</groupId>
@@ -111,18 +146,18 @@
         </dependency>
         <!-- servlet包 -->
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
         </dependency>
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-inline</artifactId>
-            <scope>test</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.mockito</groupId>-->
+<!--            <artifactId>mockito-inline</artifactId>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>

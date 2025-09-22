@@ -1,5 +1,9 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
 <suite name="ApiTest">
+    <listeners>
+        <listener class-name="org.opengauss.env.TestEnvironmentListener"/>
+    </listeners>
+
     <test name="visualtool-api">
         <classes>
             <class name="org.opengauss.visualtool.api.SysLoginControllerTest"/>

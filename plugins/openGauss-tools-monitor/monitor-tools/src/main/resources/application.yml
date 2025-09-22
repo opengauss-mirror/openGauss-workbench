@@ -8,10 +8,11 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
-  resources:
-    static-locations: classpath:static
-#server:
+  #server:
   #port: 8085
+  web:
+    resources:
+      static-locations: classpath:static
 
 # management配置在一体化平台，这里不起作用
 management:

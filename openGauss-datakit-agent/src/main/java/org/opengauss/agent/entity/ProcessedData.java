@@ -15,8 +15,7 @@
 
 package org.opengauss.agent.entity;
 
-import com.google.gson.Gson;
-
+import cn.hutool.json.JSONUtil;
 import lombok.Data;
 
 /**
@@ -46,7 +45,7 @@ public class ProcessedData {
      * @return String
      */
     public String toJson() {
-        return new Gson().toJson(this);
+        return JSONUtil.toJsonStr(this);
     }
 
     /**
@@ -56,6 +55,6 @@ public class ProcessedData {
      * @return ProcessedData
      */
     public static ProcessedData fromJson(String json) {
-        return new Gson().fromJson(json, ProcessedData.class);
+        return JSONUtil.toBean(json, ProcessedData.class);
     }
 }

@@ -24,8 +24,6 @@
 package com.nctigba.observability.instance.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.opengauss.admin.common.enums.ResponseCode;
 
@@ -35,13 +33,9 @@ import org.opengauss.admin.common.enums.ResponseCode;
  * @since 2023/12/1
  */
 @Data
-@ApiModel("Unified result return format")
 public class AjaxResult<T> {
-    @ApiModelProperty(value = "Result code.200 means ok,500 means error.", allowableValues = "200,500", required = true)
     private Integer code;
-    @ApiModelProperty(value = "Result msg, return when 500.", required = true)
     private String msg;
-    @ApiModelProperty(value = "Business data", required = true)
     private T data;
 
     /**
@@ -187,7 +181,6 @@ public class AjaxResult<T> {
      *
      * @return boolean
      */
-    @ApiModelProperty(hidden = true)
     @JsonIgnore
     public boolean isOk() {
         return code != null && code.equals(ResponseCode.SUCCESS.code());

@@ -35,10 +35,11 @@ import org.opengauss.admin.plugin.utils.FileUtils;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -66,6 +67,7 @@ public class MultiDbPortalProgressLoader {
     private MigrationTaskStatusRecordService migrationTaskStatusRecordService;
 
     @Autowired
+    @Lazy
     private MigrationMainTaskService migrationMainTaskService;
 
     @Autowired

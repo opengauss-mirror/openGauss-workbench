@@ -26,9 +26,9 @@ package com.nctigba.alert.monitor.model.query;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 /**

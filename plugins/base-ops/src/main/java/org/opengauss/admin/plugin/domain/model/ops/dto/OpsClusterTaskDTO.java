@@ -30,8 +30,8 @@ import org.opengauss.admin.plugin.enums.ops.DeployTypeEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.springframework.beans.BeanUtils;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.util.Optional;
 
 /**

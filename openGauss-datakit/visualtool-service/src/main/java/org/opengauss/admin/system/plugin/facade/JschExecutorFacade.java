@@ -28,7 +28,7 @@ import org.opengauss.admin.system.plugin.beans.SshLogin;
 import org.opengauss.admin.system.service.JschExecutorService;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * Jsch Executor Facade operations

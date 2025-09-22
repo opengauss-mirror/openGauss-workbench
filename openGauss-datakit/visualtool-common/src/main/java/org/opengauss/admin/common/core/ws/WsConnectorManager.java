@@ -24,9 +24,10 @@
 
 package org.opengauss.admin.common.core.ws;
 
+import jakarta.websocket.Session;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.websocket.Session;
+
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -37,7 +38,6 @@ import java.util.concurrent.ConcurrentHashMap;
  **/
 @Slf4j
 public class WsConnectorManager {
-
     private static final ConcurrentHashMap<String, Session> CONNECTOR_CONTEXT = new ConcurrentHashMap<>();
 
     /**

@@ -63,7 +63,7 @@ public class DataSourceConfig {
                 .build();
     }
 
-    @Bean
+    @Bean("opsDataSourceScriptDatabaseInitializer")
     @Profile("!dev")
     DataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSource dataSource) {
         EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();

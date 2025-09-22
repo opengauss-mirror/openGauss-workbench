@@ -32,7 +32,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationContext;
 
-import javax.websocket.Session;
+import jakarta.websocket.Session;
 import java.sql.Connection;
 import java.sql.Statement;
 

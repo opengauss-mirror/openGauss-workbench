@@ -14,6 +14,7 @@ import org.opengauss.admin.plugin.mapper.MigrationTaskAlertDetailMapper;
 import org.opengauss.admin.plugin.service.MigrationTaskAlertDetailService;
 import org.opengauss.admin.plugin.service.MigrationTaskAlertService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,10 +30,8 @@ public class MigrationTaskAlertDetailServiceImpl
         extends ServiceImpl<MigrationTaskAlertDetailMapper, MigrationTaskAlertDetail>
         implements MigrationTaskAlertDetailService {
     @Autowired
+    @Lazy
     private MigrationTaskAlertService alertService;
-
-    @Autowired
-    private MigrationTaskAlertDetailMapper alertDetailMapper;
 
     @Override
     public MigrationTaskAlertDetail getGroupDetailByAlertId(int alertId) {

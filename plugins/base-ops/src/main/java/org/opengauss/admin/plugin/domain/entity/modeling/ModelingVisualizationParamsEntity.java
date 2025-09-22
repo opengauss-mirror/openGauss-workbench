@@ -31,7 +31,7 @@ import org.opengauss.admin.plugin.domain.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotEmpty;
 /**
  * @author LZW
  * @TableName modeling_visualization_params

@@ -39,13 +39,20 @@ import org.opengauss.admin.system.plugin.facade.WsFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.websocket.Session;
+import jakarta.websocket.Session;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+/**
+ * Installer SocketExtract
+ *
+ * @author: wangchao
+ * @Date: 2025/9/11 21:21
+ * @since 7.0.0-RC2
+ **/
 @Slf4j
-@Service
+@Service("sqlDiagnosisInstaller")
 @Extract(bus = PluginListener.pluginId)
 public class Installer implements SocketExtract {
     @Autowired

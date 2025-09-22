@@ -29,6 +29,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.stereotype.Component;
 
 import com.gitee.starblues.spring.MainApplicationContext;
 import com.gitee.starblues.spring.SpringBeanFactory;
@@ -38,6 +39,7 @@ import com.gitee.starblues.spring.SpringBeanFactory;
  *
  * @since 2022/12/4 15:05
  */
+@Component
 public class PluginListener implements ApplicationListener<ApplicationEvent> {
     public static final String pluginId = "observability-instance";
 

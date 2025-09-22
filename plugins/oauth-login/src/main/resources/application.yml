@@ -1,9 +1,7 @@
-context:
-  listener:
-    classes: org.opengauss.admin.plugin.listener.OauthLoginPluginListener
 spring:
-  resources:
-    static-locations: classpath:resources
+  web:
+    resources:
+      static-locations: classpath:resources
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     druid:

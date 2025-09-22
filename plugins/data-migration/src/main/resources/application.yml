@@ -2,12 +2,7 @@ migration:
   taskRefreshIntervalsMillisecond: 15000
   taskOfflineSchedulerIntervalsMillisecond: 10000
   mainTaskRefreshIntervalsMillisecond: 60000
-context:
-  listener:
-    classes: org.opengauss.admin.plugin.listener.DataMigrationPluginListener
 spring:
-  resources:
-    static-locations: classpath:resources
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
@@ -18,6 +13,11 @@ spring:
   sql:
     init:
       mode: always
+  web:
+    resources:
+      static-locations: classpath:resources
+  main:
+    allow-circular-references: true
 # log config
 logging:
   level:

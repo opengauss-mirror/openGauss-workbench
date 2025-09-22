@@ -33,9 +33,7 @@ spring:
       keep-alive: true
       max-active: 30
       min-evictable-idle-time-millis: 600000
-swagger:
-  enabled: true
-  pathMapping: /dev-api
+
 plugin:
   sortInitPluginIds:
   decrypt:

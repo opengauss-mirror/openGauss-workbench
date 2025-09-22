@@ -62,7 +62,6 @@ import org.opengauss.admin.plugin.exception.MigrationTaskException;
 import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationMainTaskMapper;
 import org.opengauss.admin.plugin.portal.MultiDbPortal;
-import org.opengauss.admin.plugin.service.MainTaskEnvErrorHostService;
 import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
 import org.opengauss.admin.plugin.service.MigrationMainTaskService;
 import org.opengauss.admin.plugin.service.MigrationTaskAlertService;
@@ -79,6 +78,7 @@ import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -108,13 +108,14 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskMapper, MigrationMainTask> implements MigrationMainTaskService {
-
     private static Map<Integer, Long> taskRefreshRecord = new ConcurrentHashMap<>();
     @Autowired
     private MigrationMainTaskMapper migrationMainTaskMapper;
     @Autowired
+    @Lazy
     private MigrationTaskService migrationTaskService;
     @Autowired
+    @Lazy
     private MigrationTaskHostRefService migrationTaskHostRefService;
     @Autowired
     private MigrationTaskGlobalParamService migrationTaskGlobalParamService;
@@ -131,8 +132,6 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     @Autowired
     private MigrationTaskExecResultDetailService migrationTaskExecResultDetailService;
     @Autowired
-    private MainTaskEnvErrorHostService mainTaskEnvErrorHostService;
-    @Autowired
     private MigrationHostPortalInstallHostService migrationHostPortalInstallHostService;
     @Autowired
     private MigrationTaskAlertService migrationTaskAlertService;
@@ -146,8 +145,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private EncryptionUtils encryptionUtils;
-
     @Autowired
+    @Lazy
     private MultiDbPortal multiDbPortal;
 
     /**

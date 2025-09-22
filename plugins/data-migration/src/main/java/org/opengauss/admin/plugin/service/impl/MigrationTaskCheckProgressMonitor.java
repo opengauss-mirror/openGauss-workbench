@@ -28,7 +28,7 @@ import static org.opengauss.admin.plugin.enums.TaskStatus.FULL_CHECK_START;
 
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
 import cn.hutool.core.thread.ThreadUtil;
@@ -52,6 +52,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -203,10 +204,16 @@ public class MigrationTaskCheckProgressMonitor implements Runnable {
                 summary.setTaskId(taskId);
                 summary.setSourceDb(migrationTask.getSourceDb());
                 summary.setSinkDb(migrationTask.getTargetDb());
-                LambdaUpdateWrapper<MigrationTaskCheckProgressSummary> updateWrapper = Wrappers.lambdaUpdate(
+                LambdaQueryWrapper<MigrationTaskCheckProgressSummary> queryWrapper = Wrappers.lambdaQuery(
                     MigrationTaskCheckProgressSummary.class);
-                updateWrapper.eq(MigrationTaskCheckProgressSummary::getTaskId, taskId);
-                summaryService.saveOrUpdate(summary, updateWrapper);
+                queryWrapper.eq(MigrationTaskCheckProgressSummary::getTaskId, taskId);
+                MigrationTaskCheckProgressSummary summaryPersint = summaryService.getOne(queryWrapper);
+                if (Objects.isNull(summaryPersint)) {
+                    summaryService.save(summary);
+                } else {
+                    summary.setId(summaryPersint.getId());
+                    summaryService.updateById(summary);
+                }
             });
             log.info("refresh data check summary information, subTaskId: {} ", taskId);
         } else {

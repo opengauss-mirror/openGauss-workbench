@@ -24,8 +24,8 @@
 package com.nctigba.alert.monitor.config;
 
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
-import com.baomidou.dynamic.datasource.creator.DruidDataSourceCreator;
-import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
+import com.baomidou.dynamic.datasource.creator.DataSourceProperty;
+import com.baomidou.dynamic.datasource.creator.druid.DruidDataSourceCreator;
 import com.gitee.starblues.bootstrap.PluginContextHolder;
 import com.gitee.starblues.spring.environment.EnvironmentProvider;
 import com.nctigba.alert.monitor.enums.DbDataLocationEnum;
@@ -64,14 +64,14 @@ public class DataSourceConfig {
         primaryProperty.setUsername(environmentProvider.getString("spring.datasource.username"));
         primaryProperty.setPassword(environmentProvider.getString("spring.datasource.password"));
         primaryProperty.setDriverClassName(environmentProvider.getString("spring.datasource.driver-class-name"));
-        DataSource primary = druidDataSourceCreator.doCreateDataSource(primaryProperty);
-        DynamicRoutingDataSource dataSource = new DynamicRoutingDataSource();
+        DataSource primary = druidDataSourceCreator.createDataSource(primaryProperty);
+        DynamicRoutingDataSource dataSource = new DynamicRoutingDataSource(new ArrayList<>());
         dataSource.addDataSource("primary", primary);
         dataSource.setPrimary("primary");
         return dataSource;
     }
 
-    @Bean
+    @Bean("alterDataSourceScriptDatabaseInitializer")
     @Profile("!dev")
     DataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSource dataSource) {
         EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();

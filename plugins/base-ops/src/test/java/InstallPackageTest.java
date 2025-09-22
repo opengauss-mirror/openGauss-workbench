@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
+ */
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,31 +22,34 @@ import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerService;
 import org.opengauss.admin.plugin.service.ops.impl.OpsPackageManagerService;
 import org.opengauss.admin.system.plugin.facade.SysSettingFacade;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.constraints.AssertTrue;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
+/**
+ * InstallPackageTest
+ *
+ * @author: wangchao
+ * @Date: 2025/9/11 21:21
+ * @since 7.0.0-RC2
+ **/
 @RunWith(MockitoJUnitRunner.class)
 @ExtendWith(MockitoExtension.class)
 public class InstallPackageTest {
+    private static final int USER_ID = 1;
 
     @InjectMocks
     @Spy
     private IOpsPackageManagerService opsPackageManagerService = new OpsPackageManagerService();
-
     @Mock
     private SysSettingFacade sysSettingFacade;
-    @Mock
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
-    private static final int USER_ID = 1;
 
     @Before
     public void setup() throws IOException, InterruptedException {
@@ -56,7 +63,7 @@ public class InstallPackageTest {
     @Test
     public void testSavePackage() throws IOException {
         OpsPackageManagerEntity pkgEntity = new OpsPackageManagerEntity();
-        File file = new File("D:\\upload\\openGauss-5.1.0-CentOS-64bit-all.tar.gz");
+        File file = new File("upload/openGauss-5.1.0-CentOS-64bit-all.tar.gz");
         // 创建一个FileInputStream对象，用于读取文件内容
         FileInputStream fis = new FileInputStream(file);
         MultipartFile multipartFile = new MockMultipartFile("file", file.getName(), "text/plain", fis);
@@ -72,10 +79,9 @@ public class InstallPackageTest {
 
     @Test
     public void testGetCpuArchByPackagePath() throws IOException {
-        String result = opsPackageManagerService.getCpuArchByPackagePath("D:/upload/openGauss-Lite-5.1.1-CentOS-x86_64.tar.gz", OpenGaussVersionEnum.LITE);
+        String result = opsPackageManagerService.getCpuArchByPackagePath(
+            "/upload/openGauss-Lite-5.1.1-CentOS-x86_64.tar.gz", OpenGaussVersionEnum.LITE);
         Assert.assertEquals(result, "x86_64");
-//        result = opsPackageManagerService.getCpuArchByPackagePath("D:/upload/openGauss-5.0.1-CentOS-64bit.tar.bz2", OpenGaussVersionEnum.MINIMAL_LIST);
-//        Assert.assertEquals(result, "x86_64");
     }
 
     @Test
@@ -85,7 +91,8 @@ public class InstallPackageTest {
 
     @Test
     public void testAnalysisPkg() {
-        OpsPackageVO result = opsPackageManagerService.analysisPkg("openGauss-Lite-5.0.1-CentOS-x86_64.tar.gz", PackageTypeEnum.OPENGAUSS.getPackageType());
+        OpsPackageVO result = opsPackageManagerService.analysisPkg("openGauss-Lite-5.0.1-CentOS-x86_64.tar.gz",
+            PackageTypeEnum.OPENGAUSS.getPackageType());
         Assert.assertEquals(result.getOs(), "centos");
         Assert.assertEquals(result.getCpuArch(), "x86_64");
         Assert.assertEquals(result.getPackageVersion(), "LITE");
@@ -94,21 +101,20 @@ public class InstallPackageTest {
 
     @Test
     public void testDeletePkgTar() {
-        boolean result = opsPackageManagerService.deletePkgTar("D:\\upload\\openGauss-5.0.1-CentOS-64bit.tar.bz2", "1");
-        Assert.assertTrue(result);
+        Assert.assertTrue(opsPackageManagerService.deletePkgTar("upload/openGauss-5.0.1-CentOS-64bit.tar.bz2", "1"));
     }
 
     @Test
     public void testGetSysUploadPath() {
         String result = opsPackageManagerService.getSysUploadPath(1);
-        Assert.assertEquals(result, "D:\\upload");
+        Assert.assertEquals(result, "upload");
     }
 
     private SysSettingEntity getSysSetting() {
         SysSettingEntity sysSetting = new SysSettingEntity();
         sysSetting.setId(1);
         sysSetting.setUserId(1);
-        sysSetting.setUploadPath("D:\\upload");
+        sysSetting.setUploadPath("upload");
         return sysSetting;
     }
 
@@ -117,7 +123,7 @@ public class InstallPackageTest {
         entity.setPackageId("1");
         UploadInfo uploadInfo = new UploadInfo();
         uploadInfo.setName("TestPkgName");
-        uploadInfo.setRealPath("D:\\upload\\1.txt");
+        uploadInfo.setRealPath("upload/1.txt");
         entity.setPackagePath(uploadInfo);
         return entity;
     }

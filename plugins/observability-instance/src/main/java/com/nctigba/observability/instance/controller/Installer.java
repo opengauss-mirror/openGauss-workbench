@@ -29,7 +29,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.websocket.Session;
+import jakarta.websocket.Session;
 
 import cn.hutool.json.JSONArray;
 import com.nctigba.observability.instance.model.dto.ExporterInstallDTO;
@@ -54,6 +54,13 @@ import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Installer SocketExtract
+ *
+ * @author: wangchao
+ * @Date: 2025/9/11 21:21
+ * @since 7.0.0-RC2
+ **/
 @Slf4j
 @Service
 @Extract(bus = PluginListener.pluginId)

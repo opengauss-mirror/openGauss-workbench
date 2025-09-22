@@ -63,7 +63,7 @@ public class DataSourceConfig {
                 .build();
     }
 
-    @Bean
+    @Bean("dataMigrationDataSourceScriptDatabaseInitializer")
     DataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSource dataSource) {
         EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();
         String driverClassName = environmentProvider.getString("spring.datasource.driver-class-name");

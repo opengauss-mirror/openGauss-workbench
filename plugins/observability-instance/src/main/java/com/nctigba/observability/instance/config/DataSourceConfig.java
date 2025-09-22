@@ -24,8 +24,8 @@
 package com.nctigba.observability.instance.config;
 
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
-import com.baomidou.dynamic.datasource.creator.DruidDataSourceCreator;
-import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
+import com.baomidou.dynamic.datasource.creator.DataSourceProperty;
+import com.baomidou.dynamic.datasource.creator.druid.DruidDataSourceCreator;
 import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceProperties;
 import com.gitee.starblues.bootstrap.PluginContextHolder;
 import com.gitee.starblues.spring.environment.EnvironmentProvider;
@@ -44,6 +44,7 @@ import org.springframework.context.annotation.Profile;
 import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Optional;
 
 /**
@@ -81,16 +82,17 @@ public class DataSourceConfig {
         primaryProperty.setPassword(environmentProvider.getString("spring.datasource.password"));
         String driverClassName = environmentProvider.getString("spring.datasource.driver-class-name");
         primaryProperty.setDriverClassName(driverClassName);
-        DataSource primary = druidDataSourceCreator.doCreateDataSource(primaryProperty);
-        var d = new DynamicRoutingDataSource();
-        d.addDataSource("primary", primary);
-        d.setPrimary("primary");
+        DataSource primary = druidDataSourceCreator.createDataSource(primaryProperty);
+        DynamicRoutingDataSource dataSource = new DynamicRoutingDataSource(new ArrayList<>());
+        dataSource.addDataSource("primary", primary);
+        dataSource.setPrimary("primary");
         if (GS_DRIVER.equals(driverClassName)) {
             DataSourceProperty embedded = properties.getDatasource().get("embedded");
-            embedded.setDriverClassName(SQLITE_DRIVER).setUrl(SQLITE_URL);
+            embedded.setDriverClassName(SQLITE_DRIVER);
+            embedded.setUrl(SQLITE_URL);
             initDbFile();
         }
-        return d;
+        return dataSource;
     }
 
     /**
@@ -99,7 +101,7 @@ public class DataSourceConfig {
      * @param dataSource DataSource
      * @return DataSourceScriptDatabaseInitializer
      */
-    @Bean
+    @Bean("instanceDataSourceScriptDatabaseInitializer")
     @Profile("!dev")
     public DataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSource dataSource) {
         EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();

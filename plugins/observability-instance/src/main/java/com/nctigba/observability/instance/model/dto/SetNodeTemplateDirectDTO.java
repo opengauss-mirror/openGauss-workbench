@@ -24,8 +24,6 @@
 
 package com.nctigba.observability.instance.model.dto;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -36,10 +34,7 @@ import java.util.List;
  * @since 2023/12/1
  */
 @Data
-@ApiModel("DTO for setting metrics interval for one database node")
 public class SetNodeTemplateDirectDTO {
-    @ApiModelProperty(value = "Node id for database", required = true)
     private String nodeId;
-    @ApiModelProperty(value = "Metrics group names and intervals")
     private List<SetNodeTemplateDirectDetailDTO> details;
 }

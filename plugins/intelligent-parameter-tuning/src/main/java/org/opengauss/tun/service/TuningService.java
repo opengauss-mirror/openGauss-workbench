@@ -27,7 +27,7 @@ import org.opengauss.tun.domain.vo.LogVo;
 import org.opengauss.tun.domain.vo.TaskLogVo;
 import org.opengauss.tun.utils.response.RespBean;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * TuningService

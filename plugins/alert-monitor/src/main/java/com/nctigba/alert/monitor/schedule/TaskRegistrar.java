@@ -29,6 +29,7 @@ import com.nctigba.alert.monitor.model.entity.AlertScheduleDO;
 import com.nctigba.alert.monitor.service.AlertScheduleService;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.config.CronTask;
 import org.springframework.stereotype.Component;
@@ -50,6 +51,7 @@ public class TaskRegistrar implements DisposableBean {
     @Autowired
     private TaskScheduler taskScheduler;
     @Autowired
+    @Lazy
     private AlertScheduleService scheduleService;
 
     public TaskScheduler getScheduler() {

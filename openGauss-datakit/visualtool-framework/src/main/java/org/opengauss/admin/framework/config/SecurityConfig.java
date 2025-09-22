@@ -29,15 +29,18 @@ import org.opengauss.admin.framework.security.handle.AuthenticationEntryPointImp
 import org.opengauss.admin.framework.security.handle.LogoutSuccessHandlerImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.filter.CorsFilter;
@@ -47,14 +50,9 @@ import org.springframework.web.filter.CorsFilter;
  *
  * @author xielibo
  */
-@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
-    /**
-     * Custom user authentication logic
-     */
-    @Autowired
-    private UserDetailsService userDetailsService;
-
+@EnableWebSecurity
+@Configuration
+public class SecurityConfig {
     /**
      * Authentication failure Handler
      */
@@ -86,56 +84,64 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      * @throws Exception
      */
     @Bean
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
+    public AuthenticationManager authenticationManager(BCryptPasswordEncoder bCryptPasswordEncoder,
+        UserDetailsService userDetailService) {
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider(userDetailService);
+        authenticationProvider.setPasswordEncoder(bCryptPasswordEncoder);
+        return new ProviderManager(authenticationProvider);
     }
 
-    @Override
-    protected void configure(HttpSecurity httpSecurity) throws Exception {
+    /**
+     * filter chain
+     *
+     * @param httpSecurity httpSecurity
+     * @return SecurityFilterChain
+     * @throws Exception Exception
+     */
+    @Bean
+    protected SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
-                .csrf().disable()
-                .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-                .authorizeRequests()
-                .antMatchers("/login", "/register", "/captchaImage").anonymous()
-                .antMatchers(
-                        HttpMethod.GET,
-                        "/",
-                        "/*.html",
-                        "/**/*.html",
-                        "/**/*.css",
-                        "/**/*.js",
-                        "/img/**",
-                        "/profile/**"
-                ).permitAll()
-                .antMatchers("/*.ico").anonymous()
-                .antMatchers("/notice/send").anonymous()
-                .antMatchers("/common/download**").anonymous()
-                .antMatchers("/common/download/resource**").anonymous()
-                .antMatchers("/swagger-ui.html").anonymous()
-                .antMatchers("/swagger-resources/**").anonymous()
-                .antMatchers("/webjars/**").anonymous()
-                .antMatchers("/*/api-docs").anonymous()
-                .antMatchers("/websocket/**").anonymous()
-                .antMatchers("/ws/**").anonymous()
-                .antMatchers("/static-plugin/**").anonymous()
-                .antMatchers("/plugins/observability-sql-diagnosis/sqlDiagnosis/api/open/v1/diagnosisTasks/**").anonymous()
-				.antMatchers("/plugins/alert-monitor/api/v1/alerts").anonymous()
-                .antMatchers("/plugins/oauth-login/oauth/**").anonymous()
-                .antMatchers("/login").anonymous()
-                .antMatchers("/pubKey").anonymous()
-                .antMatchers("/modeling/visualization/report/share/**").permitAll()
-                .antMatchers("/prometheus").permitAll()
-                .antMatchers("/agent/**").permitAll()
-                .antMatchers("/receive/**").permitAll()
-                .anyRequest().authenticated()
-                .and()
-                .headers().frameOptions().disable();
-        httpSecurity.logout().logoutUrl("/logout").logoutSuccessHandler(logoutSuccessHandler);
-        httpSecurity.addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);
-        httpSecurity.addFilterBefore(corsFilter, JwtAuthenticationTokenFilter.class);
-        httpSecurity.addFilterBefore(corsFilter, LogoutFilter.class);
+            // 配置注销
+            .logout(logout -> logout.logoutUrl("/logout").logoutSuccessHandler(logoutSuccessHandler))
+            // 添加过滤器
+            .addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(corsFilter, JwtAuthenticationTokenFilter.class)
+            .addFilterBefore(corsFilter, LogoutFilter.class)
+            // 禁用 CSRF
+            .csrf(AbstractHttpConfigurer::disable)
+            // 异常处理
+            .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(unauthorizedHandler))
+            // 无状态会话
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // 授权配置（关键修改）
+            .authorizeHttpRequests(authorize -> authorize
+                // 允许所有用户访问的端点
+                .requestMatchers("/login", "/register", "/captchaImage", "/pubKey")
+                .permitAll()
+                // 静态资源
+                .requestMatchers(HttpMethod.GET, "/", "/*.html", "/*/*.html", "/*/*.css", "/*/*.js", "/img/**",
+                    "/profile/**")
+                .permitAll()
+                .requestMatchers("/*.ico", "/notice/send", "/common/download**", "/common/download/resource**")
+                .permitAll()
+                // WebSocket
+                .requestMatchers("/websocket/**", "/ws/**")
+                .permitAll()
+                // 插件相关  添加需要的静态资源路径（关键）
+                .requestMatchers("/static-plugin/**", "/plugins/base-ops/**", "/plugins/oauth-login/oauth/**",
+                    "/plugins/alert-monitor/api/v1/alerts",
+                    "/plugins/observability-sql-diagnosis/sqlDiagnosis/api/open/v1/diagnosisTasks/**")
+                .permitAll()
+                // 其他公共端点
+                .requestMatchers("/webjars/**", "/agent/**", "/receive/**", "/prometheus",
+                    "/modeling/visualization/report/share/**")
+                .permitAll()
+                // 其他请求需要认证
+                .anyRequest()
+                .authenticated())
+            // 禁用 X-Frame-Options 以便嵌入 iframe
+            .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
+        return httpSecurity.build();
     }
 
     /**
@@ -144,13 +150,5 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    /**
-     * Authentication interface
-     */
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder());
     }
 }

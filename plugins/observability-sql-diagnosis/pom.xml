@@ -17,7 +17,8 @@
 		<test.skip>true</test.skip>
 		<web.build.skip>false</web.build.skip>
 		<web.clean.skip>false</web.clean.skip>
-
+		<!-- jsqlparser4.4版本为适配com.nctigba.observability.sql.util.PointUtils相关函数，高版本不支持部分函数实现 -->
+		<jsqlparser.version>4.4</jsqlparser.version>
 		<nashorn-core.version>15.3</nashorn-core.version>
 		<es-java-client.version>8.3.3</es-java-client.version>
 		<jakarta-json.version>2.1.3</jakarta-json.version>
@@ -39,13 +40,28 @@
 					<groupId>org.springframework.boot</groupId>
 					<artifactId>spring-boot-starter-data-redis</artifactId>
 				</exclusion>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-data-redis</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.tomcat.embed</groupId>
+					<artifactId>tomcat-embed-websocket</artifactId>
+				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-websocket</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.gitee.starblues</groupId>
 			<artifactId>spring-brick-bootstrap</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>com.gitee.starblues</groupId>
 			<artifactId>spring-brick-maven-packager</artifactId>
@@ -92,15 +108,28 @@
 		<!-- data -->
 		<dependency>
 			<groupId>com.baomidou</groupId>
-			<artifactId>mybatis-plus-boot-starter</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.alibaba</groupId>
-			<artifactId>druid-spring-boot-starter</artifactId>
+			<artifactId>mybatis-plus-spring-boot3-starter</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.baomidou</groupId>
-			<artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+			<artifactId>mybatis-plus-extension</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.baomidou</groupId>
+			<artifactId>mybatis-plus-jsqlparser</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>druid-spring-boot-3-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.baomidou</groupId>
+			<artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
+			<version>${jakarta-servlet-api.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -341,7 +370,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
+				<version>${maven-compiler-plugin.version}</version>
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
@@ -349,6 +378,13 @@
 					<compilerArgs>
 						<arg>-parameters</arg>
 					</compilerArgs>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${lombok.version}</version>
+						</path>
+					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
 			<plugin>

@@ -34,15 +34,15 @@ import com.nctigba.observability.instance.agent.exception.InitClientException;
 import com.nctigba.observability.instance.agent.pool.SshClientNodeSessionPool;
 import com.nctigba.observability.instance.agent.pool.SshClientSessionPool;
 import com.nctigba.observability.instance.agent.service.TargetService;
+
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.apache.sshd.client.channel.ChannelExec;
 import org.apache.sshd.client.channel.ClientChannelEvent;
 import org.apache.sshd.client.session.ClientSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;

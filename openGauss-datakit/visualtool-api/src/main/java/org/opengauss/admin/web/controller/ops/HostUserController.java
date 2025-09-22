@@ -29,9 +29,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.opengauss.admin.common.core.controller.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.HostUserBody;
 import org.opengauss.admin.common.core.page.TableDataInfo;
+import org.opengauss.admin.common.utils.OpsAssert;
+import org.opengauss.admin.system.service.ops.IHostService;
 import org.opengauss.admin.system.service.ops.IHostUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -46,9 +49,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/hostUser")
 public class HostUserController extends BaseController {
-
     @Autowired
     private IHostUserService hostUserService;
+    @Autowired
+    private IHostService hostService;
 
     @GetMapping("/page/{hostId}")
     public TableDataInfo page(@PathVariable("hostId") String hostId) {
@@ -73,14 +77,18 @@ public class HostUserController extends BaseController {
 
     @PostMapping
     public AjaxResult add(@RequestBody @Validated HostUserBody hostUserBody) {
-        hostUserService.add(hostUserBody);
+        OpsHostEntity host = hostService.getById(hostUserBody.getHostId());
+        OpsAssert.nonNull(host, "host id " + hostUserBody.getHostId() + " is invalid");
+        hostUserService.add(host, hostUserBody);
         return AjaxResult.success();
     }
 
     @PutMapping("/{hostUserId}")
     public AjaxResult edit(@PathVariable String hostUserId,
                            @RequestBody HostUserBody hostUserBody) {
-        hostUserService.edit(hostUserId, hostUserBody);
+        OpsHostEntity host = hostService.getById(hostUserBody.getHostId());
+        OpsAssert.nonNull(host, "host id " + hostUserBody.getHostId() + " is invalid");
+        hostUserService.edit(host, hostUserId, hostUserBody);
         return AjaxResult.success();
     }
 
@@ -98,7 +106,12 @@ public class HostUserController extends BaseController {
      */
     @GetMapping("/hasRootPermission/{userId}")
     public AjaxResult hasRootPermission(@PathVariable("userId") String userId) {
-        boolean hasPermission = hostUserService.hasRootPermission(userId);
+        OpsHostUserEntity hostUser = hostUserService.getById(userId);
+        OpsAssert.nonNull(hostUser, "host user id " + userId + " is invalid");
+
+        OpsHostEntity host = hostService.getById(hostUser.getHostId());
+        OpsAssert.nonNull(host, "user hostId " + hostUser.getHostId() + " is invalid");
+        boolean hasPermission = hostUserService.hasRootPermission(host, userId);
         return AjaxResult.success(hasPermission);
     }
 }

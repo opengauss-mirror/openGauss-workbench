@@ -23,8 +23,8 @@
 
 package com.nctigba.observability.instance.model.dto;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import com.nctigba.observability.instance.model.entity.OpsWdrDO.WdrScopeEnum;
 import com.nctigba.observability.instance.model.entity.OpsWdrDO.WdrTypeEnum;

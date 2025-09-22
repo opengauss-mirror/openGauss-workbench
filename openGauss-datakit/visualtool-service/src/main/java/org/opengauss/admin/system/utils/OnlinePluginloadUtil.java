@@ -23,7 +23,6 @@
 
 package org.opengauss.admin.system.utils;
 
-import com.gitee.starblues.integration.operator.PluginOperator;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.config.SystemConfig;
 import org.opengauss.admin.common.exception.ops.OpsException;
@@ -59,12 +58,6 @@ public class OnlinePluginloadUtil {
      */
     @Autowired
     private WsUtil wsUtil;
-
-    /**
-     * PluginOperator
-     */
-    @Autowired
-    private PluginOperator pluginOperator;
 
     /**
      * SysSettingFacade

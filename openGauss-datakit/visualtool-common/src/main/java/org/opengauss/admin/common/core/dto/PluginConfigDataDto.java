@@ -26,7 +26,7 @@ package org.opengauss.admin.common.core.dto;
 
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * @className: PluginConfigDataDto

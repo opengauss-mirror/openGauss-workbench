@@ -24,7 +24,6 @@
 package com.nctigba.observability.instance;
 
 import com.gitee.starblues.bootstrap.SpringPluginBootstrap;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.spring.extract.DefaultOpExtractFactory;
 import com.gitee.starblues.spring.extract.ExtractFactory;
 import org.mybatis.spring.annotation.MapperScan;
@@ -34,8 +33,6 @@ import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.plugin.facade.WsFacade;
 import org.opengauss.admin.system.service.IWebSocketService;
-import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
@@ -79,14 +76,9 @@ import org.springframework.context.annotation.Profile;
                         org.opengauss.admin.system.plugin.facade.TaskFacade.class})})
 @MapperScan({"com.nctigba.observability.instance.mapper", "org.opengauss.admin.system.mapper"})
 public class DevelopBootApplication extends SpringPluginBootstrap {
-    @Autowired
-    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-    EncryptionUtils encryptionUtils;
-
     public static void main(String[] args) {
         SpringApplication app = new SpringApplication(DevelopBootApplication.class);
         app.setAdditionalProfiles("dev");
-        app.run(args);
     }
 
     /**
@@ -98,15 +90,5 @@ public class DevelopBootApplication extends SpringPluginBootstrap {
     @Bean
     public ExtractFactory extractFactory() {
         return new DefaultOpExtractFactory();
-    }
-
-    /**
-     * Init encryption key
-     *
-     * @since 2023/12/1
-     */
-    @Bean
-    public void initForDev() {
-        encryptionUtils.getKey();
     }
 }

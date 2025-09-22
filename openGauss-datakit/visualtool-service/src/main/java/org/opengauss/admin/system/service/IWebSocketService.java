@@ -24,7 +24,7 @@
 
 package org.opengauss.admin.system.service;
 
-import javax.websocket.Session;
+import jakarta.websocket.Session;
 
 /**
  * @author lhf

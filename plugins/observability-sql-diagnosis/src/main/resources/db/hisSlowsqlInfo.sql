@@ -8,6 +8,6 @@ insert or ignore into tb_time_config values (1, 30, 300);
 
 CREATE TABLE IF NOT EXISTS tb_time_point (
     node_tablename text primary key,
-    start_time_point timestamp with time zone,
-    finish_time_point timestamp with time zone
+    start_time_point timestamp,
+    finish_time_point timestamp
 );

@@ -12,8 +12,8 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.vo.HostInfoVo;
 import org.opengauss.admin.common.utils.excel.TagsConverter;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;

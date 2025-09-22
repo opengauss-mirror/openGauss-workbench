@@ -25,7 +25,7 @@ import org.opengauss.admin.system.service.ops.IHostUserService;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * AgentSshLoginService

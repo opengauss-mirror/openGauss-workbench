@@ -27,7 +27,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotEmpty;
 
 /**
  * @author lhf

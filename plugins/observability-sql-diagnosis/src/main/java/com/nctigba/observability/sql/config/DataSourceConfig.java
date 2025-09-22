@@ -24,8 +24,8 @@
 package com.nctigba.observability.sql.config;
 
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
-import com.baomidou.dynamic.datasource.creator.DruidDataSourceCreator;
-import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
+import com.baomidou.dynamic.datasource.creator.DataSourceProperty;
+import com.baomidou.dynamic.datasource.creator.druid.DruidDataSourceCreator;
 import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSourceProperties;
 import com.gitee.starblues.bootstrap.PluginContextHolder;
 import com.gitee.starblues.spring.environment.EnvironmentProvider;
@@ -33,7 +33,6 @@ import com.nctigba.observability.sql.enums.DbDataLocationEnum;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.jdbc.init.DataSourceScriptDatabaseInitializer;
 import org.springframework.boot.sql.init.DatabaseInitializationMode;
 import org.springframework.boot.sql.init.DatabaseInitializationSettings;
@@ -44,6 +43,7 @@ import org.springframework.context.annotation.Profile;
 import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 
@@ -54,7 +54,6 @@ import java.util.Optional;
  * @since 2023/12/5
  */
 @Configuration
-@EnableConfigurationProperties(DynamicDataSourceProperties.class)
 public class DataSourceConfig {
     static final String GS_DRIVER = "org.opengauss.Driver";
     static final String SQLITE_DRIVER = "org.sqlite.JDBC";
@@ -84,8 +83,8 @@ public class DataSourceConfig {
         primaryProperty.setPassword(environmentProvider.getString("spring.datasource.password"));
         String driverClassName = environmentProvider.getString("spring.datasource.driver-class-name");
         primaryProperty.setDriverClassName(driverClassName);
-        DataSource primary = druidDataSourceCreator.doCreateDataSource(primaryProperty);
-        var d = new DynamicRoutingDataSource();
+        DataSource primary = druidDataSourceCreator.createDataSource(primaryProperty);
+        DynamicRoutingDataSource d = new DynamicRoutingDataSource(new ArrayList<>());
         d.addDataSource("primary", primary);
         d.setPrimary("primary");
         for (Map.Entry<String, DataSourceProperty> dataSourceProperty : properties.getDatasource().entrySet()) {
@@ -110,7 +109,7 @@ public class DataSourceConfig {
      * @param dataSource DataSource
      * @return DataSourceScriptDatabaseInitializer
      */
-    @Bean
+    @Bean("diagnosisDataSourceScriptDatabaseInitializer")
     @Profile("!dev")
     public DataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSource dataSource) {
         EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();

@@ -36,7 +36,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.concurrent.Executors;
 
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PreDestroy;
 
 /**
  * DisruptorConfig

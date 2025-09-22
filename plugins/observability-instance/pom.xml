@@ -13,8 +13,7 @@
     </parent>
     <properties>
         <nashorn.version>15.3</nashorn.version>
-        <velocity.version>2.2</velocity.version>
-        <springfox-boot-starter.version>3.0.0</springfox-boot-starter.version>
+        <velocity.version>2.4.1</velocity.version>
         <!--config-->
         <plugin-id>observability-instance</plugin-id>
         <npm.run.script>buildNoTest</npm.run.script>
@@ -51,6 +50,10 @@
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+        </dependency>
         <!-- same as framework -->
         <!-- common -->
         <dependency>
@@ -75,15 +78,23 @@
         <!-- data -->
         <dependency>
             <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>druid-spring-boot-starter</artifactId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>
-            <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+            <artifactId>mybatis-plus-extension</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-jsqlparser</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid-spring-boot-3-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>
@@ -119,12 +130,6 @@
             <groupId>org.openjdk.nashorn</groupId>
             <artifactId>nashorn-core</artifactId>
             <version>${nashorn.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-boot-starter</artifactId>
-            <version>${springfox-boot-starter.version}</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -168,12 +173,6 @@
                 <dependency>
                     <groupId>org.opengauss</groupId>
                     <artifactId>visualtool-framework</artifactId>
-                </dependency>
-                <dependency>
-                    <groupId>io.springfox</groupId>
-                    <artifactId>springfox-boot-starter</artifactId>
-                    <version>${springfox-boot-starter.version}</version>
-                    <scope>compile</scope>
                 </dependency>
             </dependencies>
         </profile>

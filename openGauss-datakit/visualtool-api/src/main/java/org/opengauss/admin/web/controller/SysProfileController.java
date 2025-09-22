@@ -21,7 +21,6 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.web.controller;
 
 import org.opengauss.admin.common.annotation.Log;
@@ -41,12 +40,6 @@ import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.file.FileUploadUtils;
 import org.opengauss.admin.framework.web.service.TokenService;
 import org.opengauss.admin.system.service.ISysUserService;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,9 +53,7 @@ import java.io.IOException;
  */
 @RestController
 @RequestMapping("/system/user/profile")
-@Api(tags = "user profile")
 public class SysProfileController extends BaseController {
-
     @Autowired
     private ISysUserService userService;
 
@@ -73,9 +64,6 @@ public class SysProfileController extends BaseController {
      * Get the currently logged in user information
      */
     @GetMapping
-    @ApiOperation(value = "get profile", notes = "get profile")
-    @ApiImplicitParams ({
-    })
     public AjaxResult profile() {
         LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
         SysUser user = loginUser.getUser();
@@ -89,9 +77,6 @@ public class SysProfileController extends BaseController {
      */
     @Log(title = "user profile", businessType = BusinessType.UPDATE)
     @PutMapping
-    @ApiOperation(value = "update info", notes = "update info")
-    @ApiImplicitParams ({
-    })
     public AjaxResult updateProfile(@RequestBody SysUser user) {
         LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
         if (!loginUser.getUser().getUserId().equals(user.getUserId())) {
@@ -121,11 +106,6 @@ public class SysProfileController extends BaseController {
      */
     @Log(title = "user profile", businessType = BusinessType.UPDATE)
     @PutMapping("/updatePwd")
-    @ApiOperation(value = "reset password", notes = "reset password")
-    @ApiImplicitParams ({
-        @ApiImplicitParam(name = "oldPassword", value = "oldPassword", required = true, dataType = "string"),
-        @ApiImplicitParam(name = "newPassword", value = "newPassword", required = true, dataType = "string")
-    })
     public AjaxResult updatePwd(@RequestBody ModifyPasswordDto modifyPasswordDto) {
         String oldPassword = RsaUtils.decrypt(modifyPasswordDto.getOldPassword());
         String newPassword = RsaUtils.decrypt(modifyPasswordDto.getNewPassword());
@@ -152,9 +132,6 @@ public class SysProfileController extends BaseController {
      */
     @Log(title = "user profile", businessType = BusinessType.UPDATE)
     @PostMapping("/avatar")
-    @ApiOperation(value = "upload avatar", notes = "upload avatar")
-    @ApiImplicitParams ({
-    })
     public AjaxResult avatar(@RequestParam("avatarfile") MultipartFile file) throws IOException {
         if (!file.isEmpty()) {
             LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());

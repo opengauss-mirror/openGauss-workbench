@@ -61,7 +61,7 @@ public class DataSourceConfig {
     @Autowired
     private ApplicationContext applicationContext;
 
-    @Bean
+    @Bean("customDataSourceInitializer")
     @Profile("!dev")
     DataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSourceProperties properties,
         DataSource dataSource) {

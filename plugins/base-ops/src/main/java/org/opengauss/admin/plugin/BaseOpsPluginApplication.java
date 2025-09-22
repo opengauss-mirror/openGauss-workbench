@@ -24,11 +24,20 @@
 package org.opengauss.admin.plugin;
 
 import com.gitee.starblues.bootstrap.SpringPluginBootstrap;
+
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication()
+/**
+ * MessageSourceUtils
+ *
+ * @author: wangchao
+ * @Date: 2025/9/11 21:21
+ * @since 7.0.0-RC2
+ **/
+@SpringBootApplication
+@MapperScan("org.opengauss.admin.plugin.mapper")
 public class BaseOpsPluginApplication extends SpringPluginBootstrap {
-
     public static void main(String[] args) {
         new BaseOpsPluginApplication().run(args);
     }

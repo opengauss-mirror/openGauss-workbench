@@ -36,7 +36,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.util.CollectionUtils;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;

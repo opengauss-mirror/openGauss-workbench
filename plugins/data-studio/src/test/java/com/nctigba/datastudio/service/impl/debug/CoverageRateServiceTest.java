@@ -40,7 +40,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.ServletOutputStream;
+import jakarta.servlet.ServletOutputStream;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;

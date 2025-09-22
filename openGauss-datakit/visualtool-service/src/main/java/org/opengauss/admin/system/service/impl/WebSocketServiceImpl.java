@@ -29,9 +29,9 @@ import org.opengauss.admin.system.plugin.extract.SocketExtract;
 import org.opengauss.admin.system.service.IWebSocketService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-import javax.websocket.Session;
+import jakarta.websocket.Session;
 import java.io.IOException;
 import java.util.List;
 
@@ -42,9 +42,8 @@ import java.util.List;
  * @date: 2022-11-15 12:49
  **/
 @Slf4j
-@Service
+@Component
 public class WebSocketServiceImpl implements IWebSocketService {
-
     @Autowired
     private ExtractFactory extractFactory;
 

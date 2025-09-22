@@ -44,7 +44,7 @@ import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
