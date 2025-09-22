@@ -41,6 +41,7 @@ import java.util.concurrent.TimeoutException;
 
 import cn.hutool.core.util.StrUtil;
 import com.nctigba.observability.instance.enums.SshSessionPool;
+import com.nctigba.observability.instance.exception.TipsException;
 import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.channel.ClientChannelEvent;
 import org.apache.sshd.client.session.ClientSession;
@@ -50,10 +51,16 @@ import org.opengauss.admin.common.exception.CustomException;
 import cn.hutool.core.thread.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * SshSessionUtils
+ *
+ * @since 2025/9/22 20:58
+ */
 @Slf4j
 public class SshSessionUtils implements AutoCloseable {
     private static final int SESSION_TIMEOUT = 10000;
     private static final int CHANNEL_TIMEOUT = 1000 * 60 * 5;
+    private static final String BASH_ERR = "/.bashrc:";
 
     public enum command {
         ARCH("arch"),
@@ -195,6 +202,14 @@ public class SshSessionUtils implements AutoCloseable {
     }
 
     public synchronized void upload(InputStream in, String target) throws IOException {
+        if (StrUtil.isNotBlank(excessStr)) {
+            String[] excessArr = excessStr.split(System.lineSeparator());
+            for (String str : excessArr) {
+                if (!str.contains(BASH_ERR)) {
+                    throw new TipsException("tips.exception.uploadFail");
+                }
+            }
+        }
         var sf = SftpClientFactory.instance().createSftpFileSystem(session);
         var path = sf.getDefaultDir().resolve(target);
         Files.copy(in, path, StandardCopyOption.REPLACE_EXISTING);
