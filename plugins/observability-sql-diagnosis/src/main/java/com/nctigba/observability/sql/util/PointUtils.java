@@ -56,10 +56,9 @@ import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.FromItem;
+import net.sf.jsqlparser.statement.select.LateralSubSelect;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
-import net.sf.jsqlparser.statement.select.SelectBody;
-import net.sf.jsqlparser.statement.select.SubSelect;
 import net.sf.jsqlparser.util.TablesNamesFinder;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.exception.CustomException;
@@ -294,9 +293,8 @@ public class PointUtils {
             Statement statement = CCJSqlParserUtil.parse(new StringReader(sql));
             StringBuilder sb = new StringBuilder();
             if (statement instanceof Select) {
-                Select selectStatement = (Select) statement;
                 TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
-                List<String> tableList = tablesNamesFinder.getTableList(selectStatement);
+                List<String> tableList = tablesNamesFinder.getTableList(statement);
                 for (String table : tableList) {
                     sb.append("'");
                     sb.append(table.replace("\"", ""));
@@ -326,14 +324,14 @@ public class PointUtils {
             if (statement instanceof Select) {
                 Select selectStatement = (Select) statement;
                 PlainSelect plainSelect = new PlainSelect();
-                SelectBody selectBody = selectStatement.getSelectBody();
+                Select selectBody = selectStatement.getSelectBody();
                 if (selectBody instanceof PlainSelect) {
                     plainSelect = (PlainSelect) selectBody;
                 }
                 FromItem fromItem = plainSelect.getFromItem();
-                if (fromItem instanceof SubSelect) {
-                    SubSelect subSelect = (SubSelect) fromItem;
-                    SelectBody subSelectBody = subSelect.getSelectBody();
+                if (fromItem instanceof LateralSubSelect) {
+                    LateralSubSelect subSelect = (LateralSubSelect) fromItem;
+                    Select subSelectBody = subSelect.getSelectBody();
                     if (subSelectBody instanceof PlainSelect) {
                         plainSelect = (PlainSelect) subSelectBody;
                     }
@@ -357,10 +355,10 @@ public class PointUtils {
             conditions.addAll(recursionExpression(andExpression.getRightExpression()));
         } else if (expression instanceof EqualsTo) {
             EqualsTo equalsTo = (EqualsTo) expression;
-            if (equalsTo.getRightExpression() instanceof SubSelect) {
-                SubSelect rightExpression = (SubSelect) equalsTo.getRightExpression();
+            if (equalsTo.getRightExpression() instanceof LateralSubSelect) {
+                LateralSubSelect rightExpression = (LateralSubSelect) equalsTo.getRightExpression();
                 PlainSelect plainSelect = new PlainSelect();
-                SelectBody selectBody = rightExpression.getSelectBody();
+                Select selectBody = rightExpression.getSelectBody();
                 if (selectBody instanceof PlainSelect) {
                     plainSelect = (PlainSelect) selectBody;
                 }
