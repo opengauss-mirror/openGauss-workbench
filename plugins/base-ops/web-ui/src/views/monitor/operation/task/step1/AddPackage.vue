@@ -402,7 +402,7 @@ const submit = async () => {
       formData.append('packageVersion', data.formData.packageVersion)
       formData.append('uploadFile', data.fileList.file)
       axios({
-        url: `/installPackageManager/v2/save/upload/`,
+        url: `/installPackageManager/v2/save/upload`,
         method: 'POST',
         headers: {
           'Content-Type': 'multipart/form-data'

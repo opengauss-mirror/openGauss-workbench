@@ -440,11 +440,11 @@ export const delPackage = (packageId: string) => {
 }
 
 export const delPackageV2 = (data: KeyValue) => {
-  return axios.post(`/installPackageManager/v2/delete/package/`, data)
+  return axios.post(`/installPackageManager/v2/delete/package`, data)
 }
 
 export const checkPackage = (data: KeyValue) => {
-  return axios.post(`/installPackageManager/v2/check/package/`, data)
+  return axios.post(`/installPackageManager/v2/check/package`, data)
 }
 
 export const checkPkg = (packageId: String) => {
@@ -468,11 +468,11 @@ export const batchPackageOnline = (data: FormData) => {
 }
 
 export const batchPackageUpload = (name:KeyValue, os: KeyValue, cpuArch: KeyValue, packageVersion: KeyValue, packageVersionNum: KeyValue, packageUrl: KeyValue, file:any) => {
-  return axios.post(`/installPackageManager/v2/save/upload/?name=${name}&os=${os}&cpuArch=${cpuArch}&packageVersion=${packageVersion}&packageVersionNum=${packageVersionNum}&packageUrl=${packageUrl}`, file)
+  return axios.post(`/installPackageManager/v2/save/upload?name=${name}&os=${os}&cpuArch=${cpuArch}&packageVersion=${packageVersion}&packageVersionNum=${packageVersionNum}&packageUrl=${packageUrl}`, file)
 }
 
 export const packageOnlineUpdate = (packageId:string, wsBusinessId:string) => {
-  return axios.post(`/installPackageManager/v2/update/online/?packageId=${packageId}&wsBusinessId=${wsBusinessId}`)
+  return axios.post(`/installPackageManager/v2/update/online?packageId=${packageId}&wsBusinessId=${wsBusinessId}`)
 }
 
 export const packageUploadUpdate = (params: KeyValue, data: KeyValue) => {
