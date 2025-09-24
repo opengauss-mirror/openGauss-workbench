@@ -26,7 +26,7 @@ import org.opengauss.collect.domain.CollectPeriod;
 import org.opengauss.collect.domain.LinuxConfig;
 import org.opengauss.collect.utils.response.RespBean;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * SqlOperation

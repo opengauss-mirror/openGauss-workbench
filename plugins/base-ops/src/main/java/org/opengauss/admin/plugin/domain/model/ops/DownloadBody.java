@@ -25,7 +25,7 @@ package org.opengauss.admin.plugin.domain.model.ops;
 
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 /**
  * @author lhf

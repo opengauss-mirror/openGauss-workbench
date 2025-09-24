@@ -26,7 +26,7 @@ package com.nctigba.observability.instance.controller;
 import java.beans.PropertyEditorSupport;
 import java.util.Date;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.utils.DateUtils;

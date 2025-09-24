@@ -36,14 +36,15 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.stereotype.Component;
 
 /**
  * @author xielibo
  * @date 2023/01/14 09:01
  */
 @Slf4j
+@Component
 public class DataMigrationPluginListener implements ApplicationListener<ApplicationEvent> {
-
     @Override
     public void onApplicationEvent(ApplicationEvent event) {
         if (event instanceof ApplicationEnvironmentPreparedEvent) {

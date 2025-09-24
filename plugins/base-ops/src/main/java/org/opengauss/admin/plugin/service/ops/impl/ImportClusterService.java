@@ -61,7 +61,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * ImportClusterService

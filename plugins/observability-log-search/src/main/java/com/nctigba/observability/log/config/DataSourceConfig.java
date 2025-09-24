@@ -24,8 +24,8 @@
 package com.nctigba.observability.log.config;
 
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
-import com.baomidou.dynamic.datasource.creator.DruidDataSourceCreator;
-import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
+import com.baomidou.dynamic.datasource.creator.DataSourceProperty;
+import com.baomidou.dynamic.datasource.creator.druid.DruidDataSourceCreator;
 import com.gitee.starblues.bootstrap.PluginContextHolder;
 import com.gitee.starblues.spring.environment.EnvironmentProvider;
 import com.nctigba.observability.log.enums.DbDataLocationEnum;
@@ -40,6 +40,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
+
+import java.util.ArrayList;
 import java.util.Optional;
 
 /**
@@ -66,8 +68,8 @@ public class DataSourceConfig {
         primaryProperty.setUsername(environmentProvider.getString("spring.datasource.username"));
         primaryProperty.setPassword(environmentProvider.getString("spring.datasource.password"));
         primaryProperty.setDriverClassName(environmentProvider.getString("spring.datasource.driver-class-name"));
-        DataSource primary = druidDataSourceCreator.doCreateDataSource(primaryProperty);
-        var d = new DynamicRoutingDataSource();
+        DataSource primary = druidDataSourceCreator.createDataSource(primaryProperty);
+        DynamicRoutingDataSource d = new DynamicRoutingDataSource(new ArrayList<>());
         d.addDataSource("primary", primary);
         d.setPrimary("primary");
         return d;
@@ -79,7 +81,7 @@ public class DataSourceConfig {
      * @param dataSource DataSource
      * @return DataSourceScriptDatabaseInitializer
      */
-    @Bean
+    @Bean("logSearchDataSourceScriptDatabaseInitializer")
     @Profile("!dev")
     public DataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSource dataSource) {
         EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();

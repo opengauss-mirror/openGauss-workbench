@@ -39,8 +39,8 @@ import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.uuid.IdUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -316,6 +316,8 @@ public class FileUploadUtils {
             log.error(errMsg);
             throw new IOException(errMsg);
         }
-        return new CommonsMultipartFile(fileItem);
+        byte[] bytes = fileItem.get();
+        String contentType = fileItem.getContentType();
+        return new MockMultipartFile(fieldName, fileName, contentType, bytes);
     }
 }

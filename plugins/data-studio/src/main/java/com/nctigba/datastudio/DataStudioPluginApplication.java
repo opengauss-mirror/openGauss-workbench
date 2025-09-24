@@ -23,7 +23,7 @@
 
 package com.nctigba.datastudio;
 
-import com.alibaba.druid.spring.boot.autoconfigure.DruidDataSourceAutoConfigure;
+import com.alibaba.druid.spring.boot3.autoconfigure.DruidDataSourceAutoConfigure;
 import com.gitee.starblues.bootstrap.SpringPluginBootstrap;
 import lombok.Generated;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

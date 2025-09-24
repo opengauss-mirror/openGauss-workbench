@@ -52,10 +52,11 @@ import org.opengauss.admin.plugin.service.ops.impl.function.InstallContextConfig
 import org.opengauss.admin.plugin.service.ops.impl.function.InstallContextConfigFunctionInstance;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -89,8 +90,10 @@ public class ProviderManager {
     private IOpsPackageManagerV2Service opsPackageManagerV2Service;
 
     @Resource
+    @Lazy
     private IOpsClusterTaskNodeService opsClusterTaskNodeService;
     @Resource
+    @Lazy
     private IOpsClusterTaskService opsClusterTaskService;
 
     /**

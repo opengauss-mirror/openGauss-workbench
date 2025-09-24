@@ -30,7 +30,7 @@ import org.opengauss.admin.plugin.exception.OauthLoginException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 /**
  * @date 2024/6/14 15:31

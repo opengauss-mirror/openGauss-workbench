@@ -27,7 +27,7 @@ package org.opengauss.admin.system.plugin.facade;
 import org.opengauss.admin.system.service.HostMonitorCacheService;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * Host Monitor Cache Facade

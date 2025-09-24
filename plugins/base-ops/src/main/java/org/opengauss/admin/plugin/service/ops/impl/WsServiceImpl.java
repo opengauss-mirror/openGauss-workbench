@@ -33,11 +33,11 @@ import org.opengauss.admin.plugin.domain.model.ops.cache.WsConnectorManager;
 import org.opengauss.admin.plugin.utils.JschUtil;
 import org.opengauss.admin.system.plugin.extract.SocketExtract;
 import com.jcraft.jsch.ChannelShell;
+
+import jakarta.websocket.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-import javax.websocket.Session;
 import java.io.IOException;
 import java.util.Objects;
 
@@ -47,10 +47,8 @@ import java.util.Objects;
  * @date 2022/8/6 18:14
  **/
 @Slf4j
-@Service
 @Extract(bus = "ops-handler")
 public class WsServiceImpl implements SocketExtract {
-
     @Autowired
     private WsConnectorManager wsConnectorManager;
     @Autowired

@@ -33,7 +33,6 @@ import com.nctigba.observability.instance.agent.exception.CollectException;
 import com.nctigba.observability.instance.agent.service.TargetService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;

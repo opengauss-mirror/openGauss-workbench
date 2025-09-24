@@ -24,8 +24,6 @@
 
 package com.nctigba.observability.instance.model.dto;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 /**
@@ -34,12 +32,8 @@ import lombok.Data;
  * @since 2023/12/1
  */
 @Data
-@ApiModel("DTO for details of setting metrics interval for one database node")
 public class SetNodeTemplateDirectDetailDTO {
-    @ApiModelProperty(value = "Metric group key", required = true)
     private String metricKey;
-    @ApiModelProperty(value = "Scrape interval for this metric group", required = true)
     private String interval;
-    @ApiModelProperty(value = "is the metric open", required = true)
     private Boolean isEnable;
 }

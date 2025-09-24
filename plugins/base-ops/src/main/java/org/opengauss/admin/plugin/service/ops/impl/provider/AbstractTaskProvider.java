@@ -41,7 +41,7 @@ import org.opengauss.admin.plugin.service.ops.impl.OpsHostRemoteService;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.InitializingBean;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.MessageFormat;

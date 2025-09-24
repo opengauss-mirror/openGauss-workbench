@@ -25,8 +25,8 @@ package com.nctigba.alert.monitor.model.validator;
 
 import com.nctigba.alert.monitor.model.validator.annotation.EnumInteger;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import java.util.Arrays;
 
 /**

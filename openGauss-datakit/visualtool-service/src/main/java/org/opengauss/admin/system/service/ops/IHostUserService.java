@@ -26,6 +26,7 @@ package org.opengauss.admin.system.service.ops;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.HostUserBody;
 
@@ -42,9 +43,24 @@ public interface IHostUserService extends IService<OpsHostUserEntity> {
 
     List<OpsHostUserEntity> listHostUserByHostIdList(List<String> hostIdList);
 
-    boolean add(HostUserBody hostUserBody);
+    /**
+     * add host user
+     *
+     * @param host host
+     * @param hostUserBody host user
+     * @return boolean
+     */
+    boolean add(OpsHostEntity host, HostUserBody hostUserBody);
 
-    boolean edit(String hostUserId, HostUserBody hostUserBody);
+    /**
+     * edit host user
+     *
+     * @param host host
+     * @param hostUserId host user id
+     * @param hostUserBody host user info
+     * @return boolean
+     */
+    boolean edit(OpsHostEntity host, String hostUserId, HostUserBody hostUserBody);
 
     boolean del(String hostUserId);
 
@@ -67,8 +83,9 @@ public interface IHostUserService extends IService<OpsHostUserEntity> {
     /**
      * check if the user has root permission
      *
+     * @param host host
      * @param userId user ID
      * @return has root permission or not
      */
-    boolean hasRootPermission(String userId);
+    boolean hasRootPermission(OpsHostEntity host, String userId);
 }

@@ -21,7 +21,7 @@ import reactor.util.retry.Retry;
 
 import org.opengauss.admin.common.core.domain.entity.agent.AgentInstallEntity;
 import org.opengauss.admin.common.exception.ops.AgentConnectionException;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -33,7 +33,7 @@ import java.time.Duration;
 import java.util.Locale;
 import java.util.concurrent.TimeoutException;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * AgentHttpProxy
@@ -69,7 +69,7 @@ public class AgentHttpProxy {
             .uri(url)
             .accept(MediaType.APPLICATION_JSON)
             .retrieve()
-            .onStatus(HttpStatus::isError, response -> handleHealthHttpError(response, agent))
+            .onStatus(HttpStatusCode::isError, response -> handleHealthHttpError(response, agent))
             .bodyToMono(String.class)
             .timeout(Duration.ofSeconds(2))
             .retryWhen(retryPolicy)
@@ -95,7 +95,7 @@ public class AgentHttpProxy {
             .uri(url)
             .accept(MediaType.APPLICATION_JSON)
             .retrieve()
-            .onStatus(HttpStatus::isError, response -> handleHealthHttpError(response, agent))
+            .onStatus(HttpStatusCode::isError, response -> handleHealthHttpError(response, agent))
             .bodyToMono(String.class)
             .timeout(Duration.ofSeconds(2))
             .retryWhen(retryPolicy)

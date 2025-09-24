@@ -24,6 +24,7 @@
 
 package org.opengauss.admin.system.plugin.facade;
 
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.HostUserBody;
 import org.opengauss.admin.system.service.ops.IHostService;
@@ -65,11 +66,13 @@ public class HostUserFacade {
     }
 
     public void add(HostUserBody hostUserBody) {
-        hostUserService.add(hostUserBody);
+        OpsHostEntity host = hostService.getById(hostUserBody.getHostId());
+        hostUserService.add(host, hostUserBody);
     }
 
     public void edit(String hostUserId, HostUserBody hostUserBody) {
-        hostUserService.edit(hostUserId, hostUserBody);
+        OpsHostEntity host = hostService.getById(hostUserBody.getHostId());
+        hostUserService.edit(host, hostUserId, hostUserBody);
     }
 
     public void del(String hostUserId) {

@@ -52,6 +52,7 @@ import com.nctigba.alert.monitor.service.AlertTemplateService;
 import com.nctigba.alert.monitor.util.MessageSourceUtils;
 import org.opengauss.admin.common.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,6 +83,7 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
     @Autowired
     private AlertTemplateRuleItemService templateRuleItemService;
     @Autowired
+    @Lazy
     private AlertClusterNodeConfService nodeConfService;
     @Autowired
     private PrometheusServiceImpl prometheusService;

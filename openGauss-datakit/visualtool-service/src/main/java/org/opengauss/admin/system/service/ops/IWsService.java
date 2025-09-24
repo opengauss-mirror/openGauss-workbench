@@ -26,7 +26,7 @@ package org.opengauss.admin.system.service.ops;
 
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
 
-import javax.websocket.Session;
+import jakarta.websocket.Session;
 import java.util.Optional;
 
 /**

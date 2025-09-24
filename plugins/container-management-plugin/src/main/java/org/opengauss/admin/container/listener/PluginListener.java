@@ -36,6 +36,7 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.stereotype.Component;
 
 /**
  * PluginListener
@@ -43,6 +44,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
  * @since 2024-08-16 13:48
  **/
 @Slf4j
+@Component
 public class PluginListener implements ApplicationListener<ApplicationEvent> {
     @Override
     public void onApplicationEvent(ApplicationEvent event) {

@@ -16,28 +16,30 @@
  * MonitorToolsPromDto.java
  *
  * IDENTIFICATION
- * openGauss-visualtool/visualtool-service/src/main/java/org/opengauss/admin/system/plugin/beans/MonitorToolsPromDto.java
+ * openGauss-visualtool/visualtool-service/src/main/java/org/opengauss/admin/system/plugin/beans/MonitorToolsPromDto
+ * .java
  *
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.system.plugin.beans;
 
-import io.prometheus.client.Gauge;
+import io.prometheus.metrics.core.metrics.Gauge;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+/**
+ * MonitorToolsPromDto
+ *
+ * @author: wangchao
+ * @Date: 2025/9/11 21:21
+ * @since 7.0.0-RC2
+ **/
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class MonitorToolsPromDto {
     private Gauge gauge;
-
     private String gaugeName;
-
-    public MonitorToolsPromDto() {
-    }
-
-    public MonitorToolsPromDto(Gauge gauge, String gaugeName) {
-        this.gauge = gauge;
-        this.gaugeName = gaugeName;
-    }
 }

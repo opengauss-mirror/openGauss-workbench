@@ -39,7 +39,6 @@ import com.nctigba.alert.monitor.mapper.NotifyWayMapper;
 import com.nctigba.alert.monitor.service.AlertRuleService;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
 import com.nctigba.alert.monitor.service.CommunicationService;
-import com.nctigba.alert.monitor.service.NotifyTemplateService;
 import com.nctigba.alert.monitor.service.NotifyWayService;
 import com.nctigba.alert.monitor.util.MessageSourceUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -63,8 +62,6 @@ public class NotifyWayServiceImpl extends ServiceImpl<NotifyWayMapper, NotifyWay
     private AlertRuleService ruleService;
     @Autowired
     private AlertTemplateRuleService templateRuleService;
-    @Autowired
-    private NotifyTemplateService notifyTemplateService;
     @Autowired
     private List<CommunicationService> communicationServices;
 

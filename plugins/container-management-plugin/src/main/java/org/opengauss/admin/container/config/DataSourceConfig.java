@@ -62,7 +62,7 @@ public class DataSourceConfig {
                 .password(password).build();
     }
 
-    @Bean
+    @Bean("containerDataSourceScriptDatabaseInitializer")
     @Profile("!test")
     DataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSource dataSource) {
         log.info("Enable database initialization option for application");

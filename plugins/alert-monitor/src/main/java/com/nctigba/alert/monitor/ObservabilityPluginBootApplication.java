@@ -26,6 +26,7 @@ package com.nctigba.alert.monitor;
 import org.mybatis.spring.annotation.MapperScan;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
+import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
@@ -67,6 +68,7 @@ public class ObservabilityPluginBootApplication {
     public static void main(String[] args) {
         SpringApplication app = new SpringApplication(ObservabilityPluginBootApplication.class);
         app.setAdditionalProfiles("dev");
+            app.setBannerMode(Banner.Mode.OFF);
         app.run(args);
     }
 }

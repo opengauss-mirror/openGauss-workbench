@@ -34,9 +34,6 @@ import org.opengauss.admin.common.enums.BusinessType;
 import org.opengauss.admin.common.enums.ResponseCode;
 import org.opengauss.admin.system.domain.SysWhiteList;
 import org.opengauss.admin.system.service.ISysWhiteListService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -53,7 +50,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/sys/whiteList")
-@Api(tags = "whiteList")
 public class SysWhiteListController extends BaseController {
     @Autowired
     private ISysWhiteListService iSysWhiteListService;
@@ -61,7 +57,6 @@ public class SysWhiteListController extends BaseController {
     /**
      * page list
      */
-    @ApiOperation(value = "page list", notes = "page list")
     @PreAuthorize("@ss.hasPermi('system:whiteList:list')")
     @GetMapping("/list")
     public TableDataInfo list(SysWhiteList whiteList) {
@@ -72,7 +67,6 @@ public class SysWhiteListController extends BaseController {
     /**
      * list
      */
-    @ApiOperation(value = "list", notes = "list")
     @PreAuthorize("@ss.hasPermi('system:whiteList:list')")
     @GetMapping("/list/all")
     public AjaxResult listAll(SysWhiteList whiteList) {
@@ -83,9 +77,6 @@ public class SysWhiteListController extends BaseController {
     /**
      * getById
      */
-    @ApiOperation(value = "getById", notes = "getById")
-    @ApiImplicitParams({
-    })
     @PreAuthorize("@ss.hasPermi('system:whiteList:query')")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Integer id) {
@@ -96,7 +87,6 @@ public class SysWhiteListController extends BaseController {
      * save
      */
     @Log(title = "whitelist", businessType = BusinessType.INSERT)
-    @ApiOperation(value = "save", notes = "save")
     @PreAuthorize("@ss.hasPermi('system:whiteList:add')")
     @PostMapping
     public AjaxResult add(@RequestBody SysWhiteList whiteList) {
@@ -108,7 +98,6 @@ public class SysWhiteListController extends BaseController {
      * update
      */
     @Log(title = "whitelist", businessType = BusinessType.UPDATE)
-    @ApiOperation(value = "update", notes = "update")
     @PreAuthorize("@ss.hasPermi('system:whiteList:edit')")
     @PutMapping
     public AjaxResult edit(@RequestBody SysWhiteList whiteList) {
@@ -142,7 +131,6 @@ public class SysWhiteListController extends BaseController {
      * delete
      */
     @Log(title = "whitelist", businessType = BusinessType.DELETE)
-    @ApiOperation(value = "delete", notes = "delete")
     @PreAuthorize("@ss.hasPermi('system:whiteList:remove')")
     @DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Integer[] ids) {

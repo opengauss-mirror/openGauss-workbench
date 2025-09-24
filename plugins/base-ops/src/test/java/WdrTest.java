@@ -1,6 +1,9 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
+ */
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.Session;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,30 +21,31 @@ import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.plugin.domain.model.ops.JschResult;
 import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
-import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
 import org.opengauss.admin.plugin.service.ops.IOpsWdrService;
-import org.opengauss.admin.plugin.service.ops.impl.ClusterOpsProviderManager;
-import org.opengauss.admin.plugin.service.ops.impl.OpsClusterServiceImpl;
 import org.opengauss.admin.plugin.service.ops.impl.OpsWdrServiceImpl;
-import org.opengauss.admin.plugin.service.ops.impl.provider.EnterpriseOpsProvider;
-import org.opengauss.admin.plugin.utils.JschUtil;
 import org.opengauss.admin.plugin.vo.ops.DwrSnapshotVO;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
-import org.opengauss.admin.system.plugin.facade.HostUserFacade;
-import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
+/**
+ * WdrTest
+ *
+ * @author: wangchao
+ * @Date: 2025/9/11 21:21
+ * @since 7.0.0-RC2
+ **/
 @RunWith(MockitoJUnitRunner.class)
 @ExtendWith(MockitoExtension.class)
 public class WdrTest {
+    private static final String HOST_ID = "testHostId";
+    private static final String OLD_CLUSTER_ID = "testClusterId";
 
     @InjectMocks
     @Spy
@@ -50,22 +54,7 @@ public class WdrTest {
     private IOpsClusterService opsClusterService;
     @Mock
     private HostFacade hostFacade;
-    @Mock
-    private HostUserFacade hostUserFacade;
-    @Mock
-    private IOpsClusterNodeService opsClusterNodeService;
-    @Mock
-    private JschUtil jschUtil;
-    @Mock
-    private EnterpriseOpsProvider enterpriseOpsProvider;
-    @Mock
-    private ClusterOpsProviderManager clusterOpsProviderManager;
-    @Mock
-    private EncryptionUtils encryptionUtils;
 
-    private static final String HOST_ID = "testHostId";
-    private static final String NEW_INSTALL_CLUSTER_ID = "newInstallClusterId";
-    private static final String OLD_CLUSTER_ID = "testClusterId";
     @Before
     public void setup() throws IOException, InterruptedException {
         when(opsClusterService.getById(any())).thenReturn(getClusterEntity());
@@ -114,7 +103,7 @@ public class WdrTest {
         return nodeEntityList;
     }
 
-    private OpsHostUserEntity getHostUser () {
+    private OpsHostUserEntity getHostUser() {
         OpsHostUserEntity userEntity1 = new OpsHostUserEntity();
         userEntity1.setUsername("lhf");
         userEntity1.setHostId(HOST_ID);

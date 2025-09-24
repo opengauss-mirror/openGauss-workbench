@@ -26,8 +26,8 @@ package org.opengauss.admin.common.core.dto.ops;
 import lombok.Data;
 import org.opengauss.admin.common.enums.ops.OpenGaussVersionEnum;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 
 /**

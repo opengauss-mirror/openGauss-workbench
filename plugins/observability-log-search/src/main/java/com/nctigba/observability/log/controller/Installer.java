@@ -42,9 +42,16 @@ import org.opengauss.admin.system.plugin.facade.WsFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.websocket.Session;
+import jakarta.websocket.Session;
 import java.io.IOException;
 
+/**
+ * Installer SocketExtract
+ *
+ * @author: wangchao
+ * @Date: 2025/9/11 21:21
+ * @since 7.0.0-RC2
+ **/
 @Slf4j
 @Service
 @Extract(bus = PluginListener.pluginId)

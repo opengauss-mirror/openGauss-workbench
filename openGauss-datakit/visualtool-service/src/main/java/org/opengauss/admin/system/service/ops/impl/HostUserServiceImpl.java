@@ -22,7 +22,6 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.system.service.ops.impl;
 
 import cn.hutool.core.collection.CollUtil;
@@ -47,11 +46,11 @@ import org.opengauss.admin.common.utils.ops.JschUtil;
 import org.opengauss.admin.system.mapper.ops.OpsHostUserMapper;
 import org.opengauss.admin.system.plugin.beans.SshLogin;
 import org.opengauss.admin.system.service.JschExecutorService;
-import org.opengauss.admin.system.service.ops.IHostService;
 import org.opengauss.admin.system.service.ops.IHostUserService;
 import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
 import org.opengauss.agent.service.IAgentInstallService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,7 +62,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * @author lhf
@@ -72,9 +71,6 @@ import javax.annotation.Resource;
 @Slf4j
 @Service
 public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostUserEntity> implements IHostUserService {
-
-    @Autowired
-    private IHostService hostService;
     @Autowired
     private JschUtil jschUtil;
     @Resource
@@ -82,8 +78,10 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
     @Autowired
     private EncryptionUtils encryptionUtils;
     @Autowired
+    @Lazy
     private IOpsClusterNodeService opsClusterNodeService;
     @Resource
+    @Lazy
     private IAgentInstallService agentInstallService;
 
     @Override
@@ -118,7 +116,7 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean add(HostUserBody hostUserBody) {
+    public boolean add(OpsHostEntity host, HostUserBody hostUserBody) {
         // check user exists
         String username = hostUserBody.getUsername();
         LambdaQueryWrapper<OpsHostUserEntity> queryWrapper = Wrappers.lambdaQuery(OpsHostUserEntity.class)
@@ -130,7 +128,7 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
         }
 
         OpsHostUserEntity opsHostUserEntity = hostUserBody.toEntity(false);
-        return doAddOrEdit(opsHostUserEntity, true);
+        return doAddOrEdit(host, opsHostUserEntity, true);
     }
 
     private void createPhysicalUser(SshLogin rootLogin, String username, String password) {
@@ -171,20 +169,19 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
     }
 
     /**
-     * <pre>
      * The function of editing users currently only supports modifying the user passwords,
      * and does not support the passwords of remote server users.
      * After modifying the passwords of server users, the passwords of users
      * managed by DataKit itself need to be manually modified and updated.
-     * <pre/>
      *
+     * @param host host info
      * @param hostUserId host User Id
      * @param hostUserBody host User Body
      * @return boolean edit result
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean edit(String hostUserId, HostUserBody hostUserBody) {
+    public boolean edit(OpsHostEntity host, String hostUserId, HostUserBody hostUserBody) {
         // check user exists and username is not changed
         OpsHostUserEntity hostUserEntity = getById(hostUserId);
         if (Objects.isNull(hostUserEntity)) {
@@ -197,16 +194,12 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
         OpsHostUserEntity newEntity = hostUserBody.toEntity(false);
         newEntity.setHostId(hostUserEntity.getHostId());
         newEntity.setHostUserId(hostUserEntity.getHostUserId());
-
-        return doAddOrEdit(newEntity, false);
+        return doAddOrEdit(host, newEntity, false);
     }
 
-    private boolean doAddOrEdit(OpsHostUserEntity userEntity, boolean isAdd) {
-        String hostId = userEntity.getHostId();
-        OpsHostEntity hostEntity = checkHostExists(hostId);
+    private boolean doAddOrEdit(OpsHostEntity hostEntity, OpsHostUserEntity userEntity, boolean isAdd) {
         SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(),
-                encryptionUtils.decrypt(userEntity.getPassword()));
-
+            encryptionUtils.decrypt(userEntity.getPassword()));
         if (userEntity.isRootUser()) {
             if (!jschExecutorService.checkOsUserExist(sshLogin)) {
                 throw new OpsException("Incorrect password, please enter correct password");
@@ -214,7 +207,6 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
             userEntity.setSudo(true);
             return isAdd ? save(userEntity) : updateById(userEntity);
         }
-
         if (jschExecutorService.checkOsUserExist(sshLogin)) {
             userEntity.setSudo(false);
             if (jschExecutorService.checkOsUserSudo(sshLogin)) {
@@ -222,19 +214,17 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
             }
             return isAdd ? save(userEntity) : updateById(userEntity);
         }
-
         // if user cannot connect, use root user to check user exists, if not exists, create user or throw error
+        String hostId = userEntity.getHostId();
         OpsHostUserEntity rootUser = getRootUserByHostId(hostId);
         if (Objects.isNull(rootUser)) {
             throw new OpsException("User does not exist or the password is incorrect");
         }
-
         SshLogin rootLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), rootUser.getUsername(),
-                encryptionUtils.decrypt(rootUser.getPassword()));
+            encryptionUtils.decrypt(rootUser.getPassword()));
         if (jschExecutorService.checkOsUserExist(rootLogin, userEntity.getUsername())) {
             throw new OpsException("Incorrect password, please enter correct password");
         }
-
         if (isAdd) {
             createPhysicalUser(rootLogin, userEntity.getUsername(), userEntity.getPassword());
             userEntity.setSudo(false);
@@ -242,14 +232,6 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
         } else {
             throw new OpsException("User does not exist");
         }
-    }
-
-    private OpsHostEntity checkHostExists(String hostId) {
-        OpsHostEntity hostEntity = hostService.getById(hostId);
-        if (Objects.isNull(hostEntity)) {
-            throw new OpsException("host information does not exist");
-        }
-        return hostEntity;
     }
 
     @Override
@@ -316,7 +298,7 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
     }
 
     @Override
-    public boolean hasRootPermission(String userId) {
+    public boolean hasRootPermission(OpsHostEntity hostEntity, String userId) {
         OpsHostUserEntity userEntity = getById(userId);
         if (Objects.isNull(userEntity)) {
             log.error("Cannot get user information by user id: {}", userId);
@@ -327,7 +309,6 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
             return true;
         }
 
-        OpsHostEntity hostEntity = checkHostExists(userEntity.getHostId());
         SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(),
                 encryptionUtils.decrypt(userEntity.getPassword()));
         return jschExecutorService.checkOsUserSudo(sshLogin);

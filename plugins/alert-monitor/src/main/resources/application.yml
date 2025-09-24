@@ -1,15 +1,10 @@
-context:
-  listener:
-    classes: com.nctigba.alert.monitor.listener.PluginListener
 spring:
   servlet:
     multipart:
       max-file-size: 20MB #The maximum file size is 20MB.
       max-request-size: 20MB #The total file size for a single request is limited to 20MB.
   profiles:
-    active: '@profiles.active@'
-  resources:
-    static-locations: classpath:resources,file:D://static
+    active: dev
   datasource:
     dynamic:
       strict: false #Strictly match the data source, default is false. When set to true and no specified data source is matched, an exception will be thrown. When set to false, the default data source will be used.
@@ -43,6 +38,9 @@ spring:
     prefix: classpath:/templates/
     suffix: .html
     cache: false
+  web:
+    resources:
+      static-locations: classpath:resources
 
 
 server.compression:

@@ -69,11 +69,11 @@
     <exclusions>
         <exclusion>
             <groupId>com.alibaba</groupId>
-            <artifactId>druid-spring-boot-starter</artifactId>
+            <artifactId>druid-spring-boot-3-starter</artifactId>
         </exclusion>
         <exclusion>
             <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
         </exclusion>
         <exclusion>
             <groupId>org.springframework.boot</groupId>

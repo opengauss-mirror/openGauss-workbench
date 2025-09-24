@@ -28,7 +28,6 @@ import org.opengauss.admin.plugin.service.FullMigrationProgressService;
 import org.opengauss.admin.plugin.service.FullMigrationSummaryDataService;
 import org.opengauss.admin.plugin.service.IncrementalMigrationProgressService;
 import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
-import org.opengauss.admin.plugin.service.MigrationMainTaskService;
 import org.opengauss.admin.plugin.service.MigrationTaskParamService;
 import org.opengauss.admin.plugin.service.MigrationTaskStatusRecordService;
 import org.opengauss.admin.plugin.service.ReverseMigrationProgressService;
@@ -41,7 +40,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
@@ -70,9 +69,6 @@ public class MultiDbPortal extends MigrationPortal {
 
     @Autowired
     private MigrationTaskStatusRecordService migrationTaskStatusRecordService;
-
-    @Autowired
-    private MigrationMainTaskService migrationMainTaskService;
 
     @Autowired
     private FullMigrationSummaryDataService fullMigrationSummaryDataService;

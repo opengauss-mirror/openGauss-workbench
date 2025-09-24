@@ -40,8 +40,6 @@ import org.opengauss.admin.common.utils.ServletUtils;
 import org.opengauss.admin.framework.web.service.TokenService;
 import org.opengauss.admin.system.service.ISysMenuService;
 import org.opengauss.admin.system.service.ISysRoleService;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -71,9 +69,6 @@ public class SysMenuController extends BaseController {
     /**
      * get Menu list
      */
-    @ApiOperation(value = "menu list", notes = "menu list")
-    @ApiImplicitParams({
-    })
     @PreAuthorize("@ss.hasPermi('system:menu:list')")
     @GetMapping("/list")
     public AjaxResult list(SysMenu menu) {
@@ -86,9 +81,6 @@ public class SysMenuController extends BaseController {
     /**
      * get info by ID
      */
-    @ApiOperation(value = "get info", notes = "get info")
-    @ApiImplicitParams({
-    })
     @PreAuthorize("@ss.hasPermi('system:menu:query')")
     @GetMapping(value = "/{menuId}")
     public AjaxResult getInfo(@PathVariable Integer menuId) {
@@ -98,9 +90,6 @@ public class SysMenuController extends BaseController {
     /**
      * Get treeselect menu list
      */
-    @ApiOperation(value = "treeselect list", notes = "treeselect list")
-    @ApiImplicitParams({
-    })
     @GetMapping("/treeselect")
     public AjaxResult treeselect(SysMenu menu) {
         LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
@@ -112,9 +101,6 @@ public class SysMenuController extends BaseController {
     /**
      *  Get treeselect menu list by role
      */
-    @ApiOperation(value = "treeselect list By role", notes = "treeselect list By role")
-    @ApiImplicitParams({
-    })
     @GetMapping(value = "/roleMenuTreeselect/{roleId}")
     public AjaxResult roleMenuTreeselect(@PathVariable("roleId") Integer roleId) {
         LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
@@ -134,7 +120,6 @@ public class SysMenuController extends BaseController {
     /**
      * save menu
      */
-    @ApiOperation(value = "save menu", notes = "save menu")
     @Log(title = "menus", businessType = BusinessType.INSERT)
     @PreAuthorize("@ss.hasPermi('system:menu:add')")
     @PostMapping
@@ -149,7 +134,6 @@ public class SysMenuController extends BaseController {
     /**
      * update menu
      */
-    @ApiOperation(value = "update menu", notes = "update menu")
     @Log(title = "menus", businessType = BusinessType.UPDATE)
     @PreAuthorize("@ss.hasPermi('system:menu:edit')")
     @PutMapping
@@ -165,9 +149,6 @@ public class SysMenuController extends BaseController {
     /**
      * delete menu
      */
-    @ApiOperation(value = "delete menu", notes = "delete menu")
-    @ApiImplicitParams({
-    })
     @PreAuthorize("@ss.hasPermi('system:menu:remove')")
     @Log(title = "menus", businessType = BusinessType.DELETE)
     @DeleteMapping("/{menuId}")

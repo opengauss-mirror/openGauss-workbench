@@ -26,10 +26,6 @@ public class AppConfigLoader {
     @Getter
     private static AppConfig appConfig;
 
-    static {
-        loadConfig();
-    }
-
     /**
      * load the application configuration
      */

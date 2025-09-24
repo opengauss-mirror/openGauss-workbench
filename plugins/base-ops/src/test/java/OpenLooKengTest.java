@@ -1,11 +1,22 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
+ */
+
 import cn.hutool.core.collection.ListUtil;
+import jakarta.websocket.Session;
+
 import com.alibaba.fastjson.JSON;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -21,44 +32,48 @@ import org.opengauss.admin.plugin.domain.model.ops.olk.dadReq.DadReqPath;
 import org.opengauss.admin.plugin.domain.model.ops.olk.dadReq.DadResult;
 import org.opengauss.admin.plugin.service.ops.IOpsOlkService;
 import org.opengauss.admin.plugin.service.ops.impl.OpsOlkServiceImpl;
-import org.opengauss.admin.plugin.utils.WsUtil;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
-import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import javax.websocket.*;
 import java.io.IOException;
-import java.net.URI;
-import java.security.Principal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
+/**
+ * OpenLooKengTest
+ *
+ * @author: wangchao
+ * @Date: 2025/9/11 21:21
+ * @since 7.0.0-RC2
+ **/
 @RunWith(MockitoJUnitRunner.class)
 @ExtendWith(MockitoExtension.class)
 public class OpenLooKengTest {
+    private static final String BUSINESS_ID = "testBusinessId";
+
     @InjectMocks
     @Spy
     private IOpsOlkService olkService = new OpsOlkServiceImpl();
-
     @Mock
     private WsConnectorManager wsConnectorManager;
     @Mock
     private ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
     @Mock
     private HostFacade hostFacade;
-    @Mock
-    private WsUtil wsUtil;
-    @Mock
-    private EncryptionUtils encryptionUtils;
-    private static final String BUSINESS_ID = "testBusinessId";
 
     @Before
     public void setup() throws IOException, InterruptedException {
-        when(wsConnectorManager.getSession(any())).thenReturn(Optional.of(new WsSession(getMockSession(), "testSessionId")));
+        when(wsConnectorManager.getSession(any())).thenReturn(
+            Optional.of(new WsSession(getMockSession(), "testSessionId")));
         when(threadPoolTaskExecutor.submit(any(Runnable.class))).thenReturn(new CompletableFuture<>());
         doReturn(true).when(olkService).removeById(anyString());
         doReturn(getOlkEntity()).when(olkService).getById(anyString());
@@ -79,8 +94,7 @@ public class OpenLooKengTest {
 
     @Test
     public void testDelete() {
-        boolean result = olkService.removeById("1");
-        Assert.assertTrue(result);
+        Assert.assertTrue(olkService.removeById("1"));
     }
 
     @Test
@@ -137,26 +151,22 @@ public class OpenLooKengTest {
     }
 
     private OlkConfig getYamlConfig() {
-        OlkConfig olkConfig = new OlkConfig();
         List<ShardingDatasourceConfig> dsConfigList = new ArrayList<>();
         ShardingDatasourceConfig dsConfig1 = new ShardingDatasourceConfig();
-
         dsConfig1.setPort("5432");
         dsConfig1.setUsername("gaussdb");
         dsConfig1.setDbName("template1");
         dsConfig1.setPassword("1qaz2wsx#EDC");
         dsConfig1.setHost("175.24.226.99");
         dsConfigList.add(dsConfig1);
-
         ShardingDatasourceConfig dsConfig2 = new ShardingDatasourceConfig();
-
         dsConfig2.setPort("5432");
         dsConfig2.setUsername("gaussdb");
         dsConfig2.setDbName("template1");
         dsConfig2.setPassword("1qaz2wsx#EDC");
         dsConfig2.setHost("175.24.226.99");
         dsConfigList.add(dsConfig2);
-
+        OlkConfig olkConfig = new OlkConfig();
         olkConfig.setDsConfig(dsConfigList);
         olkConfig.setColumns("key1,key2");
         olkConfig.setTableName("table1,table2");
@@ -164,157 +174,6 @@ public class OpenLooKengTest {
     }
 
     private Session getMockSession() {
-        Session session = null;
-        try {
-            session = new Session() {
-                @Override
-                public WebSocketContainer getContainer() {
-                    return null;
-                }
-
-                @Override
-                public void addMessageHandler(MessageHandler messageHandler) throws IllegalStateException {
-
-                }
-
-                @Override
-                public Set<MessageHandler> getMessageHandlers() {
-                    return null;
-                }
-
-                @Override
-                public void removeMessageHandler(MessageHandler messageHandler) {
-
-                }
-
-                @Override
-                public String getProtocolVersion() {
-                    return null;
-                }
-
-                @Override
-                public String getNegotiatedSubprotocol() {
-                    return null;
-                }
-
-                @Override
-                public List<Extension> getNegotiatedExtensions() {
-                    return null;
-                }
-
-                @Override
-                public boolean isSecure() {
-                    return false;
-                }
-
-                @Override
-                public boolean isOpen() {
-                    return false;
-                }
-
-                @Override
-                public long getMaxIdleTimeout() {
-                    return 0;
-                }
-
-                @Override
-                public void setMaxIdleTimeout(long l) {
-
-                }
-
-                @Override
-                public void setMaxBinaryMessageBufferSize(int i) {
-
-                }
-
-                @Override
-                public int getMaxBinaryMessageBufferSize() {
-                    return 0;
-                }
-
-                @Override
-                public void setMaxTextMessageBufferSize(int i) {
-
-                }
-
-                @Override
-                public int getMaxTextMessageBufferSize() {
-                    return 0;
-                }
-
-                @Override
-                public RemoteEndpoint.Async getAsyncRemote() {
-                    return null;
-                }
-
-                @Override
-                public RemoteEndpoint.Basic getBasicRemote() {
-                    return null;
-                }
-
-                @Override
-                public String getId() {
-                    return null;
-                }
-
-                @Override
-                public void close() throws IOException {
-
-                }
-
-                @Override
-                public void close(CloseReason closeReason) throws IOException {
-
-                }
-
-                @Override
-                public URI getRequestURI() {
-                    return null;
-                }
-
-                @Override
-                public Map<String, List<String>> getRequestParameterMap() {
-                    return null;
-                }
-
-                @Override
-                public String getQueryString() {
-                    return null;
-                }
-
-                @Override
-                public Map<String, String> getPathParameters() {
-                    return null;
-                }
-
-                @Override
-                public Map<String, Object> getUserProperties() {
-                    return null;
-                }
-
-                @Override
-                public Principal getUserPrincipal() {
-                    return null;
-                }
-
-                @Override
-                public Set<Session> getOpenSessions() {
-                    return null;
-                }
-
-                @Override
-                public <T> void addMessageHandler(Class<T> aClass, MessageHandler.Partial<T> partial) throws IllegalStateException {
-
-                }
-
-                @Override
-                public <T> void addMessageHandler(Class<T> aClass, MessageHandler.Whole<T> whole) throws IllegalStateException {
-
-                }
-            };
-        } catch (Exception ex) {
-
-        }
-        return session;
+        return Mockito.mock(Session.class);
     }
 }

@@ -21,18 +21,22 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.framework.web.filter;
 
 import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.common.utils.spring.SpringUtils;
 import org.opengauss.admin.system.service.ISysWhiteListService;
+
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -47,20 +51,22 @@ import java.io.PrintWriter;
 @ConditionalOnProperty(value = "system.whitelist.enabled", havingValue = "true")
 public class WhiteListFilter implements Filter {
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+        throws IOException, ServletException {
         String ip = IpUtils.getIpAddr((HttpServletRequest) servletRequest);
         boolean isExists = SpringUtils.getBean(ISysWhiteListService.class).checkSingleIpExistsInWhiteList(ip);
         if (isExists) {
             filterChain.doFilter(servletRequest, servletResponse);
         } else {
             try {
-                returnContent(servletResponse,"Sorry,The current IP is not in the white list, please contact the administrator to add it before accessing.");
+                returnContent(servletResponse,
+                    "Sorry,The current IP is not in the white list, please contact the administrator to add it before"
+                        + " accessing.");
             } catch (Exception e) {
                 log.error("error, message: {}", e.getMessage());
             }
         }
     }
-
 
     private void returnContent(ServletResponse response, String content) throws Exception{
         PrintWriter writer = null;

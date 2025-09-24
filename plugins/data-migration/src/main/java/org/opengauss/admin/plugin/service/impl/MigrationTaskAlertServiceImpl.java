@@ -32,6 +32,7 @@ import org.opengauss.admin.plugin.utils.FileUtils;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
@@ -64,6 +65,7 @@ public class MigrationTaskAlertServiceImpl extends ServiceImpl<MigrationTaskAler
     private MigrationHostPortalInstallHostService portalInstallHostService;
 
     @Autowired
+    @Lazy
     private MigrationTaskService migrationTaskService;
 
     @Autowired

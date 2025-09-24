@@ -29,10 +29,17 @@ import org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoCo
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 
-import com.alibaba.druid.spring.boot.autoconfigure.DruidDataSourceAutoConfigure;
+import com.alibaba.druid.spring.boot3.autoconfigure.DruidDataSourceAutoConfigure;
 import com.gitee.starblues.bootstrap.SpringPluginBootstrap;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+/**
+ * ObservabilityPluginApplication
+ *
+ * @author: wangchao
+ * @Date: 2025/9/11 21:21
+ * @since 7.0.0-RC2
+ */
 @EnableScheduling
 @SpringBootApplication(exclude = {
 		DataSourceAutoConfiguration.class,

@@ -33,12 +33,14 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.stereotype.Component;
 
 /**
  * @Author wuyuebin
  * @Date 2023/4/13 09:57
  * @Description
  */
+@Component
 public class PluginListener implements ApplicationListener<ApplicationEvent> {
     private final String pluginId = "alert-monitor";
 

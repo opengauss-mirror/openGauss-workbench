@@ -37,6 +37,7 @@ import javax.sql.DataSource;
 
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.druid.pool.DruidDataSource;
+import com.baomidou.dynamic.datasource.creator.DataSourceProperty;
 import com.baomidou.dynamic.datasource.ds.ItemDataSource;
 import com.nctigba.observability.instance.exception.InstanceException;
 import org.apache.commons.lang3.StringUtils;
@@ -61,7 +62,6 @@ import org.springframework.util.CollectionUtils;
 
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
 import com.baomidou.dynamic.datasource.creator.DefaultDataSourceCreator;
-import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
 import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
@@ -170,26 +170,36 @@ public class ClusterManager {
      * @see com.nctigba.observability.instance.service.ClusterManager#pool()
      */
     public void setCurrentDatasource(String nodeId, String dbname) {
-        if (StringUtils.isBlank(nodeId))
-            return;
-        var ds = (DynamicRoutingDataSource) dataSource;
-        // Switch if data source exists
-        if (ds.getDataSources().containsKey(nodeId)) {
-            DynamicDataSourceContextHolder.push(nodeId);
+        if (StringUtils.isBlank(nodeId)) {
             return;
         }
+
+        // Switch if data source exists
+        if (dataSource instanceof DynamicRoutingDataSource ds) {
+            if (ds.getDataSources().containsKey(nodeId)) {
+                DynamicDataSourceContextHolder.push(nodeId);
+                return;
+            }
+        } else {
+            throw new RuntimeException(CommonConstants.NODE_NOT_FOUND);
+        }
+
         // Add if it does not exist
         var node = getOpsNodeById(nodeId);
-        if (node == null)
+        if (node == null) {
             throw new RuntimeException(CommonConstants.NODE_NOT_FOUND);
-        if (StringUtils.isBlank(dbname))
+        }
+        if (StringUtils.isBlank(dbname)) {
             dbname = node.getDbName();
+        }
         DataSourceProperty dataSourceProperty = new DataSourceProperty();
         dataSourceProperty.getDruid().setMaxWait(5000);
-        ds.addDataSource(nodeId, dataSourceCreator.createDataSource(dataSourceProperty
-            .setDriverClassName("org.opengauss.Driver")
-                .setUrl(CommonConstants.JDBC_OPENGAUSS + node.getPublicIp() + ":" + node.getDbPort() + "/" + dbname)
-                .setUsername(node.getDbUser()).setPassword(encryptionUtils.decrypt(node.getDbUserPassword()))));
+        dataSourceProperty.setDriverClassName("org.opengauss.Driver");
+        dataSourceProperty.setUsername(node.getDbUser());
+        dataSourceProperty.setPassword(encryptionUtils.decrypt(node.getDbUserPassword()));
+        dataSourceProperty.setUrl(
+            CommonConstants.JDBC_OPENGAUSS + node.getPublicIp() + ":" + node.getDbPort() + "/" + dbname);
+        ds.addDataSource(nodeId, dataSourceCreator.createDataSource(dataSourceProperty));
         DynamicDataSourceContextHolder.push(nodeId);
     }
 

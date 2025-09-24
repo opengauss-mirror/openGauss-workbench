@@ -23,9 +23,11 @@ spring:
   sql:
     init:
       mode: always
+  main:
+    allow-bean-definition-overriding: true
 token:
     header: Authorization
-    secret: abcdefghijklmnopqrstuvwxyz
+    secret: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz
     expireTime: 60
   
 mybatis-plus:
@@ -41,8 +43,11 @@ pagehelper:
 plugin:
   mainPackage: org.opengauss.admin
   runMode: prod
+  #  runMode: deployment
   pluginPath:
     - ~/visualtool-plugin
+
+#  pluginRestPathPrefix: /static-plugin
 agent:
   localPath:  ./agent
   agentName: datakit-agent-${version}-runner.jar

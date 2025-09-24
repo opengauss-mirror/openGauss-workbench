@@ -1,5 +1,11 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
+ */
+
 import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,18 +27,17 @@ import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
 import org.opengauss.admin.plugin.service.ops.IOpsBackupService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
-import org.opengauss.admin.plugin.service.ops.impl.OpsBackupService;
 import org.opengauss.admin.plugin.utils.JschUtil;
 import org.opengauss.admin.plugin.vo.ops.BackupInputDto;
 import org.opengauss.admin.plugin.vo.ops.RecoverInputDto;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
-import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,12 +45,22 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
+/**
+ * BackupTest
+ *
+ * @author: wangchao
+ * @Date: 2025/9/11 21:21
+ * @since 7.0.0-RC2
+ **/
 @RunWith(MockitoJUnitRunner.class)
 @ExtendWith(MockitoExtension.class)
 public class BackupTest {
+    private static final String MASTER_NODE_HOST_ID = "testHostId";
+    private static final String MASTER_NODE_INSTALL_USER_ID = "testUserId";
+
     @Mock
     private IOpsClusterService opsClusterService;
     @Mock
@@ -60,21 +75,14 @@ public class BackupTest {
     private HttpServletRequest request;
     @Mock
     private JschUtil jschUtil;
-    @Mock
-    private EncryptionUtils encryptionUtils;
-
     @InjectMocks
     @Spy
-    private IOpsBackupService backupService = new OpsBackupService();
-
+    private IOpsBackupService backupService;
     @Mock
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
-
-    private static final String MASTER_NODE_HOST_ID = "testHostId";
-    private static final String MASTER_NODE_INSTALL_USER_ID = "testUserId";
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     @Before
-    public void setup() throws IOException, InterruptedException {
+    public void setup() throws IOException, InterruptedException, JSchException {
         List<OpsClusterEntity> clusterEntities = getClusterList();
         when(opsClusterService.getById("1")).thenReturn(getCluster());
         when(clusterNodeService.listClusterNodeByClusterId("1")).thenReturn(getClusterNodeList());
@@ -89,12 +97,8 @@ public class BackupTest {
         doReturn(getBackupEntity()).when(backupService).getById(any());
         doReturn(true).when(backupService).removeById(any());
         Session session = null;
-        try {
-            JSch jSch = new JSch();
-            session = jSch.getSession("");
-        } catch (Exception ex) {
-
-        }
+        JSch jSch = new JSch();
+        session = jSch.getSession("");
         doReturn(Optional.of(session)).when(jschUtil).getSession(any(), any(), any(), any());
         doReturn(getCmdResult()).when(jschUtil).executeCommand(any(), any());
     }
@@ -142,7 +146,6 @@ public class BackupTest {
         masterNode.setHostId(MASTER_NODE_HOST_ID);
         masterNode.setInstallUserId(MASTER_NODE_INSTALL_USER_ID);
         nodeList.add(masterNode);
-
         OpsClusterNodeEntity slaveNode = new OpsClusterNodeEntity();
         slaveNode.setClusterRole(ClusterRoleEnum.SLAVE);
         nodeList.add(slaveNode);
@@ -158,13 +161,11 @@ public class BackupTest {
     }
 
     private OpsHostEntity getHost() {
-        OpsHostEntity hostEntity = new OpsHostEntity();
-        return hostEntity;
+        return new OpsHostEntity();
     }
 
     private OpsHostUserEntity getHostUser() {
-        OpsHostUserEntity userEntity = new OpsHostUserEntity();
-        return userEntity;
+        return new OpsHostUserEntity();
     }
 
     private OpsBackupEntity getBackupEntity() {

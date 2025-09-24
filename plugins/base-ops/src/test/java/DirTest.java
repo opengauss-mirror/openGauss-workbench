@@ -1,6 +1,20 @@
+/*
+ * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
+ */
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.junit.jupiter.api.Test;
 import org.opengauss.admin.plugin.utils.PathUtils;
 
+/**
+ * DirTest
+ *
+ * @author: wangchao
+ * @Date: 2025/9/11 21:21
+ * @since 7.0.0-RC2
+ **/
+@Slf4j
 public class DirTest {
     @Test
     void checkDir() {
@@ -11,13 +25,11 @@ public class DirTest {
             String[] subString = new String[length - 1];
             System.arraycopy(split, 0, subString, 0, length - 1);
             String join = String.join("/", subString);
-            System.out.println(join);
+            log.info(join);
         }
-
     }
 
-
-    public int chmodStringToInt(String perm) {
+    private int chmodStringToInt(String perm) {
         int permInt = 0;
         for (int i = 0; i < perm.length(); i++) {
             char c = perm.charAt(i);
@@ -46,30 +58,44 @@ public class DirTest {
     @Test
     void testChmodStringToInt() {
         String perm = "drwxr-xr-x";
-        System.out.println("Permission integer: " + chmodStringToInt(perm));
-        System.out.println("Permission integer: " + convertPermission(perm));
+        log.info("Permission integer: " + chmodStringToInt(perm));
+        log.info("Permission integer: " + convertPermission(perm));
     }
 
-    public static int convertPermission(String permissionString) {
+    private static int convertPermission(String permissionString) {
         if (permissionString == null || permissionString.length() != 10) {
             throw new IllegalArgumentException("Invalid permission string");
         }
-
         int owner = 0;
-        if (permissionString.charAt(1) == 'r') owner += 4;
-        if (permissionString.charAt(2) == 'w') owner += 2;
-        if (permissionString.charAt(3) == 'x') owner += 1;
-
+        if (permissionString.charAt(1) == 'r') {
+            owner += 4;
+        }
+        if (permissionString.charAt(2) == 'w') {
+            owner += 2;
+        }
+        if (permissionString.charAt(3) == 'x') {
+            owner += 1;
+        }
         int group = 0;
-        if (permissionString.charAt(4) == 'r') group += 4;
-        if (permissionString.charAt(5) == 'w') group += 2;
-        if (permissionString.charAt(6) == 'x') group += 1;
-
+        if (permissionString.charAt(4) == 'r') {
+            group += 4;
+        }
+        if (permissionString.charAt(5) == 'w') {
+            group += 2;
+        }
+        if (permissionString.charAt(6) == 'x') {
+            group += 1;
+        }
         int others = 0;
-        if (permissionString.charAt(7) == 'r') others += 4;
-        if (permissionString.charAt(8) == 'w') others += 2;
-        if (permissionString.charAt(9) == 'x') others += 1;
-
+        if (permissionString.charAt(7) == 'r') {
+            others += 4;
+        }
+        if (permissionString.charAt(8) == 'w') {
+            others += 2;
+        }
+        if (permissionString.charAt(9) == 'x') {
+            others += 1;
+        }
         return Integer.valueOf(owner + String.valueOf(group) + others);
     }
 
@@ -79,7 +105,7 @@ public class DirTest {
         String path2 = "/a/b/c/d/e";
         String path3 = "/a/b";
         PathUtils pathUtils = new PathUtils();
-        System.out.println("Conflict: " + pathUtils.checkDirNoConflict(path1, path2, path3));
+        log.info("Conflict: " + pathUtils.checkDirNoConflict(path1, path2, path3));
     }
 
     @Test
@@ -88,7 +114,6 @@ public class DirTest {
         String path2 = "/a/b/d/e";
         String path3 = "/a/b/e";
         PathUtils pathUtils = new PathUtils();
-        System.out.println("Conflict: " + pathUtils.checkDirNoConflict(path1, path2, path3));
+        log.info("Conflict: " + pathUtils.checkDirNoConflict(path1, path2, path3));
     }
-
 }

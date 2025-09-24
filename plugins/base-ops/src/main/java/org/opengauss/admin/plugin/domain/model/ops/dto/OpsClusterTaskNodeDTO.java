@@ -28,8 +28,8 @@ import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterTaskNodeEntity;
 import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
 import org.springframework.beans.BeanUtils;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * OpsClusterTaskNodeDTO
