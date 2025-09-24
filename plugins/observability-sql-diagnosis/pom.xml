@@ -22,6 +22,7 @@
 		<nashorn-core.version>15.3</nashorn-core.version>
 		<es-java-client.version>8.3.3</es-java-client.version>
 		<jakarta-json.version>2.1.3</jakarta-json.version>
+		<parsson.version>1.0.5</parsson.version>
 		<build.frontend.skip>false</build.frontend.skip>
 	</properties>
 	<dependencies>
@@ -160,18 +161,16 @@
 					<artifactId>jakarta.json-api</artifactId>
 					<groupId>jakarta.json</groupId>
 				</exclusion>
+				<exclusion>
+					<groupId>org.eclipse.parsson</groupId>
+					<artifactId>parsson</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>co.elastic.clients</groupId>
-			<artifactId>elasticsearch-java</artifactId>
-			<version>${es-java-client.version}</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>jakarta.json-api</artifactId>
-					<groupId>jakarta.json</groupId>
-				</exclusion>
-			</exclusions>
+			<groupId>org.eclipse.parsson</groupId>
+			<artifactId>parsson</artifactId>
+			<version>${parsson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
