@@ -5,7 +5,6 @@ export function cluterListData(params = {}) {
 }
 // 系统列表
 export function systemListData() {
-  return axios.get('/cmdb/system/list')
 }
 // 域名列表
 export function domainListData() {

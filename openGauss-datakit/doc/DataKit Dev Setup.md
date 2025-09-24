@@ -1,8 +1,8 @@
 # OpenGauss Datakit 开发环境搭建流程
 
 ## 推荐环境
-- java 11+
-- maven 3.8.0+
+- java 17+
+- maven 3.9.0+
 - node v18+（含npm）
 
 此外，为保证依赖下载顺利，需配置好maven镜像源和node镜像源。
@@ -13,12 +13,21 @@
 - IDE：Intellij IDEA 2023.3.3
 - OS：OpenEuler 22.03
 - JDK：Java version: 17.0.10, vendor: Oracle Corporation
-- Maven：3.8.8
+- Maven：3.9.0+
 
 ### 准备
-首先从gitee上下载项目，命令如下：
+DataKit版本7.0.0-RC2开始，项目基础平台升级为Springboot 3.5.6,在项目编译前需本地编译且安装SpringBrick组件。
+1、下载SpringBrick项目源码，命令如下：
 ```
-git clone https://gitee.com/opengauss/openGauss-workbench.git
+git clone https://gitcode.com/wang4721/springboot-plugin-framework-parent.git
+```
+2、进入springboot-plugin-framework-parent项目根目录，使用Maven进行编译安装
+```
+mvn clean install -Dmaven.test.skip=true
+```
+3、执行成功后，从gitcode上下载DataKit项目，命令如下：
+```
+git clone https://gitcode.com/opengauss/openGauss-workbench.git
 ```
 
 安装好OpenGauss，详细步骤见[README.md](https://gitee.com/opengauss/openGauss-workbench/tree/master/README.md)。将整个openGauss-workbench文件夹导入IDEA。想调试插件的话，应该先运行一次根目录的`build.sh`，命令如下：

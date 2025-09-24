@@ -122,7 +122,7 @@ const data = reactive<KeyValue>({
   cpuArchList: [],
   packageVersionList: [],
   typeList: [],
-  file:{},
+  file: {},
   type: '',
   systemUploadPath: '',
   isNameDirty: false
@@ -135,7 +135,7 @@ interface UploadInfo {
 }
 
 // The first validation of the page is skipped during initialization
-const initNameValidateSkipFlag = ref(true);
+const initNameValidateSkipFlag = ref(true)
 
 const tempVersionNum = ref('5.0.2')
 
@@ -195,9 +195,9 @@ const formRules = computed(() => {
         validator: (rule: any, value: any, cb: any) => {
           hasPkgName(value).then((res: KeyValue) => {
             if (initNameValidateSkipFlag.value) {
-              initNameValidateSkipFlag.value = false;
+              initNameValidateSkipFlag.value = false
               cb()
-              return;
+              return
             }
             if (res.data && !editDisabledFlag.value) {
               return cb(new Error(t('components.Package.5mtcyb0rty47')))
@@ -471,7 +471,7 @@ const submit = async () => {
           formData.append('packageId', data.formData.packageId)
           formData.append('uploadFile', data.file.raw)
           axios({
-            url: `/plugins/base-ops/installPackageManager/v2/update/upload/`,
+            url: `/plugins/base-ops/installPackageManager/v2/update/upload`,
             method: 'POST',
             headers: {
               'Content-Type': 'multipart/form-data'
@@ -504,7 +504,7 @@ const submit = async () => {
         formData.append('osVersion', data.formData.osVersion)
         if (progressPercent.value === 0) {
           axios({
-            url: `/plugins/base-ops/installPackageManager/v2/save/upload/`,
+            url: `/plugins/base-ops/installPackageManager/v2/save/upload`,
             method: 'POST',
             headers: {
               'Content-Type': 'multipart/form-data'
@@ -539,7 +539,7 @@ const submit = async () => {
         batchPackageOnline(params).then((res) => {
           if (res.code === 200) {
             data.show = false
-            initNameValidateSkipFlag.value = true;
+            initNameValidateSkipFlag.value = true
             emits('downloadStart', data.formData.name)
           }
         }).catch((error) => {
@@ -558,7 +558,7 @@ const submit = async () => {
           .then(res => {
             if (res.code === 200) {
               data.show = false
-              initNameValidateSkipFlag.value = true;
+              initNameValidateSkipFlag.value = true
             }
           })
           .catch(error => {
@@ -594,7 +594,7 @@ const close = () => {
   tempVersion.value = OpenGaussVersionEnum.MINIMAL_LIST
   tempVersionNum.value = ''
   uploadStatusTag.value = false
-  initNameValidateSkipFlag.value = true;
+  initNameValidateSkipFlag.value = true
   nextTick(() => {
     formRef.value?.clearValidate()
     formRef.value?.resetFields()
@@ -604,7 +604,6 @@ const close = () => {
 }
 
 </script>
-
 
 <style lang="less" scoped>
 .justify-center {
