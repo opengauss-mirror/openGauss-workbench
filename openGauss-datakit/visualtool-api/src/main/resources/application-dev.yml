@@ -42,7 +42,7 @@ plugin:
     plugins:
       - pluginId: example-basic-1
         props:
-          secretKey: mmfvXes1XckCi8F/y9i0uQ==
+          secretKey:
   version: 0.0.0
 plugins:
   oauth-login:
@@ -53,5 +53,5 @@ plugins:
     datakit-url: https://ip:port
     devkit-url: https://ip:port
     # SSL certificate
-    ssl-key: your_ssl_key
+    ssl-key: 
 
