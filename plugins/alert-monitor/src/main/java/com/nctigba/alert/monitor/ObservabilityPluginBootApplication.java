@@ -58,7 +58,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
                 HostUserFacade.class},
         excludeFilters = {@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes =
                 {org.opengauss.admin.system.plugin.facade.MenuFacade.class,
-                        org.opengauss.admin.system.plugin.facade.MonitorToolsFacade.class,
                         org.opengauss.admin.system.plugin.facade.PluginFacade.class,
                         org.opengauss.admin.system.plugin.facade.SysSettingFacade.class,
                         org.opengauss.admin.system.plugin.facade.TaskFacade.class,

@@ -30,7 +30,6 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
@@ -520,10 +519,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
                 search.sort(sort -> sort.field(field -> field.field("_index").order(SortOrder.Desc)));
                 search.sort(sort -> sort.field(field -> field.field("log.offset").order(SortOrder.Desc)));
                 if (StrUtil.isNotBlank(searchAfter)) {
-                    List<FieldValue> fieldValues = Arrays.stream(searchAfter.split(","))
-                        .map(FieldValue::of)
-                        .collect(Collectors.toList());
-                    search.searchAfter(fieldValues);
+                    search.searchAfter(Arrays.asList(searchAfter.split(",")));
                 }
                 return search;
             }, HashMap.class);
@@ -548,13 +544,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         if (CollectionUtil.isEmpty(hits) || CollectionUtil.isEmpty(hits.get(hits.size() - 1).sort())) {
             logInfoDTO.setSearchAfter(searchAfter);
         } else {
-            String searchAfterVal = hits.get(hits.size() - 1)
-                .sort()
-                .stream()
-                .map(FieldValue::_get)
-                .map(Object::toString)
-                .collect(Collectors.joining(CommonConstants.DELIMITER));
-            logInfoDTO.setSearchAfter(searchAfterVal);
+            logInfoDTO.setSearchAfter(String.join(CommonConstants.DELIMITER, hits.get(hits.size() - 1).sort()));
         }
         return logInfoDTO;
     }

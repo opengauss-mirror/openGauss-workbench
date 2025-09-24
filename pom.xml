@@ -458,12 +458,12 @@
         <module>openGauss-datakit/jsch-session-pool</module>
         <module>openGauss-datakit-agent</module>
         <module>plugins/base-ops</module>
-<!--        <module>plugins/alert-monitor</module>-->
+        <module>plugins/alert-monitor</module>
         <module>plugins/data-migration</module>
         <module>plugins/data-studio</module>
-<!--        <module>plugins/observability-instance</module>-->
-<!--        <module>plugins/observability-log-search</module>-->
-<!--        <module>plugins/observability-sql-diagnosis</module>-->
+        <module>plugins/observability-instance</module>
+        <module>plugins/observability-log-search</module>
+        <module>plugins/observability-sql-diagnosis</module>
         <module>plugins/compatibility-assessment</module>
         <module>plugins/container-management-plugin</module>
     </modules>
