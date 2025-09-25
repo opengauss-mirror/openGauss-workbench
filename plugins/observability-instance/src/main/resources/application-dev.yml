@@ -9,11 +9,10 @@ spring:
       primary: master
       datasource:
         master:
-          url: jdbc:opengauss://192.168.110.32:7001/postgres?currentSchema=public
-          #          url: jdbc:opengauss://192.168.56.51:26000/postgres?currentSchema=public
+          url: jdbc:opengauss://127.0.0.1:7001/postgres?currentSchema=public
           driverClassName: org.opengauss.Driver
           username: scott
-          password: ******
+          password: '******'
         embedded:
 #          url: jdbc:intarkdb:data/observability-instance-data
 #          driverClassName: org.intarkdb.Driver
@@ -26,7 +25,7 @@ spring:
             separator: ";"
     type: com.alibaba.druid.pool.DruidDataSource
 #    driver-class-name: org.opengauss.Driver
-#    url: jdbc:opengauss://192.168.110.31:5432/postgres?currentSchema=public
+#    url: jdbc:opengauss://127.0.0.1:5432/postgres?currentSchema=public
 #    username: scott
 #    password: ******
     druid:

@@ -7,7 +7,7 @@ spring:
       max-file-size: 20MB #The maximum size of a single file is 20M
       max-request-size: 20MB #The total size of a single request file is 20M
   profiles:
-    active: dev
+    active: prod
   datasource:
     dynamic:
       #严格匹配数据源,默认false. true未匹配到指定数据源时抛异常,false使用默认数据源
