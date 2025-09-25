@@ -35,7 +35,6 @@ import com.nctigba.observability.instance.agent.util.FileUtils;
 import com.nctigba.observability.instance.agent.util.StringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;

@@ -42,8 +42,6 @@ import com.nctigba.observability.instance.service.CollectTemplateNodeService;
 import com.nctigba.observability.instance.service.CollectTemplateService;
 import com.nctigba.observability.instance.service.PrometheusService;
 import com.nctigba.observability.instance.util.MessageSourceUtils;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
@@ -65,7 +63,6 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/collectConfig/api")
-@Api(tags = "Collect Config API")
 public class CollectConfigController {
     @Autowired
     CollectTemplateNodeService collectTemplateNodeService;
@@ -93,8 +90,6 @@ public class CollectConfigController {
      * @return Normal result
      * @since 2023/12/1
      */
-    @ApiOperation(value = "Set metrics scrape interval for a database node",
-            notes = "Set metrics scrape interval for only a database node")
     @PostMapping(value = "/v1/templates/action", params = "action=setNodeTemplateDirect")
     public AjaxResult setNodeTemplateDirect(
             @RequestBody SetNodeTemplateDirectDTO setNodeTemplateDirectDTO) {

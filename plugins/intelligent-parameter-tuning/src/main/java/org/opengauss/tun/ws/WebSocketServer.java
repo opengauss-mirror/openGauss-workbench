@@ -41,7 +41,7 @@ import org.opengauss.tun.utils.response.RespBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.websocket.Session;
+import jakarta.websocket.Session;
 
 /**
  * WebSocketServer

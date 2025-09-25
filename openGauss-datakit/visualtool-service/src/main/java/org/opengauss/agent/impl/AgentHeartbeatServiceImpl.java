@@ -25,6 +25,7 @@ import org.opengauss.agent.event.AgentStatusEvent;
 import org.opengauss.agent.service.IAgentHeartbeatService;
 import org.opengauss.agent.service.IAgentInstallService;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -37,8 +38,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
 
 /**
  * IAgentHeartbeatService
@@ -56,6 +57,7 @@ public class AgentHeartbeatServiceImpl implements IAgentHeartbeatService {
     @Resource
     private ApplicationEventPublisher eventPublisher;
     @Resource
+    @Lazy
     private IAgentInstallService agentInstallService;
 
     /**

@@ -518,8 +518,8 @@ postgres=# ALTER INDEX tpcds.ds_customer_address_p1_index2 RENAME PARTITION CA_A
 <div class="section section-item-content"><p id="ZH-CN_TOPIC_0242370532__zh-cn_topic_0237122068_zh-cn_topic_0059778744_zh-cn_topic_0058966285_p278943619369">修改角色属性。</p>
 </div>
 <div style="cursor: hand; valigh: middle" onclick="isHidden(this)"><h4 class="sectionTitle" style="valigh: middle">示例&nbsp;<img src="img/openblue.png" style="valigh:middle;display:none"><img src="img/closeblue.png" style="valigh:middle;display:inline"></h4></div>
-<div class="section"><pre class="screen" id="assistantExamples">--修改角色manager的密码为abcd@123。
-postgres=# ALTER ROLE manager IDENTIFIED BY ' abcd@123 ' REPLACE ' Bigdata@123 ' ; 
+<div class="section"><pre class="screen" id="assistantExamples">--修改角色manager的密码为xxxxxx。
+postgres=# ALTER ROLE manager IDENTIFIED BY ' xxxxxx ' REPLACE ' ****** ' ; 
 
 --修改角色manager为系统管理员。
 postgres=# ALTER ROLE manager SYSADMIN ; 
@@ -753,8 +753,8 @@ postgres=# ALTER SESSION SET CURRENT_SCHEMA TO tpcds ;
 postgres=# ALTER SESSION SET XML OPTION DOCUMENT ; 
 
 --创建角色joe，并设置会话的角色为joe。
-postgres=# CREATE ROLE joe WITH PASSWORD ' Bigdata@123 ' ; 
-postgres=# ALTER SESSION SET SESSION AUTHORIZATION joe PASSWORD ' Bigdata@123 ' ; 
+postgres=# CREATE ROLE joe WITH PASSWORD ' ****** ' ; 
+postgres=# ALTER SESSION SET SESSION AUTHORIZATION joe PASSWORD ' ****** ' ; 
 
 --切换到默认用户。
 postgres=&gt; ALTER SESSION SET SESSION AUTHORIZATION default;
@@ -1509,7 +1509,7 @@ postgres=# ALTER TABLE test_trigger_src_tbl DISABLE TRIGGER ALL ;
 postgres=# ALTER TYPE compfoo RENAME TO compfoo1 ; 
 
 --要改变一个用户定义类型compfoo1的所有者为usr1。
-postgres=# CREATE USER usr1 PASSWORD ' Bigdata@123 ' ; 
+postgres=# CREATE USER usr1 PASSWORD ' ****** ' ; 
 postgres=# ALTER TYPE compfoo1 OWNER TO usr1 ; 
 
 --把用户定义类型compfoo1的模式改变为usr1。
@@ -1590,8 +1590,8 @@ where action is one of:
 <div class="section"><p id="ZH-CN_TOPIC_0242370547__zh-cn_topic_0237122083_zh-cn_topic_0059777461_a02caaffcc37c4f6d8ed2040515d993db">ALTER USER中修改的会话参数只针对指定的用户，且在下一次会话中有效。</p>
 </div>
 <div style="cursor: hand; valigh: middle" onclick="isHidden(this)"><h4 class="sectionTitle" style="valigh: middle">示例&nbsp;<img src="img/openblue.png" style="valigh:middle;display:none"><img src="img/closeblue.png" style="valigh:middle;display:inline"></h4></div>
-<div class="section"><pre class="screen" id="assistantExamples">--将用户jim的登录密码由Bigdata@123修改为Abcd@123。
-postgres=# ALTER USER jim IDENTIFIED BY ' Abcd@123 ' REPLACE ' Bigdata@123 ' ; 
+<div class="section"><pre class="screen" id="assistantExamples">--将用户jim的登录密码由******修改为xxxxxx。
+postgres=# ALTER USER jim IDENTIFIED BY ' xxxxxx ' REPLACE ' ****** ' ; 
 
 --为用户jim追加CREATEROLE权限。
 postgres=# ALTER USER jim CREATEROLE ; 
@@ -3357,11 +3357,11 @@ plsql_body
 <div class="section"><ul id="ZH-CN_TOPIC_0242370576__zh-cn_topic_0237122112_ul1562316561251"><li id="ZH-CN_TOPIC_0242370576__zh-cn_topic_0237122112_li5623145619251">在数据库中添加一个新角色，角色无登录权限。</li><li id="ZH-CN_TOPIC_0242370576__zh-cn_topic_0237122112_li262318565259">创建角色的用户必须具备CREATE ROLE的权限或者是系统管理员。</li></ul>
 </div>
 <div style="cursor: hand; valigh: middle" onclick="isHidden(this)"><h4 class="sectionTitle" style="valigh: middle">示例&nbsp;<img src="img/openblue.png" style="valigh:middle;display:none"><img src="img/closeblue.png" style="valigh:middle;display:inline"></h4></div>
-<div class="section"><pre class="screen" id="assistantExamples">--创建一个角色，名为manager，密码为Bigdata@123。
-postgres=# CREATE ROLE manager IDENTIFIED BY ' Bigdata@123 ' ; 
+<div class="section"><pre class="screen" id="assistantExamples">--创建一个角色，名为manager，密码为******。
+postgres=# CREATE ROLE manager IDENTIFIED BY ' ****** ' ; 
 
 --创建一个角色，从2015年1月1日开始生效，到2026年1月1日失效。
-postgres=# CREATE ROLE miriam WITH LOGIN PASSWORD ' Bigdata@123 ' VALID BEGIN ' 2015-01-01 ' VALID UNTIL ' 2026-01-01 ' ; 
+postgres=# CREATE ROLE miriam WITH LOGIN PASSWORD ' ****** ' VALID BEGIN ' 2015-01-01 ' VALID UNTIL ' 2026-01-01 ' ; 
 </pre></div>
 <div style="cursor: hand; valigh: middle" onclick="isHidden(this)"><h4 class="sectionTitle" style="valigh: middle">语法格式&nbsp;<img src="img/openblue.png" style="valigh:middle;display:inline"><img src="img/closeblue.png" style="valigh:middle;display:none"></h4></div>
 <div class="section" style="display: none"><pre class="screen" id="ZH-CN_TOPIC_0242370576__zh-cn_topic_0237122112_zh-cn_topic_0059778189_s0f9fce84f4f44a3aa13c752bf0d40235">CREATE ROLE role_name [ [ WITH ] option [ ... ] ] [ ENCRYPTED | UNENCRYPTED ] { PASSWORD | IDENTIFIED BY } { 'password' | DISABLE };</pre>
@@ -5174,7 +5174,7 @@ postgres=# SELECT ( b ) .f1 FROM t1_compfoo ;
 postgres=# SELECT * FROM t1_compfoo t1 join t2_compfoo t2 on ( t1.b ) .f1= ( t1.b ) .f1 ; 
 
 --要改变一个用户定义类型compfoo1的所有者为usr1。
-postgres=# CREATE USER usr1 PASSWORD ' Bigdata@123 ' ; 
+postgres=# CREATE USER usr1 PASSWORD ' ****** ' ; 
 postgres=# ALTER TYPE compfoo1 OWNER TO usr1 ; 
 
 --创建一个枚举类型。
@@ -5319,14 +5319,14 @@ CREATE TYPE name AS ENUM
 <div class="section"><ul id="ZH-CN_TOPIC_0242370589__zh-cn_topic_0237122125_ul139412062717"><li id="ZH-CN_TOPIC_0242370589__zh-cn_topic_0237122125_li158017715272">通过CREATE USER创建的用户，默认具有LOGIN权限；</li><li id="ZH-CN_TOPIC_0242370589__zh-cn_topic_0237122125_li1618551411277">通过CREATE USER创建用户的同时系统会在执行该命令的数据库中，为该用户创建一个同名的SCHEMA；其他数据库中，则不自动创建同名的SCHEMA；用户可使用CREATE SCHEMA命令，分别在其他数据库中，为该用户创建同名SCHEMA。</li><li id="ZH-CN_TOPIC_0242370589__zh-cn_topic_0237122125_li14941206273">系统管理员在普通用户同名schema下创建的对象，所有者为schema的同名用户（非系统管理员）。</li></ul>
 </div>
 <div style="cursor: hand; valigh: middle" onclick="isHidden(this)"><h4 class="sectionTitle" style="valigh: middle">示例&nbsp;<img src="img/openblue.png" style="valigh:middle;display:none"><img src="img/closeblue.png" style="valigh:middle;display:inline"></h4></div>
-<div class="section"><pre class="screen" id="assistantExamples">--创建用户jim，登录密码为Bigdata@123。
-postgres=# CREATE USER jim PASSWORD ' Bigdata@123 ' ; 
+<div class="section"><pre class="screen" id="assistantExamples">--创建用户jim，登录密码为******。
+postgres=# CREATE USER jim PASSWORD ' ****** ' ; 
 
 --下面语句与上面的等价。
-postgres=# CREATE USER kim IDENTIFIED BY ' Bigdata@123 ' ; 
+postgres=# CREATE USER kim IDENTIFIED BY ' ****** ' ; 
 
 --如果创建有“创建数据库”权限的用户，则需要加CREATEDB关键字。
-postgres=# CREATE USER dim CREATEDB PASSWORD ' Bigdata@123 ' ; 
+postgres=# CREATE USER dim CREATEDB PASSWORD ' ****** ' ; 
 </pre></div>
 <div style="cursor: hand; valigh: middle" onclick="isHidden(this)"><h4 class="sectionTitle" style="valigh: middle">语法格式&nbsp;<img src="img/openblue.png" style="valigh:middle;display:inline"><img src="img/closeblue.png" style="valigh:middle;display:none"></h4></div>
 <div class="section" style="display: none"><pre class="screen" id="ZH-CN_TOPIC_0242370589__zh-cn_topic_0237122125_zh-cn_topic_0059778166_s234e98654dd34a88b2b5f526b351f837">CREATE USER user_name [ [ WITH ] option [ ... ] ] [ ENCRYPTED | UNENCRYPTED ] { PASSWORD | IDENTIFIED BY } { 'password' | DISABLE };</pre>
@@ -6569,7 +6569,7 @@ ca_address_sk | ca_address_id | ca_street_number | ca_street_name | ca_street_ty
 </li></ul>
 </div>
 <div style="cursor: hand; valigh: middle" onclick="isHidden(this)"><h4 class="sectionTitle" style="valigh: middle">示例&nbsp;<img src="img/openblue.png" style="valigh:middle;display:none"><img src="img/closeblue.png" style="valigh:middle;display:inline"></h4></div>
-<div class="section"><pre class="screen" id="assistantExamples">postgres=# CREATE USER joe PASSWORD ' Bigdata@123 ' ; 
+<div class="section"><pre class="screen" id="assistantExamples">postgres=# CREATE USER joe PASSWORD ' ****** ' ; 
 postgres=# GRANT ALL PRIVILEGES TO joe ; 
 授权成功后，用户joe会拥有sysadmin的所有权限。
 示例：将对象权限授权给用户或者角色。
@@ -6583,15 +6583,15 @@ postgres=# GRANT select ( r_reason_sk , r_reason_id ) ON tpcds.reason TO joe WIT
 将数据库postgres的连接权限授权给用户joe，并给予其在postgres中创建schema的权限，而且允许joe将此权限授权给其他用户。
 postgres=# GRANT create , connect on database postgres TO joe WITH GRANT OPTION ; 
 创建角色tpcds_manager，将模式tpcds的访问权限授权给角色tpcds_manager，并授予该角色在tpcds下创建对象的权限，不允许该角色中的用户将权限授权给其他人。
-postgres=# CREATE ROLE tpcds_manager PASSWORD ' Bigdata@123 ' ; 
+postgres=# CREATE ROLE tpcds_manager PASSWORD ' ****** ' ; 
 postgres=# GRANT USAGE , CREATE ON SCHEMA tpcds TO tpcds_manager ; 
 将表空间tpcds_tbspc的所有权限授权给用户joe，但用户joe无法将权限继续授予其他用户。
 postgres=# CREATE TABLESPACE tpcds_tbspc RELATIVE LOCATION ' tablespace/tablespace_1 ' ; 
 postgres=# GRANT ALL ON TABLESPACE tpcds_tbspc TO joe ; 
 示例：将用户或者角色的权限授权给其他用户或角色。
-创建角色manager，将joe的权限授权给manager，并允许该角色将权限授权给其他人。postgres=# CREATE ROLE manager PASSWORD ' Bigdata@123 ' ; 
+创建角色manager，将joe的权限授权给manager，并允许该角色将权限授权给其他人。postgres=# CREATE ROLE manager PASSWORD ' ****** ' ; 
 postgres=# GRANT joe TO manager WITH ADMIN OPTION ; 
-创建用户senior_manager，将用户manager的权限授权给该用户。postgres=# CREATE ROLE senior_manager PASSWORD ' Bigdata@123 ' ; 
+创建用户senior_manager，将用户manager的权限授权给该用户。postgres=# CREATE ROLE senior_manager PASSWORD ' ****** ' ; 
 postgres=# GRANT manager TO senior_manager ; 
 撤销权限，并清理用户。postgres=# REVOKE manager FROM joe ; 
 postgres=# REVOKE senior_manager FROM manager ; 
@@ -7247,7 +7247,7 @@ postgres=# RESET ALL ;
 <ul id="ZH-CN_TOPIC_0242370643__zh-cn_topic_0237122179_zh-cn_topic_0059779274_u3b457081b16742e68081c066fc2054b0"><li id="ZH-CN_TOPIC_0242370643__zh-cn_topic_0237122179_zh-cn_topic_0059779274_l2cdf8891fa45468e80f96229fa174ea6">如果授权用户没有该对象上的权限，则命令立即失败。</li><li id="ZH-CN_TOPIC_0242370643__zh-cn_topic_0237122179_zh-cn_topic_0059779274_l335c48c5ad744728b781c51ccfad2a9b">如果授权用户有部分权限，则只撤销那些有授权选项的权限。</li><li id="ZH-CN_TOPIC_0242370643__zh-cn_topic_0237122179_zh-cn_topic_0059779274_l2a3506a3296347c799105978c90e655b">如果授权用户没有授权选项，REVOKE ALL PRIVILEGES形式将发出一个错误信息，而对于其他形式的命令而言，如果是命令中指定名称的权限没有相应的授权选项，该命令将发出一个警告。</li><li id="ZH-CN_TOPIC_0242370643__zh-cn_topic_0237122179_zh-cn_topic_0059779274_l420a46ddf0aa4f13bf955e20c7726f3d">不允许对表分区进行REVOKE操作，对分区表进行REVOKE操作会引起告警。</li></ul>
 </div>
 <div style="cursor: hand; valigh: middle" onclick="isHidden(this)"><h4 class="sectionTitle" style="valigh: middle">示例&nbsp;<img src="img/openblue.png" style="valigh:middle;display:none"><img src="img/closeblue.png" style="valigh:middle;display:inline"></h4></div>
-<div class="section"><pre class="screen" id="assistantExamples">postgres=# CREATE USER joe PASSWORD ' Bigdata@123 ' ; 
+<div class="section"><pre class="screen" id="assistantExamples">postgres=# CREATE USER joe PASSWORD ' ****** ' ; 
 postgres=# GRANT ALL PRIVILEGES TO joe ; 
 授权成功后，用户joe会拥有sysadmin的所有权限。
 示例：将对象权限授权给用户或者角色。
@@ -7261,15 +7261,15 @@ postgres=# GRANT select ( r_reason_sk , r_reason_id ) ON tpcds.reason TO joe WIT
 将数据库postgres的连接权限授权给用户joe，并给予其在postgres中创建schema的权限，而且允许joe将此权限授权给其他用户。
 postgres=# GRANT create , connect on database postgres TO joe WITH GRANT OPTION ; 
 创建角色tpcds_manager，将模式tpcds的访问权限授权给角色tpcds_manager，并授予该角色在tpcds下创建对象的权限，不允许该角色中的用户将权限授权给其他人。
-postgres=# CREATE ROLE tpcds_manager PASSWORD ' Bigdata@123 ' ; 
+postgres=# CREATE ROLE tpcds_manager PASSWORD ' ****** ' ; 
 postgres=# GRANT USAGE , CREATE ON SCHEMA tpcds TO tpcds_manager ; 
 将表空间tpcds_tbspc的所有权限授权给用户joe，但用户joe无法将权限继续授予其他用户。
 postgres=# CREATE TABLESPACE tpcds_tbspc RELATIVE LOCATION ' tablespace/tablespace_1 ' ; 
 postgres=# GRANT ALL ON TABLESPACE tpcds_tbspc TO joe ; 
 示例：将用户或者角色的权限授权给其他用户或角色。
-创建角色manager，将joe的权限授权给manager，并允许该角色将权限授权给其他人。postgres=# CREATE ROLE manager PASSWORD ' Bigdata@123 ' ; 
+创建角色manager，将joe的权限授权给manager，并允许该角色将权限授权给其他人。postgres=# CREATE ROLE manager PASSWORD ' ****** ' ; 
 postgres=# GRANT joe TO manager WITH ADMIN OPTION ; 
-创建用户senior_manager，将用户manager的权限授权给该用户。postgres=# CREATE ROLE senior_manager PASSWORD ' Bigdata@123 ' ; 
+创建用户senior_manager，将用户manager的权限授权给该用户。postgres=# CREATE ROLE senior_manager PASSWORD ' ****** ' ; 
 postgres=# GRANT manager TO senior_manager ; 
 撤销权限，并清理用户。postgres=# REVOKE manager FROM joe ; 
 postgres=# REVOKE senior_manager FROM manager ; 
@@ -7950,7 +7950,7 @@ postgres=# SET CONSTRAINTS ALL DEFERRED ;
 </div>
 <div style="cursor: hand; valigh: middle" onclick="isHidden(this)"><h4 class="sectionTitle" style="valigh: middle">示例&nbsp;<img src="img/openblue.png" style="valigh:middle;display:none"><img src="img/closeblue.png" style="valigh:middle;display:inline"></h4></div>
 <div class="section"><pre class="screen" id="assistantExamples">--设置当前用户为paul。
-postgres=# SET ROLE paul PASSWORD ' Bigdata@123 ' ; 
+postgres=# SET ROLE paul PASSWORD ' ****** ' ; 
 
 --重置当前用户。
 postgres=# RESET role ; 
@@ -7990,7 +7990,7 @@ postgres=# RESET role ;
 </div>
 <div style="cursor: hand; valigh: middle" onclick="isHidden(this)"><h4 class="sectionTitle" style="valigh: middle">示例&nbsp;<img src="img/openblue.png" style="valigh:middle;display:none"><img src="img/closeblue.png" style="valigh:middle;display:inline"></h4></div>
 <div class="section"><pre class="screen" id="assistantExamples">--设置当前用户为paul。
-postgres=# SET SESSION AUTHORIZATION paul password ' Bigdata@123 ' ; 
+postgres=# SET SESSION AUTHORIZATION paul password ' ****** ' ; 
 
 --重置当前用户。
 postgres=# RESET SESSION AUTHORIZATION ; 

@@ -298,11 +298,11 @@ export const delPackage = (packageId: string) => {
 }
 
 export const delPackageV2 = (data: KeyValue) => {
-  return axios.post(`/plugins/base-ops/installPackageManager/v2/delete/package/`, data)
+  return axios.post(`/plugins/base-ops/installPackageManager/v2/delete/package`, data)
 }
 
 export const checkPackage = (data: KeyValue) => {
-  return axios.post(`/plugins/base-ops/installPackageManager/v2/check/package/`, data)
+  return axios.post(`/plugins/base-ops/installPackageManager/v2/check/package`, data)
 }
 
 export const getVersionNum = () => {
@@ -314,7 +314,7 @@ export const getPackageList = (data: FormData) => {
 }
 
 export const getPackagePage = (pageSize: number, pageNum:number, data: KeyValue) => {
-  return axios.post(`/plugins/base-ops/installPackageManager/v2/page/package/?pageSize=${pageSize}&pageNum=${pageNum}`, data)
+  return axios.post(`/plugins/base-ops/installPackageManager/v2/page/package?pageSize=${pageSize}&pageNum=${pageNum}`, data)
 }
 
 export const batchPackageOnline = (data: FormData) => {
@@ -322,7 +322,7 @@ export const batchPackageOnline = (data: FormData) => {
 }
 
 export const batchPackageUpload = (uploadFileParam:any) => {
-  return axios.post(`/plugins/base-ops/installPackageManager/v2/save/upload/`, uploadFileParam)
+  return axios.post(`/plugins/base-ops/installPackageManager/v2/save/upload`, uploadFileParam)
 }
 
 export const packageOnlineUpdate = (params: URLSearchParams, config: KeyValue) => {

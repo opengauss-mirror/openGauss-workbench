@@ -39,6 +39,7 @@ import org.opengauss.admin.system.mapper.ops.OpsHostTagMapper;
 import org.opengauss.admin.system.service.ops.IOpsHostTagRelService;
 import org.opengauss.admin.system.service.ops.IOpsHostTagService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +53,7 @@ import java.util.stream.Collectors;
 @Service
 public class OpsHostTagService extends ServiceImpl<OpsHostTagMapper, OpsHostTagEntity> implements IOpsHostTagService {
     @Autowired
+    @Lazy
     private IOpsHostTagRelService opsHostTagRelService;
     @Autowired
     private OpsHostTagMapper opsHostTagMapper;

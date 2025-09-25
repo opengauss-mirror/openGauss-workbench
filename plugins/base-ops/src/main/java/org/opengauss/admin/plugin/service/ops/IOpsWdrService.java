@@ -31,7 +31,7 @@ import org.opengauss.admin.plugin.enums.ops.WdrScopeEnum;
 import org.opengauss.admin.plugin.enums.ops.WdrTypeEnum;
 import org.opengauss.admin.plugin.vo.ops.DwrSnapshotVO;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Date;
 import java.util.List;
 

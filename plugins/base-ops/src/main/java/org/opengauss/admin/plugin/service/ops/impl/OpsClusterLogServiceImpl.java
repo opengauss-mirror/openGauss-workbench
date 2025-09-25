@@ -35,7 +35,7 @@ import org.opengauss.admin.plugin.mapper.ops.OpsClusterOperateLogMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterLogService;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
 

@@ -73,7 +73,7 @@ public class DataSourceConfig {
      * @param dataSource data source
      * @return DataSourceScriptDatabaseInitializer
      */
-    @Bean
+    @Bean("oauthDataSourceScriptDatabaseInitializer")
     DataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSource dataSource) {
         EnvironmentProvider environmentProvider = PluginContextHolder.getEnvironmentProvider();
         String driverClassName = environmentProvider.getString("spring.datasource.driver-class-name");

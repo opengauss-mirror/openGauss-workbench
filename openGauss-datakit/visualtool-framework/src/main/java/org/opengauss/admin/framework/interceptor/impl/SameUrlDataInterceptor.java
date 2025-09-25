@@ -21,7 +21,6 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.framework.interceptor.impl;
 
 import com.alibaba.fastjson.JSONObject;
@@ -33,10 +32,9 @@ import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.http.HttpHelper;
 import org.opengauss.admin.framework.interceptor.BaseRepeatSubmitInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,9 +49,7 @@ public class SameUrlDataInterceptor extends BaseRepeatSubmitInterceptor {
 
     public final String REPEAT_TIME = "repeatTime";
 
-    @Value("${token.header}")
-    private String header;
-
+    private final String header = Constants.TOKEN_HEADER;
     @Autowired
     private Cache<String, Object> caffeineCache;
 

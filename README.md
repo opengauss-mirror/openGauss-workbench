@@ -74,8 +74,9 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
 
 ## 编译代码
 1. 请提前安装java 17+, maven 3.9.0+, node v18+(含npm)，并配置好maven镜像源和node镜像源
-2. 执行`sh build.sh`
-3. 编译输出件在output目录下
+2. 在本地编译安装SpringBrick组件 https://gitcode.com/wang4721/springboot-plugin-framework-parent.git
+3. 下载DataKit代码，执行`sh build.sh`
+4. 编译输出件在output目录下
 
 ## 安装步骤
 1. 解压安装包\

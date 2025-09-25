@@ -24,7 +24,7 @@
             <exclusions>
                 <exclusion>
                     <groupId>com.alibaba</groupId>
-                    <artifactId>druid-spring-boot-starter</artifactId>
+                    <artifactId>druid-spring-boot-3-starter</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -56,7 +56,7 @@
 
         <dependency>
             <groupId>com.alibaba</groupId>
-            <artifactId>druid-spring-boot-starter</artifactId>
+            <artifactId>druid-spring-boot-3-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.opengauss</groupId>
@@ -65,7 +65,7 @@
 
         <dependency>
             <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
         </dependency>
 
         <dependency>
@@ -83,8 +83,8 @@
         </dependency>
 
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
         </dependency>
         <dependency>
             <groupId>cn.hutool</groupId>

@@ -27,7 +27,7 @@ package org.opengauss.admin.common.core.domain;
 import lombok.Data;
 import org.opengauss.admin.common.core.vo.UploadInfoVO;
 
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotEmpty;
 
 /**
  * File upload common info

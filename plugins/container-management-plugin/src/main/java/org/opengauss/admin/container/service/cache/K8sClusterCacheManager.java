@@ -123,7 +123,7 @@ public class K8sClusterCacheManager {
      * @return K8sCluster
      */
     public K8sCluster getCluster(String clusterId) {
-        Assert.hasText(clusterId);
+        Assert.hasText(clusterId, "cluster id is not null");
         K8sCluster cacheData = clusterCacheMap.getOrDefault(clusterId, null);
         if (cacheData != null) {
             return cacheData;

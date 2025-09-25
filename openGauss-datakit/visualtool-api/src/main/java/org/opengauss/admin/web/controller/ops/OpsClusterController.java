@@ -21,10 +21,8 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.web.controller.ops;
 
-import io.swagger.annotations.Api;
 import org.opengauss.admin.common.core.controller.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.model.ops.ClusterSummaryVO;
@@ -37,7 +35,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -49,9 +46,7 @@ import java.util.Map;
  **/
 @RestController
 @RequestMapping("/opsCluster")
-@Api(tags = "opsCluster")
 public class OpsClusterController extends BaseController {
-
     @Autowired
     private IOpsClusterService opsClusterService;
 

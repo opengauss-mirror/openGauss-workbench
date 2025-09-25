@@ -21,12 +21,12 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.system.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import jakarta.annotation.Resource;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -49,15 +49,16 @@ import java.net.Proxy;
 import java.util.List;
 import java.util.Optional;
 
-import javax.annotation.Resource;
-
 /**
  * System Setting Service
  *
- * @author wangyl
+ * @author: wangchao
+ * @Date: 2025/9/11 21:21
+ * @since 7.0.0-RC2
  */
 @Service
-public class SysSettingServiceImpl extends ServiceImpl<SysSettingMapper, SysSettingEntity> implements ISysSettingService {
+public class SysSettingServiceImpl extends ServiceImpl<SysSettingMapper, SysSettingEntity>
+    implements ISysSettingService {
     @Value("${server.proxy.hostname}")
     private String proxyHostname;
     @Value("${server.proxy.port}")

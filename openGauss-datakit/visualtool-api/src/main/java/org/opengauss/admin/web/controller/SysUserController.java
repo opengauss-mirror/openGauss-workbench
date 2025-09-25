@@ -41,7 +41,6 @@ import org.opengauss.admin.system.service.ISysRoleService;
 import org.opengauss.admin.system.service.ISysUserService;
 
 import cn.hutool.core.util.StrUtil;
-import io.swagger.annotations.Api;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +58,6 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/system/user")
-@Api(tags = "user")
 public class SysUserController extends BaseController {
     @Autowired
     private ISysUserService userService;

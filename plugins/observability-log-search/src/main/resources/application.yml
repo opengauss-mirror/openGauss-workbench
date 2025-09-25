@@ -1,17 +1,11 @@
 ## Spring Configuration
-context:
-  listener:
-    classes: com.nctigba.observability.log.listener.PluginListener
-
 spring:
   servlet:
     multipart:
       max-file-size: 20MB #The maximum size of a single file is 20M
       max-request-size: 20MB #The total file size of a single request is 20M
   profiles:
-    active: '@profiles.active@'
-  resources:
-    static-locations: classpath:resources,file:D://static
+    active: prod
   datasource:
     dynamic:
       strict: false #Strictly match data sources,Default false. true:Throw exception when the specified data source is not matched,false:Use default data source
@@ -45,6 +39,9 @@ spring:
     parser:
       allow_unquoted_control_chars: true
       allow_single_quotes: true
+  web:
+    resources:
+      static-locations: classpath:resources,file:D://static
 server.compression:
   enabled: true
   mime-types: application/javascript,text/css,application/json,application/xml,text/html,text/xml,text/plain

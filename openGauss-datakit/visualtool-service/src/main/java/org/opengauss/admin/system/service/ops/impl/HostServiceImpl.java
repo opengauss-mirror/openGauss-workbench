@@ -73,6 +73,7 @@ import org.opengauss.admin.system.service.JschExecutorService;
 import org.opengauss.admin.system.service.ops.*;
 import org.opengauss.agent.service.IAgentInstallService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -82,7 +83,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -116,6 +117,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     @Autowired
     private EncryptionUtils encryptionUtils;
     @Autowired
+    @Lazy
     private IOpsClusterService clusterService;
     @Autowired
     private WsConnectorManager wsConnectorManager;
@@ -124,12 +126,16 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
     @Autowired
     private JschUtil jschUtil;
     @Autowired
+    @Lazy
     private IOpsHostTagRelService opsHostTagRelService;
     @Autowired
+    @Lazy
     private IOpsHostTagService opsHostTagService;
     @Autowired
+    @Lazy
     private HostMonitorCacheService hostMonitorCacheService;
     @Autowired
+    @Lazy
     private IAgentInstallService agentInstallService;
 
     private Cache<String, List<ErrorHostRecord>> errorExcel = CacheBuilder.newBuilder()
@@ -152,7 +158,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         opsHostTagRelService.cleanHostTag(hostEntity.getHostId());
         opsHostTagService.addTag(HostTagInputDto.of(hostBody.getTags(), hostEntity.getHostId()));
         HostUserBody hostUserBody = hostBody.toUserBody(hostEntity.getHostId());
-        return hostUserService.add(hostUserBody);
+        return hostUserService.add(hostEntity, hostUserBody);
     }
 
     @Override
@@ -327,7 +333,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         hostUserBody.setHostId(hostEntity.getHostId());
         hostUserBody.setUsername(hostRecord.getUserName());
         hostUserBody.setPassword(encryptionUtils.encrypt(hostRecord.getPassword()));
-        hostUserService.add(hostUserBody);
+        hostUserService.add(hostEntity, hostUserBody);
         List<String> tags = addAllTagsToNewCollection(hostRecord.getTags());
         opsHostTagService.addTag(HostTagInputDto.of(tags, hostEntity.getHostId()));
     }
@@ -758,6 +764,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
      * @param hostId hostId
      * @return os entity mapped
      */
+    @Override
     public OpsHostEntity getMappedHostEntityById(String hostId) {
         OpsHostEntity opsHostEntity = getById(hostId);
         OsSupportMap osMapEnum = OsSupportMap.of(opsHostEntity.getOs(), opsHostEntity.getOsVersion(),

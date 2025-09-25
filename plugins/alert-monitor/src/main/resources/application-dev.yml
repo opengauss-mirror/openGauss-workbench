@@ -9,11 +9,10 @@ spring:
       primary: master
       datasource:
         master:
-          url: jdbc:opengauss://192.168.110.38:7001/postgres?currentSchema=public
-#          url: jdbc:opengauss://192.168.56.51:26000/postgres?currentSchema=public
+          url: jdbc:opengauss://127.0.0.1:7001/postgres?currentSchema=public
           driverClassName: org.opengauss.Driver
           username: scott
-          password: ******
+          password: '******'
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
       test-while-idle: false

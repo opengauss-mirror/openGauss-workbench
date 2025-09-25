@@ -44,8 +44,8 @@ import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.common.utils.ServletUtils;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;

@@ -1,6 +1,3 @@
-context:
-  listener:
-    classes: org.opengauss.collect.listener.PluginListener
 spring:
   # 文件上传
   servlet:
@@ -9,8 +6,6 @@ spring:
       max-file-size: 100MB
       # 设置总上传的文件大小
       max-request-size: 200MB
-  resources:
-    static-locations: classpath:resources
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
@@ -18,6 +13,9 @@ spring:
       test-on-borrow: true
       validation-query: "select 1"
       validation-query-timeout: 30000
+  web:
+    resources:
+      static-locations: classpath:resources
 
 mybatis-plus:
   # Search for the specified package alias

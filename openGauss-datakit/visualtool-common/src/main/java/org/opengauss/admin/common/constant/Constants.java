@@ -74,6 +74,16 @@ public class Constants {
     public static final String TOKEN = "token";
 
     /**
+     * token header
+     */
+    public static final String TOKEN_HEADER = "Authorization";
+
+    /**
+     * token expire time
+     */
+    public static final int TOKEN_EXPIRE_TIME = 60;
+
+    /**
      * token prefix
      */
     public static final String TOKEN_PREFIX = "Bearer ";

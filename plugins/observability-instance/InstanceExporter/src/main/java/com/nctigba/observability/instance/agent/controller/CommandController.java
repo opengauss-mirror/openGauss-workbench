@@ -34,7 +34,6 @@ import com.nctigba.observability.instance.agent.util.CmdUtils;
 import com.nctigba.observability.instance.agent.util.DbUtils;
 import com.nctigba.observability.instance.agent.util.StringUtils;
 import lombok.AllArgsConstructor;
-import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

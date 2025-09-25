@@ -24,6 +24,7 @@
 package com.nctigba.alert.monitor.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+
 import com.baomidou.mybatisplus.core.MybatisConfiguration;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
@@ -40,6 +41,7 @@ import com.nctigba.alert.monitor.model.query.AlertTemplateQuery;
 import com.nctigba.alert.monitor.service.AlertScheduleService;
 import com.nctigba.alert.monitor.service.AlertTemplateRuleService;
 import com.nctigba.alert.monitor.service.AlertTemplateService;
+
 import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.Before;
 import org.junit.Test;
@@ -144,7 +146,6 @@ public class AlertClusterNodeConfServiceImplTest {
         when(baseMapper.selectList(any())).thenReturn(oldList);
         List list = anyList();
         when(alertClusterNodeConfService.saveBatch(list)).thenReturn(true);
-
         doNothing().when(prometheusService).updateRuleConfig(anyMap());
         List<AlertTemplateRuleDO> templateRuleList = new ArrayList<>();
         AlertTemplateRuleDO templateRule = new AlertTemplateRuleDO().setRuleType(CommonConstants.LOG_RULE).setId(1L);
@@ -152,9 +153,7 @@ public class AlertClusterNodeConfServiceImplTest {
         when(templateRuleService.list(any())).thenReturn(templateRuleList);
         Set<Long> ruleIdSet = templateRuleList.stream().map(item -> item.getRuleId()).collect(Collectors.toSet());
         doNothing().when(alertScheduleService).addTasks(ruleIdSet);
-
         alertClusterNodeConfService.saveClusterNodeConf(alertClusterNodeConfQuery);
-
         verify(baseMapper, times(3)).selectList(any());
         verify(alertClusterNodeConfService, times(1)).saveBatch(list);
         verify(alertClusterNodeConfService, times(1)).update(any(), any(LambdaUpdateWrapper.class));
@@ -179,9 +178,7 @@ public class AlertClusterNodeConfServiceImplTest {
         when(templateRuleService.list(any())).thenReturn(templateRuleList);
         Set<Long> ruleIdSet = templateRuleList.stream().map(item -> item.getRuleId()).collect(Collectors.toSet());
         doNothing().when(alertScheduleService).addTasks(ruleIdSet);
-
         alertClusterNodeConfService.saveClusterNodeConf(alertClusterNodeConfQuery);
-
         verify(baseMapper, times(2)).selectList(any());
         verify(alertClusterNodeConfService, times(1)).saveBatch(list);
         verify(alertClusterNodeConfService, times(1)).update(any(), any(LambdaUpdateWrapper.class));
@@ -202,11 +199,11 @@ public class AlertClusterNodeConfServiceImplTest {
         List<AlertClusterNodeConfDO> oldListByNodeIds = new ArrayList<>();
         oldListByNodeIds.add(new AlertClusterNodeConfDO().setClusterNodeId("node2").setTemplateId(2L));
         List<AlertClusterNodeConfDO> alertClusterNodeConfDOS = new ArrayList<>();
-        when(baseMapper.selectList(any())).thenReturn(oldList).thenReturn(oldListByNodeIds)
+        when(baseMapper.selectList(any())).thenReturn(oldList)
+            .thenReturn(oldListByNodeIds)
             .thenReturn(alertClusterNodeConfDOS);
         List list = anyList();
         when(alertClusterNodeConfService.saveBatch(list)).thenReturn(true);
-
         doNothing().when(prometheusService).updateRuleConfig(anyMap());
         List<AlertTemplateRuleDO> templateRuleList = new ArrayList<>();
         templateRuleList.add(new AlertTemplateRuleDO().setRuleType(CommonConstants.LOG_RULE).setId(1L));
@@ -216,9 +213,7 @@ public class AlertClusterNodeConfServiceImplTest {
         Set<Long> ruleIdSet = templateRuleList.stream().map(item -> item.getRuleId()).collect(Collectors.toSet());
         doNothing().when(alertScheduleService).addTasks(ruleIdSet);
         doNothing().when(alertScheduleService).removeTasks(anyList());
-
         alertClusterNodeConfService.saveClusterNodeConf(alertClusterNodeConfQuery);
-
         verify(baseMapper, times(3)).selectList(any());
         verify(alertClusterNodeConfService, times(1)).saveBatch(list);
         verify(alertClusterNodeConfService, times(1)).update(any(), any(LambdaUpdateWrapper.class));
@@ -240,11 +235,11 @@ public class AlertClusterNodeConfServiceImplTest {
         List<AlertClusterNodeConfDO> oldListByNodeIds = new ArrayList<>();
         oldListByNodeIds.add(new AlertClusterNodeConfDO().setClusterNodeId("node2").setTemplateId(2L));
         List<AlertClusterNodeConfDO> alertClusterNodeConfDOS = new ArrayList<>();
-        when(baseMapper.selectList(any())).thenReturn(oldList).thenReturn(oldListByNodeIds)
+        when(baseMapper.selectList(any())).thenReturn(oldList)
+            .thenReturn(oldListByNodeIds)
             .thenReturn(alertClusterNodeConfDOS);
         List list = anyList();
         when(alertClusterNodeConfService.saveBatch(list)).thenReturn(true);
-
         doNothing().when(prometheusService).updateRuleConfig(anyMap());
         List<AlertTemplateRuleDO> templateRuleList = new ArrayList<>();
         templateRuleList.add(new AlertTemplateRuleDO().setRuleType(CommonConstants.LOG_RULE).setId(1L));
@@ -256,9 +251,7 @@ public class AlertClusterNodeConfServiceImplTest {
         List<Long> ruleIdList = new ArrayList<>();
         ruleIdList.add(1L);
         when(baseMapper.getRuleIdExcludeNoIds(any())).thenReturn(ruleIdList);
-
         alertClusterNodeConfService.saveClusterNodeConf(alertClusterNodeConfQuery);
-
         verify(baseMapper, times(3)).selectList(any());
         verify(alertClusterNodeConfService, times(1)).saveBatch(list);
         verify(alertClusterNodeConfService, times(1)).update(any(), any(LambdaUpdateWrapper.class));
@@ -279,11 +272,11 @@ public class AlertClusterNodeConfServiceImplTest {
         List<AlertClusterNodeConfDO> oldListByNodeIds = new ArrayList<>();
         oldListByNodeIds.add(new AlertClusterNodeConfDO().setClusterNodeId("node2").setTemplateId(2L));
         List<AlertClusterNodeConfDO> alertClusterNodeConfDOS = new ArrayList<>();
-        when(baseMapper.selectList(any())).thenReturn(oldList).thenReturn(oldListByNodeIds)
+        when(baseMapper.selectList(any())).thenReturn(oldList)
+            .thenReturn(oldListByNodeIds)
             .thenReturn(alertClusterNodeConfDOS);
         List list = anyList();
         when(alertClusterNodeConfService.saveBatch(list)).thenReturn(true);
-
         doNothing().when(prometheusService).updateRuleConfig(anyMap());
         List<AlertTemplateRuleDO> templateRuleList = new ArrayList<>();
         templateRuleList.add(new AlertTemplateRuleDO().setRuleType(CommonConstants.LOG_RULE).setId(1L));
@@ -291,9 +284,7 @@ public class AlertClusterNodeConfServiceImplTest {
         when(templateRuleService.list(any())).thenReturn(templateRuleList).thenReturn(logTemplateRuleList);
         Set<Long> ruleIdSet = templateRuleList.stream().map(item -> item.getRuleId()).collect(Collectors.toSet());
         doNothing().when(alertScheduleService).addTasks(ruleIdSet);
-
         alertClusterNodeConfService.saveClusterNodeConf(alertClusterNodeConfQuery);
-
         verify(baseMapper, times(3)).selectList(any());
         verify(alertClusterNodeConfService, times(1)).saveBatch(list);
         verify(alertClusterNodeConfService, times(1)).update(any(), any(LambdaUpdateWrapper.class));
@@ -320,26 +311,25 @@ public class AlertClusterNodeConfServiceImplTest {
         list.add(alertClusterNodeConfDO);
         when(baseMapper.selectList(any())).thenReturn(list);
         String clusterNodeId = "node1";
-        AlertClusterNodeConfDO alertClusterNodeConfDO1 = alertClusterNodeConfService.getByClusterNodeId(clusterNodeId
-            , CommonConstants.INSTANCE);
+        AlertClusterNodeConfDO alertClusterNodeConfDO1 = alertClusterNodeConfService.getByClusterNodeId(clusterNodeId,
+            CommonConstants.INSTANCE);
         verify(baseMapper, times(1)).selectList(any());
         assertEquals("node1", alertClusterNodeConfDO1.getClusterNodeId());
     }
 
     @Test
     public void testSaveAlertTemplateAndConfig() {
-        AlertClusterNodeAndTemplateQuery clusterNodeAndTemplateReq =
-            new AlertClusterNodeAndTemplateQuery().setClusterNodeIds("node1,node2").setTemplateName("templateName")
-                .setTemplateRuleReqList(new ArrayList<>());
+        AlertClusterNodeAndTemplateQuery clusterNodeAndTemplateReq
+            = new AlertClusterNodeAndTemplateQuery().setClusterNodeIds("node1,node2")
+            .setTemplateName("templateName")
+            .setTemplateRuleReqList(new ArrayList<>());
         AlertTemplateQuery templateReq = new AlertTemplateQuery();
         BeanUtil.copyProperties(clusterNodeAndTemplateReq, templateReq);
-        AlertTemplateDO alertTemplateDO =
-            new AlertTemplateDO().setTemplateName(templateReq.getTemplateName()).setId(1L);
+        AlertTemplateDO alertTemplateDO = new AlertTemplateDO().setTemplateName(templateReq.getTemplateName())
+            .setId(1L);
         when(templateService.saveTemplate(any())).thenReturn(alertTemplateDO);
         doNothing().when(alertClusterNodeConfService).saveClusterNodeConf(any());
-
         alertClusterNodeConfService.saveAlertTemplateAndConfig(clusterNodeAndTemplateReq);
-
         verify(templateService, times(1)).saveTemplate(any());
         verify(alertClusterNodeConfService, times(1)).saveClusterNodeConf(any());
     }
@@ -354,7 +344,6 @@ public class AlertClusterNodeConfServiceImplTest {
         opsClusterNode.setClusterRole(ClusterRoleEnum.MASTER);
         list.add(opsClusterNode);
         when(clusterNodeService.list()).thenReturn(list);
-
         Set<String> set = list.stream().map(item -> item.getHostId()).collect(Collectors.toSet());
         List<OpsHostEntity> opsHostEntities = new ArrayList<>();
         OpsHostEntity opsHostEntity = new OpsHostEntity();
@@ -362,25 +351,20 @@ public class AlertClusterNodeConfServiceImplTest {
         opsHostEntity.setPublicIp("127.0.0.1");
         opsHostEntities.add(opsHostEntity);
         when(hostFacade.listByIds(set)).thenReturn(opsHostEntities);
-
         List<OpsClusterEntity> opsClusterEntities = new ArrayList<>();
         OpsClusterEntity opsClusterEntity = new OpsClusterEntity();
         opsClusterEntity.setClusterId("test");
         opsClusterEntity.setPort(80);
         opsClusterEntities.add(opsClusterEntity);
         when(clusterService.listByIds(any())).thenReturn(opsClusterEntities);
-
         List<AlertClusterNodeConfDO> alertClusterNodeConfDOS = new ArrayList<>();
-        AlertClusterNodeConfDO alertClusterNodeConfDO =
-            new AlertClusterNodeConfDO().setClusterNodeId("node123").setTemplateId(1L);
+        AlertClusterNodeConfDO alertClusterNodeConfDO = new AlertClusterNodeConfDO().setClusterNodeId("node123")
+            .setTemplateId(1L);
         alertClusterNodeConfDOS.add(alertClusterNodeConfDO);
         when(baseMapper.selectList(any())).thenReturn(alertClusterNodeConfDOS);
-
         AlertTemplateDO alertTemplateDO = new AlertTemplateDO().setId(1L).setTemplateName("name");
         when(templateMapper.selectById(any())).thenReturn(alertTemplateDO);
-
         List<AlertClusterNodeConfDTO> resultList = alertClusterNodeConfService.getList(CommonConstants.INSTANCE);
-
         verify(clusterNodeService, times(1)).list();
         verify(hostFacade, times(1)).listByIds(set);
         verify(clusterService, times(1)).listByIds(anyList());
@@ -388,8 +372,10 @@ public class AlertClusterNodeConfServiceImplTest {
         verify(templateMapper, times(1)).selectById(any());
         assertEquals(1, resultList.size());
         AlertClusterNodeConfDTO alertClusterNodeConfDto = new AlertClusterNodeConfDTO();
-        alertClusterNodeConfDto.setClusterNodeId("node123").setNodeName("test/127.0.0.1:80(MASTER)")
-            .setTemplateId(1L).setTemplateName("name");
+        alertClusterNodeConfDto.setClusterNodeId("node123")
+            .setNodeName("test/127.0.0.1:80(MASTER)")
+            .setTemplateId(1L)
+            .setTemplateName("name");
         assertEquals(alertClusterNodeConfDto, resultList.get(0));
     }
 
@@ -403,7 +389,6 @@ public class AlertClusterNodeConfServiceImplTest {
         opsClusterNode.setClusterRole(ClusterRoleEnum.MASTER);
         list.add(opsClusterNode);
         when(clusterNodeService.list()).thenReturn(list);
-
         Set<String> set = list.stream().map(item -> item.getHostId()).collect(Collectors.toSet());
         List<OpsHostEntity> opsHostEntities = new ArrayList<>();
         OpsHostEntity opsHostEntity = new OpsHostEntity();
@@ -411,19 +396,15 @@ public class AlertClusterNodeConfServiceImplTest {
         opsHostEntity.setPublicIp("127.0.0.1");
         opsHostEntities.add(opsHostEntity);
         when(hostFacade.listByIds(set)).thenReturn(opsHostEntities);
-
         List<OpsClusterEntity> opsClusterEntities = new ArrayList<>();
         OpsClusterEntity opsClusterEntity = new OpsClusterEntity();
         opsClusterEntity.setClusterId("test");
         opsClusterEntity.setPort(80);
         opsClusterEntities.add(opsClusterEntity);
         when(clusterService.listByIds(any())).thenReturn(opsClusterEntities);
-
         List<AlertClusterNodeConfDO> alertClusterNodeConfDOS = new ArrayList<>();
         when(baseMapper.selectList(any())).thenReturn(alertClusterNodeConfDOS);
-
         List<AlertClusterNodeConfDTO> resultList = alertClusterNodeConfService.getList(CommonConstants.INSTANCE);
-
         verify(clusterNodeService, times(1)).list();
         verify(hostFacade, times(1)).listByIds(set);
         verify(clusterService, times(1)).listByIds(anyList());

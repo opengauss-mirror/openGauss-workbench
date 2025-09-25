@@ -40,7 +40,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Objects;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * @author lhf

@@ -100,6 +100,7 @@ import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.opengauss.admin.system.plugin.facade.SysSettingFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -107,7 +108,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -195,6 +196,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
     @Resource
     private MigrationTaskHostRefMapper migrationTaskHostRefMapper;
     @Resource
+    @Lazy
     private MigrationTaskService migrationTaskService;
     @Resource
     private MigrationHostPortalInstallHostService migrationHostPortalInstallHostService;

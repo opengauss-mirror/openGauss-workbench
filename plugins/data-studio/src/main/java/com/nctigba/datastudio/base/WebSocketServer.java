@@ -45,7 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import javax.websocket.Session;
+import jakarta.websocket.Session;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -69,7 +69,7 @@ import static com.nctigba.datastudio.enums.MessageEnum.WINDOW;
  * @since 2023-6-26
  */
 @Slf4j
-@Service
+@Service("webdsWebSocketServer")
 @Extract(bus = "webds-plugin")
 public class WebSocketServer implements SocketExtract {
     private final Map<String, Map<String, Object>> paramMap = new HashMap<>();

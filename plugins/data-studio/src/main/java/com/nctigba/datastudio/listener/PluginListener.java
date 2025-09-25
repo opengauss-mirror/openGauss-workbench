@@ -33,6 +33,7 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.stereotype.Component;
 
 import static com.nctigba.datastudio.constants.CommonConstants.WEBDS_PLUGIN;
 
@@ -41,6 +42,7 @@ import static com.nctigba.datastudio.constants.CommonConstants.WEBDS_PLUGIN;
  *
  * @since 2023-6-26
  */
+@Component
 public class PluginListener implements ApplicationListener<ApplicationEvent> {
     /**
      * on application event

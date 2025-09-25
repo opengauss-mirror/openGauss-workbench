@@ -34,7 +34,7 @@ import com.jcraft.jsch.SftpException;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;

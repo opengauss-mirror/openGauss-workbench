@@ -36,7 +36,6 @@ import com.nctigba.observability.instance.agent.util.CmdUtils;
 import com.nctigba.observability.instance.agent.util.StringUtils;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

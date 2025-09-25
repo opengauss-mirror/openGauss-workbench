@@ -21,18 +21,22 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.web.controller.ops;
 
 import org.opengauss.admin.system.service.ops.IWsService;
+
+import jakarta.websocket.OnClose;
+import jakarta.websocket.OnMessage;
+import jakarta.websocket.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 
-import javax.websocket.*;
-import javax.websocket.server.PathParam;
-import javax.websocket.server.ServerEndpoint;
+import jakarta.websocket.OnOpen;
+import jakarta.websocket.OnError;
+import jakarta.websocket.server.PathParam;
+import jakarta.websocket.server.ServerEndpoint;
 
 /**
  * websocket

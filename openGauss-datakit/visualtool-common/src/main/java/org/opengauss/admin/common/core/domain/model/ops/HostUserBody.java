@@ -27,7 +27,7 @@ package org.opengauss.admin.common.core.domain.model.ops;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 /**
  * @author lhf

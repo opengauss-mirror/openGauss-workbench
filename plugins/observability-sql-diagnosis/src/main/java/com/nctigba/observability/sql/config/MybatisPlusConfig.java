@@ -23,21 +23,50 @@
 
 package com.nctigba.observability.sql.config;
 
+import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.BlockAttackInnerInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * MybatisPlusConfig
+ *
+ * @author: wangchao
+ * @Date: 2025/9/11 21:21
+ * @since 7.0.0-RC2
+ **/
 @Configuration
 public class MybatisPlusConfig {
-	/**
-	 * mybatisPlusInterceptor
-	 *
-	 * @return MybatisPlusInterceptor
-	 */
+    /**
+     * mybatisPlusInterceptor
+     *
+     * @return MybatisPlusInterceptor
+     */
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
-        interceptor.addInnerInterceptor(new DefaultDbPaginationInnerInterceptor());
+        interceptor.addInnerInterceptor(paginationInnerInterceptor());
+        interceptor.addInnerInterceptor(optimisticLockerInnerInterceptor());
+        interceptor.addInnerInterceptor(blockAttackInnerInterceptor());
         return interceptor;
+    }
+
+    private PaginationInnerInterceptor paginationInnerInterceptor() {
+        PaginationInnerInterceptor paginationInnerInterceptor = new PaginationInnerInterceptor();
+        paginationInnerInterceptor.setDbType(DbType.POSTGRE_SQL);
+        paginationInnerInterceptor.setMaxLimit(-1L);
+        return paginationInnerInterceptor;
+    }
+
+    private OptimisticLockerInnerInterceptor optimisticLockerInnerInterceptor() {
+        return new OptimisticLockerInnerInterceptor();
+    }
+
+    private BlockAttackInnerInterceptor blockAttackInnerInterceptor() {
+        return new BlockAttackInnerInterceptor();
     }
 }

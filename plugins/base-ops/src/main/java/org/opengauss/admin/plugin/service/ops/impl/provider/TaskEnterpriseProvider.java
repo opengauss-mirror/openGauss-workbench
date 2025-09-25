@@ -41,7 +41,7 @@ import org.opengauss.admin.plugin.service.ops.impl.function.GenerateClusterConfi
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;

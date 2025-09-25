@@ -21,7 +21,6 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.web.controller;
 
 import cn.hutool.core.codec.Base64;
@@ -70,9 +69,6 @@ import org.opengauss.admin.system.domain.SysPlugin;
 import org.opengauss.admin.system.domain.SysPluginLogo;
 import org.opengauss.admin.system.plugin.beans.PluginExtensionInfoDto;
 import org.opengauss.admin.system.plugin.extract.PluginExtensionInfoExtract;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiOperation;
 import org.opengauss.admin.system.service.ISysPluginConfigDataService;
 import org.opengauss.admin.system.service.ISysPluginConfigService;
 import org.opengauss.admin.system.service.ISysPluginRepositoryService;
@@ -94,9 +90,15 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Map;
 
+/**
+ * user profile controller
+ *
+ * @author: wangchao
+ * @Date: 2025/9/11 21:21
+ * @since 7.0.0-RC2
+ **/
 @RestController
 @RequestMapping("/system/plugins")
-@Api(tags = "plugins")
 @Slf4j
 public class SystemPluginController extends BaseController {
     @Autowired
@@ -127,7 +129,6 @@ public class SystemPluginController extends BaseController {
      * get plugin list
      */
     @GetMapping("/list")
-    @ApiOperation(value = "plugin list", notes = "plugin list")
     public TableDataInfo list(SysPlugin sysPlugin) {
         IPage<SysPlugin> list = sysPluginService.selectList(startPage(), sysPlugin);
         list.getRecords().forEach(d -> {
@@ -149,7 +150,6 @@ public class SystemPluginController extends BaseController {
      * get plugin extension list
      */
     @GetMapping("/extensions/list")
-    @ApiOperation(value = "plugin extension info list", notes = "plugin extension info list")
     public TableDataInfo listExtensionInfo(SysPlugin sysPlugin) {
         IPage<SysPlugin> page = sysPluginService.selectList(startPage(), sysPlugin);
         List<PluginExtensionInfoDto> list = new ArrayList<>();
@@ -180,7 +180,6 @@ public class SystemPluginController extends BaseController {
      * get plugin count
      */
     @GetMapping("/count")
-    @ApiOperation(value = "plugin count", notes = "plugin count")
     public AjaxResult installCount() {
         return AjaxResult.success(sysPluginService.count());
     }
@@ -197,8 +196,6 @@ public class SystemPluginController extends BaseController {
      */
     @Log(title = "plugins", businessType = BusinessType.START)
     @PostMapping("/start/{id}")
-    @ApiOperation("start plugin")
-    @ApiImplicitParam(name = "id", value = "pluginId", paramType = "path", required = true)
     public AjaxResult start(@PathVariable("id") String id) {
         try {
             if (pluginOperator.start(id)) {
@@ -224,8 +221,6 @@ public class SystemPluginController extends BaseController {
      */
     @Log(title = "plugins", businessType = BusinessType.STOP)
     @PostMapping("/stop/{id}")
-    @ApiOperation("stop plugin")
-    @ApiImplicitParam(name = "id", value = "pluginId", paramType = "path", required = true)
     public AjaxResult stop(@PathVariable("id") String id) {
         try {
             Integer count = sysMenuService.countMenuHasOtherEnablePluginSubmenuByPluginId(id);
@@ -257,7 +252,6 @@ public class SystemPluginController extends BaseController {
      */
     @Log(title = "plugins", businessType = BusinessType.INSTALL)
     @PostMapping("/offline_install")
-    @ApiOperation("offline install plugin")
     public AjaxResult install(@RequestParam("file") MultipartFile jarFile) {
         try {
             preInstall(jarFile);
@@ -312,7 +306,6 @@ public class SystemPluginController extends BaseController {
      */
     @Log(title = "plugins", businessType = BusinessType.INSTALL)
     @PostMapping("/online_install")
-    @ApiOperation("online install plugin")
     public AjaxResult onlineInstall(@RequestBody PluginDownloadDTO dto) {
         String pluginUrl = dto.getPluginUrl();
         String wsBusinessId = dto.getWsBusinessId();
@@ -429,8 +422,6 @@ public class SystemPluginController extends BaseController {
      */
     @Log(title = "plugins", businessType = BusinessType.UNINSTALL)
     @PostMapping("/uninstall/{id}")
-    @ApiOperation("uninstall plugin")
-    @ApiImplicitParam(name = "id", value = "pluginId", paramType = "path", required = true)
     public AjaxResult uninstall(@PathVariable("id") String id) {
         try {
             Integer count = sysMenuService.countMenuHasOtherPluginSubmenuByPluginId(id);
@@ -456,8 +447,6 @@ public class SystemPluginController extends BaseController {
      * @param id plugin id
      */
     @PostMapping("/get/{id}")
-    @ApiOperation("get info")
-    @ApiImplicitParam(name = "id", value = "pluginId", paramType = "path", required = true)
     public AjaxResult get(@PathVariable("id") String id) {
         try {
             return AjaxResult.success(pluginOperator.getPluginInfo(id));
@@ -472,7 +461,6 @@ public class SystemPluginController extends BaseController {
      * save plugin config content
      */
     @PostMapping("/pluginConfigData")
-    @ApiOperation("save configData")
     public AjaxResult savePluginConfigData(@RequestBody PluginConfigDataDto configDataDto) {
         sysPluginConfigDataService.savePluginConfigData(configDataDto.getPluginId(), configDataDto.getConfigData());
         return AjaxResult.success();
@@ -519,7 +507,6 @@ public class SystemPluginController extends BaseController {
      * get unload plugins info list
      */
     @GetMapping("/isBaseOpsStart")
-    @ApiOperation("Get base-ops plugin status")
     public AjaxResult getBaseOpsStatus() {
         if (!sysPluginService.getPluginList().contains(baseOpsId)) {
             return AjaxResult.success(false);
@@ -545,7 +532,6 @@ public class SystemPluginController extends BaseController {
      * get unload plugins info list
      */
     @GetMapping("/unloadPluginsInfo")
-    @ApiOperation("Gets a list of undownloaded plugins information")
     public AjaxResult getUnloadPluginInfosList() {
         try {
             // 获取未下载插件的plugin_id列表
@@ -567,7 +553,6 @@ public class SystemPluginController extends BaseController {
      * @param pluginId pluginVersion
      */
     @PostMapping("/getUnloadPluginUrl")
-    @ApiOperation("get unload plugin url")
     public AjaxResult getUnloadPluginUrl(@RequestParam("pluginId") String pluginId) {
         String pluginVersion = sysPluginRepositoryService.getCurrentVersion();
         String unloadPluginUrl = sysPluginRepositoryService

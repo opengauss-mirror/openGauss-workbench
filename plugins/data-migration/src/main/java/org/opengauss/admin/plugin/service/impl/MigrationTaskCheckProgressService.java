@@ -49,7 +49,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * MigrationTaskCheckProgressService

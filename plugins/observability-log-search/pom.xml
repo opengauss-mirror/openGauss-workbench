@@ -19,6 +19,7 @@
 
 		<es-java-client.version>8.3.3</es-java-client.version>
 		<jakarta-json.version>2.1.3</jakarta-json.version>
+		<parsson.version>1.0.5</parsson.version>
 		<build.frontend.skip>false</build.frontend.skip>
 	</properties>
 	<dependencies>
@@ -43,7 +44,10 @@
 			<groupId>com.gitee.starblues</groupId>
 			<artifactId>spring-brick-bootstrap</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>com.gitee.starblues</groupId>
 			<artifactId>spring-brick-maven-packager</artifactId>
@@ -85,15 +89,23 @@
 		<!-- data -->
 		<dependency>
 			<groupId>com.baomidou</groupId>
-			<artifactId>mybatis-plus-boot-starter</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.alibaba</groupId>
-			<artifactId>druid-spring-boot-starter</artifactId>
+			<artifactId>mybatis-plus-spring-boot3-starter</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.baomidou</groupId>
-			<artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+			<artifactId>mybatis-plus-extension</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.baomidou</groupId>
+			<artifactId>mybatis-plus-jsqlparser</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>druid-spring-boot-3-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.baomidou</groupId>
+			<artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -113,7 +125,16 @@
 					<artifactId>jakarta.json-api</artifactId>
 					<groupId>jakarta.json</groupId>
 				</exclusion>
+				<exclusion>
+					<groupId>org.eclipse.parsson</groupId>
+					<artifactId>parsson</artifactId>
+				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.parsson</groupId>
+			<artifactId>parsson</artifactId>
+			<version>${parsson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>

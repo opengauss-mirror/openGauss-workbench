@@ -39,6 +39,7 @@ import com.nctigba.alert.monitor.service.NotifyTemplateService;
 import com.nctigba.alert.monitor.service.NotifyWayService;
 import com.nctigba.alert.monitor.util.MessageSourceUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -54,6 +55,7 @@ import java.util.List;
 public class NotifyTemplateServiceImpl extends ServiceImpl<NotifyTemplateMapper, NotifyTemplateDO>
         implements NotifyTemplateService {
     @Autowired
+    @Lazy
     private NotifyWayService notifyWayService;
 
     @Override

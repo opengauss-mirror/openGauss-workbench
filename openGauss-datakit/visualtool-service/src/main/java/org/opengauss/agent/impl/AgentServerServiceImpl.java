@@ -35,7 +35,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * IAgentServerService

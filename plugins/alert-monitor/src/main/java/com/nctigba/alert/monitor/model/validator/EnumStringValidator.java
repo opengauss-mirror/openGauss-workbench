@@ -26,8 +26,8 @@ package com.nctigba.alert.monitor.model.validator;
 import cn.hutool.core.util.StrUtil;
 import com.nctigba.alert.monitor.model.validator.annotation.EnumString;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import java.util.Arrays;
 
 /**

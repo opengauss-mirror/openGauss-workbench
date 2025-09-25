@@ -41,9 +41,6 @@ import org.opengauss.admin.framework.web.service.SysPermissionService;
 import org.opengauss.admin.framework.web.service.TokenService;
 import org.opengauss.admin.system.service.ISysRoleService;
 import org.opengauss.admin.system.service.ISysUserService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -56,7 +53,6 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/system/role")
-@Api(tags = "roles")
 public class SysRoleController extends BaseController {
     @Autowired
     private ISysRoleService roleService;
@@ -70,9 +66,6 @@ public class SysRoleController extends BaseController {
     @Autowired
     private ISysUserService userService;
 
-    @ApiOperation(value = "role list", notes = "role list")
-    @ApiImplicitParams({
-    })
     @GetMapping("/list")
     public TableDataInfo list(SysRole role) {
         IPage<SysRole> list = roleService.selectRoleList(role,startPage());
@@ -83,9 +76,6 @@ public class SysRoleController extends BaseController {
     /**
      * get role by roleI
      */
-    @ApiOperation(value = "getByRoleId", notes = "getByRoleId")
-    @ApiImplicitParams({
-    })
     @GetMapping(value = "/{roleId}")
     public AjaxResult getInfo(@PathVariable Integer roleId) {
         return AjaxResult.success(roleService.selectRoleById(roleId));
@@ -94,9 +84,6 @@ public class SysRoleController extends BaseController {
     /**
      * save
      */
-    @ApiOperation(value = "save", notes = "save")
-    @ApiImplicitParams({
-    })
     @PostMapping
     public AjaxResult add(@Validated @RequestBody SysRole role) {
         if (StringUtils.isBlank(role.getRoleName())) {
@@ -119,9 +106,6 @@ public class SysRoleController extends BaseController {
     /**
      * update
      */
-    @ApiOperation(value = "update", notes = "update")
-    @ApiImplicitParams({
-    })
     @PutMapping
     public AjaxResult edit(@Validated @RequestBody SysRole role) {
         roleService.checkRoleAllowed(role);
@@ -152,9 +136,6 @@ public class SysRoleController extends BaseController {
     /**
      * update data scope
      */
-    @ApiOperation(value = "update data scope", notes = "update data scope")
-    @ApiImplicitParams({
-    })
     @PutMapping("/dataScope")
     public AjaxResult dataScope(@RequestBody SysRole role) {
         roleService.checkRoleAllowed(role);
@@ -164,9 +145,6 @@ public class SysRoleController extends BaseController {
     /**
      * update status
      */
-    @ApiOperation(value = "update status", notes = "update status")
-    @ApiImplicitParams({
-    })
     @PutMapping("/changeStatus")
     public AjaxResult changeStatus(@RequestBody SysRole role) {
         roleService.checkRoleAllowed(role);
@@ -176,9 +154,6 @@ public class SysRoleController extends BaseController {
     /**
      * delete
      */
-    @ApiOperation(value = "delete", notes = "delete")
-    @ApiImplicitParams({
-    })
     @PreAuthorize("@ss.hasPermi('system:role:remove')")
     @DeleteMapping("/{roleIds}")
     public AjaxResult remove(@PathVariable Integer[] roleIds) {
@@ -188,9 +163,6 @@ public class SysRoleController extends BaseController {
     /**
      * optionselect
      */
-    @ApiOperation(value = "optionselect", notes = "optionselect")
-    @ApiImplicitParams({
-    })
     @PreAuthorize("@ss.hasPermi('system:role:query')")
     @GetMapping("/optionselect")
     public AjaxResult optionselect() {

@@ -33,9 +33,11 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- * @Author wuyuebin
- * @Date 2023/4/7 16:24
- * @Description
+ * ObservabilityPluginApplication
+ *
+ * @author: wangchao
+ * @Date: 2025/9/11 21:21
+ * @since 7.0.0-RC2
  */
 @SpringBootApplication(exclude = {
         DataSourceAutoConfiguration.class,

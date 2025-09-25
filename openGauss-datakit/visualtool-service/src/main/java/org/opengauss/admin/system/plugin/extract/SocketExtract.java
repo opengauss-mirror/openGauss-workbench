@@ -24,7 +24,7 @@
 
 package org.opengauss.admin.system.plugin.extract;
 
-import javax.websocket.Session;
+import jakarta.websocket.Session;
 
 /**
  * @className: SocketExtract

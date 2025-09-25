@@ -152,7 +152,7 @@ public class DiagnosisTaskDO {
         }
 
         @Override
-        protected Object parse(String json) {
+        public Object parse(String json) {
             return super.parse(json);
         }
     }

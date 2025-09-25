@@ -24,8 +24,8 @@
 package com.nctigba.alert.monitor.util;
 
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
+import com.baomidou.dynamic.datasource.creator.DataSourceProperty;
 import com.baomidou.dynamic.datasource.creator.DefaultDataSourceCreator;
-import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DataSourceProperty;
 import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.alert.monitor.constant.CommonConstants;
@@ -111,10 +111,13 @@ public class ClusterManagerUtils {
         if (StringUtils.isBlank(dbname)) {
             dbname = node.getDbName();
         }
-        ds.addDataSource(nodeId, dataSourceCreator.createDataSource(new DataSourceProperty()
-            .setDriverClassName("org.opengauss.Driver")
-            .setUrl(CommonConstants.JDBC_OPENGAUSS + node.getPublicIp() + ":" + node.getDbPort() + "/" + dbname)
-            .setUsername(node.getDbUser()).setPassword(encryptionUtils.decrypt(node.getDbUserPassword()))));
+        DataSourceProperty dataSourceProperty = new DataSourceProperty();
+        dataSourceProperty.setDriverClassName("org.opengauss.Driver");
+        dataSourceProperty.setUrl(
+            CommonConstants.JDBC_OPENGAUSS + node.getPublicIp() + ":" + node.getDbPort() + "/" + dbname);
+        dataSourceProperty.setUsername(node.getDbUser());
+        dataSourceProperty.setPassword(encryptionUtils.decrypt(node.getDbUserPassword()));
+        ds.addDataSource(nodeId, dataSourceCreator.createDataSource(dataSourceProperty));
         DynamicDataSourceContextHolder.push(nodeId);
     }
 

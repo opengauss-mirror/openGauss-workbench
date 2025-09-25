@@ -1,14 +1,7 @@
 ## Spring Configuration
-context:
-  listener:
-    classes: com.nctigba.datastudio.listener.PluginListener
-
 spring:
-  datasource:
-    driver-class-name: org.intarkdb.Driver
-    url: 'jdbc:intarkdb:./data/ds'
-  resources:
-    static-locations: classpath:resources
+  profiles:
+    active: prod
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss
@@ -20,3 +13,6 @@ spring:
     parser:
       allow_unquoted_control_chars: true
       allow_single_quotes: true
+  web:
+    resources:
+      static-locations: classpath:resources

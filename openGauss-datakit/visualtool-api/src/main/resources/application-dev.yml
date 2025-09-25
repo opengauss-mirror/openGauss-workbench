@@ -1,5 +1,5 @@
 system:
-  defaultStoragePath: /Users/xielibo/uploadPath/gausstool
+  defaultStoragePath: ./files/upload
   whitelist:
     enabled: false
 server:
@@ -33,18 +33,11 @@ spring:
       keep-alive: true
       max-active: 30
       min-evictable-idle-time-millis: 600000
-swagger:
-  enabled: true
-  pathMapping: /dev-api
+
 plugin:
   sortInitPluginIds:
   decrypt:
     enable: false
-    className: com.gitee.starblues.common.cipher.AesPluginCipher
-    plugins:
-      - pluginId: example-basic-1
-        props:
-          secretKey: mmfvXes1XckCi8F/y9i0uQ==
   version: 0.0.0
 plugins:
   oauth-login:
@@ -55,5 +48,5 @@ plugins:
     datakit-url: https://ip:port
     devkit-url: https://ip:port
     # SSL certificate
-    ssl-key: your_ssl_key
+    ssl-key:
 

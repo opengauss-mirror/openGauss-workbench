@@ -35,6 +35,7 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.stereotype.Component;
 
 /**
  * @className: ImplListener
@@ -42,8 +43,8 @@ import org.springframework.context.event.ContextRefreshedEvent;
  * @date: 2022/08/16 3:48 PM
  **/
 @Slf4j
+@Component
 public class BaseOpsPluginListener implements ApplicationListener<ApplicationEvent> {
-
     @Override
     public void onApplicationEvent(ApplicationEvent event) {
         if (event instanceof ApplicationEnvironmentPreparedEvent) {

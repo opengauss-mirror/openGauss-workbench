@@ -21,50 +21,46 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.framework.web.service;
 
 import com.github.benmanes.caffeine.cache.Cache;
+
 import org.opengauss.admin.common.constant.Constants;
 import org.opengauss.admin.common.core.domain.model.LoginUser;
+import org.opengauss.admin.common.utils.RandomCharGenerator;
 import org.opengauss.admin.common.utils.ServletUtils;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.ip.AddressUtils;
 import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.common.utils.uuid.IdUtils;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
- * Token Service
+ * TokenService
  *
- * @author xielibo
- */
+ * @author: wangchao
+ * @Date: 2025/9/25 10:07
+ * @since 7.0.0-RC2
+ **/
 @Component
 public class TokenService {
-    @Value("${token.header}")
-    private String header;
+    private static final String HEADER = Constants.TOKEN_HEADER;
+    private static final String SECRET;
 
-    @Value("${token.secret}")
-    private String secret;
-
-    @Value("${token.expireTime}")
-    private int expireTime;
-
-    protected static final long MILLIS_SECOND = 1000;
-
-    protected static final long MILLIS_MINUTE = 60 * MILLIS_SECOND;
-
-    private static final Long MILLIS_MINUTE_TEN = 20 * 60 * 1000L;
+    static {
+        SECRET = RandomCharGenerator.generateRandomBased128String();
+    }
 
     @Autowired
     private Cache<String, Object> loginCache;
@@ -120,7 +116,6 @@ public class TokenService {
         loginUser.setToken(token);
         setUserAgent(loginUser);
         refreshToken(loginUser);
-
         Map<String, Object> claims = new HashMap<>();
         claims.put(Constants.LOGIN_USER_KEY, token);
         return createToken(claims);
@@ -128,7 +123,6 @@ public class TokenService {
 
     /**
      * Refresh Token Validity Period
-     *
      */
     public void refreshToken(LoginUser loginUser) {
         String userKey = getTokenKey(loginUser.getToken());
@@ -153,10 +147,7 @@ public class TokenService {
      * @return token
      */
     private String createToken(Map<String, Object> claims) {
-        String token = Jwts.builder()
-                .setClaims(claims)
-                .signWith(SignatureAlgorithm.HS512, secret).compact();
-        return token;
+        return Jwts.builder().setClaims(claims).signWith(SignatureAlgorithm.HS512, SECRET).compact();
     }
 
     /**
@@ -165,10 +156,7 @@ public class TokenService {
      * @param token token
      */
     private Claims parseToken(String token) {
-        return Jwts.parser()
-                .setSigningKey(secret)
-                .parseClaimsJws(token)
-                .getBody();
+        return Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token).getBody();
     }
 
     /**
@@ -189,7 +177,7 @@ public class TokenService {
      * @return token
      */
     private String getToken(HttpServletRequest request) {
-        String token = request.getHeader(header);
+        String token = request.getHeader(HEADER);
         if (StringUtils.isNotEmpty(token) && token.startsWith(Constants.TOKEN_PREFIX)) {
             token = token.replace(Constants.TOKEN_PREFIX, "");
         }
