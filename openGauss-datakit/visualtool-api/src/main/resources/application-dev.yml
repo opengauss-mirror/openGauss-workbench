@@ -1,5 +1,5 @@
 system:
-  defaultStoragePath: /Users/xielibo/uploadPath/gausstool
+  defaultStoragePath: ./files/upload
   whitelist:
     enabled: false
 server:
@@ -38,11 +38,6 @@ plugin:
   sortInitPluginIds:
   decrypt:
     enable: false
-    className: com.gitee.starblues.common.cipher.AesPluginCipher
-    plugins:
-      - pluginId: example-basic-1
-        props:
-          secretKey:
   version: 0.0.0
 plugins:
   oauth-login:
@@ -53,5 +48,5 @@ plugins:
     datakit-url: https://ip:port
     devkit-url: https://ip:port
     # SSL certificate
-    ssl-key: 
+    ssl-key:
 

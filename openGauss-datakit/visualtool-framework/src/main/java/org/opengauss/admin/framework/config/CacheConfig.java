@@ -21,12 +21,12 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.framework.config;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import org.springframework.beans.factory.annotation.Value;
+
+import org.opengauss.admin.common.constant.Constants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -40,9 +40,7 @@ import java.util.concurrent.TimeUnit;
  **/
 @Configuration
 public class CacheConfig {
-
-    @Value("${token.expireTime}")
-    private int expireTime;
+    private int expireTime = Constants.TOKEN_EXPIRE_TIME;
 
     @Bean
     public Cache<String, Object> caffeineCache() {

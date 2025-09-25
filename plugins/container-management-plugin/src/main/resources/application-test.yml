@@ -13,7 +13,7 @@ spring:
   redis:
     cluster:
       nodes: node1:20001,node2:20001,node2:20001,node4:20001,node5:20001,node6:20001
-    password: ******
+    password: '******'
 
 mybatis-plus:
   typeAliasesPackage: org.opengauss.admin.container.domain
