@@ -1,8 +1,7 @@
 ## Spring Configuration
 spring:
-  datasource:
-    driver-class-name: org.intarkdb.Driver
-    url: 'jdbc:intarkdb:./data/ds'
+  profiles:
+    active: prod
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss
