@@ -127,7 +127,7 @@ public class SysUserController extends BaseController {
             return AjaxResult.error(ResponseCode.USER_NICKNAME_MAX_LENGTH_ERROR.code());
         }
         if (StrUtil.isEmpty(user.getPassword())) {
-            return AjaxResult.error(ResponseCode.USER_PASS_SAME_ERROR.code());
+            return AjaxResult.error(ResponseCode.USER_PASSWORD_CANNOT_BE_EMPTY_ERROR.code());
         }
         if (StringUtils.isNotEmpty(user.getRemark()) && user.getRemark().length() > 200) {
             return AjaxResult.error(ResponseCode.USER_REMARK_MAX_LENGTH_ERROR.code());
