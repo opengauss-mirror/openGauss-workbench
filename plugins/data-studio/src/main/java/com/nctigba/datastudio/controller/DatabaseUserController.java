@@ -56,17 +56,6 @@ public class DatabaseUserController {
      * create user
      *
      * @param request request
-     * @return String
-     */
-    @PostMapping(value = "/user/create/preview", produces = MediaType.APPLICATION_JSON_VALUE)
-    public String createUserPreviewDDL(@RequestBody DatabaseCreateUserDTO request) {
-        return databaseUserService.createUserPreviewDDL(request);
-    }
-
-    /**
-     * create user
-     *
-     * @param request request
      */
     @PostMapping(value = "/user/create", produces = MediaType.APPLICATION_JSON_VALUE)
     public void createUserDDL(@RequestBody DatabaseCreateUserDTO request) {

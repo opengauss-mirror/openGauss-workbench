@@ -4,7 +4,8 @@
       <el-tabs v-model="currentTabName" class="tabs" @tab-click="handleTabClick">
         <el-tab-pane :label="$t('userRole.create.tabs[0]')" name="GeneralTab" />
         <el-tab-pane :label="$t('userRole.create.tabs[1]')" name="MemberTab" />
-        <el-tab-pane
+        <el-tab-pane 
+          v-if="props.type != 'create'"
           :label="props.type == 'create' ? $t('userRole.create.tabs[2]') : 'DDL'"
           name="DDL"
         />
@@ -58,6 +59,7 @@
   import EventBus, { EventTypeName } from '@/utils/event-bus';
   import { previewUserRole, createUserRole } from '@/api/userRole';
   import { getUserRoleInfo, getUserRoleDdl, updateUserRoleInfo } from '@/api/userRole';
+  import Crypto from '@/utils/crypto';
 
   const props = withDefaults(
     defineProps<{
@@ -130,7 +132,7 @@
         uuid: commonParams.uuid,
         name: dataMap.GeneralTab.data.name,
         type: dataMap.GeneralTab.data.type,
-        password: dataMap.GeneralTab.data.password,
+        password: Crypto.encrypt(dataMap.GeneralTab.data.password),
         beginDate: dataMap.GeneralTab.data.beginDate,
         endDate: dataMap.GeneralTab.data.endDate,
         connectionLimit: dataMap.GeneralTab.data.connectionLimit,
