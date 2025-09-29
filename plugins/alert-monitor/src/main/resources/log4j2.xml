@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+  <Properties>
+    <Property name="LOG_PATH">$${sys:logging.file.path:-./logs}</Property>
+    <Property name="LOG_PATTERN">%style{%d{yyyy-MM-dd HH:mm:ss}}{blue} [%style{%t}{cyan}] [%style{%c{32}}{yellow}] - [%highlight{%p}] %m%n</Property>
+  </Properties>
+
+  <Appenders>
+    <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="${LOG_PATTERN}"/>
+    </Console>
+    <RollingFile name="FileInfo"
+                 fileName="${LOG_PATH}/sys.log"
+                 filePattern="${LOG_PATH}/sys.%d{yyyy-MM-dd}-%i.log">
+      <PatternLayout pattern="${LOG_PATTERN}"/>
+      <Policies>
+        <SizeBasedTriggeringPolicy size="20 MB"/>
+        <TimeBasedTriggeringPolicy/>
+      </Policies>
+      <DefaultRolloverStrategy>
+        <Delete basePath="${LOG_PATH}" maxDepth="1">
+          <IfFileName glob="sys.*.log" />
+          <IfLastModified age="60d" />
+        </Delete>
+      </DefaultRolloverStrategy>
+    </RollingFile>
+    <RollingFile name="FileError"
+                 fileName="${LOG_PATH}/sys-error.log"
+                 filePattern="${LOG_PATH}/sys-error.%d{yyyy-MM-dd}.log">
+      <PatternLayout pattern="${LOG_PATTERN}"/>
+      <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+      <Policies>
+        <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+      </Policies>
+      <DefaultRolloverStrategy>
+        <Delete basePath="${LOG_PATH}" maxDepth="1">
+          <IfFileName glob="sys-error.*.log" />
+          <IfLastModified age="60d" />
+        </Delete>
+      </DefaultRolloverStrategy>
+    </RollingFile>
+  </Appenders>
+
+  <Loggers>
+    <Root level="info">
+      <AppenderRef ref="Console"/>
+      <AppenderRef ref="FileInfo"/>
+      <AppenderRef ref="FileError"/>
+    </Root>
+  </Loggers>
+</Configuration>

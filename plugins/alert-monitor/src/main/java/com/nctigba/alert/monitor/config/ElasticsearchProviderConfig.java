@@ -25,8 +25,10 @@ package com.nctigba.alert.monitor.config;
 
 import cn.hutool.core.collection.CollectionUtil;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
+import co.elastic.clients.transport.rest_client.RestClientOptions;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
@@ -44,9 +46,11 @@ import org.opengauss.admin.common.exception.ServiceException;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -71,6 +75,20 @@ public class ElasticsearchProviderConfig {
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private EncryptionUtils encryptionUtils;
+
+    /**
+     * restClientTransport
+     *
+     * @param restClient RestClient
+     * @param jsonMapper JsonpMapper
+     * @param restClientOptions ObjectProvider
+     * @return RestClientTransport
+     */
+    @Bean
+    public RestClientTransport restClientTransport(RestClient restClient, JsonpMapper jsonMapper,
+                                                   ObjectProvider<RestClientOptions> restClientOptions) {
+        return new RestClientTransport(restClient, jsonMapper, restClientOptions.getIfAvailable());
+    }
 
     /**
      * set ElasticsearchClient
