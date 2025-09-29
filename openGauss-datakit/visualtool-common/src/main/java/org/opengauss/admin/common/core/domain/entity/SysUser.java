@@ -24,10 +24,12 @@
 
 package org.opengauss.admin.common.core.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -162,11 +164,5 @@ public class SysUser extends BaseEntity {
 
     public void setPhonenumber(String phonenumber) {
         this.phonenumber = phonenumber;
-    }
-
-    @JsonIgnore
-    @JsonProperty
-    public String getPassword() {
-        return password;
     }
 }
