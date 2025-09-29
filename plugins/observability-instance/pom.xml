@@ -114,6 +114,13 @@
             <artifactId>opengauss-jdbc</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.intarkDB</groupId>
+            <artifactId>intarkDB-jdbc</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../../lib/intarkdb-jdbc-1.0.0.1.jar</systemPath>
+        </dependency>
+        <dependency>
             <groupId>com.github.mwiede</groupId>
             <artifactId>jsch</artifactId>
         </dependency>

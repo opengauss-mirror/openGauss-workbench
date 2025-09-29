@@ -31,6 +31,7 @@ import java.util.List;
 
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
+import org.opengauss.admin.common.exception.base.BaseException;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.BeanUtils;
@@ -54,6 +55,9 @@ public class ClusterManager {
 	@Autowired(required = false)
 	@AutowiredType(Type.MAIN_PLUGIN)
 	private OpsFacade opsFacade;
+	@Autowired(required = false)
+	@AutowiredType(Type.MAIN_PLUGIN)
+	private EncryptionUtils encryptionUtils;
 
 	/**
 	 * Get all cluster information
@@ -86,6 +90,7 @@ public class ClusterManager {
 	@EqualsAndHashCode(callSuper = true)
 	public static class OpsClusterNodeVOSub extends OpsClusterNodeVO {
 		private String version;
+		private EncryptionUtils encryptionUtils;
 
 		@Override
 		public Integer getDbPort() {
@@ -94,20 +99,24 @@ public class ClusterManager {
 			return super.getDbPort();
 		}
 
-		public OpsClusterNodeVOSub(OpsClusterNodeVO opsClusterNodeVO, String version) {
+		public OpsClusterNodeVOSub(OpsClusterNodeVO opsClusterNodeVO, String version, EncryptionUtils encryptionUtils) {
 			BeanUtils.copyProperties(opsClusterNodeVO, this);
 			this.version = version;
+			this.encryptionUtils = encryptionUtils;
 		}
 
         public Connection connection() throws SQLException {
-            EncryptionUtils encryptionUtils = new EncryptionUtils();
-            var conn = DriverManager.getConnection("jdbc:opengauss://" + getPublicIp() + ":" + getDbPort() + "/"
+			try {
+				Class.forName("org.opengauss.Driver");
+			} catch (ClassNotFoundException e) {
+				throw new BaseException(e.getMessage());
+			}
+			var conn = DriverManager.getConnection("jdbc:opengauss://" + getPublicIp() + ":" + getDbPort() + "/"
                 + getDbName(), getDbUser(), encryptionUtils.decrypt(getDbUserPassword()));
             try (var preparedStatement = conn.prepareStatement("select 1");
                 var rs = preparedStatement.executeQuery();) {
                 return conn;
             } catch (Exception e) {
-                log.error("test connection fail:{}", e.getMessage());
                 throw e;
             }
         }
@@ -133,7 +142,7 @@ public class ClusterManager {
 				continue;
 			for (OpsClusterNodeVO clusterNode : nodes) {
 				if (nodeId.equals(clusterNode.getNodeId())) {
-					return new OpsClusterNodeVOSub(clusterNode, cluster.getVersion());
+					return new OpsClusterNodeVOSub(clusterNode, cluster.getVersion(), encryptionUtils);
 				}
 			}
 		}

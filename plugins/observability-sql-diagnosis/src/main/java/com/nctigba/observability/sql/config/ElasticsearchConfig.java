@@ -24,8 +24,10 @@
 package com.nctigba.observability.sql.config;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
+import co.elastic.clients.transport.rest_client.RestClientOptions;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
@@ -39,10 +41,12 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.RestClient;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 /**
@@ -59,6 +63,20 @@ public class ElasticsearchConfig {
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostFacade hostFacade;
+
+    /**
+     * restClientTransport
+     *
+     * @param restClient RestClient
+     * @param jsonMapper JsonpMapper
+     * @param restClientOptions ObjectProvider
+     * @return RestClientTransport
+     */
+    @Bean
+    public RestClientTransport restClientTransport(RestClient restClient, JsonpMapper jsonMapper,
+                                                   ObjectProvider<RestClientOptions> restClientOptions) {
+        return new RestClientTransport(restClient, jsonMapper, restClientOptions.getIfAvailable());
+    }
 
     @Cacheable(cacheNames = "elastic-clients")
     public ElasticsearchClient client() {

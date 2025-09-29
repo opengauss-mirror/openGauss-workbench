@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -551,11 +552,20 @@ public class PrometheusService extends AbstractInstaller {
     private Resource getPromInstallPkg(SshSessionUtils sshSession) throws IOException {
         String arch = sshSession.execute(command.ARCH);
         Resource[] resources = resourcePatternResolver.getResources(
-            "classpath*:pkg/prometheus-**-" + arch(arch) + TAR);
+            basePath() + "pkg/prometheus-**-" + arch(arch) + TAR);
         if (resources.length == 0) {
             throw new CustomException("The Prometheus install package is not exist");
         }
         return resources[0];
+    }
+
+    private String basePath() {
+        URL full = PrometheusService.class.getResource(PrometheusService.class.getSimpleName() + ".class");
+        String path = full.getPath();
+        int jarIndex = path.indexOf(".jar");
+        int lastSlashIndex = path.lastIndexOf(File.separator, jarIndex);
+        int preSlashIndex = path.lastIndexOf(File.separator, lastSlashIndex - 1);
+        return path.substring(0, preSlashIndex + 1);
     }
 
     private void uploadSecondScript(SshSessionUtils sshSession, String promDir, Map<String, Object> paramMap)

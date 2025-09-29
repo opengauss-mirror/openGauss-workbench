@@ -27,10 +27,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import jakarta.validation.Valid;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -81,7 +80,7 @@ public class LogSearchController {
     }
 
     @GetMapping(value = "/logs")
-    public LogInfoDTO logInfo(@Valid LogSearchQuery queryParam) throws Exception {
+    public LogInfoDTO logInfo(@Validated LogSearchQuery queryParam) throws Exception {
         EsSearchQuery esSearchQuery = new EsSearchQuery();
         if (queryParam != null) {
             esSearchQuery.setNodeId(queryParam.getNodeId());
