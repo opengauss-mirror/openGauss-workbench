@@ -76,11 +76,6 @@ public class DatabaseUserServiceImpl implements DatabaseUserService {
     }
 
     @Override
-    public String createUserPreviewDDL(DatabaseCreateUserDTO request) {
-        return userObjectSQLServiceMap.get(comGetUuidType(request.getUuid())).createUserPreviewDDL(request, "true");
-    }
-
-    @Override
     public String userPreviewDDL(DatabaseReturnUserDdlDTO request) throws SQLException {
         return userObjectSQLServiceMap.get(comGetUuidType(request.getUuid())).userPreviewDDL(request);
     }

@@ -39,14 +39,6 @@ import java.sql.SQLException;
  */
 public interface DatabaseUserService {
     /**
-     * create user preview ddl
-     *
-     * @param request request
-     * @return String
-     */
-    String createUserPreviewDDL(DatabaseCreateUserDTO request);
-
-    /**
      * user preview ddl
      *
      * @param request request
