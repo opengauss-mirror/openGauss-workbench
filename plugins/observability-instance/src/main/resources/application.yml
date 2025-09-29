@@ -1,5 +1,7 @@
 ## Spring配置
 spring:
+  main:
+    allow-circular-references: true
   profiles:
     active: prod
   servlet:

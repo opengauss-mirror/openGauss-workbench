@@ -33,7 +33,6 @@ import com.nctigba.observability.instance.enums.DbDataLocationEnum;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.jdbc.init.DataSourceScriptDatabaseInitializer;
 import org.springframework.boot.sql.init.DatabaseInitializationMode;
 import org.springframework.boot.sql.init.DatabaseInitializationSettings;
@@ -45,6 +44,7 @@ import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Optional;
 
 /**
@@ -52,7 +52,6 @@ import java.util.Optional;
  * @date 2023/1/5
  */
 @Configuration
-@EnableConfigurationProperties(DynamicDataSourceProperties.class)
 public class DataSourceConfig {
     static final String GS_DRIVER = "org.opengauss.Driver";
     static final String SQLITE_DRIVER = "org.sqlite.JDBC";
@@ -86,12 +85,14 @@ public class DataSourceConfig {
         DynamicRoutingDataSource dataSource = new DynamicRoutingDataSource(new ArrayList<>());
         dataSource.addDataSource("primary", primary);
         dataSource.setPrimary("primary");
+        DataSourceProperty embeddedProerty = properties.getDatasource().get("embedded");
         if (GS_DRIVER.equals(driverClassName)) {
-            DataSourceProperty embedded = properties.getDatasource().get("embedded");
-            embedded.setDriverClassName(SQLITE_DRIVER);
-            embedded.setUrl(SQLITE_URL);
+            embeddedProerty.setDriverClassName(SQLITE_DRIVER);
+            embeddedProerty.setUrl(SQLITE_URL);
             initDbFile();
         }
+        DataSource embedded = druidDataSourceCreator.createDataSource(embeddedProerty);
+        dataSource.addDataSource("embedded", embedded);
         return dataSource;
     }
 
@@ -133,5 +134,29 @@ public class DataSourceConfig {
         if (!dbFile.exists()) {
             dbFile.createNewFile();
         }
+    }
+
+    /**
+     * embeddedDataSourceScriptDatabaseInitializer
+     *
+     * @param dataSource DataSource
+     * @return DataSourceScriptDatabaseInitializer
+     */
+    @Bean("embeddedDataSourceScriptDatabaseInitializer")
+    @Profile("!dev")
+    public DataSourceScriptDatabaseInitializer embeddedDataSourceScriptDatabaseInitializer(DataSource dataSource) {
+        if (!(dataSource instanceof DynamicRoutingDataSource)) {
+            throw new CustomException("datasource is not DynamicRoutingDataSource");
+        }
+        DynamicRoutingDataSource drds = (DynamicRoutingDataSource) dataSource;
+        DataSource embedded = drds.getDataSource("embedded");
+        DataSourceProperty property = properties.getDatasource().get("embedded");
+        DatabaseInitializationSettings settings = new DatabaseInitializationSettings();
+        settings.setContinueOnError(property.getInit().isContinueOnError());
+        settings.setSeparator(property.getInit().getSeparator());
+        settings.setMode(DatabaseInitializationMode.ALWAYS);
+        settings.setDataLocations(Arrays.asList(property.getInit().getData()));
+        settings.setSchemaLocations(Arrays.asList(property.getInit().getSchema()));
+        return new DataSourceScriptDatabaseInitializer(embedded, settings);
     }
 }
