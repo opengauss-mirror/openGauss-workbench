@@ -31,6 +31,7 @@ import com.nctigba.datastudio.model.dto.DatabaseUserInfoDTO;
 import com.nctigba.datastudio.model.dto.DatabaseUsserCheckDTO;
 import com.nctigba.datastudio.model.dto.UpdateUserAttributeDTO;
 import com.nctigba.datastudio.model.dto.UpdateUserPasswordDTO;
+import com.nctigba.datastudio.utils.SecretUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,7 +94,7 @@ public class UserObjectSQLServiceImpl implements UserObjectSQLService {
         if (passwordType.equals("true")) {
             password = "********";
         } else {
-            password = request.getPassword();
+            password = SecretUtils.desEncrypt(request.getPassword());
         }
         StringBuilder userRole = new StringBuilder();
         if (request.getType().equals("user")) {
@@ -211,7 +212,7 @@ public class UserObjectSQLServiceImpl implements UserObjectSQLService {
             ) {
                 resultSet.next();
                 List<String> power = new ArrayList<>();
-                log.info("aaaaaaa sql is: " + resultSet.getString("belong"));
+                log.info("sql is: " + resultSet.getString("belong"));
                 if ("user".equals(request.getType())) {
                     listAddNotNull(resultSet.getString("rolcanlogin"), power);
                 }
