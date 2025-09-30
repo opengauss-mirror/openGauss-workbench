@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS tb_time_config (
     frequency integer default 300 --慢sql采集频率，单位秒
 );
 
-insert or ignore into tb_time_config values (1, 30, 300);
+insert into tb_time_config values (1, 30, 300);
 
 CREATE TABLE IF NOT EXISTS tb_time_point (
     node_tablename text primary key,

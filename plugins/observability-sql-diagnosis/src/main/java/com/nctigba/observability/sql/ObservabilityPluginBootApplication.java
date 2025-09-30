@@ -46,10 +46,4 @@ public class ObservabilityPluginBootApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(ObservabilityPluginBootApplication.class, args);
 	}
-
-	@Bean
-	@Primary
-	public MainApplicationContext test() {
-		return new EmptyMainApplicationContext();
-	}
 }
