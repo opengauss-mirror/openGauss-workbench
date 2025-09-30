@@ -34,7 +34,7 @@ spring:
           url: jdbc:intarkdb:data/observability-sql-diagnosis-data
           driverClassName: org.intarkdb.Driver
           init:
-            schema: db/diagnosisSources.sql
+            data: db/diagnosisSources.sql
             continue-on-error: true
             separator: ";"
         hisDiagnosisTaskInfo:
@@ -43,7 +43,7 @@ spring:
           url: jdbc:intarkdb:data/observability-sql-diagnosis-data
           driverClassName: org.intarkdb.Driver
           init:
-            schema: db/hisDiagnosisTaskInfo.sql
+            data: db/hisDiagnosisTaskInfo.sql
             continue-on-error: true
             separator: ";"
         hisDiagnosisThresholdInfo:
@@ -52,7 +52,7 @@ spring:
           url: jdbc:intarkdb:data/observability-sql-diagnosis-data
           driverClassName: org.intarkdb.Driver
           init:
-            schema: db/hisDiagnosisThresholdInfo.sql
+            data: db/hisDiagnosisThresholdInfo.sql
             continue-on-error: true
             separator: ";"
         paramInfo:
@@ -61,7 +61,7 @@ spring:
           url: jdbc:intarkdb:data/observability-sql-diagnosis-data
           driverClassName: org.intarkdb.Driver
           init:
-            schema: db/paramInfo.sql
+            data: db/paramInfo.sql
             continue-on-error: true
             separator: ";"
         instanceAgent:
@@ -75,8 +75,8 @@ spring:
           url: jdbc:intarkdb:data/history-slowsql-info
           driverClassName: org.intarkdb.Driver
           init:
-            schema: db/hisSlowsqlInfo.sql
-            continue-on-error: false
+            data: db/hisSlowsqlInfo.sql
+            continue-on-error: true
             separator: ";"
   web:
     resources:

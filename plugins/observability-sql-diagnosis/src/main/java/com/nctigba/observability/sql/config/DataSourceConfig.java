@@ -30,6 +30,7 @@ import com.baomidou.dynamic.datasource.spring.boot.autoconfigure.DynamicDataSour
 import com.gitee.starblues.bootstrap.PluginContextHolder;
 import com.gitee.starblues.spring.environment.EnvironmentProvider;
 import com.nctigba.observability.sql.enums.DbDataLocationEnum;
+import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -44,6 +45,7 @@ import javax.sql.DataSource;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
@@ -54,11 +56,11 @@ import java.util.Optional;
  * @since 2023/12/5
  */
 @Configuration
+@Slf4j
 public class DataSourceConfig {
     static final String GS_DRIVER = "org.opengauss.Driver";
     static final String SQLITE_DRIVER = "org.sqlite.JDBC";
-    static final String SQLITE_URL = "jdbc:sqlite:data/";
-    static final String SQLITE_INSTANCE_URL = SQLITE_URL + "observability-instance-data.db";
+    static final String SQLITE_URL = "jdbc:sqlite:";
 
     @Autowired
     DynamicDataSourceProperties properties;
@@ -88,17 +90,13 @@ public class DataSourceConfig {
         d.addDataSource("primary", primary);
         d.setPrimary("primary");
         for (Map.Entry<String, DataSourceProperty> dataSourceProperty : properties.getDatasource().entrySet()) {
-            dataSourceProperty.getValue().setDriverClassName(SQLITE_DRIVER);
-            if ("instanceAgent".equals(dataSourceProperty.getKey())) {
-                dataSourceProperty.getValue().setUrl(SQLITE_INSTANCE_URL);
-                continue;
+            DataSource emDataSource = druidDataSourceCreator.createDataSource(dataSourceProperty.getValue());
+            if (SQLITE_DRIVER.equals(dataSourceProperty.getValue().getDriverClassName())) {
+                String url = dataSourceProperty.getValue().getUrl();
+                String dbFile = url.substring(SQLITE_URL.length());
+                initDbFile(dbFile);
             }
-            String url = SQLITE_URL + dataSourceProperty.getKey() + ".db";
-            dataSourceProperty.getValue().setUrl(url);
-            dataSourceProperty.getValue().getDruid().setMaxActive(1);
-            String[] split = url.split(":");
-            String dbFile = split[split.length - 1];
-            initDbFile(dbFile);
+            d.addDataSource(dataSourceProperty.getKey(), emDataSource);
         }
         return d;
     }
@@ -141,5 +139,114 @@ public class DataSourceConfig {
         if (!dbFile.exists()) {
             dbFile.createNewFile();
         }
+    }
+
+    /**
+     * diagnosisSourcesScriptDatabaseInitializer
+     *
+     * @param dataSource DataSource
+     * @return DataSourceScriptDatabaseInitializer
+     */
+    @Bean("diagnosisSourcesScriptDatabaseInitializer")
+    @Profile("!dev")
+    public DataSourceScriptDatabaseInitializer diagnosisSourcesScriptDatabaseInitializer(DataSource dataSource) {
+        if (!(dataSource instanceof DynamicRoutingDataSource)) {
+            throw new CustomException("datasource is not DynamicRoutingDataSource");
+        }
+        DynamicRoutingDataSource drds = (DynamicRoutingDataSource) dataSource;
+        DataSource embedded = drds.getDataSource("diagnosisSources");
+        DataSourceProperty property = properties.getDatasource().get("diagnosisSources");
+        DatabaseInitializationSettings settings = new DatabaseInitializationSettings();
+        settings.setContinueOnError(property.getInit().isContinueOnError());
+        settings.setSeparator(property.getInit().getSeparator());
+        settings.setMode(DatabaseInitializationMode.ALWAYS);
+        settings.setDataLocations(Arrays.asList(property.getInit().getData()));
+        return new DataSourceScriptDatabaseInitializer(embedded, settings);
+    }
+
+    /**
+     * hisDiagnosisTaskInfoScriptDatabaseInitializer
+     *
+     * @param dataSource DataSource
+     * @return DataSourceScriptDatabaseInitializer
+     */
+    @Bean("hisDiagnosisTaskInfoScriptDatabaseInitializer")
+    @Profile("!dev")
+    public DataSourceScriptDatabaseInitializer hisDiagnosisTaskInfoScriptDatabaseInitializer(DataSource dataSource) {
+        if (!(dataSource instanceof DynamicRoutingDataSource)) {
+            throw new CustomException("datasource is not DynamicRoutingDataSource");
+        }
+        DynamicRoutingDataSource drds = (DynamicRoutingDataSource) dataSource;
+        DataSource embedded = drds.getDataSource("hisDiagnosisTaskInfo");
+        DataSourceProperty property = properties.getDatasource().get("hisDiagnosisTaskInfo");
+        DatabaseInitializationSettings settings = new DatabaseInitializationSettings();
+        settings.setContinueOnError(property.getInit().isContinueOnError());
+        settings.setSeparator(property.getInit().getSeparator());
+        settings.setMode(DatabaseInitializationMode.ALWAYS);
+        settings.setDataLocations(Arrays.asList(property.getInit().getData()));
+        return new DataSourceScriptDatabaseInitializer(embedded, settings);
+    }
+
+    /**
+     * hisDiagnosisThresholdInfoScriptDatabaseInitializer
+     *
+     * @param dataSource DataSource
+     * @return DataSourceScriptDatabaseInitializer
+     */
+    @Bean("hisDiagnosisThresholdInfoScriptDatabaseInitializer")
+    @Profile("!dev")
+    public DataSourceScriptDatabaseInitializer hisDiagnosisThresholdInfoScriptDatabaseInitializer(DataSource dataSource) {
+        if (!(dataSource instanceof DynamicRoutingDataSource)) {
+            throw new CustomException("datasource is not DynamicRoutingDataSource");
+        }
+        DynamicRoutingDataSource drds = (DynamicRoutingDataSource) dataSource;
+        DataSource embedded = drds.getDataSource("hisDiagnosisThresholdInfo");
+        DataSourceProperty property = properties.getDatasource().get("hisDiagnosisThresholdInfo");
+        DatabaseInitializationSettings settings = new DatabaseInitializationSettings();
+        settings.setContinueOnError(property.getInit().isContinueOnError());
+        settings.setSeparator(property.getInit().getSeparator());
+        settings.setMode(DatabaseInitializationMode.ALWAYS);
+        settings.setDataLocations(Arrays.asList(property.getInit().getData()));
+        return new DataSourceScriptDatabaseInitializer(embedded, settings);
+    }
+
+    @Bean("paramInfoScriptDatabaseInitializer")
+    @Profile("!dev")
+    public DataSourceScriptDatabaseInitializer paramInfoScriptDatabaseInitializer(DataSource dataSource) {
+        if (!(dataSource instanceof DynamicRoutingDataSource)) {
+            throw new CustomException("datasource is not DynamicRoutingDataSource");
+        }
+        DynamicRoutingDataSource drds = (DynamicRoutingDataSource) dataSource;
+        DataSource embedded = drds.getDataSource("paramInfo");
+        DataSourceProperty property = properties.getDatasource().get("paramInfo");
+        DatabaseInitializationSettings settings = new DatabaseInitializationSettings();
+        settings.setContinueOnError(property.getInit().isContinueOnError());
+        settings.setSeparator(property.getInit().getSeparator());
+        settings.setMode(DatabaseInitializationMode.ALWAYS);
+        settings.setDataLocations(Arrays.asList(property.getInit().getData()));
+        return new DataSourceScriptDatabaseInitializer(embedded, settings);
+    }
+
+    /**
+     * hisSlowSqlInfoScriptDatabaseInitializer
+     *
+     * @param dataSource DataSource
+     * @return DataSourceScriptDatabaseInitializer
+     */
+    @Bean("hisSlowSqlInfoScriptDatabaseInitializer")
+    @Profile("!dev")
+    public DataSourceScriptDatabaseInitializer hisSlowSqlInfoScriptDatabaseInitializer(DataSource dataSource) {
+        if (!(dataSource instanceof DynamicRoutingDataSource)) {
+            throw new CustomException("datasource is not DynamicRoutingDataSource");
+        }
+        DynamicRoutingDataSource drds = (DynamicRoutingDataSource) dataSource;
+        DataSource embedded = drds.getDataSource("hisSlowSqlInfo");
+        DataSourceProperty property = properties.getDatasource().get("hisSlowSqlInfo");
+        DatabaseInitializationSettings settings = new DatabaseInitializationSettings();
+        settings.setContinueOnError(property.getInit().isContinueOnError());
+        settings.setSeparator(property.getInit().getSeparator());
+        settings.setMode(DatabaseInitializationMode.ALWAYS);
+        settings.setDataLocations(Arrays.asList(property.getInit().getData()));
+        return new DataSourceScriptDatabaseInitializer(embedded, settings);
     }
 }

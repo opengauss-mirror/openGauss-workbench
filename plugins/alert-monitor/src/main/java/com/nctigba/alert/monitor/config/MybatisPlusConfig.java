@@ -28,6 +28,11 @@ import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.BlockAttackInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.pagination.DialectFactory;
+import com.baomidou.mybatisplus.extension.plugins.pagination.dialects.IDialect;
+import com.baomidou.mybatisplus.extension.plugins.pagination.dialects.PostgreDialect;
+import com.baomidou.mybatisplus.extension.toolkit.JdbcUtils;
+import org.apache.ibatis.executor.Executor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -53,9 +58,17 @@ public class MybatisPlusConfig {
     }
 
     public PaginationInnerInterceptor paginationInnerInterceptor() {
-        PaginationInnerInterceptor paginationInnerInterceptor = new PaginationInnerInterceptor();
-        paginationInnerInterceptor.setDbType(DbType.POSTGRE_SQL);
-        paginationInnerInterceptor.setMaxLimit(-1L);
+        PaginationInnerInterceptor paginationInnerInterceptor = new PaginationInnerInterceptor() {
+            @Override
+            protected IDialect findIDialect(Executor executor) {
+                DbType dbType = JdbcUtils.getDbType(executor);
+                if(DbType.OTHER.getDb().equals(dbType.getDb())) {
+                    super.setDialect(new PostgreDialect());
+                    return super.getDialect();
+                }
+                return DialectFactory.getDialect(JdbcUtils.getDbType(executor));
+            }
+        };
         return paginationInnerInterceptor;
     }
 
