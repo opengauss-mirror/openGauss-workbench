@@ -378,11 +378,10 @@ public class OpsWdrServiceImpl extends ServiceImpl<OpsWdrMapper, OpsWdrEntity> i
         Page<DwrSnapshotVO> page = new Page<>();
         List<DwrSnapshotVO> res = new ArrayList<>();
         String sql = "select * from snapshot.snapshot";
-        if (Objects.nonNull(pageNo) && Objects.nonNull(pageSize) && pageNo > 0 & pageSize > 0) {
+        if (Objects.nonNull(pageNo) && Objects.nonNull(pageSize) && pageNo > 0 && pageSize > 0) {
             String countSql = "select count(*) from snapshot.snapshot";
             try (Statement statement = connection.createStatement();
                  ResultSet resultSet = statement.executeQuery(countSql)){
-
                 resultSet.next();
                 int count = resultSet.getInt("count");
                 page.setTotal(count);

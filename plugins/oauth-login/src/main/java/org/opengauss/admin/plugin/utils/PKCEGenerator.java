@@ -25,16 +25,20 @@ package org.opengauss.admin.plugin.utils;
 
 import org.opengauss.admin.plugin.constants.MyConstants;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Base64;
 
 /**
- * @date 2024/5/31 15:42
- * @since 0.0
- */
+ * PKCEGenerator
+ *
+ * @author duanguoqiang
+ * @since 2024/6/22
+ **/
 public class PKCEGenerator {
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     /**
      * generateCodeVerifier
      *
@@ -43,20 +47,20 @@ public class PKCEGenerator {
     public static String generateCodeVerifier() {
         // Generates a random string of 128 length as code_verifier.
         byte[] verifierBytes = new byte[128];
-        new SecureRandom().nextBytes(verifierBytes);
+        SECURE_RANDOM.nextBytes(verifierBytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(verifierBytes);
     }
 
     /**
      * generateCodeChallenge
      *
-     * @param codeVerifier code_verifier
-     * @return String code_challenge
+     * @param String code_verifier
+     * @return String hash_result
      */
     public static String generateCodeChallenge(String codeVerifier) throws NoSuchAlgorithmException {
         // Hash code_verifier using the SHA-256 hash algorithm.
         MessageDigest digest = MessageDigest.getInstance(MyConstants.PKCE_CODE_CHALLENGE_METHOD);
-        byte[] bytes = digest.digest(codeVerifier.getBytes());
+        byte[] bytes = digest.digest(codeVerifier.getBytes(StandardCharsets.UTF_8));
         // Base64 encodes the hash result and removes the fill characters.
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }

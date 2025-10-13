@@ -36,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.annotation.Resource;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
@@ -68,6 +69,6 @@ public class OpsClusterLogController extends BaseController {
         return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment;filename=\"" + downloadFileName + "\"")
                 .header("fileName", downloadFileName)
-                .body(context.getBytes());
+                .body(context.getBytes(StandardCharsets.UTF_8));
     }
 }

@@ -149,7 +149,8 @@ public class HttpRequestUtils {
             log.info("Post Request to : " + url + ". Response Code : " + responseCode + ".");
 
             // Read response data.
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(
+                    con.getInputStream(), StandardCharsets.UTF_8))) {
                 String inputLine;
                 StringBuilder response = new StringBuilder();
                 while ((inputLine = in.readLine()) != null) {
