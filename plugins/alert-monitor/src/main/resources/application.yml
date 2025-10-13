@@ -23,6 +23,11 @@ spring:
         remove-abandoned-timeout-millis: 300000
         log-abandoned: true
         max-active: 50
+logging:
+  level:
+    com.nctigba.alert.monitor: INFO
+  file:
+    name: logs/plugins_alert_monitor.log
   jackson:
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss

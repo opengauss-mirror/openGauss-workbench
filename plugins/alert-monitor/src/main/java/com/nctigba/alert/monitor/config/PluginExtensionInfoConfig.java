@@ -35,6 +35,11 @@ import java.util.Map;
  */
 @Component
 public class PluginExtensionInfoConfig implements PluginExtensionInfo {
+    /**
+     * plugin id alert monitor
+     */
+    public static final String PLUGIN_ID = "alert-monitor";
+
     @Override
     public Map<String, Object> extensionInfo() {
         Map<String, Object> map = new HashMap<>();

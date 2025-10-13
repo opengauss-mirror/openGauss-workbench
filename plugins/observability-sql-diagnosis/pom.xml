@@ -36,24 +36,19 @@
 			<artifactId>visualtool-framework</artifactId>
 			<scope>provided</scope>
 			<exclusions>
-				<!--druid-spring-boot-starter removed-->
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter-data-redis</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter-data-redis</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.tomcat.embed</groupId>
-					<artifactId>tomcat-embed-websocket</artifactId>
-				</exclusion>
+					<exclusion>
+						<groupId>com.alibaba</groupId>
+						<artifactId>druid-spring-boot-3-starter</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>com.baomidou</groupId>
+						<artifactId>*</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>com.alibaba</groupId>
+						<artifactId>fastjson</artifactId>
+					</exclusion>
 			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.tomcat.embed</groupId>
-			<artifactId>tomcat-embed-websocket</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.gitee.starblues</groupId>
@@ -85,9 +80,6 @@
 			<version>${lombok.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- same as framework -->
-
-		<!-- common -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -317,9 +309,12 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
-				<version>1.6.0</version>
+				<version>${exec-maven-plugin.version}</version>
 				<configuration>
 					<skip>${build.frontend.skip}</skip>
+					<environmentVariables>
+						<npm_config_cache>${npm.cache}/observability_sql_diagnosis</npm_config_cache>
+					</environmentVariables>
 				</configuration>
 				<executions>
 					<execution>

@@ -16,3 +16,9 @@ spring:
   web:
     resources:
       static-locations: classpath:resources
+logging:
+  level:
+    com.nctigba.datastudio: debug
+    org.springframework: warn
+  file:
+    name: logs/plugins_data_studio.log

@@ -21,14 +21,12 @@
  * -------------------------------------------------------------------------
  */
 
-
 package org.opengauss.admin.framework.interceptor;
 
 import com.alibaba.fastjson.JSONObject;
 import org.opengauss.admin.common.annotation.RepeatSubmit;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.utils.ServletUtils;
-import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -41,7 +39,6 @@ import java.lang.reflect.Method;
  *
  * @author xielibo
  */
-@Component
 public abstract class BaseRepeatSubmitInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {

@@ -93,3 +93,9 @@ mybatis-plus:
   configuration:
     mapUnderscoreToCamelCase: true
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+logging:
+  level:
+    org.springframework: warn
+    com.nctigba.observability.sql: INFO
+  file:
+    name: logs/plugins_observability_sql_diagnosis.log

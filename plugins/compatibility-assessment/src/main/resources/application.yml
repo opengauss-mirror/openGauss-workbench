@@ -27,4 +27,9 @@ mybatis-plus:
     cache-enabled: false
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
 
-
+logging:
+  level:
+    org.opengauss.collect: INFO
+    org.springframework: warn
+  file:
+    name: logs/plugins_compatibility_assessment.log

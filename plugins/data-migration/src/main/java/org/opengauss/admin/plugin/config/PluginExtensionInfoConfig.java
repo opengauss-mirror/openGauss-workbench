@@ -37,6 +37,10 @@ import java.util.Map;
  **/
 @Component
 public class PluginExtensionInfoConfig implements PluginExtensionInfo {
+    /**
+     * plugin id data-migration
+     */
+    public static final String PLUGIN_ID = "data-migration";
 
     @Override
     public Map<String, Object> extensionInfo() {

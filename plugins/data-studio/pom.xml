@@ -260,7 +260,10 @@
 				<artifactId>exec-maven-plugin</artifactId>
 				<version>${exec-maven-plugin.version}</version>
 				<configuration>
-					<skip>false</skip>
+					<skip>${build.frontend.skip}</skip>
+					<environmentVariables>
+						<npm_config_cache>${npm.cache}/data_studio</npm_config_cache>
+					</environmentVariables>
 				</configuration>
 				<executions>
 					<execution>
