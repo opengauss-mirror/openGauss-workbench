@@ -48,6 +48,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -110,7 +111,7 @@ public class GenerateClusterConfigXmlInstance {
             DOMSource domSource = new DOMSource(document);
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             transformer.transform(domSource, new StreamResult(byteArrayOutputStream));
-            xmlString = byteArrayOutputStream.toString();
+            xmlString = byteArrayOutputStream.toString(StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.error("generate xml exception：", e);
             throw new OpsException("generate xml exception");

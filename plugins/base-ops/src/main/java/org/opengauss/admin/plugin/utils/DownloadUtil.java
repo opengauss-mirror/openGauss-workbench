@@ -85,6 +85,9 @@ public class DownloadUtil {
             long max = urlConnection.getContentLengthLong();
             downloadMonitor.init(max, 0, wsSession);
             inputStream = urlConnection.getInputStream();
+            if (inputStream == null) {
+                throw new IOException("Failed to get input stream form URL: " + url);
+            }
             byte[] bs = new byte[10240];
             int len;
             outputStream = new FileOutputStream(targetPath + "/" + fileName, false);

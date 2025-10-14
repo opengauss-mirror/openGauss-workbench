@@ -52,8 +52,21 @@ import org.opengauss.admin.plugin.domain.model.ops.JschResult;
 import org.opengauss.admin.plugin.domain.model.ops.WsSession;
 import org.opengauss.admin.plugin.domain.model.ops.cache.TaskManager;
 import org.opengauss.admin.plugin.domain.model.ops.cache.WsConnectorManager;
-import org.opengauss.admin.plugin.domain.model.ops.olk.*;
-import org.opengauss.admin.plugin.domain.model.ops.olk.dadReq.*;
+import org.opengauss.admin.plugin.domain.model.ops.olk.InstallOlkBody;
+import org.opengauss.admin.plugin.domain.model.ops.olk.InstallOlkContext;
+import org.opengauss.admin.plugin.domain.model.ops.olk.OlkConfig;
+import org.opengauss.admin.plugin.domain.model.ops.olk.OlkPageVO;
+import org.opengauss.admin.plugin.domain.model.ops.olk.OlkProcessFlagStr;
+import org.opengauss.admin.plugin.domain.model.ops.olk.ShardingDatasourceConfig;
+import org.opengauss.admin.plugin.domain.model.ops.olk.dadReq.DadReqPath;
+import org.opengauss.admin.plugin.domain.model.ops.olk.dadReq.DadResult;
+import org.opengauss.admin.plugin.domain.model.ops.olk.dadReq.OlkCommandDto;
+import org.opengauss.admin.plugin.domain.model.ops.olk.dadReq.OpenLooKengDto;
+import org.opengauss.admin.plugin.domain.model.ops.olk.dadReq.ServerDto;
+import org.opengauss.admin.plugin.domain.model.ops.olk.dadReq.ShardingDataSourceDto;
+import org.opengauss.admin.plugin.domain.model.ops.olk.dadReq.ShardingRuleDto;
+import org.opengauss.admin.plugin.domain.model.ops.olk.dadReq.ShardingsDto;
+import org.opengauss.admin.plugin.domain.model.ops.olk.dadReq.ZookeeperDto;
 import org.opengauss.admin.plugin.mapper.ops.OpsOlkMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsOlkService;
 import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerService;
@@ -72,7 +85,12 @@ import org.springframework.web.client.RestTemplate;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -332,7 +350,9 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
         jschUtil.upload(session, wsSession, zkEntity.getRealPath(), getPath(olkConfig.getSsUploadPath(), zkEntity.getFileName()));
         wsUtil.sendText(wsSession, String.format(OlkProcessFlagStr.END_UPLOAD_ZOOKEEPER, opsHostEntity.getPublicIp()));
         wsUtil.sendText(wsSession, String.format(OlkProcessFlagStr.START_UPLOAD_RULE_YAML, opsHostEntity.getPublicIp()));
-        jschUtil.upload(session, wsSession, new ByteArrayInputStream(olkConfig.getRuleYaml().getBytes()), getPath(olkConfig.getSsUploadPath(), "rule.yaml"));
+        jschUtil.upload(session, wsSession, new ByteArrayInputStream(
+                olkConfig.getRuleYaml().getBytes(StandardCharsets.UTF_8)),
+                getPath(olkConfig.getSsUploadPath(), "rule.yaml"));
         wsUtil.sendText(wsSession, String.format(OlkProcessFlagStr.END_UPLOAD_RULE_YAML, opsHostEntity.getPublicIp()));
         session.disconnect();
     }
@@ -587,7 +607,7 @@ public class OpsOlkServiceImpl extends ServiceImpl<OpsOlkMapper, OpsOlkEntity> i
                 channel.setCommand(String.format("grep -n \"%s\" %s | tail -1 | awk -F \":\" '{print $1}' | xargs -I {} tail -f %s -n +{}", param.getSF(), param.getLogPath(), param.getLogPath()));
                 channel.connect(20000);
                 in = channel.getInputStream();
-                isr = new InputStreamReader(in);
+                isr = new InputStreamReader(in, StandardCharsets.UTF_8);
                 reader = new BufferedReader(isr);
                 String line;
                 TimeLimiter limiter = SimpleTimeLimiter.create(Executors.newSingleThreadExecutor());

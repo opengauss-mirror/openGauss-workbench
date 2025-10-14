@@ -23,6 +23,7 @@ import cn.hutool.core.util.StrUtil;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsJdbcDbClusterNodeEntity;
@@ -127,7 +128,7 @@ public class ExecuteJob implements Job {
     }
 
     private void writeConfigPy(TrainingConfig train, String filePath) {
-        try (PrintWriter writer = new PrintWriter(filePath)) {
+        try (PrintWriter writer = new PrintWriter(filePath, StandardCharsets.UTF_8)) {
             TuningBuilder builder = new TuningBuilder();
             builder.appendNote("# 集群id").appendProperty("tuning_id", String.valueOf(train.getTrainingId()))
                     .appendNote("# 调优配置").appendNote("# 随机采样次数")

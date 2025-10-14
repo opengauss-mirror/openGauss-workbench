@@ -25,12 +25,18 @@ package org.opengauss.admin.plugin.utils;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import com.jcraft.jsch.*;
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpException;
+import com.jcraft.jsch.SftpProgressMonitor;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.domain.model.ops.JschResult;
 import org.opengauss.admin.plugin.domain.model.ops.RetBuffer;
-import org.opengauss.admin.plugin.domain.model.ops.WsSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -39,7 +45,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -392,10 +401,10 @@ public class JschRetBufferUtil {
         // The progress of
         private long percent = -1L;
 
-        private WsSession wsSession;
+        private RetBuffer retBuffer;
 
         public JschProgressMonitor(RetBuffer retBuffer) {
-            this.wsSession = wsSession;
+            this.retBuffer = retBuffer;
         }
 
         @Override
@@ -415,7 +424,7 @@ public class JschRetBufferUtil {
             if (percent % 10 == 0) {
                 log.info("Completed " + this.count + "(" + percent + "%) out of " + max + ".");
             }
-            wsUtil.sendText(wsSession, percent + "%");
+            retBuffer.sendText(percent + "%");
             return true;
         }
 

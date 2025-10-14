@@ -997,19 +997,22 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private List<SlowSqlVO> querySlowSql(Connection connection, String start, String end) {
         List<SlowSqlVO> res = new ArrayList<>();
-        String sql = "select * from DBE_PERF.get_global_full_sql_by_timestamp('" + start + "', '" + end + "')";
-        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                SlowSqlVO slowSqlVO = new SlowSqlVO();
-                slowSqlVO.setNode_name(resultSet.getString("node_name"));
-                slowSqlVO.setDb_name(resultSet.getString("db_name"));
-                slowSqlVO.setStart_time(resultSet.getString("start_time"));
-                slowSqlVO.setFinish_time(resultSet.getString("finish_time"));
-                slowSqlVO.setSlow_sql_threshold(resultSet.getString("slow_sql_threshold"));
-                slowSqlVO.setQuery(resultSet.getString("query"));
-                slowSqlVO.setQuery_plan(resultSet.getString("query_plan"));
-                res.add(slowSqlVO);
+        String sql = "select * from DBE_PERF.get_global_full_sql_by_timestamp(?, ?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, start);
+            pstmt.setString(2, end);
+            try (ResultSet resultSet = pstmt.executeQuery()) {
+                while (resultSet.next()) {
+                    SlowSqlVO slowSqlVO = new SlowSqlVO();
+                    slowSqlVO.setNode_name(resultSet.getString("node_name"));
+                    slowSqlVO.setDb_name(resultSet.getString("db_name"));
+                    slowSqlVO.setStart_time(resultSet.getString("start_time"));
+                    slowSqlVO.setFinish_time(resultSet.getString("finish_time"));
+                    slowSqlVO.setSlow_sql_threshold(resultSet.getString("slow_sql_threshold"));
+                    slowSqlVO.setQuery(resultSet.getString("query"));
+                    slowSqlVO.setQuery_plan(resultSet.getString("query_plan"));
+                    res.add(slowSqlVO);
+                }
             }
         } catch (Exception e) {
             log.error("Querying the Audit Log Exception", e);
@@ -1019,26 +1022,30 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
 
     private List<AuditLogVO> querySession(Connection connection, String start, String end) {
         List<AuditLogVO> res = new ArrayList<>();
-        String sql = "select * from pg_query_audit('" + start + "','" + end + "')";
-        try (Statement statement = connection.createStatement(); ResultSet resultSet = statement.executeQuery(sql)) {
-            while (resultSet.next()) {
-                AuditLogVO auditLogVO = new AuditLogVO();
-                auditLogVO.setTime(resultSet.getString("time"));
-                auditLogVO.setType(resultSet.getString("type"));
-                auditLogVO.setResult(resultSet.getString("result"));
-                auditLogVO.setUserid(resultSet.getString("userid"));
-                auditLogVO.setUsername(resultSet.getString("username"));
-                auditLogVO.setDatabase(resultSet.getString("database"));
-                auditLogVO.setClient_conninfo(resultSet.getString("client_conninfo"));
-                auditLogVO.setObject_name(resultSet.getString("object_name"));
-                auditLogVO.setDetail_info(resultSet.getString("detail_info"));
-                auditLogVO.setNode_name(resultSet.getString("node_name"));
-                auditLogVO.setThread_id(resultSet.getString("thread_id"));
-                auditLogVO.setLocal_port(resultSet.getString("local_port"));
-                auditLogVO.setRemote_port(resultSet.getString("remote_port"));
-                res.add(auditLogVO);
+        String sql = "select * from pg_query_audit(?, ?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, start);
+            pstmt.setString(2, end);
+            try (ResultSet resultSet = pstmt.executeQuery()) {
+                while (resultSet.next()) {
+                    AuditLogVO auditLogVO = new AuditLogVO();
+                    auditLogVO.setTime(resultSet.getString("time"));
+                    auditLogVO.setType(resultSet.getString("type"));
+                    auditLogVO.setResult(resultSet.getString("result"));
+                    auditLogVO.setUserid(resultSet.getString("userid"));
+                    auditLogVO.setUsername(resultSet.getString("username"));
+                    auditLogVO.setDatabase(resultSet.getString("database"));
+                    auditLogVO.setClient_conninfo(resultSet.getString("client_conninfo"));
+                    auditLogVO.setObject_name(resultSet.getString("object_name"));
+                    auditLogVO.setDetail_info(resultSet.getString("detail_info"));
+                    auditLogVO.setNode_name(resultSet.getString("node_name"));
+                    auditLogVO.setThread_id(resultSet.getString("thread_id"));
+                    auditLogVO.setLocal_port(resultSet.getString("local_port"));
+                    auditLogVO.setRemote_port(resultSet.getString("remote_port"));
+                    res.add(auditLogVO);
+                }
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             log.error("Querying the Audit Log Exception", e);
         }
         return res;
