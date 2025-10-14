@@ -29,7 +29,7 @@ import jakarta.annotation.Resource;
 
 import org.opengauss.admin.common.config.SystemConfig;
 import org.opengauss.admin.common.constant.Constants;
-import org.opengauss.admin.framework.interceptor.BaseRepeatSubmitInterceptor;
+import org.opengauss.admin.framework.interceptor.impl.SameUrlDataInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -52,7 +52,7 @@ import java.util.List;
 @Configuration
 public class ResourcesConfig implements WebMvcConfigurer {
     @Autowired
-    private BaseRepeatSubmitInterceptor repeatSubmitInterceptor;
+    private SameUrlDataInterceptor sameUrlDataInterceptor;
 
     @Resource
     private PluginProperties pluginProperties;
@@ -84,7 +84,7 @@ public class ResourcesConfig implements WebMvcConfigurer {
      */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(repeatSubmitInterceptor).addPathPatterns("/**");
+        registry.addInterceptor(sameUrlDataInterceptor).addPathPatterns("/**");
     }
 
     /**

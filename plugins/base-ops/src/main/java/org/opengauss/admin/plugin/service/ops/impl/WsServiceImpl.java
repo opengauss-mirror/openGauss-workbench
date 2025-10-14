@@ -37,6 +37,7 @@ import com.jcraft.jsch.ChannelShell;
 import jakarta.websocket.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -47,6 +48,7 @@ import java.util.Objects;
  * @date 2022/8/6 18:14
  **/
 @Slf4j
+@Service
 @Extract(bus = "ops-handler")
 public class WsServiceImpl implements SocketExtract {
     @Autowired

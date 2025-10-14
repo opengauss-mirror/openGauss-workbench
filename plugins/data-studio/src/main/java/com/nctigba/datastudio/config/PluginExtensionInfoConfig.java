@@ -37,6 +37,11 @@ import java.util.Map;
 @Component
 public class PluginExtensionInfoConfig implements PluginExtensionInfo {
     /**
+     * plugin id webds-plugin
+     */
+    public static final String PLUGIN_ID = "webds-plugin";
+
+    /**
      * plug-in
      *
      * @return Map

@@ -41,10 +41,3 @@ myProps:
   openGaussOperator:
     quantity:
       max: 100
-
-
-logging:
-  level:
-    root: INFO
-  file:
-    name: /dbops/logs/container-management.log

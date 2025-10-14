@@ -21,10 +21,10 @@ spring:
 # log config
 logging:
   level:
-    org.opengauss.admin: debug
+    org.opengauss.admin.plugin: INFO
     org.springframework: warn
   file:
-    path: /ops/logs/data-migration/
+    name: logs/plugins_data_migration.log
 mybatis-plus:
   # Search for the specified package alias
   typeAliasesPackage: org.opengauss.admin.plugin.domain

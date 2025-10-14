@@ -23,16 +23,24 @@
 
 package org.opengauss.admin.web.core.config;
 
+import com.gitee.starblues.core.PluginInfo;
+import com.gitee.starblues.integration.operator.PluginOperator;
+
+import cn.hutool.core.collection.CollUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import org.opengauss.admin.system.service.ISysPluginService;
 import org.opengauss.admin.system.service.ISysSettingService;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.opengauss.agent.service.IAgentInstallService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.Resource;
+
+import java.util.List;
 
 /**
  * @className: AdminApplicationRunner
@@ -49,12 +57,30 @@ public class AdminApplicationRunner implements ApplicationRunner {
     private IAgentInstallService agentInstallService;
     @Resource
     private ISysSettingService sysSettingService;
+    @Autowired
+    private PluginOperator pluginOperator;
+    @Autowired
+    private ISysPluginService sysPluginService;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
+        clearDirtyDataOfPlugins();
         this.encryptionUtils.updateKeyPairSecret();
         this.encryptionUtils.refreshKeyPair(false);
         sysSettingService.initHttpProxy();
         agentInstallService.startAllOfAgent();
+    }
+
+    private void clearDirtyDataOfPlugins() {
+        List<String> pluginList = sysPluginService.getPluginList();
+        if (CollUtil.isEmpty(pluginList)) {
+            return;
+        }
+        for (String pluginId : pluginList) {
+            PluginInfo pluginInfo = pluginOperator.getPluginInfo(pluginId);
+            if (pluginInfo == null) {
+                sysPluginService.uninstallPluginByPluginId(pluginId);
+            }
+        }
     }
 }

@@ -205,13 +205,9 @@ public class SystemPluginController extends BaseController {
                 return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_START_ERROR.code());
             }
         } catch (Exception e) {
-            StringWriter errorsWriter = new StringWriter();
-            e.printStackTrace(new PrintWriter(errorsWriter));
-            log.error(errorsWriter.toString());
+            log.error("start plugins [{}] failed ", id, e);
             return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_START_ERROR.code(), e.getMessage());
         }
-
-
     }
 
     /**
@@ -227,10 +223,6 @@ public class SystemPluginController extends BaseController {
             if (count > 0) {
                 return AjaxResult.error(ResponseCode.PLUGIN_MENU_HAS_OTHER_PLUGIN_SUBMENU_UNINSTALL_ERROR.code());
             }
-            PluginInfo pluginInfo = pluginOperator.getPluginInfo(id);
-//            File file = new
-//            pluginInfo.getPluginDescriptor().getPluginPath()
-
             if (pluginOperator.stop(id)) {
                 sysPluginService.stopByPluginId(id);
                 return AjaxResult.success();
@@ -238,9 +230,7 @@ public class SystemPluginController extends BaseController {
                 return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_STOP_ERROR.code());
             }
         } catch (Exception e) {
-            StringWriter errorsWriter = new StringWriter();
-            e.printStackTrace(new PrintWriter(errorsWriter));
-            log.error(errorsWriter.toString());
+            log.error("stop plugins [{}] failed ", id, e);
             return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_STOP_ERROR.code(), e.getMessage());
         }
     }
@@ -253,6 +243,7 @@ public class SystemPluginController extends BaseController {
     @Log(title = "plugins", businessType = BusinessType.INSTALL)
     @PostMapping("/offline_install")
     public AjaxResult install(@RequestParam("file") MultipartFile jarFile) {
+        String pluginId = "";
         try {
             preInstall(jarFile);
             UploadParam uploadParam = UploadParam.byMultipartFile(jarFile)
@@ -260,9 +251,9 @@ public class SystemPluginController extends BaseController {
                     .setStartPlugin(true)
                     .setUnpackPlugin(false);
             PluginInfo pluginInfo = pluginOperator.uploadPlugin(uploadParam);
+            pluginId = pluginInfo.getPluginId();
             if (!pluginInfo.getPluginDescriptor().getPluginVersion()
                     .equals(sysPluginRepositoryService.getCurrentVersion())) {
-                sysMenuService.deleteByPluginId(pluginInfo.getPluginId());
                 pluginOperator.uninstall(pluginInfo.getPluginId(), true, true);
                 return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_VERSION_ERROR.msg()
                     + sysPluginRepositoryService.getCurrentVersion());
@@ -276,9 +267,7 @@ public class SystemPluginController extends BaseController {
                 return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_INSTALL_ERROR.code());
             }
         } catch (Exception e) {
-            StringWriter errorsWriter = new StringWriter();
-            e.printStackTrace(new PrintWriter(errorsWriter));
-            log.error(errorsWriter.toString());
+            log.error("offline_install plugins [{}] failed ", pluginId, e);
             return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_INSTALL_ERROR.msg() + ":" + e.getMessage());
         }
     }
@@ -325,9 +314,7 @@ public class SystemPluginController extends BaseController {
                 return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_INSTALL_ERROR.code());
             }
         } catch (Exception e) {
-            StringWriter errorsWriter = new StringWriter();
-            e.printStackTrace(new PrintWriter(errorsWriter));
-            log.error(errorsWriter.toString());
+            log.error("online_install plugins [{}] failed ", fileName, e);
             return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_INSTALL_ERROR.msg() + ":" + e.getMessage());
         }
     }
@@ -428,15 +415,15 @@ public class SystemPluginController extends BaseController {
             if (count > 0) {
                 return AjaxResult.error(ResponseCode.PLUGIN_MENU_HAS_OTHER_PLUGIN_SUBMENU_UNINSTALL_ERROR.code());
             }
-            sysMenuService.deleteByPluginId(id);
             pluginOperator.uninstall(id, true, true);
-            sysPluginRepositoryService.updatePluginDownloadStatus(
-                    List.of(id), SysPluginDownloadStatus.UN_DOWNLOAD_STATUS.getCode());
+            sysPluginRepositoryService.updatePluginDownloadStatus(List.of(id),
+                SysPluginDownloadStatus.UN_DOWNLOAD_STATUS.getCode());
             return AjaxResult.success();
         } catch (Exception e) {
-            StringWriter errorsWriter = new StringWriter();
-            e.printStackTrace(new PrintWriter(errorsWriter));
-            log.error(errorsWriter.toString());
+            log.error("uninstall plugin failed {} ", id, e);
+            return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_UNINSTALL_ERROR.code(), e.getMessage());
+        } catch (Error e) {
+            log.error("uninstall plugin error {} ", id, e);
             return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_UNINSTALL_ERROR.code(), e.getMessage());
         }
     }

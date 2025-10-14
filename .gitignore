@@ -403,3 +403,8 @@ yarn-error.log
 
 # End of https://www.toptal.com/developers/gitignore/api/webstorm+all,jetbrains+all,intellij+all,java,vue,vuejs,maven,node
 package-lock.json
+/files/
+/data/
+/backupPlugin/
+/agent/
+/visualtool-plugin/

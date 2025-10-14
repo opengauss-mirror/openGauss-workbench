@@ -67,3 +67,9 @@ mybatis-plus:
   # 加载全局的配置文件
   configuration:
     mapUnderscoreToCamelCase: true
+logging:
+  level:
+    org.springframework: warn
+    com.nctigba.observability.instance: INFO
+  file:
+    name: logs/plugins_observability_instance.log

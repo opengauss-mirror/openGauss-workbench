@@ -33,53 +33,23 @@
 			<artifactId>visualtool-framework</artifactId>
 			<scope>provided</scope>
 			<exclusions>
-				<!--druid-spring-boot-starter removed-->
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter-data-redis</artifactId>
-				</exclusion>
+					<exclusion>
+						<groupId>com.alibaba</groupId>
+						<artifactId>druid-spring-boot-3-starter</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>com.baomidou</groupId>
+						<artifactId>*</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>com.alibaba</groupId>
+						<artifactId>fastjson</artifactId>
+					</exclusion>
+					<exclusion>
+						<artifactId>pagehelper-spring-boot-starter</artifactId>
+						<groupId>com.github.pagehelper</groupId>
+					</exclusion>
 			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>com.gitee.starblues</groupId>
-			<artifactId>spring-brick-bootstrap</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-websocket</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.gitee.starblues</groupId>
-			<artifactId>spring-brick-maven-packager</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<version>${lombok.version}</version>
-			<scope>provided</scope>
-		</dependency>
-		<!-- same as framework -->
-
-		<!-- common -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.alibaba</groupId>
-			<artifactId>fastjson</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>cn.hutool</groupId>
-			<artifactId>hutool-all</artifactId>
 		</dependency>
 		<!-- common -->
 		<dependency>
@@ -107,6 +77,45 @@
 			<groupId>com.baomidou</groupId>
 			<artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.gitee.starblues</groupId>
+			<artifactId>spring-brick-bootstrap</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.gitee.starblues</groupId>
+			<artifactId>spring-brick-maven-packager</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>${lombok.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>fastjson</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>cn.hutool</groupId>
+			<artifactId>hutool-all</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
@@ -263,9 +272,12 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
-				<version>1.6.0</version>
+				<version>${exec-maven-plugin.version}</version>
 				<configuration>
 					<skip>${build.frontend.skip}</skip>
+					<environmentVariables>
+						<npm_config_cache>${npm.cache}/observability_log_search</npm_config_cache>
+					</environmentVariables>
 				</configuration>
 				<executions>
 					<execution>

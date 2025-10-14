@@ -231,9 +231,12 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
-                <version>1.6.0</version>
+                <version>${exec-maven-plugin.version}</version>
                 <configuration>
                     <skip>${build.frontend.skip}</skip>
+                    <environmentVariables>
+                        <npm_config_cache>${npm.cache}/container_management</npm_config_cache>
+                    </environmentVariables>
                 </configuration>
                 <executions>
                     <execution>

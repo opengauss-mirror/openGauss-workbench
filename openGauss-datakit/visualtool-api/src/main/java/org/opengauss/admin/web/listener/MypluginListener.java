@@ -25,8 +25,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -54,9 +52,7 @@ public class MypluginListener implements PluginListener {
 
     @Override
     public void loadFailure(Path path, Throwable throwable) {
-        StringWriter errorsWriter = new StringWriter();
-        throwable.printStackTrace(new PrintWriter(errorsWriter));
-        log.error("plugin[{}] load fail. {}", path, errorsWriter.toString());
+        log.error("plugin[{}] load fail. {}", path, throwable);
     }
 
     @Override
@@ -67,9 +63,7 @@ public class MypluginListener implements PluginListener {
 
     @Override
     public void unLoadFailure(PluginInfo pluginInfo, Throwable throwable) {
-        StringWriter errorsWriter = new StringWriter();
-        throwable.printStackTrace(new PrintWriter(errorsWriter));
-        log.error("plugin[{}] uninstall fail. {}", pluginInfo.getPluginId(), errorsWriter.toString());
+        log.error("plugin[{}] uninstall fail. {}", pluginInfo.getPluginId(), throwable);
     }
 
     @Override
@@ -84,9 +78,7 @@ public class MypluginListener implements PluginListener {
 
     @Override
     public void startFailure(PluginInfo pluginInfo, Throwable throwable) {
-        StringWriter errorsWriter = new StringWriter();
-        throwable.printStackTrace(new PrintWriter(errorsWriter));
-        log.error("plugin[{}] start fail. {}", pluginInfo.getPluginId(), errorsWriter.toString());
+        log.error("plugin[{}] start fail. {}", pluginInfo.getPluginId(), throwable);
 
         pluginOperator.unload(pluginInfo.getPluginId());
     }
@@ -98,8 +90,6 @@ public class MypluginListener implements PluginListener {
 
     @Override
     public void stopFailure(PluginInfo pluginInfo, Throwable throwable) {
-        StringWriter errorsWriter = new StringWriter();
-        throwable.printStackTrace(new PrintWriter(errorsWriter));
-        log.error("plugin[{}] stop fail. {}", pluginInfo.getPluginId(), errorsWriter.toString());
+        log.error("plugin[{}] stop fail. {}", pluginInfo.getPluginId(), throwable);
     }
 }

@@ -71,11 +71,16 @@ public class WsEndpoint {
         wsService.onClose(businessId);
     }
 
+    /**
+     * ws endpoint on error handler
+     *
+     * @param type type
+     * @param businessId bussiness id
+     * @param error error msg
+     */
     @OnError
-    public void onError(@PathParam("type") String type,
-                        @PathParam("businessId") String businessId,
-                        Throwable error) {
-        log.error("onError，type:{},businessId:{},err",type,businessId,error);
+    public void onError(@PathParam("type") String type, @PathParam("businessId") String businessId, Throwable error) {
+        log.error("onError,type:{},businessId:{},err ", type, businessId, error);
     }
 
     @OnMessage(maxMessageSize = 10 * 1024 * 1024)

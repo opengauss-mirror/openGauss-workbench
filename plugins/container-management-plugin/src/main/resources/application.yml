@@ -1,3 +1,10 @@
 spring:
   profiles:
     active: dev
+
+logging:
+  level:
+    org.opengauss.admin.container: INFO
+    org.springframework: warn
+  file:
+    name: logs/plugins_container_management.log
