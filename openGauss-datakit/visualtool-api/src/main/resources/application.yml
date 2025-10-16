@@ -1,4 +1,4 @@
-version: 7.0.0-RC2
+version: 7.0.0-RC3
 server:
   proxy:
     hostname: localhost

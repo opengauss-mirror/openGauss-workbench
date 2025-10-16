@@ -56,6 +56,7 @@ import org.opengauss.admin.plugin.dto.TranscribeReplayTaskQueryDto;
 import org.opengauss.admin.plugin.enums.TranscribeReplaySqlStorageMode;
 import org.opengauss.admin.plugin.enums.TranscribeReplayStatus;
 import org.opengauss.admin.plugin.enums.TranscribeReplayVersion;
+import org.opengauss.admin.plugin.exception.NoSupportTranscribeReplayVersionException;
 import org.opengauss.admin.plugin.handler.TranscribeReplayHandle;
 import org.opengauss.admin.plugin.mapper.TranscribeReplayMapper;
 import org.opengauss.admin.plugin.service.TranscribeReplayFailSqlService;
@@ -87,6 +88,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -112,10 +114,8 @@ import static org.opengauss.admin.plugin.enums.TranscribeReplaySqlTransMode.TCPD
 @Slf4j
 public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMapper, TranscribeReplayTask>
     implements TranscribeReplayService, TranscribeReplayConstants {
-    final String lastedVersionUrl = "https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/"
-            + "transcribe-replay-tool-" + TranscribeReplayVersion.LATEST.getVersion() + ".tar.gz";
-    final String versionRc1Url = "https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/"
-            + "transcribe-replay-tool-" + TranscribeReplayVersion.VERSION_7_0_0_RC1.getVersion() + ".tar.gz";
+    final String downloadVersionUrl = "https://opengauss.obs.cn-south-1.myhuaweicloud.com/%s/tools/"
+        + "transcribe-replay-tool-%s.tar.gz";
     final String configFilePath = "/transcribe-replay-tool/config/";
     final String pluginPath = "/transcribe-replay-tool/plugin";
     final String transcribeConfigFile = "transcribe.properties";
@@ -163,12 +163,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
     @Override
     public void downloadAndConfig(TranscribeReplayTaskDto tp, Integer id, Map<String, String> config) {
         this.downloadId = id;
-        String url;
-        if (TranscribeReplayVersion.VERSION_7_0_0_RC1.getVersion().equals(tp.getToolVersion())) {
-            url = versionRc1Url;
-        } else {
-            url = lastedVersionUrl;
-        }
+        String url = getDownloadVersionUrl(tp.getToolVersion());
         String taskType = tp.getTaskType();
         boolean isTranscribe = taskType.contains("transcribe");
         boolean isReplay = taskType.contains("replay");
@@ -191,6 +186,16 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             }
             updateStatus(transcribeReplayTask, TranscribeReplayStatus.NOT_RUN);
         });
+    }
+
+    private String getDownloadVersionUrl(String toolVersion) {
+        try {
+            TranscribeReplayVersion transcribeReplayVersion = TranscribeReplayVersion.valueOf(toolVersion);
+            return String.format(Locale.getDefault(), downloadVersionUrl, transcribeReplayVersion.getPath(),
+                transcribeReplayVersion.getVersion());
+        } catch (IllegalArgumentException error) {
+            throw new NoSupportTranscribeReplayVersionException(toolVersion);
+        }
     }
 
     private ShellInfoVo createSourceShellInfo(TranscribeReplayTaskDto tp) {
