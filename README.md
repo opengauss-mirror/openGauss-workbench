@@ -28,34 +28,37 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 
 | 包名                            | 备注                                                        | 下载链接                                                                                                  |
 |:------------------------------|-----------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| Datakit-All-7.0.0-RC2.tar.gz  | 完整包（包含所有插件）                                               | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-All-7.0.0-RC2.tar.gz  |
-| Datakit-Mini-7.0.0-RC2.tar.gz | （推荐）最小化包（插件仅包含基础功能【业务开发】【基础运维】，其他插件可在DataKit的【插件管理】页面按需下载） | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-Mini-7.0.0-RC2.tar.gz |
+| Datakit-All-7.0.0-RC3.tar.gz  | 完整包（包含所有插件）                                               | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-All-7.0.0-RC3.tar.gz  |
+| Datakit-Mini-7.0.0-RC3.tar.gz | （推荐）最小化包（插件仅包含基础功能【业务开发】【基础运维】，其他插件可在DataKit的【插件管理】页面按需下载） | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-Mini-7.0.0-RC3.tar.gz |
 
 #### 注意：
 1. 7.0.0-RC2之前的包不做区分，都包含所有插件，包名是Datakit-_$VERSION_.tar.gz（比如6.0.0版：Datakit-6.0.0.tar.gz）；
 2. 7.0.0-RC2及之后的版本，下载链接为以*上表*内容，分为整包和最小化包；
 3. 用最小化包安装部署后，插件可在datakit的【插件管理】页面按需下载，有在线下载、离线下载两种方式；
 4. 在线下载，在下拉框选择需要下载的插件，点击确认即可；
-5. 离线下载，在在[官网下载页面](https://opengauss.org/zh/download/)的openGauss Tools部分中Datakit_Mini_7.0.0-RC2下拉框中选择下载插件jar包（复制对应jar包的sha256值，算出的sha256值做对比，如果一致则可以确认下载下来的包是完整的，否则需要重新下载）上传下载的jar包进行离线下载；
+5. 离线下载，在在[官网下载页面](https://opengauss.org/zh/download/)的openGauss Tools部分中Datakit_Mini_7.0.0-RC3下拉框中选择下载插件jar包（复制对应jar包的sha256值，算出的sha256值做对比，如果一致则可以确认下载下来的包是完整的，否则需要重新下载）上传下载的jar包进行离线下载；
 6. 离线下载上传的插件版本需要和部署的datakit版本保持一致。
 
 ##### 插件下载链接
 
 | 包名                                                  | 备注          | 下载链接                                                                                                                                         |
 |:----------------------------------------------------|-------------|----------------------------------------------------------------------------------------------------------------------------------------------|
-| alert-monitor-7.0.0-RC2-repackage.jar               | 告警监控插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/alert-monitor-7.0.0-RC2-repackage.jar                                         |
-| data-migration-7.0.0-RC2-repackage.jar              | 数据迁移插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/data-migration-7.0.0-RC2-repackage.jar             |
-| webds-plugin-7.0.0-RC2-repackage.jar                | 业务开发插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/webds-plugin-7.0.0-RC2-repackage.jar               |
-| base-ops-7.0.0-RC2-repackage.jar                    | 基础运维插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/base-ops-7.0.0-RC2-repackage.jar                   |
-| observability-instance-7.0.0-RC2-repackage.jar      | 实例监控插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-instance-7.0.0-RC2-repackage.jar     |
-| observability-log-search-7.0.0-RC2-repackage.jar    | 日志检索插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-log-search-7.0.0-RC2-repackage.jar   |
-| compatibility-assessment-7.0.0-RC2-repackage.jar    | 兼容性评估工具    | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/compatibility-assessment-7.0.0-RC2-repackage.jar |
-| observability-sql-diagnosis-7.0.0-RC2-repackage.jar | 智能诊断插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-sql-diagnosis-7.0.0-RC2-repackage.jar                  |
+| alert-monitor-7.0.0-RC3-repackage.jar               | 告警监控插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/alert-monitor-7.0.0-RC3-repackage.jar                                         |
+| data-migration-7.0.0-RC3-repackage.jar              | 数据迁移插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/data-migration-7.0.0-RC3-repackage.jar             |
+| webds-plugin-7.0.0-RC3-repackage.jar                | 业务开发插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/webds-plugin-7.0.0-RC3-repackage.jar               |
+| base-ops-7.0.0-RC3-repackage.jar                    | 基础运维插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/base-ops-7.0.0-RC3-repackage.jar                   |
+| observability-instance-7.0.0-RC3-repackage.jar      | 实例监控插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-instance-7.0.0-RC3-repackage.jar     |
+| observability-log-search-7.0.0-RC3-repackage.jar    | 日志检索插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-log-search-7.0.0-RC3-repackage.jar   |
+| compatibility-assessment-7.0.0-RC3-repackage.jar    | 兼容性评估工具    | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/compatibility-assessment-7.0.0-RC3-repackage.jar |
+| observability-sql-diagnosis-7.0.0-RC3-repackage.jar | 智能诊断插件      | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-sql-diagnosis-7.0.0-RC3-repackage.jar                  |
 
      
 ## 正式发布版下载
 
 https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC1/tools/Datakit/Datakit-7.0.0-RC1.tar.gz
+
+https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC2/tools/Datakit/Datakit-All-7.0.0-RC2.tar.gz
+https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC2/tools/Datakit/Datakit-Mini-7.0.0-RC2.tar.gz
 
 为确认软件包在传输过程中由于网络原因或存储介质原因是否出现下载不完整的情况，需对软件包的完整性进行校验，通过校验的软件包才能部署，完整性校验步骤如下：
 
@@ -80,13 +83,13 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
 
 ## 安装步骤
 1. 解压安装包\
-   通过下载链接或编译代码获取安装包`Datakit-All-7.0.0-RC2.tar.gz`或`Datakit-Mini-7.0.0-RC2.tar.gz`，（如果不需要所有插件，建议下载`Datakit-Mini-7.0.0-RC2.tar.gz`，安装部署完成后，可以在插件管理界面按需下载插件）；
+   通过下载链接或编译代码获取安装包`Datakit-All-{version}.tar.gz`或`Datakit-Mini-{version}.tar.gz`，（如果不需要所有插件，建议下载`Datakit-Mini-7.0.0-RC3.tar.gz`，安装部署完成后，可以在插件管理界面按需下载插件）；
    解压安装包至`datakit`安装目录下，例如安装目录为`/path/datakit_server`时，解压目录如下:
    ```shell
-   $ tar -zxvf Datakit-All-7.0.0-RC2.tar.gz -C /path/to/datakit_server
+   $ tar -zxvf Datakit-All-{version}.tar.gz -C /path/to/datakit_server
    ./agent/
    ./agent/application.yml
-   ./agent/datakit-agent-7.0.0-RC2-runner.jar
+   ./agent/datakit-agent-{version}-runner.jar
    ./application-temp.yml
    ./build_commit_id.log
    ./doc/
@@ -102,17 +105,17 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
    ./doc/alert-monitor-README.md
    ./doc/data-studio-README.md
    ./doc/datakit-README.md
-   ./openGauss-datakit-7.0.0-RC2.jar
+   ./openGauss-datakit-{version}.jar
    ./run.sh
    ./visualtool-plugin/
-   ./visualtool-plugin/observability-sql-diagnosis-7.0.0-RC2-repackage.jar
-   ./visualtool-plugin/compatibility-assessment-7.0.0-RC2-repackage.jar
-   ./visualtool-plugin/alert-monitor-7.0.0-RC2-repackage.jar
-   ./visualtool-plugin/webds-plugin-7.0.0-RC2-repackage.jar
-   ./visualtool-plugin/observability-log-search-7.0.0-RC2-repackage.jar
-   ./visualtool-plugin/base-ops-7.0.0-RC2-repackage.jar
-   ./visualtool-plugin/data-migration-7.0.0-RC2-repackage.jar
-   ./visualtool-plugin/observability-instance-7.0.0-RC2-repackage.jar
+   ./visualtool-plugin/observability-sql-diagnosis-{version}-repackage.jar
+   ./visualtool-plugin/compatibility-assessment-{version}-repackage.jar
+   ./visualtool-plugin/alert-monitor-{version}-repackage.jar
+   ./visualtool-plugin/webds-plugin-{version}-repackage.jar
+   ./visualtool-plugin/observability-log-search-{version}-repackage.jar
+   ./visualtool-plugin/base-ops-{version}-repackage.jar
+   ./visualtool-plugin/data-migration-{version}-repackage.jar
+   ./visualtool-plugin/observability-instance-{version}-repackage.jar
    ```
 2. 创建新目录\
    在`datakit`安装目录下，创建新的目录`config`, `files`, `ssl`, `logs`

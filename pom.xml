@@ -16,7 +16,7 @@
         <npm.cache>${user.home}/datakit/npm-cache</npm.cache>
         <spring-brick.version>4.1.2</spring-brick.version>
         <spring-boot.version>3.5.6</spring-boot.version>
-        <admin.version>7.0.0-RC2</admin.version>
+        <admin.version>7.0.0-RC3</admin.version>
 
         <druid.version>1.2.27</druid.version>
         <!-- mybatis -->
