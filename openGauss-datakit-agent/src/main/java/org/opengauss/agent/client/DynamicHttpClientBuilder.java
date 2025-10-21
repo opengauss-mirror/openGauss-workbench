@@ -26,9 +26,18 @@ import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+import org.opengauss.agent.config.AgentSslContext;
+import org.opengauss.agent.constant.AgentConstants;
+import org.opengauss.agent.exception.AgentException;
+
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
 
 /**
  * DynamicHttpClientBuilder
@@ -66,9 +75,24 @@ public class DynamicHttpClientBuilder {
     }
 
     private static OkHttpClient defaultClient() {
-        return new OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS)
+        OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
-            .connectionPool(new ConnectionPool(5, 5, TimeUnit.MINUTES)) // 连接池优化
-            .build();
+            .connectionPool(new ConnectionPool(5, 5, TimeUnit.MINUTES));
+        String protocol = ServerUrlBuilder.getAgentServerProtocol();
+        if (AgentConstants.ConfigProperties.HTTPS.equalsIgnoreCase(protocol)) {
+            configureTrustAll(clientBuilder);
+        }
+        return clientBuilder.build();
+    }
+
+    private static void configureTrustAll(OkHttpClient.Builder clientBuilder) {
+        try {
+            SSLContext sslContext = AgentSslContext.configureSslContext();
+            SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+            clientBuilder.sslSocketFactory(sslSocketFactory, AgentSslContext.getX509TrustManager());
+            clientBuilder.hostnameVerifier((hostname, session) -> true);
+        } catch (NoSuchAlgorithmException | KeyManagementException e) {
+            throw new AgentException("Failed to configure unsafe SSL", e);
+        }
     }
 }

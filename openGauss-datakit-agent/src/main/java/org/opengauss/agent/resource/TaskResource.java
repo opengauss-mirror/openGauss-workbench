@@ -27,8 +27,8 @@ import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.http.Body;
 
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.opengauss.agent.client.AgentServerClient;
+import org.opengauss.agent.client.ServerClientFactory;
 import org.opengauss.agent.common.MutinyExecutor;
 import org.opengauss.agent.config.AppConfig;
 import org.opengauss.agent.entity.TaskExecution;
@@ -65,10 +65,9 @@ public class TaskResource {
     AppConfig appConfig;
     @Inject
     TaskExecutionRecordService taskExecutionRecordService;
-    @Inject
-    @RestClient
     AgentServerClient agentServerClient;
-
+    @Inject
+    ServerClientFactory clientFactory;
     private final AtomicBoolean isCalledTask = new AtomicBoolean(false);
     private final Object taskLock = new Object();
     private ScheduledFuture<?> scheduledTask;
@@ -77,6 +76,7 @@ public class TaskResource {
      * init
      */
     void init() {
+        agentServerClient = clientFactory.createAgentServerClient();
         scheduledTask = mutinyExecutor.schedule(() -> {
             if (taskManager.isEmpty() || !isCalledTask.get()) {
                 log.info("no task to inspect");

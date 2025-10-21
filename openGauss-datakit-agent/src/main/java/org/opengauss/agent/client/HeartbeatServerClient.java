@@ -33,7 +33,7 @@ import org.opengauss.agent.entity.HeartbeatReport;
  * @since 7.0.0-RC2
  **/
 @Path("/agent")
-@RegisterRestClient(configKey = "agent.server")
+@RegisterRestClient
 public interface HeartbeatServerClient {
     /**
      * heartbeat

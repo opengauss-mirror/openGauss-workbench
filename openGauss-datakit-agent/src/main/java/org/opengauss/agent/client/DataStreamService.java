@@ -34,7 +34,7 @@ import java.util.List;
  * @since 7.0.0-RC2
  **/
 @Path("/agent")
-@RegisterRestClient(configKey = "agent.server")
+@RegisterRestClient
 public interface DataStreamService {
     /**
      * push data to downstream service

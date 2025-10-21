@@ -33,7 +33,7 @@ import org.opengauss.agent.entity.HostBaseInfo;
  * @since 7.0.0-RC2
  **/
 @Path("/receive")
-@RegisterRestClient(configKey = "agent.server")
+@RegisterRestClient
 public interface HostFixedMetricsClient {
     /**
      * sendHostBaseInfo
