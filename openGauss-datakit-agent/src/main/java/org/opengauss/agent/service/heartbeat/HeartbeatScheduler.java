@@ -25,8 +25,8 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.opengauss.agent.client.HeartbeatServerClient;
+import org.opengauss.agent.client.ServerClientFactory;
 import org.opengauss.agent.config.AppConfig;
 import org.opengauss.agent.constant.AgentConstants;
 import org.opengauss.agent.entity.HeartbeatHeader;
@@ -49,7 +49,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 @ApplicationScoped
 public class HeartbeatScheduler {
-    private static final String INSTANCE_ID = UUID.randomUUID().toString(); // 生成实例ID
+    private static final String INSTANCE_ID = UUID.randomUUID().toString();
     private static final AtomicInteger HEARTBEAT_BREAK_TIMES = new AtomicInteger(0);
 
     HeartbeatHeader heartbeatHeader;
@@ -57,8 +57,8 @@ public class HeartbeatScheduler {
     @Inject
     AppConfig appConfig;
     @Inject
-    @RestClient
-    HeartbeatServerClient heartbeatServerClient;
+    ServerClientFactory clientFactory;
+    HeartbeatServerClient heartbeatServerClient = null;
 
     /**
      * onStart
@@ -69,6 +69,7 @@ public class HeartbeatScheduler {
         log.info("agent config : {}", appConfig);
         initHeartbeatHeader();
         scheduler = Executors.newSingleThreadScheduledExecutor();
+        heartbeatServerClient = clientFactory.createHeartbeatClient();
         scheduler.scheduleAtFixedRate(this::sendHeartbeat, 1, appConfig.getHeartbeatInterval(), TimeUnit.SECONDS);
     }
 

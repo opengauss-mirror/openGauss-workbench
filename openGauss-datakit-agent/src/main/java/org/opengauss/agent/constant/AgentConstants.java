@@ -97,4 +97,19 @@ public interface AgentConstants {
          */
         String DEFAULT_TYPE = "UNDEFINED";
     }
+
+    /**
+     * agent config properties
+     */
+    interface ConfigProperties {
+        /**
+         * https protocol
+         */
+        String HTTPS = "https";
+
+        /**
+         * agnet server properties name
+         */
+        String AGENT_SERVER = "agent.server";
+    }
 }

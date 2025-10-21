@@ -30,7 +30,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
  * @since 7.0.0-RC2
  **/
 @Path("/agent")
-@RegisterRestClient(configKey = "agent.server")
+@RegisterRestClient
 public interface AgentServerClient {
     /**
      * task callback start

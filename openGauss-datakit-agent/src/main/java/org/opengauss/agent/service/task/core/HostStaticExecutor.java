@@ -18,8 +18,8 @@ package org.opengauss.agent.service.task.core;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.opengauss.agent.client.HostFixedMetricsClient;
+import org.opengauss.agent.client.ServerClientFactory;
 import org.opengauss.agent.entity.HostBaseInfo;
 import org.opengauss.agent.entity.TaskDefinition;
 import org.opengauss.agent.exception.TaskExecutionException;
@@ -35,12 +35,13 @@ import org.opengauss.agent.service.task.TaskExecutor;
  **/
 @ApplicationScoped
 public class HostStaticExecutor implements TaskExecutor {
-    @Inject
-    @RestClient
     HostFixedMetricsClient hostFixedMetricsClient;
+    @Inject
+    ServerClientFactory clientFactory;
 
     @Override
     public void initialize(TaskDefinition taskDefinition) throws TaskExecutionException {
+        hostFixedMetricsClient = clientFactory.createHostFixedMetricsClient();
     }
 
     @Override
