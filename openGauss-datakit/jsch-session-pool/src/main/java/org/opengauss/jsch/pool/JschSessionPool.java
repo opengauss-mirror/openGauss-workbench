@@ -116,10 +116,11 @@ public class JschSessionPool {
      * @throws JschPoolException borrow exception
      */
     public static Session borrowSession(SessionConfig config) throws JschPoolException {
+        GenericObjectPool<Session> pool = getOrCreatePool(config);
         try {
-            GenericObjectPool<Session> pool = getOrCreatePool(config);
             return pool.borrowObject();
         } catch (Exception e) {
+            pool.clear();
             throw new JschPoolException(
                 "Failed to borrow session from pool [" + config.getHost() + ":" + config.getUsername() + "] caused by "
                     + e.getMessage(), e);
