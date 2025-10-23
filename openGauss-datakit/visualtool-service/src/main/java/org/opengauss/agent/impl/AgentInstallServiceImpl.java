@@ -92,6 +92,8 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
     private String serverPort;
     @Value("${agent.localPath}")
     private String agentLocalPath;
+    @Value("${server.ssl.enabled}")
+    private boolean shouldServerSslEnable;
     @Value("${agent.agentName}")
     private String agentName;
     @Resource
@@ -170,8 +172,8 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
 
     private void configAgentProperties(Map<String, Object> properties, AgentInstallEntity install) {
         String serverHost = sysSettingExtService.queryAdminServerHost();
-        ConfigAgentProperties configAgentProperties = new ConfigAgentProperties(serverHost, serverIpAndMask,
-            serverPort);
+        ConfigAgentProperties configAgentProperties = new ConfigAgentProperties(serverHost, serverIpAndMask, serverPort,
+            shouldServerSslEnable);
         configAgentProperties.configAgentProperties(properties, install);
     }
 
@@ -537,6 +539,7 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
         private Map<String, String> serverIpAndMaskMap;
         private String defaultServerHost;
         private String serverPort;
+        private boolean isSslEnable;
 
         /**
          * constructor
@@ -544,11 +547,14 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
          * @param serverHost serverHost
          * @param serverIpAndMask server ip and mask map
          * @param serverPort server port
+         * @param isSslEnable isSslEnable
          */
-        public ConfigAgentProperties(String serverHost, Map<String, String> serverIpAndMask, String serverPort) {
+        public ConfigAgentProperties(String serverHost, Map<String, String> serverIpAndMask, String serverPort,
+            boolean isSslEnable) {
             this.serverIpAndMaskMap = serverIpAndMask;
             this.defaultServerHost = serverHost;
             this.serverPort = serverPort;
+            this.isSslEnable = isSslEnable;
         }
 
         /**
@@ -579,16 +585,25 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
 
         private String loadServerUrl(String agentIp) {
             if (StrUtil.isNotEmpty(defaultServerHost)) {
-                return "http://" + defaultServerHost + ":" + this.serverPort;
+                return getServerProtocol() + "://" + defaultServerHost + ":" + this.serverPort;
             }
-            return this.serverIpAndMaskMap.entrySet().stream().filter(entry -> {
-                try {
-                    return IpUtils.isIpInSubnet(agentIp, entry.getKey(), entry.getValue());
-                } catch (UnknownHostException e) {
-                    log.error("Failed to load server url", e);
-                    return false;
-                }
-            }).findFirst().map(entry -> "http://" + entry.getKey() + ":" + this.serverPort).orElse("");
+            return this.serverIpAndMaskMap.entrySet()
+                .stream()
+                .filter(entry -> {
+                    try {
+                        return IpUtils.isIpInSubnet(agentIp, entry.getKey(), entry.getValue());
+                    } catch (UnknownHostException e) {
+                        log.error("Failed to load server url", e);
+                        return false;
+                    }
+                })
+                .findFirst()
+                .map(entry -> getServerProtocol() + "://" + entry.getKey() + ":" + this.serverPort)
+                .orElse("");
+        }
+
+        private String getServerProtocol() {
+            return isSslEnable ? "https" : "http";
         }
 
         private Object buildDefaultLogPath(String defaultPath, String installPath) {
