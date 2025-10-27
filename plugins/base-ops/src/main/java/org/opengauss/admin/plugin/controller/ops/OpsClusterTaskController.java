@@ -75,7 +75,7 @@ public class OpsClusterTaskController extends BaseController {
     @GetMapping("/host/{hostIp}")
     public AjaxResult host(@PathVariable String hostIp) {
         Assert.isTrue(StrUtil.isNotEmpty(hostIp), "host ip cannot be empty");
-        Assert.isTrue(IpUtils.mayBeIPAddress(hostIp), "ipaddress " + hostIp + "is invalid");
+        Assert.isTrue(IpUtils.mayBeIpAddress(hostIp), "ipaddress " + hostIp + "is invalid");
         return AjaxResult.success(opsClusterTaskService.getHostByIp(hostIp));
     }
 
@@ -209,7 +209,7 @@ public class OpsClusterTaskController extends BaseController {
                                                      @RequestParam(name = "hostUsername") String hostUsername) {
         Assert.isTrue(StrUtil.isNotEmpty(hostIp), "host ip cannot be empty");
         Assert.isTrue(StrUtil.isNotEmpty(hostUsername), "host username cannot be empty");
-        Assert.isTrue(IpUtils.mayBeIPAddress(hostIp), "ip address " + hostIp + " is illegal");
+        Assert.isTrue(IpUtils.mayBeIpAddress(hostIp), "ip address " + hostIp + " is illegal");
         return AjaxResult.success(opsClusterTaskService.checkHostInstanceCanInstallClusterNode(hostIp, hostUsername));
     }
 

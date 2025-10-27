@@ -25,13 +25,13 @@
 package org.opengauss.admin.common.utils.ip;
 
 import org.apache.commons.net.util.SubnetUtils;
-import org.apache.commons.validator.routines.InetAddressValidator;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.html.EscapeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -43,6 +43,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * IP Tool
@@ -50,6 +51,7 @@ import java.util.Map;
  * @author xielibo
  */
 public class IpUtils {
+    private static final Pattern IPV4_PATTERN = Pattern.compile("\\d{0,3}.\\d{0,3}.\\d{0,3}.\\d{0,3}(/\\d{0,3})?");
     private static final String IPV4 = "ipv4";
     private static final String IPV6 = "ipv6";
 
@@ -253,8 +255,15 @@ public class IpUtils {
         return "Unknown";
     }
 
-    public static boolean mayBeIPAddress(String hostIp) {
-        return InetAddressValidator.getInstance().isValid(hostIp);
+    /**
+     * check ip address is valid
+     *
+     * @param ipAddress ip address
+     * @return boolean
+     */
+    public static boolean mayBeIpAddress(String ipAddress) {
+        return IPV4_PATTERN.matcher(ipAddress).matches() || ipAddress.charAt(0) == '[' || ipAddress.charAt(0) == ':'
+            || Character.digit(ipAddress.charAt(0), 16) != -1 && ipAddress.indexOf(58) > 0;
     }
 
     /**

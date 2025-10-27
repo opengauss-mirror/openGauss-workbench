@@ -3,21 +3,25 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.opengauss</groupId>
-    <artifactId>visualtool-parent</artifactId>
-    <version>${admin.version}</version>
-    <relativePath>../../pom.xml</relativePath>
-  </parent>
+  <groupId>org.opengauss</groupId>
   <artifactId>jsch-session-pool</artifactId>
   <name>jsch-session-pool</name>
-
+  <version>7.0.0-RC3</version>
 
   <properties>
     <java.version>17</java.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <jsch.version>2.27.2</jsch.version>
+    <lombok.version>1.18.34</lombok.version>
+    <commons.pool2.version>2.11.1</commons.pool2.version>
+    <hutool.version>5.8.38</hutool.version>
+    <slf4j.version>1.7.36</slf4j.version>
+    <spring-boot.version>3.5.6</spring-boot.version>
+    <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+    <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
+    <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
   </properties>
 
   <dependencies>
@@ -30,11 +34,13 @@
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
+      <version>${lombok.version}</version>
     </dependency>
     <!-- Connection pooling -->
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-pool2</artifactId>
+      <version>${commons.pool2.version}</version>
     </dependency>
     <dependency>
       <groupId>cn.hutool</groupId>
@@ -52,6 +58,7 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
+      <version>${spring-boot.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
