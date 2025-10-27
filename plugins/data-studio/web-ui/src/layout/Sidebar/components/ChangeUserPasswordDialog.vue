@@ -38,7 +38,7 @@
   import { useI18n } from 'vue-i18n';
   import { updateUserPassword } from '@/api/userRole';
   import { useUserStore } from '@/store/modules/user';
-  import Crypto from '@/utils/crypto';
+  import { encryptPassword } from '@/utils/jsencrypt';
 
   const props = withDefaults(
     defineProps<{
@@ -113,10 +113,13 @@
   const handleConfirm = () => {
     ruleFormRef.value.validate(async (valid) => {
       if (valid) {
+        const oldPassword = await encryptPassword(form.oldPassword);
+        const newPassword = await encryptPassword(form.newPassword);
+        const loginUserPassword = await encryptPassword(form.loginUserPassword);
         updateUserPassword({
-          oldPassword: Crypto.encrypt(form.oldPassword),
-          newPassword: Crypto.encrypt(form.newPassword),
-          loginUserPassword: Crypto.encrypt(form.loginUserPassword),
+          oldPassword,
+          newPassword,
+          loginUserPassword,
           userName: props.userName,
           uuid: props.uuid,
           webUser: UserStore.userId,

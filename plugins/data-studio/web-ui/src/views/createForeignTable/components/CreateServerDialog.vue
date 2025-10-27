@@ -84,7 +84,7 @@
   import { loadingInstance } from '@/utils';
   import { createServerListApi, testForeignTableApi } from '@/api/foreignTable';
   import { getUserRoleList } from '@/api/userRole';
-  import Crypto from '@/utils/crypto';
+  import { encryptPassword } from '@/utils/jsencrypt';
 
   const { t } = useI18n();
   const props = withDefaults(
@@ -215,6 +215,7 @@
   const testRemoteConnection = async () => {
     ruleFormRef.value.validate(async (valid) => {
       if (valid) {
+        let remotePassword = await encryptPassword(form.remotePassword)
         try {
           loading.value = loadingInstance();
           await testForeignTableApi({
@@ -224,7 +225,7 @@
             remotePort: form.remotePort,
             remoteDatabase: form.remoteDatabase,
             remoteUsername: form.remoteUsername,
-            remotePassword: Crypto.encrypt(form.remotePassword),
+            remotePassword,
           });
           ElMessage.success(t('message.success'));
         } finally {
@@ -236,6 +237,7 @@
   const confirmForm = async () => {
     ruleFormRef.value.validate(async (valid) => {
       if (valid) {
+        let remotePassword = await encryptPassword(form.remotePassword)
         try {
           loading.value = loadingInstance();
           await createServerListApi({
@@ -247,7 +249,7 @@
             remoteDatabase: form.remoteDatabase,
             role: form.role,
             remoteUsername: form.remoteUsername,
-            remotePassword: Crypto.encrypt(form.remotePassword),
+            remotePassword,
           });
           ElMessage.success(t('message.success'));
           emit('success', form.name);

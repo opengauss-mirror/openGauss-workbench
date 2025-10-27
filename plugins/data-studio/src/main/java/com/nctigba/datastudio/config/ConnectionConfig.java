@@ -28,15 +28,20 @@ import com.nctigba.datastudio.dao.ConnectionMapDAO;
 import com.nctigba.datastudio.model.dto.ConnectionDTO;
 import com.nctigba.datastudio.utils.ConnectionUtils;
 import com.nctigba.datastudio.utils.LocaleStringUtils;
+
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
 import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
-import static com.nctigba.datastudio.utils.SecretUtils.desEncrypt;
 
 /**
  * ConnectionConfig
@@ -46,6 +51,10 @@ import static com.nctigba.datastudio.utils.SecretUtils.desEncrypt;
 @Slf4j
 @Service("connectionConfig")
 public class ConnectionConfig {
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
+
     /**
      * connect database
      *
@@ -61,7 +70,7 @@ public class ConnectionConfig {
         Connection connection = JdbcConnectionManager.getConnection(
                 connectionDTO.getUrl(),
                 connectionDTO.getDbUser(),
-                desEncrypt(connectionDTO.getDbPassword()));
+                encryptionUtils.decrypt(connectionDTO.getDbPassword()));
         connectionDTO.updateConnectionDTO(connectionDTO);
         ConnectionMapDAO.setConMap(uuid, connectionDTO);
         return connection;

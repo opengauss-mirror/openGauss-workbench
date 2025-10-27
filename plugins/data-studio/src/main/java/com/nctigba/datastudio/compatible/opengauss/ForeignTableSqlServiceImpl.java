@@ -32,10 +32,15 @@ import com.nctigba.datastudio.service.MetaDataByJdbcService;
 import com.nctigba.datastudio.utils.DebugUtils;
 import com.nctigba.datastudio.utils.ExecuteUtils;
 import com.nctigba.datastudio.utils.LocaleStringUtils;
+
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -96,7 +101,6 @@ import static com.nctigba.datastudio.constants.SqlConstants.TABLE_DDL_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.TABLE_DESCRIPTION_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.UNIQUE_KEYWORD_SQL;
 import static com.nctigba.datastudio.utils.DebugUtils.comGetUuidType;
-import static com.nctigba.datastudio.utils.SecretUtils.desEncrypt;
 
 /**
  * ForeignTableSQLServiceImpl
@@ -112,6 +116,9 @@ public class ForeignTableSqlServiceImpl implements ForeignTableSqlService {
     @Autowired
     private MetaDataByJdbcService metaDataByJdbcService;
     private Map<String, TableColumnSQLService> tableColumnSQLService;
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
 
     @Resource
     public void setTableColumnSQLService(List<TableColumnSQLService> sqlServiceList) {
@@ -312,7 +319,8 @@ public class ForeignTableSqlServiceImpl implements ForeignTableSqlService {
                 return;
             }
             String mappingSql = String.format(CREATE_MAPPING_SQL, DebugUtils.needQuoteName(request.getRole()),
-                    request.getForeignServer(), request.getRemoteUsername(), desEncrypt(request.getRemotePassword()));
+                    request.getForeignServer(), request.getRemoteUsername(),
+                encryptionUtils.decrypt(request.getRemotePassword()));
             statement.execute(mappingSql);
         }
     }
