@@ -27,7 +27,6 @@ package org.opengauss.admin.system.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.common.core.domain.entity.SysUser;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -75,22 +74,6 @@ public interface ISysUserService extends IService<SysUser> {
      * @param userName username
      */
     public String checkUserNameUnique(String userName);
-
-    /**
-     * Check if phone is unique
-     *
-     * @param user user
-     * @return
-     */
-    public String checkPhoneUnique(SysUser user);
-
-    /**
-     * Check if email is unique
-     *
-     * @param user user
-     * @return
-     */
-    public String checkEmailUnique(SysUser user);
 
     /**
      * Check if the user allows the operation

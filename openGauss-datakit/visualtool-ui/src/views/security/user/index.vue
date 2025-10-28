@@ -6,9 +6,6 @@
           <a-form-item field="userName" :label="$t('user.index.5m6ni29gbi40')">
             <a-input v-model="form.userName" allow-clear :placeholder="$t('user.index.5m6ni29gdag0')" style="width: 180px;" @change="getList(true)"></a-input>
           </a-form-item>
-          <a-form-item field="phonenumber" :label="$t('user.index.5m6ni29gdhw0')">
-            <a-input v-model="form.phonenumber" allow-clear :placeholder="$t('user.index.5m6ni29gdog0')" style="width: 180px;" @change="getList(true)"></a-input>
-          </a-form-item>
           <a-form-item field="status" :label="$t('user.index.5m6ni29gdrk0')">
             <a-select v-model="form.status" allow-clear :placeholder="$t('user.index.5m6ni29gdus0')" style="width: 150px;" @change="getList(true)">
               <a-option value="0">{{$t('user.index.5m6ni29gdxs0')}}</a-option>
@@ -48,7 +45,6 @@
                 {{ record.userId !== 1 ? record.nickName : $t('user.index.5obuyt8kr2o0') }}
               </template>
             </a-table-column>
-            <a-table-column :title="$t('user.index.5m6ni29gdhw0')" data-index="phonenumber" align="center"></a-table-column>
             <a-table-column :title="$t('user.index.5msnsk9mm9k0')" data-index="roleName" align="center">
               <template #cell="{ record }">
                 {{ record.userId !== 1 ? record.roleName : $t('user.index.5obuyt8kr2o0') }}
@@ -122,7 +118,6 @@
 
   const form = reactive({
     userName: undefined,
-    phonenumber: undefined,
     status: undefined
   })
 
@@ -159,7 +154,6 @@
     queryParams.pageSize = 10
     pagination.current = 1
     form.userName = undefined
-    form.phonenumber = undefined
     form.status = undefined
     getList()
   }

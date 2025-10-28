@@ -49,14 +49,11 @@ public class SysProfileControllerTest {
         userProfile.put("userId", response.jsonPath().getInt("data.userId"));
         userProfile.put("userName", AppConfigLoader.getAppConfig().getDatakit().getUsername());
         userProfile.put("nickName", response.jsonPath().getString("data.nickName"));
-        userProfile.put("phonenumber", response.jsonPath().getString("data.phonenumber"));
-        userProfile.put("email", response.jsonPath().getString("data.email"));
     }
 
     @Test(dependsOnMethods = "profileTest")
     public void updateProfileTest() {
-        userProfile.put("phonenumber", "phoneNumber");
-        userProfile.put("email", "example@example.com");
+        userProfile.put("nickName", "nick_name");
 
         getRequestSpecification()
                 .contentType(ContentType.JSON)

@@ -25,7 +25,6 @@ package org.opengauss.admin.web.controller;
 
 import org.opengauss.admin.common.annotation.Log;
 import org.opengauss.admin.common.config.SystemConfig;
-import org.opengauss.admin.common.constant.UserConstants;
 import org.opengauss.admin.common.core.controller.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.SysUser;
@@ -36,12 +35,17 @@ import org.opengauss.admin.common.enums.ResponseCode;
 import org.opengauss.admin.common.utils.RsaUtils;
 import org.opengauss.admin.common.utils.SecurityUtils;
 import org.opengauss.admin.common.utils.ServletUtils;
-import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.common.utils.file.FileUploadUtils;
 import org.opengauss.admin.framework.web.service.TokenService;
 import org.opengauss.admin.system.service.ISysUserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -82,18 +86,8 @@ public class SysProfileController extends BaseController {
         if (!loginUser.getUser().getUserId().equals(user.getUserId())) {
             return AjaxResult.error(ResponseCode.UNAUTHORIZED.code());
         }
-        if (StringUtils.isNotEmpty(user.getPhonenumber())
-                && UserConstants.NOT_UNIQUE.equals(userService.checkPhoneUnique(user))) {
-            return AjaxResult.error(ResponseCode.USER_PHONE_EXISTS_ERROR.code());
-        }
-        if (StringUtils.isNotEmpty(user.getEmail())
-                && UserConstants.NOT_UNIQUE.equals(userService.checkEmailUnique(user))) {
-            return AjaxResult.error(ResponseCode.USER_EMAIL_EXISTS_ERROR.code());
-        }
         if (userService.updateUserProfile(user) > 0) {
             loginUser.getUser().setNickName(user.getNickName());
-            loginUser.getUser().setPhonenumber(user.getPhonenumber());
-            loginUser.getUser().setEmail(user.getEmail());
             loginUser.getUser().setSex(user.getSex());
             tokenService.setLoginUser(loginUser);
             return AjaxResult.success();
