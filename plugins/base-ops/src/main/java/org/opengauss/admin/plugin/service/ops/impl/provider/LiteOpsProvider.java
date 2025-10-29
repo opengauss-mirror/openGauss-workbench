@@ -58,7 +58,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -200,10 +199,7 @@ public class LiteOpsProvider extends AbstractOpsProvider {
         String installUserId = installNodeConfig.getInstallUserId();
         String installUserName = null;
         if (StrUtil.isEmpty(installUserId)) {
-            wsUtil.sendText(installContext.getRetSession(), "CREATE_INSTALL_USER");
-            OpsHostUserEntity installUser = createInstallUser(installContext, hostId);
-            installUserId = installUser.getHostUserId();
-            installUserName = installUser.getUsername();
+            throw new OpsException("Installation user does not exist");
         } else {
             final String uid = installUserId;
             OpsHostUserEntity installUser = installContext.getHostInfoHolders()
@@ -253,97 +249,6 @@ public class LiteOpsProvider extends AbstractOpsProvider {
         }
     }
 
-    private OpsHostUserEntity createInstallUser(InstallContext installContext, String hostId) {
-        OpsHostEntity hostEntity = hostFacade.getById(hostId);
-        OpsHostUserEntity hostUserEntity = hostUserFacade.getOmmUserByHostId(hostId);
-        if (Objects.nonNull(hostUserEntity)) {
-            return hostUserEntity;
-        }
-
-        String rootPassword = installContext.getLiteInstallConfig().getNodeConfigList().stream().filter(nodeConfig -> nodeConfig.getHostId().equalsIgnoreCase(hostId)).map(LiteInstallNodeConfig::getRootPassword).findFirst().orElseThrow(() -> new OpsException("root password not found"));
-        Session rootSession = jschUtil.getSession(hostEntity.getPublicIp(), hostEntity.getPort(), "root", encryptionUtils.decrypt(rootPassword)).orElseThrow(() -> new OpsException("with the host[" + hostEntity.getPublicIp() + "]Failed to establish session"));
-        try {
-            try {
-                JschResult jschResult = jschUtil.executeCommand(SshCommandConstants.OMM_USER, rootSession, installContext.getRetSession());
-                if (0 != jschResult.getExitCode()) {
-                    log.error("Failed to query omm user, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
-                    throw new OpsException("Failed to query omm user");
-                }
-
-                if (StrUtil.isNotEmpty(jschResult.getResult()) && "1".equals(jschResult.getResult())) {
-                    throw new OpsException("Please enter the omm user login password");
-                }
-            } catch (Exception e) {
-                log.error("Failed to query omm user", e);
-                throw new OpsException("Failed to query omm user");
-            }
-
-            String password = StrUtil.uuid();
-
-            try {
-                JschResult jschResult = null;
-                try {
-                    jschResult = jschUtil.executeCommand(SshCommandConstants.CREATE_OMM_USER, rootSession, installContext.getRetSession());
-                } catch (InterruptedException e) {
-                    throw new OpsException("thread is interrupted");
-                }
-                if (0 != jschResult.getExitCode()) {
-                    log.error("Failed to create omm user, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
-                    throw new OpsException("Failed to create omm user");
-                }
-            } catch (IOException e) {
-                log.error("Failed to create omm user", e);
-                throw new OpsException("Failed to create omm user");
-            }
-
-            try {
-                Map<String, String> autoResponse = new HashMap<>();
-                autoResponse.put("password:", password);
-                autoResponse.put("password:", password);
-                JschResult jschResult = null;
-                try {
-                    jschResult = jschUtil.executeCommand(SshCommandConstants.CHANGE_OMM_PASSWORD, rootSession, installContext.getRetSession(), autoResponse);
-                } catch (InterruptedException e) {
-                    throw new OpsException("thread is interrupted");
-                }
-                if (0 != jschResult.getExitCode()) {
-                    log.error("Failed to modify omm user password, exit code: {}, log: {}", jschResult.getExitCode(), jschResult.getResult());
-                    throw new OpsException("Failed to modify omm user password");
-                }
-            } catch (IOException e) {
-                log.error("Failed to modify omm user password", e);
-                throw new OpsException("Failed to modify omm user password");
-            }
-
-            hostUserEntity = new OpsHostUserEntity();
-            hostUserEntity.setHostId(hostId);
-            hostUserEntity.setUsername("omm");
-            hostUserEntity.setPassword(encryptionUtils.encrypt(password));
-
-            hostUserFacade.save(hostUserEntity);
-
-            List<HostInfoHolder> hostInfoHolders = installContext.getHostInfoHolders();
-            if (Objects.isNull(hostInfoHolders)) {
-                hostInfoHolders = new ArrayList<>();
-                installContext.setHostInfoHolders(hostInfoHolders);
-            }
-
-            HostInfoHolder hostHolder = hostInfoHolders.stream().filter(holder -> holder.getHostEntity().getHostId().equals(hostId)).findFirst().orElseThrow(() -> new OpsException("host information not found"));
-            List<OpsHostUserEntity> hostUserEntities = hostHolder.getHostUserEntities();
-            if (Objects.isNull(hostUserEntities)) {
-                hostUserEntities = new ArrayList<>();
-                hostHolder.setHostUserEntities(hostUserEntities);
-            }
-
-            hostUserEntities.add(hostUserEntity);
-            return hostUserEntity;
-        } finally {
-            if (Objects.nonNull(rootSession) && rootSession.isConnected()) {
-                rootSession.disconnect();
-            }
-        }
-    }
-
     private void installCluster(InstallContext installContext) {
         wsUtil.sendText(installContext.getRetSession(), "START_CLUSTER");
         log.info("Start installing the Lite cluster");
@@ -374,10 +279,7 @@ public class LiteOpsProvider extends AbstractOpsProvider {
         String installUserId = slaveNodeConfig.getInstallUserId();
         String installUserName = null;
         if (StrUtil.isEmpty(installUserId)) {
-            wsUtil.sendText(installContext.getRetSession(), "CREATE_INSTALL_USER");
-            OpsHostUserEntity installUser = createInstallUser(installContext, hostId);
-            installUserId = installUser.getHostUserId();
-            installUserName = installUser.getUsername();
+            throw new OpsException("Installation user does not exist");
         } else {
             final String uid = installUserId;
             OpsHostUserEntity installUser = installContext.getHostInfoHolders()
@@ -446,10 +348,7 @@ public class LiteOpsProvider extends AbstractOpsProvider {
         String installUserId = masterNodeConfig.getInstallUserId();
         String installUserName = null;
         if (StrUtil.isEmpty(installUserId)) {
-            wsUtil.sendText(installContext.getRetSession(), "CREATE_INSTALL_USER");
-            OpsHostUserEntity installUser = createInstallUser(installContext, hostId);
-            installUserId = installUser.getHostUserId();
-            installUserName = installUser.getUsername();
+            throw new OpsException("Installation user does not exist");
         } else {
             final String uid = installUserId;
             OpsHostUserEntity installUser = installContext.getHostInfoHolders()
