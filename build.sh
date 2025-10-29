@@ -217,8 +217,8 @@ build_pkg
 copy_plugin_pkg
 copy_agent_pkg
 cd $output_path
-tar -zcf Datakit-All-${pom_version}.tar.gz ./*
-tar -zcf Datakit-Mini-${pom_version}.tar.gz \
+tar -zcf openGauss-Datakit-All-${pom_version}.tar.gz ./*
+tar -zcf openGauss-Datakit-Mini-${pom_version}.tar.gz \
       ./application-temp.yml \
       ./build_commit_id.log \
       ./doc \
