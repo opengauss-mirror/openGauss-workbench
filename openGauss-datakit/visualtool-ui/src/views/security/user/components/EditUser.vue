@@ -40,21 +40,6 @@
           </a-form-item>
         </a-col>
         <a-col :span="12">
-          <a-form-item field="phonenumber" :label="$t('components.EditUser.5m6nh3mgmds0')" :rules="[
-            {
-              required: true,
-              message: $t('components.EditUser.5m6nh3mgmko0')
-            },
-            {
-              required: true,
-              match: /^(?:(?:\+|00)86)?1\d{10}$/,
-              message: $t('components.EditUser.5nsg5pkyao80')
-            }
-          ]">
-            <a-input v-model="form.phonenumber" :placeholder="$t('components.EditUser.5m6nh3mgmp40')" />
-          </a-form-item>
-        </a-col>
-        <a-col :span="12">
           <a-form-item field="role" :label="$t('components.EditUser.5m6nh3mgmss0')">
             <a-select v-model="form.roleIds" :placeholder="$t('components.EditUser.5m6nh3mgmvs0')">
               <a-option v-for="item in roles" :key="item.roleId" :value="item.roleId">{{ item.roleName }}</a-option>
@@ -116,10 +101,9 @@
   watch(() => props.open, (v) => {
     if (v) {
       if (props.options.userId) {
-        const { userName, nickName, phonenumber, status, remark } = toRaw(props.options)
+        const { userName, nickName, status, remark } = toRaw(props.options)
         form.userName = userName
         form.nickName = nickName
-        form.phonenumber = phonenumber
         form.status = status
         form.remark = remark
         form.password = void 0
@@ -127,7 +111,6 @@
         form.userName = undefined
         form.password = undefined
         form.nickName = undefined
-        form.phonenumber = undefined
         form.roleIds = undefined
         form.status = '0'
         form.remark = undefined

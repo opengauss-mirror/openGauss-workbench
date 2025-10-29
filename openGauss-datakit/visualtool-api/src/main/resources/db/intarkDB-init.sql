@@ -723,8 +723,6 @@ CREATE TABLE IF NOT EXISTS "sys_user" (
     "user_name" varchar(30)  NOT NULL,
     "nick_name" varchar(30)  NOT NULL,
     "user_type" varchar(2) ,
-    "email" varchar(50) ,
-    "phonenumber" varchar(11) ,
     "sex" char(1) ,
     "avatar" varchar(100) ,
     "password" varchar(100) ,
@@ -743,8 +741,6 @@ COMMENT ON COLUMN "sys_user"."user_id" IS '用户ID';
 COMMENT ON COLUMN "sys_user"."user_name" IS '用户账号';
 COMMENT ON COLUMN "sys_user"."nick_name" IS '用户昵称';
 COMMENT ON COLUMN "sys_user"."user_type" IS '用户类型（00系统用户）';
-COMMENT ON COLUMN "sys_user"."email" IS '用户邮箱';
-COMMENT ON COLUMN "sys_user"."phonenumber" IS '手机号码';
 COMMENT ON COLUMN "sys_user"."sex" IS '用户性别（0男 1女 2未知）';
 COMMENT ON COLUMN "sys_user"."avatar" IS '头像地址';
 COMMENT ON COLUMN "sys_user"."password" IS '密码';
@@ -1632,7 +1628,7 @@ update "ops_package_path_dict" set package_name_tmp= replace(package_name_tmp,'g
 
 
 
- INSERT INTO "sys_user" ("user_id", "user_name", "nick_name", "user_type", "email", "phonenumber", "sex", "avatar", "password", "status", "del_flag", "login_ip", "login_date", "create_by", "create_time", "update_by", "update_time", "remark") VALUES (1, 'admin', '超级管理员', '00', NULL, NULL, NULL, NULL, '$2a$10$MeXrFYhTOrDXqVDXPBDwrOnxg7NVe1ADX1qnhQe04m94VFKwq3cRy', '0', '0', NULL, NULL, 'admin', '2021-11-01 09:38:09', 'admin', '2022-11-23 13:58:14.047', '管理员');
+ INSERT INTO "sys_user" ("user_id", "user_name", "nick_name", "user_type", "sex", "avatar", "password", "status", "del_flag", "login_ip", "login_date", "create_by", "create_time", "update_by", "update_time", "remark") VALUES (1, 'admin', '超级管理员', '00', NULL, NULL, '$2a$10$MeXrFYhTOrDXqVDXPBDwrOnxg7NVe1ADX1qnhQe04m94VFKwq3cRy', '0', '0', NULL, NULL, 'admin', '2021-11-01 09:38:09', 'admin', '2022-11-23 13:58:14.047', '管理员');
 
 
  INSERT INTO "sys_user_role" ("user_id", "role_id") VALUES (1, 1);

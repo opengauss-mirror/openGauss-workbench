@@ -110,15 +110,6 @@ public class SysUserController extends BaseController {
     public AjaxResult add(@RequestBody SysUser user) {
         if (UserConstants.NOT_UNIQUE.equals(userService.checkUserNameUnique(user.getUserName()))) {
             return AjaxResult.error(ResponseCode.USER_ACCOUNT_EXISTS_ERROR.code());
-        } else if (StringUtils.isNotEmpty(user.getPhonenumber()) && UserConstants.NOT_UNIQUE.equals(
-            userService.checkPhoneUnique(user))) {
-            return AjaxResult.error(ResponseCode.USER_PHONE_EXISTS_ERROR.code());
-        } else if (StringUtils.isNotEmpty(user.getEmail()) && UserConstants.NOT_UNIQUE.equals(
-            userService.checkEmailUnique(user))) {
-            return AjaxResult.error(ResponseCode.USER_EMAIL_EXISTS_ERROR.code());
-        }
-        if (user.getPhonenumber().length() > 11) {
-            return AjaxResult.error(ResponseCode.USER_TELEPHONE_MAX_LENGTH_ERROR.code());
         }
         if (user.getUserName().length() > 30) {
             return AjaxResult.error(ResponseCode.USER_NAME_MAX_LENGTH_ERROR.code());
@@ -149,16 +140,6 @@ public class SysUserController extends BaseController {
     public AjaxResult edit(@Validated @RequestBody SysUser user) {
         user.setPassword(null);
         userService.checkUserAllowed(user);
-        if (StringUtils.isNotEmpty(user.getPhonenumber()) && UserConstants.NOT_UNIQUE.equals(
-            userService.checkPhoneUnique(user))) {
-            return AjaxResult.error(ResponseCode.USER_PHONE_EXISTS_ERROR.code());
-        } else if (StringUtils.isNotEmpty(user.getEmail()) && UserConstants.NOT_UNIQUE.equals(
-            userService.checkEmailUnique(user))) {
-            return AjaxResult.error(ResponseCode.USER_EMAIL_EXISTS_ERROR.code());
-        }
-        if (user.getPhonenumber().length() > 11) {
-            return AjaxResult.error(ResponseCode.USER_TELEPHONE_MAX_LENGTH_ERROR.code());
-        }
         if (user.getUserName().length() > 30) {
             return AjaxResult.error(ResponseCode.USER_NAME_MAX_LENGTH_ERROR.code());
         }

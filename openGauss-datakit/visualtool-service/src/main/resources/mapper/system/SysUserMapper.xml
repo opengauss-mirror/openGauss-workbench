@@ -25,9 +25,7 @@
         u.user_id,
         u.user_name,
         u.nick_name,
-        u.email,
         u.avatar,
-        u.phonenumber,
         u.password,
         u.sex,
         u.status,
@@ -56,9 +54,7 @@
         u.user_id,
         u.nick_name,
         u.user_name,
-        u.email,
         u.avatar,
-        u.phonenumber,
         u.password,
         u.sex,
         u.status,
@@ -77,9 +73,6 @@
         </if>
         <if test="entity.status != null and entity.status != ''">
             AND u.status = #{entity.status}
-        </if>
-        <if test="entity.phonenumber != null and entity.phonenumber != ''">
-            AND u.phonenumber like concat('%', #{entity.phonenumber}, '%')
         </if>
         <if test="entity.params.beginTime != null and entity.params.beginTime != ''">
             AND date_format(u.create_time,'%y%m%d') &gt;= date_format(#{entity.params.beginTime},'%y%m%d')

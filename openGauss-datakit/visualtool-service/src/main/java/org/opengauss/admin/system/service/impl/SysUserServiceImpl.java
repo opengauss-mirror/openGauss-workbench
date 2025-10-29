@@ -44,7 +44,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -127,55 +126,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     public String checkUserNameUnique(String userName) {
         int count = userMapper.selectCount(new QueryWrapper<SysUser>().lambda().eq(SysUser::getUserName, userName)).intValue();
         if (count > 0) {
-            return UserConstants.NOT_UNIQUE;
-        }
-        return UserConstants.UNIQUE;
-    }
-
-    /**
-     * Check if phone is unique
-     *
-     * @param user user
-     * @return
-     */
-    @Override
-    public String checkPhoneUnique(SysUser user) {
-        Integer userId = user.getUserId();
-        LambdaQueryWrapper<SysUser> queryWrapper = new QueryWrapper<SysUser>().lambda().eq(SysUser::getPhonenumber, user.getPhonenumber());
-        if (StringUtils.isNull(userId)) {
-            userId = 1;
-        } else {
-            queryWrapper.ne(SysUser::getUserId, user.getUserId());
-        }
-
-        SysUser info = userMapper.selectOne(queryWrapper);
-
-        if (StringUtils.isNotNull(info) && !info.getUserId().equals(userId)) {
-            return UserConstants.NOT_UNIQUE;
-        }
-        return UserConstants.UNIQUE;
-    }
-
-    /**
-     * Check if email is unique
-     *
-     * @param user user
-     * @return
-     */
-    @Override
-    public String checkEmailUnique(SysUser user) {
-        Integer userId = user.getUserId();
-        LambdaQueryWrapper<SysUser> queryWrapper = new QueryWrapper<SysUser>().lambda().eq(SysUser::getEmail, user.getEmail());
-
-        if (StringUtils.isNull(userId)) {
-            userId = 1;
-        } else {
-            queryWrapper.ne(SysUser::getUserId, user.getUserId());
-        }
-
-        SysUser info = userMapper.selectOne(queryWrapper);
-
-        if (StringUtils.isNotNull(info) && !info.getUserId().equals(userId)) {
             return UserConstants.NOT_UNIQUE;
         }
         return UserConstants.UNIQUE;

@@ -39,18 +39,6 @@
               </span>
               <span class="txt">{{ userName }}</span>
             </div>
-            <div class="info-item">
-              <span class="icon-con">
-                <icon-mobile />
-              </span>
-              <span class="txt">{{ phonenumber }}</span>
-            </div>
-            <div class="info-item">
-              <span class="icon-con">
-                <icon-email />
-              </span>
-              <span class="txt">{{ email }}</span>
-            </div>
           </div>
           <div class="info-con">
             <div class="info-item">
@@ -93,17 +81,13 @@
   const avatar = computed(() => userStore.avatar)
   const userName = computed(() => userStore.userName)
   const nickName = computed(() => userStore.nickName)
-  const phonenumber = computed(() => userStore.phonenumber)
-  const email = computed(() => userStore.email)
   const remark = computed(() => userStore.remark)
 
   const editUserInfo = () => {
     currentEditUser.value = {
       userId: userStore.userId,
       userName: userStore.userName,
-      nickName: userStore.nickName,
-      phonenumber: userStore.phonenumber,
-      email: userStore.email
+      nickName: userStore.nickName
     }
     editInfoVisible.value = true
   }

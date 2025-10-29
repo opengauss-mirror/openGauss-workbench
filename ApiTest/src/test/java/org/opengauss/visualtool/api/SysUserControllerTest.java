@@ -42,7 +42,6 @@ public class SysUserControllerTest {
                 .userName("testUser")
                 .nickName("testUserNick")
                 .password(RsaUtils.encryptByPublicKey(passwordForAddingUser))
-                .phonenumber("12345678912")
                 .remark("testUser remark")
                 .status("0").build();
 

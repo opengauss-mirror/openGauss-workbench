@@ -22,7 +22,6 @@ public class SysUser {
     private Integer userId;
     private String userName;
     private String nickName;
-    private String phonenumber;
     private String password;
 
     /**

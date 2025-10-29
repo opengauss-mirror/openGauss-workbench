@@ -960,8 +960,6 @@ CREATE TABLE IF NOT EXISTS "public"."sys_user" (
     "user_name" varchar(30) COLLATE "pg_catalog"."default" NOT NULL,
     "nick_name" varchar(30) COLLATE "pg_catalog"."default" NOT NULL,
     "user_type" varchar(2) COLLATE "pg_catalog"."default",
-    "email" varchar(50) COLLATE "pg_catalog"."default",
-    "phonenumber" varchar(11) COLLATE "pg_catalog"."default",
     "sex" char(1) COLLATE "pg_catalog"."default",
     "avatar" varchar(100) COLLATE "pg_catalog"."default",
     "password" varchar(100) COLLATE "pg_catalog"."default",
@@ -980,8 +978,6 @@ COMMENT ON COLUMN "public"."sys_user"."user_id" IS '用户ID';
 COMMENT ON COLUMN "public"."sys_user"."user_name" IS '用户账号';
 COMMENT ON COLUMN "public"."sys_user"."nick_name" IS '用户昵称';
 COMMENT ON COLUMN "public"."sys_user"."user_type" IS '用户类型（00系统用户）';
-COMMENT ON COLUMN "public"."sys_user"."email" IS '用户邮箱';
-COMMENT ON COLUMN "public"."sys_user"."phonenumber" IS '手机号码';
 COMMENT ON COLUMN "public"."sys_user"."sex" IS '用户性别（0男 1女 2未知）';
 COMMENT ON COLUMN "public"."sys_user"."avatar" IS '头像地址';
 COMMENT ON COLUMN "public"."sys_user"."password" IS '密码';
@@ -2047,7 +2043,7 @@ OR REPLACE FUNCTION init_data_fuc() RETURNS integer AS 'BEGIN
  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema=''public'' and table_name=''sys_user'') AND
  NOT EXISTS (select 1 from "public"."sys_user")
  THEN
- INSERT INTO "public"."sys_user" ("user_id", "user_name", "nick_name", "user_type", "email", "phonenumber", "sex", "avatar", "password", "status", "del_flag", "login_ip", "login_date", "create_by", "create_time", "update_by", "update_time", "remark") VALUES (1, ''admin'', ''超级管理员'', ''00'', NULL, NULL, NULL, NULL, ''$2a$10$MeXrFYhTOrDXqVDXPBDwrOnxg7NVe1ADX1qnhQe04m94VFKwq3cRy'', ''0'', ''0'', NULL, NULL, ''admin'', ''2021-11-01 09:38:09'', ''admin'', ''2022-11-23 13:58:14.047'', ''管理员'');
+ INSERT INTO "public"."sys_user" ("user_id", "user_name", "nick_name", "user_type", "sex", "avatar", "password", "status", "del_flag", "login_ip", "login_date", "create_by", "create_time", "update_by", "update_time", "remark") VALUES (1, ''admin'', ''超级管理员'', ''00'', NULL, NULL, ''$2a$10$MeXrFYhTOrDXqVDXPBDwrOnxg7NVe1ADX1qnhQe04m94VFKwq3cRy'', ''0'', ''0'', NULL, NULL, ''admin'', ''2021-11-01 09:38:09'', ''admin'', ''2022-11-23 13:58:14.047'', ''管理员'');
  END IF;
 
  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema=''public'' and table_name=''sys_user_role'') AND
@@ -2189,6 +2185,25 @@ LANGUAGE plpgsql;
 SELECT add_user_field_func();
 
 DROP FUNCTION add_user_field_func;
+
+CREATE OR REPLACE FUNCTION delete_user_field_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''sys_user'' AND COLUMN_NAME = ''email'' ) = 1
+THEN
+ALTER TABLE sys_user DROP COLUMN email;
+END IF;
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''sys_user'' AND COLUMN_NAME = ''phonenumber'' ) = 1
+THEN
+ALTER TABLE sys_user DROP COLUMN phonenumber;
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT delete_user_field_func();
+
+DROP FUNCTION delete_user_field_func;
 
 CREATE OR REPLACE FUNCTION add_cluster_field_func() RETURNS integer AS 'BEGIN
 IF

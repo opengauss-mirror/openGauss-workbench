@@ -30,7 +30,6 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -60,14 +59,6 @@ public class SysUser extends BaseEntity {
      * nickName
      */
     private String nickName;
-    /**
-     * email
-     */
-    private String email;
-    /**
-     * phonenumber
-     */
-    private String phonenumber;
     /**
      * sex
      */
@@ -147,22 +138,5 @@ public class SysUser extends BaseEntity {
     @Size(min = 0, max = 30, message = "User account length cannot exceed 30 characters")
     public String getUserName() {
         return userName;
-    }
-
-
-    @Email(message = "E-mail format is incorrect")
-    @Size(min = 0, max = 50, message = "E-mail length cannot exceed 50 characters")
-    public String getEmail() {
-        return email;
-    }
-
-
-    @Size(min = 0, max = 11, message = "Mobile phone number length cannot exceed 11 characters")
-    public String getPhonenumber() {
-        return phonenumber;
-    }
-
-    public void setPhonenumber(String phonenumber) {
-        this.phonenumber = phonenumber;
     }
 }
