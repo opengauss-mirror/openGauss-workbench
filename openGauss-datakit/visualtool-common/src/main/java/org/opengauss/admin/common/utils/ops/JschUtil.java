@@ -176,8 +176,6 @@ public class JschUtil {
      */
     public JschResult executeCommand(String command, Session session, WsSession wsSession,
                                      Map<String, String> autoResponse) throws IOException, InterruptedException {
-        log.debug("Execute an order {}", command);
-
         ChannelExec channel = null;
         try {
             Channel exeChannel = session.openChannel("exec");
@@ -190,15 +188,13 @@ public class JschUtil {
             log.error("Obtaining the exec channel fails:", e);
             throw new OpsException("Obtaining the exec channel fails");
         }
-
         channel.setCommand(command);
         try {
             channel.connect(CHANNEL_TIMEOUT);
         } catch (JSchException e) {
-            log.error("Execute instruction [{}] exception:", command, e);
+            log.error("Execute instruction exception:", e);
             throw new OpsException("Command execution exception");
         }
-
         return buildJschResult(channel, wsSession, autoResponse);
     }
 
