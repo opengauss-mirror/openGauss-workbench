@@ -9,6 +9,11 @@ server:
     min-spare-threads: 30
   ssl:
     enabled: false
+    client-auth: none
+    key-alias: opengauss
+    key-store: ssl/keystore.p12
+    key-store-password: '******'
+    key-store-type: PKCS12
 spring:
   profiles:
     active: prod
@@ -26,7 +31,13 @@ spring:
       mode: always
   main:
     allow-bean-definition-overriding: true
-  
+  web:
+    resources:
+      cache:
+        period: 3600  # 缓存静态资源
+      chain:
+        compressed: true
+      static-locations: classpath:/static/
 mybatis-plus:
   typeAliasesPackage: org.opengauss.admin.**.domain
   mapperLocations: classpath*:mapper/**/*Mapper.xml
@@ -43,7 +54,10 @@ plugin:
   #  runMode: deployment
   pluginPath:
     - ~/visualtool-plugin
-
+monitor:
+  handle:
+    enabled: true
+    report-dir: ./logs/handle
 #  pluginRestPathPrefix: /static-plugin
 agent:
   localPath:  ./agent

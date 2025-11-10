@@ -16,6 +16,7 @@
 package org.opengauss.agent.event.producer;
 
 import com.lmax.disruptor.EventTranslatorTwoArg;
+import com.lmax.disruptor.RingBuffer;
 
 import cn.hutool.core.lang.Pair;
 import cn.hutool.core.lang.Snowflake;
@@ -96,6 +97,15 @@ public class DynamicMetricEventProducer {
     }
 
     /**
+     * get ring buffer
+     *
+     * @return ringBuffer
+     */
+    public RingBuffer<MetricEvent> getRingBuffer() {
+        return backpressureStrategy.getRingBuffer();
+    }
+
+    /**
      * onDataTranslate
      *
      * @param metric CustomEventConfig
@@ -105,14 +115,12 @@ public class DynamicMetricEventProducer {
         requestCounter.incrementAndGet();
         Pair<CustomEventConfig, List<CustomMetricData>> pair = Pair.of(metric, dataList);
         updateTaskMetric(metric);
-        log.debug("metric={}, requestCounter={}", metric.info(), requestCounter.get());
         if (tryFastPublish(pair)) {
             return;
         }
         if (backpressureStrategy.shouldApplyBackpressure()) {
             backpressureStrategy.applyBackpressure();
             if (tryFastPublish(pair)) {
-                log.debug("Backpressure tryFastPublish");
                 return;
             }
         }
@@ -148,10 +156,9 @@ public class DynamicMetricEventProducer {
         log.error("CRITICAL: Publish failed {}", metric, e);
     }
 
-    @Scheduled(fixedRate = 10)
+    @Scheduled(fixedRate = 500)
     private void drainOverflowQueue() {
         Pair<CustomEventConfig, List<CustomMetricData>> pair;
-        log.debug("Metric requestCounter={}", requestCounter.get());
         while ((pair = overflowQueue.poll()) != null) {
             if (!tryFastPublish(pair)) {
                 overflowQueue.offer(pair);

@@ -68,5 +68,6 @@
       <AppenderRef ref="FileInfo"/>
       <AppenderRef ref="FileError"/>
     </Root>
+    <Logger name="org.apache.tomcat.util" level="OFF"  additivity="false"/>
   </Loggers>
 </Configuration>

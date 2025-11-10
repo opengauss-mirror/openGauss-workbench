@@ -19,6 +19,7 @@ import com.lmax.disruptor.EventTranslatorTwoArg;
 import com.lmax.disruptor.RingBuffer;
 
 import cn.hutool.core.lang.Pair;
+import lombok.Getter;
 
 import org.opengauss.agent.data.CustomEventConfig;
 import org.opengauss.agent.data.CustomMetricData;
@@ -38,6 +39,7 @@ import java.util.concurrent.locks.LockSupport;
  * @since 7.0.0-RC2
  **/
 public class DynamicBackpressureStrategy implements BackpressureStrategy {
+    @Getter
     private final RingBuffer<MetricEvent> ringBuffer;
     private final long initDelayNanos;
     private final long maxDelayNanos;

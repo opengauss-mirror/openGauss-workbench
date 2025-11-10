@@ -51,6 +51,7 @@ import jakarta.annotation.PreDestroy;
 public class DisruptorConfig {
     @Value("${disruptor.bufferSize:16}")
     private int bufferSize;
+    private Disruptor<PipelineEvent> disruptor;
 
     /**
      * create a bean for the order event producer
@@ -70,8 +71,8 @@ public class DisruptorConfig {
      */
     @Bean
     public PipelineEventProducer orderEventProducer() {
-        Disruptor<PipelineEvent> disruptor = new Disruptor<>(PipelineEvent::new, bufferSize * 1024,
-            Executors.defaultThreadFactory(), ProducerType.SINGLE, new SleepingWaitStrategy(100, 1000));
+        disruptor = new Disruptor<>(PipelineEvent::new, bufferSize * 1024, Executors.defaultThreadFactory(),
+            ProducerType.SINGLE, new SleepingWaitStrategy(100, 1000));
         // bind event handlers to the disruptor:
         // all of the event handlers will be broadcast to all of the event messages.
         disruptor.handleEventsWith(new PipeRealTimeStorageHandler());
@@ -89,6 +90,9 @@ public class DisruptorConfig {
      */
     @PreDestroy
     public void destroy() {
+        if (disruptor != null) {
+            disruptor.shutdown();
+        }
         // system shutdown, release resources
         HistoricalStorageCleanerManager.unregister();
         StorageHandlerUtils.shutdownNow();

@@ -29,6 +29,7 @@ import jakarta.annotation.Resource;
 
 import org.opengauss.admin.common.config.SystemConfig;
 import org.opengauss.admin.common.constant.Constants;
+import org.opengauss.admin.common.exception.ServiceException;
 import org.opengauss.admin.framework.interceptor.impl.SameUrlDataInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -41,8 +42,11 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.io.File;
-import java.util.Arrays;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Web configuration
@@ -68,14 +72,16 @@ public class ResourcesConfig implements WebMvcConfigurer {
 
     private static void loadPluginDirectoryJars(ResourceHandlerRegistry registry, String mainPluginPath) {
         File pluginDirectory = new File(mainPluginPath);
-        if (pluginDirectory.exists() && pluginDirectory.isDirectory()) {
-            File[] jars = pluginDirectory.listFiles((dir, name) -> name.endsWith(".jar"));
-            if (jars != null) {
-                Arrays.stream(jars).forEach(jar -> {
-                    String jarPath = "jar:file:" + jar.getAbsolutePath() + "!/classes/resources/";
-                    registry.addResourceHandler("/static-plugin/**").addResourceLocations(jarPath);
-                });
-            }
+        if (!pluginDirectory.exists() || !pluginDirectory.isDirectory()) {
+            return;
+        }
+        try (Stream<Path> stream = Files.list(Path.of(mainPluginPath))) {
+            stream.filter((file) -> file.toString().endsWith(".jar")).forEach(jar -> {
+                String jarPath = "jar:file:" + jar.toAbsolutePath() + "!/classes/resources/";
+                registry.addResourceHandler("/static-plugin/**").addResourceLocations(jarPath);
+            });
+        } catch (IOException e) {
+            throw new ServiceException("load plugin directory for ResourcesConfig error");
         }
     }
 
@@ -84,7 +90,9 @@ public class ResourcesConfig implements WebMvcConfigurer {
      */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(sameUrlDataInterceptor).addPathPatterns("/**");
+        registry.addInterceptor(sameUrlDataInterceptor)
+            .addPathPatterns("/**")
+            .excludePathPatterns("/web/**", "/static-plugin/**");
     }
 
     /**

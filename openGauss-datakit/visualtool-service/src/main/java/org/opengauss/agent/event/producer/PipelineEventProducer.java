@@ -22,6 +22,7 @@ import cn.hutool.core.lang.Pair;
 import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.IdUtil;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.opengauss.admin.common.constant.AgentConstants;
@@ -38,6 +39,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import jakarta.annotation.PreDestroy;
@@ -55,6 +57,10 @@ public class PipelineEventProducer {
     private static final Snowflake SNOWFLAKE = IdUtil.getSnowflake(1, 2);
     private static volatile AtomicInteger requestCounter = new AtomicInteger(0);
 
+    private final AtomicLong retryInterval = new AtomicLong(10L);
+    private final AtomicInteger consecutiveFailures = new AtomicInteger(0);
+
+    @Getter
     private final RingBuffer<PipelineEvent> ringBuffer;
     private final BlockingQueue<Pair<CustomEventConfig, List<Map<String, Object>>>> backpressureQueue
         = new LinkedBlockingQueue<>(10000);
@@ -104,13 +110,31 @@ public class PipelineEventProducer {
     }
 
     private void retryFailedEvents() {
+        int processedCount = 0;
+        int maxBatchSize = 100;
         Pair<CustomEventConfig, List<Map<String, Object>>> pair;
-        while ((pair = backpressureQueue.poll()) != null) {
+        while (processedCount < maxBatchSize && (pair = backpressureQueue.poll()) != null) {
             if (!ringBuffer.tryPublishEvent(translator, pair.getKey(), pair.getValue())) {
                 backpressureQueue.offer(pair);
+                consecutiveFailures.incrementAndGet();
+                adjustRetryInterval(false);
                 break;
             }
+            processedCount++;
+            consecutiveFailures.set(0);
         }
+        adjustRetryInterval(processedCount > 0);
+    }
+
+    private void adjustRetryInterval(boolean isSuuccess) {
+        long currentInterval = retryInterval.get();
+        long newInterval;
+        if (isSuuccess) {
+            newInterval = Math.max(1, currentInterval / 2);
+        } else {
+            newInterval = Math.min(1000, currentInterval * 2);
+        }
+        retryInterval.set(newInterval);
     }
 
     private void handleOverflow(CustomEventConfig metric) {

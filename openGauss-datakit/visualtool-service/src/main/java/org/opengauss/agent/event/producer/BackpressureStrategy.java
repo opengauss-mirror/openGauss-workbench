@@ -16,6 +16,7 @@
 package org.opengauss.agent.event.producer;
 
 import com.lmax.disruptor.EventTranslatorTwoArg;
+import com.lmax.disruptor.RingBuffer;
 
 import cn.hutool.core.lang.Pair;
 
@@ -45,6 +46,13 @@ public interface BackpressureStrategy {
      * applyBackpressure
      */
     void applyBackpressure();
+
+    /**
+     * get RingBuffer
+     *
+     * @return ringBuffer
+     */
+    RingBuffer<MetricEvent> getRingBuffer();
 
     /**
      * tryPublishEvent
