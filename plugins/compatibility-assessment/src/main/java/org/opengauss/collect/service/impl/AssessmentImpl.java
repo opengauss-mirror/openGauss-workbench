@@ -134,11 +134,6 @@ public class AssessmentImpl implements Evaluate {
     }
 
     @Override
-    public int saveAssessMent(Assessment assessment) {
-        return assessmentMapper.insert(assessment);
-    }
-
-    @Override
     public RespBean obtainAllEvaluationResults(Assessment assessment, int pageNum, int pageSize) {
         List<Assessment> list = assessmentMapper.selectAllOrderByStartTimeDesc();
         List<Assessment> paginatedList = list.stream()

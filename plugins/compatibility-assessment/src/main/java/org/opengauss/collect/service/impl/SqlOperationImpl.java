@@ -232,9 +232,9 @@ public class SqlOperationImpl implements SqlOperation {
 
     @Override
     public RespBean startAssessmentSql(Assessment assessment, String sqlInputType, Integer userId) {
-        assessment.setMysqlPassword(encryptionUtils.decrypt(assessment.getMysqlPassword()));
-        assessment.setOpengaussPassword(encryptionUtils.decrypt(assessment.getOpengaussPassword()));
-        checkAssessment(assessment, sqlInputType);
+        String mysqlPassword = encryptionUtils.decrypt(assessment.getMysqlPassword());
+        String gaussPassword = encryptionUtils.decrypt(assessment.getOpengaussPassword());
+        checkAssessment(assessment, sqlInputType, mysqlPassword, gaussPassword);
         // 创建一个执行环境 data/gs_assessment/fileName  目前是这个
         String envPath = Constant.ENV_PATH;
         // 下载评估文件
@@ -263,8 +263,8 @@ public class SqlOperationImpl implements SqlOperation {
         String command = getAssessCommand(sqlInputType);
         // 执行command  在真实路径下执行
         String actPath = envPath + Constant.ASSESS_PATH;
-        boolean isSuccess = CommandLineRunner.runCommand(assessment.getMysqlPassword(),
-                assessment.getOpengaussPassword(), command, actPath, Constant.TIME_OUT);
+        boolean isSuccess = CommandLineRunner.runCommand(mysqlPassword,
+                gaussPassword, command, actPath, Constant.TIME_OUT);
         AssertUtil.isTrue(!isSuccess, "Evaluation failed");
         long id = IdUtils.SNOWFLAKE.nextId();
         String reportFileName = id + "_" + Constant.ASSESS_REPORT;
@@ -319,19 +319,20 @@ public class SqlOperationImpl implements SqlOperation {
         return new AsyncResult<>(message);
     }
 
-    private void checkAssessment(Assessment assessment, String sqlInputType) {
+    private void checkAssessment(Assessment assessment, String sqlInputType,
+                                 String mysqlPassword, String gaussPassword) {
         // 校验opengauss数据库
         String gaussUrl = "jdbc:opengauss://" + assessment.getOpengaussHost() + ":" + assessment.getOpengaussPort()
                 + "/" + assessment.getOpengaussDbname() + "?batchMode=off";
         ConnectionUtils.getConnection(DbTypeEnum.OPENGAUSS.getDriverClass(), gaussUrl, assessment.getOpengaussUser(),
-                assessment.getOpengaussPassword());
+                gaussPassword);
         if (sqlInputType.equals(Constant.ASSESS_COLLECT)) {
             // 校验mysql数据库
             String mysqlUrl = "jdbc:mysql://" + assessment.getMysqlHost() + ":" + assessment.getMysqlPort() + "/"
                     + assessment.getMysqlDbname() + "?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/"
                     + "Shanghai&useSSL=false&allowPublicKeyRetrieval=true";
             ConnectionUtils.getConnection(DbTypeEnum.MYSQL.getDriverClass(), mysqlUrl, assessment.getMysqlUser(),
-                    assessment.getMysqlPassword());
+                    mysqlPassword);
         }
     }
 

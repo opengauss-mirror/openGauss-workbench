@@ -60,14 +60,6 @@ public interface Evaluate {
     RespBean openGaussIp();
 
     /**
-     * saveAssessMent
-     *
-     * @param assessment assessment
-     * @return int int
-     */
-    int saveAssessMent(Assessment assessment);
-
-    /**
      * obtainAllEvaluationResults
      *
      * @param assessment assessment
