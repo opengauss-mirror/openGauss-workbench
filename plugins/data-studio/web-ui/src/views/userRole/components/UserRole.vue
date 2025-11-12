@@ -59,7 +59,7 @@
   import EventBus, { EventTypeName } from '@/utils/event-bus';
   import { previewUserRole, createUserRole } from '@/api/userRole';
   import { getUserRoleInfo, getUserRoleDdl, updateUserRoleInfo } from '@/api/userRole';
-  import Crypto from '@/utils/crypto';
+  import { encryptPassword } from '@/utils/jsencrypt';
 
   const props = withDefaults(
     defineProps<{
@@ -128,11 +128,12 @@
   const getFinallyParams = async () => {
     try {
       await generalRef.value.validateForm();
+      const password = await encryptPassword(dataMap.GeneralTab.data.password);
       return {
         uuid: commonParams.uuid,
         name: dataMap.GeneralTab.data.name,
         type: dataMap.GeneralTab.data.type,
-        password: Crypto.encrypt(dataMap.GeneralTab.data.password),
+        password,
         beginDate: dataMap.GeneralTab.data.beginDate,
         endDate: dataMap.GeneralTab.data.endDate,
         connectionLimit: dataMap.GeneralTab.data.connectionLimit,

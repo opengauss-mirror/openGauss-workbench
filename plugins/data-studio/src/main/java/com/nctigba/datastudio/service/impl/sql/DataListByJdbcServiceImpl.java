@@ -24,15 +24,16 @@
 package com.nctigba.datastudio.service.impl.sql;
 
 import cn.hutool.core.thread.ThreadUtil;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.datastudio.base.JdbcConnectionManager;
-import com.nctigba.datastudio.config.ConnectionConfig;
 import com.nctigba.datastudio.enums.ParamTypeEnum;
 import com.nctigba.datastudio.model.dto.DataListDTO;
 import com.nctigba.datastudio.service.DataListByJdbcService;
-import com.nctigba.datastudio.utils.ConnectionUtils;
 import com.nctigba.datastudio.utils.DebugUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
@@ -57,7 +58,6 @@ import static com.nctigba.datastudio.constants.CommonConstants.PRO_PACKAGE_ID;
 import static com.nctigba.datastudio.constants.CommonConstants.REL_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.SPACE;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_TYPENAME_SQL;
-import static com.nctigba.datastudio.utils.SecretUtils.desEncrypt;
 
 /**
  * DataListByJdbcServiceImpl
@@ -66,6 +66,9 @@ import static com.nctigba.datastudio.utils.SecretUtils.desEncrypt;
  */
 @Service
 public class DataListByJdbcServiceImpl implements DataListByJdbcService {
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
 
     @Override
     public DataListDTO dataListQuerySQL(
@@ -82,7 +85,8 @@ public class DataListByJdbcServiceImpl implements DataListByJdbcService {
         List<Map<String, Object>> trigger = new ArrayList<>();
         Map<String, String> funTypeMap = new HashMap<>();
         try (
-                Connection connection = JdbcConnectionManager.getConnection(jdbcUrl, username, desEncrypt(password))
+                Connection connection =
+                    JdbcConnectionManager.getConnection(jdbcUrl, username, encryptionUtils.decrypt(password))
         ) {
             CountDownLatch countDownLatch = new CountDownLatch(7);
             ThreadUtil.execute(() -> {

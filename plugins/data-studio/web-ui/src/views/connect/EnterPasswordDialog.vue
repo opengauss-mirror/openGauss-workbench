@@ -32,7 +32,7 @@
   import { useI18n } from 'vue-i18n';
   import { reLogin } from '@/api/connect';
   import { useUserStore } from '@/store/modules/user';
-  import Crypto from '@/utils/crypto';
+  import { encryptPassword } from '@/utils/jsencrypt';
   import EventBus, { EventTypeName } from '@/utils/event-bus';
 
   const props = withDefaults(
@@ -75,6 +75,7 @@
   const handleConfirm = () => {
     ruleFormRef.value.validate(async (valid) => {
       if (valid) {
+        const password = await encryptPassword(form.password);
         reLogin({
           type: props.connectInfo.type,
           name: props.connectInfo.name,
@@ -83,7 +84,7 @@
           dataName: props.connectInfo.dataName,
           userName: props.connectInfo.userName,
           id: props.connectInfo.id,
-          password: Crypto.encrypt(form.password),
+          password,
           isRememberPassword: form.isRememberPassword,
           webUser: UserStore.userId,
           connectionid: props.uuid,

@@ -186,7 +186,7 @@
   import { useI18n } from 'vue-i18n';
   import { useAppStore } from '@/store/modules/app';
   import { useUserStore } from '@/store/modules/user';
-  import Crypto from '@/utils/crypto';
+  import { encryptPassword } from '@/utils/jsencrypt';
   import { connectListPersist } from '@/config';
   import { sidebarForage } from '@/utils/localforage';
   import { getSystemUserProfile } from '@/api/connect';
@@ -406,7 +406,8 @@
     }
   };
 
-  const getConnectionParams = () => {
+  const getConnectionParams = async () => {
+    const password = await encryptPassword(form.password);
     // common params
     const params = {
       id: form.id,
@@ -421,7 +422,7 @@
       port: String(form.port),
       dataName: form.dataName,
       userName: form.userName,
-      password: Crypto.encrypt(form.password),
+      password,
       isRememberPassword: form.isRememberPassword,
     });
     return params;
@@ -431,7 +432,7 @@
     if (!formEl) return;
     await formEl.validate(async (valid) => {
       if (valid) {
-        const params = getConnectionParams();
+        const params = await getConnectionParams();
         try {
           const time = await testConnectionApi(params);
           ElMessage.success(t('message.testConnectionSuccess', { time }));
@@ -469,7 +470,7 @@
     formEl.clearValidate();
   };
   const requestConnect = async () => {
-    const params = getConnectionParams();
+    const params = await getConnectionParams();
     if (props.type === 'create') {
       const isCover = AppStore.connectListMap.some(
         (item) => item.id === params.id && item.connectInfo.name === params.name,

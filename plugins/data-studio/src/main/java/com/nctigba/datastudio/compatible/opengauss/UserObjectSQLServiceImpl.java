@@ -31,9 +31,13 @@ import com.nctigba.datastudio.model.dto.DatabaseUserInfoDTO;
 import com.nctigba.datastudio.model.dto.DatabaseUsserCheckDTO;
 import com.nctigba.datastudio.model.dto.UpdateUserAttributeDTO;
 import com.nctigba.datastudio.model.dto.UpdateUserPasswordDTO;
-import com.nctigba.datastudio.utils.SecretUtils;
+
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.utils.StringUtils;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -70,7 +74,6 @@ import static com.nctigba.datastudio.constants.SqlConstants.USER_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.VALID_BEGIN_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.VALID_UNTIL_SQL;
 import static com.nctigba.datastudio.utils.DebugUtils.cutBrace;
-import static com.nctigba.datastudio.utils.SecretUtils.desEncrypt;
 
 /**
  * UserObjectSQLServiceImpl achieve
@@ -82,6 +85,9 @@ import static com.nctigba.datastudio.utils.SecretUtils.desEncrypt;
 public class UserObjectSQLServiceImpl implements UserObjectSQLService {
     @Autowired
     private ConnectionConfig connectionConfig;
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
 
     @Override
     public String type() {
@@ -94,7 +100,7 @@ public class UserObjectSQLServiceImpl implements UserObjectSQLService {
         if (passwordType.equals("true")) {
             password = "********";
         } else {
-            password = SecretUtils.desEncrypt(request.getPassword());
+            password = encryptionUtils.decrypt(request.getPassword());
         }
         StringBuilder userRole = new StringBuilder();
         if (request.getType().equals("user")) {
@@ -248,7 +254,7 @@ public class UserObjectSQLServiceImpl implements UserObjectSQLService {
     @Override
     public String updateUserPassword(UpdateUserPasswordDTO request) {
         return String.format(UPDAT_USER_PASSWORD_SQL, request.getType(), request.getUserName(),
-                desEncrypt(request.getNewPassword()), desEncrypt(request.getOldPassword()));
+            encryptionUtils.decrypt(request.getNewPassword()), encryptionUtils.decrypt(request.getOldPassword()));
     }
 
 

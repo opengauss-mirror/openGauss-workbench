@@ -33,8 +33,13 @@ import com.nctigba.datastudio.model.dto.UpdateUserAttributeDTO;
 import com.nctigba.datastudio.model.dto.UpdateUserPasswordDTO;
 import com.nctigba.datastudio.service.DatabaseUserService;
 import com.nctigba.datastudio.utils.LocaleStringUtils;
+
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -59,6 +64,9 @@ import static com.nctigba.datastudio.utils.DebugUtils.comGetUuidType;
 public class DatabaseUserServiceImpl implements DatabaseUserService {
     @Autowired
     private ConnectionConfig connectionConfig;
+    @Autowired
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
 
     private Map<String, UserObjectSQLService> userObjectSQLServiceMap;
 
@@ -120,7 +128,8 @@ public class DatabaseUserServiceImpl implements DatabaseUserService {
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
         ) {
-            if (request.getLoginUserPassword().equals(conMap.get(request.getUuid()).getDbPassword())) {
+            if (encryptionUtils.decrypt(request.getLoginUserPassword())
+                .equals(encryptionUtils.decrypt(conMap.get(request.getUuid()).getDbPassword()))) {
                 String ddl = userObjectSQLServiceMap.get(comGetUuidType(request.getUuid()))
                         .updateUserPassword(request);
                 statement.execute(ddl);

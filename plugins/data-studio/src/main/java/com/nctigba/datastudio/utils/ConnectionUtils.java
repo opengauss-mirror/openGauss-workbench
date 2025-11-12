@@ -23,14 +23,16 @@
 
 package com.nctigba.datastudio.utils;
 
-import com.alibaba.druid.pool.DruidDataSource;
-import com.nctigba.datastudio.base.JdbcConnectionManager;
+import com.gitee.starblues.spring.MainApplicationContext;
+import com.gitee.starblues.spring.SpringBeanFactory;
+
+import com.nctigba.datastudio.base.SpringApplicationContext;
+
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-
-import static com.nctigba.datastudio.utils.SecretUtils.desEncrypt;
 
 /**
  * ConnectionUtils
@@ -49,6 +51,10 @@ public class ConnectionUtils {
      */
     public static Connection connectGet(String jdbcUrl, String username, String password)
             throws SQLException {
-        return DriverManager.getConnection(jdbcUrl, username, desEncrypt(password));
+        MainApplicationContext mainContext = SpringApplicationContext.getApplicationContext().getBean(
+            MainApplicationContext.class);
+        SpringBeanFactory springBeanFactory = mainContext.getSpringBeanFactory();
+        EncryptionUtils encryptionUtils = springBeanFactory.getBean(EncryptionUtils.class);
+        return DriverManager.getConnection(jdbcUrl, username, encryptionUtils.decrypt(password));
     }
 }
