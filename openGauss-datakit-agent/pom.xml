@@ -1,44 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
-
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.opengauss</groupId>
   <artifactId>openGauss-datakit-agent</artifactId>
   <version>7.0.0-RC3</version>
+  <packaging>jar</packaging>
+
+  <name>openGauss DataKit Agent</name>
+  <description>Data collection and monitoring agent</description>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <java.version>17</java.version>
-    <quarkus.package.type>uber-jar</quarkus.package.type>
-    <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
+
+    <!-- Build Properties -->
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
+    <maven.compiler.parameters>true</maven.compiler.parameters>
+    <skipITs>true</skipITs>
+
+    <!-- Quarkus Configuration -->
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-    <quarkus.platform.version>3.26.4</quarkus.platform.version>
+    <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
+    <quarkus.platform.version>3.29.2</quarkus.platform.version>
+    <quarkus.package.type>uber-jar</quarkus.package.type>
+    <!-- Third-party Dependencies -->
     <retrofit.version>3.0.0</retrofit.version>
     <oshi.version>6.4.6</oshi.version>
-    <common.lang3.version>3.18.0</common.lang3.version>
-    <commons.exec.version>1.5.0</commons.exec.version>
+    <commons-lang3.version>3.18.0</commons-lang3.version>
+    <commons-exec.version>1.5.0</commons-exec.version>
     <lombok.version>1.18.34</lombok.version>
-    <hutool.version>5.8.38</hutool.version>
+    <hutool.version>5.8.39</hutool.version>
     <hikaricp.version>7.0.0</hikaricp.version>
     <opengauss-jdbc.version>6.0.0-og</opengauss-jdbc.version>
     <mysql-jdbc.version>9.4.0</mysql-jdbc.version>
     <jna.version>5.13.0</jna.version>
-    <maven.compiler.source>${java.version}</maven.compiler.source>
-    <maven.compiler.target>${java.version}</maven.compiler.target>
+
+    <!-- Plugin Versions -->
     <maven-clean-plugin.version>3.2.0</maven-clean-plugin.version>
     <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
-    <maven.compiler.parameters>true</maven.compiler.parameters>
-    <skipITs>true</skipITs>
+    <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
+    <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
+    <jandex-maven-plugin.version>1.2.3</jandex-maven-plugin.version>
   </properties>
+
   <repositories>
     <repository>
       <id>jitpack.io</id>
       <url>https://jitpack.io</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
     </repository>
   </repositories>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -52,6 +73,31 @@
   </dependencyManagement>
 
   <dependencies>
+    <!-- Quarkus Core Dependencies -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-arc</artifactId>
+    </dependency>
+
+    <!-- Web & REST - 统一使用RESTEasy Reactive -->
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy-jackson</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-resteasy-client-jackson</artifactId>
+    </dependency>
+
+    <!-- Messaging & Async -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-vertx</artifactId>
@@ -62,29 +108,14 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus.resteasy.reactive</groupId>
-      <artifactId>resteasy-reactive-common</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-resteasy-mutiny</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy-jackson</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy-client-jackson</artifactId>
+      <artifactId>quarkus-smallrye-context-propagation</artifactId>
     </dependency>
 
+    <!-- Configuration & Scheduling -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-config-yaml</artifactId>
@@ -93,11 +124,8 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-scheduler</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-exporter-logging</artifactId>
-    </dependency>
 
+    <!-- Monitoring & Observability -->
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-api</artifactId>
@@ -107,20 +135,18 @@
       <artifactId>opentelemetry-sdk</artifactId>
     </dependency>
     <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-smallrye-context-propagation</artifactId>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-exporter-logging</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-arc</artifactId>
-    </dependency>
-
+    <!-- System Monitoring -->
     <dependency>
       <groupId>com.github.oshi</groupId>
       <artifactId>oshi-core</artifactId>
       <version>${oshi.version}</version>
     </dependency>
+
+    <!-- HTTP Client -->
     <dependency>
       <groupId>com.squareup.retrofit2</groupId>
       <artifactId>retrofit</artifactId>
@@ -131,16 +157,20 @@
       <artifactId>converter-jackson</artifactId>
       <version>${retrofit.version}</version>
     </dependency>
-    <dependency>
-      <groupId>net.java.dev.jna</groupId>
-      <artifactId>jna-platform</artifactId>
-      <version>${jna.version}</version>
-    </dependency>
+
+    <!-- Native Access -->
     <dependency>
       <groupId>net.java.dev.jna</groupId>
       <artifactId>jna</artifactId>
       <version>${jna.version}</version>
     </dependency>
+    <dependency>
+      <groupId>net.java.dev.jna</groupId>
+      <artifactId>jna-platform</artifactId>
+      <version>${jna.version}</version>
+    </dependency>
+
+    <!-- Utilities -->
     <dependency>
       <groupId>cn.hutool</groupId>
       <artifactId>hutool-all</artifactId>
@@ -149,23 +179,25 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-      <version>${common.lang3.version}</version>
+      <version>${commons-lang3.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-exec</artifactId>
+      <version>${commons-exec.version}</version>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <version>${lombok.version}</version>
+      <scope>provided</scope>
     </dependency>
+
+    <!-- Database -->
     <dependency>
       <groupId>com.zaxxer</groupId>
       <artifactId>HikariCP</artifactId>
       <version>${hikaricp.version}</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.mysql</groupId>
-      <artifactId>mysql-connector-j</artifactId>
-      <version>${mysql-jdbc.version}</version>
     </dependency>
     <dependency>
       <groupId>org.opengauss</groupId>
@@ -173,10 +205,12 @@
       <version>${opengauss-jdbc.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-exec</artifactId>
-      <version>${commons.exec.version}</version>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
+      <version>${mysql-jdbc.version}</version>
     </dependency>
+
+    <!-- Test Dependencies -->
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-junit5</artifactId>
@@ -201,14 +235,21 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>${maven-compiler-plugin.version}</version>
         <configuration>
-          <compilerArguments>
-            <bootclasspath>${java.home}/lib/rt.jar</bootclasspath>
-          </compilerArguments>
           <source>${java.version}</source>
           <target>${java.version}</target>
           <encoding>${project.build.sourceEncoding}</encoding>
+          <parameters>true</parameters>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>${lombok.version}</version>
+            </path>
+          </annotationProcessorPaths>
         </configuration>
       </plugin>
+
+      <!-- Testing -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -220,37 +261,47 @@
           </systemPropertyVariables>
         </configuration>
       </plugin>
+
+      <!-- Jandex Indexing -->
       <plugin>
         <groupId>org.jboss.jandex</groupId>
         <artifactId>jandex-maven-plugin</artifactId>
-        <version>1.2.3</version>
+        <version>${jandex-maven-plugin.version}</version>
         <executions>
           <execution>
             <id>make-index</id>
-            <goals><goal>jandex</goal></goals>
+            <goals>
+              <goal>jandex</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
+
+      <!-- Quarkus Build -->
       <plugin>
         <groupId>${quarkus.platform.group-id}</groupId>
         <artifactId>quarkus-maven-plugin</artifactId>
         <version>${quarkus.platform.version}</version>
+        <extensions>true</extensions>
         <executions>
           <execution>
             <goals>
               <goal>build</goal>
+              <goal>generate-code</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
-          <finalName>datakit-agent-${version}</finalName>
+          <finalName>datakit-agent-${project.version}</finalName>
           <outputDirectory>../agent</outputDirectory>
         </configuration>
       </plugin>
+
+      <!-- Resource Copying -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.3.0</version>
+        <version>${maven-resources-plugin.version}</version>
         <executions>
           <execution>
             <id>copy-configs</id>
@@ -263,8 +314,9 @@
               <resources>
                 <resource>
                   <directory>src/main/resources</directory>
+                  <filtering>true</filtering>
                   <includes>
-                    <include>*</include>
+                    <include>**/*</include>
                   </includes>
                 </resource>
               </resources>
@@ -276,13 +328,14 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
-        <version>3.1.0</version>
+        <version>${maven-antrun-plugin.version}</version>
         <executions>
           <execution>
+            <id>copy-runner-jar</id>
             <phase>package</phase>
             <configuration>
               <target>
-                <copy file="${project.build.directory}/datakit-agent-${version}-runner.jar"
+                <copy file="${project.build.directory}/datakit-agent-${project.version}-runner.jar"
                       todir="../agent"/>
               </target>
             </configuration>
@@ -295,7 +348,6 @@
     </plugins>
   </build>
 
-
   <profiles>
     <profile>
       <id>native</id>
@@ -307,6 +359,7 @@
       <properties>
         <quarkus.native.enabled>true</quarkus.native.enabled>
         <quarkus.package.jar.enabled>false</quarkus.package.jar.enabled>
+        <skipITs>false</skipITs>
       </properties>
       <build>
         <plugins>
@@ -322,7 +375,7 @@
                 </goals>
                 <configuration>
                   <systemPropertyVariables>
-                    <native.image.path>${project.build.directory}/datakit-agent-runner</native.image.path>
+                    <native.image.path>${project.build.directory}/datakit-agent-${project.version}-runner</native.image.path>
                     <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                     <maven.home>${maven.home}</maven.home>
                   </systemPropertyVariables>
