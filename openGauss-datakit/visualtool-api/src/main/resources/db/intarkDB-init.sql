@@ -1730,9 +1730,6 @@ COMMENT ON COLUMN "ops_cluster"."xml_config_path" IS 'xml配置路径';
 ALTER TABLE ops_host ADD COLUMN os varchar(255);
 COMMENT ON COLUMN "ops_host"."os" IS '操作系统';
 
-ALTER TABLE ops_host ADD COLUMN cpu_arch varchar(255);
-COMMENT ON COLUMN "ops_host"."cpu_arch" IS 'CPU架构';
-
 ALTER TABLE ops_host ADD COLUMN name varchar(255);
 COMMENT ON COLUMN "ops_host"."name" IS '名称';
 

@@ -25,7 +25,11 @@
 package org.opengauss.admin.web.listener;
 
 import com.gitee.starblues.integration.listener.PluginInitializerListener;
+import com.gitee.starblues.loader.PluginResourceStorage;
+
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -49,7 +53,16 @@ public class MyPluginInitializerListener implements PluginInitializerListener {
 
     @Override
     public void complete() {
+        PluginResourceStorage.initialize();
         log.info("My plugin init complete.");
+    }
+
+    /**
+     * destroy plugin resource Storage
+     */
+    @PreDestroy
+    public void destroy() {
+        PluginResourceStorage.shutdown();
     }
 
     @Override

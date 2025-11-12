@@ -23,6 +23,9 @@ spring:
         remove-abandoned-timeout-millis: 300000
         log-abandoned: true
         max-active: 50
+  web:
+    resources:
+      static-locations: classpath:resources
 logging:
   level:
     com.nctigba.alert.monitor: INFO
@@ -43,9 +46,7 @@ logging:
     prefix: classpath:/templates/
     suffix: .html
     cache: false
-  web:
-    resources:
-      static-locations: classpath:resources
+
 
 
 server.compression:

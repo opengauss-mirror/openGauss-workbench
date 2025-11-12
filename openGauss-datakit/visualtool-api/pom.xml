@@ -30,7 +30,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-websocket</artifactId>
+            <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -41,6 +41,16 @@
             <groupId>org.opengauss</groupId>
             <artifactId>opengauss-jdbc</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.opengauss</groupId>
+            <artifactId>visualtool-service</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.opengauss</groupId>
+            <artifactId>visualtool-common</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.opengauss</groupId>
             <artifactId>visualtool-framework</artifactId>
