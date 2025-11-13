@@ -153,7 +153,7 @@ public class DynamicMetricEventProducer {
     }
 
     private void handlePublishError(CustomEventConfig metric, Exception e) {
-        log.error("CRITICAL: Publish failed {}", metric, e);
+        log.error("CRITICAL: Publish failed {}", metric.detail(), e);
     }
 
     @Scheduled(fixedRate = 500)
