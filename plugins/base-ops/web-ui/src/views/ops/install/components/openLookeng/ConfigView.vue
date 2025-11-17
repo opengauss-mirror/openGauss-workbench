@@ -7,25 +7,24 @@
         }}
       </a-button>
     </div>
-    <Codemirror
-      v-model:value="code"
-      :options="cmOptions"
-      border
-      ref="cmRef"
-      height="500px"
-      width="100%"
+    <codemirror
+      v-model="code"
+      :extensions="extensions"
+      :style="{ height: '500px', border: '1px solid #ddd' }"
       @ready="onReady"
-    >
-    </Codemirror>
+      :autofocus="true"
+      :indent-with-tab="true"
+      :tab-size="2"
+    />
   </div>
 </template>
 <script lang="ts" setup>
 import { inject, onMounted, onUnmounted, ref } from 'vue'
-import 'codemirror/mode/yaml/yaml.js'
-import type { CmComponentRef } from 'codemirror-editor-vue3'
-import Codemirror from 'codemirror-editor-vue3'
-import type { Editor, EditorConfiguration } from 'codemirror'
-import 'codemirror/theme/monokai.css'
+import { Codemirror } from 'vue-codemirror'
+import { yaml } from '@codemirror/lang-yaml'
+import { oneDark } from '@codemirror/theme-one-dark'
+import { lineNumbers } from '@codemirror/view'
+import { EditorView } from '@codemirror/view'
 import { useOpsStore } from '@/store'
 import { dataSourceDbList } from '@/api/modeling'
 import { KeyValue } from '@/types/global'
@@ -42,6 +41,19 @@ const installStore = useOpsStore()
 const loadingFunc = inject<any>('loading')
 const code = ref('')
 const loading = ref(false)
+const editorView = ref<EditorView>()
+
+const extensions = [
+  yaml(),
+  lineNumbers(),
+  oneDark,
+  EditorView.lineWrapping
+]
+
+const onReady = (payload: { view: EditorView; container: HTMLDivElement }) => {
+  editorView.value = payload.view
+  payload.view.focus()
+}
 
 const generateYaml = async () => {
   loadingFunc.toLoading()
@@ -97,38 +109,28 @@ const buildReqData = async () => {
   }
 }
 
-const cmRef = ref<CmComponentRef>()
-const cmOptions: EditorConfiguration = {
-  mode: 'text/x-yaml',
-  theme: 'monokai',
-  lineNumbers: true,
-  lineWrapping: true
-}
-
-const onReady = (cm: Editor) => {
-  cm.focus()
-}
-
 onMounted(() => {
-  setTimeout(() => {
-    cmRef.value?.refresh()
-  }, 1000)
-  setTimeout(() => {
-    cmRef.value?.cminstance.isClean()
-  }, 3000)
   generateYaml()
 })
 
 onUnmounted(() => {
-  cmRef.value?.destroy()
+  if (editorView.value) {
+    editorView.value.destroy()
+  }
 })
 
 defineExpose({
   beforeConfirm
 })
 </script>
+
 <style lang="less">
-.codemirror-container {
+.cm-editor {
   font-size: 16px !important;
+  height: 500px;
+
+  &.cm-focused {
+    outline: none;
+  }
 }
 </style>
