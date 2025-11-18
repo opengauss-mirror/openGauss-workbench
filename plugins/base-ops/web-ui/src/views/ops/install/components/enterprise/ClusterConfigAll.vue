@@ -127,12 +127,7 @@ const installType = computed(() => installStore.getInstallConfig.installType)
 const isInstallCM = computed(() => installStore.getEnterpriseConfig.isInstallCM)
 const minNodeSize = computed(() => {
   const ogVerNumStr = installStore.getInstallConfig.openGaussVersionNum
-  const ogVerNum = Number(ogVerNumStr.replaceAll('.', ''))
-  if (ogVerNum > 311) {
-    return 2
-  } else {
-    return 3
-  }
+  return /[a-zA-Z]/.test(ogVerNumStr) || Number(ogVerNumStr.replaceAll('.', '')) > 311 ? 2 : 3
 })
 
 watch([() => data.form.cluster.databaseKernelArch, () => data.form.cluster.isInstallCM], (val) => {
