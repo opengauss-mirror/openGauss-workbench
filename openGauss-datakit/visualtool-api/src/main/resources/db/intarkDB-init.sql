@@ -664,6 +664,7 @@ VALUES (9, 'observability-sql-diagnosis', 0, '7.0.0-RC2', 'https://opengauss.obs
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
 VALUES (11, 'compatibility-assessment', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/compatibility-assessment-7.0.0-RC2-repackage.jar', 'openGauss兼容性评估工具', 'The openGauss compatibility evaluation tool');
 
+update sys_plugins_repository set plugin_version='7.0.0-RC3', download_url=replace(download_url,'7.0.0-RC2','7.0.0-RC3');
 -- ----------------------------
 -- Table structure for sys_role
 -- ----------------------------

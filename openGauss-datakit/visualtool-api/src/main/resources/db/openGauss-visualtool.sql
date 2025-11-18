@@ -900,7 +900,7 @@ VALUES ('compatibility-assessment', 0, '7.0.0-RC2', 'https://opengauss.obs.cn-so
 UPDATE NOTHING;
 
 DELETE FROM sys_plugins_repository WHERE plugin_id IN ('oauth-login', 'MetaTune', 'monitor-tools');
-
+update sys_plugins_repository set plugin_version='7.0.0-RC3', download_url=replace(download_url,'7.0.0-RC2','7.0.0-RC3');
 -- ----------------------------
 -- Table structure for sys_role
 -- ----------------------------
