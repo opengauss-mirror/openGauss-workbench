@@ -168,7 +168,7 @@ public class DynamicMetricEventProducer {
     }
 
     private void handleCriticalOverflow(CustomEventConfig metric) {
-        log.error("Critical overflow persistence failed {}", metric);
+        log.error("Critical overflow persistence failed {}", metric.detail());
     }
 
     /**

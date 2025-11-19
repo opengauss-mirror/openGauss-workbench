@@ -17,6 +17,7 @@
 package org.opengauss.admin.common.core.domain.model.agent;
 
 import lombok.Data;
+import lombok.ToString;
 
 /**
  * AgentClusterVo
@@ -32,6 +33,7 @@ public class AgentClusterVo {
     private String hostIp;
     private String port;
     private String username;
+    @ToString.Exclude
     private String dbPassword;
     private String url;
 }
