@@ -138,7 +138,7 @@ public class PipelineEventProducer {
     }
 
     private void handleOverflow(CustomEventConfig metric) {
-        log.error("CRITICAL: Backpressure queue overflow! {}", metric);
+        log.error("CRITICAL: Backpressure queue overflow! {}", metric.detail());
     }
 
     /**
