@@ -1,6 +1,3 @@
-context:
-  listener:
-    classes:
 spring:
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
@@ -29,4 +26,4 @@ spring:
       continue-on-error: true
 
 mybatis-plus:
-  typeAliasesPackage: org.opengauss.plugin.alertcenter.entity,org.opengauss.admin.common.core.domain.entity
+  typeAliasesPackage: com.nctigba.alert.monitor.model.entity,org.opengauss.admin.common.core.domain.entity
