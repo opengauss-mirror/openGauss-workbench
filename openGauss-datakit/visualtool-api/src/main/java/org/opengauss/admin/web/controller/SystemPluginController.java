@@ -301,14 +301,14 @@ public class SystemPluginController extends BaseController {
         String fileName = getFileNameFromUrl(pluginUrl);
         log.info("wsBusinessId is {} in onlineInstall", wsBusinessId);
         sysPluginRepositoryService.saveOnlinePackage(pluginUrl, fileName, wsBusinessId);
-        String pluginPathString = SystemConfig.getPluginPath() + File.separator + getFileNameFromUrl(pluginUrl);
+        String pluginPathString = SystemConfig.getStoragePath() + File.separator + getFileNameFromUrl(pluginUrl);
         Path pluginPath = Paths.get(pluginPathString);
-        PluginInfo pluginInfo = pluginOperator.install(pluginPath, false);
         try {
+            PluginInfo pluginInfo = pluginOperator.install(pluginPath, false);
             Map<String, Object> result;
             if ((result = updateSystemByPluginInfo(pluginInfo)) != null) {
-                sysPluginRepositoryService.updatePluginDownloadStatus(
-                        List.of(pluginInfo.getPluginId()), SysPluginDownloadStatus.DOWNLOADED_STATUS.getCode());
+                sysPluginRepositoryService.updatePluginDownloadStatus(List.of(pluginInfo.getPluginId()),
+                    SysPluginDownloadStatus.DOWNLOADED_STATUS.getCode());
                 return AjaxResult.success(result);
             } else {
                 return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_INSTALL_ERROR.code());
@@ -316,6 +316,12 @@ public class SystemPluginController extends BaseController {
         } catch (Exception e) {
             log.error("online_install plugins [{}] failed ", fileName, e);
             return AjaxResult.error(ResponseCode.INTEGRATION_PLUGIN_INSTALL_ERROR.msg() + ":" + e.getMessage());
+        } finally {
+            try {
+                Files.deleteIfExists(pluginPath);
+            } catch (IOException e) {
+                log.error("del online_install plugins download file [{}]  failed ", fileName, e);
+            }
         }
     }
 
