@@ -32,12 +32,12 @@ import org.opengauss.admin.common.core.domain.model.LoginUser;
 import org.opengauss.admin.common.core.dto.ModifyPasswordDto;
 import org.opengauss.admin.common.enums.BusinessType;
 import org.opengauss.admin.common.enums.ResponseCode;
-import org.opengauss.admin.common.utils.RsaUtils;
 import org.opengauss.admin.common.utils.SecurityUtils;
 import org.opengauss.admin.common.utils.ServletUtils;
 import org.opengauss.admin.common.utils.file.FileUploadUtils;
 import org.opengauss.admin.framework.web.service.TokenService;
 import org.opengauss.admin.system.service.ISysUserService;
+import org.opengauss.tool.cipher.RsaUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -101,8 +101,8 @@ public class SysProfileController extends BaseController {
     @Log(title = "user profile", businessType = BusinessType.UPDATE)
     @PutMapping("/updatePwd")
     public AjaxResult updatePwd(@RequestBody ModifyPasswordDto modifyPasswordDto) {
-        String oldPassword = RsaUtils.decrypt(modifyPasswordDto.getOldPassword());
-        String newPassword = RsaUtils.decrypt(modifyPasswordDto.getNewPassword());
+        String oldPassword = RsaUtils.getInstance().decrypt(modifyPasswordDto.getOldPassword());
+        String newPassword = RsaUtils.getInstance().decrypt(modifyPasswordDto.getNewPassword());
         LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
         String userName = loginUser.getUsername();
         String password = loginUser.getPassword();

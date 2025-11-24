@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opengauss.tool</groupId>
-  <artifactId>jsch-session-pool</artifactId>
-  <name>jsch-session-pool</name>
+  <artifactId>visualtool-common-cipher</artifactId>
+  <name>visualtool-common-cipher</name>
   <version>7.0.0-RC3</version>
 
   <properties>
@@ -13,54 +13,50 @@
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jsch.version>2.27.2</jsch.version>
     <lombok.version>1.18.34</lombok.version>
-    <commons.pool2.version>2.11.1</commons.pool2.version>
+    <commons-codec.version>1.19.0</commons-codec.version>
     <hutool.version>5.8.39</hutool.version>
     <slf4j.version>1.7.36</slf4j.version>
-    <spring-boot.version>3.5.7</spring-boot.version>
+    <junit.version>4.13.2</junit.version>
     <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
     <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
     <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
   </properties>
 
   <dependencies>
-    <!-- JSCH SFTP library -->
-    <dependency>
-      <groupId>com.github.mwiede</groupId>
-      <artifactId>jsch</artifactId>
-      <version>${jsch.version}</version>
-    </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>
       <artifactId>lombok</artifactId>
       <version>${lombok.version}</version>
+      <scope>provided</scope>
     </dependency>
     <!-- Connection pooling -->
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-pool2</artifactId>
-      <version>${commons.pool2.version}</version>
+      <artifactId>commons-codec</artifactId>
+      <groupId>commons-codec</groupId>
+      <version>${commons-codec.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>cn.hutool</groupId>
       <artifactId>hutool-all</artifactId>
       <version>${hutool.version}</version>
+      <scope>provided</scope>
     </dependency>
     <!-- Logging -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
+      <scope>provided</scope>
     </dependency>
-
-    <!-- Testing -->
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <version>${spring-boot.version}</version>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
+
   </dependencies>
 
   <build>

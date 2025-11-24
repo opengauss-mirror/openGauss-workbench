@@ -11,17 +11,7 @@
  * EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
  * MERCHANTABILITY OR FITFOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
- * -------------------------------------------------------------------------
- *
- * EncryptionUtils.java
- *
- * IDENTIFICATION
- * openGauss-visualtool/visualtool-service/src/main/java/org/opengauss/admin/system/service/ops/impl/EncryptionUtils
- * .java
- *
- * -------------------------------------------------------------------------
  */
-
 
 package org.opengauss.admin.system.service.ops.impl;
 
@@ -34,9 +24,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.codec.binary.Base64;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsEncryptionEntity;
-import org.opengauss.admin.common.utils.AesGcmUtils;
 import org.opengauss.admin.system.mapper.ops.OpsEncryptionMapper;
 import org.opengauss.admin.system.service.ops.IEncryptionService;
+import org.opengauss.tool.cipher.AesGcmUtils;
+import org.opengauss.tool.cipher.SecureKeyManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -51,8 +42,6 @@ import java.util.Objects;
 @Component
 public class EncryptionUtils {
     private static final String SECRET = "secret";
-    private static String publicKey;
-    private static String privateKey;
 
     @Autowired
     private OpsEncryptionMapper encryptionMapper;
@@ -60,69 +49,114 @@ public class EncryptionUtils {
     @Autowired
     private IEncryptionService encryptionService;
 
+    /**
+     * encrypt plain text
+     *
+     * @param plainText plainText
+     * @return encrypt result
+     */
     public String encrypt(String plainText) {
-        RSA rsa = new RSA(null, publicKey);
-        byte[] encrypt = rsa.encrypt(StrUtil.bytes(plainText, CharsetUtil.CHARSET_UTF_8), KeyType.PublicKey);
-        return StrUtil.str(Base64.encodeBase64(encrypt), CharsetUtil.CHARSET_UTF_8);
+        if (StrUtil.isEmpty(plainText)) {
+            return "";
+        }
+        return useKeySecurely(KeyType.PublicKey, (keyType, publicKeyChars) -> {
+            String publicKeyStr = new String(publicKeyChars);
+            RSA rsa = new RSA(null, publicKeyStr);
+            byte[] encrypt = rsa.encrypt(StrUtil.bytes(plainText, CharsetUtil.CHARSET_UTF_8), KeyType.PublicKey);
+            return StrUtil.str(Base64.encodeBase64(encrypt), CharsetUtil.CHARSET_UTF_8);
+        });
     }
 
+    /**
+     * decrypt cipher text
+     *
+     * @param cipherText cipherText
+     * @return decrypt result
+     */
     public String decrypt(String cipherText) {
+        if (StrUtil.isEmpty(cipherText)) {
+            return "";
+        }
+        return useKeySecurely(KeyType.PrivateKey, (keyType, privateKeyChars) -> {
+            try {
+                String privateKeyStr = new String(privateKeyChars);
+                RSA rsa = new RSA(privateKeyStr, null);
+                byte[] decrypt = rsa.decrypt(Base64.decodeBase64(cipherText), KeyType.PrivateKey);
+                return StrUtil.str(decrypt, CharsetUtil.CHARSET_UTF_8);
+            } catch (CryptoException e) {
+                log.warn("Decryption failed, returning original text", e);
+                return cipherText;
+            }
+        });
+    }
+
+    private String useKeySecurely(KeyType keyType, KeyOperation operation) {
+        char[] keyChars = null;
+        String keyString = null;
         try {
-            RSA rsa = new RSA(privateKey, null);
-            byte[] decrypt = rsa.decrypt(Base64.decodeBase64(cipherText), KeyType.PrivateKey);
-            return StrUtil.str(decrypt, CharsetUtil.CHARSET_UTF_8);
-        } catch (CryptoException e) {
-            return cipherText;
+            String encryptedKey = encryptionService.getEncryptedKey(keyType.name());
+            String decryptedKey = AesGcmUtils.decrypt(encryptedKey);
+            keyChars = decryptedKey.toCharArray();
+            return operation.execute(keyType, keyChars);
+        } finally {
+            SecureKeyManager.secureWipe(keyChars);
+            if (keyString != null) {
+                SecureKeyManager.secureWipe(keyString.toCharArray());
+            }
         }
     }
 
+    /**
+     * KeyOperation  secure operation
+     */
+    @FunctionalInterface
+    public interface KeyOperation {
+        /**
+         * secure operation
+         *
+         * @param keyType key type
+         * @param key key
+         * @return result
+         */
+        String execute(KeyType keyType, char[] key);
+    }
+
+
+    /**
+     * get public key
+     *
+     * @return key public key
+     */
     public String getKey() {
-        if (StrUtil.isEmpty(publicKey)) {
-            refreshKeyPair();
-        }
-        return publicKey;
+        return useKeySecurely(KeyType.PublicKey, (keyType, publicKeyChars) -> new String(publicKeyChars));
     }
 
-    public static synchronized void generateKeyPair() {
+    private KeyPair generateKeyPairSecurely() {
+        char[] publicKeyChars = null;
+        char[] privateKeyChars = null;
         try {
             KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA");
             gen.initialize(4096);
             KeyPair keyPair = gen.generateKeyPair();
             PublicKey pubKey = keyPair.getPublic();
             PrivateKey priKey = keyPair.getPrivate();
-            publicKey = Base64.encodeBase64String(pubKey.getEncoded());
-            privateKey = Base64.encodeBase64String(priKey.getEncoded());
-        } catch (Exception e) {
-            log.error("gen key pair fail", e);
+            String publicKeyStr = Base64.encodeBase64String(pubKey.getEncoded());
+            String privateKeyStr = Base64.encodeBase64String(priKey.getEncoded());
+            saveKeyPairSecurely(publicKeyStr, privateKeyStr);
+            publicKeyChars = publicKeyStr.toCharArray();
+            privateKeyChars = privateKeyStr.toCharArray();
+            return keyPair;
+        } catch (NoSuchAlgorithmException e) {
+            log.error("Generate key pair securely failed", e);
+            throw new CryptoException("Generate key pair securely failed", e);
+        } finally {
+            SecureKeyManager.secureWipe(publicKeyChars);
+            SecureKeyManager.secureWipe(privateKeyChars);
         }
     }
 
-    public void refreshKeyPair() {
-        this.refreshKeyPair(true);
-    }
-
-    /**
-     * 刷新公钥和私钥
-     *
-     * @param isEnforce 是否强制
-     */
-    public void refreshKeyPair(boolean isEnforce) {
-        OpsEncryptionEntity opsEncryptionEntity = encryptionMapper.selectOne(null);
-        if (Objects.isNull(opsEncryptionEntity)) {
-            opsEncryptionEntity = new OpsEncryptionEntity();
-            log.info("encryption key not found, generate it.");
-            generateKeyPair();
-            saveKeyPair(opsEncryptionEntity);
-        } else if (StrUtil.isEmpty(publicKey) || isEnforce) {
-            log.info("refresh encryption key.");
-            publicKey = AesGcmUtils.decrypt(opsEncryptionEntity.getPublicKey());
-            privateKey = AesGcmUtils.decrypt(opsEncryptionEntity.getPrivateKey());
-        } else {
-            log.info("dont refresh encryption key.");
-        }
-    }
-
-    private void saveKeyPair(OpsEncryptionEntity opsEncryptionEntity) {
+    private void saveKeyPairSecurely(String publicKey, String privateKey) {
+        OpsEncryptionEntity opsEncryptionEntity = new OpsEncryptionEntity();
         opsEncryptionEntity.setEncryptionId("1");
         opsEncryptionEntity.setPublicKey(AesGcmUtils.encrypt(publicKey));
         opsEncryptionEntity.setPrivateKey(AesGcmUtils.encrypt(privateKey));
@@ -131,16 +165,15 @@ public class EncryptionUtils {
     }
 
     /**
-     * update key pair secret
+     * refresh key pair ,first init key pair for current env
      */
-    public void updateKeyPairSecret() {
+    public void refreshKeyPair() {
         OpsEncryptionEntity opsEncryptionEntity = encryptionMapper.selectOne(null);
-        if (Objects.nonNull(opsEncryptionEntity) && !StrUtil.equalsIgnoreCase(SECRET,
-            opsEncryptionEntity.getKeySecurity())) {
-            opsEncryptionEntity.setKeySecurity(SECRET);
-            opsEncryptionEntity.setPublicKey(AesGcmUtils.encrypt(opsEncryptionEntity.getPublicKey()));
-            opsEncryptionEntity.setPrivateKey(AesGcmUtils.encrypt(opsEncryptionEntity.getPrivateKey()));
-            encryptionMapper.updateById(opsEncryptionEntity);
+        if (Objects.isNull(opsEncryptionEntity)) {
+            log.info("Encryption key not found, generate it securely.");
+            generateKeyPairSecurely();
+        } else {
+            log.info("Encryption key exists, no need to refresh.");
         }
     }
 }

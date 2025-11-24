@@ -34,13 +34,13 @@ import org.opengauss.admin.common.exception.ops.AgentTaskException;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.ChainAssert;
 import org.opengauss.admin.common.utils.OpsAssert;
-import org.opengauss.admin.common.utils.RsaUtils;
 import org.opengauss.agent.data.ClusterOriginal;
 import org.opengauss.agent.repository.DynamicTableService;
 import org.opengauss.agent.repository.TaskInstanceService;
 import org.opengauss.agent.repository.TaskMetricsDefinitionService;
 import org.opengauss.agent.repository.TaskSchemaDefinitionService;
 import org.opengauss.agent.repository.TaskTemplateDefinitionService;
+import org.opengauss.tool.cipher.RsaUtils;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -272,7 +272,8 @@ public class AgentTaskManager {
         AgentTaskConfig taskConfig = buildAgentTaskConfig(task);
         if (StrUtil.isNotEmpty(agent.getPublicKey())) {
             AgentClusterVo clusterConfig = taskConfig.getClusterConfig();
-            clusterConfig.setDbPassword(RsaUtils.encrypt(clusterConfig.getDbPassword(), agent.getPublicKey()));
+            clusterConfig.setDbPassword(
+                RsaUtils.getInstance().encrypt(clusterConfig.getDbPassword(), agent.getPublicKey()));
             taskConfig.setClusterConfig(clusterConfig);
         }
         sendStartTaskRequest(agent, taskConfig);

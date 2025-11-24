@@ -26,10 +26,10 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 
 ##### Datakit下载链接
 
-| 包名                            | 备注                                                        | 下载链接                                                                                                  |
-|:------------------------------|-----------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| Datakit-All-7.0.0-RC3.tar.gz  | 完整包（包含所有插件）                                               | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-All-7.0.0-RC3.tar.gz  |
-| Datakit-Mini-7.0.0-RC3.tar.gz | （推荐）最小化包（插件仅包含基础功能【业务开发】【基础运维】，其他插件可在DataKit的【插件管理】页面按需下载） | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/Datakit-Mini-7.0.0-RC3.tar.gz |
+| 包名                            | 备注                                                        | 下载链接                                                                                                           |
+|:------------------------------|-----------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| Datakit-All-7.0.0-RC3.tar.gz  | 完整包（包含所有插件）                                               | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/openGauss-Datakit-All-7.0.0-RC3.tar.gz |
+| Datakit-Mini-7.0.0-RC3.tar.gz | （推荐）最小化包（插件仅包含基础功能【业务开发】【基础运维】，其他插件可在DataKit的【插件管理】页面按需下载） | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/openGauss-Datakit-Mini-7.0.0-RC3.tar.gz          |
 
 #### 注意：
 1. 7.0.0-RC2之前的包不做区分，都包含所有插件，包名是Datakit-_$VERSION_.tar.gz（比如6.0.0版：Datakit-6.0.0.tar.gz）；

@@ -42,7 +42,7 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.opengauss</groupId>
+            <groupId>org.opengauss.tool</groupId>
             <artifactId>jsch-session-pool</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -408,7 +408,7 @@ public class ShellUtil {
             sftp = (ChannelSftp) channel;
             sftp.rm(filepath);
         } catch (JSchException | SftpException e) {
-            log.error("exec rm file error, message: {}", e.getMessage());
+            log.error("exec rm file {} error, message: {}", filepath, e.getMessage());
         } finally {
             JschUtil.close(sftp);
             JschUtil.close(channel);

@@ -36,7 +36,7 @@ import org.opengauss.agent.entity.task.AgentTaskVo;
 import org.opengauss.agent.exception.AgentException;
 import org.opengauss.agent.service.task.TaskManager;
 import org.opengauss.agent.service.task.core.TaskExecutionRecordService;
-import org.opengauss.agent.utils.RsaUtils;
+import org.opengauss.tool.cipher.RsaUtils;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -134,7 +134,7 @@ public class TaskResource {
     @Path("/pubKey")
     @Produces(MediaType.APPLICATION_JSON)
     public String pubKey() {
-        return RsaUtils.publicKey();
+        return RsaUtils.getInstance().publicKey();
     }
 
     /**

@@ -24,7 +24,7 @@ import java.util.Date;
  */
 @Slf4j
 @Service
-@Extract(bus = PluginExtensionInfoConfig.PLUGIN_ID)
+@Extract(bus = "data-migration-extension")
 public class DataMigrationExtensionInfoServiceImpl implements PluginExtensionInfoExtract {
     @Override
     public PluginExtensionInfoDto getPluginExtensionInfo() {

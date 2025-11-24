@@ -309,7 +309,7 @@
             <version>${admin.version}</version>
           </dependency>
           <dependency>
-            <groupId>org.opengauss</groupId>
+            <groupId>org.opengauss.tool</groupId>
             <artifactId>jsch-session-pool</artifactId>
             <version>${admin.version}</version>
           </dependency>
@@ -455,6 +455,7 @@
         <module>openGauss-datakit/visualtool-framework</module>
         <module>openGauss-datakit/visualtool-service</module>
         <module>openGauss-datakit/visualtool-common</module>
+        <module>openGauss-datakit/visualtool-common-cipher</module>
         <module>openGauss-datakit/cov-analysis</module>
         <module>openGauss-datakit/jsch-session-pool</module>
         <module>openGauss-datakit-agent</module>

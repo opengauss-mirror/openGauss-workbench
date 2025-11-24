@@ -56,6 +56,8 @@ import java.util.Map;
 @Component
 @Slf4j
 public class TranscribeReplayHandle {
+    private static final String DEFAULT_USER = "root";
+
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private JschUtil jschUtil;
@@ -104,12 +106,16 @@ public class TranscribeReplayHandle {
 
     private JschResult executeTask(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask,
         String jarPath, String taskType, TranscribeReplayPwdInfo pwdInfo) {
-        log.info("Task host info: {}", JSON.toJSONString(shellInfoVo));
         StringBuilder commandSb = new StringBuilder();
         String installPath = getInstallPath(transcribeReplayTask, taskType);
         String configFilePath = installPath + "/config/" + taskType + ".properties";
+        commandSb.append("source ~/.bashrc; ");
         commandSb.append("cd ").append(installPath);
-        commandSb.append(" && (sudo java -Xms256m -Xmx2g -jar ").append(jarPath);
+        if (DEFAULT_USER.equals(shellInfoVo.getUsername())) {
+            commandSb.append(" && (java -Xms256m -Xmx2g -jar ").append(jarPath);
+        } else {
+            commandSb.append(" && (sudo java -Xms256m -Xmx2g -jar ").append(jarPath);
+        }
         commandSb.append(" -t ").append(taskType);
         commandSb.append(" -f ").append(configFilePath);
         commandSb.append(" 2>&1 | tee ").append(String.format("%s_result.log", taskType));

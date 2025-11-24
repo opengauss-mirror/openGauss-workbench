@@ -18,6 +18,10 @@ package org.opengauss.admin.plugin.enums;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import org.opengauss.admin.plugin.exception.NoSupportTranscribeReplayVersionException;
+
+import java.util.Arrays;
+
 /**
  * TranscribeReplayVersion
  *
@@ -27,18 +31,23 @@ import lombok.Getter;
 @Getter
 public enum TranscribeReplayVersion {
     /**
-     * replay version 7.0.0rc1
-     */
-    VERSION_7_0_0_RC1("7.0.0-RC1", "7.0.0-RC1"),
-    /**
-     * replay version 7.0.0rc2
-     */
-    VERSION_7_0_0_RC2("7.0.0-RC2", "7.0.0-RC2"),
-    /**
      * replay version 7.0.0rc3
      */
     LATEST("latest", "7.0.0-RC3");
 
     private final String path;
     private final String version;
+
+    /**
+     * get TranscribeReplayVersion of version
+     *
+     * @param version version
+     * @return TranscribeReplayVersion
+     */
+    public static TranscribeReplayVersion versionOf(String version) {
+        return Arrays.stream(TranscribeReplayVersion.values())
+            .filter(ver -> ver.getVersion().equalsIgnoreCase(version))
+            .findAny()
+            .orElseThrow((() -> new NoSupportTranscribeReplayVersionException(version)));
+    }
 }

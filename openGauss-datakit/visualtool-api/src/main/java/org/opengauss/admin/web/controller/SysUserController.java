@@ -34,7 +34,6 @@ import org.opengauss.admin.common.core.domain.entity.SysUser;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.common.enums.BusinessType;
 import org.opengauss.admin.common.enums.ResponseCode;
-import org.opengauss.admin.common.utils.RsaUtils;
 import org.opengauss.admin.common.utils.SecurityUtils;
 import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.system.service.ISysRoleService;
@@ -43,6 +42,7 @@ import org.opengauss.admin.system.service.ISysUserService;
 import cn.hutool.core.util.StrUtil;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.opengauss.tool.cipher.RsaUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -124,7 +124,7 @@ public class SysUserController extends BaseController {
             return AjaxResult.error(ResponseCode.USER_REMARK_MAX_LENGTH_ERROR.code());
         }
         user.setCreateBy(getUsername());
-        user.setPassword(SecurityUtils.encryptPassword(RsaUtils.decrypt(user.getPassword())));
+        user.setPassword(SecurityUtils.encryptPassword(RsaUtils.getInstance().decrypt(user.getPassword())));
         return toAjax(userService.insertUser(user));
     }
 
@@ -179,7 +179,7 @@ public class SysUserController extends BaseController {
     @PutMapping("/resetPwd")
     public AjaxResult resetPwd(@RequestBody SysUser user) {
         userService.checkUserAllowed(user);
-        user.setPassword(SecurityUtils.encryptPassword(RsaUtils.decrypt(user.getPassword())));
+        user.setPassword(SecurityUtils.encryptPassword(RsaUtils.getInstance().decrypt(user.getPassword())));
         user.setUpdateBy(getUsername());
         return toAjax(userService.resetPwd(user));
     }

@@ -25,6 +25,7 @@
 package org.opengauss.admin.system.service.ops;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+
 import org.opengauss.admin.common.core.domain.entity.ops.OpsEncryptionEntity;
 
 /**
@@ -32,4 +33,11 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsEncryptionEntity;
  * @date 2022/12/2 18:37
  **/
 public interface IEncryptionService extends IService<OpsEncryptionEntity> {
+    /**
+     * query rsa key entry ,and return key by keyIdentifier
+     *
+     * @param keyIdentifier keyIdentifier
+     * @return public or private key
+     */
+    String getEncryptedKey(String keyIdentifier);
 }

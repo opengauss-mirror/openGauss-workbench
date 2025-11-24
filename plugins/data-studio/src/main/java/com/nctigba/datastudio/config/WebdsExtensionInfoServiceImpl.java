@@ -24,7 +24,7 @@ import java.util.Date;
  */
 @Slf4j
 @Service
-@Extract(bus = PluginExtensionInfoConfig.PLUGIN_ID)
+@Extract(bus = "webds-extension")
 public class WebdsExtensionInfoServiceImpl implements PluginExtensionInfoExtract {
     @Override
     public PluginExtensionInfoDto getPluginExtensionInfo() {
