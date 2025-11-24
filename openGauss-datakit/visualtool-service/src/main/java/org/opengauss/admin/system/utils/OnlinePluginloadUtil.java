@@ -76,7 +76,7 @@ public class OnlinePluginloadUtil {
         DownloadMonitor downloadMonitor = new DownloadMonitor();
         InputStream inputStream = null;
         OutputStream outputStream = null;
-        String targetPath = SystemConfig.getPluginPath();
+        String targetPath = SystemConfig.getStoragePath();
         try {
             File existFile = new File(targetPath + File.separator + fileName);
             if (existFile.exists()) {
