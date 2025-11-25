@@ -88,6 +88,17 @@ public class JschExecutorFacade {
     }
 
     /**
+     * Execute the command and redirect the standard error stream to the standard output stream
+     *
+     * @param sshLogin ssh login info
+     * @param command command
+     * @return standard error stream content
+     */
+    public String execCommandErrorStream(SshLogin sshLogin, String command) {
+        return jschExecutorService.execCommandErrorStream(sshLogin, command);
+    }
+
+    /**
      * 执行ssh远程命令，并获取返回值；执行命令时，需要指定环境变量
      *
      * @param sshLogin ssh登录信息

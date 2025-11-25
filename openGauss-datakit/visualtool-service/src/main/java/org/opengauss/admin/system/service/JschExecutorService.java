@@ -375,6 +375,17 @@ public class JschExecutorService {
     }
 
     /**
+     * Execute the command and redirect the standard error stream to the standard output stream
+     *
+     * @param sshLogin ssh login info
+     * @param command command
+     * @return standard error stream content
+     */
+    public String execCommandErrorStream(SshLogin sshLogin, String command) {
+        return new JschExecutor().execCommandErrorStream(sshLogin, command);
+    }
+
+    /**
      * 执行shell命令,该方法不主动关闭会话
      *
      * @param session ssh会话
