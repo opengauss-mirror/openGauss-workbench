@@ -28,6 +28,7 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.io.FilenameUtils;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.exception.ops.OpsException;
@@ -41,6 +42,7 @@ import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeCon
 import org.opengauss.admin.plugin.domain.model.ops.node.LiteInstallNodeConfig;
 import org.opengauss.admin.plugin.domain.model.ops.node.MinimalistInstallNodeConfig;
 import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
+import org.opengauss.admin.plugin.enums.ops.DeployTypeEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.mapper.ops.OpsClusterMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
@@ -105,10 +107,10 @@ public class ImportClusterService extends ServiceImpl<OpsClusterMapper, OpsClust
         ClusterConfig clusterConfig = getClusterConfig(importClusterBody, openGaussVersion);
         OpsHostUserEntity masterNodeInstallUser = getMasterNodeInstallUser(clusterConfig.masterNodeInstallUserId);
         OpsHostEntity hostEntity = getHostEntity(clusterConfig.masterHostId);
+        SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(),
+                masterNodeInstallUser.getUsername(), encryptionUtils.decrypt(masterNodeInstallUser.getPassword()));
         try (Connection connection = createConnection(hostEntity, clusterConfig.port, clusterConfig.databaseUsername,
             clusterConfig.databasePassword)) {
-            SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(),
-                masterNodeInstallUser.getUsername(), encryptionUtils.decrypt(masterNodeInstallUser.getPassword()));
             String versionNum = getVersionNum(sshLogin, importClusterBody.getEnvPath());
             importClusterBody.setOpenGaussVersionNum(versionNum);
             Integer majorVersion = Integer.valueOf(versionNum.substring(0, 1));
@@ -122,10 +124,84 @@ public class ImportClusterService extends ServiceImpl<OpsClusterMapper, OpsClust
             log.error("get connection fail", e);
             throw new OpsException("connection fail：" + e.getMessage());
         }
+
+        if (OpenGaussVersionEnum.MINIMAL_LIST.equals(openGaussVersion)) {
+            checkBeforeMinimalistImport(importClusterBody, sshLogin);
+        }
+
         OpsClusterEntity opsClusterEntity = importClusterBody.toOpsClusterEntity();
         opsClusterEntity.setDatabasePassword(encryptionUtils.encrypt(opsClusterEntity.getDatabasePassword()));
         save(opsClusterEntity);
         saveClusterNodes(importClusterBody, opsClusterEntity);
+    }
+
+    private void checkBeforeMinimalistImport(ImportClusterBody importClusterBody, SshLogin installUserSshLogin) {
+        DeployTypeEnum deployType = importClusterBody.getDeployType();
+        MinimalistInstallConfig minimalistInstallConfig = importClusterBody.getMinimalistInstallConfig();
+        MinimalistInstallNodeConfig nodeConfig = minimalistInstallConfig.getNodeConfigList().get(0);
+        String installPath = nodeConfig.getInstallPath();
+        String normalizedPath = FilenameUtils.normalize(installPath);
+        checkMinimalistNode(deployType, normalizedPath, installUserSshLogin);
+    }
+
+    private void checkMinimalistNode(DeployTypeEnum deployType, String installPath, SshLogin installUserSshLogin) {
+        if (DeployTypeEnum.SINGLE_NODE.equals(deployType)) {
+            String singleNodeDir = installPath + "/data/single_node";
+            checkDatabaseNodePath(singleNodeDir, installUserSshLogin);
+            checkDatabaseNodeStatus(singleNodeDir, installUserSshLogin);
+        } else {
+            String masterNodeDir = installPath + "/data/master";
+            String slaveNodeDir = installPath + "/data/slave";
+            checkDatabaseNodePath(masterNodeDir, installUserSshLogin);
+            checkDatabaseNodePath(slaveNodeDir, installUserSshLogin);
+            checkDatabaseNodeStatus(masterNodeDir, installUserSshLogin);
+            checkDatabaseNodeStatus(slaveNodeDir, installUserSshLogin);
+        }
+    }
+
+    private void checkDatabaseNodeStatus(String nodePath, SshLogin installUserSshLogin) {
+        String username = installUserSshLogin.getUsername();
+        String statusCmd = String.format("gs_ctl status -D %s", nodePath);
+        String result = jschExecutorFacade.execCommand(installUserSshLogin, statusCmd);
+        if (result.contains("server is running")) {
+            return;
+        } else if (result.contains("no server running")) {
+            String error = String.format("Check database node is not running, install user: %s, node path: %s",
+                    username, nodePath);
+            log.error(error);
+            throw new OpsException(error);
+        } else {
+            String error = String.format("Failed to check database node status use gs_ctl, install user: %s, error: %s",
+                    username, result);
+            log.error(error);
+            throw new OpsException(error);
+        }
+    }
+
+    private void checkDatabaseNodePath(String nodePath, SshLogin installUserSshLogin) {
+        String username = installUserSshLogin.getUsername();
+        if (!jschExecutorFacade.checkFileExist(installUserSshLogin, nodePath)) {
+            String errorMsg = String.format("Database node directory not found under install user, user: %s, "
+                            + "node path: %s", username, nodePath);
+            log.error(errorMsg);
+            throw new OpsException(errorMsg);
+        }
+
+        String postgresqlConfPath = nodePath + "/postgresql.conf";
+        if (!jschExecutorFacade.checkFileExist(installUserSshLogin, postgresqlConfPath)) {
+            String errorMsg = String.format("postgresql.conf not found under install user, user: %s, "
+                    + "conf path: %s", installUserSshLogin.getUsername(), postgresqlConfPath);
+            log.error(errorMsg);
+            throw new OpsException(errorMsg);
+        }
+
+        String pgHbaConfPath = nodePath + "/pg_hba.conf";
+        if (!jschExecutorFacade.checkFileExist(installUserSshLogin, pgHbaConfPath)) {
+            String errorMsg = String.format("pg_hba.conf not found under install user, user: %s, "
+                    + "conf path: %s", installUserSshLogin.getUsername(), pgHbaConfPath);
+            log.error(errorMsg);
+            throw new OpsException(errorMsg);
+        }
     }
 
     private OpsHostUserEntity getMasterNodeInstallUser(String masterNodeInstallUserId) {
