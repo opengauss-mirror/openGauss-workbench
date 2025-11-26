@@ -24,7 +24,6 @@
 
 package org.opengauss.admin.plugin.handler;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -293,7 +292,6 @@ public class PortalHandle {
      */
     public static void startPortal(MigrationHostPortalInstall host, MigrationTask task, String portalJarName,
                                    Map<String, String> paramMap) {
-        log.info("run host info: {}", JSON.toJSONString(host));
         String portalHome = host.getInstallPath() + "portal/";
         StringBuilder commandSb = new StringBuilder();
         commandSb.append("java -Dpath=").append(portalHome);

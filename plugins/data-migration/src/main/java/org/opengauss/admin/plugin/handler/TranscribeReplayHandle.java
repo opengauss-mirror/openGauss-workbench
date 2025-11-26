@@ -23,8 +23,6 @@
 
 package org.opengauss.admin.plugin.handler;
 
-import com.alibaba.fastjson.JSON;
-
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import lombok.extern.slf4j.Slf4j;
 
@@ -104,7 +102,6 @@ public class TranscribeReplayHandle {
 
     private JschResult executeTask(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask,
         String jarPath, String taskType, TranscribeReplayPwdInfo pwdInfo) {
-        log.info("Task host info: {}", JSON.toJSONString(shellInfoVo));
         StringBuilder commandSb = new StringBuilder();
         String installPath = getInstallPath(transcribeReplayTask, taskType);
         String configFilePath = installPath + "/config/" + taskType + ".properties";
@@ -186,7 +183,7 @@ public class TranscribeReplayHandle {
 
     private JschResult removePath(ShellInfoVo shellInfoVo, TranscribeReplayTask transcribeReplayTask,
         String pathType) {
-        log.info("Remove {} host info: {}", pathType, JSON.toJSONString(shellInfoVo));
+        log.info("Remove {} host info", pathType);
         String pathCmd = getPath(transcribeReplayTask, pathType);
         StringBuilder commandSb = new StringBuilder();
         commandSb.append("rm -rf ").append(pathCmd);

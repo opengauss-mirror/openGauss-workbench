@@ -1450,7 +1450,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             if (retryCount > 3) {
                 throw new PortalInstallException("Stop kafka failed after 3 retries: " + result.getResult());
             }
-            log.error("stop kafka failed {},{} {} times, try again", sshLogin, portalHome, retryCount);
+            log.error("stop kafka failed {} times, try again, host: {}", retryCount, sshLogin.getHost());
             stopKafka(sshLogin, portalHome, jarName, ++retryCount);
         }
     }
@@ -1487,7 +1487,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         if (javaVersionMajor < 17) {
             String errMsg = "The java version is not match 17+, "
                 + "please check environment JAVA_HOME,it must configuration in user ~/.bashrc";
-            log.warn("{} {}", sshLogin, errMsg);
+            log.warn("{}, host: {}, user: {}", errMsg, sshLogin.getHost(), sshLogin.getUsername());
             throw new PortalInstallException(errMsg);
         }
         log.info("Java version is compatible with the installation requirements.");
