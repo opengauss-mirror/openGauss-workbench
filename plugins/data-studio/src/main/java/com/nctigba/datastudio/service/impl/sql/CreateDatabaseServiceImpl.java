@@ -40,10 +40,13 @@ import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.common.utils.StringUtils;
+import org.opengauss.admin.common.utils.uuid.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -51,11 +54,9 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import static com.nctigba.datastudio.constants.SqlConstants.CONFIGURE_TIME;
 import static com.nctigba.datastudio.constants.SqlConstants.GET_URL_JDBC;
-import static com.nctigba.datastudio.dao.ConnectionMapDAO.conMap;
 import static com.nctigba.datastudio.utils.DebugUtils.comGetUuidType;
 
 /**
@@ -106,7 +107,6 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
 
     @Override
     public DatabaseConnectionDO connectionDatabase(DatabaseConnectionDO database) {
-        log.info("connectionDatabase request is: " + database);
         ConnectionDTO connectionDTO = new ConnectionDTO();
         DatabaseConnectionUrlDO databaseConnectionUrlDO = new DatabaseConnectionUrlDO();
         DatabaseConnectionDO databaseConnectionDO = databaseConnectionDAO.getByIdDatabase(
@@ -115,7 +115,7 @@ public class CreateDatabaseServiceImpl implements CreateDatabaseService {
         if (StringUtils.isNotEmpty(database.getConnectionid())) {
             uuid = database.getConnectionid();
         } else {
-            uuid = UUID.randomUUID().toString();
+            uuid = UUID.randomUuid().toString();
         }
         databaseConnectionDO.setConnectionid(uuid);
         databaseConnectionDO.setDataName(database.getDataName());
