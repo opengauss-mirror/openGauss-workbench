@@ -431,7 +431,7 @@ public class MultiDbPortalInstaller {
         if (javaVersionMajor < 17) {
             String errMsg = "The java version is not match 17+, "
                     + "please check environment JAVA_HOME,it must configuration in user ~/.bashrc";
-            log.warn("{} {}", sshLogin, errMsg);
+            log.warn("{}, host: {}, user: {}", errMsg, sshLogin.getHost(), sshLogin.getUsername());
             throw new PortalInstallException(errMsg);
         }
         log.info("Java version is compatible with the installation requirements.");

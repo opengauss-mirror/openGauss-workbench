@@ -210,7 +210,7 @@ public class ShellUtil {
                 }
             }
         } catch (JSchException | InterruptedException | IOException e) {
-            log.error("Failed to exec command: {}", command, e);
+            log.error("Failed to exec command", e);
         } finally {
             if (channel != null && channel.isConnected()) {
                 channel.disconnect();

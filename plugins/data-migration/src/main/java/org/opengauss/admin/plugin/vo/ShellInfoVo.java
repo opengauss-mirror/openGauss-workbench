@@ -23,6 +23,9 @@
 
 package org.opengauss.admin.plugin.vo;
 
+import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -41,7 +44,19 @@ public class ShellInfoVo {
     String ip;
     Integer port;
     String username;
+    @JsonIgnore
+    @JSONField(serialize = false)
     String password;
+
+    @Override
+    public String toString() {
+        return "ShellInfoVo{"
+                + "ip='" + ip + '\''
+                + ", port=" + port
+                + ", username='" + username + '\''
+                + ", password='******'"
+                + '}';
+    }
 
     /**
      * get ShellInfoVo instance

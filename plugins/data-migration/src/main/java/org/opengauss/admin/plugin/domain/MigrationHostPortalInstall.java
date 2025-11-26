@@ -70,6 +70,8 @@ public class MigrationHostPortalInstall {
     private String host;
     private Integer port;
     private String runUser;
+    @JsonIgnore
+    @JSONField(serialize = false)
     private String runPassword;
     // 0: online 1: offline 2:import install
     private Integer installType;
@@ -92,6 +94,31 @@ public class MigrationHostPortalInstall {
     @JsonIgnore
     @JSONField(serialize = false, deserialize = false)
     private MultipartFile file;
+
+    @Override
+    public String toString() {
+        return "MigrationHostPortalInstall{"
+                + "id=" + id
+                + ", runHostId='" + runHostId + '\''
+                + ", installStatus=" + installStatus
+                + ", installPath='" + installPath + '\''
+                + ", hostUserId='" + hostUserId + '\''
+                + ", host='" + host + '\''
+                + ", port=" + port
+                + ", runUser='" + runUser + '\''
+                + ", runPassword='******'"
+                + ", installType=" + installType
+                + ", pkgDownloadUrl='" + pkgDownloadUrl + '\''
+                + ", pkgName='" + pkgName + '\''
+                + ", jarName='" + jarName + '\''
+                + ", portalType=" + portalType
+                + ", portalVersion=" + portalVersion
+                + ", thirdPartySoftwareConfig=" + thirdPartySoftwareConfig
+                + ", kafkaBindId=" + kafkaBindId
+                + ", pkgUploadPath=" + pkgUploadPath
+                + ", file=" + file
+                + '}';
+    }
 
     /**
      * get portal log path
