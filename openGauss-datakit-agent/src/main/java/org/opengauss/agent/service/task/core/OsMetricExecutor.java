@@ -61,12 +61,12 @@ public class OsMetricExecutor implements TaskExecutor {
      */
     void onStart(@Observes StartupEvent event) {
         otelCommonExecutor = new OtelCommonExecutor(appConfig, log);
-        log.info("initialize os metric task executor : {}", appConfig);
+        log.info("initialize os metric task executor : {}", appConfig.toSimpleString());
     }
 
     @Override
     public void initialize(TaskDefinition task) throws TaskExecutionException {
-        log.info("initialize os metric task: {}", task);
+        log.info("initialize os metric task: {}", task.toSimpleString());
         otelCommonExecutor.initialize(task);
     }
 

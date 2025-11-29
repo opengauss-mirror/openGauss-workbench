@@ -36,4 +36,14 @@ public class AgentTaskVo {
     private List<String> collectorMetricDetails;
     private List<TaskMetricsDefinitionVo> metricsDefinitionList;
     private AgentClusterVo clusterConfig;
+
+    /**
+     * agent task simple info
+     *
+     * @return simple info
+     */
+    public String toSimpleString() {
+        return "task[taskId=" + taskId + " taskName=" + taskName + " agentId=" + agentId + " templateDefinition="
+            + templateDefinition.getName() + "]";
+    }
 }

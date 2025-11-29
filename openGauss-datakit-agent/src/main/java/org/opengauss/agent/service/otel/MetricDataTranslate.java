@@ -74,7 +74,6 @@ public class MetricDataTranslate {
     private Metric convertMetric(MetricData metric) {
         Metric converted = new Metric(getName(metric), getDescription(metric), getUnit(metric), getType(metric));
         converted.setPoints(getMetricDataPoint(metric));
-        log.debug("Converted metric: {} {}", converted, metric.getData());
         return converted;
     }
 

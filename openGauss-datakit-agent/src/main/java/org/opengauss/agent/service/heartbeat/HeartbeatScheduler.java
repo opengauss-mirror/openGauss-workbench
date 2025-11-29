@@ -66,7 +66,7 @@ public class HeartbeatScheduler {
      * @param event startup event
      */
     void onStart(@Observes StartupEvent event) {
-        log.info("agent config : {}", appConfig);
+        log.info("agent config : {}", appConfig.toSimpleString());
         initHeartbeatHeader();
         scheduler = Executors.newSingleThreadScheduledExecutor();
         heartbeatServerClient = clientFactory.createHeartbeatClient();

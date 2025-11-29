@@ -58,12 +58,12 @@ public class TaskManager {
         TaskDefinition taskDef = TaskDefinitionBuilder.builder(taskConfig);
         TaskExecution execution = new TaskExecution(taskDef);
         if (taskExecMap.containsKey(taskDef.getTaskId())) {
-            log.info("task {} is already running", taskDef.getTaskId());
+            log.info("task {} is already running", taskDef.toSimpleString());
             execution.setStatus("already_running");
             execution.setErrorMessage("task " + taskDef.getTaskId() + " is already running");
             return execution;
         }
-        log.info("task {} is running ", taskDef.getTaskName());
+        log.info("task {} is running ", taskDef.toSimpleString());
         try {
             TaskExecutor executor = executorFactory.getExecutor(taskDef.getTaskType());
             executor.initialize(taskDef);

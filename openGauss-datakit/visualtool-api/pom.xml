@@ -56,6 +56,10 @@
             <artifactId>visualtool-framework</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.opengauss.tool</groupId>
+            <artifactId>visualtool-log4j2-desensitize</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
