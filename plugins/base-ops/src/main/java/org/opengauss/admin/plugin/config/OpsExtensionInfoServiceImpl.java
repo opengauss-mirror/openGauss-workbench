@@ -4,6 +4,8 @@
 
 package org.opengauss.admin.plugin.config;
 
+import com.gitee.starblues.annotation.Extract;
+
 import lombok.extern.slf4j.Slf4j;
 
 import org.opengauss.admin.common.enums.PluginLicenseType;
@@ -22,6 +24,7 @@ import java.util.Date;
  */
 @Slf4j
 @Service
+@Extract(bus = "base-ops-extension")
 public class OpsExtensionInfoServiceImpl implements PluginExtensionInfoExtract {
     @Override
     public PluginExtensionInfoDto getPluginExtensionInfo() {

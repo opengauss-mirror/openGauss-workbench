@@ -27,7 +27,7 @@ package org.opengauss.admin.framework.web.service;
 import org.opengauss.admin.common.core.domain.model.LoginUser;
 import org.opengauss.admin.common.exception.ServiceException;
 import org.opengauss.admin.common.exception.user.UserPasswordNotMatchException;
-import org.opengauss.admin.common.utils.RsaUtils;
+import org.opengauss.tool.cipher.RsaUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -64,7 +64,7 @@ public class SysLoginService {
         Authentication authentication = null;
         try {
             authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, RsaUtils.decrypt(password)));
+                new UsernamePasswordAuthenticationToken(username, RsaUtils.getInstance().decrypt(password)));
         } catch (Exception e) {
             if (e instanceof BadCredentialsException) {
                 throw new UserPasswordNotMatchException();

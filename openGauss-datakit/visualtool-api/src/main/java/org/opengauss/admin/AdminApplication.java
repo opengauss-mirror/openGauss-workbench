@@ -26,10 +26,6 @@ package org.opengauss.admin;
 import com.gitee.starblues.loader.launcher.SpringBootstrap;
 import com.gitee.starblues.loader.launcher.SpringMainBootstrap;
 
-import cn.hutool.core.thread.ThreadUtil;
-
-import org.opengauss.admin.common.utils.AesGcmUtils;
-import org.opengauss.admin.common.utils.RsaUtils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -53,11 +49,6 @@ public class AdminApplication implements SpringBootstrap {
 
     @Override
     public void run(String[] args) throws Exception {
-        ThreadUtil.execute(RsaUtils::publicKey);
-        ThreadUtil.execute(() -> {
-            ThreadUtil.sleep(1000);
-            AesGcmUtils.initializeKey();
-        });
         SecurityContextHolder.setStrategyName("MODE_INHERITABLETHREADLOCAL");
         SpringApplication.run(AdminApplication.class, args);
     }

@@ -115,7 +115,7 @@ import static org.opengauss.admin.plugin.enums.TranscribeReplaySqlTransMode.TCPD
 public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMapper, TranscribeReplayTask>
     implements TranscribeReplayService, TranscribeReplayConstants {
     final String downloadVersionUrl = "https://opengauss.obs.cn-south-1.myhuaweicloud.com/%s/tools/"
-        + "transcribe-replay-tool-%s.tar.gz";
+        + "openGauss-TranscribeReplay-%s.tar.gz";
     final String configFilePath = "/transcribe-replay-tool/config/";
     final String pluginPath = "/transcribe-replay-tool/plugin";
     final String transcribeConfigFile = "transcribe.properties";
@@ -190,7 +190,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
 
     private String getDownloadVersionUrl(String toolVersion) {
         try {
-            TranscribeReplayVersion transcribeReplayVersion = TranscribeReplayVersion.valueOf(toolVersion);
+            TranscribeReplayVersion transcribeReplayVersion = TranscribeReplayVersion.versionOf(toolVersion);
             return String.format(Locale.getDefault(), downloadVersionUrl, transcribeReplayVersion.getPath(),
                 transcribeReplayVersion.getVersion());
         } catch (IllegalArgumentException error) {
@@ -257,7 +257,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
     }
 
     private void unZip(String path, ShellInfoVo shellInfo, String toolVersion, Integer id) {
-        String toolsName = String.format("transcribe-replay-tool-%s.tar.gz", toolVersion);
+        String toolsName = String.format("openGauss-TranscribeReplay-%s.tar.gz", toolVersion);
         String uzipFileCommand = String.format("tar -zxvf %s/%s/%s -C %s/%s", path, downloadId,
             toolsName, path, downloadId);
         JschResult unzip = ShellUtil.execCommandGetResult(shellInfo, uzipFileCommand);
@@ -428,7 +428,6 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         sb.append(String.format(formatString, GENERAL_DATABASE_IP, params.getDatabaseIp()));
         sb.append(String.format(formatString, GENERAL_DATABASE_PORT, params.getDatabasePort()));
         sb.append(String.format(formatString, GENERAL_DATABASE_USERNAME, params.getDatabaseUsername()));
-        String databasePassword = encryptionUtils.decrypt(params.getDatabasePassword());
         return String.valueOf(sb);
     }
 
@@ -439,7 +438,6 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         sb.append(String.format(formatString, SQL_DATABASE_IP, params.getSqlDatabaseIp()));
         sb.append(String.format(formatString, SQL_DATABASE_PORT, params.getSqlDatabasePort()));
         sb.append(String.format(formatString, SQL_DATABASE_USERNAME, params.getSqlDatabaseUsername()));
-        String databasePassword = params.getSqlDatabasePassword();
         sb.append(String.format(formatString, SQL_DATABASE_NAME, params.getSqlDatabaseName()));
         sb.append(String.format(formatString, SQL_TABLE_NAME, params.getSqlTableName()));
         return String.valueOf(sb);
@@ -505,7 +503,6 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
         sb.append(String.format(formatString, SQL_REPLAY_SESSION_WHITE_LIST, params.getSqlReplaySessionWhiteList()));
         sb.append(String.format(formatString, SQL_REPLAY_SESSION_BLACK_LIST, params.getSqlReplaySessionBlackList()));
         sb.append(String.format(formatString, SQL_REPLAY_DATABASE_USERNAME, params.getSqlReplayDatabaseUsername()));
-        String databasePassword = encryptionUtils.decrypt(params.getSqlReplayDatabasePassword());
         sb.append(String.format(formatString, SQL_REPLAY_SLOW_SQL_CSV_DIR, params.getSqlReplaySlowSqlCsvDir()));
         sb.append(String.format(formatString, SQL_REPLAY_DATABASE_IP, params.getSqlReplayDatabaseIp()));
         sb.append(String.format(formatString, SQL_REPLAY_DATABASE_PORT, params.getSqlReplayDatabasePort()));

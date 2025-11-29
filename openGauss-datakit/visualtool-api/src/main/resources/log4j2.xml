@@ -69,5 +69,7 @@
       <AppenderRef ref="FileError"/>
     </Root>
     <Logger name="org.apache.tomcat.util" level="OFF"  additivity="false"/>
+    <Logger name="org.springframework.web.servlet" level="ERROR"  additivity="false"/>
+    <Logger name="org.opengauss.core.v3" level="ERROR"  additivity="false"/>
   </Loggers>
 </Configuration>

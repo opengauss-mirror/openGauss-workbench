@@ -39,13 +39,13 @@ import java.util.Date;
  */
 @Slf4j
 @Service
-@Extract(bus = PluginExtensionInfoConfig.PLUGIN_ID)
+@Extract(bus = "container-management-extension")
 public class ExtensionInfoServiceImpl implements PluginExtensionInfoExtract {
     @Override
     public PluginExtensionInfoDto getPluginExtensionInfo() {
         PluginExtensionInfoDto dto = new PluginExtensionInfoDto();
         dto.setPluginId(PluginExtensionInfoConfig.PLUGIN_ID);
-        dto.setPluginName("插件DEMO");
+        dto.setPluginName("container-management");
         dto.setPluginHome(PluginExtensionInfoConfig.PLUGIN_ID);
         dto.setPluginDevelopmentCompany("openGauss社区");
         dto.setPhoneNumber("400-123-4567");

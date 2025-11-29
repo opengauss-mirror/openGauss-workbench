@@ -13,7 +13,7 @@
  * See the Mulan PSL v2 for more details.
  */
 
-package org.opengauss.admin.common.exception;
+package org.opengauss.tool.cipher.exception;
 
 /**
  * SecureException
@@ -23,6 +23,16 @@ package org.opengauss.admin.common.exception;
  * @since 7.0.0-RC2
  **/
 public class SecureException extends RuntimeException {
+    /**
+     * secure exception
+     *
+     * @param message exception message
+     * @param e exception
+     */
+    public SecureException(String message, Throwable e) {
+        super(message);
+    }
+
     /**
      * secure exception
      *

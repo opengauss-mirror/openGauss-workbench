@@ -31,7 +31,6 @@ import org.opengauss.admin.common.core.domain.entity.SysUser;
 import org.opengauss.admin.common.core.domain.model.LoginBody;
 import org.opengauss.admin.common.core.domain.model.LoginUser;
 import org.opengauss.admin.common.enums.SysMenuRouteOpenPosition;
-import org.opengauss.admin.common.utils.RsaUtils;
 import org.opengauss.admin.common.utils.ServletUtils;
 import org.opengauss.admin.framework.web.service.SysLoginService;
 import org.opengauss.admin.framework.web.service.SysPermissionService;
@@ -39,6 +38,7 @@ import org.opengauss.admin.framework.web.service.TokenService;
 import org.opengauss.admin.system.service.ISysMenuService;
 
 import org.apache.commons.lang3.StringUtils;
+import org.opengauss.tool.cipher.RsaUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -83,7 +83,7 @@ public class SysLoginController {
      */
     @GetMapping("/pubKey")
     public AjaxResult publicKey() {
-        return AjaxResult.success(RsaUtils.publicKey());
+        return AjaxResult.success(RsaUtils.getInstance().publicKey());
     }
 
     /**

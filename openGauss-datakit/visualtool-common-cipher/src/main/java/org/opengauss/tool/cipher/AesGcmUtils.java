@@ -13,12 +13,12 @@
  * See the Mulan PSL v2 for more details.
  */
 
-package org.opengauss.admin.common.utils;
+package org.opengauss.tool.cipher;
 
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import org.opengauss.admin.common.exception.SecureException;
+import org.opengauss.tool.cipher.exception.SecureException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,6 +66,10 @@ public class AesGcmUtils {
 
     private static volatile SecretKey aesKey = null;
 
+    static {
+        initializeKey();
+    }
+
     /**
      * initialize key
      */
@@ -99,9 +103,9 @@ public class AesGcmUtils {
             byteBuffer.put(ciphertext);
             return B64_ENCODER.encodeToString(byteBuffer.array());
         } catch (InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException e) {
-            throw new SecureException("AES encrypt algorithm error :" + e.getMessage());
+            throw new SecureException("AES encrypt algorithm error :" + e.getMessage(), e);
         } catch (NoSuchAlgorithmException | BadPaddingException | InvalidKeyException e) {
-            throw new SecureException("AES encrypt failed :" + e.getMessage());
+            throw new SecureException("AES encrypt failed :" + e.getMessage(), e);
         }
     }
 
@@ -124,9 +128,9 @@ public class AesGcmUtils {
             cipher.init(Cipher.DECRYPT_MODE, aesKey, spec);
             return new String(cipher.doFinal(encryptedData), StandardCharsets.UTF_8);
         } catch (InvalidAlgorithmParameterException | NoSuchPaddingException | IllegalBlockSizeException e) {
-            throw new SecureException("AES decrypt algorithm error :" + e.getMessage());
+            throw new SecureException("AES decrypt algorithm error :" + e.getMessage(), e);
         } catch (NoSuchAlgorithmException | BadPaddingException | InvalidKeyException e) {
-            throw new SecureException("AES decrypt failed :" + e.getMessage());
+            throw new SecureException("AES decrypt failed :" + e.getMessage(), e);
         }
     }
 
@@ -167,7 +171,7 @@ public class AesGcmUtils {
                 Arrays.fill(password, '\0');
                 return initAesKey;
             } catch (KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
-                throw new SecureException("load or generate key failed: " + e.getMessage());
+                throw new SecureException("load or generate key failed: " + e.getMessage(), e);
             }
         }
 
@@ -196,7 +200,7 @@ public class AesGcmUtils {
                 }
                 return keyStore;
             } catch (KeyStoreException | NoSuchAlgorithmException | CertificateException | IOException e) {
-                throw new SecureException("load or create keystore failed: " + e.getMessage());
+                throw new SecureException("load or create keystore failed: " + e.getMessage(), e);
             }
         }
 
@@ -218,10 +222,10 @@ public class AesGcmUtils {
                 try (OutputStream os = Files.newOutputStream(KEYSTORE_PATH, StandardOpenOption.CREATE)) {
                     ks.store(os, password);
                 } catch (CertificateException | KeyStoreException | NoSuchAlgorithmException e) {
-                    throw new SecureException("save keystore failed: " + e.getMessage());
+                    throw new SecureException("save keystore failed: " + e.getMessage(), e);
                 }
             } catch (IOException e) {
-                throw new SecureException("save keystore failed: " + e.getMessage());
+                throw new SecureException("save keystore failed: " + e.getMessage(), e);
             }
         }
     }

@@ -15,24 +15,39 @@
  *
  * EncryptionServiceImpl.java
  *
- * IDENTIFICATION
- * openGauss-visualtool/visualtool-service/src/main/java/org/opengauss/admin/system/service/ops/impl/EncryptionServiceImpl.java
- *
  * -------------------------------------------------------------------------
  */
 
 
 package org.opengauss.admin.system.service.ops.impl;
+
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+
+import cn.hutool.crypto.asymmetric.KeyType;
+
 import org.opengauss.admin.common.core.domain.entity.ops.OpsEncryptionEntity;
+import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.system.mapper.ops.OpsEncryptionMapper;
 import org.opengauss.admin.system.service.ops.IEncryptionService;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 
 /**
  * @author lhf
  * @date 2022/12/2 18:37
  **/
 @Service
-public class EncryptionServiceImpl extends ServiceImpl<OpsEncryptionMapper, OpsEncryptionEntity> implements IEncryptionService {
+public class EncryptionServiceImpl extends ServiceImpl<OpsEncryptionMapper, OpsEncryptionEntity>
+    implements IEncryptionService {
+    @Override
+    public String getEncryptedKey(String keyIdentifier) {
+        OpsEncryptionEntity keyEntry = getById(1);
+        if (Objects.isNull(keyEntry)) {
+            throw new CustomException("encryption key not found");
+        }
+        return KeyType.PrivateKey.equals(KeyType.valueOf(keyIdentifier))
+            ? keyEntry.getPrivateKey()
+            : keyEntry.getPublicKey();
+    }
 }

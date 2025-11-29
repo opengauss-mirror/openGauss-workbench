@@ -65,8 +65,7 @@ public class AdminApplicationRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         clearDirtyDataOfPlugins();
-        this.encryptionUtils.updateKeyPairSecret();
-        this.encryptionUtils.refreshKeyPair(false);
+        this.encryptionUtils.refreshKeyPair();
         sysSettingService.initHttpProxy();
         agentInstallService.startAllOfAgent();
     }
