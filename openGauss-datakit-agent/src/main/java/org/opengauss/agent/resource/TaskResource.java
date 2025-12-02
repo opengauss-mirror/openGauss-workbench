@@ -146,7 +146,7 @@ public class TaskResource {
     @Path("/task/start")
     @Produces(MediaType.APPLICATION_JSON)
     public void start(@Body AgentTaskVo taskConfig) {
-        log.info("start task {}", taskConfig);
+        log.info("start task {}", taskConfig.toSimpleString());
         isCalledTask.set(true);
         mutinyExecutor.getWorkerPool().execute(() -> {
             TaskExecution execution = taskManager.startTask(taskConfig);

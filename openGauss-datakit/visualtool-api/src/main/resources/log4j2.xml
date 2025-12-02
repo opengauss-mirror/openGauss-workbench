@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="WARN" monitorInterval="30">
+<Configuration status="WARN" monitorInterval="30" >
   <Properties>
     <Property name="LOG_PATH">$${sys:logging.file.path:-./logs}</Property>
-    <Property name="SAFE_MSG">%enc{%msg}{CRLF}%n</Property>
+    <Property name="SAFE_MSG">%enc{%desensitize{%msg}}{CRLF}%n</Property>
     <Property name="LOG_PATTERN">%style{%d{yyyy-MM-dd HH:mm:ss}}{blue} [%style{%t}{cyan}] [%style{%c{32}}{yellow}] - [%highlight{%p}] ${SAFE_MSG}</Property>
   </Properties>
 
@@ -72,4 +72,7 @@
     <Logger name="org.springframework.web.servlet" level="ERROR"  additivity="false"/>
     <Logger name="org.opengauss.core.v3" level="ERROR"  additivity="false"/>
   </Loggers>
+<!--  <Plugins>-->
+<!--    <Plugin name="DesensitizeConverter" category="Converter" class="org.opengauss.tool.log4j2.desensitize.converter.Log4j2DesensitizingConverter"/>-->
+<!--  </Plugins>-->
 </Configuration>

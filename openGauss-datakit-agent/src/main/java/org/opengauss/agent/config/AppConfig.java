@@ -47,4 +47,13 @@ public class AppConfig {
     String osCommandWriteList;
     String osCommandDefaultWriteList
         = "date,dig,ping,ls,echo,dir,wc,head,java,git,cat,mkdir,tail,grep,touch,less,sort,id,javac";
+
+    /**
+     * agent config simple info
+     *
+     * @return simple info
+     */
+    public String toSimpleString() {
+        return "agentConfig[appName=" + appName + " appServerUrl=" + appServerUrl + " agentId=" + agentId + "]";
+    }
 }

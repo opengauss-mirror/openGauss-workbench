@@ -68,7 +68,7 @@ public class DbMetricExecutor implements TaskExecutor {
 
     @Override
     public void initialize(TaskDefinition task) throws TaskExecutionException {
-        log.info("initialize task: {}", task);
+        log.info("initialize task: {}", task.toSimpleString());
         otelCommonExecutor.initialize(task);
     }
 
