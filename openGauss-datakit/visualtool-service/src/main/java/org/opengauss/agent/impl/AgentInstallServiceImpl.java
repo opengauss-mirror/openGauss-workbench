@@ -267,7 +267,7 @@ public class AgentInstallServiceImpl extends ServiceImpl<AgentInstallMapper, Age
             refreshRemoteHostAgentConfig(session, properties, agent.getInstallPath());
             log.info("agent is updated, agentId: {}", agentId);
         });
-        update(agent, Wrappers.lambdaUpdate(AgentInstallEntity.class)
+        update(Wrappers.lambdaUpdate(AgentInstallEntity.class)
             .eq(AgentInstallEntity::getAgentId, agentId)
             .set(AgentInstallEntity::getAgentPort, port)
             .set(AgentInstallEntity::getUpdateTime, Instant.now()));
