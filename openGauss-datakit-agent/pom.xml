@@ -36,7 +36,7 @@
     <visualtool-common-cipher.version>7.0.0-RC3</visualtool-common-cipher.version>
     <hikaricp.version>7.0.0</hikaricp.version>
     <opengauss-jdbc.version>6.0.0-og</opengauss-jdbc.version>
-    <mysql-jdbc.version>9.4.0</mysql-jdbc.version>
+    <mysql-jdbc.version>9.5.0</mysql-jdbc.version>
     <jna.version>5.13.0</jna.version>
 
     <!-- Plugin Versions -->
