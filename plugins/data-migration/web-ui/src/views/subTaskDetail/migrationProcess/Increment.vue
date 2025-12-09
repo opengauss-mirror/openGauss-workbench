@@ -3,18 +3,18 @@
     <div class="statistics">
       <div class="card-area">
         <statistic-card :count="migrationCount" :description="t('components.SubTaskDetail.migrationObjNum')"
-          class="total-card"></statistic-card>
+                        class="total-card"></statistic-card>
         <statistic-card :count="restWriteInCount"
-          :description="t('components.SubTaskDetail.restWriteData')"></statistic-card>
+                        :description="t('components.SubTaskDetail.restWriteData')"></statistic-card>
       </div>
       <div class="button-area">
         <el-button type="primary" v-if="showRepair" :disabled="props.subTaskDbType?.toUpperCase() ==='POSTGRESQL'"
-          @click="handleFix('reset')" :loading="isButtonLoading">{{
+                   @click="handleFix('reset')" :loading="isButtonLoading">{{
             t('components.SubTaskDetail.oneClickRepair')
           }}</el-button>
         <el-button v-if="currentActive === 3 && subTaskMode === 2 &&
           currentExecStatus === SUB_TASK_STATUS.INCREMENTAL_RUNNING"
-          @click="stopSubIncrese" :loading="incrementalLoading" >{{
+                   @click="stopSubIncrese" :loading="incrementalLoading" >{{
             t('components.SubTaskDetail.stopIncreaseMigration') }}</el-button>
         <el-button
           v-if="currentActive === 3 && subTaskMode === 2 && currentExecStatus === SUB_TASK_STATUS.INCREMENTAL_STOPPED"
@@ -58,7 +58,7 @@
       </div>
     </div>
     <ReverseDetail v-if="reverseVisible" @closeDialog="closeDialog" :replicationData="replicationData"
-      :reverseConfig="reverseConfig"></ReverseDetail>
+                   :reverseConfig="reverseConfig"></ReverseDetail>
   </div>
 </template>
 <script setup lang="ts">
@@ -123,8 +123,8 @@ const showRepair = computed(() => {
     // If it is a reverse migration currently, the repair button will not be displayed
     // when the reverse migration is completed/when the migration is completed.
     if (currentExecStatus.value === SUB_TASK_STATUS.REVERSE_STOP ||
-        currentExecStatus.value === SUB_TASK_STATUS.MIGRATION_FINISH ||
-        props.active === 3
+      currentExecStatus.value === SUB_TASK_STATUS.MIGRATION_FINISH ||
+      props.active === 3
     ) {
       return false
     }
@@ -132,8 +132,8 @@ const showRepair = computed(() => {
     // If it is an incremental migration currentlythe repair button will not be displayed
     // when the increment is completed/at the end of the increment/it is not in an incremental state.
     if (currentExecStatus.value === SUB_TASK_STATUS.INCREMENTAL_FINISHED ||
-        currentExecStatus.value === SUB_TASK_STATUS.INCREMENTAL_STOPPED ||
-        currentExecStatus.value === SUB_TASK_STATUS.MIGRATION_FINISH
+      currentExecStatus.value === SUB_TASK_STATUS.INCREMENTAL_STOPPED ||
+      currentExecStatus.value === SUB_TASK_STATUS.MIGRATION_FINISH
     ) {
       return false
     }
@@ -149,7 +149,7 @@ const curFixStatus = () => {
     curStatusFlag = currentExecStatus.value === SUB_TASK_STATUS.REVERSE_STOP
   } else {
     curStatusFlag = currentExecStatus.value === SUB_TASK_STATUS.INCREMENTAL_FINISHED ||
-        currentExecStatus.value === SUB_TASK_STATUS.INCREMENTAL_STOPPED;
+      currentExecStatus.value === SUB_TASK_STATUS.INCREMENTAL_STOPPED;
   }
   return curFixStatus
 }
@@ -202,12 +202,12 @@ const stopSubIncrese = () => {
   })
 }
 
- const isButtonLoading = computed(() => {
-   const caseIncremental = incrementalLoading.value &&
-     currentExecStatus.value === SUB_TASK_STATUS.INCREMENTAL_RUNNING
-   const caseReverse = currentExecStatus !== SUB_TASK_STATUS.MIGRATION_FINISH && reverseLoading.value
-   return caseIncremental || caseReverse;
- })
+const isButtonLoading = computed(() => {
+  const caseIncremental = incrementalLoading.value &&
+    currentExecStatus.value === SUB_TASK_STATUS.INCREMENTAL_RUNNING
+  const caseReverse = currentExecStatus !== SUB_TASK_STATUS.MIGRATION_FINISH && reverseLoading.value
+  return caseIncremental || caseReverse;
+})
 
 const startReverseLoading = ref(false)
 const startSubReverse = () => {

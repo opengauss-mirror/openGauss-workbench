@@ -15,7 +15,7 @@
       </el-button>
       <!-- In the case of batch deletion -->
       <a-popconfirm :content="$t('transcribe.index.bulkdelete')" type="warning" :ok-text="$t('list.index.confirm')"
-        :cancel-text="$t('list.index.cancel')" @ok="deleteSelectedTask()" class="aPopConfirmStyle">
+                    :cancel-text="$t('list.index.cancel')" @ok="deleteSelectedTask()" class="aPopConfirmStyle">
         <el-button status="warning">
           <template #icon>
             <icon-delete />
@@ -35,8 +35,8 @@
     </div>
     <div class="table-con openDesignTableArea">
       <el-table ref="listTable" :loading="loading" row-key="id" :data="tableData" :expand-row-keys="expandRowIdList"
-        @selection-change="handleSelectChange" :hoverable="!currentTheme" :row-class-name="handleRowClass"
-        @expand-change="handleExpand" @row-click="handleRowClick">
+                @selection-change="handleSelectChange" :hoverable="!currentTheme" :row-class-name="handleRowClass"
+                @expand-change="handleExpand" @row-click="handleRowClick">
         <template #empty>
           <div class="o-table-empty mt24">
             <el-icon class="o-empty-icon">
@@ -60,28 +60,22 @@
         <el-table-column :label="$t('list.index.5q08sf2dj8k0')" prop="taskName">
           <template #default="record">
             <el-button size="small" style="height: 24px; line-height: 24px;" v-if="record.row.execStatus === 0" text @click="goConfig(record.row)">
-                <TextTooltip class="textDetail" :content="record.row.taskName">
-                  {{ record.row.taskName }}
-                </TextTooltip>
-              </el-button>
-              <TextTooltip v-else class="textDetail" :content="record.row.taskName">
+              <TextTooltip class="textDetail" :content="record.row.taskName">
                 {{ record.row.taskName }}
               </TextTooltip>
+            </el-button>
+            <TextTooltip v-else class="textDetail" :content="record.row.taskName">
+              {{ record.row.taskName }}
+            </TextTooltip>
           </template>
         </el-table-column>
         <el-table-column :label="$t('list.index.5q08sf2djbk0')" prop="createUser"></el-table-column>
         <el-table-column :label="$t('list.index.5q08sf2djew0')" prop="execStatus">
           <template #default="record">
             <el-tag :type="statusColor[record.row.execStatus]" width="150"
-              style="width: 88px; border-radius: 2px; font-size: 12px;">
+                    style="width: 88px; border-radius: 2px; font-size: 12px;">
               {{ execStatusMap(record.row.execStatus) }}
             </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column :label="$t('list.index.5q08sf2djks0')" prop="execProgress">
-          <template #default="record">
-            <el-progress :percentage="record.row.execStatus === 2 ? 100 : (record.row.execProgress * 100 || 0)"
-              :stroke-width="8" :min-width="400" />
           </template>
         </el-table-column>
         <el-table-column :label="$t('list.index.5q08sf2djoo0')">
@@ -107,11 +101,11 @@
         <el-table-column :label="$t('list.index.5q08sf2djyc0')" fixed="right">
           <template #default="record">
             <el-button v-if="record.row.execStatus === 1 || record.row.execStatus === 3000 || record.row.execStatus === 4" size="small" text
-              @click="stopTask(record.row)">
+                       @click="stopTask(record.row)">
               <template #default>{{ $t('list.index.5q08sf2dk3c0') }}</template>
             </el-button>
             <el-button v-if="record.row.execStatus === 0" :loading="record.row.startLoading" size="small" text
-              @click="startTask(record.row)">
+                       @click="startTask(record.row)">
               <template #default>{{ $t('list.index.5q08sf2dk5s0') }}</template>
             </el-button>
             <a-popconfirm
@@ -131,8 +125,8 @@
       </el-table>
 
       <el-pagination v-model:currentPage="pagination.pageNum" v-model:page-size="pagination.pageSize"
-        :page-sizes="[5, 10, 20, 50]" layout="total, sizes, prev, pager, next, jumper" @current-change="currentChange"
-        @size-change="sizeChange" :total="total"></el-pagination>
+                     :page-sizes="[5, 10, 20, 50]" layout="total, sizes, prev, pager, next, jumper" @current-change="currentChange"
+                     @size-change="sizeChange" :total="total"></el-pagination>
     </div>
     <div class="terminaStyle">
       <mac-terminal v-model:open="terminalVisible" :host="macHost" />
@@ -248,26 +242,26 @@ const labelOptions = computed(() => {
         value: 0,
         label: t('list.index.5q08sf2dha80'),
       },
-      {
-        value: 1,
-        label: t('list.index.5q08sf2dhek0'),
-      },
-      {
-        value: 2,
-        label: t('list.index.5q08sf2dhj00'),
-      },
-      {
-        value: 3,
-        label: t('list.index.taskSuccess'),
-      },
-      {
-        value: 4,
-        label: t('list.index.taskFail'),
-      },
-      {
-        value: 3000,
-        label: t('list.index.5q08sf2dha81')
-      }]
+        {
+          value: 1,
+          label: t('list.index.5q08sf2dhek0'),
+        },
+        {
+          value: 2,
+          label: t('list.index.5q08sf2dhj00'),
+        },
+        {
+          value: 3,
+          label: t('list.index.taskSuccess'),
+        },
+        {
+          value: 4,
+          label: t('list.index.taskFail'),
+        },
+        {
+          value: 3000,
+          label: t('list.index.5q08sf2dha81')
+        }]
     },
     execTime: {
       label: t('list.index.executeTimeRange'),
@@ -344,7 +338,7 @@ const handleDocumentClick = (event: MouseEvent) => {
   if (!isClickInsideTable) {
     expandRowIdList.value = []
     tableData.value.forEach(r => {
-        r.expanded = false
+      r.expanded = false
     })
   }
 }
@@ -437,7 +431,8 @@ const calcTime = (row: rowsType) => {
     }
     const hour = Math.floor(seconds / 3600)
     const minute = Math.floor((seconds - hour * 3600) / 60)
-    return `${hour ? hour + t('list.index.5q08sf2dkc80') : ''} ${minute ? minute + t('list.index.5q08sf2dkek0') : ''}`
+    const tempSeconds = seconds - hour * 3600 - minute * 60
+    return `${hour ? hour + t('list.index.5q08sf2dkc80') : ''} ${minute ? minute + t('list.index.5q08sf2dkek0') : ''} ${tempSeconds ? tempSeconds + t('components.SubTaskDetail.sec') : ''}`
   } else {
     return '--';
   }

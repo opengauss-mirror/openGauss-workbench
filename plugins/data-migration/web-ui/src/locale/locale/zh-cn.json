@@ -521,6 +521,7 @@
       "subTask": "子任务 {num}",
       "dbVersionInfo": "当前 {sqlType} 版本为 {versionNum}，",
       "dbVersionSuc": "满足迁移条件",
+      "dbVersionFail": "不满足迁移条件",
       "dbTypeContent": "括号内显示控制数据库的SQL语法和语句行为同哪一个主流数据库兼容。A表示同O数据库兼容。 B表示同MY数据库兼容。 C表示同TD数据库兼容。 PG表示同POSTGRES数据库兼容。 D表示同S数据库兼容。",
       "dbVersionErr": "不满足迁移条件",
       "5q091ixiemk0": "源端",
@@ -561,7 +562,15 @@
       "5q091ixih2i0": "输入表的名称进行搜索当前页...",
       "5q091ixih5i0": "全选当前页",
       "5q091ixih5i1": "获取用户类型失败",
-      "defaultSeleMsg": "未选择表则默认选择整个库"
+      "defaultSeleMsg": "未选择表则默认选择整个库",
+      "getVersion": "当前数据库版本未知，请点击",
+      "getVersionBtn": "查询版本",
+      "index": "索引",
+      "indexSelect": "选择索引",
+      "clearSelection": "清空选择",
+      "collection": "集合",
+      "collectionSelect": "选择集合",
+      "versionCheckError": "数据库版本不符合迁移要求，请核对版本信息"
     }
   },
   "step2": {
@@ -631,7 +640,9 @@
         "portalType": "源端数据库类型",
         "portEmpty": "端口不可为空",
         "portalContent": "端口号必须是1-65535之间的数字",
-        "versionContent": "在线下载版本无法提供，请通过其他方式安装"
+        "versionContent": "在线下载版本无法提供，请通过其他方式安装",
+        "other": "其他",
+        "otherMessage": "其他选项支持PostgreSQL、Milvus、Elasticsearch数据库迁移"
       }
     }
   },

@@ -1,5 +1,5 @@
 <template>
-  <el-drawer v-model="visible" :before-close="handleClose" :width="'calc(50vw)'" class="custom-drawer" show-close="true">
+  <el-drawer v-model="visible" :before-close="handleClose" :size="'50%'" class="custom-drawer" show-close="true">
     <template #title>
       <div class="title-con">
         <h4 class="params-title">{{ data.title }}</h4>
@@ -31,9 +31,11 @@
             </el-row>
             <el-form-item :label="$t('components.AddJdbc.5q0a7i43bto0')" validate-trigger="change">
               <el-radio-group v-model="data.form.dbType">
-                <el-radio-button value="MYSQL" disabled>MySQL</el-radio-button>
-                <el-radio-button value="POSTGRESQL" disabled>PostgreSQL</el-radio-button>
-                <el-radio-button value="OPENGAUSS" disabled>openGauss</el-radio-button>
+                <el-radio-button :value="JDBCType.MySQL" disabled>MySQL</el-radio-button>
+                <el-radio-button :value="JDBCType.PostgreSQL" disabled>PostgreSQL</el-radio-button>
+                <el-radio-button :value="JDBCType.openGauss" disabled>openGauss</el-radio-button>
+                <el-radio-button :value="JDBCType.Elasticsearch" disabled>Elasticsearch</el-radio-button>
+                <el-radio-button :value="JDBCType.Milvus" disabled>Milvus</el-radio-button>
               </el-radio-group>
             </el-form-item>
           </el-form>
@@ -65,10 +67,12 @@
             </el-card>
           </div>
           <el-row>
-            <el-button @click="handleAdd" type="text" class="add-button">
-              <el-icon><CirclePlus/></el-icon>
-              {{ $t('components.AddJdbc.5q0a7i43bzk0') }}
-            </el-button>
+            <div v-if="data.form.dbType !== JDBCType.Milvus && data.form.dbType !== JDBCType.Elasticsearch">
+              <el-button @click="handleAdd" type="text" class="add-button">
+                <el-icon><CirclePlus/></el-icon>
+                {{ $t('components.AddJdbc.5q0a7i43bzk0') }}
+              </el-button>
+            </div>
           </el-row>
         </div>
       </div>
@@ -95,6 +99,7 @@ import {CirclePlus, Close} from '@element-plus/icons-vue'
 import {ElDrawer} from 'element-plus'
 import {encryptPassword} from "@/utils/jsencrypt"
 import showMessage from "@/utils/showMessage"
+import { JDBCType } from "@/types/jdbc";
 
 const {t} = useI18n()
 const visible = ref(false)
@@ -109,16 +114,12 @@ const data = reactive({
     clusterId: '',
     name: '',
     isCustomName: false,
-    dbType: 'MYSQL',
+    dbType: JDBCType.MySQL,
     nodes: [],
     status: -1
   },
   hostList: [],
-  activeTab: '',
-  dbTypes: [
-    {label: 'MYSQL', value: 'MYSQL'},
-    {label: 'openGauss', value: 'OPENGAUSS'}
-  ]
+  activeTab: ''
 })
 
 const formRef = ref(null)
@@ -252,11 +253,13 @@ const submit = () => {
       param.nodes.push(newItem)
     })
     return Promise.all(
-      param.nodes.map(item =>
-        encryptPassword(item.password).then(encrypted => {
-          item.password = encrypted
-        })
-      )
+      param.nodes.map(item => {
+        if(item.password && item.password !== '') {
+          encryptPassword(item.password).then(encrypted => {
+            item.password = encrypted
+          })
+        }
+      })
     ).then(() => param)
   }).then(param => {
     return addJdbc(param)
@@ -323,15 +326,18 @@ const handleTestHost = () => {
   })
 }
 
+
+
 const handleAdd = () => {
   const id = new Date().getTime() + ''
+  let port = JDBCType.getDefaultPort(data.form.dbType)
   data.form.nodes.push({
     id: id,
     tabName: data.form.nodes.length + 1,
     url: '',
     urlSuffix: '',
     ip: '',
-    port: data.form.dbType === 'MYSQL' ? 3306 : 5432,
+    port: port,
     username: '',
     password: '',
     props: [{
@@ -469,8 +475,7 @@ defineExpose({
 }
 
 .custom-drawer {
-  width: 50% !important;
-  margin-left: calc(100% - 100vw);
+
 }
 
 .compact-divider {

@@ -2,7 +2,7 @@
   <div class="migration-log openDesignTableArea minWid912">
     <div class="search-con">
       <el-input class="o-style-search" maxlength="50" allow-clear v-model="filter.fileName" :placeholder="t('components.SubTaskDetail.fileName')"
-        :prefix-icon="IconSearch" @search="searchLog" @change="searchLog"></el-input>
+                :prefix-icon="IconSearch" @search="searchLog" @change="searchLog"></el-input>
       <div class="button-wrapper">
         <el-button class="o-button--icon" @click="searchLog" :icon="IconRefresh"></el-button>
       </div>
@@ -31,7 +31,7 @@
       </el-table-column>
     </el-table>
     <el-pagination :total="total" :layout="layout" v-model:page-size="filter.pageSize" :page-sizes="[15, 30, 50]"
-      v-model:current-page="filter.pageNum" @change="clickSearch"></el-pagination>
+                   v-model:current-page="filter.pageNum" @change="clickSearch"></el-pagination>
   </div>
 </template>
 <script setup lang="ts">

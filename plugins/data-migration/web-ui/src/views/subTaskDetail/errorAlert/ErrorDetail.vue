@@ -1,6 +1,6 @@
 <template>
   <el-dialog v-model="props.errorVisible" draggable :close-on-click-modal="false" @close="closeModal"
-    style="width: fit-content;max-width: 1550px;" custom-class="testDialog">
+             style="width: fit-content;max-width: 1550px;" custom-class="testDialog">
     <template #header>
       <div class="header">{{ $t('components.SubTaskDetail.showDetail') }}</div>
     </template>
@@ -46,8 +46,8 @@
 import { toRefs, computed, onBeforeUnmount, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
-const props = defineProps({
+const { t } = useI18n ()
+const props = defineProps ( {
   errorVisible: {
     type: Boolean,
     require: true,
@@ -61,28 +61,28 @@ const props = defineProps({
     type: Object,
     require: true
   }
-})
+} )
 
 const hasNewLine = (text) => {
-  return text?.includes('\n')
+  return text?.includes ( '\n' )
 }
-const locationMap = computed(() => {
+const locationMap = computed ( () => {
   return {
-    0: t('components.SubTaskDetail.portal', { id: detailInfo.value.taskId }),
-    10: t('components.SubTaskDetail.fullMigrationLog'),
-    20: t('components.SubTaskDetail.checkCheck'),
-    21: t('components.SubTaskDetail.checkSource'),
-    22: t('components.SubTaskDetail.checkSink'),
-    31: t('components.SubTaskDetail.connectSource'),
-    32: t('components.SubTaskDetail.connectSink'),
-    41: t('components.SubTaskDetail.reverseConnectSource'),
-    42: t('components.SubTaskDetail.reverseConnectSink'),
+    0: t ( 'components.SubTaskDetail.portal', { id: detailInfo.value.taskId } ),
+    10: t ( 'components.SubTaskDetail.fullMigrationLog' ),
+    20: t ( 'components.SubTaskDetail.checkCheck' ),
+    21: t ( 'components.SubTaskDetail.checkSource' ),
+    22: t ( 'components.SubTaskDetail.checkSink' ),
+    31: t ( 'components.SubTaskDetail.connectSource' ),
+    32: t ( 'components.SubTaskDetail.connectSink' ),
+    41: t ( 'components.SubTaskDetail.reverseConnectSource' ),
+    42: t ( 'components.SubTaskDetail.reverseConnectSink' ),
   }
-})
-const { detailInfo, areaLoading } = toRefs(props)
-const emits = defineEmits(['update:errorVisible'])
+} )
+const { detailInfo, areaLoading } = toRefs ( props )
+const emits = defineEmits ( ['update:errorVisible'] )
 const closeModal = () => {
-  emits('update:errorVisible', false)
+  emits ( 'update:errorVisible', false )
 }
 </script>
 

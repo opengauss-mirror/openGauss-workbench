@@ -60,9 +60,10 @@ export function getEntryKey () {
   return axios.get('/encryption/getKey')
 }
 
-export function getdataTbl (formData, dbName, pageSize, pageNum) {
-  return axios.post(`/plugins/data-migration/resource/tables/${dbName}?pageSize=${pageSize}&pageNum=${pageNum}`, formData)
+export function getdataTbl (dbType, nodeId, dbName, pageSize, pageNum) {
+  return axios.get(`/plugins/data-migration/resource/source/table/page?dbType=${dbType}&nodeId=${nodeId}&dbName=${dbName}&pageNum=${pageNum}&pageSize=${pageSize}`)
 }
+
 
 export function getTotalAlarmNum (taskId) {
   return axios.get(`/plugins/data-migration/migration/alert/count/${taskId}`)

@@ -2,11 +2,7 @@
   <el-drawer v-model="visible" :size="'50%'" :destroy-on-close="true">
     <template #header>
       <div class="title-con">
-      <span class="params-title">{{
-          props.mode === 1
-            ? $t('components.ParamsConfig.5q0aazspots0')
-            : $t('components.ParamsConfig.5q0aazsppew0')
-        }}</span>
+        <span class="params-title">{{ $t('components.ParamsConfig.5q0aazsppew0') }}</span>
       </div>
     </template>
     <div class="config-con">
@@ -106,7 +102,6 @@ const {t} = useI18n()
 const props = defineProps({
   open: Boolean,
   mode: [String, Number],
-  globalParams: Object,
   taskInfo: Object
 })
 
@@ -182,13 +177,6 @@ watch(
       )
       if (fItem.paramValue != item.paramValue) {
         flag = true
-      } else {
-        const gItem = props.globalParams.basic.find(
-          (gItem) => gItem.paramKey === item.paramKey
-        )
-        if (props.mode === 2 && gItem && gItem.paramValue != item.paramValue) {
-          flag = true
-        }
       }
       return flag
     })
@@ -206,13 +194,6 @@ watch(
       )
       if (!fItem || fItem.paramValue != item.paramValue) {
         flag = true
-      } else {
-        const gItem = props.globalParams.more.find(
-          (gItem) => gItem.paramKey === item.paramKey
-        )
-        if (props.mode === 2 && gItem && gItem.paramValue != item.paramValue) {
-          flag = true
-        }
       }
       return flag
     })
@@ -271,118 +252,78 @@ const moreValueChange = (row, rowIndex) => {
 const getDefaultParams = () => {
   defaultParams(props.taskInfo.sourceDbType).then((res) => {
     fillDefaultData(res.data)
-    let basicRowCount = props.taskInfo.sourceDbType == 'MYSQL'? 13: 3
+    const rowCountLen = res.data.length
+    let basicRowCount = props.taskInfo.sourceDbType == 'MYSQL'? 13: rowCountLen
     defaultData.basic = res.data.slice(0, basicRowCount)
     defaultData.more = res.data.slice(basicRowCount)
     const data = JSON.parse(JSON.stringify(res.data))
     form.basicData = data.slice(0, basicRowCount)
     form.moreData = data.slice(basicRowCount)
-
-    if (props.mode === 1) {
-      if (props.globalParams.basic.length) {
-        basicEditData.value = props.globalParams.basic
-        form.basicData = form.basicData.map((item) => {
-          const findItem = basicEditData.value.find(
-            (fItem) => fItem.paramKey === item.paramKey
-          )
-          return findItem || item
-        })
-      }
-      if (props.globalParams.more.length) {
-        moreEditData.value = props.globalParams.more
-        const moreDataTmp = []
-        form.moreData.forEach((item) => {
-          moreDataTmp.push(item)
-          if (item.paramType === PORTAL_PARAM_TYPE.OBJECT_ARRAY) {
-            const parentKey = item.paramKey
-            props.globalParams.more.forEach((param) => {
-              const childPrefix = param.paramKey.replace(/\.[^/.]+$/, '')
-              if (parentKey === childPrefix && parentKey !== 'type_override') {
-                moreDataTmp.push(param)
-              } else if (
-                parentKey === 'type_override' &&
-                childPrefix.indexOf('override') > -1 &&
-                childPrefix !== 'type_override'
-              ) {
-                moreDataTmp.push(param)
-              }
-            })
-          }
-        })
-        form.moreData = moreDataTmp.map((item) => {
-          const findItem = moreEditData.value.find(
-            (fItem) => fItem.paramKey === item.paramKey
-          )
-          return findItem ? {...item, ...findItem} : item
-        })
-      }
-    } else {
-      taskParams.basic = mergeObjectArray(
-        props.globalParams.basic,
-        props.taskInfo.taskParamsObject.basic,
-        'paramKey'
-      )
-      taskParams.more = mergeObjectArray(
-        props.globalParams.more,
-        props.taskInfo.taskParamsObject.more,
-        'paramKey'
-      )
-      fillDefaultData(taskParams.basic)
-      if (taskParams.basic.length) {
-        basicEditData.value = taskParams.basic
-        form.basicData = form.basicData.map((item) => {
-          const findItem = basicEditData.value.find(
-            (fItem) => fItem.paramKey === item.paramKey
-          )
-          return findItem || item
-        })
-      }
-      if (taskParams.more.length) {
-        moreEditData.value = taskParams.more.filter(
-          v => {
-            let flag = true
-            if (v.parentKey) {
-              const value = taskParams.more.find(e => e.paramKey === v.parentKey).paramValue
-              flag = v.childIndex <= taskParams.more.find(e => e.paramKey === v.parentKey).paramValue
-            }
-            return flag
-          }
+    taskParams.basic = mergeObjectArray(
+      props.taskInfo.taskParamsObject.basic,
+      props.taskInfo.taskParamsObject.basic,
+      'paramKey'
+    )
+    taskParams.more = mergeObjectArray(
+      props.taskInfo.taskParamsObject.more,
+      props.taskInfo.taskParamsObject.more,
+      'paramKey'
+    )
+    fillDefaultData(taskParams.basic)
+    if (taskParams.basic.length) {
+      basicEditData.value = taskParams.basic
+      form.basicData = form.basicData.map((item) => {
+        const findItem = basicEditData.value.find(
+          (fItem) => fItem.paramKey === item.paramKey
         )
-        const moreDataTmp = []
-        form.moreData.forEach((item) => {
-          moreDataTmp.push(item)
-          if (item.paramType === PORTAL_PARAM_TYPE.OBJECT_ARRAY) {
-            const parentKey = item.paramKey
-            taskParams.more.forEach((param) => {
-              const childPrefix = param.paramKey.replace(/\.[^/.]+$/, '')
-              if (parentKey === childPrefix && parentKey !== 'type_override') {
-                moreDataTmp.push(param)
-              } else if (
-                parentKey === 'type_override' &&
-                childPrefix.indexOf('override') > -1 &&
-                childPrefix !== 'type_override'
-              ) {
-                moreDataTmp.push(param)
-              }
-            })
+        return findItem || item
+      })
+    }
+    if (taskParams.more.length) {
+      moreEditData.value = taskParams.more.filter(
+        v => {
+          let flag = true
+          if (v.parentKey) {
+            const value = taskParams.more.find(e => e.paramKey === v.parentKey).paramValue
+            flag = v.childIndex <= taskParams.more.find(e => e.paramKey === v.parentKey).paramValue
           }
-        })
-        form.moreData = moreDataTmp.map((item) => {
-          const findItem = moreEditData.value.find(
-            (fItem) => fItem.paramKey === item.paramKey
-          )
-          return findItem ? {...item, ...findItem} : item
-        })
-        form.moreData = form.moreData.filter(
-          v => {
-            let flag = true
-            if (v.parentKey) {
-              flag = v.childIndex <= form.moreData.find(e => e.paramKey === v.parentKey).paramValue
+          return flag
+        }
+      )
+      const moreDataTmp = []
+      form.moreData.forEach((item) => {
+        moreDataTmp.push(item)
+        if (item.paramType === PORTAL_PARAM_TYPE.OBJECT_ARRAY) {
+          const parentKey = item.paramKey
+          taskParams.more.forEach((param) => {
+            const childPrefix = param.paramKey.replace(/\.[^/.]+$/, '')
+            if (parentKey === childPrefix && parentKey !== 'type_override') {
+              moreDataTmp.push(param)
+            } else if (
+              parentKey === 'type_override' &&
+              childPrefix.indexOf('override') > -1 &&
+              childPrefix !== 'type_override'
+            ) {
+              moreDataTmp.push(param)
             }
-            return flag
-          }
+          })
+        }
+      })
+      form.moreData = moreDataTmp.map((item) => {
+        const findItem = moreEditData.value.find(
+          (fItem) => fItem.paramKey === item.paramKey
         )
-      }
+        return findItem ? {...item, ...findItem} : item
+      })
+      form.moreData = form.moreData.filter(
+        v => {
+          let flag = true
+          if (v.parentKey) {
+            flag = v.childIndex <= form.moreData.find(e => e.paramKey === v.parentKey).paramValue
+          }
+          return flag
+        }
+      )
     }
   })
 }
@@ -412,6 +353,19 @@ const fillDefaultData = (data) => {
       }
       item.defaultParamValue = result
     }
+    if (
+      item.paramType === PORTAL_PARAM_TYPE.VAR &&
+      item.paramKey === 'table.mappings'
+    ) {
+      const result = Object.entries(props.taskInfo?.sourceTables)
+        .filter(([_, value]) => value != null)
+        .map(([_, value]) => `${value}:${value}`)
+        .join(',')
+      if (item.paramValue === '' || item.paramValue === null) {
+        item.paramValue = result
+      }
+      item.defaultParamValue = result
+    }
     if (item && item.defaultParamValue === undefined && defaultBasicDataMap.get(item.paramKey)) {
       item.defaultParamValue = defaultBasicDataMap.get(item.paramKey).defaultParamValue
     }
@@ -431,11 +385,7 @@ const saveParams = async () => {
     if (defaultData.more.length) {
       await moreFormRef?.value.validate()
     }
-    if (props.mode === 1) {
-      emits('syncGlobalParams', {basic: basicEditData.value, more: moreEditData.value});
-    } else {
-      emits('syncTaskParams', {basic: basicEditData.value, more: moreEditData.value});
-    }
+    emits('syncTaskParams', {basic: basicEditData.value, more: moreEditData.value})
     visible.value = false;
   } catch (error) {
     console.log('验证失败:', error);

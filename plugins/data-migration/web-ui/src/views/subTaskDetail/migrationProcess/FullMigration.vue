@@ -2,10 +2,10 @@
   <div class="full-migration" id="full-migration">
     <div class="statistics">
       <statistic-card v-for="(item, index) in cardConfigList" :key="index" :count="item.count" :type="item.type"
-        :description="item.desc"></statistic-card>
+                      :description="item.desc"></statistic-card>
     </div>
     <div class="sub-tabs">
-      <el-tabs type="card" v-model="tabName" @tab-change="tabTypeChange">
+      <el-tabs type="card" v-model="tabName" @tab-change="tabTypeChange" :class="{ 'single-tab': !shouldShowDbColumn }">
         <el-tab-pane :label="t('components.SubTaskDetail.dataTable')" name="table"></el-tab-pane>
         <el-tab-pane :label="t('components.BigDataList.5q09jzwfqiw0')" name="view"></el-tab-pane>
         <el-tab-pane :label="t('components.BigDataList.5q09jzwfqm80')" name="function"></el-tab-pane>
@@ -13,7 +13,7 @@
         <el-tab-pane :label="t('components.BigDataList.5q09jzwfqs40')" name="procedure"></el-tab-pane>
       </el-tabs>
       <div class="main-list">
-        <full-migration-table ref="fullMigrationTableRef"></full-migration-table>
+        <full-migration-table ref="fullMigrationTableRef" :shouldShowDbColumn="shouldShowDbColumn"></full-migration-table>
       </div>
     </div>
   </div>
@@ -24,6 +24,7 @@ import FullMigrationTable from './FullMigrationTable.vue';
 import { onMounted, ref, inject, computed } from 'vue';
 import { useSubTaskStore } from '@/store'
 import { useI18n } from 'vue-i18n';
+import {JDBCType} from "@/types/jdbc";
 const { t } = useI18n();
 const subTaskStore = useSubTaskStore()
 // The tabular form of each tab corresponding to each page
@@ -64,6 +65,17 @@ const cardConfigList = computed(() => {
   }]
 })
 
+const props = defineProps(({
+  subTaskDbType: {
+    type: String,
+  }
+}))
+
+const shouldShowDbColumn = computed(() => {
+  const types = [JDBCType.MySQL, JDBCType.PostgreSQL].map(String)
+  return types.includes(props.subTaskDbType || '')
+});
+
 </script>
 <style lang="less" scoped>
 .full-migration {
@@ -102,4 +114,9 @@ const cardConfigList = computed(() => {
 
   }
 }
+
+:deep(.single-tab .el-tabs__header) {
+  display: none;
+}
+
 </style>

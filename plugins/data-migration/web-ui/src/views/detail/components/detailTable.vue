@@ -6,15 +6,15 @@
         <el-table-column :label="$t('detail.index.5q09asiwg7s0')" prop="id">
           <template #default="scope">
             <el-button size="small"
-              :disabled="scope.row.execStatus === SUB_TASK_STATUS.NOT_RUN || scope.row.execStatus === SUB_TASK_STATUS.CHECK_FAILED"
-              type="text" @click="handleDetail(scope.row)">
+                       :disabled="scope.row.execStatus === SUB_TASK_STATUS.NOT_RUN || scope.row.execStatus === SUB_TASK_STATUS.CHECK_FAILED"
+                       type="text" @click="handleDetail(scope.row)">
               {{ scope.row.id }}
             </el-button>
           </template>
         </el-table-column>
         <el-table-column :label="$t('detail.index.sourceType')" ellipsis tooltip prop="sourceDbType">
           <template #default="scope">
-            {{ scope.row?.sourceDbType?.toUpperCase() === 'POSTGRESQL' ? 'PostgreSQL' : 'MySQL' }}
+            {{ JDBCType.normalize(scope.row?.sourceDbType) }}
           </template>
         </el-table-column>
         <el-table-column :label="$t('detail.index.5q09asiwgb40')" ellipsis tooltip>
@@ -22,7 +22,11 @@
             {{ `${scope.row.sourceDbHost}:${scope.row.sourceDbPort}` }}
           </template>
         </el-table-column>
-        <el-table-column :label="$t('detail.index.5q09asiwifk0')" prop="sourceDb" ellipsis tooltip></el-table-column>
+        <el-table-column :label="$t('detail.index.5q09asiwifk0')" prop="sourceDb" ellipsis tooltip>
+          <template #default="scope">
+            {{ scope.row.sourceDb || '--' }}
+          </template>
+        </el-table-column>
         <el-table-column :label="$t('detail.index.5q09asiwijw0')" ellipsis tooltip>
           <template #default="scope">
             {{ `${scope.row.targetDbHost}:${scope.row.targetDbPort}` }}
@@ -31,11 +35,16 @@
         <el-table-column :label="$t('detail.index.5q09asiwing0')" prop="targetDb" ellipsis tooltip></el-table-column>
         <el-table-column :label="$t('detail.index.5q09asiwiqk0')" ellipsis tooltip>
           <template #default="scope">
-            {{
-              scope.row.migrationModelId === TaskMode.Offline
-                ? $t('detail.index.5q09asiwiyc0')
-                : $t('detail.index.5q09asiwj1o0')
-            }}
+            <div v-if="scope.row.sourceDbType === JDBCType.MySQL || scope.row.sourceDbType === JDBCType.PostgreSQL">
+              {{
+                scope.row.migrationModelId === TaskMode.Offline
+                  ? $t('detail.index.5q09asiwiyc0')
+                  : $t('detail.index.5q09asiwj1o0')
+              }}
+            </div>
+            <div v-else>
+              {{ $t('components.SubTaskDetail.fullMigration') }}
+            </div>
           </template>
         </el-table-column>
         <el-table-column :label="$t('detail.index.5q09asiwj4g0')" :min-width="150" ellipsis tooltip>
@@ -48,8 +57,8 @@
           <template #default="scope">
             <el-tag style="min-width: 88px;" :type="statusColor(scope.row.execStatus, scope.row.migrationModelId) || '--'"
             > {{
-              execSubStatusMap(scope.row.execStatus, scope.row.migrationModelId)
-            }}</el-tag>
+                execSubStatusMap(scope.row.execStatus, scope.row.migrationModelId)
+              }}</el-tag>
             <el-tooltip :title="titleMap(scope.row.execStatus)" :key="scope.row.id">
               <template #default>
                 <icon-close-circle-fill
@@ -57,38 +66,38 @@
                   size="14" style="color: #ff7d01; margin-left: 3px; cursor: pointer" />
               </template>
               <template #content>
-                <div v-if="scope.row.sourceDbType.toUpperCase() === 'POSTGRESQL'" class="error-tips">{{
-                  scope.row.statusDesc}}</div>
+                <div v-if="scope.row.sourceDbType.toUpperCase() !== JDBCType.MySQL" class="error-tips">{{
+                    scope.row.statusDesc}}</div>
                 <div v-else>
                   <div v-if="scope.row.execStatus === SUB_TASK_STATUS.MIGRATION_ERROR" class="error-tips">{{
-                    scope.row.statusDesc }}</div>
+                      scope.row.statusDesc }}</div>
                   <div v-if="scope.row.execStatus === SUB_TASK_STATUS.CHECK_FAILED" class="error-tips">
                     <p v-if="judgeKeyExist(scope.row.statusDesc, 'service_availability')">{{
-                      parseServiceAvailability(scope.row.statusDesc) }}</p>
+                        parseServiceAvailability(scope.row.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(scope.row.statusDesc, 'database_connect')">{{
-                      parseDatabaseConnect(scope.row.statusDesc) }}</p>
+                        parseDatabaseConnect(scope.row.statusDesc) }}</p>
                     <p>{{ parseDatabasePermission(scope.row.statusDesc) }}</p>
                     <p
                       v-if="judgeKeyExist(scope.row.statusDesc, 'increment_param') || judgeKeyExist(scope.row.statusDesc, 'reverse_param')">
                       {{ parselogParameter(scope.row.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(scope.row.statusDesc, 'lower_param')">{{
-                      parseLowerParameter(scope.row.statusDesc) }}</p>
+                        parseLowerParameter(scope.row.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(scope.row.statusDesc, 'disk_space')">{{
-                      parseDiskSpace(scope.row.statusDesc)
-                    }}</p>
+                        parseDiskSpace(scope.row.statusDesc)
+                      }}</p>
                     <p v-if="judgeKeyExist(scope.row.statusDesc, 'mysql_encryption')">{{
-                      parseMysqlEncryption(scope.row.statusDesc) }}</p>
+                        parseMysqlEncryption(scope.row.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(scope.row.statusDesc, 'sql_compatibility')">{{
-                      parseOpenGaussBDB(scope.row.statusDesc) }}</p>
+                        parseOpenGaussBDB(scope.row.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(scope.row.statusDesc, 'replication_slots')">{{
-                      parseReplicationNumber(scope.row.statusDesc) }}</p>
+                        parseReplicationNumber(scope.row.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(scope.row.statusDesc, 'enable_slot_log')">{{
-                      parseEnableSlotLog(scope.row.statusDesc) }}</p>
+                        parseEnableSlotLog(scope.row.statusDesc) }}</p>
                     <p v-if="judgeKeyExist(scope.row.statusDesc, 'hba_conf')">{{
-                      parseHbaConf(scope.row.statusDesc) }}
+                        parseHbaConf(scope.row.statusDesc) }}
                     </p>
                     <p v-if="judgeKeyExist(scope.row.statusDesc, 'gtid_set')">{{
-                      parseGtidSet(scope.row.statusDesc) }}
+                        parseGtidSet(scope.row.statusDesc) }}
                     </p>
                   </div>
                 </div>
@@ -99,30 +108,24 @@
         <el-table-column :label="$t('detail.index.5q09asiwka80')" :min-width="112" fixed="right">
           <template #default="scope">
             <a-popconfirm :content="tooltipMap(scope.row.checkDataLevelingAndIncrementFinish)" type="warning"
-              :ok-text="$t('list.index.confirm')" :cancel-text="$t('list.index.cancel')" @ok="stopSubIncrease(scope.row)"
-              class="aPopConfirmStyle">
+                          :ok-text="$t('list.index.confirm')" :cancel-text="$t('list.index.cancel')" @ok="stopSubIncrease(scope.row)"
+                          class="aPopConfirmStyle">
               <el-button v-if="(scope.row.migrationModelId === TaskMode.Online &&
                   scope.row.execStatus ===
                   SUB_TASK_STATUS.INCREMENTAL_RUNNING) ||
                   scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_FINISHED
                 " size="small" type="text" :loading="scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_FINISHED
                   ">
-                  {{
-                    $t('detail.index.5q09asiwkkw0')
-                  }}
-                </el-button>
+                {{
+                  $t('detail.index.5q09asiwkkw0')
+                }}
+              </el-button>
             </a-popconfirm>
             <el-button v-if="scope.row.migrationModelId === TaskMode.Online &&
               scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_STOPPED
             " size="small" type="text" @click="startSubReverse(scope.row)">
               {{
                 $t('detail.index.5q09asiwkq40')
-              }}
-            </el-button>
-            <el-button v-if="scope.row.execStatus !== SUB_TASK_STATUS.MIGRATION_FINISH" size="small" type="text"
-              @click="stopSubTask(scope.row)">
-              {{
-                $t('detail.index.5q09asiwl5g0')
               }}
             </el-button>
             <el-button size="small" type="text" @click="handleLog(scope.row)">
@@ -139,7 +142,7 @@
     </div>
 
     <ReverseDetailDia v-if="reverseVisible" @closeDialog="closeDialog" :replicationData="replicationData"
-      :reverseConfig="reverseConfig"></ReverseDetailDia>
+                      :reverseConfig="reverseConfig"></ReverseDetailDia>
   </div>
 </template>
 
@@ -158,6 +161,7 @@ import useTheme from '@/hooks/theme'
 import { useI18n } from 'vue-i18n'
 import { SUB_TASK_STATUS } from '@/utils/constants'
 import ReverseDetailDia from "@/views/subTaskDetail/migrationProcess/reverseDetail.vue";
+import { JDBCType } from "@/types/jdbc";
 const { t } = useI18n()
 
 // This is where the corresponding taskId is received
@@ -536,14 +540,6 @@ const handleLog = (row) => {
   })
 }
 
-// stop sub task full
-const stopSubTask = (row) => {
-  subTaskFinish(row.id).then(() => {
-    showMessage('success', t('detail.index.stopSuccess'))
-    getSubTaskList()
-  })
-}
-
 watch(() => props.listRefresh, () => {
   if (props.listRefresh) {
     getSubTaskList('loopQuery')
@@ -607,12 +603,11 @@ const getSubTaskList = (loopQuery) => {
       timerDown && clearTimeout(timerDown)
       if (task.value.execStatus !== 2) {
         if (isMountedStatus.value) {
-          
+
           timerDown = setTimeout(() => {
             getSubTaskList('loopQuery')
           }, 5000)
         }
-        console.log(tableData.value, 'result', tableData.value?.[0]?.execStatus)
         if (tableData.value?.[0]?.execStatus === 0) {
           // update status
           refreshStatus(id)
@@ -640,7 +635,7 @@ onBeforeUnmount(() => {
 <style lang="less" scoped>
 .ommon-layout {
   width: 100%;
-  
+
   .main-table {
     width: 100%;
   }
