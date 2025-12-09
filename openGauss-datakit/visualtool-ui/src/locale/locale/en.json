@@ -1027,7 +1027,17 @@
       "5oxhr0qz4no0": "State",
       "5oxhr0qz4zk0": "Update Time",
       "5oxhr0qz58o0": "Operation",
-      "5oxhr0qz5g40": "Upload Confirm"
+      "5oxhr0qz5g40": "Upload Confirm",
+      "clusterType": "Node Type",
+      "version": "Version",
+      "nameMaxLength": "Name length cannot exceed 255 characters",
+      "ipMaxLength": "IP address length cannot exceed 255 characters",
+      "noChinese": "IP address cannot contain Chinese characters",
+      "batchDeleteConfirm": "Are you sure you want to delete the selected {count} item(s)? This action cannot be undone",
+      "singleNode": "Single Node",
+      "multiNode": "Multi-Node",
+      "deleSuccess": "Batch deletion successful",
+      "deleWarning": "Please select data to delete"
     },
     "JdbcInstance": {
       "5oxhtcbo8ac0": "IP",
@@ -1065,7 +1075,13 @@
       "5oxhv6qcnnk0": "Slave",
       "5oxhv6qcnuk0": "Connection number",
       "5oxhv6qco4c0": "TableSpace occupy",
-      "5oxhv6qcobk0": "Memory occupy"
+      "5oxhv6qcobk0": "Memory occupy",
+      "collectionNum": "Number of Collections",
+      "apiResponseDelay": "API Response Delay",
+      "unassigned_shards": "Number of Unassigned Shards",
+      "active_shards": "Percentage of Active Shards",
+      "clusterStatus": "Cluster Health Status",
+      "connectionStatus": "Connection Status"
     }
   },
   "echarts": {

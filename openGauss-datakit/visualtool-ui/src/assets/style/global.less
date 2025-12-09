@@ -27,6 +27,27 @@ body {
   --padding-vertical: 15px; // Padding (vertical direction)
 
   --o-popconfirm-bg: #fff; //light theme el-popConfirm background-color
+
+  /* Element Plus Font */
+  --el-font-size-base: 14px;
+  --el-form-label-font-size: 14px;
+  --el-input-font-size: 14px;
+  --el-input-number-font-size: 14px;
+  --el-select-font-size: 14px;
+  --el-textarea-font-size: 14px;
+  --el-button-font-size: 14px;
+  --el-table-font-size: 14px;
+  --el-table-header-font-size: 14px;
+  --el-link-font-size: 14px;
+  --el-tag-font-size: 14px;
+  --el-radio-font-size: 14px;
+  --el-checkbox-font-size: 14px;
+  --el-component-size: medium;
+
+  --el-component-size: medium;
+
+  --o-font-size-info: 14px;
+  --o-font-size-text: 14px;
 }
 
 /********** css custom specification dark ***********/
@@ -167,8 +188,8 @@ body.dark {
 
 .echarts-tooltip-diy {
   background: linear-gradient(304.17deg,
-      rgba(253, 254, 255, 0.6) -6.04%,
-      rgba(244, 247, 252, 0.6) 85.2%) !important;
+    rgba(253, 254, 255, 0.6) -6.04%,
+  rgba(244, 247, 252, 0.6) 85.2%) !important;
   border: none !important;
   backdrop-filter: blur(10px) !important;
   /* Note: backdrop-filter has minimal browser support */
@@ -418,7 +439,6 @@ input:-webkit-autofill:focus {
   }
 
   .el-dialog__body {
-
     .el-form-item__label,
     .el-form-item__content {
       font-size: 14px;
@@ -430,6 +450,88 @@ input:-webkit-autofill:focus {
         font-size: 14px;
       }
     }
+  }
+}
+
+.el-dialog.openDesignDialog.small-dialog {
+  z-index: 100;
+  width: 432px !important;
+  height: 288px !important;
+  max-width: calc(100vw - 48px) !important;
+  max-height: calc(100vh - 48px) !important;
+
+  .el-dialog__body {
+    height: calc(288px - 54px - 64px) !important;
+    padding: 24px !important;
+    overflow: auto !important;
+  }
+
+  .el-dialog__footer {
+    padding: 16px 24px !important;
+  }
+}
+
+.el-dialog.openDesignDialog.normal-dialog {
+  z-index: 100;
+  width: 656px !important;
+  height: 440px !important;
+  max-width: calc(100vw - 48px) !important;
+  max-height: calc(100vh - 48px) !important;
+
+  .el-dialog__body {
+    height: calc(440px - 54px - 64px) !important;
+    padding: 24px !important;
+    overflow: auto !important;
+  }
+
+  .el-dialog__footer {
+    padding: 16px 24px !important;
+  }
+}
+
+.el-dialog.openDesignDialog.super-large-dialog {
+  z-index: 100;
+  width: 928px !important;
+  height: 632px !important;
+  max-width: calc(100vw - 48px) !important;
+  max-height: calc(100vh - 48px) !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  position: relative !important;
+  box-sizing: border-box !important;
+
+  .el-dialog__header {
+    height: 54px !important;
+    flex: 0 0 54px !important;
+    padding: 0 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+  }
+
+  .el-dialog__body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    padding: 24px !important;
+    overflow: auto !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+  }
+
+  .el-dialog__footer {
+    padding: 16px 24px !important;
+    height: 64px !important;
+    flex: 0 0 64px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
   }
 }
 

@@ -1,102 +1,64 @@
 <template>
   <div class="jdbc-instance-table">
-    <a-table :data="data.nodeList" :columns="columns" :show-header="false" :pagination="false" :bordered="false">
-      <template #baseInfo="{ record }">
-        <div class="flex-col-start mr">
-          <div class="flex-row mb-s">
-            <div class="mr-s">{{ $t('database.JdbcNodeTable.else5') }}:</div>
-            <div>{{ record.os ?? '-' }}</div>
-          </div>
-          <div class="flex-row mb-s">
-            <div class="mr-s" style="max-width: 160px;">{{ $t('database.JdbcNodeTable.else1') }}: {{ record.ip }}</div>
-            <icon-code-square :size="25" style="cursor: pointer;" @click="showTerminal(record.ip)" />
-          </div>
-          <div class="flex-row">
-            <div class="mr-s">{{ $t('database.JdbcNodeTable.else2') }}: {{ record.port }}</div>
-            <div>{{ $t('database.JdbcInstance.5oxhtcboa240') }}: {{ record.username }}</div>
-          </div>
-        </div>
+    <el-table
+      :data="data.nodeList"
+      :border="false"
+      style="width: 100%"
+    >
+      <el-table-column prop="ip" :label="$t('database.JdbcNodeTable.else1')">
+        <template #default="{ row: record }">
+          {{ record.ip || '--' }}
+        </template>
+      </el-table-column>
+
+      <el-table-column prop="port" :label="$t('database.JdbcNodeTable.else2')">
+        <template #default="{ row: record }">
+          {{ record.port || '--' }}
+        </template>
+      </el-table-column>
+
+      <el-table-column prop="username" :label="$t('database.JdbcInstance.5oxhtcboa240')">
+        <template #default="{ row: record }">
+          {{ record.username || '--' }}
+        </template>
+      </el-table-column>
+
+      <el-table-column prop="state" :label="$t('database.JdbcNodeTable.connectionStatus')">
+        <template #default="{ row: record }">
+          <span class="status-container">
+            <span class="status-dot"
+                  :class="{ 'error-dot': record.status === 'error', 'success-dot': record.status === 'success', 'info-dot': record.status === 'loading'}" />
+            {{record.status}}
+          </span>
+
+        </template>
+      </el-table-column>
+      <template v-for="col in dbSpecificColumns" :key="col.prop">
+        <el-table-column
+          :prop="col.prop"
+          :label="getColumnLabel(col)"
+          :min-width="120"
+        >
+          <template #default="{ row }">
+            {{ formatColumnValue(row[col.prop], col.prop) }}
+          </template>
+        </el-table-column>
       </template>
-      <template #status="{ record }">
-        <div class="flex-row mr">
-          <div class="node-role mr-s">
-            <div class="flex-row">
-              <div :class="'node-state-c mr-s ' + getNodeStateColor(record.state)"></div>
-              <div>{{ getNodeRole(record.role) }}</div>
-            </div>
-          </div>
-          <a-tag color="green">{{ $t('database.JdbcNodeTable.else6') }}</a-tag>
-        </div>
-      </template>
-      <template #connectInfo="{ record }">
-        <div class="flex-col-start" v-if="jdbcData.dbType === 'MYSQL'">
-          <div class="flex-row">
-            <div class="mr-s" style="width: 50px;">QPS:</div>
-            <div class="monitor-data">{{ record.qps ? record.qps : '--' }}</div>
-          </div>
-          <div class="flex-row">
-            <div class="mr-s" style="width: 50px;">TPS:</div>
-            <div class="monitor-data">{{ record.tps ? record.tps : '--' }}</div>
-          </div>
-          <div class="flex-row">
-            <div class="mr-s" style="width: 50px;">{{ $t('database.JdbcNodeTable.5oxhv6qcnuk0') }}:
-            </div>
-            <div class="monitor-data">{{ record.connNum ? record.connNum : '--' }}</div>
-          </div>
-        </div>
-        <div class="flex-col-start" v-if="jdbcData.dbType === 'OPENGAUSS' || jdbcData.dbType === 'POSTGRESQL'">
-          <div class="flex-col">
-            <div class="monitor-data">{{ record.connNum ? record.connNum : '--' }}</div>
-            <div>{{ $t('database.JdbcNodeTable.5oxhv6qcnuk0') }}</div>
-          </div>
-        </div>
-      </template>
-      <template #tableSpaceUsed="{ record }">
-        <div class="flex-col mr" style="width: 130px;" v-if="jdbcData.dbType === 'MYSQL'">
-          <div class="monitor-data">{{ record.tableSpaceUsed ? record.tableSpaceUsed : '--' }}MB</div>
-          <div>{{ $t('database.JdbcNodeTable.5oxhv6qco4c0') }}</div>
-        </div>
-        <div class="flex-col mr" style="width: 130px;" v-if="jdbcData.dbType === 'OPENGAUSS' || jdbcData.dbType === 'POSTGRESQL'">
-          <div class="monitor-data">{{ record.sessionNum ? record.sessionNum : '--' }}</div>
-          <div>{{ $t('database.JdbcNodeTable.else7') }}</div>
-        </div>
-      </template>
-      <template #memoryUsed="{ record }">
-        <div class="flex-col mr" style="width: 120px;" v-if="jdbcData.dbType === 'MYSQL'">
-          <div class="monitor-data">{{ record.memoryUsed ? record.memoryUsed : '--' }}GB</div>
-          <div>{{ $t('database.JdbcNodeTable.5oxhv6qcobk0') }}</div>
-        </div>
-        <div class="flex-col mr" style="width: 130px;" v-if="jdbcData.dbType === 'OPENGAUSS' || jdbcData.dbType === 'POSTGRESQL'">
-          <div class="monitor-data">{{ record.lockNum ? record.lockNum : '--' }}</div>
-          <div>{{ $t('database.JdbcNodeTable.else8') }}</div>
-        </div>
-      </template>
-    </a-table>
-    <host-pwd-dlg ref="hostPwdRef" @finish="handleShowTerminal($event)"></host-pwd-dlg>
-    <host-terminal ref="hostTerminalRef" @finish="handleFinish()"></host-terminal>
+    </el-table>
   </div>
 </template>
 <script setup lang="ts">
 import { PropType, onMounted, onUnmounted, reactive, ref, computed, watch } from 'vue'
 import { KeyValue } from '@/types/global'
 import Socket from '@/utils/websocket'
-import { jdbcNodeMonitor } from '@/api/ops'
-import HostPwdDlg from './HostPwdDlg.vue'
-import HostTerminal from './HostTerminal.vue'
+import {jdbcNodeMonitor} from '@/api/ops'
 import { useI18n } from 'vue-i18n'
+import {JDBCType} from "@/types/jdbc";
 const { t } = useI18n()
 const data = reactive<KeyValue>({
   socketArr: [],
   nodeList: []
 })
-
-const columns = computed(() => [
-  { slotName: 'baseInfo', width: 350 },
-  { slotName: 'status', width: 230 },
-  { slotName: 'connectInfo', width: 200 },
-  { slotName: 'tableSpaceUsed', width: 310 },
-  { slotName: 'memoryUsed', width: 320 }
-])
 
 const props = defineProps({
   jdbcData: {
@@ -151,13 +113,19 @@ const getNodeStateColor = (state: number) => {
   }
 }
 
-const getNodeRole = (role?: string) => {
-  if (!role) {
-    return t('database.JdbcNodeTable.else4')
-  } else if (role === 'MASTER') {
-    return t('database.JdbcNodeTable.5oxhv6qcnak0')
-  } else {
-    return t('database.JdbcNodeTable.5oxhv6qcnnk0')
+const getNodeState = (state?: number): string => {
+  if (state == null) {
+    return 'error'
+  }
+  switch (state) {
+    case -1:
+      return 'checking'
+    case 1:
+      return 'pass'
+    case 0:
+      return 'error'
+    default:
+      return 'error'
   }
 }
 
@@ -168,10 +136,12 @@ const openMonitor = () => {
     openNodeMonitor(item, index)
   })
 }
+
 const openNodeMonitor = (nodeData: KeyValue, index: number) => {
   const socketKey = new Date().getTime()
   const param = {
-    businessId: 'monitor_ops_jdbc_' + nodeData.clusterNodeId + '_' + socketKey
+    businessId: 'monitor_ops_jdbc_' + nodeData.clusterNodeId + '_' + socketKey,
+    dbType: props.jdbcData.dbType
   }
   const websocket = new Socket({ url: `COMMAND_EXEC/${param.businessId}` })
   websocket.onopen(() => {
@@ -181,16 +151,11 @@ const openNodeMonitor = (nodeData: KeyValue, index: number) => {
         data.nodeList[index].state = 0
         websocket.destroy()
       } else {
-        if (res.data.res) {
-          data.nodeList[index].state = 1
-          // websocket push socketArr
-          data.socketArr.push(websocket)
-        } else {
-          data.nodeList[index].state = 0
-          websocket.destroy()
-        }
+        data.nodeList[index].state = 1
+        data.socketArr.push(websocket)
       }
-    }).catch(() => {
+    }).catch((error: any) => {
+      console.log('Websocket error:', error)
       data.nodeList[index].state = 0
       websocket.destroy()
     }).finally(() => {
@@ -200,52 +165,168 @@ const openNodeMonitor = (nodeData: KeyValue, index: number) => {
   websocket.onclose(() => {
     data.nodeList[index].state = 0
   })
+  websocket.onerror((error) => {
+    console.error('WebSocket Error:', error)
+    data.nodeList[index].state = 0
+  })
   websocket.onmessage((messageData: any) => {
     const eventData = JSON.parse(messageData)
-    console.log('show jdbc ws data', props.jdbcData.dbType, data.nodeList, eventData)
     if (Object.keys(eventData).length) {
-      if (props.jdbcData.dbType === 'OPENGAUSS' || props.jdbcData.dbType === 'POSTGRESQL') {
+      data.nodeList[index].status = eventData.status
+      if (props.jdbcData.dbType === JDBCType.openGauss || props.jdbcData.dbType === JDBCType.PostgreSQL) {
         data.nodeList[index].connNum = eventData.connNum
         data.nodeList[index].lockNum = eventData.lockNum
         data.nodeList[index].sessionNum = eventData.sessionNum
-      } else if (props.jdbcData.dbType === 'MYSQL') {
+      } else if (props.jdbcData.dbType === JDBCType.MySQL) {
         data.nodeList[index].tableSpaceUsed = Number(eventData.tableSpaceUsed / 1024 / 1024).toFixed(2)
         data.nodeList[index].memoryUsed = Number(eventData.memoryUsed / 1024 / 1024 / 1024).toFixed(2)
         data.nodeList[index].connNum = eventData.connNum
         data.nodeList[index].qps = eventData.qps
         data.nodeList[index].tps = eventData.tps
         data.nodeList[index].role = eventData.role
+      } else if (props.jdbcData.dbType === JDBCType.Milvus) {
+        data.nodeList[index].collectionNum = eventData.collectionNum
+        data.nodeList[index].apiResponseDelay = eventData.apiResponseDelay
+      } else {
+        data.nodeList[index].unassigned_shards = eventData.unassigned_shards
+        data.nodeList[index].active_shards_percent_as_number = Number(eventData.active_shards_percent_as_number).toFixed(2)
+        data.nodeList[index].clusterStatus = eventData.clusterStatus
       }
     }
   })
 }
 
-const hostPwdRef = ref<null | InstanceType<typeof HostPwdDlg>>(null)
-
-const showTerminal = (ip: string) => {
-  console.log('show terminal')
-  if (ip) {
-    hostPwdRef.value?.open(ip, 'terminal')
+const dbColumnConfigs = {
+  [JDBCType.MySQL]: [
+    { prop: 'tps', label: 'TPS' },
+    { prop: 'qps', label: 'QPS' },
+    { prop: 'connNum', i18nKey: 'database.JdbcNodeTable.5oxhv6qcnuk0'},
+    { prop: 'tableSpaceUsed', i18nKey: 'database.JdbcNodeTable.5oxhv6qco4c0'},
+    { prop: 'memoryUsed', i18nKey: 'database.JdbcNodeTable.5oxhv6qcobk0'}
+  ],
+  [JDBCType.openGauss]: [
+    { prop: 'connNum', i18nKey: 'database.JdbcNodeTable.5oxhv6qcnuk0'},
+    { prop: 'sessionNum', i18nKey: 'database.JdbcNodeTable.else7'},
+    { prop: 'lockNum', i18nKey: 'database.JdbcNodeTable.else8'}
+  ],
+  [JDBCType.PostgreSQL]: [
+    { prop: 'connNum', i18nKey: 'database.JdbcNodeTable.5oxhv6qcnuk0'},
+    { prop: 'sessionNum', i18nKey: 'database.JdbcNodeTable.else7'},
+    { prop: 'lockNum', i18nKey: 'database.JdbcNodeTable.else8' }
+  ],
+  [JDBCType.Milvus]: [
+    { prop: 'collectionNum', i18nKey: 'database.JdbcNodeTable.collectionNum'},
+    { prop: 'apiResponseDelay', i18nKey: 'database.JdbcNodeTable.apiResponseDelay', formatter: (v) => v ? `${v}ms` : '--' }
+  ],
+  [JDBCType.Elasticsearch]: [
+    { prop: 'unassigned_shards', i18nKey: 'database.JdbcNodeTable.unassigned_shards'},
+    { prop: 'active_shards_percent_as_number', i18nKey: 'database.JdbcNodeTable.active_shards'},
+    { prop: 'clusterStatus', i18nKey: 'database.JdbcNodeTable.clusterStatus'},
+  ]
+}
+const dbSpecificColumns = computed(() => {
+  return dbColumnConfigs[props.jdbcData.dbType] || []
+})
+const getColumnLabel = (col) => {
+  if (col.label) {
+    return col.label
   }
+  if (col.labelKey) {
+    if (col.labelKey.includes('.')) {
+      try {
+        const translated = t(col.labelKey)
+        return translated
+      } catch (error) {
+        return col.labelKey
+      }
+    }
+    return col.labelKey
+  }
+  if (col.i18nKey) {
+    try {
+      const translated = t(col.i18nKey)
+      return translated
+    } catch (error) {
+      return col.i18nKey
+    }
+  }
+  return col.prop
 }
 
-const hostTerminalRef = ref<null | InstanceType<typeof HostTerminal>>(null)
-const handleShowTerminal = (sshData: KeyValue) => {
-  hostTerminalRef.value?.open(sshData)
-}
-
-const handleFinish = () => {
-  console.log('finish')
+const formatColumnValue = (value, prop) => {
+  if (prop === 'active_shards_percent_as_number') {
+    if (value == null || value === '') return '--'
+    const num = Number(value)
+    return isNaN(num) ? '--' : `${num.toFixed(2)}%`
+  }else if (prop === 'apiResponseDelay') {
+    return value ? `${value}ms` : '--'
+  } else if (prop === 'memoryUsed') {
+    return value ? `${value}GB` : '--'
+  } else if (prop === 'tableSpaceUsed') {
+    return value ? `${value}MB` : '--'
+  } else {
+    return value || '--'
+  }
 }
 
 </script>
 <style lang="less" scoped>
 .jdbc-instance-table {
-  padding: 10px;
+  :deep(.el-table) {
+    .el-table__header .el-table__cell {
+      padding-top: 0px;
+      padding-bottom: 0px;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+
+    .el-table__body .el-table__cell {
+      padding-top: 16px;
+      padding-bottom: 16px;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+
+    .el-table__fixed .el-table__cell,
+    .el-table__fixed-right .el-table__cell {
+      padding-top: 16px;
+      padding-bottom: 16px;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+  }
 }
 
-.cursor-c {
-  cursor: pointer;
+.table-row {
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  min-width: 100%;
+}
+
+.table-cell {
+  display: flex;
+  align-items: center;
+
+  &.base-info {
+    flex: 0 0 350px;
+  }
+
+  &.status {
+    flex: 0 0 230px;
+  }
+
+  &.connect-info {
+    flex: 0 0 200px;
+  }
+
+  &.table-space {
+    flex: 0 0 130px;
+  }
+
+  &.memory-used {
+    flex: 0 0 130px;
+  }
 }
 
 .node-role {
@@ -275,7 +356,63 @@ const handleFinish = () => {
   background-color: red
 }
 
-.monitor-data {
-  font-size: 22px;
+.status-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin: 0 16px 0 0;
+}
+
+.info-dot {
+  background-color: var(--o-color-info-secondary);
+}
+
+.error-dot {
+  background-color: var(--o-color-danger);
+}
+
+.success-dot {
+  background-color: var(--o-color-success);
+}
+
+.flex-col-start {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 64px;
+  min-width: 70%;
+  padding-bottom: 8px;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.flex-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.mb-s {
+  margin-bottom: 8px;
+}
+
+.mr {
+  margin-right: 16px;
+}
+
+.mr-s {
+  margin-right: 8px;
 }
 </style>

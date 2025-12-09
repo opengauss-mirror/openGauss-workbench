@@ -1,10 +1,10 @@
 <template>
   <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title" @cancel="close"
-    :modal-style="{ width: '550px' }" :footer="false">
+           :modal-style="{ width: '550px' }" :footer="false">
     <div class="flex-col-start">
       <label class="mb">{{ $t('database.HostImportDlg.5oxhmjuzltc0') }}</label>
       <a-table class="full-w" :data="list.data" :columns="columns" :pagination="false" :loading="list.loading"
-        size="mini">
+               size="mini">
       </a-table>
     </div>
   </a-modal>
