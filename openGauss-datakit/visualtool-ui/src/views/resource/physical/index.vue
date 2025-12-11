@@ -189,7 +189,7 @@ import fusionSearch from '@/components/fusion-search/index.vue'
 import { searchType } from '@/types/searchType'
 import { useRoute, useRouter, RouteRecordRaw } from 'vue-router'
 import { AgentStatus } from './physicalType/index.ts'
-import AddAgent from "@/views/resource/physical/components/AddAgent.vue";
+import AddAgent from '@/views/resource/physical/components/AddAgent.vue'
 import showMessage from '@/hooks/showMessage'
 const { t } = useI18n()
 const { bus } = WujieVue
@@ -228,7 +228,7 @@ const list = reactive<KeyValue>({
   tagsLoading: false,
   tagsList: [],
   socketArr: [],
-  newSocket: {},
+  newSocket: {}
 })
 
 const data = reactive<KeyValue>({
@@ -242,7 +242,7 @@ const tempList = ref<KeyValue[]>([{
   value: '111'
 }])
 const initList = computed(() => {
-  return [...tempList.value];
+  return [...tempList.value]
 })
 const labelOptions = computed(() => {
   return {
@@ -287,7 +287,7 @@ onMounted(() => {
 })
 
 const updateTableData = () => {
-  webSocketNew.value && webSocketNew.value.destroy();
+  webSocketNew.value && webSocketNew.value.destroy()
   setTimeout(() => {
     timerValue.value = new Date().getTime()
     openHostsMonitor()
@@ -296,9 +296,9 @@ const updateTableData = () => {
 }
 
 const hostIdList = computed(() => list.data.map((item: KeyValue) => {
-  return item.hostId;
+  return item.hostId
 }))
-const webSocketNew = ref<any>(null);
+const webSocketNew = ref<any>(null)
 const openHostsMonitor = () => {
   const param = {
     businessId: 'monitor_ops_host_' + timerValue.value
@@ -322,6 +322,9 @@ const openHostsMonitor = () => {
         list.data[index].memoryRate = eventData?.memory || 0
       }
     })
+  })
+  websocket.onerror((error) => {
+    console.log('ERROR:', error)
   })
   websocket.onclose((event) => {
     console.log(event)
@@ -386,12 +389,12 @@ const bulkClose = () => {
 
 // 这里测试下
 const clickSearch = (params) => {
-  filter.tagIds = params.tagIds;
-  filter.os = params.os || '';
-  filter.name = params.name || '';
-  updateTableData();
+  filter.tagIds = params.tagIds
+  filter.os = params.os || ''
+  filter.name = params.name || ''
+  updateTableData()
 }
-const getListData = () =>  {
+const getListData = () => {
   queryDataList()
   // queryDataList();
 }
@@ -399,13 +402,13 @@ const getListData = () =>  {
 const queryDataList = () => new Promise(resolve => {
   list.loading = true
   const param = JSON.parse(JSON.stringify(filter))
-  param.tagIds = filter.tagIds?.toString() || '';
+  param.tagIds = filter.tagIds?.toString() || ''
 
   hostPage(param).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
       resolve(true)
       list.data = res.rows?.map((item: KeyValue) => {
-        return item;
+        return item
       })
       list.page.total = res?.total
       setTimeout(() => {
@@ -416,12 +419,12 @@ const queryDataList = () => new Promise(resolve => {
         }).catch((err) => {
           console.error(err)
         })
-      })
+      }, 500)
       if (rowInfo.value) {
         // If the agent management drawer is open, updating the column data requires updating the open row data
         list.data.forEach((row: KeyValue) => {
           if (row.hostId === rowInfo.value?.hostId) {
-            rowInfo.value = row;
+            rowInfo.value = row
           }
         })
       }
@@ -512,10 +515,10 @@ const handleAddAgent = (record?: KeyValue) => {
 
 const addHostRef = ref<null | InstanceType<typeof AddHost>>(null)
 const handleAddHost = (type: string, data?: KeyValue) => {
-  const title = document.getElementById('physicalPageTitle');
-  title?.click();
-  rowHostId.value = data.hostId;
-  rowPublicIp.value = data.rowPublicIp;
+  const title = document.getElementById('physicalPageTitle')
+  title?.click()
+  rowHostId.value = data.hostId
+  rowPublicIp.value = data.rowPublicIp
   addHostRef.value?.open(type, data)
 }
 
@@ -620,8 +623,8 @@ const deleteSelectedHosts = () => {
 }
 
 const judgeUninstall = () => {
-  let allUninstallFlag = true;
-  for (let i=0; i<list.data.length; i++) {
+  let allUninstallFlag = true
+  for (let i = 0; i < list.data.length; i++) {
     if (list.selectedHostIds.includes(list.data[i].hostId) &&
       list.data[i].agentStatus !== AgentStatus.UNINSTALL) {
         allUninstallFlag = false

@@ -42,6 +42,6 @@ public class SshLogin {
 
     @Override
     public String toString() {
-        return "[host=" + host + ", username=" + username + "]";
+        return "ssh login info : [" + username + "@" + host + ":" + port + "]";
     }
 }
