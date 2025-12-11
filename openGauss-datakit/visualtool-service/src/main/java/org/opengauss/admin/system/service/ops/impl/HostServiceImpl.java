@@ -579,7 +579,7 @@ public class HostServiceImpl extends ServiceImpl<OpsHostMapper, OpsHostEntity> i
         Runnable worker = TaskManager.getRegistryWorker(businessId);
         if (worker == null) {
             WsSession wsSession = wsConnectorManager.getSession(businessId)
-                .orElseThrow(() -> new OpsException("response session does not exist"));
+                .orElseThrow(() -> new OpsException("response session[" + businessId + "] does not exist"));
             worker = new PageMonitorWorker(wsSession, pageHostList);
             TaskManager.registryWorker(businessId, worker);
             Future<?> future = threadPoolTaskExecutor.submit(worker);

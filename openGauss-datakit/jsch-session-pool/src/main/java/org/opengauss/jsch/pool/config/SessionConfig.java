@@ -164,4 +164,13 @@ public class SessionConfig {
     public boolean isSessionReuseAllowed() {
         return isReuseSessionForMultipleChannels;
     }
+
+    /**
+     * toString session simple config
+     *
+     * @return config
+     */
+    public String toSimpleString() {
+        return "session config:[" + username + "@" + host + ":" + port + "]";
+    }
 }

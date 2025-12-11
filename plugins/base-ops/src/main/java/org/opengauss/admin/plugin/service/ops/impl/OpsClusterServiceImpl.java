@@ -1424,7 +1424,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             throw new OpsException("Node installation user information does not exist");
         }
         WsSession wsSession = wsConnectorManager.getSession(businessId)
-            .orElseThrow(() -> new OpsException("response session does not exist"));
+            .orElseThrow(() -> new OpsException("response session[" + businessId + "] does not exist"));
         String dataPath = nodeEntity.getDataPath();
         SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), hostUserEntity.getUsername(),
             encryptionUtils.decrypt(hostUserEntity.getPassword()));

@@ -284,7 +284,8 @@ public class OpsJdbcDbClusterNodeServiceImpl extends ServiceImpl<OpsJdbcDbCluste
             return res;
         }
 
-        WsSession wsSession = wsConnectorManager.getSession(businessId).orElseThrow(() -> new OpsException("response session does not exist"));
+        WsSession wsSession = wsConnectorManager.getSession(businessId).orElseThrow(() ->
+                new OpsException("response session[" + businessId + "] does not exist"));
 
         Connection finalConnection = connection;
         Future<?> future = threadPoolTaskExecutor.submit(() -> {

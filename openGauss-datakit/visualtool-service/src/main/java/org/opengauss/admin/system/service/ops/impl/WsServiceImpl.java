@@ -90,7 +90,7 @@ public class WsServiceImpl implements IWsService {
     public WsSession getRetWsSession(String businessId) {
         return wsConnectorManager
                 .getSession(businessId)
-                .orElseThrow(() -> new OpsException("response session does not exist"));
+                .orElseThrow(() -> new OpsException("response session[" + businessId + "] does not exist"));
     }
 
     @Override

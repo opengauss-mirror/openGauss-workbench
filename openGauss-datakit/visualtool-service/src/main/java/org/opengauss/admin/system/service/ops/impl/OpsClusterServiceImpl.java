@@ -225,7 +225,7 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         Future<?> future = threadPoolTaskExecutor.submit(() -> {
             Connection connection = null;
             WsSession wsSession = wsConnectorManager.getSession(businessId)
-                .orElseThrow(() -> new OpsException("response session does not exist"));
+                .orElseThrow(() -> new OpsException("response session[" + businessId + "] does not exist"));
             try {
                 String driver = "org.opengauss.Driver";
                 String sourceURL = "jdbc:opengauss://" + hostEntity.getPublicIp() + ":" + clusterEntity.getPort()
