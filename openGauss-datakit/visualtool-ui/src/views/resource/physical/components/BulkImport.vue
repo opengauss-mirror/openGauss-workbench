@@ -201,7 +201,7 @@ const step1Status = computed(() => {
 
 const step2Status = computed(() => {
   if (data.formLoaFlag >= 6) return 'success'
-  if (data.formLoaFlag  < 5) return 'wait'
+  if (data.formLoaFlag < 5) return 'wait'
   return 'process'
 })
 
@@ -406,7 +406,7 @@ const fetchProgress = async () => {
   const uid = data.uid
   let formLoaFlagTemp = formLoaFlaEnum.loadWin
   try {
-    const progressResponse = await axios.get('/host/get_import_plan/', {
+    const progressResponse = await axios.get('/host/get_import_plan', {
       params: {
         uuid: uid
       }
@@ -524,11 +524,11 @@ const startProgressBar = () => {
 const downLoadModule = () => {
   let url = `/host/downloadTemplate/${currentLocale.value}`
   axios.get(url, {
-    responseType: 'blob', headers: {'Content-Type': 'application/json;application/octet-stream'}
+    responseType: 'blob', headers: { 'Content-Type': 'application/json;application/octet-stream' }
   })
     .then((res) => {
       if (res) {
-        const blob = new Blob([res], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})
+        const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
         const link = document.createElement('a')
         const URL = window.URL || window.webkitURL
         let herf = URL.createObjectURL(blob)
@@ -546,11 +546,11 @@ const downLoadErrRep = () => {
   const uuid = data.uid
   let url = `/host/downloadErrorExcel/${uuid}`
   axios.get(url, {
-    responseType: 'blob', headers: {'Content-Type': 'application/json;application/octet-stream'}
+    responseType: 'blob', headers: { 'Content-Type': 'application/json;application/octet-stream' }
   })
     .then((res) => {
       if (res) {
-        const blob = new Blob([res], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})
+        const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
         const link = document.createElement('a')
         const URL = window.URL || window.webkitURL
         let herf = URL.createObjectURL(blob)
@@ -576,7 +576,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload)
 })
 
-function handleBeforeUnload(event: BeforeUnloadEvent) {
+function handleBeforeUnload (event: BeforeUnloadEvent) {
   if (isUploading.value) {
     event.preventDefault()
     event.returnValue = ''
