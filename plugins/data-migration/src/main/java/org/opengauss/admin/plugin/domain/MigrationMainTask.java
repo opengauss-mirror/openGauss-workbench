@@ -88,4 +88,7 @@ public class MigrationMainTask {
     @TableField(exist = false)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date currentTime;
+
+    @TableField(exist = false)
+    private long executedTime;
 }

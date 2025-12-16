@@ -16,9 +16,10 @@ import java.util.List;
  */
 @Getter
 public enum PortalType {
-    MYSQL_ONLY("仅支持MySQL迁移", List.of(DbTypeEnum.MYSQL)),
-
-    MULTI_DB("当前仅支持PostgreSQL迁移", List.of(DbTypeEnum.POSTGRESQL));
+    MYSQL_ONLY("Only support MySQL migration", List.of(DbTypeEnum.MYSQL)),
+    MULTI_DB("Support PostgreSQL/Milvus/Elasticsearch migration",
+            List.of(DbTypeEnum.POSTGRESQL, DbTypeEnum.MILVUS, DbTypeEnum.ELASTICSEARCH)),
+    ;
 
     PortalType(String description, List<DbTypeEnum> supportedDbTypes) {
         this.description = description;

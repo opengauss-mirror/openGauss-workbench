@@ -17,12 +17,28 @@ import java.util.List;
  */
 public interface FullMigrationProgressService extends IService<FullMigrationProgress> {
     /**
+     * Delete all records by taskId and status
+     *
+     * @param taskId taskId
+     * @param status migration status
+     */
+    void deleteByTaskIdAndStatus(Integer taskId, Integer status);
+
+    /**
      * Delete all records by taskId and objectType
      *
      * @param taskId     taskId
      * @param objectType objectType
      */
     void deleteByTaskIdAndObjectType(Integer taskId, FullMigrationDbObjEnum objectType);
+
+    /**
+     * Get list by taskId
+     *
+     * @param taskId taskId
+     * @return list
+     */
+    List<FullMigrationProgress> getListByTaskId(Integer taskId);
 
     /**
      * Get list by taskId and objectType

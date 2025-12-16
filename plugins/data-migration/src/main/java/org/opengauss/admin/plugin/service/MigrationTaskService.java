@@ -30,7 +30,6 @@ import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTask;
 import org.opengauss.admin.plugin.domain.MigrationTaskCheckProgressDetail;
 import org.opengauss.admin.plugin.domain.MigrationTaskCheckProgressSummary;
-import org.opengauss.admin.plugin.domain.MigrationTaskGlobalParam;
 import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
 import org.opengauss.admin.plugin.dto.MigrationCurrentCheckInfoDto;
 import org.opengauss.admin.plugin.dto.MigrationInfoDto;
@@ -139,11 +138,9 @@ public interface MigrationTaskService extends IService<MigrationTask> {
      *
      * @param h MigrationTaskHostRef Object
      * @param t MigrationTask Object
-     * @param globalParams globalParams
      * @param operateUsername operateUsername
      */
-    void runTask(MigrationTaskHostRef h, MigrationTask t, List<MigrationTaskGlobalParam> globalParams,
-        String operateUsername);
+    void runTask(MigrationTaskHostRef h, MigrationTask t, String operateUsername);
 
     /**
      * subtask Execution Offline Scheduler
@@ -155,12 +152,10 @@ public interface MigrationTaskService extends IService<MigrationTask> {
      *
      * @param installHost installHost
      * @param t task
-     * @param globalParams globalParams
      * @param command command
      * @return check result
      */
-    boolean execMigrationCheck(MigrationHostPortalInstall installHost, MigrationTask t,
-        List<MigrationTaskGlobalParam> globalParams, String command);
+    boolean execMigrationCheck(MigrationHostPortalInstall installHost, MigrationTask t, String command);
 
     /**
      * check status of incremental or reverse migration task
@@ -247,4 +242,13 @@ public interface MigrationTaskService extends IService<MigrationTask> {
      * @param sessionId sessionId
      */
     void sendMigrationDataByWebsocket(Integer id, String sessionId);
+
+    /**
+     * Get log file content
+     *
+     * @param taskId taskId
+     * @param logFilePath logFilePath
+     * @return log file content
+     */
+    String getLogFileContent(Integer taskId, String logFilePath);
 }

@@ -24,19 +24,24 @@
 
 package org.opengauss.admin.plugin.service.impl;
 
-import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.map.MapUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+
+import cn.hutool.core.date.DateUtil;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.StringUtils;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsJdbcDbClusterNodeEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsNonJdbcDbClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.model.LoginUser;
-import org.opengauss.admin.common.core.dto.ops.ClusterNodeDto;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.common.utils.SecurityUtils;
 import org.opengauss.admin.common.utils.ops.JdbcUtil;
@@ -44,7 +49,6 @@ import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationMainTask;
 import org.opengauss.admin.plugin.domain.MigrationTask;
 import org.opengauss.admin.plugin.domain.MigrationTaskExecResultDetail;
-import org.opengauss.admin.plugin.domain.MigrationTaskGlobalParam;
 import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
 import org.opengauss.admin.plugin.domain.MigrationTaskModel;
 import org.opengauss.admin.plugin.domain.MigrationTaskParam;
@@ -66,7 +70,6 @@ import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
 import org.opengauss.admin.plugin.service.MigrationMainTaskService;
 import org.opengauss.admin.plugin.service.MigrationTaskAlertService;
 import org.opengauss.admin.plugin.service.MigrationTaskExecResultDetailService;
-import org.opengauss.admin.plugin.service.MigrationTaskGlobalParamService;
 import org.opengauss.admin.plugin.service.MigrationTaskHostRefService;
 import org.opengauss.admin.plugin.service.MigrationTaskModelService;
 import org.opengauss.admin.plugin.service.MigrationTaskOperateRecordService;
@@ -75,6 +78,8 @@ import org.opengauss.admin.plugin.service.MigrationTaskService;
 import org.opengauss.admin.plugin.service.MigrationTaskStatusRecordService;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
+import org.opengauss.admin.system.plugin.facade.JdbcDbClusterFacade;
+import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -86,6 +91,7 @@ import org.springframework.util.ObjectUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -94,7 +100,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
@@ -118,8 +123,6 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     @Lazy
     private MigrationTaskHostRefService migrationTaskHostRefService;
     @Autowired
-    private MigrationTaskGlobalParamService migrationTaskGlobalParamService;
-    @Autowired
     private MigrationTaskParamService migrationTaskParamService;
     @Autowired
     private MigrationTaskModelService migrationTaskModelService;
@@ -137,11 +140,16 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     private MigrationTaskAlertService migrationTaskAlertService;
     @Value("${migration.taskRefreshIntervalsMillisecond}")
     private Long taskRefreshIntervalsMillisecond;
-    @Value("${migration.mainTaskRefreshIntervalsMillisecond}")
-    private Long mainTaskRefreshIntervalsMillisecond;
+
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostFacade hostFacade;
+    @Resource
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private OpsFacade opsFacade;
+    @Resource
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private JdbcDbClusterFacade jdbcDbClusterFacade;
     @Autowired
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private EncryptionUtils encryptionUtils;
@@ -159,13 +167,13 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
     public IPage<MigrationMainTask> selectList(IPage<MigrationMainTask> page, MigrationMainTaskDto task) {
         IPage<MigrationMainTask> taskPage = migrationMainTaskMapper.selectTaskPage(page, task);
         List<MigrationMainTask> tasks = taskPage.getRecords();
-        tasks.forEach(mainTask -> mainTask.setCurrentTime(new Date()));
         setMigrationTaskType(tasks);
         return taskPage;
     }
 
     private void setMigrationTaskType(List<MigrationMainTask> tasks) {
         tasks.forEach(mainTask -> {
+            mainTask.setCurrentTime(new Date());
             List<MigrationTask> subTasks = migrationTaskService.listByMainTaskId(mainTask.getId());
             subTasks.forEach(t -> {
                 if (t.getExecStatus() == 500) {
@@ -173,6 +181,20 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                     updateById(mainTask);
                 }
                 setOfflineMigrationTaskType(subTasks, mainTask);
+                Instant execTime = t.getExecTime();
+                if (execTime != null) {
+                    mainTask.setExecTime(Date.from(execTime));
+                } else {
+                    return;
+                }
+
+                Instant finishTime = t.getFinishTime();
+                if (finishTime != null) {
+                    mainTask.setFinishTime(Date.from(finishTime));
+                    mainTask.setExecutedTime(Duration.between(execTime, finishTime).toSeconds());
+                } else {
+                    mainTask.setExecutedTime(Duration.between(execTime, Instant.now()).toSeconds());
+                }
             });
         });
     }
@@ -187,10 +209,10 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 .forEach(t -> {
                     MigrationTaskStatusRecord lastTaskStatus = migrationTaskStatusRecordService.getLastByTaskId(t
                             .getId());
-                    if (lastTaskStatus == null || !"1.00".equals(mainTask.getExecProgress())) {
+                    if (lastTaskStatus == null) {
                         return;
                     }
-                    if ((lastTaskStatus.getStatusId() == 3 && DbTypeEnum.POSTGRESQL.equals(t.getSourceDbType()))
+                    if ((lastTaskStatus.getStatusId() == 3 && !DbTypeEnum.MYSQL.equals(t.getSourceDbType()))
                             || lastTaskStatus.getStatusId() == 6) {
                         mainTask.setExecStatus(MainTaskStatus.SUCCESS.getCode());
                         updateById(mainTask);
@@ -291,83 +313,39 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         result.put("onlineCounts", calculateTaskCount(onlineTasks, 2));
         result.put("hosts", hosts);
         result.put("task", task);
-        List<MigrationTaskGlobalParam> globalParams = migrationTaskGlobalParamService.selectByMainTaskId(taskId);
-        result.put("globalParams", globalParams);
         return result;
     }
 
-
-    /**
-     * Get task detail
-     *
-     * @param taskId
-     * @return
-     */
     @Override
-    public MigrationTaskDto getMigrationTaskDtoById(Integer taskId) {
-        MigrationMainTask task = getById(taskId);
-        MigrationTaskDto dto = new MigrationTaskDto();
-        dto.setTaskId(task.getId());
-        dto.setTaskName(task.getTaskName());
+    public MigrationTaskDto getMigrationTaskDtoById(Integer mainTaskId) {
+        MigrationMainTask mainTask = getById(mainTaskId);
+        if (mainTask == null) {
+            throw new IllegalArgumentException("Migration task does not exist, mainTaskId: " + mainTaskId);
+        }
 
-        List<MigrationTaskGlobalParam> globalParams = migrationTaskGlobalParamService.selectByMainTaskId(taskId);
-        dto.setGlobalParams(globalParams);
-        List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(taskId);
-        tasks.stream().forEach(t -> {
+        MigrationTaskDto dto = new MigrationTaskDto();
+        dto.setTaskId(mainTask.getId());
+        dto.setTaskName(mainTask.getTaskName());
+
+        List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(mainTaskId);
+        tasks.forEach(t -> {
             t.setTaskParams(migrationTaskParamService.selectByTaskId(t.getId()));
             t.setIsSystemAdmin(JdbcUtil.judgeSystemAdmin(t.getTargetDbHost(), t.getTargetDbPort(), t.getTargetDbUser(),
                 encryptionUtils.decrypt(t.getTargetDbPass())));
         });
         dto.setTasks(tasks);
-        List<MigrationTaskHostRef> hosts = migrationTaskHostRefService.listByMainTaskId(taskId);
+
+        List<MigrationTaskHostRef> hosts = migrationTaskHostRefService.listByMainTaskId(mainTaskId);
         dto.setHostIds(hosts.stream().map(MigrationTaskHostRef::getRunHostId).collect(Collectors.toList()));
         return dto;
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void saveTask(MigrationTaskDto taskDto) {
         checkTask(taskDto);
-
-        MigrationMainTask mainTask = new MigrationMainTask();
-        LoginUser loginUser = SecurityUtils.getLoginUser();
-        mainTask.setCreateUser(loginUser != null ? loginUser.getUsername() : "unknown");
-        mainTask.setTaskName(taskDto.getTaskName());
-        mainTask.setCreateTime(new Date());
-        mainTask.setExecStatus(MainTaskStatus.NOT_RUN.getCode());
-        save(mainTask);
-
-        List<MigrationTaskParam> batchTaskParams = new ArrayList<>();
-        taskDto.getTasks().stream().forEach(t -> {
-            t.setMainTaskId(mainTask.getId());
-            t.setCreateTime(Instant.now());
-            t.setExecStatus(TaskStatus.NOT_RUN.getCode());
-            MigrationTaskModel model = migrationTaskModelService.getById(t.getMigrationModelId());
-            t.setMigrationOperations(model.getMigrationOperations());
-            if (DbTypeEnum.POSTGRESQL.equals(t.getSourceDbType()) && ObjectUtils.isEmpty(t.getSourceSchemas())) {
-                t.setSourceSchemas(String.join(",", migrationTaskHostRefService.getPgsqlDbSchemas(
-                        t.getSourceDbHost(), t.getSourceDbPort(), t.getSourceDb(), t.getSourceDbUser(),
-                        t.getSourceDbPass())));
-            }
-            migrationTaskService.save(t);
-            if (t.getTaskParams().size() > 0) {
-                t.getTaskParams().stream().forEach(param -> {
-                    param.setTaskId(t.getId());
-                    param.setMainTaskId(mainTask.getId());
-                });
-                batchTaskParams.addAll(t.getTaskParams());
-            }
-        });
-        batchTaskParams.stream().forEach(tp -> {
-            tp.setId(null);
-            migrationTaskParamService.save(tp);
-        });
-        saveRunHosts(taskDto.getHostIds(), mainTask.getId());
-        taskDto.getGlobalParams().stream().forEach(param -> {
-            param.setId(null);
-            param.setMainTaskId(mainTask.getId());
-            migrationTaskGlobalParamService.save(param);
-        });
+        MigrationMainTask mainTask = saveMainTask(taskDto);
+        saveTaskDetails(taskDto, mainTask);
     }
 
     private void checkTask(MigrationTaskDto taskDto) {
@@ -381,59 +359,182 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                     "A main task must select one portal host and can only select one portal host.");
         }
 
-        PortalType portalType = migrationHostPortalInstallHostService.getOneByHostId(hostIds.get(0)).getPortalType();
-        if (!portalType.getSupportedDbTypes().contains(tasks.get(0).getSourceDbType())) {
-            throw new MigrationTaskException("Current portal host does not support current source database type");
+        DbTypeEnum sourceDbType = tasks.get(0).getSourceDbType();
+        if (sourceDbType == null) {
+            throw new MigrationTaskException("Migration task source database type cannot be empty.");
+        }
+
+        MigrationHostPortalInstall portalInstall = migrationHostPortalInstallHostService.getOneByHostId(hostIds.get(0));
+        if (portalInstall == null) {
+            throw new MigrationTaskException("Portal host does not exist, host id: " + hostIds.get(0));
+        }
+
+        if (!portalInstall.getPortalType().getSupportedDbTypes().contains(sourceDbType)) {
+            throw new MigrationTaskException("Current portal host does not support current source database type: "
+                    + sourceDbType);
         }
     }
 
-    @Override
-    @Transactional
-    public AjaxResult updateTask(MigrationTaskDto taskDto) {
-        MigrationMainTask mainTask = migrationMainTaskMapper.selectById(taskDto.getTaskId());
-        if (mainTask == null) {
-            return AjaxResult.error(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
-        }
-        if (mainTask.getExecStatus() != TaskStatus.NOT_RUN.getCode()) {
-            return AjaxResult.error(MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getCode(), MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getMsg());
+    private MigrationMainTask saveMainTask(MigrationTaskDto taskDto) {
+        MigrationMainTask selectTask = getMainTaskByTaskName(taskDto.getTaskName());
+        if (selectTask != null) {
+            throw new MigrationTaskException("Main task name already exists, task name: " + taskDto.getTaskName());
         }
 
-        MigrationMainTask update = getById(taskDto.getTaskId());
+        MigrationMainTask mainTask = new MigrationMainTask();
+        LoginUser loginUser = SecurityUtils.getLoginUser();
+        mainTask.setCreateUser(loginUser != null ? loginUser.getUsername() : "unknown");
+        mainTask.setTaskName(taskDto.getTaskName());
+        mainTask.setCreateTime(new Date());
+        mainTask.setExecStatus(MainTaskStatus.NOT_RUN.getCode());
+        save(mainTask);
+        return mainTask;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public AjaxResult updateTask(MigrationTaskDto taskDto) {
+        Integer mainTaskId = taskDto.getTaskId();
+        if (mainTaskId == null) {
+            throw new IllegalArgumentException("Migration task id cannot be empty");
+        }
+
+        MigrationMainTask mainTask = migrationMainTaskMapper.selectById(mainTaskId);
+        if (mainTask == null) {
+            throw new MigrationTaskException(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
+        }
+        if (!TaskStatus.NOT_RUN.getCode().equals(mainTask.getExecStatus())) {
+            throw new MigrationTaskException(MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getMsg());
+        }
+
+        checkTask(taskDto);
+
+        MigrationMainTask update = getById(mainTaskId);
         update.setTaskName(taskDto.getTaskName());
         updateById(update);
 
-        migrationTaskParamService.deleteByMainTaskId(taskDto.getTaskId());
-        migrationTaskService.deleteByMainTaskId(taskDto.getTaskId());
+        migrationTaskParamService.deleteByMainTaskId(mainTaskId);
+        migrationTaskService.deleteByMainTaskId(mainTaskId);
+        migrationTaskHostRefService.deleteByMainTaskId(mainTaskId);
+
+        saveTaskDetails(taskDto, mainTask);
+        return AjaxResult.success();
+    }
+
+    private void saveTaskDetails(MigrationTaskDto taskDto, MigrationMainTask mainTask) {
+        MigrationTask task = taskDto.getTasks().get(0);
+        task.setMainTaskId(mainTask.getId());
+        task.setCreateTime(Instant.now());
+        task.setExecStatus(TaskStatus.NOT_RUN.getCode());
+        setSourceDatabaseInfo(task);
+        setTargetDatabaseInfo(task);
+
+        DbTypeEnum sourceDbType = task.getSourceDbType();
+        Integer modeId = sourceDbType.isJdbcDriver() ? task.getMigrationModelId() : MigrationMode.OFFLINE.getCode();
+        if (modeId == null) {
+            throw new IllegalArgumentException("Migration task migration mode id cannot be empty");
+        }
+        task.setMigrationModelId(modeId);
+        MigrationTaskModel model = migrationTaskModelService.getById(modeId);
+        task.setMigrationOperations(model.getMigrationOperations());
+        migrationTaskService.save(task);
+
         List<MigrationTaskParam> batchTaskParams = new ArrayList<>();
-        taskDto.getTasks().stream().forEach(t -> {
-            t.setMainTaskId(mainTask.getId());
-            t.setCreateTime(Instant.now());
-            t.setExecStatus(TaskStatus.NOT_RUN.getCode());
-            MigrationTaskModel model = migrationTaskModelService.getById(t.getMigrationModelId());
-            t.setMigrationOperations(model.getMigrationOperations());
-            migrationTaskService.save(t);
-            if (t.getTaskParams().size() > 0) {
-                t.getTaskParams().stream().forEach(param -> {
-                    param.setTaskId(t.getId());
-                    param.setMainTaskId(mainTask.getId());
-                });
-                batchTaskParams.addAll(t.getTaskParams());
-            }
-        });
-        batchTaskParams.stream().forEach(tp -> {
+        if (!task.getTaskParams().isEmpty()) {
+            task.getTaskParams().forEach(param -> {
+                param.setTaskId(task.getId());
+                param.setMainTaskId(mainTask.getId());
+            });
+            batchTaskParams.addAll(task.getTaskParams());
+        }
+
+        batchTaskParams.forEach(tp -> {
             tp.setId(null);
             migrationTaskParamService.save(tp);
         });
-        migrationTaskHostRefService.deleteByMainTaskId(taskDto.getTaskId());
-        saveRunHosts(taskDto.getHostIds(), mainTask.getId());
 
-        migrationTaskGlobalParamService.deleteByMainTaskId(taskDto.getTaskId());
-        taskDto.getGlobalParams().stream().forEach(param -> {
-            param.setId(null);
-            param.setMainTaskId(mainTask.getId());
-            migrationTaskGlobalParamService.save(param);
-        });
-        return AjaxResult.success();
+        saveRunHosts(taskDto.getHostIds(), mainTask.getId());
+    }
+
+    private void setSourceDatabaseInfo(MigrationTask migrationTask) {
+        String sourceNodeId = migrationTask.getSourceNodeId();
+        if (StringUtils.isBlank(sourceNodeId)) {
+            throw new IllegalArgumentException("Migration task source cluster node id cannot be empty");
+        }
+
+        DbTypeEnum sourceDbType = migrationTask.getSourceDbType();
+        if (sourceDbType.isJdbcDriver()) {
+            OpsJdbcDbClusterNodeEntity sourceNode = jdbcDbClusterFacade.getJdbcDbClusterNode(sourceNodeId);
+            if (sourceNode == null) {
+                throw new IllegalArgumentException("Source cluster node does not exist, node id: " + sourceNodeId);
+            }
+
+            migrationTask.setSourceDbHost(sourceNode.getIp());
+            migrationTask.setSourceDbPort(sourceNode.getPort());
+            migrationTask.setSourceDbUser(sourceNode.getUsername());
+            migrationTask.setSourceDbPass(sourceNode.getPassword());
+
+            String sourceDb = migrationTask.getSourceDb();
+            if (StringUtils.isBlank(sourceDb)) {
+                throw new IllegalArgumentException("Migration task source database name cannot be empty");
+            }
+
+            if (DbTypeEnum.POSTGRESQL.equals(sourceDbType) && ObjectUtils.isEmpty(migrationTask.getSourceSchemas())) {
+                migrationTask.setSourceSchemas(String.join(",", migrationTaskHostRefService.getSourceSchemas(
+                        sourceDbType, sourceNodeId, sourceDb)));
+            }
+        } else {
+            OpsNonJdbcDbClusterNodeEntity sourceNode = jdbcDbClusterFacade.getNonJdbcDbClusterNode(sourceNodeId);
+            if (sourceNode == null) {
+                throw new IllegalArgumentException("Source cluster node does not exist, node id: " + sourceNodeId);
+            }
+
+            migrationTask.setSourceDbHost(sourceNode.getIp());
+            migrationTask.setSourceDbPort(sourceNode.getPort());
+            migrationTask.setSourceDbUser(sourceNode.getUsername());
+            migrationTask.setSourceDbPass(sourceNode.getPassword());
+
+            if (migrationTask.getSourceTables().isBlank()) {
+                throw new IllegalArgumentException("Migration task source tables cannot be empty");
+            }
+        }
+    }
+
+    private void setTargetDatabaseInfo(MigrationTask migrationTask) {
+        String targetNodeId = migrationTask.getTargetNodeId();
+        if (StringUtils.isBlank(targetNodeId)) {
+            throw new IllegalArgumentException("Migration task target cluster node id cannot be empty");
+        }
+
+        String targetDb = migrationTask.getTargetDb();
+        if (StringUtils.isBlank(targetDb)) {
+            throw new IllegalArgumentException("Migration task target database name cannot be empty");
+        }
+
+        OpsJdbcDbClusterNodeEntity targetNode = jdbcDbClusterFacade.getJdbcDbClusterNode(targetNodeId);
+        if (targetNode != null) {
+            migrationTask.setTargetDbHost(targetNode.getIp());
+            migrationTask.setTargetDbPort(targetNode.getPort());
+            migrationTask.setTargetDbUser(targetNode.getUsername());
+            migrationTask.setTargetDbPass(targetNode.getPassword());
+            return;
+        }
+
+        OpsClusterVO targetCluster = opsFacade.getOpsClusterVOByNodeId(targetNodeId);
+        if (targetCluster == null) {
+            throw new IllegalArgumentException("Target cluster node does not exist, node id: " + targetNodeId);
+        }
+
+        OpsClusterNodeVO targetNodeVO = targetCluster.getClusterNodes().stream()
+                .filter(node -> node.getNodeId().equals(targetNodeId)).findFirst().orElse(null);
+        if (targetNodeVO == null) {
+            throw new IllegalArgumentException("Target cluster node does not exist, node id: " + targetNodeId);
+        }
+
+        migrationTask.setTargetDbHost(targetNodeVO.getPublicIp());
+        migrationTask.setTargetDbPort(String.valueOf(targetNodeVO.getDbPort()));
+        migrationTask.setTargetDbUser(targetNodeVO.getDbUser());
+        migrationTask.setTargetDbPass(targetNodeVO.getDbUserPassword());
     }
 
     private void saveRunHosts(List<String> hostIds, Integer mainTaskId) {
@@ -452,20 +553,25 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
 
     @Override
     public void deleteTask(Integer[] ids) {
-        Arrays.asList(ids).stream().forEach(i -> {
+        Arrays.stream(ids).forEach(i -> {
             removeById(i);
             migrationTaskAlertService.deleteByMainTaskId(i);
             migrationTaskService.deleteByMainTaskId(i);
             migrationTaskParamService.deleteByMainTaskId(i);
-            migrationTaskGlobalParamService.deleteByMainTaskId(i);
             migrationTaskHostRefService.deleteByMainTaskId(i);
         });
     }
 
-
     @Override
-    public void updateStatus(Integer id, MainTaskStatus taskStatus) {
-        MigrationMainTask task = getById(id);
+    public void updateStatus(Integer mainTaskId, MainTaskStatus taskStatus) {
+        if (mainTaskId == null) {
+            throw new IllegalArgumentException("Migration task id cannot be empty");
+        }
+        MigrationMainTask task = getById(mainTaskId);
+        if (task == null) {
+            throw new MigrationTaskException(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
+        }
+
         task.setExecStatus(taskStatus.getCode());
         if (taskStatus.getCode().equals(MainTaskStatus.RUNNING.getCode())) {
             task.setExecTime(new Date());
@@ -476,41 +582,15 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         updateById(task);
     }
 
-    /**
-     * Start the task process:
-     * 1. Query subtask list; query running configuration machine list; query global configuration and subtask configuration data;
-     * 2. Loop through each machine, use the maximum number of executable tasks - the number of running tasks to get the number of tasks that can be executed by each machine, assign tasks according to the number of executable tasks, and judge whether the machine is installed with portal, if not Install, then install the portal. The following situations may be encountered when assigning tasks:
-     * a. If the total number of executable tasks of all machines > the number of subtasks,
-     * it is allocated according to the number of executable tasks of each machine, and then the configuration parameters are processed, the portal process is invoked, and task instructions are issued.
-     * b. The total number of executable tasks of all machines < the number of subtasks,
-     * For example, there are 3 machines, A machine can run 3, B machine can run 6, C machine can run 5,
-     * the overall number of tasks can be 14, and the number of subtasks is 20.
-     * At this time, the 14 tasks are first allocated according to the executable quantity of each machine,
-     * and then the configuration parameters are processed, the portal process is invoked, and task instructions are issued. The status of the remaining 6 tasks is changed to waiting for resources, which are called by the asynchronous scheduler.
-     * The asynchronous scheduler will regularly monitor whether the three machines have resources released, and if there are resources released, tasks will be assigned according to the carrying capacity.
-     * 3. For the task assigned to the machine, log in to the remote server, process configuration parameters, start the portal process, and pass in the subtask ID to start the process. Then write the instructions of the task to the input file of Portal.
-     * 4. Modify the subtask status, and modify the task to the running state.
-     *
-     * @param id
-     */
     @Override
     @Transactional
-    public AjaxResult startTask(Integer id) {
+    public AjaxResult startTask(Integer mainTaskId) {
         long startTaskTimestamp = System.currentTimeMillis();
-        MigrationMainTask mainTask = getById(id);
-        if (mainTask == null) {
-            return AjaxResult.error(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getCode(),
-                MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
-        }
-        if (mainTask.getExecStatus().equals(MainTaskStatus.RUNNING.getCode()) || mainTask.getExecStatus()
-            .equals(MainTaskStatus.FINISH.getCode())) {
-            return AjaxResult.error(MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getCode(),
-                MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getMsg());
-        }
-        updateStatus(id, MainTaskStatus.RUNNING);
-        List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(id);
-        List<MigrationTaskHostRef> hosts = migrationTaskHostRefService.listByMainTaskId(id);
-        List<MigrationTaskGlobalParam> globalParams = migrationTaskGlobalParamService.selectByMainTaskId(id);
+        beforeStartCheck(mainTaskId);
+        updateStatus(mainTaskId, MainTaskStatus.RUNNING);
+
+        List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(mainTaskId);
+        List<MigrationTaskHostRef> hosts = migrationTaskHostRefService.listByMainTaskId(mainTaskId);
         int totalRunnableCount = hosts.stream().mapToInt(MigrationTaskHostRef::getRunnableCount).sum();
         String operateUsername = SecurityUtils.getUsername();
         if (totalRunnableCount > tasks.size()) {
@@ -522,7 +602,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 t.setOrderInvokedTimestamp(startTaskTimestamp);
                 MigrationTaskHostRef h = hosts.get(curHostIndex);
                 h.addPlaceHolderCount();
-                threadPoolTaskExecutor.submit(() -> migrationTaskService.runTask(h, t, globalParams, operateUsername));
+                threadPoolTaskExecutor.submit(() -> runTask(h, t, operateUsername));
             }
         } else { //The number of tasks that the host can perform is less than the total number of tasks
             hosts.forEach(h -> {
@@ -530,8 +610,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 for (int i = tasks.size() - 1; i >= tasks.size() - runnableCount; i--) {
                     MigrationTask t = tasks.get(i);
                     t.setOrderInvokedTimestamp(startTaskTimestamp);
-                    threadPoolTaskExecutor.submit(
-                        () -> migrationTaskService.runTask(h, t, globalParams, operateUsername));
+                    threadPoolTaskExecutor.submit(() -> runTask(h, t, operateUsername));
                     tasks.remove(i);
                 }
             });
@@ -544,28 +623,54 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         return AjaxResult.success();
     }
 
+    private void runTask(MigrationTaskHostRef hostRef, MigrationTask task, String operateUsername) {
+        try {
+            migrationTaskService.runTask(hostRef, task, operateUsername);
+        } catch (Exception e) {
+            log.error("Run task error, host: {}, task id: {}", hostRef.getHost(), task.getId(), e);
+        }
+    }
+
+    private void beforeStartCheck(Integer mainTaskId) {
+        if (mainTaskId == null) {
+            throw new IllegalArgumentException("Migration task id cannot be empty");
+        }
+
+        MigrationMainTask mainTask = getById(mainTaskId);
+        if (mainTask == null) {
+            throw new MigrationTaskException(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
+        }
+        if (mainTask.getExecStatus().equals(MainTaskStatus.RUNNING.getCode()) || mainTask.getExecStatus()
+                .equals(MainTaskStatus.FINISH.getCode())) {
+            throw new MigrationTaskException(MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getMsg());
+        }
+    }
+
     @Transactional
     @Override
-    public AjaxResult resetTask(Integer id) {
-        MigrationMainTask mainTask = getById(id);
+    public AjaxResult resetTask(Integer mainTaskId) {
+        if (mainTaskId == null) {
+            throw new IllegalArgumentException("Migration task id cannot be empty");
+        }
+
+        MigrationMainTask mainTask = getById(mainTaskId);
         if (mainTask == null || mainTask.getId() == null) {
-            return AjaxResult.error(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getCode(),
-                    MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
+            throw new MigrationTaskException(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
         }
         if (!mainTask.getExecStatus().equals(MainTaskStatus.FINISH.getCode())
                 && !mainTask.getExecStatus().equals(MainTaskStatus.SUCCESS.getCode())) {
-            return AjaxResult.error(MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getCode(),
-                    MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getMsg());
+            throw new MigrationTaskException(MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getMsg());
         }
+
         mainTask.setExecStatus(MainTaskStatus.NOT_RUN.getCode());
         mainTask.setFinishTime(null);
         mainTask.setExecTime(null);
         mainTask.setExecProgress("0.0");
         migrationMainTaskMapper.updateById(mainTask);
 
-        List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(id);
-        migrationTaskAlertService.deleteByMainTaskId(id);
-        migrationTaskService.deleteByMainTaskId(id);
+        List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(mainTaskId);
+        migrationTaskAlertService.deleteByMainTaskId(mainTaskId);
+        migrationTaskService.deleteByMainTaskId(mainTaskId);
         tasks.forEach(task -> {
             Integer subTaskId = task.getId();
             task.setId(null);
@@ -585,14 +690,28 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 });
             }
         });
+        migrationTaskParamService.deleteByMainTaskId(mainTaskId);
         return AjaxResult.success();
     }
 
     @Override
-    public void finishTask(Integer id) {
-        updateStatus(id, MainTaskStatus.FINISH);
+    public void finishTask(Integer mainTaskId) {
+        if (mainTaskId == null) {
+            throw new IllegalArgumentException("Migration task id cannot be empty");
+        }
+
+        MigrationMainTask mainTask = getById(mainTaskId);
+        if (mainTask == null) {
+            throw new MigrationTaskException(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
+        }
+
+        mainTask.setExecProgress("1.00");
+        mainTask.setExecStatus(MainTaskStatus.FINISH.getCode());
+        mainTask.setFinishTime(new Date());
+        updateById(mainTask);
+
         long finishTaskTimestamp = System.currentTimeMillis();
-        List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(id);
+        List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(mainTaskId);
         tasks.forEach(task -> {
             task.setOrderInvokedTimestamp(finishTaskTimestamp);
             doFinishTask(task);
@@ -633,7 +752,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             throw new MigrationTaskException("The portal host does not exist.");
         }
 
-        if (DbTypeEnum.POSTGRESQL.equals(task.getSourceDbType())) {
+        if (PortalType.MULTI_DB.equals(portalHost.getPortalType())) {
             multiDbPortal.stopTask(portalHost, task);
         } else {
             ShellInfoVo shellInfo = new ShellInfoVo(task.getRunHost(), task.getRunPort(), task.getRunUser(),
@@ -652,11 +771,15 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 && subTask.getExecStatus() != TaskStatus.INCREMENTAL_RUNNING.getCode()) {
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_ERROR.getCode(), MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_ERROR.getMsg());
         }
+        DbTypeEnum sourceDbType = subTask.getSourceDbType();
+        if (DbTypeEnum.MILVUS.equals(sourceDbType) || DbTypeEnum.ELASTICSEARCH.equals(sourceDbType)) {
+            return AjaxResult.error("Milvus and Elasticsearch do not support incremental migration");
+        }
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(subTask.getRunHostId());
         long stopIncrementalTimestamp = System.currentTimeMillis();
         subTask.setOrderInvokedTimestamp(stopIncrementalTimestamp);
 
-        if (DbTypeEnum.POSTGRESQL.equals(subTask.getSourceDbType())) {
+        if (DbTypeEnum.POSTGRESQL.equals(sourceDbType)) {
             multiDbPortal.stopIncremental(installHost, subTask);
         } else {
             PortalHandle.stopIncrementalPortal(subTask.getRunHost(), subTask.getRunPort(), subTask.getRunUser(),
@@ -670,57 +793,6 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         LoginUser loginUser = SecurityUtils.getLoginUser();
         migrationTaskOperateRecordService.saveRecord(subTask.getId(), TaskOperate.STOP_INCREMENTAL, loginUser.getUsername());
         return AjaxResult.success();
-    }
-
-
-    /**
-     * Check if the conditions for reverse migration are met.
-     *
-     * @param subTask MigrationTask Object
-     * @return check result
-     */
-    private Optional<AjaxResult> checkReverseCondition(MigrationTask subTask) {
-        ClusterNodeDto clusterNode = hostFacade.getClusterNodeByNodeId(subTask.getTargetNodeId());
-        if (StringUtils.isBlank(clusterNode.getPublicIp())) {
-            return Optional.of(AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_SUPPORT_REVERSE_ERROR.getCode(),
-                    MigrationErrorCode.SUB_TASK_NOT_SUPPORT_REVERSE_ERROR.getMsg()));
-        } else {
-            Map<String, Object> result = new HashMap<>();
-            result.put("dbUser", subTask.getTargetDbUser());
-            String password = encryptionUtils.decrypt(clusterNode.getInstallPassword());
-            boolean permiseIsOk = PortalHandle.checkTargetNodeReplicationPermise(clusterNode.getPublicIp(),
-                    clusterNode.getPort(), clusterNode.getInstallUserName(), password, clusterNode.getDataPath(),
-                    subTask.getTargetDbUser());
-            result.put("replacationPermise", permiseIsOk);
-            Map<String, Object> configCheckResult = PortalHandle.checkTargetNodeConfigCorrectness(clusterNode
-                            .getPublicIp(), clusterNode.getPort(), clusterNode.getInstallUserName(), password,
-                    clusterNode.getDataPath());
-            boolean configIsOk = MapUtil.getBool(configCheckResult, "checkResult");
-            result.putAll(configCheckResult);
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("SELECT r.rolcanlogin AS rolcanlogin, r.rolreplication AS rolreplication ");
-            stringBuilder.append("FROM pg_roles r WHERE r.rolname = current_user");
-            List<Map<String, Object>> userPermiseResults = migrationTaskHostRefService.queryBySqlOnOpengauss(
-                subTask.getTargetDbHost(), subTask.getTargetDbPort(), "postgres",
-                subTask.getTargetDbUser(), encryptionUtils.decrypt(subTask.getTargetDbPass()),
-                "public", stringBuilder.toString());
-            boolean checkUserPermiseIsOk = false;
-            if (userPermiseResults.size() > 0) {
-                Map<String, Object> singleMap = userPermiseResults.get(0);
-                String rolcanlogin = MapUtil.getStr(singleMap, "rolcanlogin");
-                String rolreplication = MapUtil.getStr(singleMap, "rolreplication");
-                result.put("rolcanlogin", rolcanlogin);
-                result.put("rolreplication", rolreplication);
-                checkUserPermiseIsOk = "true".equals(rolcanlogin) && "true".equals(rolreplication);
-            }
-            if (!(permiseIsOk && configIsOk && checkUserPermiseIsOk)) {
-                result.put("checkResult", permiseIsOk && configIsOk && checkUserPermiseIsOk);
-                return Optional.of(AjaxResult.errorAttachedData(MigrationErrorCode
-                                .SUB_TASK_NOT_CONDITIONS_REVERSE_ERROR.getCode(),
-                        MigrationErrorCode.SUB_TASK_NOT_CONDITIONS_REVERSE_ERROR.getMsg(), result));
-            }
-            return Optional.empty();
-        }
     }
 
     /**
@@ -740,17 +812,18 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             return AjaxResult.error(MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR.getCode(),
                 MigrationErrorCode.SUB_TASK_NOT_IN_INCREMENTAL_STOP_ERROR.getMsg());
         }
+        DbTypeEnum sourceDbType = subTask.getSourceDbType();
+        if (DbTypeEnum.MILVUS.equals(sourceDbType) || DbTypeEnum.ELASTICSEARCH.equals(sourceDbType)) {
+            return AjaxResult.error("Milvus and Elasticsearch do not support reverse migration");
+        }
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(
             subTask.getRunHostId());
         installHost.setRunPassword(encryptionUtils.decrypt(installHost.getRunPassword()));
-        List<MigrationTaskGlobalParam> globalParams = migrationTaskGlobalParamService.selectByMainTaskId(
-            subTask.getMainTaskId());
 
-        if (DbTypeEnum.POSTGRESQL.equals(subTask.getSourceDbType())) {
+        if (DbTypeEnum.POSTGRESQL.equals(sourceDbType)) {
             multiDbPortal.startReverse(installHost, subTask);
         } else {
-            if (!migrationTaskService.execMigrationCheck(
-                    installHost, subTask, globalParams, "verify_reverse_migration")) {
+            if (!migrationTaskService.execMigrationCheck(installHost, subTask, "verify_reverse_migration")) {
                 return AjaxResult.success();
             }
             long startReverseTimestamp = System.currentTimeMillis();
@@ -816,7 +889,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         }).collect(Collectors.toList());
         MigrationMainTask mainTask = getById(mainTaskId);
         if (MainTaskStatus.RUNNING.getCode().equals(mainTask.getExecStatus())) {
-            if (tasks.stream().anyMatch((task) -> DbTypeEnum.POSTGRESQL.equals(task.getSourceDbType())
+            if (tasks.stream().anyMatch((task) -> !DbTypeEnum.MYSQL.equals(task.getSourceDbType())
                     && TaskStatus.NOT_RUN.getCode().equals(task.getExecStatus()))) {
                 runningTasks.addAll(tasks);
             }
@@ -840,23 +913,16 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
      */
     @Override
     public void doRefreshMainTaskStatus() {
-        while (true) {
-            if (countByProcessing() > 0) {
-                List<MigrationMainTask> migrationMainTasks = listByProcessing();
-                migrationMainTasks.stream().forEach(mt -> {
-                    Long time = taskRefreshRecord.get(mt.getId());
-                    Long curTime = DateUtil.date().getTime();
-                    if (time == null || curTime > (time + taskRefreshIntervalsMillisecond)) {
-                        syncRefreshTaskStatusByPortal(mt.getId());
-                    }
-                    doRefreshSingleMainTask(mt);
-                });
-            }
-            try {
-                Thread.sleep(mainTaskRefreshIntervalsMillisecond);
-            } catch (InterruptedException e) {
-                log.error("refresh main task status error, message: {}", e.getMessage());
-            }
+        if (countByProcessing() > 0) {
+            List<MigrationMainTask> migrationMainTasks = listByProcessing();
+            migrationMainTasks.stream().forEach(mt -> {
+                Long time = taskRefreshRecord.get(mt.getId());
+                Long curTime = DateUtil.date().getTime();
+                if (time == null || curTime > (time + taskRefreshIntervalsMillisecond)) {
+                    syncRefreshTaskStatusByPortal(mt.getId());
+                }
+                doRefreshSingleMainTask(mt);
+            });
         }
     }
 
@@ -881,6 +947,17 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             data = 2;
         }
         return data;
+    }
+
+    @Override
+    public MigrationMainTask getMainTaskByTaskName(String taskName) {
+        if (StringUtils.isBlank(taskName)) {
+            return null;
+        }
+
+        LambdaQueryWrapper<MigrationMainTask> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(MigrationMainTask::getTaskName, taskName);
+        return getOne(queryWrapper);
     }
 
     private void doRefreshSingleMainTask(MigrationMainTask mt) {

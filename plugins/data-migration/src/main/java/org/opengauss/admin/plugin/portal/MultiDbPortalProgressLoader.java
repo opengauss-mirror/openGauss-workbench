@@ -4,14 +4,19 @@
 
 package org.opengauss.admin.plugin.portal;
 
-import cn.hutool.core.map.MapUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.parser.Feature;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.SftpException;
+
+import cn.hutool.core.map.MapUtil;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.io.FilenameUtils;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.plugin.domain.FullMigrationProgress;
 import org.opengauss.admin.plugin.domain.FullMigrationSummaryData;
 import org.opengauss.admin.plugin.domain.IncrementalMigrationProgress;
@@ -39,7 +44,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
-import jakarta.annotation.Resource;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -107,8 +111,21 @@ public class MultiDbPortalProgressLoader {
             return;
         }
         Map<String, Object> lastStatus = migrationStatusList.get(migrationStatusList.size() - 1);
-        Integer latestStatus = MapUtil.getInt(lastStatus, "status");
 
+        DbTypeEnum sourceDbType = task.getSourceDbType();
+        if (DbTypeEnum.POSTGRESQL.equals(sourceDbType)) {
+            refreshPostgresqlStatusAndProcess(task, portalInfo, lastStatus);
+        } else if (DbTypeEnum.MILVUS.equals(sourceDbType) || DbTypeEnum.ELASTICSEARCH.equals(sourceDbType)) {
+            refreshMilvusStatusAndProcess(task, portalInfo, lastStatus);
+        } else {
+            throw new UnsupportedOperationException("DbTypeEnum " + sourceDbType + " is not supported");
+        }
+    }
+
+    private void refreshPostgresqlStatusAndProcess(
+            MigrationTask task, MigrationHostPortalInstall portalInfo, Map<String, Object> lastStatus
+    ) {
+        Integer latestStatus = MapUtil.getInt(lastStatus, "status");
         IncrementalMigrationProgress incrementalMigrationProgress =
                 incrementalMigrationProgressService.getOneByTaskId(task.getId());
         if (TaskStatus.FULL_START.getCode() <= latestStatus && incrementalMigrationProgress == null) {
@@ -127,6 +144,67 @@ public class MultiDbPortalProgressLoader {
         updateStatus(task, lastStatus);
     }
 
+    private void refreshMilvusStatusAndProcess(
+            MigrationTask task, MigrationHostPortalInstall portalInfo, Map<String, Object> lastStatus
+    ) {
+        loadMilvusFullMigrationProgress(portalInfo, task.getId());
+        updateStatus(task, lastStatus);
+
+        Integer execStatus = migrationTaskService.getById(task.getId()).getExecStatus();
+        if (TaskStatus.MIGRATION_FINISH.getCode().equals(execStatus)
+                || TaskStatus.MIGRATION_ERROR.getCode().equals(execStatus)) {
+            loadMilvusFullMigrationProgress(portalInfo, task.getId());
+        }
+    }
+
+    private void loadMilvusFullMigrationProgress(MigrationHostPortalInstall portalInfo, Integer taskId) {
+        ShellInfoVo shellInfo = createShellInfo(portalInfo);
+        try {
+            List<FullMigrationProgress> fullMigrationProgressList = new ArrayList<>();
+            String successPath = MultiDbPortalDirHelper.getMilvusFullSuccessStatusFilePath(portalInfo, taskId);
+            if (FileUtils.isRemoteFileExists(successPath, shellInfo)
+                    && isFileModified(successPath, FileUtils.getRemoteFileLastModified(shellInfo, successPath))) {
+                String fileContents = FileUtils.catRemoteFileContents(successPath, shellInfo);
+                List<String> tableList = fileContents.trim().lines().toList();
+                for (String table : tableList) {
+                    FullMigrationProgress fullMigrationProgress = new FullMigrationProgress();
+                    fullMigrationProgress.setTaskId(taskId);
+                    fullMigrationProgress.setName(table);
+                    fullMigrationProgress.setSchema("-");
+                    fullMigrationProgress.setPercent(100.0);
+                    fullMigrationProgress.setStatus(3);
+                    fullMigrationProgress.setObjectType(FullMigrationDbObjEnum.TABLE.getObjectType());
+                    fullMigrationProgressList.add(fullMigrationProgress);
+                }
+                fullProgressService.deleteByTaskIdAndStatus(taskId, 3);
+            }
+
+            String failedPath = MultiDbPortalDirHelper.getMilvusFullFailedStatusFilePath(portalInfo, taskId);
+            if (FileUtils.isRemoteFileExists(failedPath, shellInfo)
+                    && isFileModified(failedPath, FileUtils.getRemoteFileLastModified(shellInfo, failedPath))) {
+                String fileContents = FileUtils.catRemoteFileContents(failedPath, shellInfo);
+                List<String> tableList = fileContents.trim().lines().toList();
+                for (String table : tableList) {
+                    FullMigrationProgress fullProgress = new FullMigrationProgress();
+                    fullProgress.setTaskId(taskId);
+                    fullProgress.setName(table);
+                    fullProgress.setSchema("-");
+                    fullProgress.setPercent(0.0);
+                    fullProgress.setStatus(6);
+                    fullProgress.setError("Please check the log for details, log path: " + FilenameUtils.normalize(
+                            MultiDbPortalDirHelper.getMilvusTableLogPath(portalInfo, taskId, table)));
+                    fullProgress.setObjectType(FullMigrationDbObjEnum.TABLE.getObjectType());
+                    fullMigrationProgressList.add(fullProgress);
+                }
+                fullProgressService.deleteByTaskIdAndStatus(taskId, 6);
+            }
+
+            fullProgressService.saveBatch(fullMigrationProgressList);
+        } catch (JSchException | SftpException e) {
+            log.error("Failed to load full migration progress", e);
+        }
+    }
+
     private void updateStatus(MigrationTask task, Map<String, Object> lastStatus) {
         Integer execStatus = task.getExecStatus();
         if (execStatus >= TaskStatus.MIGRATION_FINISH.getCode()) {
@@ -143,9 +221,8 @@ public class MultiDbPortalProgressLoader {
             return;
         }
 
-        if ((TaskStatus.FULL_CHECK_FINISH.getCode().equals(latestStatus)
-                || TaskStatus.MIGRATION_FINISH.getCode().equals(latestStatus))
-                && task.getMigrationModelId().equals(1)) {
+        if ((TaskStatus.FULL_CHECK_FINISH.getCode().equals(latestStatus) && task.getMigrationModelId() == 1)
+                || TaskStatus.MIGRATION_FINISH.getCode().equals(latestStatus)) {
             update.setExecStatus(TaskStatus.MIGRATION_FINISH.getCode());
             update.setFinishTime(Instant.now());
         }

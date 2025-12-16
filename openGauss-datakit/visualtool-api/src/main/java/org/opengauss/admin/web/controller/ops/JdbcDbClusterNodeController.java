@@ -27,9 +27,19 @@ package org.opengauss.admin.web.controller.ops;
 import org.opengauss.admin.common.core.controller.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterNodeInputDto;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
+import org.opengauss.admin.system.service.DbClusterInstanceService;
 import org.opengauss.admin.system.service.ops.IOpsJdbcDbClusterNodeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @author lhf
@@ -38,9 +48,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/jdbcDbClusterNode")
 public class JdbcDbClusterNodeController extends BaseController {
-
     @Autowired
     private IOpsJdbcDbClusterNodeService opsJdbcDbClusterNodeService;
+
+    @Autowired
+    private DbClusterInstanceService dbClusterInstanceService;
 
     @DeleteMapping("/{clusterNodeId}")
     public AjaxResult del(@PathVariable("clusterNodeId") String clusterNodeId) {
@@ -62,12 +74,24 @@ public class JdbcDbClusterNodeController extends BaseController {
 
     @PostMapping("/ping")
     public AjaxResult ping(@RequestBody JdbcDbClusterNodeInputDto clusterNodeInput) {
-        return AjaxResult.success(opsJdbcDbClusterNodeService.ping(clusterNodeInput));
+        return AjaxResult.success(dbClusterInstanceService.ping(clusterNodeInput));
     }
 
+    /**
+     * Monitor cluster node
+     *
+     * @param clusterNodeId cluster node id
+     * @param businessId business id
+     * @param dbType database type
+     * @return success
+     */
     @GetMapping("/monitor/{clusterNodeId}")
-    public AjaxResult monitor(@PathVariable("clusterNodeId") String clusterNodeId,@RequestParam("businessId") String businessId){
-        return AjaxResult.success(opsJdbcDbClusterNodeService.monitor(clusterNodeId,businessId));
+    public AjaxResult monitor(
+            @PathVariable("clusterNodeId") String clusterNodeId,
+            @RequestParam("businessId") String businessId,
+            @RequestParam("dbType") DbTypeEnum dbType
+    ) {
+        dbClusterInstanceService.monitor(dbType, clusterNodeId, businessId);
+        return AjaxResult.success();
     }
-
 }

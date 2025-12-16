@@ -27,6 +27,7 @@ package org.opengauss.admin.system.service.ops;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsJdbcDbClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterNodeInputDto;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,19 @@ public interface IOpsJdbcDbClusterNodeService extends IService<OpsJdbcDbClusterN
 
     Map<String, List<OpsJdbcDbClusterNodeEntity>> mapClusterNodesByClusterId(Set<String> clusterIds);
 
-    void delByClusterId(String clusterId);
+    /**
+     * Delete cluster node by cluster id
+     *
+     * @param clusterId cluster id
+     */
+    void deleteByClusterId(String clusterId);
+
+    /**
+     * Delete cluster nodes by cluster ids
+     *
+     * @param clusterIds cluster ids
+     */
+    void deleteByClusterIds(List<String> clusterIds);
 
     void update(String clusterNodeId, JdbcDbClusterNodeInputDto clusterNodeInput);
 
@@ -61,5 +74,37 @@ public interface IOpsJdbcDbClusterNodeService extends IService<OpsJdbcDbClusterN
 
     boolean ping(JdbcDbClusterNodeInputDto clusterNodeInput);
 
-    Map<String,Object> monitor(String clusterNodeId, String businessId);
+    /**
+     * List jdbc cluster nodes by cluster ids
+     *
+     * @param clustersIds cluster ids
+     * @return jdbc cluster nodes
+     */
+    List<OpsJdbcDbClusterNodeEntity> listByClusterIds(List<String> clustersIds);
+
+    /**
+     * List jdbc cluster nodes by ip and cluster ids
+     *
+     * @param ip ip
+     * @param clusterIds cluster ids
+     * @return jdbc cluster nodes
+     */
+    List<OpsJdbcDbClusterNodeEntity> listByIpAndClusterIds(String ip, List<String> clusterIds);
+
+    /**
+     * Get one jdbc cluster node by cluster id
+     *
+     * @param clusterId cluster id
+     * @return jdbc cluster node
+     */
+    OpsJdbcDbClusterNodeEntity getOneByClusterId(String clusterId);
+
+    /**
+     * Monitor jdbc cluster node
+     *
+     * @param dbType db type
+     * @param clusterNodeId cluster node id
+     * @param businessId business id
+     */
+    void monitor(DbTypeEnum dbType, String clusterNodeId, String businessId);
 }

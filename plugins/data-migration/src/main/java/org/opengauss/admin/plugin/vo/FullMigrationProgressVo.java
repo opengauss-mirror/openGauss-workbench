@@ -21,6 +21,7 @@ public class FullMigrationProgressVo {
     private String name;
     private String sourceSchema;
     private String targetSchema;
+    private String targetName;
     private Double percent;
     private String errorMsg;
 
@@ -42,10 +43,23 @@ public class FullMigrationProgressVo {
         this.taskId = fullMigrationProgress.getTaskId();
         this.objectType = fullMigrationProgress.getObjectType();
         this.name = fullMigrationProgress.getName();
+        this.targetName = fullMigrationProgress.getName();
         this.status = fullMigrationProgress.getStatus();
         this.percent = fullMigrationProgress.getPercent();
         this.errorMsg = fullMigrationProgress.getError();
         this.sourceSchema = fullMigrationProgress.getSchema();
         this.targetSchema = schemaMapping.get(sourceSchema);
+    }
+
+    public FullMigrationProgressVo(FullMigrationProgress fullMigrationProgress, String targetName) {
+        this.id = fullMigrationProgress.getId();
+        this.taskId = fullMigrationProgress.getTaskId();
+        this.objectType = fullMigrationProgress.getObjectType();
+        this.name = fullMigrationProgress.getName();
+        this.status = fullMigrationProgress.getStatus();
+        this.percent = fullMigrationProgress.getPercent();
+        this.errorMsg = fullMigrationProgress.getError();
+        this.sourceSchema = fullMigrationProgress.getSchema();
+        this.targetName = targetName;
     }
 }

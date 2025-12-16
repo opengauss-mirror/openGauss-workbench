@@ -45,4 +45,5 @@ public class OpsJdbcDbClusterEntity extends BaseEntity {
     private String name;
     private DbTypeEnum dbType;
     private DeployTypeEnum deployType;
+    private String versionNum;
 }

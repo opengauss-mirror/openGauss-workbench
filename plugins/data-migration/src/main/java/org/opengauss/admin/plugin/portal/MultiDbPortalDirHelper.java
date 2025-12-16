@@ -157,6 +157,40 @@ public class MultiDbPortalDirHelper {
     }
 
     /**
+     * Get Milvus full table success status file path
+     *
+     * @param portalInfo portal info
+     * @param taskId task id
+     * @return full table success status file path
+     */
+    public static String getMilvusFullSuccessStatusFilePath(MigrationHostPortalInstall portalInfo, int taskId) {
+        return String.format("%s/status/full/table-success.txt", getTaskWorkspaceDirPath(portalInfo, taskId));
+    }
+
+    /**
+     * Get Milvus full table failed status file path
+     *
+     * @param portalInfo portal info
+     * @param taskId task id
+     * @return full table failed status file path
+     */
+    public static String getMilvusFullFailedStatusFilePath(MigrationHostPortalInstall portalInfo, int taskId) {
+        return String.format("%s/status/full/table-failed.txt", getTaskWorkspaceDirPath(portalInfo, taskId));
+    }
+
+    /**
+     * Get Milvus full table log path
+     *
+     * @param portalInfo portal info
+     * @param taskId task id
+     * @param tableName table name
+     * @return full table log path
+     */
+    public static String getMilvusTableLogPath(MigrationHostPortalInstall portalInfo, int taskId, String tableName) {
+        return String.format("%s/full/migration_%s.log", getPortalLogsDirPath(portalInfo, taskId), tableName);
+    }
+
+    /**
      * Get portal status file path
      *
      * @param portalInfo portal info

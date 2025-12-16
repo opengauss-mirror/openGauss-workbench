@@ -27,18 +27,24 @@ package org.opengauss.admin.plugin.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import org.apache.poi.ss.formula.functions.T;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTaskHostRef;
-import org.opengauss.admin.plugin.dto.CustomDbResource;
 import org.opengauss.admin.plugin.dto.MigrationHostDto;
 import org.opengauss.admin.plugin.dto.PortalInstallHostDto;
+import org.opengauss.admin.plugin.enums.OpengaussSourceTable;
 import org.opengauss.admin.plugin.exception.PortalInstallException;
-import org.opengauss.admin.plugin.vo.TargetClusterVO;
+import org.opengauss.admin.plugin.vo.OpengaussClusterVo;
+import org.opengauss.admin.plugin.vo.SourceClusterVo;
+import org.opengauss.admin.plugin.vo.TargetClusterVo;
+import org.opengauss.admin.plugin.vo.TargetDatabaseVo;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -72,53 +78,14 @@ public interface MigrationTaskHostRefService extends IService<MigrationTaskHostR
      */
     List<JdbcDbClusterVO> getSourceClusters(String dbType);
 
-    /**
-     * getMysqlClusters
-     *
-     * @return JdbcDbClusterVOList
-     */
-    List<JdbcDbClusterVO> getPgsqlClusters();
-
-    void saveDbResource(CustomDbResource dbResource);
-
-    void saveSource(String clusterName, String dbUrl, String username, String password);
-
-    List<TargetClusterVO> getTargetClusters();
-
     List<String> getMysqlClusterDbNames(String url, String username, String password);
 
     /**
-     * getPgsqlClusterDbNames
+     * getOpengaussClusters
      *
-     * @param url      url
-     * @param username username
-     * @param password password
-     * @return dbNames
+     * @return OpengaussClusterVOList
      */
-    List<String> getPgsqlClusterDbNames(String url, String username, String password);
-
-    /**
-     * getPgsqlDbSchemas
-     *
-     * @param url      url
-     * @param username username
-     * @param password password
-     * @param dbName   dbName
-     * @return dbSchemas
-     */
-    List<String> getPgsqlDbSchemas(String url, String username, String password, String dbName);
-
-    /**
-     * Get the list of schema names on a PostgreSQL node.
-     *
-     * @param ip ip of node
-     * @param port port of node
-     * @param dbName database name
-     * @param username username of db connection
-     * @param password password of db connection
-     * @return schema name list
-     */
-    List<String> getPgsqlDbSchemas(String ip, String port, String dbName, String username, String password);
+    List<OpengaussClusterVo> getOpengaussClusters();
 
     List<Map<String, Object>> getOpsClusterDbNames(OpsClusterNodeVO clusterNode);
 
@@ -152,18 +119,6 @@ public interface MigrationTaskHostRefService extends IService<MigrationTaskHostR
     UploadInfo upload(MultipartFile file, Integer userId) throws PortalInstallException;
 
     /**
-     * find tables task
-     *
-     * @param page      page
-     * @param dbName    database name
-     * @param url       source database connection
-     * @param username  username of db connection
-     * @param password  password of db connection
-     * @return tables
-     */
-    IPage<Object> pageByDB(Page page, String dbName, String url, String username, String password);
-
-    /**
      * is openGauss connect user admin
      *
      * @param clusterNode cluster node
@@ -178,4 +133,68 @@ public interface MigrationTaskHostRefService extends IService<MigrationTaskHostR
      * @return Map<String, Boolean>
      */
     Map<String, Boolean> getNodeRoleMap(String clusterName);
+
+    /**
+     * Get the source db clusters by db type
+     *
+     * @param dbType db type
+     * @return SourceClusterVo list
+     */
+    List<SourceClusterVo> getSourceClusters(DbTypeEnum dbType);
+
+    /**
+     * Get source cluster node databases
+     *
+     * @param dbType db type
+     * @param nodeId cluster node id
+     * @return database list
+     */
+    List<String> getSourceDatabases(DbTypeEnum dbType, String nodeId);
+
+    /**
+     * Get source cluster node schemas
+     *
+     * @param dbType db type
+     * @param nodeId cluster node id
+     * @param dbName database name
+     * @return schema list
+     */
+    List<String> getSourceSchemas(DbTypeEnum dbType, String nodeId, String dbName);
+
+    /**
+     * Get source cluster node tables
+     *
+     * @param dbType db type
+     * @param nodeId cluster node id
+     * @param dbName database name
+     * @param schemaName schema name
+     * @param page page info
+     * @return table list
+     */
+    IPage<String> getSourceTablePage(DbTypeEnum dbType, String nodeId, String dbName, String schemaName, Page<T> page);
+
+    /**
+     * Get the target db clusters by db type
+     *
+     * @return TargetClusterVo list
+     */
+    List<TargetClusterVo> getTargetClusters();
+
+    /**
+     * Get target cluster detail
+     *
+     * @param sourceTable source table
+     * @param clusterId cluster id
+     * @return TargetClusterVo
+     */
+    TargetClusterVo getTargetDetail(OpengaussSourceTable sourceTable, String clusterId);
+
+    /**
+     * Get target cluster node databases
+     *
+     * @param sourceTable source table
+     * @param nodeId cluster node id
+     * @return TargetDatabaseVo list
+     */
+    List<TargetDatabaseVo> getTargetDatabases(OpengaussSourceTable sourceTable, String nodeId);
 }

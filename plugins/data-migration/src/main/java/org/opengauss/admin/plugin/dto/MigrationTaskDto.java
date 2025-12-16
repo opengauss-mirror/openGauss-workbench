@@ -24,9 +24,10 @@
 
 package org.opengauss.admin.plugin.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 import org.opengauss.admin.plugin.domain.MigrationTask;
-import org.opengauss.admin.plugin.domain.MigrationTaskGlobalParam;
 
 import java.util.List;
 
@@ -37,16 +38,14 @@ import java.util.List;
  **/
 @Data
 public class MigrationTaskDto {
-
     private Integer taskId;
 
+    @NotBlank(message = "taskName cannot be empty")
     private String taskName;
 
+    @NotEmpty(message = "tasks cannot be empty")
     private List<MigrationTask> tasks;
 
+    @NotEmpty(message = "hostIds cannot be empty")
     private List<String> hostIds;
-
-    private List<MigrationTaskGlobalParam> globalParams;
-
-
 }

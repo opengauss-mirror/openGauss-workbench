@@ -24,10 +24,12 @@
 
 package org.opengauss.admin.plugin.config;
 
+import cn.hutool.core.thread.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.plugin.service.MigrationMainTaskService;
 import org.opengauss.admin.plugin.service.MigrationTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -50,20 +52,34 @@ public class DataMigrationApplicationRunner implements ApplicationRunner {
     @Autowired
     private MigrationMainTaskService migrationMainTaskService;
 
+    @Value("${migration.taskOfflineSchedulerIntervalsMillisecond}")
+    private Long taskOfflineSchedulerIntervalsMillisecond;
+
+    @Value("${migration.mainTaskRefreshIntervalsMillisecond}")
+    private Long mainTaskRefreshIntervalsMillisecond;
+
     @Override
     public void run(ApplicationArguments args) throws Exception {
         threadPoolTaskExecutor.submit(() -> {
-            try {
-                migrationTaskService.doOfflineTaskRunScheduler();
-            } catch (Exception e) {
-                log.error("OffLineTaskRunScheduler error", e);
+            while (true) {
+                try {
+                    migrationTaskService.doOfflineTaskRunScheduler();
+                } catch (Exception e) {
+                    log.error("OffLineTaskRunScheduler error", e);
+                }
+
+                ThreadUtil.safeSleep(taskOfflineSchedulerIntervalsMillisecond);
             }
         });
         threadPoolTaskExecutor.submit(() -> {
-            try {
-                migrationMainTaskService.doRefreshMainTaskStatus();
-            } catch (Exception e) {
-                log.error("RefreshMainTaskStatus error", e);
+            while (true) {
+                try {
+                    migrationMainTaskService.doRefreshMainTaskStatus();
+                } catch (Exception e) {
+                    log.error("RefreshMainTaskStatus error", e);
+                }
+
+                ThreadUtil.safeSleep(mainTaskRefreshIntervalsMillisecond);
             }
         });
         threadPoolTaskExecutor.submit(() -> {

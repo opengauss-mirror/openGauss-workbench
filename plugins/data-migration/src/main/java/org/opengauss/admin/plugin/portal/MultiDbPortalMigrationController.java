@@ -5,6 +5,8 @@
 package org.opengauss.admin.plugin.portal;
 
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
@@ -27,7 +29,6 @@ import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.Resource;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -67,8 +68,7 @@ public class MultiDbPortalMigrationController {
         ShellInfoVo shellInfo = createShellInfo(portalInfo);
         String portalHome = portalInfo.getInstallPath() + "portal/";
         String jarPath = portalHome + portalInfo.getJarName();
-        String createCommand = String.format(Locale.ROOT, "cd %s && java -jar %s --task create %d %s",
-                portalHome, jarPath, task.getId(), DbTypeEnum.POSTGRESQL.name());
+        String createCommand = generateCreateCommand(portalHome, jarPath, task);
         String createResult = ShellUtil.execCommandGetResult(shellInfo, createCommand).getResult();
         String createSuccessMsg = "Create a migration task successfully";
         if (!createResult.contains(createSuccessMsg)) {
@@ -90,7 +90,13 @@ public class MultiDbPortalMigrationController {
      * @param task task
      */
     public void stopIncremental(MigrationHostPortalInstall portalInfo, MigrationTask task) {
-        executeTaskCurlCommand(portalInfo, task, "stopIncremental");
+        DbTypeEnum sourceDbType = task.getSourceDbType();
+        if (DbTypeEnum.POSTGRESQL.equals(sourceDbType)) {
+            executeTaskCurlCommand(portalInfo, task, "stopIncremental");
+            return;
+        }
+        throw new UnsupportedOperationException(
+                "Database type '" + sourceDbType + "' does not support stopIncremental operation");
     }
 
     /**
@@ -100,7 +106,13 @@ public class MultiDbPortalMigrationController {
      * @param task task
      */
     public void resumeIncremental(MigrationHostPortalInstall portalInfo, MigrationTask task) {
-        executeTaskCurlCommand(portalInfo, task, "resumeIncremental");
+        DbTypeEnum sourceDbType = task.getSourceDbType();
+        if (DbTypeEnum.POSTGRESQL.equals(sourceDbType)) {
+            executeTaskCurlCommand(portalInfo, task, "resumeIncremental");
+            return;
+        }
+        throw new UnsupportedOperationException(
+                "Database type '" + sourceDbType + "' does not support resumeIncremental operation");
     }
 
     /**
@@ -110,7 +122,13 @@ public class MultiDbPortalMigrationController {
      * @param task task
      */
     public void startReverse(MigrationHostPortalInstall portalInfo, MigrationTask task) {
-        executeTaskCurlCommand(portalInfo, task, "startReverse");
+        DbTypeEnum sourceDbType = task.getSourceDbType();
+        if (DbTypeEnum.POSTGRESQL.equals(sourceDbType)) {
+            executeTaskCurlCommand(portalInfo, task, "startReverse");
+            return;
+        }
+        throw new UnsupportedOperationException(
+                "Database type '" + sourceDbType + "' does not support startReverse operation");
     }
 
     /**
@@ -120,7 +138,13 @@ public class MultiDbPortalMigrationController {
      * @param task task
      */
     public void resumeReverse(MigrationHostPortalInstall portalInfo, MigrationTask task) {
-        executeTaskCurlCommand(portalInfo, task, "resumeReverse");
+        DbTypeEnum sourceDbType = task.getSourceDbType();
+        if (DbTypeEnum.POSTGRESQL.equals(sourceDbType)) {
+            executeTaskCurlCommand(portalInfo, task, "resumeReverse");
+            return;
+        }
+        throw new UnsupportedOperationException(
+                "Database type '" + sourceDbType + "' does not support resumeReverse operation");
     }
 
     /**
@@ -140,6 +164,12 @@ public class MultiDbPortalMigrationController {
      * @return Map<String, Object>  task status
      */
     public TaskProcessStatus resumeMigrationProcess(MigrationTask migrationTask) {
+        DbTypeEnum sourceDbType = migrationTask.getSourceDbType();
+        if (!DbTypeEnum.POSTGRESQL.equals(sourceDbType)) {
+            throw new UnsupportedOperationException("Database type '" + sourceDbType
+                    + "' does not support resumeIncremental or resumeReverse operation");
+        }
+
         MigrationHostPortalInstall portalInfo = portalInstallHostService.getOneByHostId(migrationTask.getRunHostId());
         if (TaskStatus.INCREMENTAL_PAUSE.getCode().equals(migrationTask.getExecStatus())) {
             resumeIncremental(portalInfo, migrationTask);
@@ -170,12 +200,28 @@ public class MultiDbPortalMigrationController {
 
     private void configTask(ShellInfoVo shellInfo, String workspacePath, MigrationTask task) {
         HashMap<String, String> migrationConfig = new HashMap<>();
-        setDatabaseParams(migrationConfig, task);
-        setMigrationTaskParams(migrationConfig, task);
-        setOpenGaussClusterParams(migrationConfig, task);
+        DbTypeEnum sourceDbType = task.getSourceDbType();
+        if (DbTypeEnum.POSTGRESQL.equals(sourceDbType)) {
+            setDatabaseParams(migrationConfig, task);
+            setMigrationTaskParams(migrationConfig, task);
+            setOpenGaussClusterParams(migrationConfig, task);
+        } else if (DbTypeEnum.MILVUS.equals(sourceDbType)) {
+            setMilvusDatabaseParams(migrationConfig, task);
+            setMilvusMigrationTaskParams(migrationConfig, task);
+        } else if (DbTypeEnum.ELASTICSEARCH.equals(sourceDbType)) {
+            setElasticsearchDatabaseParams(migrationConfig, task);
+            setElasticsearchMigrationTaskParams(migrationConfig, task);
+        } else {
+            throw new UnsupportedOperationException("DbTypeEnum '" + sourceDbType + "' is not supported to migration");
+        }
 
         String configFilePath = String.format("%s/config/migration.properties", workspacePath);
         PropertiesUtils.updateRemoteProperties(configFilePath, migrationConfig, shellInfo);
+    }
+
+    private String generateCreateCommand(String portalHome, String jarPath, MigrationTask task) {
+        return String.format(Locale.ROOT, "cd %s && java -jar %s --task create %d %s",
+                portalHome, jarPath, task.getId(), task.getSourceDbType().name());
     }
 
     private void setDatabaseParams(Map<String, String> migrationConfig, MigrationTask task) {
@@ -198,11 +244,37 @@ public class MultiDbPortalMigrationController {
         }
     }
 
+    private void setMilvusDatabaseParams(Map<String, String> migrationConfig, MigrationTask task) {
+        migrationConfig.put("milvus.ip", task.getSourceDbHost());
+        migrationConfig.put("milvus.port", task.getSourceDbPort());
+        migrationConfig.put("milvus.collections", task.getSourceTables());
+        migrationConfig.put("opengauss.database.ip", task.getTargetDbHost());
+        migrationConfig.put("opengauss.database.port", task.getTargetDbPort());
+        migrationConfig.put("opengauss.database.name", task.getTargetDb());
+        migrationConfig.put("opengauss.database.username", task.getTargetDbUser());
+        migrationConfig.put("use.interactive.password", "true");
+        migrationConfig.put("is.adjust.kernel.param", task.getIsAdjustKernelParam().toString());
+    }
+
+    private void setElasticsearchDatabaseParams(Map<String, String> migrationConfig, MigrationTask task) {
+        String elasticsearchHost = String.format("http://%s:%s", task.getSourceDbHost(), task.getSourceDbPort());
+        migrationConfig.put("elasticsearch.host", elasticsearchHost);
+        migrationConfig.put("elasticsearch.indexes", task.getSourceTables());
+        migrationConfig.put("opengauss.database.ip", task.getTargetDbHost());
+        migrationConfig.put("opengauss.database.port", task.getTargetDbPort());
+        migrationConfig.put("opengauss.database.name", task.getTargetDb());
+        migrationConfig.put("opengauss.database.username", task.getTargetDbUser());
+        migrationConfig.put("use.interactive.password", "true");
+        migrationConfig.put("is.adjust.kernel.param", task.getIsAdjustKernelParam().toString());
+    }
+
     private LinkedHashMap<String, String> getInteractParams(MigrationTask task) {
-        LinkedHashMap<String, String> inputMap = new LinkedHashMap<>();
-        inputMap.put("Please input PostgreSQL database password: ", encryptionUtils.decrypt(task.getSourceDbPass()));
-        inputMap.put("Please input openGauss database password: ", encryptionUtils.decrypt(task.getTargetDbPass()));
-        return inputMap;
+        LinkedHashMap<String, String> params = new LinkedHashMap<>();
+        if (DbTypeEnum.POSTGRESQL.equals(task.getSourceDbType())) {
+            params.put("Please input PostgreSQL database password: ", encryptionUtils.decrypt(task.getSourceDbPass()));
+        }
+        params.put("Please input openGauss database password: ", encryptionUtils.decrypt(task.getTargetDbPass()));
+        return params;
     }
 
     private void setMigrationTaskParams(Map<String, String> migrationConfig, MigrationTask task) {
@@ -220,7 +292,30 @@ public class MultiDbPortalMigrationController {
         }
     }
 
+    private void setMilvusMigrationTaskParams(Map<String, String> migrationConfig, MigrationTask task) {
+        List<MigrationTaskParam> migrationTaskParams = migrationTaskParamService.selectByTaskId(task.getId());
+        if (!migrationTaskParams.isEmpty()) {
+            for (MigrationTaskParam taskParam : migrationTaskParams) {
+                if ("migration.concurrent.threads".equals(taskParam.getParamKey())) {
+                    migrationConfig.put("migration.concurrent.threads", taskParam.getParamValue());
+                    continue;
+                }
+                if ("table.mappings".equals(taskParam.getParamKey())) {
+                    migrationConfig.put("table.mappings", taskParam.getParamValue());
+                }
+            }
+        }
+    }
+
+    private void setElasticsearchMigrationTaskParams(Map<String, String> migrationConfig, MigrationTask task) {
+        setMilvusMigrationTaskParams(migrationConfig, task);
+    }
+
     private void setOpenGaussClusterParams(Map<String, String> migrationConfig, MigrationTask task) {
+        if (!opsFacade.isNodeInOpsCluster(task.getTargetNodeId())) {
+            return;
+        }
+
         OpsClusterVO opsClusterVO = opsFacade.getOpsClusterVOByNodeId(task.getTargetNodeId());
         if (opsClusterVO != null && opsClusterVO.getClusterNodes().size() > 1) {
             List<OpsClusterNodeVO> standbyNodes = opsClusterVO.getOtherNodes(task.getTargetNodeId());

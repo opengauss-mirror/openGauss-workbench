@@ -25,6 +25,7 @@
 package org.opengauss.admin.common.core.domain.model.ops.jdbc;
 
 import lombok.Data;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.common.enums.ops.DeployTypeEnum;
 
 import java.util.List;
@@ -37,6 +38,7 @@ import java.util.List;
 public class JdbcDbClusterInputDto {
     private String clusterName;
     private DeployTypeEnum deployType;
+    private DbTypeEnum dbType;
     private List<JdbcDbClusterNodeInputDto> nodes;
     private String remark;
 

@@ -24,8 +24,10 @@
 
 package org.opengauss.admin.system.plugin.facade;
 
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.core.domain.model.ops.check.CheckSummaryVO;
+import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.system.service.ops.IOpsClusterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,9 +40,11 @@ import java.util.List;
  **/
 @Service
 public class OpsFacade {
-
     @Autowired
     private IOpsClusterService opsClusterService;
+
+    @Autowired
+    private IOpsClusterNodeService opsClusterNodeService;
 
     public List<OpsClusterVO> listCluster() {
         return opsClusterService.listCluster();
@@ -57,10 +61,17 @@ public class OpsFacade {
      * @return boolean
      */
     public boolean isNodeInOpsCluster(String nodeId) {
-        return opsClusterService.listCluster().stream()
-                .map(OpsClusterVO::getClusterNodes)
-                .flatMap(List::stream)
-                .anyMatch(node -> nodeId.equals(node.getNodeId()));
+        return opsClusterService.isOpsClusterExists(nodeId);
+    }
+
+    /**
+     * Get opsClusterVO by cluster id
+     *
+     * @param clusterId cluster id
+     * @return OpsClusterVO
+     */
+    public OpsClusterVO getOpsClusterVOByClusterId(String clusterId) {
+        return opsClusterService.getOpsClusterVoByClusterId(clusterId);
     }
 
     /**
@@ -70,11 +81,16 @@ public class OpsFacade {
      * @return OpsClusterVO
      */
     public OpsClusterVO getOpsClusterVOByNodeId(String nodeId) {
-        for (OpsClusterVO opsClusterVO : listCluster()) {
-            if (opsClusterVO.getClusterNodes().stream().anyMatch(node -> nodeId.equals(node.getNodeId()))) {
-                return opsClusterVO;
-            }
-        }
-        return null;
+        return opsClusterService.getOpsClusterVoByNodeId(nodeId);
+    }
+
+    /**
+     * Get opsClusterNodeVO by node id
+     *
+     * @param nodeId node id
+     * @return OpsClusterNodeVO
+     */
+    public OpsClusterNodeVO getOpsClusterNodeVOByNodeId(String nodeId) {
+        return opsClusterNodeService.getOpsClusterNodeVoByNodeId(nodeId);
     }
 }
