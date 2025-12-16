@@ -24,25 +24,27 @@
 
 package org.opengauss.admin.plugin.controller;
 
+import com.alibaba.fastjson.JSON;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
-import com.alibaba.fastjson.JSON;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
-import org.opengauss.admin.common.core.page.TableDataInfo;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationThirdPartySoftwareConfig;
-import org.opengauss.admin.plugin.dto.CustomDbResource;
 import org.opengauss.admin.plugin.dto.PortalInstallHostDto;
+import org.opengauss.admin.plugin.enums.OpengaussSourceTable;
 import org.opengauss.admin.plugin.exception.PortalInstallException;
 import org.opengauss.admin.plugin.service.MigrationTaskHostRefService;
 import org.opengauss.admin.plugin.utils.FileUtils;
-import org.opengauss.admin.plugin.vo.TargetClusterVO;
+import org.opengauss.admin.plugin.vo.OpengaussClusterVo;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -59,7 +61,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.servlet.http.HttpServletResponse;
 import java.beans.PropertyEditorSupport;
 import java.io.BufferedOutputStream;
 import java.io.OutputStream;
@@ -87,21 +88,6 @@ public class MigrationTaskResourceController extends BaseController {
     private HostUserFacade hostUserFacade;
 
     /**
-     * retrieve the source and target cluster
-     *
-     * @return AjaxResult Response
-     */
-    @GetMapping("/getClusters")
-    public AjaxResult getClusters() {
-        List<JdbcDbClusterVO> sourceClusters = migrationTaskHostRefService.getSourceClusters();
-        List<TargetClusterVO> targetClusters = migrationTaskHostRefService.getTargetClusters();
-        Map<String, Object> result = new HashMap<>();
-        result.put("sourceClusters", sourceClusters);
-        result.put("targetClusters", targetClusters);
-        return AjaxResult.success(result);
-    }
-
-    /**
      * retrieve the source cluster
      *
      * @return AjaxResult Response
@@ -115,14 +101,94 @@ public class MigrationTaskResourceController extends BaseController {
     }
 
     /**
-     * retrieve the pgsql cluster
+     * Get the source db clusters by db type
      *
+     * @param dbType db type
      * @return AjaxResult Response
      */
-    @GetMapping("/pgsqlClusters")
-    public AjaxResult getPgsqlClusters() {
-        List<JdbcDbClusterVO> pgsqlClusters = migrationTaskHostRefService.getPgsqlClusters();
-        return AjaxResult.success(Map.of("sourceClusters", pgsqlClusters));
+    @GetMapping("/source/clusters")
+    public AjaxResult getSourceClusters(DbTypeEnum dbType) {
+        return AjaxResult.success(migrationTaskHostRefService.getSourceClusters(dbType));
+    }
+
+    /**
+     * Get source cluster databases
+     *
+     * @param dbType db type
+     * @param nodeId cluster node id
+     * @return AjaxResult
+     */
+    @GetMapping("/source/databases")
+    public AjaxResult getSourceDatabases(DbTypeEnum dbType, String nodeId) {
+        return AjaxResult.success(migrationTaskHostRefService.getSourceDatabases(dbType, nodeId));
+    }
+
+    /**
+     * Get source cluster schemas
+     *
+     * @param dbType db type, default is POSTGRESQL
+     * @param nodeId cluster node id
+     * @param dbName database name
+     * @return AjaxResult
+     */
+    @GetMapping("/source/schemas")
+    public AjaxResult getSourceSchemas(
+            @RequestParam(required = false, defaultValue = "POSTGRESQL") DbTypeEnum dbType, String nodeId, String dbName
+    ) {
+        List<String> schemas = migrationTaskHostRefService.getSourceSchemas(dbType, nodeId, dbName);
+        return AjaxResult.success(schemas);
+    }
+
+    /**
+     * Get source cluster table page
+     *
+     * @param dbType db type
+     * @param nodeId cluster node id
+     * @param dbName database name
+     * @param schemaName schema name
+     * @return AjaxResult
+     */
+    @GetMapping("/source/table/page")
+    public AjaxResult getSourceTablePage(
+            @RequestParam(required = true) DbTypeEnum dbType, @RequestParam(required = true) String nodeId,
+            @RequestParam(required = false) String dbName, @RequestParam(required = false) String schemaName
+    ) {
+        return AjaxResult.success(migrationTaskHostRefService.getSourceTablePage(dbType, nodeId, dbName, schemaName,
+                startPage()));
+    }
+
+    /**
+     * Get the target db clusters by db type
+     *
+     * @return AjaxResult
+     */
+    @GetMapping("/target/clusters")
+    public AjaxResult getTargetClusters() {
+        return AjaxResult.success(migrationTaskHostRefService.getTargetClusters());
+    }
+
+    /**
+     * Get target cluster detail
+     *
+     * @param sourceTable source table
+     * @param clusterId target cluster id
+     * @return AjaxResult
+     */
+    @GetMapping("/target/detail")
+    public AjaxResult getTargetDetail(OpengaussSourceTable sourceTable, String clusterId) {
+        return AjaxResult.success(migrationTaskHostRefService.getTargetDetail(sourceTable, clusterId));
+    }
+
+    /**
+     * Get target cluster databases
+     *
+     * @param sourceTable source table
+     * @param nodeId cluster node id
+     * @return AjaxResult
+     */
+    @GetMapping("/target/databases")
+    public AjaxResult getTargetDatabases(OpengaussSourceTable sourceTable, String nodeId) {
+        return AjaxResult.success(migrationTaskHostRefService.getTargetDatabases(sourceTable, nodeId));
     }
 
     /**
@@ -131,48 +197,10 @@ public class MigrationTaskResourceController extends BaseController {
      * @return AjaxResult Response
      */
     @GetMapping("/targetClusters")
-    public AjaxResult getTargetClusters() {
-        List<TargetClusterVO> targetClusters = migrationTaskHostRefService.getTargetClusters();
+    public AjaxResult getOpengaussClusters() {
+        List<OpengaussClusterVo> targetClusters = migrationTaskHostRefService.getOpengaussClusters();
         Map<String, Object> result = new HashMap<>();
         result.put("targetClusters", targetClusters);
-        return AjaxResult.success(result);
-    }
-
-    /**
-     * get pgsql databases
-     *
-     * @param url jdbc url
-     * @param username username
-     * @param password password
-     * @return AjaxResult
-     */
-    @PostMapping("/getPgsqlClusterDbs")
-    public AjaxResult getPgsqlClusterDbs(String url, String username, String password) {
-        return AjaxResult.success(migrationTaskHostRefService.getPgsqlClusterDbNames(url, username, password));
-    }
-
-    /**
-     * get pgsql database schemas
-     *
-     * @param url jdbc url
-     * @param username username
-     * @param password password
-     * @param dbName database name
-     * @return AjaxResult
-     */
-    @PostMapping("/getPgsqlDbSchemas")
-    public AjaxResult getPgsqlDbSchemas(String url, String username, String password, String dbName) {
-        return AjaxResult.success(migrationTaskHostRefService.getPgsqlDbSchemas(url, username, password, dbName));
-    }
-
-    /**
-     * judge cluster NodeType
-     *
-     * @return AjaxResult Response
-     */
-    @GetMapping("/isMaster")
-    public AjaxResult isMasterNode(@RequestParam String clusterName) {
-        Map<String, Boolean> result = migrationTaskHostRefService.getNodeRoleMap(clusterName);
         return AjaxResult.success(result);
     }
 
@@ -214,12 +242,6 @@ public class MigrationTaskResourceController extends BaseController {
     @GetMapping("/listAllHostUser")
     public AjaxResult listAllHostUser(@RequestParam("hostIds") List<String> hostIds) {
         return AjaxResult.success(hostUserFacade.listHostUserByHostIdList(hostIds));
-    }
-
-    @PostMapping("/saveCustomMysql")
-    public AjaxResult saveCustomMysql(@RequestBody CustomDbResource dbResource) {
-        migrationTaskHostRefService.saveDbResource(dbResource);
-        return AjaxResult.success();
     }
 
     @GetMapping("/hostUsers/{hostId}")
@@ -311,15 +333,6 @@ public class MigrationTaskResourceController extends BaseController {
                 setValue(info);
             }
         });
-    }
-
-    /**
-     * find tables
-     */
-    @PostMapping("/tables/{dbName}")
-    public TableDataInfo getTables(@PathVariable String dbName, String url, String username, String password) {
-        IPage<Object> page = migrationTaskHostRefService.pageByDB(startPage(), dbName, url, username, password);
-        return getDataTable(page);
     }
 
     /**

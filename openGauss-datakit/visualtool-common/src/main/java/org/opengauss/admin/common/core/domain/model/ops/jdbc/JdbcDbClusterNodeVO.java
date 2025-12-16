@@ -26,6 +26,7 @@ package org.opengauss.admin.common.core.domain.model.ops.jdbc;
 
 import lombok.Data;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsJdbcDbClusterNodeEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsNonJdbcDbClusterNodeEntity;
 
 /**
  * @author lhf
@@ -52,6 +53,41 @@ public class JdbcDbClusterNodeVO {
         jdbcDbClusterNodeVO.setPassword(clusterNodeEntity.getPassword());
         jdbcDbClusterNodeVO.setUrl(clusterNodeEntity.getUrl());
         jdbcDbClusterNodeVO.setOs(os);
+        return jdbcDbClusterNodeVO;
+    }
+
+    /**
+     * Convert OpsJdbcDbClusterNodeEntity to JdbcDbClusterNodeVO
+     *
+     * @param clusterNodeEntity The entity object of JDBC cluster node
+     * @return The VO object of JDBC cluster node
+     */
+    public static JdbcDbClusterNodeVO of(OpsJdbcDbClusterNodeEntity clusterNodeEntity) {
+        JdbcDbClusterNodeVO jdbcDbClusterNodeVO = new JdbcDbClusterNodeVO();
+        jdbcDbClusterNodeVO.setClusterNodeId(clusterNodeEntity.getClusterNodeId());
+        jdbcDbClusterNodeVO.setName(clusterNodeEntity.getName());
+        jdbcDbClusterNodeVO.setIp(clusterNodeEntity.getIp());
+        jdbcDbClusterNodeVO.setPort(clusterNodeEntity.getPort());
+        jdbcDbClusterNodeVO.setUsername(clusterNodeEntity.getUsername());
+        jdbcDbClusterNodeVO.setPassword(clusterNodeEntity.getPassword());
+        jdbcDbClusterNodeVO.setUrl(clusterNodeEntity.getUrl());
+        return jdbcDbClusterNodeVO;
+    }
+
+    /**
+     * Convert OpsNonJdbcDbClusterNodeEntity to JdbcDbClusterNodeVO
+     *
+     * @param clusterNodeEntity The entity object of non-JDBC cluster node
+     * @return The VO object of non-JDBC cluster node
+     */
+    public static JdbcDbClusterNodeVO of(OpsNonJdbcDbClusterNodeEntity clusterNodeEntity) {
+        JdbcDbClusterNodeVO jdbcDbClusterNodeVO = new JdbcDbClusterNodeVO();
+        jdbcDbClusterNodeVO.setClusterNodeId(clusterNodeEntity.getClusterNodeId());
+        jdbcDbClusterNodeVO.setIp(clusterNodeEntity.getIp());
+        jdbcDbClusterNodeVO.setPort(clusterNodeEntity.getPort());
+        jdbcDbClusterNodeVO.setUsername(clusterNodeEntity.getUsername());
+        jdbcDbClusterNodeVO.setPassword(clusterNodeEntity.getPassword());
+        jdbcDbClusterNodeVO.setUrl(clusterNodeEntity.getUrl());
         return jdbcDbClusterNodeVO;
     }
 }

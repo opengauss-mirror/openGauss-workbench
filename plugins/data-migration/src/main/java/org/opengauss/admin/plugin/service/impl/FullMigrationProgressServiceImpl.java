@@ -27,11 +27,26 @@ public class FullMigrationProgressServiceImpl extends ServiceImpl<FullMigrationP
     private FullMigrationProgressMapper mapper;
 
     @Override
+    public void deleteByTaskIdAndStatus(Integer taskId, Integer status) {
+        LambdaQueryWrapper<FullMigrationProgress> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(FullMigrationProgress::getTaskId, taskId);
+        queryWrapper.eq(FullMigrationProgress::getStatus, status);
+        mapper.delete(queryWrapper);
+    }
+
+    @Override
     public void deleteByTaskIdAndObjectType(Integer taskId, FullMigrationDbObjEnum objectType) {
         LambdaQueryWrapper<FullMigrationProgress> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(FullMigrationProgress::getTaskId, taskId);
         queryWrapper.eq(FullMigrationProgress::getObjectType, objectType.getObjectType());
         mapper.delete(queryWrapper);
+    }
+
+    @Override
+    public List<FullMigrationProgress> getListByTaskId(Integer taskId) {
+        LambdaQueryWrapper<FullMigrationProgress> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(FullMigrationProgress::getTaskId, taskId);
+        return mapper.selectList(queryWrapper);
     }
 
     @Override

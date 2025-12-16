@@ -1682,12 +1682,73 @@ CREATE TABLE IF NOT EXISTS "ops_jdbcdb_cluster"
     "name" varchar(255) ,
     "deploy_type" varchar(255) ,
     "db_type" varchar(255) ,
+    "version_num" varchar(255) ,
     "remark" varchar(255) ,
     "create_by" varchar(64) ,
     "create_time" timestamp,
     "update_by" varchar(64) ,
     "update_time" timestamp
     );
+
+-- ----------------------------
+-- Create table ops_non_jdbc_db_cluster
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "ops_non_jdbc_db_cluster"(
+    "cluster_id" varchar(255) NOT NULL PRIMARY KEY,
+    "name" varchar(255) ,
+    "deploy_type" varchar(255) ,
+    "db_type" varchar(255) ,
+    "version_num" varchar(255) ,
+    "remark" varchar(255) ,
+    "create_by" varchar(64) ,
+    "create_time" timestamp,
+    "update_by" varchar(64) ,
+    "update_time" timestamp
+    );
+
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster"."cluster_id" IS '集群ID';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster"."name" IS '集群名称';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster"."deploy_type" IS '部署方式：CLUSTER、SINGLE_NODE';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster"."db_type" IS '数据库类型：MILVUS、ELASTICSEARCH';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster"."version_num" IS '数据库版本号';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster"."remark" IS '备注';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster"."create_by" IS '创建集群的系统用户';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster"."create_time" IS '创建时间';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster"."update_by" IS '修改集群的系统用户';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster"."update_time" IS '修改时间';
+
+-- ----------------------------
+-- Create table ops_non_jdbc_db_cluster_node
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS "ops_non_jdbc_db_cluster_node"(
+    "cluster_node_id" varchar(25) NOT NULL PRIMARY KEY,
+    "cluster_id" varchar(255) ,
+    "ip" varchar(255) ,
+    "port" varchar(255) ,
+    "username" varchar(255) ,
+    "password" text ,
+    "url" varchar(255) ,
+    "remark" varchar(255) ,
+    "create_by" varchar(64) ,
+    "create_time" timestamp,
+    "update_by" varchar(64) ,
+    "update_time" timestamp
+    );
+
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster_node"."cluster_node_id" IS '集群节点ID';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster_node"."cluster_id" IS '集群ID';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster_node"."ip" IS '主机IP';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster_node"."port" IS '端口号';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster_node"."username" IS '连接用户名';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster_node"."password" IS '连接用户密码';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster_node"."url" IS '连接url串';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster"."remark" IS '备注';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster"."create_by" IS '创建集群的系统用户';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster"."create_time" IS '创建时间';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster"."update_by" IS '修改集群的系统用户';
+COMMENT ON COLUMN "ops_non_jdbc_db_cluster"."update_time" IS '修改时间';
 
 -- ----------------------------
 -- Table structure for sys_setting

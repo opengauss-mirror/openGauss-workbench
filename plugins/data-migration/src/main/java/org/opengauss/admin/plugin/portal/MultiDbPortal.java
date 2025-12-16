@@ -5,10 +5,15 @@
 package org.opengauss.admin.plugin.portal;
 
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.google.common.collect.Lists;
+
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.plugin.domain.FullMigrationProgress;
 import org.opengauss.admin.plugin.domain.FullMigrationSubProcessCounter;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
@@ -23,7 +28,6 @@ import org.opengauss.admin.plugin.enums.FullMigrationDbObjEnum;
 import org.opengauss.admin.plugin.enums.MigrationMode;
 import org.opengauss.admin.plugin.enums.TaskStatus;
 import org.opengauss.admin.plugin.exception.MigrationTaskException;
-import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.service.FullMigrationProgressService;
 import org.opengauss.admin.plugin.service.FullMigrationSummaryDataService;
 import org.opengauss.admin.plugin.service.IncrementalMigrationProgressService;
@@ -31,6 +35,7 @@ import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
 import org.opengauss.admin.plugin.service.MigrationTaskParamService;
 import org.opengauss.admin.plugin.service.MigrationTaskStatusRecordService;
 import org.opengauss.admin.plugin.service.ReverseMigrationProgressService;
+import org.opengauss.admin.plugin.utils.PageHelper;
 import org.opengauss.admin.plugin.vo.FullMigrationProgressVo;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 import org.opengauss.admin.plugin.vo.TaskProcessStatus;
@@ -40,7 +45,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 
-import jakarta.annotation.Resource;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
@@ -50,6 +54,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -104,6 +109,19 @@ public class MultiDbPortal extends MigrationPortal {
      */
     public Map<String, Object> getFullMigCurrentTypeInfo(
             MigrationTask task, String currentInfoType, MigrationCurrentCheckInfoDto info) {
+        DbTypeEnum sourceDbType = task.getSourceDbType();
+        if (DbTypeEnum.POSTGRESQL.equals(sourceDbType)) {
+            return getPgsqlFullMigCurrentTypeInfo(task, currentInfoType, info);
+        } else if (DbTypeEnum.MILVUS.equals(sourceDbType) || DbTypeEnum.ELASTICSEARCH.equals(sourceDbType)) {
+            return getMilvusFullMigCurrentTypeInfo(task, currentInfoType, info);
+        } else {
+            throw new MigrationTaskException("Unsupported database type to get full migration type info");
+        }
+    }
+
+    private Map<String, Object> getPgsqlFullMigCurrentTypeInfo(
+            MigrationTask task, String currentInfoType, MigrationCurrentCheckInfoDto info
+    ) {
         FullMigrationDbObjEnum objectType = Arrays.stream(FullMigrationDbObjEnum.values())
                 .filter(e -> e.getObjectType().equals(currentInfoType))
                 .findFirst()
@@ -111,10 +129,11 @@ public class MultiDbPortal extends MigrationPortal {
         List<FullMigrationProgress> objectProgressList =
                 fullProgressService.getListByTaskIdAndObjectType(task.getId(), objectType);
 
+        Map<String, String> schemaMapping = getSchemaMapping(task);
         List<FullMigrationProgressVo> filterList = objectProgressList.stream()
                 .filter(objectProgress -> objectProgress.getName().contains(info.getTableName()))
                 .filter(objectProgress -> objectProgress.getSchema().contains(info.getSchemaName()))
-                .map(progress -> new FullMigrationProgressVo(progress, getSchemaMapping(task)))
+                .map(progress -> new FullMigrationProgressVo(progress, schemaMapping))
                 .collect(Collectors.toList());
 
         Map<String, Object> filteredMap = new HashMap<>();
@@ -126,27 +145,62 @@ public class MultiDbPortal extends MigrationPortal {
         return filteredMap;
     }
 
-    private Map<String, String> getSchemaMapping(MigrationTask task) {
-        Map<String, String> schemaMappings = new HashMap<>();
-        List<String> sourceSchemas = Arrays.asList(task.getSourceSchemas().split(","));
-        for (String configSchema : sourceSchemas) {
-            schemaMappings.put(configSchema, configSchema);
+    private Map<String, Object> getMilvusFullMigCurrentTypeInfo(
+            MigrationTask task, String currentInfoType, MigrationCurrentCheckInfoDto info
+    ) {
+        if (!FullMigrationDbObjEnum.TABLE.getObjectType().equals(currentInfoType)) {
+            throw new MigrationTaskException("Only table is supported, currentInfoType: " + currentInfoType);
         }
+        List<FullMigrationProgress> objectProgressList = fullProgressService.getListByTaskId(task.getId());
 
+        Map<String, String> tableMapping = getTableMapping(task);
+        List<FullMigrationProgressVo> filterList = objectProgressList.stream()
+                .filter(objectProgress -> objectProgress.getName().contains(info.getTableName()))
+                .map(progress -> new FullMigrationProgressVo(progress, tableMapping.get(progress.getName())))
+                .toList();
+
+        Map<String, Object> filteredMap = new HashMap<>();
+        Page<FullMigrationProgressVo> page = PageHelper.getPageFromList(
+                filterList, new Page<>(info.getPageNum(), info.getPageSize()));
+        filteredMap.put(currentInfoType, page.getRecords());
+        filteredMap.put("total", page.getTotal());
+        return filteredMap;
+    }
+
+    private Map<String, String> getTableMapping(MigrationTask task) {
+        String paramKey = "table.mappings";
         List<MigrationTaskParam> migrationTaskParamList = migrationTaskParamService.selectByTaskId(task.getId())
-                .stream().filter(param -> param.getParamKey().equals("schema.mappings"))
+                .stream().filter(param -> paramKey.equals(param.getParamKey()))
+                .toList();
+        String tableMappingStr = null;
+        if (!migrationTaskParamList.isEmpty()) {
+            tableMappingStr = migrationTaskParamList.get(0).getParamValue();
+        }
+        return parseMapping(task.getSourceTables(), tableMappingStr);
+    }
+
+    private Map<String, String> getSchemaMapping(MigrationTask task) {
+        String paramKey = "schema.mappings";
+        List<MigrationTaskParam> migrationTaskParamList = migrationTaskParamService.selectByTaskId(task.getId())
+                .stream().filter(param -> paramKey.equals(param.getParamKey()))
                 .toList();
         String schemaMappingStr = null;
         if (!migrationTaskParamList.isEmpty()) {
             schemaMappingStr = migrationTaskParamList.get(0).getParamValue();
         }
 
-        String[] configMappingArray = null;
-        if (!ObjectUtils.isEmpty(schemaMappingStr)) {
-            configMappingArray = schemaMappingStr.split(",");
+        return parseMapping(task.getSourceSchemas(), schemaMappingStr);
+    }
+
+    private Map<String, String> parseMapping(String sourceObjects, String mappingStr) {
+        Map<String, String> mappings = new HashMap<>();
+        List<String> sourceObjectsList = Arrays.asList(sourceObjects.split(","));
+        for (String sourceObject : sourceObjectsList) {
+            mappings.put(sourceObject, sourceObject);
         }
 
-        if (configMappingArray != null) {
+        if (!ObjectUtils.isEmpty(mappingStr)) {
+            String[] configMappingArray = mappingStr.split(",");
             for (String s : configMappingArray) {
                 if (ObjectUtils.isEmpty(s)) {
                     continue;
@@ -154,17 +208,18 @@ public class MultiDbPortal extends MigrationPortal {
 
                 String[] parts = s.split(":");
                 if (parts.length != 2) {
-                    log.error("Invalid schema mapping: {}", s);
+                    log.error("Invalid table mapping: {}", s);
                     continue;
                 }
 
-                String sourceSchema = parts[0];
-                if (sourceSchemas.contains(sourceSchema)) {
-                    schemaMappings.put(sourceSchema, parts[1]);
+                String sourceTable = parts[0];
+                if (sourceObjectsList.contains(sourceTable)) {
+                    mappings.put(sourceTable, parts[1]);
                 }
             }
         }
-        return schemaMappings;
+
+        return mappings;
     }
 
     /**
@@ -200,7 +255,9 @@ public class MultiDbPortal extends MigrationPortal {
 
         List<List<String>> pageList = Lists.partition(logsList, info.getPageSize());
         if (!pageList.isEmpty()) {
-            resultMap.put("logs", pageList.get(info.getPageNum() - 1));
+            List<String> pageRecords = pageList.get(info.getPageNum() - 1);
+            pageRecords = pageRecords.stream().map(FilenameUtils::normalize).toList();
+            resultMap.put("logs", pageRecords);
         }
         resultMap.put("total", logsList.size());
         return resultMap;
@@ -223,18 +280,13 @@ public class MultiDbPortal extends MigrationPortal {
         wsInfo.setExecStatus(execStatus);
         wsInfo.setExceptionAlertTotalCount(0L);
         setExecuteTime(wsInfo, task);
-        setProcessDetailAndStatusRecord(wsInfo, task);
-        setFullMigrationObjectCounter(wsInfo, task);
-        wsInfo.setTask(task);
-
-        List<String> logPaths = new ArrayList<>();
-        if (!execStatus.equals(TaskStatus.NOT_RUN.getCode())) {
-            MigrationHostPortalInstall portalInfo = portalInstallHostService.getOneByHostId(task.getRunHostId());
-            logPaths = PortalHandle.getPortalLogPath(portalInfo.getHost(), portalInfo.getPort(),
-                    portalInfo.getRunUser(), encryptionUtils.decrypt(portalInfo.getRunPassword()),
-                    portalInfo.getInstallPath(), task);
+        if (DbTypeEnum.POSTGRESQL.equals(task.getSourceDbType())) {
+            setProcessDetailAndStatusRecord(wsInfo, task);
+            setFullMigrationObjectCounter(wsInfo, task);
+        } else {
+            setMilvusFullMigrationTableCounter(wsInfo, task);
         }
-        wsInfo.setLogs(logPaths);
+        wsInfo.setTask(task);
         return wsInfo;
     }
 
@@ -266,6 +318,11 @@ public class MultiDbPortal extends MigrationPortal {
      * @return TaskProcessStatus task process status
      */
     public TaskProcessStatus checkStatusOfIncrementalOrReverseMigrationTask(MigrationTask migrationTask) {
+        DbTypeEnum sourceDbType = migrationTask.getSourceDbType();
+        if (DbTypeEnum.MILVUS.equals(sourceDbType) || DbTypeEnum.ELASTICSEARCH.equals(sourceDbType)) {
+            throw new MigrationTaskException("Milvus/Elasticsearch do not support incremental or reverse migration.");
+        }
+
         TaskProcessStatus taskProcessStatus = new TaskProcessStatus();
         if (TaskStatus.INCREMENTAL_PAUSE.getCode().equals(migrationTask.getExecStatus())
                 || TaskStatus.REVERSE_PAUSE.getCode().equals(migrationTask.getExecStatus())) {
@@ -381,6 +438,38 @@ public class MultiDbPortal extends MigrationPortal {
         return portalInstaller.deletePortal(hostId);
     }
 
+    private void setMilvusFullMigrationTableCounter(MigrationTaskWebsocketInfoDto wsInfo, MigrationTask task) {
+        Integer taskId = task.getId();
+        List<FullMigrationProgress> tableProgressList = fullProgressService.getListByTaskIdAndObjectType(
+                taskId, FullMigrationDbObjEnum.TABLE);
+        FullMigrationSubProcessCounter tableCounter = new FullMigrationSubProcessCounter(tableProgressList);
+        wsInfo.setTableCounts(tableCounter);
+
+        int successCount = tableCounter.getSuccessCount();
+        int errorCount = tableCounter.getErrorCount();
+        wsInfo.setTotalSuccessCount(successCount);
+        wsInfo.setTotalErrorCount(errorCount);
+
+        int concurrentThreads = 4;
+        String paramKey = "migration.concurrent.threads";
+        Optional<MigrationTaskParam> sourceTableParam = migrationTaskParamService.selectByTaskId(taskId).stream()
+                .filter(param -> paramKey.equals(param.getParamKey()))
+                .findFirst();
+        if (sourceTableParam.isPresent()) {
+            concurrentThreads = Integer.parseInt(sourceTableParam.get().getParamValue());
+        }
+
+        int total = (int) Arrays.stream(task.getSourceTables().split(",")).filter(table -> !table.isEmpty()).count();
+        int remainingCount = total - successCount - errorCount;
+        if (remainingCount > concurrentThreads) {
+            wsInfo.setTotalRunningCount(concurrentThreads);
+            wsInfo.setTotalWaitCount(remainingCount - concurrentThreads);
+        } else {
+            wsInfo.setTotalRunningCount(remainingCount);
+            wsInfo.setTotalWaitCount(0);
+        }
+    }
+
     private void setFullMigrationObjectCounter(MigrationTaskWebsocketInfoDto wsInfo, MigrationTask task) {
         Integer taskId = task.getId();
         List<FullMigrationProgress> tableProgressList = fullProgressService.getListByTaskIdAndObjectType(
@@ -419,21 +508,21 @@ public class MultiDbPortal extends MigrationPortal {
     }
 
     private void setProcessDetailAndStatusRecord(MigrationTaskWebsocketInfoDto wsInfo, MigrationTask task) {
+        Integer taskId = task.getId();
         HashMap<String, Object> fullProcessEntry = new HashMap<>();
-        fullProcessEntry.put("total", fullMigrationSummaryDataService.getOneByTaskId(task.getId()));
+        fullProcessEntry.put("total", fullMigrationSummaryDataService.getOneByTaskId(taskId));
         wsInfo.setFullProcess(MigrationTaskExecResultDetail.builder().execResultDetail(
                 JSON.toJSONString(fullProcessEntry)).build());
         fullProcessEntry.clear();
         wsInfo.setDataCheckProcess(new MigrationTaskExecResultDetail());
         if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
             wsInfo.setIncrementalProcess(MigrationTaskExecResultDetail.builder().execResultDetail(
-                    JSON.toJSONString(incrementalMigrationProgressService.getOneByTaskId(task.getId()))).build());
+                    JSON.toJSONString(incrementalMigrationProgressService.getOneByTaskId(taskId))).build());
             wsInfo.setReverseProcess(MigrationTaskExecResultDetail.builder().execResultDetail(
-                    JSON.toJSONString(reverseMigrationProgressService.getOneByTaskId(task.getId()))).build());
+                    JSON.toJSONString(reverseMigrationProgressService.getOneByTaskId(taskId))).build());
 
-            List<MigrationTaskStatusRecord> migrationTaskStatusRecords
-                    = migrationTaskStatusRecordService.selectByTaskId(task.getId());
-            Map<String, List<MigrationTaskStatusRecord>> recordMap = migrationTaskStatusRecords.stream()
+            List<MigrationTaskStatusRecord> statusRecords = migrationTaskStatusRecordService.selectByTaskId(taskId);
+            Map<String, List<MigrationTaskStatusRecord>> recordMap = statusRecords.stream()
                     .filter(record -> Objects.nonNull(record.getOperateType()))
                     .collect(Collectors.groupingBy(record -> record.getOperateType().toString()));
             wsInfo.setStatusRecords(recordMap);

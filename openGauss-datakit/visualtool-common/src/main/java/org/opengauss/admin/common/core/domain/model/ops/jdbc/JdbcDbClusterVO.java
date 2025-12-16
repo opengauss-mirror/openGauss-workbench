@@ -27,6 +27,7 @@ package org.opengauss.admin.common.core.domain.model.ops.jdbc;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsJdbcDbClusterEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsNonJdbcDbClusterEntity;
 import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.common.enums.ops.DeployTypeEnum;
 
@@ -48,6 +49,13 @@ public class JdbcDbClusterVO {
     private Date updateTime;
     private String versionNum;
 
+    /**
+     * Convert OpsJdbcDbClusterEntity to JdbcDbClusterVO
+     *
+     * @param record The entity object of JDBC cluster
+     * @param nodes The list of JDBC cluster nodes
+     * @return The VO object of JDBC cluster
+     */
     public static JdbcDbClusterVO of(OpsJdbcDbClusterEntity record, List<JdbcDbClusterNodeVO> nodes) {
         JdbcDbClusterVO jdbcDbClusterVO = new JdbcDbClusterVO();
         jdbcDbClusterVO.setClusterId(record.getClusterId());
@@ -55,6 +63,26 @@ public class JdbcDbClusterVO {
         jdbcDbClusterVO.setDeployType(record.getDeployType());
         jdbcDbClusterVO.setDbType(record.getDbType());
         jdbcDbClusterVO.setUpdateTime(record.getUpdateTime());
+        jdbcDbClusterVO.setVersionNum(record.getVersionNum());
+        jdbcDbClusterVO.setNodes(nodes);
+        return jdbcDbClusterVO;
+    }
+
+    /**
+     * Convert OpsNonJdbcDbClusterEntity to JdbcDbClusterVO
+     *
+     * @param record The entity object of non-JDBC cluster
+     * @param nodes The list of non-JDBC cluster nodes
+     * @return The VO object of non-JDBC cluster
+     */
+    public static JdbcDbClusterVO of(OpsNonJdbcDbClusterEntity record, List<JdbcDbClusterNodeVO> nodes) {
+        JdbcDbClusterVO jdbcDbClusterVO = new JdbcDbClusterVO();
+        jdbcDbClusterVO.setClusterId(record.getClusterId());
+        jdbcDbClusterVO.setName(record.getName());
+        jdbcDbClusterVO.setDeployType(record.getDeployType());
+        jdbcDbClusterVO.setDbType(record.getDbType());
+        jdbcDbClusterVO.setUpdateTime(record.getUpdateTime());
+        jdbcDbClusterVO.setVersionNum(record.getVersionNum());
         jdbcDbClusterVO.setNodes(nodes);
         return jdbcDbClusterVO;
     }

@@ -25,6 +25,7 @@
 package org.opengauss.admin.plugin.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.plugin.domain.MigrationTaskInitGlobalParam;
 
 import java.util.List;
@@ -40,4 +41,12 @@ public interface MigrationTaskInitGlobalParamService extends IService<MigrationT
      * @return pgsql migration config params
      */
     List<MigrationTaskInitGlobalParam> getPgsqlMigrationConfigParams();
+
+    /**
+     * Get migration config params by db type
+     *
+     * @param dbType db type
+     * @return migration config params
+     */
+    List<MigrationTaskInitGlobalParam> getMigrationConfigParams(DbTypeEnum dbType);
 }

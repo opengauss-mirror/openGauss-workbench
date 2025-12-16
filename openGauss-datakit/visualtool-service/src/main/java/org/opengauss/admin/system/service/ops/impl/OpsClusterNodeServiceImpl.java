@@ -35,6 +35,7 @@ import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.dto.ops.ClusterNodeDto;
 import org.opengauss.admin.common.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.system.mapper.ops.OpsClusterNodeMapper;
@@ -48,6 +49,7 @@ import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -136,5 +138,49 @@ public class OpsClusterNodeServiceImpl extends ServiceImpl<OpsClusterNodeMapper,
             }
         }
         return nodeDto;
+    }
+
+    @Override
+    public OpsClusterNodeVO getOpsClusterNodeVoByNodeId(String nodeId) {
+        if (StrUtil.isEmpty(nodeId)) {
+            throw new IllegalArgumentException("Param nodeId is empty");
+        }
+
+        OpsClusterNodeEntity nodeEntity = getById(nodeId);
+        if (Objects.isNull(nodeEntity)) {
+            return null;
+        }
+
+        OpsClusterNodeVO nodeVo = OpsClusterNodeVO.of(nodeEntity);
+        String hostId = nodeEntity.getHostId();
+        OpsHostEntity hostEntity = hostService.getById(hostId);
+        OpsClusterEntity clusterEntity = opsClusterService.getById(nodeEntity.getClusterId());
+
+        if (Objects.nonNull(hostEntity)) {
+            nodeVo.setPublicIp(hostEntity.getPublicIp());
+            nodeVo.setPrivateIp(hostEntity.getPrivateIp());
+            nodeVo.setHostPort(hostEntity.getPort());
+            nodeVo.setHostname(hostEntity.getHostname());
+            nodeVo.setHostId(hostId);
+            nodeVo.setDbPort(clusterEntity.getPort());
+            nodeVo.setDbName("postgres");
+            nodeVo.setDbUser(clusterEntity.getDatabaseUsername());
+            nodeVo.setDbUserPassword(clusterEntity.getDatabasePassword());
+            nodeVo.setHostOs(hostEntity.getOs());
+            nodeVo.setHostCpuArch(hostEntity.getCpuArch());
+
+            OpsHostUserEntity rootUser = hostUserService.getRootUserByHostId(hostId);
+            nodeVo.setIsRemember(Objects.nonNull(rootUser) && StrUtil.isNotEmpty(rootUser.getPassword()));
+
+            if (OpenGaussVersionEnum.ENTERPRISE.equals(clusterEntity.getVersion())) {
+                nodeVo.setInstallPath(clusterEntity.getInstallPath());
+            }
+
+            OpsHostUserEntity installUser = hostUserService.getById(nodeEntity.getInstallUserId());
+            if (Objects.nonNull(installUser)) {
+                nodeVo.setInstallUserName(installUser.getUsername());
+            }
+        }
+        return nodeVo;
     }
 }

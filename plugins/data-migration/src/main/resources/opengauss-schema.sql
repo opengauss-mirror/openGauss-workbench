@@ -30,16 +30,6 @@ START 1
 CACHE 1;
 END IF;
 
-IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_tb_task_global_param_id'' )
-THEN
-CREATE SEQUENCE "public"."sq_tb_task_global_param_id"
-INCREMENT 1
-MINVALUE  1
-MAXVALUE 9223372036854775807
-START 1
-CACHE 1;
-END IF;
-
 IF NOT EXISTS (SELECT 1 FROM information_schema.sequences WHERE sequence_schema=''public'' AND sequence_name=''sq_tb_task_run_host_id'' )
 THEN
 CREATE SEQUENCE "public"."sq_tb_task_run_host_id"
@@ -365,27 +355,8 @@ COMMENT ON COLUMN "public"."tb_migration_task_exec_result_detail"."process_type"
 
 COMMENT ON TABLE "public"."tb_migration_task_exec_result_detail" IS '任务执行结果进度详情';
 
-CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_global_param" (
-  "id" int8 NOT NULL DEFAULT nextval('sq_tb_task_global_param_id'::regclass),
-  "param_key" varchar(255) COLLATE "pg_catalog"."default",
-  "param_value" varchar(255) COLLATE "pg_catalog"."default",
-  "param_desc" varchar(512) COLLATE "pg_catalog"."default",
-  "main_task_id" int8,
-  CONSTRAINT "tb_task_global_param_pkey" PRIMARY KEY ("id")
-);
-
-COMMENT ON COLUMN "public"."tb_migration_task_global_param"."id" IS '主键ID';
-
-COMMENT ON COLUMN "public"."tb_migration_task_global_param"."param_key" IS '参数key';
-
-COMMENT ON COLUMN "public"."tb_migration_task_global_param"."param_value" IS '参数值';
-
-COMMENT ON COLUMN "public"."tb_migration_task_global_param"."param_desc" IS '参数说明';
-
-COMMENT ON COLUMN "public"."tb_migration_task_global_param"."main_task_id" IS '主任务ID';
-
-COMMENT ON TABLE "public"."tb_migration_task_global_param" IS '任务全局参数配置表';
-
+DROP TABLE IF EXISTS "public"."tb_migration_task_global_param";
+DROP SEQUENCE IF EXISTS "public"."sq_tb_task_global_param_id";
 
 CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_global_tools_param" (
   "id" int8 NOT NULL DEFAULT nextval('sq_tb_migration_task_global_tools_param_id'::regclass),
@@ -1338,6 +1309,27 @@ VALUES(32, 'is.migration.object', 'true', '是否迁移对象（view, trigger, f
 INSERT INTO "public"."tb_migration_task_init_global_param"
 ("id", "param_key", "param_value", "param_desc", "param_type", "db_type")
 VALUES(33, 'schema.mappings', '', '源端到目标端的schema映射，不配置时，默认迁移至目标端的schema与源端schema同名，配置格式为：public:public,schema1:schema1,schema2:schema2，注意分隔符均为英文的冒号和逗号', 6, 'POSTGRESQL')
+    ON DUPLICATE KEY UPDATE NOTHING;
+
+-------------------------------------------
+-- Add Milvus/Elasticsearch migration params to tb_migration_task_init_global_param
+-------------------------------------------
+
+INSERT INTO "public"."tb_migration_task_init_global_param"
+("id", "param_key", "param_value", "param_rules", "param_desc", "param_type", "db_type")
+VALUES(34, 'migration.concurrent.threads', '4', '[1,32]', '并发迁移线程数，即多少张表同时迁移', 2, 'MILVUS')
+    ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."tb_migration_task_init_global_param"
+("id", "param_key", "param_value", "param_rules", "param_desc", "param_type", "db_type")
+VALUES(35, 'migration.concurrent.threads', '4', '[1,32]', '并发迁移线程数，即多少张表同时迁移', 2, 'ELASTICSEARCH')
+    ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."tb_migration_task_init_global_param"
+("id", "param_key", "param_value", "param_desc", "param_type", "db_type")
+VALUES(36, 'table.mappings', '', '源端collection名到目标端table名的映射，不配置时，默认迁移至目标端的table名与源端collection同名，配置格式为：collection1:collection1,collection2:collection2，注意分隔符均为英文的冒号和逗号', 6, 'MILVUS')
+    ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."tb_migration_task_init_global_param"
+("id", "param_key", "param_value", "param_desc", "param_type", "db_type")
+VALUES(37, 'table.mappings', '', '源端index名到目标端table名的映射，不配置时，默认迁移至目标端的table名与源端index同名，配置格式为：index1:index1,index2:index2，注意分隔符均为英文的冒号和逗号', 6, 'ELASTICSEARCH')
     ON DUPLICATE KEY UPDATE NOTHING;
 
 -------------------------------------------

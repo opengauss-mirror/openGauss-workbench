@@ -24,20 +24,37 @@
 
 package org.opengauss.admin.system.service.ops.impl;
 
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
-
 import com.alibaba.fastjson.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
+import jakarta.annotation.Resource;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import org.opengauss.admin.common.core.domain.entity.ops.*;
-import org.opengauss.admin.common.core.domain.model.ops.*;
-import org.opengauss.admin.common.core.domain.model.ops.check.*;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsCheckEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.core.domain.model.ops.ClusterSummaryVO;
+import org.opengauss.admin.common.core.domain.model.ops.NodeMonitorVO;
+import org.opengauss.admin.common.core.domain.model.ops.NodeNetMonitor;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
+import org.opengauss.admin.common.core.domain.model.ops.WsSession;
+import org.opengauss.admin.common.core.domain.model.ops.check.CheckClusterVO;
+import org.opengauss.admin.common.core.domain.model.ops.check.CheckDbVO;
+import org.opengauss.admin.common.core.domain.model.ops.check.CheckDeviceVO;
+import org.opengauss.admin.common.core.domain.model.ops.check.CheckItemVO;
+import org.opengauss.admin.common.core.domain.model.ops.check.CheckNetworkVO;
+import org.opengauss.admin.common.core.domain.model.ops.check.CheckOSVO;
+import org.opengauss.admin.common.core.domain.model.ops.check.CheckSummaryVO;
+import org.opengauss.admin.common.core.domain.model.ops.check.CheckVO;
 import org.opengauss.admin.common.core.handler.ops.cache.TaskManager;
 import org.opengauss.admin.common.core.handler.ops.cache.WsConnectorManager;
 import org.opengauss.admin.common.enums.ops.ClusterRoleEnum;
@@ -48,23 +65,35 @@ import org.opengauss.admin.system.mapper.ops.OpsClusterMapper;
 import org.opengauss.admin.system.plugin.beans.SshLogin;
 import org.opengauss.admin.system.service.HostMonitorCacheService;
 import org.opengauss.admin.system.service.JschExecutorService;
-import org.opengauss.admin.system.service.ops.*;
+import org.opengauss.admin.system.service.ops.IHostService;
+import org.opengauss.admin.system.service.ops.IHostUserService;
+import org.opengauss.admin.system.service.ops.IOpsCheckService;
+import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
+import org.opengauss.admin.system.service.ops.IOpsClusterService;
+import org.opengauss.admin.system.service.ops.IOpsJdbcDbClusterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import jakarta.annotation.Resource;
 
 /**
  * @author lhf
@@ -569,6 +598,99 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
         opsCheckService.save(opsCheckEntity);
         CheckVO checkVO = parseCheckResToCheckVO(res);
         return CheckSummaryVO.of(checkVO);
+    }
+
+    @Override
+    public OpsClusterVO getOpsClusterVoByClusterId(String clusterId) {
+        OpsClusterEntity clusterEntity = getById(clusterId);
+        if (clusterEntity == null) {
+            return null;
+        }
+
+        OpsClusterVO resultVo = OpsClusterVO.of(clusterEntity);
+
+        OpsCheckEntity opsCheckEntity = opsCheckService.getLastResByClusterId(clusterId);
+        if (opsCheckEntity != null) {
+            resultVo.setCheckSummary(getCheckSummary(opsCheckEntity));
+            resultVo.setLastCheckAt(opsCheckEntity.getCreateTime());
+        }
+
+        resultVo.setClusterNodes(getClusterNodeVos(clusterEntity));
+        return resultVo;
+    }
+
+    @Override
+    public OpsClusterVO getOpsClusterVoByNodeId(String nodeId) {
+        OpsClusterNodeEntity clusterNodeEntity = opsClusterNodeService.getById(nodeId);
+        if (clusterNodeEntity == null) {
+            return null;
+        }
+
+        String clusterId = clusterNodeEntity.getClusterId();
+        return getOpsClusterVoByClusterId(clusterId);
+    }
+
+    @Override
+    public boolean isOpsClusterExists(String nodeId) {
+        OpsClusterNodeEntity clusterNodeEntity = opsClusterNodeService.getById(nodeId);
+        if (clusterNodeEntity == null) {
+            return false;
+        }
+
+        LambdaQueryWrapper<OpsClusterEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(OpsClusterEntity::getClusterId, clusterNodeEntity.getClusterId());
+        return exists(queryWrapper);
+    }
+
+    private Map<String, Integer> getCheckSummary(OpsCheckEntity opsCheckEntity) {
+        HashMap<String, Integer> checkSummary = new HashMap<>();
+        CheckVO checkVO = parseCheckResToCheckVO(opsCheckEntity.getCheckRes());
+        if (Objects.nonNull(checkVO)) {
+            Map<String, List<CheckItemVO>> summary = checkVO.summary();
+            if (CollUtil.isNotEmpty(summary)) {
+                summary.forEach((k, v) -> checkSummary.put(k, v.size()));
+            }
+        }
+        return checkSummary;
+    }
+
+    private List<OpsClusterNodeVO> getClusterNodeVos(OpsClusterEntity clusterEntity) {
+        String clusterId = clusterEntity.getClusterId();
+        List<OpsClusterNodeEntity> nodeList = opsClusterNodeService.listClusterNodeByClusterId(clusterId);
+        List<OpsClusterNodeVO> clusterNodeVOS = new ArrayList<>();
+
+        for (OpsClusterNodeEntity nodeEntity : nodeList) {
+            OpsClusterNodeVO nodeVo = OpsClusterNodeVO.of(nodeEntity);
+            String hostId = nodeEntity.getHostId();
+            OpsHostEntity hostEntity = hostService.getById(hostId);
+            if (Objects.nonNull(hostEntity)) {
+                nodeVo.setPublicIp(hostEntity.getPublicIp());
+                nodeVo.setPrivateIp(hostEntity.getPrivateIp());
+                nodeVo.setHostPort(hostEntity.getPort());
+                nodeVo.setHostname(hostEntity.getHostname());
+                nodeVo.setHostId(hostId);
+                nodeVo.setDbPort(clusterEntity.getPort());
+                nodeVo.setDbName("postgres");
+                nodeVo.setDbUser(clusterEntity.getDatabaseUsername());
+                nodeVo.setDbUserPassword(clusterEntity.getDatabasePassword());
+                nodeVo.setHostOs(hostEntity.getOs());
+                nodeVo.setHostCpuArch(hostEntity.getCpuArch());
+
+                OpsHostUserEntity rootUser = hostUserService.getRootUserByHostId(hostId);
+                nodeVo.setIsRemember(Objects.nonNull(rootUser) && StrUtil.isNotEmpty(rootUser.getPassword()));
+
+                if (OpenGaussVersionEnum.ENTERPRISE.equals(clusterEntity.getVersion())) {
+                    nodeVo.setInstallPath(clusterEntity.getInstallPath());
+                }
+
+                OpsHostUserEntity installUser = hostUserService.getById(nodeEntity.getInstallUserId());
+                if (Objects.nonNull(installUser)) {
+                    nodeVo.setInstallUserName(installUser.getUsername());
+                }
+            }
+            clusterNodeVOS.add(nodeVo);
+        }
+        return clusterNodeVOS;
     }
 
     private boolean hasRootPassword(String rootPassword) {

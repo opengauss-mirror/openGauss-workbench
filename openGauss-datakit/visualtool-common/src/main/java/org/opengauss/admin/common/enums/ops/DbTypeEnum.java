@@ -37,9 +37,33 @@ import lombok.Getter;
 public enum DbTypeEnum {
     MYSQL("com.mysql.cj.jdbc.Driver"),
     OPENGAUSS("org.opengauss.Driver"),
-    POSTGRESQL("org.postgresql.Driver");
+    POSTGRESQL("org.postgresql.Driver"),
+    MILVUS(null),
+    ELASTICSEARCH(null),
+    ;
 
     private String driverClass;
+
+    /**
+     * Get driver class
+     *
+     * @return driver class
+     */
+    public String getDriverClass() {
+        if (StrUtil.isEmpty(driverClass)) {
+            throw new UnsupportedOperationException("DbTypeEnum " + name() + " does not have driver class");
+        }
+        return driverClass;
+    }
+
+    /**
+     * Whether it is a JDBC driver database type
+     *
+     * @return boolean
+     */
+    public boolean isJdbcDriver() {
+        return driverClass != null;
+    }
 
     public static DbTypeEnum typeOf(String dbType) {
         if (StrUtil.isEmpty(dbType)) {

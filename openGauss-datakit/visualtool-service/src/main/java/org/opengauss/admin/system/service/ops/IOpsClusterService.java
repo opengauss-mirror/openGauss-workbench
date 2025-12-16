@@ -58,4 +58,28 @@ public interface IOpsClusterService extends IService<OpsClusterEntity> {
     String lock(Connection connection);
 
     CheckSummaryVO check(String clusterId, String rootPassword);
+
+    /**
+     * Get ops cluster vo by cluster id
+     *
+     * @param clusterId cluster id
+     * @return OpsClusterVO
+     */
+    OpsClusterVO getOpsClusterVoByClusterId(String clusterId);
+
+    /**
+     * Get ops cluster vo by node id
+     *
+     * @param nodeId node id
+     * @return OpsClusterVO
+     */
+    OpsClusterVO getOpsClusterVoByNodeId(String nodeId);
+
+    /**
+     * Check if ops cluster exists
+     *
+     * @param nodeId cluster node id
+     * @return boolean
+     */
+    boolean isOpsClusterExists(String nodeId);
 }

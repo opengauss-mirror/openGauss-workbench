@@ -24,24 +24,32 @@
 
 package org.opengauss.admin.web.controller.ops;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.opengauss.admin.common.core.controller.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterImportAnalysisVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterInputDto;
-import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
+import org.opengauss.admin.common.core.dto.BatchDeleteRequest;
 import org.opengauss.admin.common.core.page.TableDataInfo;
+import org.opengauss.admin.common.enums.ops.DbTypeEnum;
+import org.opengauss.admin.system.service.DbClusterInstanceService;
 import org.opengauss.admin.system.service.ops.IOpsJdbcDbClusterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 /**
  * @author lhf
@@ -53,28 +61,87 @@ public class JdbcDbClusterController extends BaseController {
     @Autowired
     private IOpsJdbcDbClusterService opsJdbcDbClusterService;
 
+    @Autowired
+    private DbClusterInstanceService dbClusterInstanceService;
+
+    /**
+     * Add cluster
+     *
+     * @param clusterInput cluster information
+     * @return success
+     */
     @PostMapping("/add")
     public AjaxResult add(@RequestBody JdbcDbClusterInputDto clusterInput) {
-        opsJdbcDbClusterService.add(clusterInput);
+        dbClusterInstanceService.add(clusterInput);
         return AjaxResult.success();
     }
 
+    /**
+     * Get cluster page
+     *
+     * @param name cluster name
+     * @param ip cluster ip
+     * @param type cluster type
+     * @return cluster list
+     */
     @GetMapping("/page")
-    public TableDataInfo page(@RequestParam(required = false, value = "name") String name,@RequestParam(required = false,value = "ip") String ip, @RequestParam(required = false,value = "type") String type) {
-        Page<JdbcDbClusterVO> page = opsJdbcDbClusterService.page(name,ip,type,startPage());
-        return getDataTable(page);
+    public TableDataInfo selectPage(
+            @RequestParam(required = false, value = "name") String name,
+            @RequestParam(required = false, value = "ip") String ip,
+            @RequestParam(required = false, value = "type") String type
+    ) {
+        return dbClusterInstanceService.page(name, ip, type);
     }
 
+    /**
+     * Delete cluster
+     *
+     * @param clusterId cluster id
+     * @return success
+     */
     @DeleteMapping("/{clusterId}")
     public AjaxResult del(@PathVariable("clusterId") String clusterId) {
-        opsJdbcDbClusterService.del(clusterId);
+        dbClusterInstanceService.delete(clusterId);
         return AjaxResult.success();
     }
 
-    @PutMapping("/{clusterId}")
-    public AjaxResult update(@PathVariable("clusterId") String clusterId, @RequestBody JdbcDbClusterInputDto clusterInput) {
-        opsJdbcDbClusterService.update(clusterId, clusterInput);
+    /**
+     * Delete clusters
+     *
+     * @param request batch delete request
+     * @return success
+     */
+    @DeleteMapping("/batch")
+    public AjaxResult delete(@RequestBody BatchDeleteRequest request) {
+        dbClusterInstanceService.batchDelete(request.getIds());
         return AjaxResult.success();
+    }
+
+    /**
+     * Update cluster information
+     *
+     * @param clusterId cluster id
+     * @param clusterInput cluster information
+     * @return success
+     */
+    @PutMapping("/{clusterId}")
+    public AjaxResult update(
+            @PathVariable("clusterId") String clusterId, @RequestBody JdbcDbClusterInputDto clusterInput
+    ) {
+        dbClusterInstanceService.update(clusterId, clusterInput);
+        return AjaxResult.success();
+    }
+
+    /**
+     * Get cluster version number
+     *
+     * @param clusterId cluster id
+     * @param dbType database type
+     * @return version number
+     */
+    @GetMapping("/version/{clusterId}")
+    public AjaxResult version(@PathVariable("clusterId") String clusterId, DbTypeEnum dbType) {
+        return AjaxResult.success(dbClusterInstanceService.version(clusterId, dbType));
     }
 
     @PostMapping("/importAnalysis")

@@ -83,4 +83,12 @@ public interface MigrationMainTaskService extends IService<MigrationMainTask> {
      * @return result
      */
     int checkDataLevelingAndIncrementFinish(Integer id);
+
+    /**
+     * get main task by task name
+     *
+     * @param taskName task name
+     * @return MigrationMainTask
+     */
+    MigrationMainTask getMainTaskByTaskName(String taskName);
 }

@@ -49,4 +49,16 @@ public class MigrationTaskInitGlobalParamServiceImpl extends ServiceImpl<Migrati
         wrapper.orderByAsc(MigrationTaskInitGlobalParam::getId);
         return list(wrapper);
     }
+
+    @Override
+    public List<MigrationTaskInitGlobalParam> getMigrationConfigParams(DbTypeEnum dbType) {
+        if (dbType == null) {
+            throw new IllegalArgumentException("Parameter 'dbType' cannot be null");
+        }
+
+        LambdaQueryWrapper<MigrationTaskInitGlobalParam> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MigrationTaskInitGlobalParam::getDbType, dbType);
+        wrapper.orderByAsc(MigrationTaskInitGlobalParam::getId);
+        return list(wrapper);
+    }
 }

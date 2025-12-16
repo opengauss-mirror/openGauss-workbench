@@ -146,26 +146,6 @@ COMMENT ON COLUMN "tb_migration_task_exec_result_detail"."process_type" IS '进�
 
 COMMENT ON TABLE "tb_migration_task_exec_result_detail" IS '任务执行结果进度详情';
 
-CREATE TABLE IF NOT EXISTS "tb_migration_task_global_param" (
-    "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "param_key" varchar(255),
-    "param_value" varchar(255),
-    "param_desc" varchar(512),
-    "main_task_id" int8
-    );
-
-COMMENT ON COLUMN "tb_migration_task_global_param"."id" IS '主键ID';
-
-COMMENT ON COLUMN "tb_migration_task_global_param"."param_key" IS '参数key';
-
-COMMENT ON COLUMN "tb_migration_task_global_param"."param_value" IS '参数值';
-
-COMMENT ON COLUMN "tb_migration_task_global_param"."param_desc" IS '参数说明';
-
-COMMENT ON COLUMN "tb_migration_task_global_param"."main_task_id" IS '主任务ID';
-
-COMMENT ON TABLE "tb_migration_task_global_param" IS '任务全局参数配置表';
-
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task_global_tools_param" (
     "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -941,6 +921,23 @@ VALUES(32, 'is.migration.object', 'true', '是否迁移对象（view, trigger, f
 INSERT INTO "tb_migration_task_init_global_param"
 ("id", "param_key", "param_value", "param_desc", "param_type", "db_type")
 VALUES(33, 'schema.mappings', '', '源端到目标端的schema映射，不配置时，默认迁移至目标端的schema与源端schema同名，配置格式为：public:public,schema1:schema1,schema2:schema2，注意分隔符均为英文的冒号和逗号', 6, 'POSTGRESQL');
+
+-------------------------------------------
+-- Add Milvus/Elasticsearch migration params to tb_migration_task_init_global_param
+-------------------------------------------
+
+INSERT INTO "tb_migration_task_init_global_param"
+("id", "param_key", "param_value", "param_rules", "param_desc", "param_type", "db_type")
+VALUES(34, 'migration.concurrent.threads', '4', '[1,32]', '并发迁移线程数，即多少张表同时迁移', 2, 'MILVUS');
+INSERT INTO "tb_migration_task_init_global_param"
+("id", "param_key", "param_value", "param_rules", "param_desc", "param_type", "db_type")
+VALUES(35, 'migration.concurrent.threads', '4', '[1,32]', '并发迁移线程数，即多少张表同时迁移', 2, 'ELASTICSEARCH');
+INSERT INTO "tb_migration_task_init_global_param"
+("id", "param_key", "param_value", "param_desc", "param_type", "db_type")
+VALUES(36, 'table.mappings', '', '源端collection名到目标端table名的映射，不配置时，默认迁移至目标端的table名与源端collection同名，配置格式为：collection1:collection1,collection2:collection2，注意分隔符均为英文的冒号和逗号', 6, 'MILVUS');
+INSERT INTO "tb_migration_task_init_global_param"
+("id", "param_key", "param_value", "param_desc", "param_type", "db_type")
+VALUES(37, 'table.mappings', '', '源端index名到目标端table名的映射，不配置时，默认迁移至目标端的table名与源端index同名，配置格式为：index1:index1,index2:index2，注意分隔符均为英文的冒号和逗号', 6, 'ELASTICSEARCH');
 
 -------------------------------------------
 -- ALTER TABLE tb_migration_host_portal_install

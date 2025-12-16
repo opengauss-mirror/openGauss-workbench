@@ -24,10 +24,12 @@
 
 package org.opengauss.admin.plugin.controller;
 
-import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+
+import cn.hutool.core.date.DateUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.annotation.Log;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.page.TableDataInfo;
@@ -36,17 +38,16 @@ import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.plugin.domain.MigrationMainTask;
 import org.opengauss.admin.plugin.domain.MigrationTask;
-import org.opengauss.admin.plugin.dto.MigrationTaskDto;
 import org.opengauss.admin.plugin.dto.MigrationCurrentCheckInfoDto;
 import org.opengauss.admin.plugin.dto.MigrationInfoDto;
-import org.opengauss.admin.plugin.dto.MigrationMainTaskDto;
 import org.opengauss.admin.plugin.dto.MigrationLogsInfoDto;
-import org.opengauss.admin.plugin.handler.PortalHandle;
+import org.opengauss.admin.plugin.dto.MigrationMainTaskDto;
+import org.opengauss.admin.plugin.dto.MigrationTaskDto;
+import org.opengauss.admin.plugin.exception.MigrationTaskException;
 import org.opengauss.admin.plugin.service.MigrationMainTaskService;
 import org.opengauss.admin.plugin.service.MigrationTaskService;
 import org.opengauss.admin.plugin.utils.FileUtils;
 import org.opengauss.admin.plugin.vo.FullCheckParam;
-import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -58,7 +59,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -78,10 +78,6 @@ public class MigrationTaskController extends BaseController {
 
     @Autowired
     private MigrationMainTaskService migrationMainTaskService;
-
-    @Autowired
-    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
-    private EncryptionUtils encryptionUtils;
 
     /**
      * page list
@@ -283,11 +279,14 @@ public class MigrationTaskController extends BaseController {
 
     /**
      * Download log file by filepath
+     *
+     * @param id migration task id
+     * @param filePath log file path
+     * @param response response
      */
     @GetMapping("/subTask/log/download/{id}")
-    public void logDownload(@PathVariable Integer id, String filePath, HttpServletResponse response) throws Exception {
-        MigrationTask task = migrationTaskService.getById(id);
-        String logContent = PortalHandle.getTaskLogs(task.getRunHost(), task.getRunPort(), task.getRunUser(), encryptionUtils.decrypt(task.getRunPass()), filePath);
+    public void logDownload(@PathVariable Integer id, String filePath, HttpServletResponse response) {
+        String logContent = migrationTaskService.getLogFileContent(id, filePath);
         if (StringUtils.isBlank(logContent)) {
             logContent = " ";
         }
@@ -296,11 +295,15 @@ public class MigrationTaskController extends BaseController {
         String date = DateUtil.format(new Date(), "yyyyMMddhhmmss");
         String filename = "log_" + id + "_" + date + "_" + logName;
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
-        FileUtils.setAttachmentResponseHeader(response, filename);
-        OutputStream output = new BufferedOutputStream(response.getOutputStream());
-        output.write(bytes);
-        output.flush();
-        output.close();
+        try (OutputStream output = new BufferedOutputStream(response.getOutputStream())) {
+            FileUtils.setAttachmentResponseHeader(response, filename);
+            output.write(bytes);
+            output.flush();
+        } catch (IOException e) {
+            log.error("Download log file failed", e);
+            throw new MigrationTaskException("Download log file failed, error: " + e.getClass().getName() + " "
+                    + e.getMessage());
+        }
     }
 
     /**
