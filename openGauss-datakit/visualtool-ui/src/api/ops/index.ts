@@ -281,6 +281,10 @@ export const jdbcNodeMonitor = (clusterNodeId: any, data: KeyValue) => {
   })
 }
 
+export const batchDelJdbc = (jdbcIds: string[]) => {
+  return axios.delete(`/jdbcDbCluster/batch`, { data: { ids: jdbcIds }})
+}
+
 export const bulkuploadPhy = (data: KeyValue) => {
   return axios.post(`/host/upload`, data)
 }

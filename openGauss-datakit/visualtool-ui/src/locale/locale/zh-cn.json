@@ -1027,7 +1027,17 @@
       "5oxhr0qz4no0": "状态",
       "5oxhr0qz4zk0": "更新时间",
       "5oxhr0qz58o0": "操作",
-      "5oxhr0qz5g40": "上传确认"
+      "5oxhr0qz5g40": "上传确认",
+      "clusterType": "节点类型",
+      "version": "版本",
+      "nameMaxLength": "名称长度不能超过255个字符",
+      "ipMaxLength": "IP地址长度不能超过255个字符",
+      "noChinese": "IP地址不能包含中文字符",
+      "batchDeleteConfirm": "确定要删除选中的 {count} 项数据吗？此操作不可恢复",
+      "singleNode": "单节点",
+      "multiNode": "多节点",
+      "deleSuccess": "批量删除成功",
+      "deleWarning": "请选择要删除的数据"
     },
     "JdbcInstance": {
       "5oxhtcbo8ac0": "IP地址",
@@ -1065,7 +1075,13 @@
       "5oxhv6qcnnk0": "备",
       "5oxhv6qcnuk0": "连接数",
       "5oxhv6qco4c0": "表空间占用",
-      "5oxhv6qcobk0": "内存占用"
+      "5oxhv6qcobk0": "内存占用",
+      "collectionNum": "collection数量",
+      "apiResponseDelay": "API响应延迟",
+      "unassigned_shards": "未分配分片数",
+      "active_shards": "已激活分片数百分比",
+      "clusterStatus": "集群健康状态",
+      "connectionStatus": "连接状态"
     }
   },
   "echarts": {

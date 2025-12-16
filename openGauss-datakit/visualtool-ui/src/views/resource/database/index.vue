@@ -5,74 +5,153 @@
         <div class="flex-between mb-s">
           <div>
             <div class="flex-row cond-btns">
-              <a-button type="primary" @click="handleAdd('create')">
-                <template #icon>
-                  <icon-plus />
+              <el-button type="primary" @click="handleAdd('create')">
+                <el-icon><Plus /></el-icon>
+                {{ $t('database.index.5oxhr0qz15w0') }}
+              </el-button>
+              <el-upload
+                class="mr-s"
+                action=""
+                :before-upload="beforeUpload"
+                :show-file-list="false"
+                accept=".csv"
+              >
+                <el-button type="primary">
+                  <el-icon><Upload /></el-icon>
+                  {{ $t('manage.PluginInstall.clickToUpload') }}
+                </el-button>
+              </el-upload>
+              <el-button :loading="list.downloadLoading" type="default" @click="downloadTemp">
+                <el-icon><Download /></el-icon>
+                {{ $t('database.index.5oxhr0qz2bs0') }}
+              </el-button>
+              <el-popconfirm
+                :title="$t('database.index.batchDeleteConfirm', { count: selectedRows.length })"
+                @confirm="handleBatchDelete"
+              >
+                <template #reference>
+                  <el-button type="danger" >
+                    <el-icon><Delete /></el-icon>
+                    {{ $t('physical.index.5mphf11rr590') }}
+                  </el-button>
                 </template>
-                {{ $t('database.index.5oxhr0qz15w0') }}</a-button>
-              <a-space direction="vertical" :style="{ width: '100%' }" class="mr-s">
-                <a-upload action="/" @before-upload="beforeUpload" accept=".csv" />
-              </a-space>
-              <a-button :loading="list.downloadLoading" type="outline" @click="downloadTemp">
-                <template #icon>
-                  <icon-download />
-                </template>
-                {{ $t('database.index.5oxhr0qz2bs0') }}</a-button>
+              </el-popconfirm>
             </div>
           </div>
           <div>
-            <a-form :model="filter" layout="inline">
-              <a-form-item field="name" :label="$t('database.index.else1')">
-                <a-input v-model.trim="filter.name" allow-clear :placeholder="$t('database.index.5oxhr0qz2s00')"
-                  style="width: 180px;"></a-input>
-              </a-form-item>
-              <a-form-item field="ip" :label="$t('database.index.elseIp')">
-                <a-input v-model.trim="filter.ip" allow-clear :placeholder="$t('database.index.elseIpPlaceholder')"
-                  style="width: 170px;"></a-input>
-              </a-form-item>
-              <a-form-item field="type" :label="$t('database.index.else3')">
-                <a-select v-model="filter.type" allow-clear :placeholder="$t('database.index.else3Placeholder')"
-                  style="width: 150px;">
-                  <a-option value="OPENGAUSS">openGauss</a-option>
-                  <a-option value="MYSQL">MySQL</a-option>
-                  <a-option value="POSTGRESQL">PostgreSQL</a-option>
-                </a-select>
-              </a-form-item>
-              <a-form-item>
-                <a-button type="outline" @click="getListData()">
-                  <template #icon>
-                    <icon-search />
-                  </template>
-                  <template #default>{{ $t('database.index.5oxhr0qz30g0') }}</template>
-                </a-button>
-              </a-form-item>
-            </a-form>
+            <el-form :model="filter" inline :rules="searchFormRules" ref="searchFormRef">
+              <el-form-item prop="name" :label="$t('database.index.else1')">
+                <el-input v-model.trim="filter.name" :placeholder="$t('database.index.5oxhr0qz2s00')" maxlength="255"
+                          clearable style="width: 200px;" />
+              </el-form-item>
+              <el-form-item prop="ip" :label="$t('database.index.elseIp')">
+                <el-input v-model.trim="filter.ip" :placeholder="$t('database.index.elseIpPlaceholder')" maxlength="255"
+                          clearable style="width: 200px;"></el-input>
+              </el-form-item>
+              <el-form-item prop="type" :label="$t('database.index.else3')">
+                <el-select v-model="filter.type" :placeholder="$t('database.index.else3Placeholder')"
+                           clearable style="width: 200px;">
+                  <el-option :value="JDBCType.MySQL" label="MySQL" />
+                  <el-option :value="JDBCType.openGauss" label="openGauss" />
+                  <el-option :value="JDBCType.PostgreSQL" label="PostgreSQL" />
+                  <el-option :value="JDBCType.Elasticsearch" label="Elasticsearch" />
+                  <el-option :value="JDBCType.Milvus" label="Milvus" />
+                </el-select>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="default" @click="handleSearch()">
+                  <el-icon><Search /></el-icon>
+                  {{ $t('database.index.5oxhr0qz30g0') }}
+                </el-button>
+              </el-form-item>
+            </el-form>
           </div>
         </div>
-        <a-table style="height: 95%" :data="list.data" :columns="columns" :pagination="list.page" :loading="list.loading"
-          @page-change="currentPage" @page-size-change="pageSizeChange" row-key="clusterId" @expand="handleExpand"
-          :expandable="expandable">
-          <template #dbType="{ record }">
-            <a-text bordered v-if="record.dbType === 'MYSQL'">MySQL</a-text>
-            <a-text bordered v-if="record.dbType === 'OPENGAUSS'">openGauss</a-text>
-            <a-text bordered v-if="record.dbType === 'POSTGRESQL'">PostgreSQL</a-text>
-          </template>
-          <template #status="{ record }">
-            <a-tag bordered v-if="record.state === -1">checking</a-tag>
-            <a-tag bordered color="red" v-if="record.state === 0">error</a-tag>
-            <a-tag bordered color="green" v-if="record.state === 1">running</a-tag>
-          </template>
-          <template #operation="{ record }">
-            <div class="flex-row">
-              <a-link class="mr" @click="handleAdd('update', record)">{{ $t('database.index.5oxhr0qz37o0') }}</a-link>
-              <a-popconfirm :content="$t('database.index.5oxhr0qz3f40')" type="warning"
-                :ok-text="$t('database.index.5oxhr0qz3m80')" :cancel-text="$t('database.index.5oxhr0qz3t80')"
-                @ok="handleDel(record)">
-                <a-link status="danger">{{ $t('database.index.5oxhr0qz40k0') }}</a-link>
-              </a-popconfirm>
-            </div>
-          </template>
-        </a-table>
+        <div class="table-pagination-container">
+          <div class="table-wrapper">
+            <el-table :data="list.data" v-loading="list.loading"  row-key="clusterId"
+                      @expand="handleExpand" :expand-row-keys="expandable.expandedRowKeys" style="height: 95%"
+                      @selection-change="handleSelectionChange"
+            >
+              <template #empty>
+                <div>
+                  <empty-page></empty-page>
+                </div>
+              </template>
+              <el-table-column type="selection" width="55" />
+              <el-table-column type="expand">
+                <template #default="{ row }">
+                  <div v-if="row.nodes?.length > 0">
+                    <JdbcNodeTable
+                      :jdbc-data="row"
+                      @valid-res="(val) => { row.state = val }"
+                    />
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('database.index.5oxhr0qz48w0')" prop="name" min-width="300" show-overflow-tooltip/>
+              <el-table-column :label="$t('database.index.5oxhr0qz4fs0')" prop="dbType" min-width="150">
+                <template #default="{ row }">
+                  <el-text>{{ JDBCType.normalize(row.dbType) }}</el-text>
+                </template>
+              </el-table-column>
+              <el-table-column :label="$t('database.index.version')" prop="version" min-width="200">
+                <template #default="{ row }">
+                  {{ row.versionNum ? row.versionNum: $t('database.JdbcNodeTable.else4') }}
+                </template>
+              </el-table-column>
+              <el-table-column
+                :label="$t('database.index.clusterType')"
+                prop="clusterType"
+                min-width="100"
+              >
+                <template #default="{ row }">
+                  <el-text v-if="row.deployType === 'SINGLE_NODE'">{{ $t('database.index.singleNode') }}</el-text>
+                  <el-text v-else>{{ $t('database.index.multiNode') }}</el-text>
+                </template>
+              </el-table-column>
+              <el-table-column
+                :label="$t('database.index.5oxhr0qz4zk0')"
+                prop="updateTime"
+                min-width="300"
+              />
+              <el-table-column
+                :label="$t('database.index.5oxhr0qz58o0')"
+                fixed="right"
+                min-width="150"
+              >
+                <template #default="{ row }">
+                  <div class="flex-row">
+                    <el-link class="mr" @click="handleAdd('update', row)" type="primary">
+                      {{ $t('database.index.5oxhr0qz37o0') }}
+                    </el-link>
+                    <el-popconfirm
+                      :title="$t('database.index.5oxhr0qz3f40')"
+                      @confirm="handleDel(row)"
+                    >
+                      <template #reference>
+                        <el-link type="danger">{{ $t('database.index.5oxhr0qz40k0') }}</el-link>
+                      </template>
+                    </el-popconfirm>
+                  </div>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+          <div class="pagination-wrapper">
+            <el-pagination
+              v-model:current-page="filter.pageNum"
+              v-model:page-size="filter.pageSize"
+              :page-sizes="[10, 20, 50, 100]"
+              :total="list.page.total"
+              :hide-on-single-page="false"
+              layout="total, sizes, prev, pager, next, jumper"
+              @size-change="pageSizeChange"
+              @current-change="currentPage"
+              class="pagination-fixed"
+            />
+          </div>
+        </div>
         <add-jdbc ref="addJdbcRef" @finish="getListData"></add-jdbc>
         <host-import-dlg ref="hostImportDlgRef"></host-import-dlg>
       </div>
@@ -84,54 +163,31 @@
 import { KeyValue } from '@/types/global'
 import { onMounted, reactive, computed, ref, h } from 'vue'
 import { Message, Modal } from '@arco-design/web-vue'
-import { jdbcPage, delJdbc, uploadFileJdbc, downloadTemplate, uploadRealJdbc } from '@/api/ops'
+import {jdbcPage, delJdbc, uploadFileJdbc, downloadTemplate, uploadRealJdbc, batchDelJdbc} from '@/api/ops'
 import AddJdbc from './AddJdbc.vue'
 import HostImportDlg from './HostImportDlg.vue'
 import JdbcNodeTable from './JdbcNodeTable.vue'
 import { useI18n } from 'vue-i18n'
+import {JDBCType} from "@/types/jdbc";
+import { Plus,Download, Upload, Search, Delete } from '@element-plus/icons-vue'
+import {ElMessageBox, FormInstance} from "element-plus";
+import showMessage from "@/hooks/showMessage";
+import EmptyPage from "@/components/emptyPage"
 const { t } = useI18n()
-const expandable = reactive<KeyValue>({
-  title: '',
-  width: 50,
-  expandedRowKeys: [],
-  defaultExpandAllRows: true,
-  expandedRowRender: (record: KeyValue) => {
-    if (record.nodes && record.nodes.length > 0) {
-      return h('div', {}, [
-        h(JdbcNodeTable, {
-          jdbcData: record,
-          onValidRes (val: boolean) {
-            console.log('receive state', val)
-            record.state = val
-          }
-        })
-      ])
-    }
-    return ''
-  }
+
+const expandable = reactive({
+  expandedRowKeys: [] as (string | number)[]
 })
 
-const handleExpand = (rowKey: string | number) => {
-  if (expandable.expandedRowKeys.length > 0) {
-    let index = expandable.expandedRowKeys.indexOf(rowKey)
-    if (index > -1) {
-      expandable.expandedRowKeys.splice(index, 1)
-    } else {
-      // expandable.expandedRowKeys.splice(0, expandable.expandedRowKeys.length)
-      expandable.expandedRowKeys.push(rowKey)
-    }
+const handleExpand = (row: any, expandedRows: any[]) => {
+  const rowKey = row.clusterId
+  if (expandable.expandedRowKeys.includes(rowKey)) {
+    const index = expandable.expandedRowKeys.indexOf(rowKey)
+    expandable.expandedRowKeys.splice(index, 1)
   } else {
     expandable.expandedRowKeys.push(rowKey)
   }
 }
-
-const columns = computed(() => [
-  { title: t('database.index.5oxhr0qz48w0'), dataIndex: 'name', width: 300, ellipsis: true, tooltip: true },
-  { title: t('database.index.5oxhr0qz4fs0'), dataIndex: 'dbType', width: 220, slotName: 'dbType' },
-  { title: t('database.index.5oxhr0qz4no0'), dataIndex: 'status', width: 200, slotName: 'status' },
-  { title: t('database.index.5oxhr0qz4zk0'), dataIndex: 'updateTime', width: 300 },
-  { title: t('database.index.5oxhr0qz58o0'), slotName: 'operation', width: 300, fixed: 'right' }
-])
 
 const filter = reactive({
   name: '',
@@ -140,6 +196,36 @@ const filter = reactive({
   pageNum: 1,
   pageSize: 10
 })
+
+const searchFormRef = ref<FormInstance>()
+
+const valiSearchIp = (rule: any, value: string, callback: (error?: Error) => void) => {
+  if (!value) {
+    callback()
+    return
+  }
+  if (value.length > 255) {
+    callback(new Error(t('database.index.ipMaxLength')))
+    return
+  }
+  const chineseRegex = /[\u4e00-\u9fa5]/
+  if (chineseRegex.test(value)) {
+    callback(new Error(t('database.index.noChinese')))
+    return
+  }
+  callback()
+}
+
+const searchFormRules = computed(<FormRules>() => ({
+  name: [
+    { max: 255, message: t('database.index.nameMaxLength'), trigger: 'blur' }
+  ],
+  ip: [
+    { max: 255, message: t('database.index.ipMaxLength'), trigger: 'blur' },
+    { validator: valiSearchIp, trigger: 'blur' }
+  ]
+}))
+
 
 const list = reactive<KeyValue>({
   data: [],
@@ -162,6 +248,17 @@ onMounted(() => {
   getListData()
 })
 
+const handleSearch = async () => {
+  if (!searchFormRef.value) return
+
+  try {
+    await searchFormRef.value.validate()
+    getListData()
+  } catch (error) {
+    console.log('valid error', error)
+  }
+}
+
 const getListData = () => {
   list.loading = true
   jdbcPage(filter).then((res: KeyValue) => {
@@ -181,19 +278,20 @@ const getListData = () => {
   })
 }
 
-const beforeUpload = (file?: any) => {
-  return new Promise((resolve, reject) => {
-    Modal.confirm({
-      title: t('database.index.5oxhr0qz5g40'),
-      content: `${t('database.index.else2')} ${file.name}`,
-      onOk: () => {
-        if (file) {
-          handleUpload(file)
-        }
-      },
-      onCancel: () => reject('cancel')
-    })
+const beforeUpload = (file: File) => {
+  ElMessageBox.confirm(
+    `${t('database.index.else2')} ${file.name}`,
+    t('database.index.5oxhr0qz5g40'),
+    {
+      confirmButtonText: t('components.FusionSearch.confirm'),
+      cancelButtonText: t('components.FusionSearch.cancel'),
+      type: 'warning'
+    }
+  ).then(() => {
+    handleUpload(file)
+  }).catch(() => {
   })
+  return false
 }
 
 const hostImportDlgRef = ref<null | InstanceType<typeof HostImportDlg>>(null)
@@ -208,7 +306,7 @@ const handleUpload = (fileObj: any) => {
     flag = false
   }
   if (!flag) {
-    Message.error('Only.csv files can be uploaded. Upload the files again')
+    showMessage('error', 'Only.csv files can be uploaded. Upload the files again')
     return
   } else {
     const data = new FormData()
@@ -236,7 +334,7 @@ const handleRealUpload = (fileObj: any) => {
   list.loading = true
   uploadRealJdbc(data).then((res: KeyValue) => {
     if (Number(res.code) === 200) {
-      Message.success('Import successfully')
+      showMessage('success', 'Import successfully')
       getListData()
     }
   }).finally(() => {
@@ -284,6 +382,28 @@ const downloadTemp = () => {
   })
 }
 
+const selectedRows = ref<any[]>([])
+const handleSelectionChange = (selection: any[]) => {
+  selectedRows.value = selection
+}
+
+const handleBatchDelete = () => {
+  if (selectedRows.value.length === 0) {
+    showMessage('warning', t('database.index.deleWarning'))
+    return
+  }
+  const ids = selectedRows.value.map(item => item.clusterId)
+  batchDelJdbc(ids) .then((res: KeyValue) => {
+    if(Number(res.code) === 200) {
+      showMessage('success', t('database.index.deleSuccess'))
+    }
+  }) .catch((error: any) => {
+    console.log(error)
+  }) .finally(() => {
+    getListData()
+  })
+}
+
 const currentPage = (e: number) => {
   filter.pageNum = e
   getListData()
@@ -306,6 +426,9 @@ const pageSizeChange = (e: number) => {
       padding: 20px;
       box-sizing: border-box;
       height: calc(100vh - 76px - 40px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
 
       .top-label {
         width: 200px;
@@ -317,7 +440,95 @@ const pageSizeChange = (e: number) => {
           margin-right: 10px;
         }
       }
+
+      .table-pagination-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        position: relative;
+      }
+
+      .table-wrapper {
+        flex: 1;
+        overflow: auto;
+        min-height: 200px;
+
+        :deep(.el-table) {
+          width: 100%;
+
+          .el-table__body {
+            width: 100% !important;
+          }
+
+          .el-table__header-wrapper,
+          .el-table__body-wrapper {
+            width: 100% !important;
+          }
+
+          .el-table__fixed,
+          .el-table__fixed-right {
+            height: auto !important;
+          }
+        }
+      }
+
+      .pagination-wrapper {
+        flex-shrink: 0;
+        background: var(--o-bg-color-base);
+        position: sticky;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        :deep(.el-pagination) {
+          justify-content: flex-start;
+          @media (max-width: 768px) {
+            flex-wrap: wrap;
+            gap: 8px;
+            .el-pagination__sizes,
+            .el-pagination__jump {
+              margin-left: 0 !important;
+            }
+          }
+        }
+      }
     }
   }
 }
+
+.status-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 24px;
+  line-height: 1;
+}
+
+@media (max-width: 1200px) {
+  .app-container .main-bd .upgrade-container {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-container .main-bd .upgrade-container {
+    padding: 12px;
+    height: calc(100vh - 60px - 30px);
+  }
+
+  .flex-between.mb-s {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .cond-btns {
+    flex-wrap: wrap;
+    gap: 8px;
+
+    button {
+      margin-right: 0 !important;
+    }
+  }
+}
+
 </style>

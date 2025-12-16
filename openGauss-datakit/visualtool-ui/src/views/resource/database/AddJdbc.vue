@@ -1,80 +1,104 @@
 <template>
-  <a-modal :mask-closable="false" :esc-to-close="false" :visible="data.show" :title="data.title" :unmount-on-close="true"
-    :ok-loading="data.loading" :modal-style="{ width: '650px' }" @cancel="close">
+  <el-dialog :close-on-click-modal="false" :close-on-press-escape="false" :destroy-on-close="true"
+             :model-value="data.show" :title="data.title" :class="['openDesignDialog', 'super-large-dialog']"
+             :ok-loading="data.loading" @close="close">
     <template #footer>
       <div class="flex-between">
-        <div class="flex-row">
-          <div class="label-color mr" v-if="data.form.status === jdbcStatusEnum.unTest">{{ $t('database.AddJdbc.else1') }}
+        <div class="flex-row" v-if="data.form.nodes.length > 1">
+          <div class="label-color mr" v-if="data.form.status === jdbcStatusEnum.unTest">
+            {{ $t('database.AddJdbc.else1') }}
           </div>
-          <a-tag v-if="data.form.status === jdbcStatusEnum.success" color="green">{{ $t('database.AddJdbc.5oxhkhiks5k0')
-          }}</a-tag>
-          <a-tag v-if="data.form.status === jdbcStatusEnum.fail" color="red">{{ $t('database.AddJdbc.5oxhkhimwfg0')
-          }}</a-tag>
+          <el-tag v-if="data.form.status === jdbcStatusEnum.success" type="success">
+            {{ $t('database.AddJdbc.5oxhkhiks5k0') }}
+          </el-tag>
+          <el-tag v-if="data.form.status === jdbcStatusEnum.fail" type="danger">
+            {{ $t('database.AddJdbc.5oxhkhimwfg0') }}
+          </el-tag>
         </div>
         <div>
-          <a-button class="mr" @click="close">{{ $t('database.AddJdbc.5oxhkhimwy00') }}</a-button>
-          <a-button :loading="data.testLoading" class="mr" @click="handleTestHost()">{{
-            $t('database.AddJdbc.5oxhkhimx5c0') }}</a-button>
-          <a-button :loading="data.loading" type="primary" @click="submit">{{ $t('database.AddJdbc.5oxhkhimxbg0')
-          }}</a-button>
+          <el-button class="mr" @click="close">{{ $t('database.AddJdbc.5oxhkhimwy00') }}</el-button>
+          <el-button :loading="data.testLoading" class="mr" @click="handleTestHost()" v-if="data.form.nodes.length > 1">
+            {{ $t('database.AddJdbc.5oxhkhimx5c0') }}
+          </el-button>
+          <el-button :loading="data.loading" type="primary" @click="submit">
+            {{ $t('database.AddJdbc.5oxhkhimxbg0') }}
+          </el-button>
         </div>
       </div>
     </template>
-    <a-form :model="data.form" ref="formRef" auto-label-width :rules="formRules">
-      <a-row :gutter="16">
-        <a-col :span="19">
-          <a-form-item v-if="!data.form.isCustomName" :label="$t('database.AddJdbc.5oxhkhimxho0')"
-            validate-trigger="blur">
-            <a-input v-model="clusterName" :placeholder="$t('database.AddJdbc.customNamePlaceholder')" disabled></a-input>
-          </a-form-item>
-          <a-form-item v-else field="name" :label="$t('database.AddJdbc.5oxhkhimxho0')" validate-trigger="blur">
-            <a-input v-model="data.form.name" :placeholder="$t('database.AddJdbc.5oxhkhimz480')"></a-input>
-          </a-form-item>
-        </a-col>
-        <a-col :span="5">
-          <a-form-item hide-label>
-            <a-checkbox v-model="data.form.isCustomName" @change="handleCustomChange(data.form.isCustomName)">
+    <el-form :model="data.form" ref="formRef" label-width="auto" :rules="formRules">
+      <el-row :gutter="16">
+        <el-col :span="18">
+          <el-form-item v-if="!data.form.isCustomName" :label="$t('database.AddJdbc.5oxhkhimxho0')"
+                        validate-trigger="blur">
+            <el-input v-model="clusterName" :placeholder="$t('database.AddJdbc.customNamePlaceholder')" disabled></el-input>
+          </el-form-item>
+          <el-form-item v-else prop="name" :label="$t('database.AddJdbc.5oxhkhimxho0')" validate-trigger="blur">
+            <el-input v-model="data.form.name" :placeholder="$t('database.AddJdbc.5oxhkhimz480')"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label-width="0">
+            <el-checkbox v-model="data.form.isCustomName" @change="handleCustomChange(data.form.isCustomName)">
               {{ $t('database.AddJdbc.isCustomName') }}
-            </a-checkbox>
-          </a-form-item>
-        </a-col>
-      </a-row>
-      <a-form-item :label="$t('database.AddJdbc.5oxhkhimxto0')" validate-trigger="change">
-        <a-select class="select-w" v-model="data.form.dbType" :placeholder="$t('database.AddJdbc.5oxhkhimxzw0')">
-          <a-option v-for="item in data.dbTypes" :key="item.value" :value="item.value">{{
-            item.label
-          }}</a-option>
-        </a-select>
-      </a-form-item>
-    </a-form>
-    <a-tabs type="card-gutter" :editable="true" @tab-click="handleTabClick" @add="handleAdd" @delete="handleDelete"
-      v-model:active-key="data.activeTab" show-add-button auto-switch>
-      <a-tab-pane v-for="item of data.form.nodes" :key="item.id" :closable="data.form.nodes.length > 1">
-        <template #title>
-          <a-tooltip :content="$t('database.AddJdbc.5oxhkhimwfg0')" v-if="item.status === jdbcStatusEnum.fail">
-            <icon-exclamation-circle-fill />
-          </a-tooltip>
-          {{ item.ip.trim() ? item.ip : $t('database.AddJdbc.5oxhkhimyio0') + item.tabName }}
+            </el-checkbox>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-form-item :label="$t('database.AddJdbc.5oxhkhimxto0')" validate-trigger="change" style="margin-bottom: 14px">
+        <el-radio-group v-model="data.form.dbType" class="radio-group-w" @change="changeJDBCType">
+          <el-radio-button v-for="item in data.dbTypes" :label="item.label" :value="item.value" class="radio-item">
+            {{ item.label }}
+          </el-radio-button>
+        </el-radio-group>
+      </el-form-item>
+    </el-form>
+    <div v-if="data.form.dbType === JDBCType.Milvus || data.form.dbType === JDBCType.Elasticsearch">
+      <div class="jdbc-instance-c">
+        <jdbc-instance :form-data="data.form.nodes[0]" :host-list="data.hostList" :jdbc-type="data.form.dbType"
+                       :ref="(el: any) => setRefMap(el, data.form.nodes[0].id)" />
+      </div>
+    </div>
+    <div v-else>
+      <el-tabs type="card" :editable="true" :closable="true" class="clean-add-icon-only"
+               @tab-remove="handleDelete" @add="handleAdd" @edit="handleTabsEdit"
+               v-model="data.activeTab"  :show-add-button="true"  :auto-switch="true">
+        <template #add-icon>
+          <el-icon class="custom-add-icon"><IconPlus /></el-icon>
         </template>
-        <div class="jdbc-instance-c">
-          <jdbc-instance :form-data="item" :host-list="data.hostList" :jdbc-type="data.form.dbType"
-            :ref="(el: any) => setRefMap(el, item.id)"></jdbc-instance>
-        </div>
-      </a-tab-pane>
-    </a-tabs>
-  </a-modal>
+        <el-tab-pane v-for="item of data.form.nodes" :key="item.id" :name="item.id"
+                     :closable="data.form.nodes.length > 1" class="bordered-tab-pane">
+          <template #label>
+            <span class="tab-label">
+              <el-tooltip v-if="item.status === jdbcStatusEnum.fail" :content="$t('database.AddJdbc.5oxhkhimwfg0')" placement="top">
+                <el-icon><WarningFilled /></el-icon>
+              </el-tooltip>
+            {{ item.ip.trim() ? item.ip : $t('database.AddJdbc.5oxhkhimyio0') + item.tabName }}
+            </span>
+          </template>
+          <div class="jdbc-instance-c">
+            <jdbc-instance :form-data="item" :host-list="data.hostList" :jdbc-type="data.form.dbType"
+                           :ref="(el: any) => setRefMap(el, item.id)"></jdbc-instance>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+    </div>
+
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 import { KeyValue } from '@/types/global'
-import { FormInstance } from '@arco-design/web-vue/es/form'
+import { ElForm } from 'element-plus'
 import { nextTick, reactive, ref, computed } from 'vue'
 import { addJdbc, editJdbc, hostListAll } from '@/api/ops'
 import { Message } from '@arco-design/web-vue'
 import JdbcInstance from './JdbcInstance.vue'
 import { useI18n } from 'vue-i18n'
-import { encryptPassword, decryptPassword } from "@/utils/jsencrypt";
+import { encryptPassword } from "@/utils/jsencrypt";
 import showMessage from '@/hooks/showMessage'
+import {JDBCType} from "@/types/jdbc";
+import type { TabPaneName } from 'element-plus'
 const { t } = useI18n()
 enum jdbcStatusEnum {
   unTest = -1,
@@ -92,19 +116,21 @@ const data = reactive<KeyValue>({
     clusterId: '',
     name: '',
     isCustomName: false,
-    dbType: 'MYSQL',
+    dbType: JDBCType.MySQL,
     nodes: [],
     status: jdbcStatusEnum.unTest
   },
   hostList: [],
   activeTab: '',
   dbTypes: [
-    { label: 'MySQL', value: 'MYSQL' },
-    { label: 'openGauss', value: 'OPENGAUSS' },
-    { label: 'PostgreSQL', value: 'POSTGRESQL' }
+    { label: 'MySQL', value: JDBCType.MySQL },
+    { label: 'openGauss', value: JDBCType.openGauss },
+    { label: 'PostgreSQL', value: JDBCType.PostgreSQL },
+    { label: 'Elasticsearch', value: JDBCType.Elasticsearch },
+    { label: 'Milvus', value: JDBCType.Milvus }
   ]
 })
-const formRef = ref<null | FormInstance>(null)
+const formRef = ref<null | InstanceType<typeof ElForm>>(null)
 const handleCustomChange = (val: boolean) => {
   formRef.value?.clearValidate()
   if (val) {
@@ -140,18 +166,16 @@ const getNameByNode = (data: KeyValue) => {
 const formRules = computed(() => {
   return {
     name: [
-      { required: true, 'validate-trigger': 'blur', message: t('database.AddJdbc.5oxhkhimz480') },
+      { required: true, message: t('database.AddJdbc.5oxhkhimz480'), trigger: 'blur' },
       {
-        validator: (value: any, cb: any) => {
-          return new Promise(resolve => {
-            if (!value.trim()) {
-              cb(t('database.AddJdbc.5oxhkhimzcg0'))
-              resolve(false)
-            } else {
-              resolve(true)
-            }
-          })
-        }
+        validator: (rule: any, value: any, callback: any) => {
+          if (!value.trim()) {
+            callback(new Error(t('database.AddJdbc.5oxhkhimzcg0')))
+          } else {
+            callback()
+          }
+        },
+        trigger: 'blur'
       }
     ]
   }
@@ -167,9 +191,10 @@ const setRefMap = (el: HTMLElement, key: string) => {
 const refList = computed(() => {
   const result = []
   const refs = Object.keys(refObj.value)
+  const validNodeIds = data.form.nodes.map((node: KeyValue) => node.id)
   if (refs.length) {
     for (let key in refObj.value) {
-      if (refObj.value[key]) {
+      if (refObj.value[key] && validNodeIds.includes(key)) {
         result.push(refObj.value[key])
       }
     }
@@ -199,29 +224,25 @@ const getHostList = () => {
 
 const emits = defineEmits([`finish`])
 
-const submit = async() => {
+const submit = async () => {
+  if (!formRef.value) return
   const methodArr = []
   for (let i = 0; i < refList.value.length; i++) {
     if (refList.value[i]) {
       methodArr.push(refList.value[i].formValidate())
     }
   }
-  methodArr.push(formRef.value?.validate())
-  Promise.all(methodArr).then(async (res) => {
-    console.log('validRes', res)
+
+  try {
+    await formRef.value.validate()
+    const res = await Promise.all(methodArr)
     const validRes = res.filter((item: KeyValue) => {
       return item && item.res === false
     })
-    console.log('validRes', validRes)
     if (validRes.length) {
       data.activeTab = validRes[0].id
       return
     }
-    if (res[methodArr.length - 1]) {
-      return
-    }
-
-    // save
     data.loading = true
 
     let param: {
@@ -243,9 +264,13 @@ const submit = async() => {
       newItem.extendProps = JSON.stringify(newItem.props)
       param.nodes.push(newItem)
     })
-    for (const item of param.nodes) {
-      const temppassword = await encryptPassword(item.password)
-      item.password = temppassword
+    if(data.form.dbType !== JDBCType.Milvus && data.form.dbType !== JDBCType.Elasticsearch) {
+      for (const item of param.nodes) {
+        if ( item.password.length > 0 ) {
+          const temppassword = await encryptPassword(item.password)
+          item.password = temppassword
+        }
+      }
     }
     if (data.form.clusterId) {
       editJdbc(data.form.clusterId, param).then((res: KeyValue) => {
@@ -255,6 +280,15 @@ const submit = async() => {
           emits(`finish`)
         }
         close()
+      }).catch((error) => {
+        data.form.status = jdbcStatusEnum.fail
+        const errorMsg = error?.message || error?.msg || String(error)
+        if (errorMsg.includes('jdbc failed to get connection') && data.form.nodes.length === 1) {
+          data.form.nodes[0].status = jdbcStatusEnum.fail
+        } else {
+          data.form.nodes[0].status = jdbcStatusEnum.unTest
+        }
+        console.log(error)
       }).finally(() => {
         data.loading = false
       })
@@ -267,13 +301,24 @@ const submit = async() => {
         }
         close()
       }).catch((error) => {
+        data.form.status = jdbcStatusEnum.fail
+        const errorMsg = error?.message || error?.msg || String(error)
+        if (errorMsg.includes('jdbc failed to get connection') && data.form.nodes.length === 1) {
+          data.form.nodes[0].status = jdbcStatusEnum.fail
+        } else {
+          data.form.nodes[0].status = jdbcStatusEnum.unTest
+        }
         console.log(error)
-      }) .finally(() => {
+      }).finally(() => {
         data.loading = false
       })
     }
-  })
+  } catch (error) {
+    console.log('Validation failed:', error)
+    return
+  }
 }
+
 const close = () => {
   nextTick(() => {
     formRef.value?.clearValidate()
@@ -284,7 +329,6 @@ const close = () => {
 }
 
 const handleTestHost = () => {
-  console.log('show refList', refList.value)
   const methodArr = []
   for (let i = 0; i < refList.value.length; i++) {
     if (refList.value[i]) {
@@ -322,17 +366,9 @@ const handleTestHost = () => {
   })
 }
 
-const handleTabClick = (val: any) => {
-  console.log('show handle tab click', val)
-
-}
-
 const handleAdd = () => {
   const id = new Date().getTime() + ''
-  let port = 3306
-  if (data.form.dbType === 'OPENGAUSS') {
-    port = 5432
-  }
+  let port = JDBCType.getDefaultPort(data.form.dbType)
   let username = ''
   let password = ''
   const firstNode = data.form.nodes[0]
@@ -356,9 +392,7 @@ const handleAdd = () => {
     }],
     status: jdbcStatusEnum.unTest
   })
-  nextTick(() => {
-    data.activeTab = id
-  })
+  data.activeTab = id
 }
 
 const handleDelete = (val: any) => {
@@ -368,9 +402,26 @@ const handleDelete = (val: any) => {
   data.form.nodes = data.form.nodes.filter((item: KeyValue) => {
     return item.id !== val
   })
-  nextTick(() => {
+  if (data.form.nodes.length > 0) {
     data.activeTab = data.form.nodes[0].id
-  })
+  }
+}
+
+const handleTabsEdit = (
+  targetName: TabPaneName | undefined,
+  action: 'remove' | 'add'
+) => {
+  if (action === 'add') {
+    handleAdd()
+  } else if (action === 'remove') {
+    handleDelete(targetName)
+  }
+}
+
+const changeJDBCType = () => {
+  delRefObj()
+  data.form.nodes = []
+  handleAdd()
 }
 
 const getProps = (url: string): KeyValue[] => {
@@ -457,7 +508,7 @@ const open = async (type: string, editData?: KeyValue) => {
     Object.assign(data.form, {
       clusterId: '',
       name: '',
-      dbType: 'MYSQL',
+      dbType: JDBCType.MySQL,
       nodes: [],
       status: jdbcStatusEnum.unTest
     })
@@ -479,5 +530,38 @@ defineExpose({
 <style lang="less" scoped>
 .jdbc-instance-c {
   padding: 15px;
+}
+.bordered-tab-pane {
+  border: 1px solid var(--o-border-color-base);
+  border-top: none;
+  margin-top: -1px;
+}
+
+.custom-add-btn-tabs :deep(.el-tabs__new-tab) {
+  background: transparent;
+  border: 1px dashed var(--el-border-color);
+  color: var(--el-text-color-secondary);
+}
+
+.custom-add-btn-tabs :deep(.el-tabs__new-tab:hover) {
+  background: transparent;
+  border-color: var(--el-color-primary);
+  color: var(--el-color-primary);
+}
+
+.clean-add-icon-only :deep(.el-tabs__new-tab) {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  margin-left: 8px;
+}
+
+.add-icon-clean {
+  color: var(--o-color-info);
+  transition: color 0.3s ease;
+}
+
+.tab-content-wrapper {
+  padding: 16px;
 }
 </style>
