@@ -51,8 +51,8 @@
           </el-form-item>
           <el-form-item prop="portalType" style="margin-left: -17px" :label="$t('step2.index.portalVersion')">
             <el-select v-model="form.portalType" clearable style="width: 160px" :placeholder="$t('step2.index.portalVersionContent')">
-              <el-option  label="MySQL" value="MYSQL_ONLY" />
-              <el-option  label="PostgreSQL" value="MULTI_DB" />
+              <el-option  :label="JDBCType.normalize(JDBCType.MySQL)" value="MYSQL_ONLY" />
+              <el-option  :label="$t('step2.compoents.portalInstall.other')" value="MULTI_DB" />
             </el-select>
           </el-form-item>
         </el-row>
@@ -133,8 +133,8 @@
         >
           <template #default="{ row }">
             <div v-if="row.installInfo?.portalType">
-              <p v-if="row.installInfo.portalType === 'MYSQL_ONLY'">MySQL</p>
-              <p v-if="row.installInfo.portalType === 'MULTI_DB'">PostgreSQL</p>
+              <p v-if="row.installInfo.portalType === 'MYSQL_ONLY'">{{ JDBCType.normalize ( JDBCType.MySQL) }}</p>
+              <p v-if="row.installInfo.portalType === 'MULTI_DB'">{{ $t('step2.compoents.portalInstall.other') }}</p>
             </div>
           </template>
         </el-table-column>
@@ -340,6 +340,7 @@ import {Message} from '@arco-design/web-vue'
 import {Delete, Download, Filter, InfoFilled, Refresh, VideoPlay, Edit} from '@element-plus/icons-vue'
 import showMessage from "@/utils/showMessage";
 import {useRouter} from "vue-router";
+import { JDBCType } from "@/types/jdbc";
 
 
 const { t } = useI18n()
@@ -490,7 +491,6 @@ const handleToolsParams = (row) => {
   toolsParamsDlg.visible = true
 }
 
-// start install
 const handleInstall = (row) => {
   portalDlg.curHostId = row.hostInfo.hostId
   portalDlg.installMode = 'install'

@@ -48,93 +48,17 @@ import {KeyValue} from "@/types/global";
 import showMessage from "@/utils/showMessage";
 import {useI18n} from 'vue-i18n'
 import {PORTAL_INSTALL_STATUS} from "@/utils/constants";
+import {JDBCType} from "@/types/jdbc";
 
 const {t} = useI18n()
 
 const currentStep = ref(0)
-
-interface subTaskList {
-  sourceNodeName: string,
-  sourceNodeInfo: {
-    port: number,
-    host: string,
-    password: string,
-    username: string,
-    nodeId: string
-  },
-  sourceDBName: string,
-  sourceSchema: string[],
-  seletedTbl: string[],
-  sourceTables: string,
-  targetNodeName: string,
-  targetNodeInfo: {
-    port: number,
-    host: string,
-    password: string,
-    username: string,
-    nodeId: string,
-    versionNum: string
-  },
-  targetDBName: string,
-  configType: number,
-  isAdjustKernelParam: boolean,
-  isSystemAdmin: boolean,
-  taskParamsObject: {
-    basic: {
-      paramKey: string;
-      paramValue: string;
-      paramDesc: string;
-    }[],
-    more: {
-      paramKey: string;
-      paramValue: string;
-      paramDesc: string;
-    }[],
-  },
-  id: string,
-  curretTab: number,
-  subTaskName: string,
-  sourceDbType: string,
-  sourceIpPort: string,
-  targetIpPort: string,
-  sourceIp: string,
-  targetIp: string,
-  sourcePort: number,
-  targetPort: number,
-  selectHost: string
-  mode: number,
-  isDefaultConfig: boolean,
-  isSelectAlltables: boolean
-}
-
-interface migrationTaskList {
-  taskId: number
-  taskName: string
-  subTaskData: subTaskList[]
-  selectedHosts: string[]
-  globalParamsObject: {
-    basic: {
-      paramKey: string,
-      paramValue: string,
-      paramDesc: string,
-    }[],
-    more: {
-      paramKey: string,
-      paramValue: string,
-      paramDesc: string,
-    }[],
-  }
-}
 
 const taskBasicInfo = ref<migrationTaskList>({
   taskId: 0,
   taskName: '',
   subTaskData: [],
   selectedHosts: [],
-  globalParamsObject: {
-    basic: [],
-    more: [],
-  }
 })
 
 const defaultBasicData = ref([])
@@ -145,10 +69,15 @@ provide('changeSubmitLoading', (val) => {
   submitLoading.value = val
 })
 
-const validateForms = () => {
+const validateForms = async () => {
   const childComponent = stepOneComp.value
   if (childComponent) {
-    return childComponent.saveAllTask()
+    const checkCon = childComponent.checkMigrationConditions()
+    if (!checkCon) {
+      return false
+    }
+    const all = await childComponent.saveAllTask()
+    return all
   }
   return false
 }
@@ -209,72 +138,45 @@ const saveConfig = async () => {
   const params = {
     taskId: taskBasicInfo.value.taskId,
     taskName: taskBasicInfo.value.taskName,
-    globalParams: [
-      ...taskBasicInfo.value.globalParamsObject.basic.map(item => ({
-        paramKey: item.paramKey,
-        paramValue: item.paramValue,
-        paramDesc: item.paramDesc
-      })),
-      ...taskBasicInfo.value.globalParamsObject.more.map(item => ({
-        paramKey: item.paramKey,
-        paramValue: item.paramValue,
-        paramDesc: item.paramDesc
-      }))],
     hostIds: taskBasicInfo.value.selectedHosts,
     tasks: taskBasicInfo.value.subTaskData.map(item => {
       if (!item.taskParamsObject.more) {
         item.taskParamsObject.more = []
       }
       const hasRulesEnable = item.taskParamsObject.more.some((param: any) => param.paramKey === "rules.enable")
-      if (!hasRulesEnable) {
+      if (!hasRulesEnable && item.sourceDbType === JDBCType.MySQL) {
         item.taskParamsObject.more.push({
           paramKey: "rules.enable",
           paramValue: "true",
           paramDesc: "规则过滤，true代表开启，false代表关闭"
         })
       }
-      const taskParamsObject = {
-        basic: mergeObjectArray(taskBasicInfo.value.globalParamsObject.basic, item.taskParamsObject.basic, 'paramKey'),
-        more: mergeObjectArray(taskBasicInfo.value.globalParamsObject.more, item.taskParamsObject.more, 'paramKey')
-      }
-      taskParamsObject.more = taskParamsObject.more.filter((taskparam: KeyValue) => {
-          let flag = true
-          if (taskparam.parentKey) {
-            flag = taskparam.childIndex <= taskParamsObject.more.find((e: KeyValue) => e.paramKey === taskparam.parentKey).paramValue
-          }
-          return flag
-        }
-      )
       return {
         isAdjustKernelParam: item.isAdjustKernelParam,
         migrationModelId: item.mode,
         sourceDb: item.sourceDBName,
-        sourceDbHost: item.sourceNodeInfo.host,
-        sourceDbPass: item.sourceNodeInfo.password,
-        sourceDbPort: item.sourceNodeInfo.port,
-        sourceDbUser: item.sourceNodeInfo.username,
-        sourceNodeId: item.sourceNodeInfo.nodeId,
+        sourceNodeId: item.sourceNodeId,
         sourceSchemas: item.sourceSchema? Object.values(item.sourceSchema).join(','): '',
-        seletedTbl: item.seletedTbl,
+        sourceTables: item.sourceTables? Object.values(item.sourceTables).join(','): '',
         sourceDbType: item.sourceDbType.toUpperCase(),
         targetDb: item.targetDBName,
-        targetDbHost: item.targetNodeInfo.host,
-        targetDbPass: item.targetNodeInfo.password,
-        targetDbPort: item.targetNodeInfo.port,
-        targetDbUser: item.targetNodeInfo.username,
-        targetDbVersion: item.targetNodeInfo.versionNum,
-        targetNodeId: item.targetNodeInfo.nodeId,
-        isSystemAdmin: item.isSystemAdmin,
-        sourceTables: item.sourceTables,
-        taskParams: [...taskParamsObject.basic.map((item: KeyValue) => ({
-          paramKey: item.paramKey,
-          paramValue: item.paramValue,
-          paramDesc: item.paramDesc
-        })), ...taskParamsObject.more.map((item: KeyValue) => ({
-          paramKey: item.paramKey,
-          paramValue: item.paramValue,
-          paramDesc: item.paramDesc
-        }))]
+        targetNodeId: item.targetNodeId,
+        taskParams : [
+          ...((Array.isArray(item.taskParamsObject?.basic) && item.taskParamsObject.basic.length > 0)
+              ? item.taskParamsObject.basic.map((param: KeyValue) => ({
+                paramKey: param?.paramKey || '',
+                paramValue: param?.paramValue || '',
+              }))
+              : []
+          ),
+          ...((Array.isArray(item.taskParamsObject?.more) && item.taskParamsObject.more.length > 0)
+              ? item.taskParamsObject.more.map((param: KeyValue) => ({
+                paramKey: param?.paramKey || '',
+                paramValue: param?.paramValue || '',
+              }))
+              : []
+          )
+        ]
       }
     })
   }
@@ -313,7 +215,7 @@ const saveConfig = async () => {
 const getDefaultParams = (type: string) => {
   return defaultParams(type.toUpperCase()).then((res: any) => {
     if(Number(res.code) === 200) {
-      if (type === 'MYSQL') {
+      if (type === JDBCType.MySQL) {
         defaultBasicData.value = res.data.slice(0, 12)
         defaultMoreData.value = res.data.slice(12)
       } else {
@@ -329,26 +231,11 @@ const getDefaultParams = (type: string) => {
 const initSubTask = (currentTab: string) => {
   const newSubTask: subTaskList = {
     sourceNodeName: '',
-    sourceNodeInfo: {
-      host: '',
-      password: '',
-      port: 0,
-      username: '',
-      nodeId: '',
-    },
+    sourceNodeId: '',
     sourceDBName: '',
-    seletedTbl: [],
-    sourceTables: '',
+    sourceTables: [],
     sourceSchema: [],
     targetNodeName: '',
-    targetNodeInfo: {
-      host: '',
-      password: '',
-      port: 0,
-      username: '',
-      nodeId: '',
-      versionNum: '',
-    },
     targetDBName: '',
     configType: 1,
     isAdjustKernelParam: false,
@@ -360,7 +247,7 @@ const initSubTask = (currentTab: string) => {
     id: '',
     curretTab: Number(currentTab),
     subTaskName: `Task_${dayjs().format('YYYYMMDDHHmm')}_${Math.random().toString(36).substring(2, 8)}` + currentTab,
-    sourceDbType: 'MYSQL',
+    sourceDbType: JDBCType.MySQL,
     sourceIpPort: '',
     targetIpPort: '',
     sourceIp: '',
@@ -376,20 +263,16 @@ const initSubTask = (currentTab: string) => {
 }
 
 const getTaskDetail = async (id: number) => {
-  await getDefaultParams('MYSQL')
+  await getDefaultParams(JDBCType.MySQL)
   taskEditInfo(id).then((res: KeyValue) => {
     if (Number(res.code) !== 200) return
     const {data} = res
-    const {taskName, taskId, hostIds, globalParams, tasks} = data
+    const {taskName, taskId, hostIds, tasks} = data
     taskBasicInfo.value = {
       ...taskBasicInfo.value,
       taskName,
       taskId,
       selectedHosts: hostIds,
-      globalParamsObject: {
-        basic: globalParams.filter((child: KeyValue) => defaultBasicData.value.includes(child.paramKey)),
-        more: globalParams.filter((child: KeyValue) => !defaultBasicData.value.includes(child.paramKey))
-      }
     }
     tasks.map((task: KeyValue, index: number) => {
       const {
@@ -404,65 +287,52 @@ const getTaskDetail = async (id: number) => {
       const subTask = initSubTask(index.toString())
       const isDefaultConfigtemp = (taskParams.length > 1) || (taskParams.length === 1 && taskParams[0].paramKey !== "rules.enable")
       const defaultBasicDataSet = computed(() =>
-        new Set(defaultBasicData.value.map(item => item.paramKey))
+        new Set(defaultBasicData.value.map((item: ParamItem) => item.paramKey))
       )
       const defaultMoreDataSet = computed(() =>
-        new Map(defaultMoreData.value.map(item => [item.paramKey, item]))
+        new Map(defaultMoreData.value.map((item: ParamItem) => [item.paramKey, item]))
       )
       Object.assign(subTask, {
-          isSystemAdmin,
-          isAdjustKernelParam,
-          isDefaultConfig:!isDefaultConfigtemp,
-          mode: migrationModelId,
-          configType: taskParams.length ? 2 : 1,
-          sourceDBName: sourceDb,
-          sourceNodeName,
-          sourceIpPort: sourceNodeName,
-          sourceDbType: sourceDbType? sourceDbType: 'MYSQL',
-          sourceSchema: sourceSchemas !== null ? sourceSchemas.split(',') : null,
-          targetDBName: targetDb,
-          targetNodeName,
-          targetIpPort: targetNodeName,
-          sourceNodeInfo: {
-            host: sourceDbHost,
-            password: sourceDbPass,
-            port: sourceDbPort,
-            username: sourceDbUser,
-            nodeId: sourceNodeId
-          },
-          targetNodeInfo: {
-            host: targetDbHost,
-            password: targetDbPass,
-            port: targetDbPort,
-            username: targetDbUser,
-            nodeId: targetNodeId,
-            versionNum: targetDbVersion
-          },
-          taskParamsObject: {
-            basic: taskParams.filter((child: KeyValue) => defaultBasicDataSet.value.has(child.paramKey)),
-            more: taskParams
-              .filter((child: KeyValue) => !defaultBasicDataSet.value.has(child.paramKey))
-              .map((child: KeyValue) => {
-                if (!defaultMoreDataSet.value.has(child.paramKey)) {
-                  const tempParamKey = child.paramKey.split('.').slice(0, 2).join('.')
-                  if (defaultMoreDataSet.value.has(tempParamKey)) {
-                    const tempParamExtends = JSON.parse(defaultMoreDataSet.value.get(tempParamKey).paramExtends)
-                    const matchedItem = tempParamExtends.find((item: any )=> {
-                      const regex = new RegExp(`^${item.subKeyPrefix}\\d*$`)
-                      return regex.test(child.paramKey)
-                    })
-                    return {
-                      ...child,
-                      paramType: matchedItem.paramType,
-                      paramRules: matchedItem.paramRules,
-                    }
+        isSystemAdmin,
+        isAdjustKernelParam,
+        isDefaultConfig:!isDefaultConfigtemp,
+        mode: migrationModelId,
+        configType: taskParams.length ? 2 : 1,
+        sourceDBName: sourceDb,
+        sourceNodeName,
+        sourceIpPort: sourceNodeName,
+        sourceDbType: sourceDbType? sourceDbType: JDBCType.MySQL,
+        sourceSchema: sourceSchemas !== null ? sourceSchemas.split(',') : null,
+        sourceTables: sourceTables !== null ? sourceTables.split(',') : null,
+        isSelectAlltables: !(sourceTables && sourceTables.length > 0),
+        targetDBName: targetDb,
+        targetNodeName,
+        targetIpPort: targetNodeName,
+        sourceNodeId,
+        targetNodeId,
+        taskParamsObject: {
+          basic: taskParams?.filter((child: KeyValue) => defaultBasicDataSet.value.has(child.paramKey)),
+          more: taskParams?.filter((child: KeyValue) => !defaultBasicDataSet.value.has(child.paramKey))
+            .map((child: KeyValue) => {
+              if (!defaultMoreDataSet.value.has(child.paramKey)) {
+                const tempParamKey = child.paramKey.split('.').slice(0, 2).join('.')
+                if (defaultMoreDataSet.value.has(tempParamKey)) {
+                  const tempParamExtends = JSON.parse(defaultMoreDataSet.value.get(tempParamKey).paramExtends)
+                  const matchedItem = tempParamExtends.find((item: any )=> {
+                    const regex = new RegExp(`^${item.subKeyPrefix}\\d*$`)
+                    return regex.test(child.paramKey)
+                  })
+                  return {
+                    ...child,
+                    paramType: matchedItem.paramType,
+                    paramRules: matchedItem.paramRules,
                   }
-                  return child
                 }
                 return child
-              })
-          },
-          sourceTables
+              }
+              return child
+            })
+        },
       });
       taskBasicInfo.value.subTaskData.push(subTask)
     });
@@ -473,12 +343,10 @@ const getTaskDetail = async (id: number) => {
 }
 
 const inittaskBasicInfo = async () => {
-  await getDefaultParams('MYSQL')
+  await getDefaultParams(JDBCType.MySQL)
   taskBasicInfo.value.taskName = `Task_${dayjs().format('YYYYMMDDHHmm')}_${Math.random().toString(36).substring(2, 8)}`
   taskBasicInfo.value.subTaskData.length = 0
   taskBasicInfo.value.selectedHosts = []
-  taskBasicInfo.value.globalParamsObject.basic = []
-  taskBasicInfo.value.globalParamsObject.more = []
   currentStep.value = 1
 }
 

@@ -38,9 +38,9 @@
                     </template>
                   </el-table-column>
                   <el-table-column :label="$t('components.ToolsParamsConfig.5q0toolspa11')"
-                    prop="paramValue" width="300" show-overflow-tooltip/>
+                                   prop="paramValue" width="300" show-overflow-tooltip/>
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazspptw0')"
-                    prop="paramDesc" width="300" show-overflow-tooltip/>
+                                   prop="paramDesc" width="300" show-overflow-tooltip/>
                   <el-table-column
                     :label="$t('components.ToolsParamsConfig.5q0toolspa20')"
                     width="100" show-overflow-tooltip
@@ -78,9 +78,9 @@
               <el-form :model="form" ref="basicFormRef" class="tableClass" :hide-required-asterisk="true">
                 <el-table :data="form.chameleonData" border :row-class="basicRowClass">
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppog0')"
-                    prop="paramKey" width="200" show-overflow-tooltip />
+                                   prop="paramKey" width="200" show-overflow-tooltip />
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppr80')"
-                    width="300" show-overflow-tooltip>
+                                   width="300" show-overflow-tooltip>
                     <template #default="{ row, $index }">
                       <el-form-item :prop="`chameleonData.${$index}.paramChangeValue`">
                         <el-input v-model.trim="row.paramChangeValue" @change="changeRecord(row)"/>
@@ -88,18 +88,18 @@
                     </template>
                   </el-table-column>
                   <el-table-column :label="$t('components.ToolsParamsConfig.5q0toolspa11')"
-                    prop="paramValue" width="300" show-overflow-tooltip />
+                                   prop="paramValue" width="300" show-overflow-tooltip />
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazspptw0')"
-                    prop="paramDesc" width="300" show-overflow-tooltip
+                                   prop="paramDesc" width="300" show-overflow-tooltip
                   />
                   <el-table-column :label="$t('components.ToolsParamsConfig.5q0toolspa20')"
-                    width="100"
+                                   width="100"
                   >
                     <template #default="{ row }">
                       <el-form-item>
                         <el-popconfirm :title="$t('components.ToolsParamsConfig.5q0toolspa28')"
-                          :confirm-button-text="$t('step3.index.5q093f8y9zg4')" :cancel-button-text="$t('step3.index.5q093f8y9zg5')"
-                          @confirm="deleteToolsParams(row)">
+                                       :confirm-button-text="$t('step3.index.5q093f8y9zg4')" :cancel-button-text="$t('step3.index.5q093f8y9zg5')"
+                                       @confirm="deleteToolsParams(row)">
                           <template #reference>
                             <el-button size="small" type="text">
                               <el-icon><Delete /></el-icon>
@@ -126,25 +126,25 @@
               </template>
               <el-form :model="form" ref="basicFormRef">
                 <el-table :data="form.dataCheckApplicationData" :row-class-name="basicRowClass"
-                  border class="tableClass">
+                          border class="tableClass">
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppog0')"
-                    prop="paramKey" width="200" show-overflow-tooltip />
+                                   prop="paramKey" width="200" show-overflow-tooltip />
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppr80')" width="300">
                     <template #default="{ row, $index }">
                       <el-form-item :prop="`dataCheckApplicationData.${$index}.paramChangeValue`" class="hide-asterisk">
-                      <el-input v-model.trim="row.paramChangeValue" @change="changeRecord(row)"/>
+                        <el-input v-model.trim="row.paramChangeValue" @change="changeRecord(row)"/>
                       </el-form-item>
                     </template>
                   </el-table-column>
                   <el-table-column :label="$t('components.ToolsParamsConfig.5q0toolspa11')" prop="paramValue"
-                    width="200" show-overflow-tooltip/>
+                                   width="200" show-overflow-tooltip/>
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazspptw0')" prop="paramDesc"
-                    width="200" show-overflow-tooltip />
+                                   width="200" show-overflow-tooltip />
                   <el-table-column :label="$t('components.ToolsParamsConfig.5q0toolspa20')" width="100">
                     <template #default="{ row }">
                       <el-form-item class="hide-asterisk">
                         <el-popconfirm :title="$t('components.ToolsParamsConfig.5q0toolspa28')" :confirm-button-text="$t('step3.index.5q093f8y9zg4')"
-                          :cancel-button-text="$t('step3.index.5q093f8y9zg5')" @confirm="deleteToolsParams(row)">
+                                       :cancel-button-text="$t('step3.index.5q093f8y9zg5')" @confirm="deleteToolsParams(row)">
                           <template #reference>
                             <el-button size="small" type="text">
                               <el-icon><Delete /></el-icon>
@@ -165,7 +165,7 @@
                 <div style="display: flex; align-items: center">
                   {{ $t("components.ToolsParamsConfig.5q0toolspar3") }}
                   <el-button size="small" type="text" @click.stop="handleToolsParams(3)">
-                  <el-icon><Plus /></el-icon>
+                    <el-icon><Plus /></el-icon>
                   </el-button>
                 </div>
               </template>
@@ -173,7 +173,7 @@
                 <el-table :data="form.dataCheckApplicationSinkData" border
                           :row-class-name="basicRowClass" class="tableClass">
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppog0')" prop="paramKey"
-                    width="200" show-overflow-tooltip />
+                                   width="200" show-overflow-tooltip />
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppr80')" width="300">
                     <template #default="{ row, $index }">
                       <el-form-item :prop="`dataCheckApplicationSinkData.${$index}.paramChangeValue`" class="hide-asterisk">
@@ -182,14 +182,14 @@
                     </template>
                   </el-table-column>
                   <el-table-column :label="$t('components.ToolsParamsConfig.5q0toolspa11')" prop="paramValue"
-                    width="300" show-overflow-tooltip />
+                                   width="300" show-overflow-tooltip />
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazspptw0')" prop="paramDesc"
-                    width="300" show-overflow-tooltip/>
+                                   width="300" show-overflow-tooltip/>
                   <el-table-column :label="$t('components.ToolsParamsConfig.5q0toolspa20')" width="100">
                     <template #default="{ row }">
                       <el-form-item class="hide-asterisk">
                         <el-popconfirm :title="$t('components.ToolsParamsConfig.5q0toolspa28')" :confirm-button-text="$t('step3.index.5q093f8y9zg4')"
-                          :cancel-button-text="$t('step3.index.5q093f8y9zg5')" @confirm="deleteToolsParams(row)">
+                                       :cancel-button-text="$t('step3.index.5q093f8y9zg5')" @confirm="deleteToolsParams(row)">
                           <template #reference>
                             <el-button size="small" type="text">
                               <el-icon><Delete /></el-icon>
@@ -216,9 +216,9 @@
               </template>
               <el-form :model="form" ref="basicFormRef">
                 <el-table :data="form.dataCheckApplicationSourceData" border
-                  :row-class-name="basicRowClass" class="tableClass" style="width: 100%">
+                          :row-class-name="basicRowClass" class="tableClass" style="width: 100%">
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppog0')" prop="paramKey"
-                    width="200" show-overflow-tooltip/>
+                                   width="200" show-overflow-tooltip/>
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppr80')" width="300">
                     <template #default="{ row, $index }">
                       <el-form-item :prop="`dataCheckApplicationSourceData.${$index}.paramChangeValue`" class="hide-asterisk">
@@ -227,14 +227,14 @@
                     </template>
                   </el-table-column>
                   <el-table-column :label="$t('components.ToolsParamsConfig.5q0toolspa11')" prop="paramValue"
-                    width="300" show-overflow-tooltip/>
+                                   width="300" show-overflow-tooltip/>
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazspptw0')" prop="paramDesc"
-                    width="300" show-overflow-tooltip/>
+                                   width="300" show-overflow-tooltip/>
                   <el-table-column :label="$t('components.ToolsParamsConfig.5q0toolspa20')" width="100" align="center">
                     <template #default="{ row }">
                       <el-form-item class="hide-asterisk">
                         <el-popconfirm :title="$t('components.ToolsParamsConfig.5q0toolspa28')" :confirm-button-text="$t('step3.index.5q093f8y9zg4')"
-                          :cancel-button-text="$t('step3.index.5q093f8y9zg5')" @confirm="deleteToolsParams(row)">
+                                       :cancel-button-text="$t('step3.index.5q093f8y9zg5')" @confirm="deleteToolsParams(row)">
                           <template #reference>
                             <el-button size="small" type="danger" text>
                               <el-icon><Delete /></el-icon>
@@ -255,39 +255,39 @@
                 <div class="flex items-center">
                   {{ $t("components.ToolsParamsConfig.5q0toolspar5") }}
                   <el-button size="small" type="text" @click.stop="handleToolsParams(5)" >
-                  <el-icon><Plus /></el-icon>
+                    <el-icon><Plus /></el-icon>
                   </el-button>
                 </div>
               </template>
               <el-form :model="form" ref="basicFormRef">
                 <el-table :data="form.debeziumMysqlSinkData" border :row-class-name="basicRowClass"
-                  class="tableClass" style="width: 100%">
+                          class="tableClass" style="width: 100%">
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppog0')" prop="paramKey"
-                    width="200" show-overflow-tooltip />
+                                   width="200" show-overflow-tooltip />
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppr80')" width="300">
                     <template #default="{ row, $index }">
                       <el-form-item :prop="`debeziumMysqlSinkData.${$index}.paramChangeValue`" class="hide-asterisk" >
-                      <el-input v-model.trim="row.paramChangeValue" @change="changeRecord(row)" clearable />
+                        <el-input v-model.trim="row.paramChangeValue" @change="changeRecord(row)" clearable />
                       </el-form-item>
                     </template>
                   </el-table-column>
                   <el-table-column :label="$t('components.ToolsParamsConfig.5q0toolspa11')" prop="paramValue"
-                    width="300" show-overflow-tooltip />
+                                   width="300" show-overflow-tooltip />
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazspptw0')" prop="paramDesc"
-                    width="300" show-overflow-tooltip/>
+                                   width="300" show-overflow-tooltip/>
                   <el-table-column :label="$t('components.ToolsParamsConfig.5q0toolspa20')" width="100" align="center" >
-                  <template #default="{ row }">
-                    <el-form-item class="hide-asterisk">
-                      <el-popconfirm :title="$t('components.ToolsParamsConfig.5q0toolspa28')" :confirm-button-text="$t('step3.index.5q093f8y9zg4')"
-                        :cancel-button-text="$t('step3.index.5q093f8y9zg5')" @confirm="deleteToolsParams(row)">
-                      <template #reference>
-                        <el-button size="small" type="danger" text>
-                          <el-icon><Delete /></el-icon>
-                        </el-button>
-                      </template>
-                      </el-popconfirm>
-                    </el-form-item>
-                  </template>
+                    <template #default="{ row }">
+                      <el-form-item class="hide-asterisk">
+                        <el-popconfirm :title="$t('components.ToolsParamsConfig.5q0toolspa28')" :confirm-button-text="$t('step3.index.5q093f8y9zg4')"
+                                       :cancel-button-text="$t('step3.index.5q093f8y9zg5')" @confirm="deleteToolsParams(row)">
+                          <template #reference>
+                            <el-button size="small" type="danger" text>
+                              <el-icon><Delete /></el-icon>
+                            </el-button>
+                          </template>
+                        </el-popconfirm>
+                      </el-form-item>
+                    </template>
                   </el-table-column>
                 </el-table>
               </el-form>
@@ -306,9 +306,9 @@
               </template>
               <el-form :model="form" ref="basicFormRef">
                 <el-table :data="form.debeziumMysqlSourceData" border
-                  :row-class-name="basicRowClass" class="tableClass" style="width: 100%">
+                          :row-class-name="basicRowClass" class="tableClass" style="width: 100%">
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppog0')" prop="paramKey"
-                    width="200" show-overflow-tooltip />
+                                   width="200" show-overflow-tooltip />
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppr80')" width="300">
                     <template #default="{ row, $index }">
                       <el-form-item :prop="`debeziumMysqlSinkData.${$index}.paramChangeValue`" class="hide-asterisk" >
@@ -317,23 +317,23 @@
                     </template>
                   </el-table-column>
                   <el-table-column :label="$t('components.ToolsParamsConfig.5q0toolspa11')" prop="paramValue"
-                    width="300" show-overflow-tooltip/>
+                                   width="300" show-overflow-tooltip/>
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazspptw0')" prop="paramDesc"
-                    width="300" show-overflow-tooltip />
+                                   width="300" show-overflow-tooltip />
                   <el-table-column :label="$t('components.ToolsParamsConfig.5q0toolspa20')"
-                    width="100" align="center">
-                  <template #default="{ row }">
-                    <el-form-item class="hide-asterisk">
-                      <el-popconfirm :title="$t('components.ToolsParamsConfig.5q0toolspa28')" :confirm-button-text="$t('step3.index.5q093f8y9zg4')"
-                        :cancel-button-text="$t('step3.index.5q093f8y9zg5')" @confirm="deleteToolsParams(row)" >
-                      <template #reference>
-                        <el-button size="small" type="danger" text>
-                          <el-icon><Delete /></el-icon>
-                        </el-button>
-                      </template>
-                      </el-popconfirm>
-                    </el-form-item>
-                  </template>
+                                   width="100" align="center">
+                    <template #default="{ row }">
+                      <el-form-item class="hide-asterisk">
+                        <el-popconfirm :title="$t('components.ToolsParamsConfig.5q0toolspa28')" :confirm-button-text="$t('step3.index.5q093f8y9zg4')"
+                                       :cancel-button-text="$t('step3.index.5q093f8y9zg5')" @confirm="deleteToolsParams(row)" >
+                          <template #reference>
+                            <el-button size="small" type="danger" text>
+                              <el-icon><Delete /></el-icon>
+                            </el-button>
+                          </template>
+                        </el-popconfirm>
+                      </el-form-item>
+                    </template>
                   </el-table-column>
                 </el-table>
               </el-form>
@@ -352,9 +352,9 @@
               </template>
               <el-form :model="form" ref="sinkFormRef">
                 <el-table :data="form.debeziumOpengaussSinkData" border
-                  :row-class-name="basicRowClass" class="tableClass">
+                          :row-class-name="basicRowClass" class="tableClass">
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppog0')" prop="paramKey"
-                    width="200" show-overflow-tooltip
+                                   width="200" show-overflow-tooltip
                   />
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppr80')" width="300"
                   >
@@ -365,9 +365,9 @@
                     </template>
                   </el-table-column>
                   <el-table-column :label="$t('components.ToolsParamsConfig.5q0toolspa11')" prop="paramValue"
-                    width="300" show-overflow-tooltip/>
+                                   width="300" show-overflow-tooltip/>
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazspptw0')" prop="paramDesc"
-                    width="300" show-overflow-tooltip/>
+                                   width="300" show-overflow-tooltip/>
                   <el-table-column :label="$t('components.ToolsParamsConfig.5q0toolspa20')" width="100" align="center">
                     <template #default="{ row }">
                       <el-form-item class="hide-asterisk">
@@ -398,9 +398,9 @@
               </template>
               <el-form :model="form" ref="sourceFormRef">
                 <el-table :data="form.debeziumOpengaussSourceData" border
-                  :row-class-name="basicRowClass" class="tableClass">
+                          :row-class-name="basicRowClass" class="tableClass">
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppog0')" prop="paramKey"
-                    width="200" show-overflow-tooltip/>
+                                   width="200" show-overflow-tooltip/>
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazsppr80')" width="300">
                     <template #default="{ row, $index }">
                       <el-form-item :prop="`debeziumOpengaussSourceData.${$index}.paramChangeValue`" class="hide-asterisk">
@@ -409,9 +409,9 @@
                     </template>
                   </el-table-column>
                   <el-table-column :label="$t('components.ToolsParamsConfig.5q0toolspa11')" prop="paramValue"
-                    width="300" show-overflow-tooltip/>
+                                   width="300" show-overflow-tooltip/>
                   <el-table-column :label="$t('components.ParamsConfig.5q0aazspptw0')" prop="paramDesc"
-                    width="300" show-overflow-tooltip/>
+                                   width="300" show-overflow-tooltip/>
                   <el-table-column :label="$t('components.ToolsParamsConfig.5q0toolspa20')" width="100" align="center">
                     <template #default="{ row }">
                       <el-form-item class="hide-asterisk">

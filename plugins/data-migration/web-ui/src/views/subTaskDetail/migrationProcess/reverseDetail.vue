@@ -130,16 +130,16 @@ const closeDialog = () => {
 }
 </script>
 <style lang="less" scoped>
-    .reverseBody {
-      .cur-config, .correct-config {
-        display: flex;
-        gap: 10px;
-        flex-direction: column;
-        .config-item {
-          min-height: 76px;
-        }
-      }
-      max-height: 450px !important;
-      margin-bottom: 20px;
+.reverseBody {
+  .cur-config, .correct-config {
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+    .config-item {
+      min-height: 76px;
     }
+  }
+  max-height: 450px !important;
+  margin-bottom: 20px;
+}
 </style>

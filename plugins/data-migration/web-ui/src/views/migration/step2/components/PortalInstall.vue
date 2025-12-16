@@ -102,13 +102,24 @@
           @change="changePortalType"
         >
           <el-radio-group v-model="form.portalType">
-            <el-radio-button label="MULTI_DB">
-              PostgreSQL
-            </el-radio-button>
             <el-radio-button label="MYSQL_ONLY">
               MySQL
             </el-radio-button>
+            <el-radio-button label="MULTI_DB">
+              {{ $t('step2.compoents.portalInstall.other') }}
+            </el-radio-button>
           </el-radio-group>
+          <el-tooltip class="item" effect="light"
+                      :content="$t('step2.compoents.portalInstall.otherMessage')"
+                      placement="bottom"
+                      :popper-style="{ maxWidth: '5vw', width: 'auto' }"
+                      :teleported="false">
+            <i class="el-icon icon spacing-left">
+              <el-icon>
+                <IconHelpCircle/>
+              </el-icon>
+            </i>
+          </el-tooltip>
         </el-form-item>
         <el-form-item
           :label="$t('components.PortalInstall.5q0aajl77lg33')"
@@ -287,6 +298,7 @@ import {useI18n} from 'vue-i18n'
 import {Modal} from '@arco-design/web-vue'
 import {Plus} from '@element-plus/icons-vue'
 import showMessage from "@/utils/showMessage";
+import {IconHelpCircle} from "@computing/opendesign-icons"
 const {t} = useI18n()
 
 const props = defineProps({
@@ -633,6 +645,10 @@ onMounted(() => {
 .page-input-size :deep(.el-form-item .el-select),
 .page-input-size :deep(.el-form-item .el-input-number){
   width: 450px !important;
+}
+
+.spacing-left {
+  margin-left: 8px;
 }
 
 </style>

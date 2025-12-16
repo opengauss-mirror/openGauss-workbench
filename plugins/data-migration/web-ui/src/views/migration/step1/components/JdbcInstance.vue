@@ -2,31 +2,48 @@
   <el-form :model="form" ref="formRef" auto-label-width :rules="formRules" label-width="110px">
     <el-row style="justify-content: space-between">
       <el-form-item prop="ip" :label="$t('components.JdbcInstance.5q0a9843uf40')" validate-trigger="change">
-        <el-select v-model="form.ip" :placeholder="$t('components.JdbcInstance.5q0a8km729o0')" allow-create filterable>
+        <el-select v-model="form.ip" :placeholder="$t('components.JdbcInstance.5q0a8km729o0')"
+                   allow-create filterable style="width:441px">
           <el-option v-for="item in props.hostList" :key="item.value" :label="item.label" :value="item.value"/>
         </el-select>
       </el-form-item>
       <el-form-item prop="port" label="/" validate-trigger="blur">
         <el-input-number v-model="form.port" :placeholder="$t('components.JdbcInstance.5q0a8km73bo0')" :min="0"
-                         :max="65535" controls-position="right"/>
+                         :max="65535" controls-position="right" style="width:178px" />
       </el-form-item>
     </el-row>
     <el-form-item prop="username" :label="$t('components.JdbcInstance.5q0a8km73f00')" validate-trigger="blur">
-      <el-input v-model="form.username" :placeholder="$t('components.JdbcInstance.5q0a8km73hs0')"/>
+      <el-input v-model="form.username" :placeholder="$t('components.JdbcInstance.5q0a8km73hs0')"
+                :disabled="props.jdbcType === JDBCType.Milvus || props.jdbcType === JDBCType.Elasticsearch" style="width:441px" />
     </el-form-item>
     <el-form-item prop="password" :label="$t('components.JdbcInstance.5q0a8km73ko0')" validate-trigger="blur">
-      <div class="text-row">
-        <el-input v-model="form.password" :placeholder="$t('components.JdbcInstance.5q0a8km73n80')" allow-clear
-                  show-password/>
-        <el-button type="primary" link @click="handelTest">{{ $t('components.AddJdbc.5q0a7i43ap40') }}</el-button>
-        <div>
-          <el-text truncated type="info" v-if="form.status === -1">{{ $t('components.AddJdbc.5q0a7i439cg0') }}</el-text>
-          <el-text truncated type="success" v-else-if="form.status === 1">{{ $t('components.AddJdbc.5q0a7i43aeg0') }}</el-text>
-          <el-text truncated type="danger" v-else>{{ $t('components.AddJdbc.5q0a7i43ajk0') }}</el-text>
+      <div class="password-container">
+        <div class="input-wrapper">
+          <el-input v-model="form.password" :placeholder="$t('components.JdbcInstance.5q0a8km73n80')"
+            allow-clear show-password class="password-input"
+            :disabled="props.jdbcType === JDBCType.Milvus || props.jdbcType === JDBCType.Elasticsearch"
+          />
+        </div>
+        <div class="actions-row">
+          <el-button type="primary" link @click="handelTest" class="test-btn">
+            {{ $t('components.AddJdbc.5q0a7i43ap40') }}
+          </el-button>
+          <div class="status-container">
+            <el-text truncated type="info" v-if="form.status === -1">
+              {{ $t('components.AddJdbc.5q0a7i439cg0') }}
+            </el-text>
+            <el-text truncated type="success" v-else-if="form.status === 1">
+              {{ $t('components.AddJdbc.5q0a7i43aeg0') }}
+            </el-text>
+            <el-text truncated type="danger" v-else>
+              {{ $t('components.AddJdbc.5q0a7i43ajk0') }}
+            </el-text>
+          </div>
         </div>
       </div>
     </el-form-item>
-    <el-form-item :label="$t('components.JdbcInstance.5q0a8km73q00')">
+    <el-form-item :label="$t('components.JdbcInstance.5q0a8km73q00')"
+                  v-if="props.jdbcType !== JDBCType.Milvus && props.jdbcType !== JDBCType.Elasticsearch">
       <el-table class="full-w" :data="form.props" size="mini" :pagination="false">
         <el-table-column :label="$t('components.JdbcInstance.5q0a8km74h00')" prop="name">
           <template #default="scope">
@@ -84,6 +101,7 @@ import {jdbcNodePing} from '@/api/task'
 import {useI18n} from 'vue-i18n'
 import {Delete, CirclePlus, InfoFilled} from '@element-plus/icons-vue'
 import {encryptPassword} from "@/utils/jsencrypt"
+import { JDBCType } from "@/types/jdbc";
 
 const {t} = useI18n()
 
@@ -130,11 +148,11 @@ const formRules = computed(() => {
       {required: true, message: t('components.JdbcInstance.5q0a8km73bo0')}
     ],
     username: [
-      {required: true, message: t('components.JdbcInstance.5q0a8km73hs0')},
+      {required: props.jdbcType !== JDBCType.Milvus && props.jdbcType !== JDBCType.Elasticsearch, message: t('components.JdbcInstance.5q0a8km73hs0')},
       {
         validator: (rule, value) => {
           return new Promise((resolve, reject) => {
-            if (!value) {
+            if (!value && props.jdbcType !== JDBCType.Milvus && props.jdbcType !== JDBCType.Elasticsearch) {
               reject(new Error(t('components.JdbcInstance.5q0a8km74xk0')))
             } else {
               resolve()
@@ -144,11 +162,11 @@ const formRules = computed(() => {
       }
     ],
     password: [
-      {required: true, message: t('components.JdbcInstance.5q0a8km75000')},
+      {required: props.jdbcType !== JDBCType.Milvus && props.jdbcType !== JDBCType.Elasticsearch, message: t('components.JdbcInstance.5q0a8km75000')},
       {
         validator: (rule, value) => {
           return new Promise((resolve, reject) => {
-            if (!value) {
+            if (!value && props.jdbcType !== JDBCType.Milvus && props.jdbcType !== JDBCType.Elasticsearch) {
               reject(new Error(t('components.JdbcInstance.5q0a8km74xk0')))
             } else {
               resolve()
@@ -180,8 +198,13 @@ const handelTest = async () => {
     id: form.value.id,
     res: false
   }
-  const encryptPwd = await encryptPassword(form.value.password)
+  let encryptPwd = ''
+  if (form.value.password && form.value.password !== '') {
+    encryptPwd = await encryptPassword(form.value.password)
+  }
+
   const param = {
+    dbType: props.jdbcType,
     username: form.value.username,
     password: encryptPwd,
     url: jdbcUrl.value
@@ -201,52 +224,40 @@ const handelTest = async () => {
 }
 
 const jdbcUrl = computed(() => {
-  let urlSuffix = ''
-  if (form.value.props?.length) {
-    form.value.props?.forEach((item, index) => {
-      if (item.name.trim() && item.value.trim()) {
-        if (index === 0) {
-          urlSuffix = urlSuffix + item.name + '=' + item.value
-        } else if (index > 0 && index < form.value.props?.length)
-          urlSuffix = urlSuffix + '&' + item.name + '=' + item.value
-      }
-    })
-  }
-  let urlPrefix = ''
-  if (props.jdbcType === 'MYSQL') {
-    urlPrefix = `jdbc:mysql://${form.value.ip || '{IP}'}:${form.value.port || '{port}'}`
-    if (urlSuffix) {
-      return urlPrefix + '?' + urlSuffix
-    } else {
-      return urlPrefix
+  const queryParams = form.value.props
+    ?.filter(item => item.name?.trim() && item.value?.trim())
+    .map(item => `${item.name}=${item.value}`)
+    .join('&') || ''
+
+  const config = JDBCType.getConfig(props.jdbcType)
+  const host = form.value.ip || '{IP}'
+  const port = form.value.port || '{port}'
+
+  let baseUrl = ''
+
+  if (config.urlPattern) {
+    let defaultDb = 'postgres'
+    if (props.jdbcType === JDBCType.MySQL) {
+      defaultDb = 'mysql'
     }
-  } else if (props.jdbcType === 'OPENGAUSS') {
-    urlPrefix = `jdbc:opengauss://${form.value.ip || '{IP}'}:${form.value.port || '{port}'}/postgres`
-    if (urlSuffix) {
-      return urlPrefix + '?' + urlSuffix
-    } else {
-      return urlPrefix
-    }
+    baseUrl = config.urlPattern
+      .replace('{host}', host)
+      .replace('{port}', port.toString())
+      .replace('{defaultDb}', defaultDb)
+
+    return queryParams ? `${baseUrl}?${queryParams}` : baseUrl
   } else {
-    urlPrefix = `jdbc:postgresql://${form.value.ip || '{IP}'}:${form.value.port || '{port}'}/postgres`
-    if (urlSuffix) {
-      return urlPrefix + '?' + urlSuffix
-    } else {
-      return urlPrefix
-    }
+    baseUrl = `http://${host}:${port}`
+    return baseUrl
   }
-  return urlPrefix
 })
+
 
 watch(jdbcUrl, (val) => {
   form.value.url = val
 })
 watch(() => props.jdbcType, (val) => {
-  if (val === 'MYSQL') {
-    form.value.port = 3306
-  } else {
-    form.value.port = 5432
-  }
+  form.value.port = JDBCType.getDefaultPort(val)
 })
 
 const formRef = ref(null)
@@ -259,7 +270,7 @@ const formValidate = async () => {
       res: true
     };
   } catch (error) {
-    console.log('表单验证失败:', error);
+    console.log('Error:', error);
     return {
       id: form.value.id,
       res: false,
@@ -277,6 +288,7 @@ defineExpose({
 <style scoped>
 .text-row {
   display: flex;
+  align-items: center;
   gap: 24px;
 }
 .text-item {
@@ -321,4 +333,63 @@ defineExpose({
 .text-item:hover .full-content {
   display: block;
 }
+
+.password-container {
+  width: 100%;
+}
+
+.input-wrapper {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-right: 16px;
+}
+
+.password-input {
+  width: 441px;
+}
+
+.actions-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  vertical-align: middle;
+}
+
+.test-btn {
+  white-space: nowrap;
+}
+
+.status-container {
+  display: inline-block;
+  min-width: 150px;
+}
+
+@media (max-width: 1100px) {
+  .input-wrapper {
+    display: block;
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+  .password-input {
+    width: 100%;
+    max-width: 441px;
+  }
+  .actions-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .actions-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .status-container {
+    width: 100%;
+  }
+}
+
 </style>

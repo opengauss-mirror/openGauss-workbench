@@ -561,7 +561,16 @@
       "5q091ixih2i0": "Search for table names on the current page...",
       "5q091ixih5i0": "Select all on current page",
       "5q091ixih5i1": "Failed to get user type",
-      "defaultSeleMsg": "When no table is selected, the entire database is chosen by default"
+      "defaultSeleMsg": "When no table is selected, the entire database is chosen by default",
+      "getVersion": "Current database version unknown, please click",
+      "getVersionBtn": "Query Version",
+      "dbVersionFail": "Migration conditions not satisfied",
+      "index": "Index",
+      "indexSelect": "Select Index",
+      "clearSelection": "Clear Selection",
+      "collection": "Collection",
+      "collectionSelect": "Select Collection",
+      "versionCheckError": "Database version does not meet migration requirements. Please verify the version information."
     }
   },
   "step2": {
@@ -631,7 +640,9 @@
         "portalType": "Migrate Database Type",
         "portEmpty": "Port cannot be empty",
         "portalContent": "Port number must be a numeric value between 1 and 65535",
-        "versionContent": "Online download version is unavailable, please install via alternative methods."
+        "versionContent": "Online download version is unavailable, please install via alternative methods.",
+        "other": "Other",
+        "otherMessage": "Other options support migration for PostgreSQL, Milvus, and Elasticsearch databases"
       }
     }
   },

@@ -1,36 +1,35 @@
 <template>
   <div class="table-con">
-    <div class="statistic">
+    <div class="statistic" v-if="shouldShowDbColumn">
       <div class="success-color">{{ $t('components.BigDataList.5q09o79wvtw0') }}
         <el-tag type="round" size="small">{{ subTaskStore?.subTaskData?.[transFiled[tableType] + 'Counts']?.successCount ||
-          0 }}</el-tag>
+        0 }}</el-tag>
       </div>
       <div class="danger-color"> {{ $t('components.BigDataList.5q09o79ww2g0') }}
         <el-tag type="round" size="small">{{ subTaskStore?.subTaskData?.[transFiled[tableType] + 'Counts']?.errorCount ||
-          0 }}</el-tag>
+        0 }}</el-tag>
       </div>
       <div class="primary-color">{{ $t('components.BigDataList.5q09o79wsew0') }}
         <el-tag type="round" size="small">{{ subTaskStore?.subTaskData?.[transFiled[tableType] + 'Counts']?.runningCount ||
-          0 }}</el-tag>
+        0 }}</el-tag>
       </div>
       <div class="wait-color"> {{ $t('components.BigDataList.5q09nizckiw0') }}
         <el-tag type="round" size="small">{{ subTaskStore?.subTaskData?.[transFiled[tableType] + 'Counts']?.waitCount ||
-          0 }}</el-tag>
+        0 }}</el-tag>
       </div>
     </div>
     <div class="main-table openDesignTableArea minWid680">
       <!-- This is the search -->
-      <div class="mb16">
+      <div class="mb16" :class="{ 'add-padding-top': !shouldShowDbColumn }">
         <el-form :model="filter" inline ref="formRef" class="processForm">
-          <el-form-item prop="schemaName" :label="$t('components.SubTaskDetail.source_schema')">
+          <el-form-item prop="schemaName" :label="$t('components.SubTaskDetail.source_schema')" v-if="shouldShowDbColumn">
             <el-input v-model.trim="filter.schemaName" clearable :placeholder="$t('transcribe.index.inputtaskname')"
-              @keyup.enter.native="getFilterData" @clear="resetQuery" style="width: 180px" maxlength="255" />
-              
+                      @keyup.enter.native="getFilterData" @clear="resetQuery" style="width: 180px" maxlength="255" />
           </el-form-item>
 
           <el-form-item prop="tableName" :label="$t('components.SubTaskDetail.source_db')">
             <el-input v-model.trim="filter.tableName" clearable :placeholder="$t('transcribe.index.inputtaskname')"
-              @keyup.enter.native="getFilterData" @clear="resetQuery" style="width: 180px" maxlength="255" />
+                      @keyup.enter.native="getFilterData" @clear="resetQuery" style="width: 180px" maxlength="255" />
           </el-form-item>
           <div class="form-margin" style="flex: 1; text-align: right;">
             <el-form-item>
@@ -51,14 +50,14 @@
           </div>
         </template>
         <el-table-column :label="$t('components.SubTaskDetail.source_schema')" prop="sourceSchema" ellipsis
-          tooltip></el-table-column>
+                         tooltip :min-width="200" v-if="shouldShowDbColumn"></el-table-column>
         <el-table-column :label="$t('components.SubTaskDetail.source_db')" prop="name" ellipsis
-          tooltip></el-table-column>
+                         tooltip :min-width="200"></el-table-column>
         <el-table-column :label="$t('components.SubTaskDetail.target_schema')" prop="targetSchema" ellipsis
-          tooltip></el-table-column>
-        <el-table-column :label="$t('components.SubTaskDetail.target_db')" prop="name" ellipsis
-          tooltip></el-table-column>
-        <el-table-column label="" prop="status" :width="300">
+                         tooltip :min-width="200" v-if="shouldShowDbColumn"></el-table-column>
+        <el-table-column :label="$t('components.SubTaskDetail.target_db')" prop="targetName" ellipsis
+                         tooltip :min-width="200"></el-table-column>
+        <el-table-column label="" prop="status" :min-width="200">
           <template #header>
             <el-popover popper-class="popFilterClass" trigger="click">
               <template #default>
@@ -76,9 +75,11 @@
             </el-popover>
           </template>
           <template #default="{ row }">
-            <span v-if="row.status === SUB_TASK_STATUS.FULL_START || row.status === SUB_TASK_STATUS.FULL_RUNNING">
-              {{ row.percent ? (row.percent * 100).toFixed(2) : '0' }}%
-            </span>
+            <div v-if="shouldShowDbColumn">
+              <span v-if="row.status === SUB_TASK_STATUS.FULL_START || row.status === SUB_TASK_STATUS.FULL_RUNNING">
+                {{ row.percent ? (row.percent * 100).toFixed(2) : '0' }}%
+              </span>
+            </div>
             <el-popover v-if="row.status === SUB_TASK_STATUS.FULL_CHECK_FINISH" :content="row.errorMsg" position="top">
               <!-- This represents failure. -->
               <template #reference>
@@ -96,7 +97,7 @@
         </el-table-column>
       </el-table>
       <el-pagination :total="total" :layout="layout" v-model:page-size="filter.pageSize"
-        v-model:current-page="filter.pageNum" @change="searchTable"></el-pagination>
+                     v-model:current-page="filter.pageNum" @change="searchTable"></el-pagination>
     </div>
   </div>
 </template>
@@ -108,11 +109,13 @@ import { SUB_TASK_STATUS } from '@/utils/constants';
 import EmptyPage from '@/components/emptyPage';
 import usePagination from '@/utils/usePagination';
 import {
-  fullMigInfo,
+  fullMigInfo, refreshStatus, subTaskList,
 } from '@/api/detail'
 import { IconSuccess, IconError, IconFilter } from '@computing/opendesign-icons';
 import { useSubTaskStore } from '@/store'
 import { searchType } from "@/types/searchType";
+import {JDBCType} from "@/types/jdbc";
+import {KeyValue} from "@/types/global";
 type tabType = 'table' | 'view' | 'function' | 'trigger' | 'procedure'
 // Here, because the table interface passes parameters to the function and procedure fields, and the statistics are not func and produce, it is escaped here
 const transFiled = {
@@ -251,6 +254,16 @@ const filterTableData = () => {
     total.value = tableData.value.length;
   }
 }
+
+const props = defineProps({
+  shouldShowDbColumn :{
+    type: Boolean,
+  }
+})
+const shouldShowDbColumn = computed(() => {
+  return props.shouldShowDbColumn
+})
+
 </script>
 
 <style lang="less" scoped>
@@ -316,5 +329,9 @@ const filterTableData = () => {
       padding-right: 16px;
     }
   }
+}
+
+.add-padding-top {
+  padding-top: 24px;
 }
 </style>

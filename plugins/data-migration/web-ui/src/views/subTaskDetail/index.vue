@@ -7,7 +7,7 @@
           <div class="title-right">
             <TextTooltip class="name-text" :content="subTaskId"></TextTooltip>
             <el-tag v-if="execSubStatusMap(subTaskInfo.execStatus)"
-              :type="statusColorMap(subTaskInfo?.execStatus) || ''" class="status-tag">{{
+                    :type="statusColorMap(subTaskInfo?.execStatus) || ''" class="status-tag">{{
                 execSubStatusMap(subTaskInfo.execStatus) }}
             </el-tag>
           </div>
@@ -33,7 +33,7 @@
             <!-- with lazy attribute, this card would not render until first click,-->
             <el-tab-pane :label="t('components.SubTaskDetail.migrationProcess')" name="migrationProcess" lazy>
               <MigrationProcess :subTaskMode="subTaskMode" :subTaskDbType="subTaskDbType" v-if="currentTab === 'migrationProcess'"
-                :processObj="processObj" :subTaskStep="subTaskStep" :fullProcessCount="fullProcessCount">
+                                :processObj="processObj" :subTaskStep="subTaskStep" :fullProcessCount="fullProcessCount">
               </MigrationProcess>
             </el-tab-pane>
             <el-tab-pane :label="t('components.SubTaskDetail.abnormalAlarms')" name="errorAlert" lazy>
@@ -42,7 +42,7 @@
                   <el-tag type="round" size="small" class="errorAlertCount">{{ phaseNums.total || 0 }}</el-tag>
                 </div>
               </template>
-              <ErrorAlert v-if="currentTab === 'errorAlert'" :phaseNums="phaseNums"/>
+              <ErrorAlert v-if="currentTab === 'errorAlert'" :phaseNums="phaseNums" :sourceDbType="sourceDbType"/>
             </el-tab-pane>
             <el-tab-pane :label="t('components.SubTaskDetail.log')" name="log" lazy>
               <MigrationLog />
@@ -70,6 +70,7 @@ import ErrorAlert from './errorAlert';
 import MigrationLog from './migrationLogs.vue';
 import { useSubTaskStore } from '@/store';
 import Socket from '@/utils/websocket'
+import { JDBCType } from "@/types/jdbc";
 const { t } = useI18n();
 // The various states included in the migration progress
 const stepSet0 = new Set([SUB_TASK_STATUS.NOT_RUN, SUB_TASK_STATUS.CHECK_FAILED]);
@@ -143,7 +144,8 @@ const descData = computed(() => [
   },
   {
     label: t('components.SubTaskDetail.executionMode'),
-    value: descValueObj.value.executionMode === 1 ? t('components.SubTaskDetail.offLineMigration') : t('components.SubTaskDetail.onLineMigration'),
+    value: descValueObj.value.executionMode === 1 ? t('components.SubTaskDetail.offLineMigration')
+      : descValueObj.value.executionMode === 1 ? t('components.SubTaskDetail.onLineMigration') : t('components.SubTaskDetail.fullMigration'),
     prop: 'executionMode'
   },
   {
@@ -257,7 +259,15 @@ const testWebsocketFunc = () => {
   const websocket = new Socket({ url: socketUrl })
   currentWS.value = websocket
   websocket.onopen(() => {
-    connectWSTest(subTaskId.value)
+    console.log('open')
+    isWSConnect.value = true
+    subTaskInfoDetail(subTaskId.value, `taskInfo_${subTaskId.value}_${currentWsKey.value}`)
+      .then(res => {
+        console.log('ws connect success')
+      })
+      .catch(error => {
+        console.error('ws connect error:', error)
+      })
   })
 
   websocket.onmessage((data) => {
@@ -277,35 +287,34 @@ const testWebsocketFunc = () => {
       }
     }
   })
+  websocket.onerror((error) => {
+    console.log('error-subTaskDetail-webscoket', error)
+    isWSConnect.value = false
+  })
+
   websocket.onclose(() => {
     console.warn('close-subTaskDetail-webscoket')
   })
 }
 const isWSConnect = ref(false)
-const timer = ref()
-const connectWSTest = (id) => {
-  subTaskInfoDetail(subTaskId.value, `taskInfo_${subTaskId.value}_${currentWsKey.value}`).then(res => {
-    timer.value && clearTimeout(timer)
-    if (!isWSConnect.value) {
-      timer.value = setTimeout(() => {
-        connectWSTest(id)
-      }, 5000)
-    }
-  })
-}
 
 onMounted(() => {
   subTaskId.value = window.$wujie?.props.data.id
   currentTab.value = window.$wujie?.props.data.tab || 'migrationProcess'
-  
+
   descValueObj.value.sourceIpPort = sessionStorage.getItem('sourceIpPort')
   descValueObj.value.sinkIpPort = sessionStorage.getItem('sinkIpPort')
   // The webSocket is tested here
-  testWebsocketFunc()
-
+  if(!isWSConnect.value) {
+    testWebsocketFunc()
+  }
   // Get the basics here
   getSubTaskBasicInfo();
 });
+
+const sourceDbType = computed(() => {
+  return descValueObj.value.sourceDbType?.toUpperCase?.() || ''
+})
 
 // Query the basic details of a subtask
 const getSubTaskBasicInfo = () => {
@@ -313,16 +322,12 @@ const getSubTaskBasicInfo = () => {
     if (Number(res.code) === 200) {
       descValueObj.value.subTaskName = res.data?.subTaskId
       descValueObj.value.fatherTask = res.data?.taskName
-      // offline = 1; online = 2;
-      descValueObj.value.executionMode = res.data?.execMode
-      descValueObj.value.sourceLibrary = res.data?.sourceDb
-      if (res.data?.sourceDbType.toUpperCase() === 'POSTGRESQL') {
-        descValueObj.value.sourceDbType = 'PostgreSQL'
-      } else if (res.data?.sourceDbType.toUpperCase() === 'MYSQL') {
-        descValueObj.value.sourceDbType = 'MySQL'
-      } else {
-        descValueObj.value.sourceDbType = ''
-      }
+      descValueObj.value.sourceDbType = JDBCType.normalize(res.data?.sourceDbType)
+      // offline = 1; online = 2; other = 3
+      let types = [JDBCType.MySQL, JDBCType.PostgreSQL].map(String)
+      let shouldShowDbColumn =  types.includes(descValueObj.value.sourceDbType || '')
+      descValueObj.value.executionMode = shouldShowDbColumn && res.data?.execMode !== undefined? res.data.execMode: 3
+      descValueObj.value.sourceLibrary = res.data?.sourceDb || '--'
       descValueObj.value.sinkLibrary = res.data?.targetDb
       // The fifth one is assigned in the websocket
       if (res.data?.createTime) {
@@ -355,6 +360,7 @@ const transTimeType = (isoTypeTime) => {
 
 // Before/off the corresponding webscoket before leaving the page
 const closeWS = () => {
+  console.log('close')
   if (currentWS.value) {
     currentWS.value?.destroy()
     currentWS.value = null;
@@ -394,8 +400,8 @@ const execSubStatusMap = (status) => {
     1000: t('components.SubTaskDetail.5q09prnzp980'),
     3000: t('detail.index.5q09asiwlca0')
   };
-  if (status === 100 
-    && subTaskInfo.value.currentExecStatus === 6 
+  if (status === 100
+    && subTaskInfo.value.currentExecStatus === 6
     && descValueObj.value.executionMode === 1) {
     return t('components.SubTaskDetail.5q09prnzp540')
   }
@@ -425,8 +431,8 @@ const statusColorMap = (status) => {
     1000: 'primary',
     3000: 'danger'
   }
-  if (status === 100 
-    && subTaskInfo.value.currentExecStatus === 6 
+  if (status === 100
+    && subTaskInfo.value.currentExecStatus === 6
     && descValueObj.value.executionMode === 1) {
     return 'success'
   }

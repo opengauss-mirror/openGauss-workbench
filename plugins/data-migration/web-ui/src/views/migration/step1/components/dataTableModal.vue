@@ -1,19 +1,25 @@
 <template>
   <el-dialog v-model="winConVisible" :title="$t('step1.index.5q091ixigdc1')" draggable :before-close="closeModal"
-  :z-index="1000" >
+             :z-index="1000" >
     <div >
       <el-form>
-        <el-form-item :label="$t('step1.index.5q091ixigjo1')" label-position="right" style="margin-bottom: 0">
+        <el-form-item :label="$t('step1.index.5q091ixigjo1')" label-position="right" style="margin-bottom: 0"
+                      v-if="useInFo.get('dbType') === JDBCType.MySQL">
           <span style="font-size: 16px;">
-            {{ tempdbname }}
+            {{ currentTitleName }}
+          </span>
+        </el-form-item>
+        <el-form-item :label="$t('step1.index.5q091ixiemk0')" label-position="right" style="margin-bottom: 8px" v-else>
+          <span style="font-size: 16px;">
+            {{ currentTitleName }}
           </span>
         </el-form-item>
         <el-form-item label-position="right">
           <div>
-            <el-text v-if="selectedTbllength > 0" type="success">{{ $t('step1.index.5q091ixih2h0') }}
-              {{ selectedTbllength }}
+            <el-text v-if="selectedCount > 0" type="success">{{ $t('step1.index.5q091ixih2h0') }}
+              {{ selectedCount }}
             </el-text>
-            <el-text v-else type="default">{{$t('step1.index.defaultSeleMsg')}}</el-text>
+            <el-text v-else-if="useInFo.get('dbType') === JDBCType.MySQL" type="info">{{$t('step1.index.defaultSeleMsg')}}</el-text>
           </div>
           <el-input
             v-model.trim="searchTblNam"
@@ -29,7 +35,7 @@
         style="width: 90%"
         border
         ref="tableRef"
-        :row-key="(row) => row"
+        :row-key="getRowKey"
         @selection-change="handleSelectionChange"
         class="select-table"
       >
@@ -48,38 +54,39 @@
       </el-table>
     </div>
     <template #footer>
-       <span class="dialog-footer">
-       <div style="justify-content: center" v-if="searchTblNam.length <= 0">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :page-sizes="pageSizeOptions"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="totalNum"
-          @size-change="pageSizeChange"
-          @current-change="handlePageChange"
-        />
+      <div class="dialog-footer">
+        <div style="justify-content: center" v-if="searchTblNam.length <= 0">
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="pageSizeOptions"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="totalNum"
+            @size-change="pageSizeChange"
+            @current-change="handlePageChange"
+          />
+        </div>
+        <div style='display: flex; justify-content: center; gap: 40px;'>
+          <el-button type="primary" @click="handleSubmit">{{ $t('step1.index.5q091ixigjo3') }}</el-button>
+          <el-button @click="closeModal">{{ $t('step1.index.5q091ixigjo4') }}</el-button>
+        </div>
       </div>
-      <div style='display: flex; justify-content: center; gap: 40px;'>
-        <el-button type="primary" @click="handleSubmit">{{ $t('step1.index.5q091ixigjo3') }}</el-button>
-        <el-button @click="closeModal">{{ $t('step1.index.5q091ixigjo4') }}</el-button>
-      </div>
-      </span>
     </template>
   </el-dialog>
-
 </template>
 
 <script lang="ts" setup>
-import {computed, nextTick, ref, watch} from 'vue'
-import {defineEmits} from 'vue'
+import {computed, nextTick, onUnmounted, ref, watch} from 'vue'
 import {getdataTbl} from '@/api/detail'
 import {Search} from "@element-plus/icons-vue";
+import {KeyValue} from "@/types/global";
+import {JDBCType} from "@/types/jdbc";
 
-const selectedTblCurrent = ref([])
-const selectedTbllength = ref<number>(0)
 const winConVisible = ref<boolean>(false)
-const tableData = ref([])
+const tableData = ref<string[]>([])
+const selectedTables = ref<string[]>([])
+const selectedCount = computed(() => selectedTables.value.length)
+
 const searchTblNam = ref<string>('')
 const tableRef = ref()
 
@@ -88,22 +95,29 @@ const pageSize = ref<number>(50)
 const totalNum = ref<number>(0)
 const pageSizeOptions = ref([50, 100, 200, 500])
 
-const pageSizeChange = (e) => {
+const isLoading = ref(false)
+
+const pageSizeChange = (e: number) => {
   pageSize.value = e
   fetchTblList()
 }
-const handlePageChange = (pageNum) => {
+const handlePageChange = (pageNum: number) => {
   currentPage.value = pageNum
   fetchTblList()
 }
 
 const emits = defineEmits(['close', 'data-selected'])
+
 const handleSubmit = () => {
-  emits('data-selected', selectedTblCurrent.value)
+  emits('data-selected', selectedTables.value)
   closeModal()
 }
 
 const closeModal = () => {
+  if (tableRef.value) {
+    tableRef.value.clearSelection()
+  }
+  selectedTables.value = []
   winConVisible.value = false
   emits('close')
 }
@@ -114,110 +128,155 @@ const props = defineProps({
     required: true
   }
 })
-const selecTbl = ref([])
-const tempdbname = ref('')
+
+const currentTitleName = ref('')
 const useInFo = new FormData
-const getTblSelec = async () => {
-  const {dbName, url, username, password, seletedTbl} = props.seleDBMsg
-  tempdbname.value = dbName
-  if (seletedTbl) {
-    selectedTblCurrent.value = seletedTbl
-    selecTbl.value = seletedTbl
-    handleSelectionChange(seletedTbl)
-    selectedTblCurrent.value.forEach(item => {
-      const row = filteredData.value.find(row => row === item)
-      if (row) {
+
+const fetchTblList = async () => {
+  try {
+    isLoading.value = true
+    const response = await getdataTbl(
+      useInFo.get('dbType'),
+      useInFo.get('nodeId'),
+      currentTitleName.value,
+      pageSize.value,
+      currentPage.value
+    ) as KeyValue
+    console.log(response)
+    if (response.code === 200) {
+      tableData.value = Object.values(response.data.records)
+      totalNum.value = response.data.total
+      await nextTick()
+      setTimeout(async () => {
+        await restoreSelectionState()
+      }, 100)
+    }
+  } catch (error) {
+    console.error('Error fetching data:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+
+const restoreSelectionState = async () => {
+  await nextTick()
+
+  if (!tableRef.value) {
+    setTimeout(() => {
+      if (tableRef.value) {
+        restoreSelectionState()
+      }
+    }, 100)
+    return
+  }
+  try {
+    await nextTick()
+
+    filteredData.value.forEach(row => {
+      tableRef.value.toggleRowSelection(row, false)
+    })
+
+    await nextTick()
+
+    filteredData.value.forEach(row => {
+      if (selectedTables.value.includes(row)) {
         tableRef.value.toggleRowSelection(row, true)
       }
     })
-    isInitializing.value = false
+  } catch (error) {
+    console.error('恢复选择状态时出错:', error)
   }
-  useInFo.append('url', url)
-  useInFo.append('username', username)
-  useInFo.append('password', password)
 }
 
-async function fetchTblList() {
-  await getdataTbl(useInFo, tempdbname.value, pageSize.value, currentPage.value)
-    .then(response => {
-      if (Number(response.code) === 200) {
-        tableData.value = Object.keys(response.rows).map(key => response.rows[key])
-        totalNum.value = response.total
-      }
-    })
-    .catch(error => {
-      console.error('Error fetching data:', error)
-    })
+
+const getRowKey = (row: string): string => {
+  return row
 }
+
 const isInitializing = ref(true)
-const handleSelectionChange = (selection) => {
-  if (isInitializing.value) return
-  selection.forEach(item => {
-    const bool = selectedTblCurrent.value.some(key => key === item)
-    if (!bool) {
-      selectedTblCurrent.value.push(item)
-    }
-  })
-  let tempselectedTblCurrent = {...selectedTblCurrent.value}
-  Object.keys(tempselectedTblCurrent).forEach(item => {
-    const boolCurr = filteredData.value.some(key => key === tempselectedTblCurrent[item])
-    const boolSele = selection.some(key => key === tempselectedTblCurrent[item])
-    if (boolCurr && boolSele === false) {
-      selectedTblCurrent.value = selectedTblCurrent.value.filter(key => key !== tempselectedTblCurrent[item])
-    }
-  })
-  selectedTbllength.value = selectedTblCurrent.value.length
+const handleSelectionChange = (selection: string[]) => {
+  if (isInitializing.value || isLoading.value) {
+    return
+  }
+
+  const currentPageTables = new Set(filteredData.value)
+
+  const otherPagesSelected = selectedTables.value.filter(table => !currentPageTables.has(table))
+  selectedTables.value = [...otherPagesSelected, ...selection]
 }
 
 const filteredData = computed(() => {
   if (searchTblNam.value.length > 0) {
-    return Object.values(tableData.value).filter(item =>
+    return tableData.value.filter(item =>
       item.includes(searchTblNam.value)
     )
   } else {
-    return Object.values(tableData.value)
+    return tableData.value
   }
 })
 
-watch(() => filteredData.value, async (newValue) => {
-  if (isInitializing.value) return
-  if (newValue) {
-    await nextTick()
-    newValue.forEach(key => {
-      selecTbl.value.forEach(item => {
-        if (item === key) {
-          tableRef.value.toggleRowSelection(key, true)
-        }
-      })
-    })
-
+const initializeSelection = async () => {
+  const { dbName, seletedTbl, nodeId, dbType } = props.seleDBMsg
+  currentTitleName.value = dbName
+  if (seletedTbl && Array.isArray(seletedTbl) && seletedTbl.length > 0) {
+    selectedTables.value = seletedTbl.filter(item => typeof item === 'string')
+  } else {
+    selectedTables.value = []
   }
-})
 
-const init = () => {
-  isInitializing.value = true
-  selectedTblCurrent.value = []
-  tableData.value = []
-  selectedTbllength.value = 0
-  currentPage.value = 1
-  pageSize.value = 50
-  getTblSelec()
-  fetchTblList()
-  winConVisible.value = true
+  useInFo.set('nodeId', nodeId)
+  useInFo.set('dbType', dbType)
 }
 
-init()
+const resetAllState = () => {
+  selectedTables.value = []
+  tableData.value = []
+  currentPage.value = 1
+  pageSize.value = 50
+  totalNum.value = 0
+  searchTblNam.value = ''
+  isLoading.value = false
+}
 
-watch(() => props.seleDBMsg, (newValue) => {
-  if (newValue) {
-    init()
+const init = async () => {
+  isInitializing.value = true
+  resetAllState()
+  await initializeSelection()
+  winConVisible.value = true
+  await nextTick()
+  await fetchTblList()
+  setTimeout(() => {
+    isInitializing.value = false
+  }, 300)
+}
+
+onUnmounted(() => {
+  resetAllState()
+})
+
+watch(filteredData, () => {
+  if (!isInitializing.value && !isLoading.value) {
+    restoreSelectionState()
   }
+})
+
+watch(winConVisible, async (newVal) => {
+  if (newVal && tableData.value.length > 0) {
+    await nextTick()
+    setTimeout(() => {
+      restoreSelectionState()
+    }, 200)
+  }
+})
+
+defineExpose({
+  init
 })
 
 </script>
 
 <style scoped>
-
 .header p {
   font-size: x-large;
 }
@@ -232,13 +291,12 @@ watch(() => props.seleDBMsg, (newValue) => {
 }
 
 .select-table {
-  :deep(el-table__row) {
+  :deep(.el-table__row) {
     height: 40px
   }
 
-  :deep(el-table-column) {
+  :deep(.el-table-column) {
     padding: 9px 5px 9px 16px;
   }
 }
-
 </style>

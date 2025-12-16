@@ -1,8 +1,8 @@
 <template>
   <div class="error-alert">
-    <el-tabs type="card" style="padding-top: 16px;" @tab-change="alarmPhaseChange" v-model="phaseTab">
+    <el-tabs type="card" style="padding-top: 16px;" @tab-change="alarmPhaseChange" v-model="phaseTab" v-if="shouldShowDbColumn">
       <el-tab-pane :label="$t('components.SubTaskDetail.fullMigration')" :name="item.key" v-for="item in phaseList"
-        :key="item.key">
+                   :key="item.key">
         <template #label>
           <div v-if="phaseNums[item.key] && phaseNums[item.key] > 0">
             {{ item.label }}<el-tag type="round" size="small">{{ phaseNums[item.key] }}</el-tag>
@@ -41,13 +41,13 @@
         </el-table-column>
       </el-table>
       <el-pagination v-model:current-page="pageNum" v-model:pageSize="pageSize" :page-sizes="pageSizes"
-        :total="phaseTotal" :teleported="false" :layout="paginationLayout"
-        @change="fetchPhaseAlarmList"></el-pagination>
+                     :total="phaseTotal" :teleported="false" :layout="paginationLayout"
+                     @change="fetchPhaseAlarmList"></el-pagination>
     </div>
 
   </div>
   <error-detail v-model:error-visible="errorVisible" :detail-info="detailInfo"
-    :area-loading="areaLoading"></error-detail>
+                :area-loading="areaLoading"></error-detail>
 </template>
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount, computed, inject } from 'vue'
@@ -57,6 +57,7 @@ import EmptyPage from '@/components/emptyPage'
 import { useI18n } from 'vue-i18n'
 import { MIGRATION_MODE, SUB_TASK_STATUS } from '@/utils/constants'
 import { getAlarmDetail, getPhaseAlarmList, getTotalAlarmNum } from '@/api/detail'
+import { JDBCType } from "@/types/jdbc";
 
 const { t } = useI18n()
 const subTaskId = inject('subTaskId')
@@ -71,7 +72,8 @@ const props = defineProps({
       '4': 0,
       total: 0,
     }
-  }
+  },
+  sourceDbType: String
 })
 watch(() => autoRefresh.value, () => {
   //   The logic for automatic refreshing is determined here.
@@ -91,10 +93,10 @@ const phaseList = computed(() => {
       key: '1',
       label: t('components.SubTaskDetail.fullMigration')
     },
-    {
-      key: '2',
-      label: t('components.SubTaskDetail.fullCheck'),
-    },]
+      {
+        key: '2',
+        label: t('components.SubTaskDetail.fullCheck'),
+      },]
   } else {
     return [
       {
@@ -209,6 +211,11 @@ const clearTimeInterval = () => {
 
 onBeforeUnmount(() => {
   clearTimeInterval();
+})
+
+const shouldShowDbColumn = computed(() => {
+  const types = [JDBCType.MySQL, JDBCType.PostgreSQL].map(String)
+  return types.includes(props.sourceDbType || '')
 })
 
 </script>

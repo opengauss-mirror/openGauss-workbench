@@ -39,25 +39,25 @@ const termTerminal = ref();
 const fitAddon = ref();
 
 watch(visible, (v) => {
-  emits('update:open', v);
-});
+  emits ( 'update:open', v );
+} );
 
-watch(
+watch (
   () => props.open,
   (v) => {
-    if (v) {
-      handleConnect();
+    if ( v ) {
+      handleConnect ();
     }
     visible.value = v;
   }
 );
 
 const handleConnect = async () => {
-  const term = getTerminalInstance();
-  const socketKey = new Date().getTime();
-  const terminalSocket = new Wsocket({ url: `SSH/jdbc_terminal_${socketKey}`, type: 'websocket' });
+  const term = getTerminalInstance ();
+  const socketKey = new Date ().getTime ();
+  const terminalSocket = new Wsocket ( { url: `SSH/jdbc_terminal_${socketKey}`, type: 'websocket' } );
   terminalWs.value = terminalSocket;
-  terminalSocket.onopen(() => {
+  terminalSocket.onopen ( () => {
     const param = {
       businessId: `jdbc_terminal_${socketKey}`,
       ip: props.host.runHost,
@@ -65,41 +65,41 @@ const handleConnect = async () => {
       sshPort: props.host.runPort,
       sshUsername: props.host.runUser
     };
-    initTerm(term, terminalSocket.ws);
-    openSSH(props.host?.runHostId, param)
-      .then((res) => {
-        if (res.code !== 200) {
-          term.writeln(res.msg);
-          terminalSocket.destroy();
+    initTerm ( term, terminalSocket.ws );
+    openSSH ( props.host?.runHostId, param )
+      .then ( (res) => {
+        if ( res.code !== 200 ) {
+          term.writeln ( res.msg );
+          terminalSocket.destroy ();
         }
-      })
-      .catch((error) => {
-        term.writeln(error.toString());
-        terminalSocket.destroy();
-      });
-  });
-  terminalSocket.onclose(() => {
-    console.log('jdbc terminal close');
-  });
+      } )
+      .catch ( (error) => {
+        term.writeln ( error.toString () );
+        terminalSocket.destroy ();
+      } );
+  } );
+  terminalSocket.onclose ( () => {
+    console.log ( 'jdbc terminal close' );
+  } );
 };
 
 const initTerm = (term, ws) => {
-  if (ws) {
-    const attachAddon = new AttachAddon(ws);
-    fitAddon.value = new FitAddon();
-    term.loadAddon(attachAddon);
-    term.loadAddon(fitAddon.value);
-    term.open(document.getElementById('xterm'));
-    fitAddon.value.fit();
-    term.clear();
-    term.focus();
-    term.write('\r\n\x1b[33m$\x1b[0m ');
+  if ( ws ) {
+    const attachAddon = new AttachAddon ( ws );
+    fitAddon.value = new FitAddon ();
+    term.loadAddon ( attachAddon );
+    term.loadAddon ( fitAddon.value );
+    term.open ( document.getElementById ( 'xterm' ) );
+    fitAddon.value.fit ();
+    term.clear ();
+    term.focus ();
+    term.write ( '\r\n\x1b[33m$\x1b[0m ' );
     termTerminal.value = term;
   }
 };
 
 const getTerminalInstance = () =>
-  new Terminal({
+  new Terminal ( {
     fontSize: 14,
     rows: 73,
     cols: 200,
@@ -110,16 +110,16 @@ const getTerminalInstance = () =>
     theme: {
       background: 'black'
     },
-  });
+  } );
 
-onBeforeUnmount(() => {
-  terminalWs.value?.destroy();
-  termTerminal.value && termTerminal.value.dispose();
-});
+onBeforeUnmount ( () => {
+  terminalWs.value?.destroy ();
+  termTerminal.value && termTerminal.value.dispose ();
+} );
 
-onMounted(() => {
+onMounted ( () => {
   visible.value = props.open;
-});
+} );
 </script>
 
 <style lang="less" scoped>

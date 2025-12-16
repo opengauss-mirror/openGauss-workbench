@@ -29,11 +29,7 @@ export function migrationUpdate (payload) {
 }
 
 export function defaultParams (dbType) {
-  if(dbType === 'MYSQL') {
-    return axios.get('/plugins/data-migration/param/default')
-  } else {
-    return axios.get('/plugins/data-migration/param/pgsql')
-  }
+  return axios.get(`/plugins/data-migration/param?dbType=${dbType}`)
 }
 
 export function jdbcNodePing (data) {
@@ -112,3 +108,36 @@ export function hasRootPermission (hostUserId) {
   return axios.get(`/hostUser/hasRootPermission/${hostUserId}`)
 }
 
+
+export function sourceClustersType(dbType) {
+  return axios.get(`/plugins/data-migration/resource/source/clusters?dbType=${dbType}`)
+}
+
+export function sourceClusterDbsType(clusterId, dbType) {
+  return axios.get(`/plugins/data-migration/resource/source/databases?dbType=${dbType}&nodeId=${clusterId}`)
+}
+
+export function sourceClusterSchema(dbType, nodeId, dbName) {
+  return axios.get(`/plugins/data-migration/resource/source/schemas?dbType=${dbType}&nodeId=${nodeId}&dbName=${dbName}`)
+}
+
+
+export function clusterVersioNnum(clusterId, dbType) {
+  return axios.get(`/jdbcDbCluster/version/${clusterId}`, {
+    params: {
+      dbType: dbType
+    }
+  })
+}
+
+export function targetClustersType() {
+  return axios.get(`/plugins/data-migration/resource/target/clusters`)
+}
+
+export function targetClusterDbs(sourceTable, nodeId) {
+  return axios.get(`/plugins/data-migration/resource/target/databases?sourceTable=${sourceTable}&nodeId=${nodeId}`)
+}
+
+export function checkTargetclusterMaster(sourceTable, clusterId) {
+  return axios.get(`/plugins/data-migration/resource/target/detail?sourceTable=${sourceTable}&clusterId=${clusterId}`)
+}
