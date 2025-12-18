@@ -772,7 +772,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         try {
             if (DbTypeEnum.MILVUS.equals(dbType)) {
                 milvusClientV2 = MilvusUtils.createMilvusClientV2(ip, port, dbName, username, password);
-                List<String> collections = MilvusUtils.listCollections(milvusClientV2);
+                List<String> collections = MilvusUtils.listCollections(milvusClientV2).stream().sorted().toList();
                 return PageHelper.getPageFromList(collections, page);
             }
 
@@ -780,6 +780,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 restClient = ElasticsearchUtils.createRestClient(ip, port, username, password);
                 List<String> indexes = ElasticsearchUtils.listIndexes(restClient);
                 indexes.removeIf(index -> index.startsWith(".kibana"));
+                indexes = indexes.stream().sorted().toList();
                 return PageHelper.getPageFromList(indexes, page);
             }
 
