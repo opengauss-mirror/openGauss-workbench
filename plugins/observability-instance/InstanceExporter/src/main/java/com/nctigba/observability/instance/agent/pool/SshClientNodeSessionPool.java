@@ -25,8 +25,9 @@
 package com.nctigba.observability.instance.agent.pool;
 
 import com.nctigba.observability.instance.agent.config.model.TargetConfig;
-import com.nctigba.observability.instance.agent.util.RsaUtils;
+
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.opengauss.tool.cipher.RsaUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -66,9 +67,10 @@ public class SshClientNodeSessionPool {
                     sshClientConfig.setObjectPoolConfig(objectPoolConfig);
 
                     sshClientConfig.setMachineIP(targetConfig.getMachineIP());
-                    sshClientConfig.setMachinePort(Integer.valueOf(targetConfig.getMachinePort()));
+                    sshClientConfig.setMachinePort(Integer.parseInt(targetConfig.getMachinePort()));
                     sshClientConfig.setMachineUser(targetConfig.getMachineUser());
-                    sshClientConfig.setMachinePassword(RsaUtils.decrypt(targetConfig.getMachinePassword()));
+                    String machinePassword = targetConfig.getMachinePassword();
+                    sshClientConfig.setMachinePassword(RsaUtils.getInstance().decrypt(machinePassword));
                     poolMap.put(nodeId, new SshClientSessionPool(sshClientConfig));
                 }
             }

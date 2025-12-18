@@ -71,6 +71,14 @@
 			<groupId>com.gitee.starblues</groupId>
 			<artifactId>spring-brick-bootstrap</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.opengauss.tool</groupId>
+            <artifactId>visualtool-log4j2-desensitize</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>

@@ -130,6 +130,10 @@
             <systemPath>${project.basedir}/../../lib/intarkdb-jdbc-1.0.0.1.jar</systemPath>
         </dependency>
         <dependency>
+            <groupId>org.opengauss.tool</groupId>
+            <artifactId>visualtool-common-cipher</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.github.mwiede</groupId>
             <artifactId>jsch</artifactId>
         </dependency>

@@ -68,6 +68,7 @@ import org.opengauss.admin.common.utils.file.FileUploadUtils;
 import org.opengauss.admin.system.domain.SysPlugin;
 import org.opengauss.admin.system.domain.SysPluginLogo;
 import org.opengauss.admin.system.plugin.beans.PluginExtensionInfoDto;
+import org.opengauss.admin.system.plugin.extract.PluginExtensionHolder;
 import org.opengauss.admin.system.plugin.extract.PluginExtensionInfoExtract;
 import org.opengauss.admin.system.service.ISysPluginConfigDataService;
 import org.opengauss.admin.system.service.ISysPluginConfigService;
@@ -159,7 +160,8 @@ public class SystemPluginController extends BaseController {
             dto.setPluginLicenseType(PluginLicenseType.FREE);
             dto.setPluginName(d.getPluginId());
             try {
-                ExtractCoordinate coordinate = ExtractCoordinate.build(d.getPluginId());
+                String pluginExtensionBus = PluginExtensionHolder.getPluginExtensionBus(d.getPluginId());
+                ExtractCoordinate coordinate = ExtractCoordinate.build(pluginExtensionBus);
                 PluginExtensionInfoExtract noticeExtract = extractFactory.getExtractByCoordinate(coordinate);
                 PluginExtensionInfoDto extensionInfo = noticeExtract.getPluginExtensionInfo();
                 BeanUtils.copyProperties(extensionInfo, dto);

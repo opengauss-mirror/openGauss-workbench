@@ -131,7 +131,9 @@ public class OpsPackagePathDictService extends ServiceImpl<OpsPackagePathDictMap
 
     @Override
     public boolean checkCurrentEnvironmentIsOnline() {
-        AjaxResult result = HttpUtils.checkUrl("https://opengauss.org/zh/");
+        String url = "https://opengauss.obs.cn-south-1.myhuaweicloud.com/7.0.0-RC2/tools/Datakit/"
+                + "Datakit-All-7.0.0-RC2.tar.gz";
+        AjaxResult result = HttpUtils.checkUrl(url);
         return result.isOk();
     }
 }

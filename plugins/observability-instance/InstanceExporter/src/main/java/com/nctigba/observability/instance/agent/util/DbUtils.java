@@ -33,6 +33,7 @@ import com.nctigba.observability.instance.agent.exception.CollectException;
 import com.nctigba.observability.instance.agent.service.TargetService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.opengauss.tool.cipher.RsaUtils;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -179,7 +180,7 @@ public class DbUtils {
         String url = StrFormatter.format(dbTypeEnum.getUrlPattern(),
             targetConfig.getDbIp(), targetConfig.getDbPort());
         return DriverManager.getConnection(url, targetConfig.getDbUserName(),
-            RsaUtils.decrypt(targetConfig.getDbUserPassword()));
+            RsaUtils.getInstance().decrypt(targetConfig.getDbUserPassword()));
     }
 
     public void createDataSource(String nodeId) {
@@ -202,7 +203,7 @@ public class DbUtils {
             dataSource.setUrl(StrFormatter.format(dbTypeEnum.getUrlPattern(), targetConfig.getDbIp(),
                 targetConfig.getDbPort()));
             dataSource.setUsername(targetConfig.getDbUserName());
-            dataSource.setPassword(RsaUtils.decrypt(targetConfig.getDbUserPassword()));
+            dataSource.setPassword(RsaUtils.getInstance().decrypt(targetConfig.getDbUserPassword()));
             dataSource.setAsyncInit(true);
             dataSourceMap.put(nodeId, dataSource);
             dataSource.init();

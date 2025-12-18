@@ -38,6 +38,7 @@ import org.opengauss.admin.common.utils.file.FileUploadUtils;
 import org.opengauss.admin.framework.web.service.TokenService;
 import org.opengauss.admin.system.service.ISysUserService;
 import org.opengauss.tool.cipher.RsaUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -71,7 +72,10 @@ public class SysProfileController extends BaseController {
     public AjaxResult profile() {
         LoginUser loginUser = tokenService.getLoginUser(ServletUtils.getRequest());
         SysUser user = loginUser.getUser();
-        AjaxResult ajax = AjaxResult.success(user);
+        SysUser copy = new SysUser();
+        BeanUtils.copyProperties(user, copy);
+        copy.setPassword("");
+        AjaxResult ajax = AjaxResult.success(copy);
         ajax.put("roleGroup", userService.selectUserRoleGroup(loginUser.getUsername()));
         return ajax;
     }

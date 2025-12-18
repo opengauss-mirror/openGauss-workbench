@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.opengauss.jsch.pool.ProgressCallback;
 import org.opengauss.jsch.pool.config.SessionConfig;
+import org.opengauss.jsch.pool.enums.ChannelType;
 
 import java.text.DecimalFormat;
 
@@ -97,7 +98,7 @@ public class JschUtils {
     /**
      * create basic session config
      *
-     * @param host host
+     * @param host     host
      * @param username username
      * @param password password
      * @return session config
@@ -107,10 +108,23 @@ public class JschUtils {
     }
 
     /**
+     * create basic session config
+     *
+     * @param host     host
+     * @param port     port
+     * @param username username
+     * @param password password
+     * @return session config
+     */
+    public static SessionConfig createExecConfig(String host, Integer port, String username, String password) {
+        return new SessionConfig(host, port, username, password).withChannelType(ChannelType.EXEC).withTimeout(15000);
+    }
+
+    /**
      * create key based session config
      *
-     * @param host host
-     * @param username username
+     * @param host       host
+     * @param username   username
      * @param privateKey private key
      * @return session config
      */

@@ -315,6 +315,11 @@
           </dependency>
           <dependency>
             <groupId>org.opengauss.tool</groupId>
+            <artifactId>visualtool-common-cipher</artifactId>
+            <version>${admin.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.opengauss.tool</groupId>
             <artifactId>jsch-session-pool</artifactId>
             <version>${admin.version}</version>
           </dependency>

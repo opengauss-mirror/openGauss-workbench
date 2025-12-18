@@ -86,7 +86,6 @@ public class HttpUtils {
         InputStreamReader isr = null;
         try {
             String urlNameString = url + "?" + param;
-            log.info("sendGet - {}", urlNameString);
             URL realUrl = new URL(urlNameString);
             URLConnection connection = realUrl.openConnection();
             connection.setRequestProperty("accept", "*/*");
@@ -100,7 +99,6 @@ public class HttpUtils {
             while ((line = in.readLine()) != null) {
                 result.append(line);
             }
-            log.info("recv - {}", result);
         } catch (ConnectException e) {
             log.error("sendGet ConnectException, url=" + url + ",param=" + param, e);
         } catch (SocketTimeoutException e) {
@@ -165,7 +163,6 @@ public class HttpUtils {
             }
             response.setBody(result.toString());
             response.setHeaders(conn.getHeaderFields());
-            log.info("recv - {}", result);
         } catch (ConnectException e) {
             log.error("sendPost ConnectException, url=" + url + ",param=" + param, e);
         } catch (SocketTimeoutException e) {
@@ -222,7 +219,6 @@ public class HttpUtils {
                     result.append(new String(ret.getBytes("ISO-8859-1"), "utf-8"));
                 }
             }
-            log.info("recv - {}", result);
             conn.disconnect();
             br.close();
         } catch (ConnectException e) {

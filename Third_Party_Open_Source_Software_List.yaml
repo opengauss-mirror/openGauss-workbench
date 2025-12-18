@@ -1088,11 +1088,6 @@ org.sonatype.aether:aether-impl:
   artifactId: aether-impl
   version: '1.7'
   url: https://mvnrepository.com/artifact/org.sonatype.aether/aether-impl/1.7
-logback-core:
-  groupId: ch.qos.logback
-  artifactId: logback-core
-  version: 1.2.6
-  url: https://mvnrepository.com/artifact/ch.qos.logback/logback-core/1.2.6
 spring-brick:
   groupId: com.gitee.starblues
   artifactId: spring-brick

@@ -112,7 +112,6 @@ io.jsonwebtoken:jjwt:jar:0.9.1:provided
 io.springfox:springfox-bean-validators:jar:3.0.0:compile
 org.junit.jupiter:junit-jupiter-api:jar:5.7.2:test
 org.springframework.boot:spring-boot-starter-logging:jar:2.5.6:compile
-ch.qos.logback:logback-core:jar:1.2.6:compile
 eu.bitwalker:UserAgentUtils:jar:1.21:provided
 org.yaml:snakeyaml:jar:1.28:compile
 com.gitee.starblues:spring-brick-loader:jar:3.1.0-eb-1:provided

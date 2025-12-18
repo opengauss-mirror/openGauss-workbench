@@ -26,7 +26,7 @@ package org.opengauss.admin.framework.web.service;
 
 import org.opengauss.admin.common.core.domain.model.LoginUser;
 import org.opengauss.admin.common.exception.ServiceException;
-import org.opengauss.admin.common.exception.user.UserPasswordNotMatchException;
+import org.opengauss.admin.common.exception.user.UserOrPasswordNotExistException;
 import org.opengauss.tool.cipher.RsaUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -56,18 +56,18 @@ public class SysLoginService {
      * @param password password
      * @param code code
      * @return result
-     * @throws UserPasswordNotMatchException UserPasswordNotMatchException
+     * @throws UserOrPasswordNotExistException UserOrPasswordNotExistException
      * @throws ServiceException ServiceException
      */
     public String login(String username, String password, String code)
-        throws UserPasswordNotMatchException, ServiceException {
+        throws UserOrPasswordNotExistException, ServiceException {
         Authentication authentication = null;
         try {
             authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, RsaUtils.getInstance().decrypt(password)));
         } catch (Exception e) {
             if (e instanceof BadCredentialsException) {
-                throw new UserPasswordNotMatchException();
+                throw new UserOrPasswordNotExistException();
             } else {
                 throw new ServiceException(e.getMessage());
             }

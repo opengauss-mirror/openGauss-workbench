@@ -10,7 +10,6 @@
       ></svg-icon>
       <div class="label-color mb-lg">{{ $t('enterprise.ExeInstall.5mpm9j359hw0') }}</div>
       <div class="install-connect-c flex-col mb-xlg">
-        <div class="ft-b mb">{{ $t('enterprise.ExeInstall.5mpm9j35a4o0') }}</div>
         <div class="flex-row mb-s">
           <div class="label-w">{{ $t('enterprise.ClusterConfig.5mpm3ku3hcg0') }}</div>
           <div class="label-value">{{ installStore.getInstallConfig.clusterId }}</div>
