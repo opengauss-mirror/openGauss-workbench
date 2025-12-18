@@ -994,7 +994,6 @@ const saveAllTask = async () => {
         form?.validate().then(() => true).catch(() => false)
       )
     )
-    console.log('saveAllTask', results)
     if (results.some(valid => !valid)) {
       showMessage('error', t('step1.index.validErrorMsg', {num: curTableTabs.value + 1}))
       return false
@@ -1052,17 +1051,12 @@ const dataTblWin = async () => {
   const currentTask = taskBasicInfo.value.subTaskData[curTableTabs.value]
   let sourceDbType = currentTask.sourceDbType
   const clusterNodeId = sourceClusterInfo.value[currentTask.sourceIpPort]?.clusterNodeId
-  console.log('111')
-  if (sourceDbType === JDBCType.Elasticsearch) {
-    seleDBMsg.value.dbName = currentTask.sourceIpPort
-  } else  {
-    seleDBMsg.value.dbName = currentTask.sourceDBName
-  }
-  seleDBMsg.value.seletedTbl.length = 0
+  seleDBMsg.value.dbName = sourceDbType === JDBCType.Elasticsearch
+    ? currentTask.sourceIpPort
+    : currentTask.sourceDBName
+  seleDBMsg.value.seletedTbl = [...(currentTask.sourceTables || [])]
   seleDBMsg.value.dbType = currentTask.sourceDbType
   seleDBMsg.value.nodeId = clusterNodeId
-  seleDBMsg.value.seletedTbl = currentTask.sourceTables
-  console.log('1167', seleDBMsg.value)
   dataTblModalRef.value?.init()
 }
 
@@ -1079,17 +1073,17 @@ const dataTblWinClose = () => {
 
 const handleTableSeleted = (selectedTblCurrent: any) => {
   let sourceDbType = taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDbType
+  const newTables = Array.isArray(selectedTblCurrent) ? [...selectedTblCurrent] : []
   if (sourceDbType === JDBCType.MySQL) {
-    taskBasicInfo.value.subTaskData[curTableTabs.value].sourceTables = selectedTblCurrent
-    if (selectedTblCurrent.length === 0) {
+    if (newTables.length === 0) {
       taskBasicInfo.value.subTaskData[curTableTabs.value].isSelectAlltables = true
       taskBasicInfo.value.subTaskData[curTableTabs.value].sourceTables = []
       showMessage('info', t('step1.index.selectTblContent'))
     } else {
-      taskBasicInfo.value.subTaskData[curTableTabs.value].sourceTables = selectedTblCurrent
+      taskBasicInfo.value.subTaskData[curTableTabs.value].sourceTables = newTables
     }
   } else {
-    taskBasicInfo.value.subTaskData[curTableTabs.value].sourceTables = selectedTblCurrent
+    taskBasicInfo.value.subTaskData[curTableTabs.value].sourceTables = newTables
   }
 }
 
