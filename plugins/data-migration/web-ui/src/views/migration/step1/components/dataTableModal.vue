@@ -97,9 +97,10 @@ const pageSizeOptions = ref([50, 100, 200, 500])
 
 const isLoading = ref(false)
 
-const pageSizeChange = (e: number) => {
+const pageSizeChange = async (e: number) => {
   pageSize.value = e
-  fetchTblList()
+  currentPage.value = 1
+  await fetchTblList()
 }
 const handlePageChange = (pageNum: number) => {
   currentPage.value = pageNum
@@ -142,14 +143,13 @@ const fetchTblList = async () => {
       pageSize.value,
       currentPage.value
     ) as KeyValue
-    console.log(response)
     if (response.code === 200) {
       tableData.value = Object.values(response.data.records)
       totalNum.value = response.data.total
       await nextTick()
-      setTimeout(async () => {
+      if (tableRef.value) {
         await restoreSelectionState()
-      }, 100)
+      }
     }
   } catch (error) {
     console.error('Error fetching data:', error)
@@ -158,19 +158,12 @@ const fetchTblList = async () => {
   }
 }
 
-
 const restoreSelectionState = async () => {
   await nextTick()
-
-  if (!tableRef.value) {
-    setTimeout(() => {
-      if (tableRef.value) {
-        restoreSelectionState()
-      }
-    }, 100)
-    return
-  }
+  if (!tableRef.value) return
+  const currentSelected = [...selectedTables.value]
   try {
+    tableRef.value.clearSelection()
     await nextTick()
 
     filteredData.value.forEach(row => {
@@ -188,7 +181,6 @@ const restoreSelectionState = async () => {
     console.error('恢复选择状态时出错:', error)
   }
 }
-
 
 const getRowKey = (row: string): string => {
   return row
