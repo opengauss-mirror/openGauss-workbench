@@ -1178,7 +1178,6 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         resultMap.put("mysql.database.host", task.getSourceDbHost());
         resultMap.put("mysql.database.port", task.getSourceDbPort());
         resultMap.put("mysql.database.name", task.getSourceDb());
-        resultMap.put("mysql.database.table", task.getSourceTables());
         resultMap.put("opengauss.user.name", task.getTargetDbUser());
         resultMap.put("opengauss.user.password", encryptionUtils.decrypt(task.getTargetDbPass()));
         resultMap.put("opengauss.database.host", task.getTargetDbHost());
@@ -1188,6 +1187,13 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         resultMap.put("migration_mode", task.getMigrationModelId() + "");
         resultMap.put("is_adjustKernel_param", task.getIsAdjustKernelParam() + "");
         resultMap.put("enable.stdin.password", "true");
+
+        String tables = task.getSourceTables();
+        String database = task.getSourceDb();
+        String fullTableNames = Arrays.stream(tables.split(","))
+                .map(table -> database + "." + table)
+                .collect(Collectors.joining(","));
+        resultMap.put("mysql.database.table", fullTableNames);
 
         if (!taskParamMap.keySet().isEmpty()) {
             resultMap.putAll(taskParamMap);
