@@ -27,6 +27,7 @@ import cn.hutool.core.util.StrUtil;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,10 @@ import org.opengauss.admin.plugin.enums.ops.HostEnvStatusEnum;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
 import org.opengauss.admin.plugin.utils.OpsAssert;
 import org.opengauss.admin.system.plugin.facade.HostMonitorFacade;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.opengauss.jsch.pool.ExecOperations;
+import org.opengauss.jsch.pool.config.SessionConfig;
+import org.opengauss.jsch.pool.utils.JschUtils;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
@@ -56,7 +61,6 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
-import java.util.stream.Collectors;
 
 /**
  * OpsClusterEnvService
@@ -81,12 +85,15 @@ public class OpsClusterEnvService {
     @Resource
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private HostMonitorFacade hostMonitorFacade;
+    @Resource
+    @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
+    private EncryptionUtils encryptionUtils;
 
     /**
      * host env check
      *
-     * @param hostId hostId
-     * @param expectedOs expectedOs
+     * @param hostId       hostId
+     * @param expectedOs   expectedOs
      * @param rootPassword rootPassword ignored
      * @return HostEnv
      */
@@ -104,7 +111,7 @@ public class OpsClusterEnvService {
     public HostEnv env(String hostId) {
         OpsHostEntity hostEntity = opsHostRemoteService.getHost(hostId);
         OpenGaussSupportOSEnum expectedOs = OpenGaussSupportOSEnum.of(hostEntity.getOs(), hostEntity.getOsVersion(),
-            hostEntity.getCpuArch());
+                hostEntity.getCpuArch());
         return env(hostEntity, expectedOs);
     }
 
@@ -119,9 +126,9 @@ public class OpsClusterEnvService {
         threadPoolTaskExecutor.submit(() -> {
             OpsHostUserEntity userEntity = opsHostRemoteService.getAnyHostUser(hostEntity.getHostId());
             if (Objects.nonNull(userEntity)) {
-                Session session = opsHostRemoteService.createHostUserSession(hostEntity, userEntity);
-                hostEnv.setSoftwareEnv(softwareEnvDetect(session, expectedOs));
-                opsHostRemoteService.closeSession(session);
+                SessionConfig execConfig = JschUtils.createExecConfig(hostEntity.getPublicIp(), hostEntity.getPort(),
+                        userEntity.getUsername(), encryptionUtils.decrypt(userEntity.getPassword()));
+                hostEnv.setSoftwareEnv(softwareEnvDetect(execConfig, expectedOs));
                 countDownLatch.countDown();
             } else {
                 countDownLatch.countDown();
@@ -136,33 +143,34 @@ public class OpsClusterEnvService {
         return hostEnv;
     }
 
-    private SoftwareEnv softwareEnvDetect(Session session, OpenGaussSupportOSEnum expectedOs) {
+    private SoftwareEnv softwareEnvDetect(SessionConfig execConfig, OpenGaussSupportOSEnum expectedOs) {
         SoftwareEnv softwareEnv = new SoftwareEnv();
         List<EnvProperty> envProperties = new CopyOnWriteArrayList<>();
         softwareEnv.setEnvProperties(envProperties);
-        envProperties.add(dependencyPropertyDetect(session, expectedOs.getCpuArch()));
-        envProperties.add(firewallPropertyDetect(session));
-        envProperties.add(installUserPropertyDetect(session));
-        envProperties.add(otherPropertyDetect(session, expectedOs));
+        envProperties.add(dependencyPropertyDetect(execConfig, expectedOs.getCpuArch()));
+        envProperties.add(firewallPropertyDetect(execConfig));
+        envProperties.add(installUserPropertyDetect(execConfig));
+        envProperties.add(otherPropertyDetect(execConfig, expectedOs));
         envProperties.sort(Comparator.comparingInt(EnvProperty::getSortNum));
         return softwareEnv;
     }
 
-    private EnvProperty otherPropertyDetect(Session session, OpenGaussSupportOSEnum expectedOs) {
+    private EnvProperty otherPropertyDetect(SessionConfig execConfig, OpenGaussSupportOSEnum expectedOs) {
         EnvProperty otherProperty;
         String cpuArch = expectedOs.getCpuArch();
         if (StrUtil.equals(expectedOs.getOsId(), OpenGaussSupportOSEnum.CENTOS_X86_64.getOsId())) {
-            otherProperty = getEnvProperty(session, cpuArch, SshCommandConstants.BASE_DEPENDENCY, BASE_DEPENDENCY_LIST);
+            otherProperty = getEnvProperty(execConfig, cpuArch, SshCommandConstants.BASE_DEPENDENCY,
+                    BASE_DEPENDENCY_LIST);
         } else {
-            otherProperty = getEnvProperty(session, cpuArch, SshCommandConstants.OPENEULER_BASE_DEPENDENCY,
-                OPENEULER_BASE_DEPENDENCY_LIST);
+            otherProperty = getEnvProperty(execConfig, cpuArch, SshCommandConstants.OPENEULER_BASE_DEPENDENCY,
+                    OPENEULER_BASE_DEPENDENCY_LIST);
         }
         otherProperty.setName("other");
         otherProperty.setSortNum(4);
         return otherProperty;
     }
 
-    private EnvProperty installUserPropertyDetect(Session session) {
+    private EnvProperty installUserPropertyDetect(SessionConfig execConfig) {
         EnvProperty installUserProperty = new EnvProperty();
         installUserProperty.setName("install user");
         installUserProperty.setSortNum(3);
@@ -170,13 +178,14 @@ public class OpsClusterEnvService {
         return installUserProperty;
     }
 
-    private EnvProperty firewallPropertyDetect(Session session) {
+    private EnvProperty firewallPropertyDetect(SessionConfig execConfig) {
         EnvProperty firewallProperty = new EnvProperty();
         firewallProperty.setName("firewall");
         firewallProperty.setSortNum(2);
         try {
-            String firewallStatus = opsHostRemoteService.executeCommand(SshCommandConstants.FIREWALL, session,
-                "firewall");
+            ExecOperations.ExecResult execResult = ExecOperations.executeCommand(execConfig,
+                    SshCommandConstants.FIREWALL);
+            String firewallStatus = execResult.getResult();
             if ("inactive".equals(firewallStatus)) {
                 firewallProperty.setStatus(HostEnvStatusEnum.NORMAL);
             } else {
@@ -191,23 +200,39 @@ public class OpsClusterEnvService {
         return firewallProperty;
     }
 
-    private EnvProperty dependencyPropertyDetect(Session session, String cpuArch) {
-        EnvProperty dependencyProperty = getEnvProperty(session, cpuArch, SshCommandConstants.DEPENDENCY,
-            DEPENDENCY_PACKAGE_NAMES);
+    private EnvProperty dependencyPropertyDetect(SessionConfig execConfig, String cpuArch) {
+        EnvProperty dependencyProperty = getEnvProperty(execConfig, cpuArch, SshCommandConstants.DEPENDENCY,
+                DEPENDENCY_PACKAGE_NAMES);
         dependencyProperty.setName("software dependency");
         dependencyProperty.setSortNum(1);
         return dependencyProperty;
     }
 
-    private EnvProperty getEnvProperty(Session session, String cpuArch, String queryCommand,
-        List<String> dependencies) {
+    private EnvProperty getEnvProperty(SessionConfig execConfig, String cpuArch, String queryCommand,
+                                       List<String> dependencies) {
+        List<String> notInstalledPackages = new ArrayList<>();
+        try {
+            ExecOperations.ExecResult queryResult = ExecOperations.executeCommand(execConfig, queryCommand);
+            List<String> dependencyPackages = dependencies.stream()
+                    .map(dependency -> dependency + "." + cpuArch)
+                    .toList();
+            String cmdExecRes = queryResult.getResult();
+            for (String dependencyPackage : dependencyPackages) {
+                if (!cmdExecRes.contains(dependencyPackage)) {
+                    notInstalledPackages.add(dependencyPackage);
+                }
+            }
+        } catch (JSchException e) {
+            notInstalledPackages.add(e.getMessage());
+            log.warn("query command dependencies {} error", queryCommand, e);
+        }
         EnvProperty envProperty = new EnvProperty();
-        List<String> notInstalledPackages = getMissingList(session, cpuArch, queryCommand, dependencies);
         if (CollectionUtils.isEmpty(notInstalledPackages)) {
             envProperty.setStatus(HostEnvStatusEnum.NORMAL);
         } else {
             envProperty.setStatus(HostEnvStatusEnum.ERROR);
-            envProperty.setStatusMessage("not installed dependencies:" + StringUtils.join(notInstalledPackages, ","));
+            String errorMsg = StringUtils.join(notInstalledPackages, ",");
+            envProperty.setStatusMessage("not installed dependencies:" + errorMsg);
         }
         return envProperty;
     }
@@ -215,19 +240,19 @@ public class OpsClusterEnvService {
     /**
      * get uninstalled dependencies
      *
-     * @param session session
-     * @param cpuArch session
+     * @param session      session
+     * @param cpuArch      session
      * @param queryCommand queryCommand
      * @param dependencies dependencies
      * @return uninstalled dependencies
      */
     public List<String> getMissingList(Session session, String cpuArch, String queryCommand,
-        List<String> dependencies) {
+                                       List<String> dependencies) {
         try {
             String queryResult = opsHostRemoteService.executeCommand(queryCommand, session, "check dependencies");
             List<String> dependencyPackages = dependencies.stream()
-                .map(dependency -> dependency + "." + cpuArch)
-                .collect(Collectors.toList());
+                    .map(dependency -> dependency + "." + cpuArch)
+                    .toList();
             List<String> notInstalledPackages = new ArrayList<>();
             for (String dependencyPackage : dependencyPackages) {
                 if (!queryResult.contains(dependencyPackage)) {

@@ -133,8 +133,8 @@ public class SecurityConfig {
                     "/plugins/observability-sql-diagnosis/sqlDiagnosis/api/open/v1/diagnosisTasks/**")
                 .permitAll()
                 // 其他公共端点
-                .requestMatchers("/webjars/**", "/agent/**", "/receive/**", "/prometheus",
-                    "/modeling/visualization/report/share/**")
+                .requestMatchers("/webjars/**", "/agent/**", "/receive/**", "/prometheus", "/system/plugins",
+                            "/modeling/visualization/report/share/**")
                 .permitAll()
                 // 其他请求需要认证
                 .anyRequest()

@@ -146,8 +146,13 @@
             <artifactId>opengauss-jdbc</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.opengauss.tool</groupId>
+            <artifactId>jsch-session-pool</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.github.mwiede</groupId>
             <artifactId>jsch</artifactId>
+            <version>${jsch.version}</version>
         </dependency>
         <!-- servlet包 -->
         <dependency>

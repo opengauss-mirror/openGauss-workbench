@@ -65,7 +65,6 @@ public class HttpUtils {
         BufferedReader in = null;
         try {
             String urlNameString = StringUtils.isEmpty(param) ? url : url + "?" + param;
-            log.info("sendGet - {}", urlNameString);
             URL realUrl = new URL(urlNameString);
             URLConnection connection = realUrl.openConnection();
             connection.setRequestProperty("accept", "*/*");
@@ -77,7 +76,6 @@ public class HttpUtils {
             while ((line = in.readLine()) != null) {
                 result.append(line);
             }
-            log.info("recv - {}", result);
         } catch (IOException e) {
             log.error("use HttpsUtil.sendGet Exception, url=" + url + ",param=" + param, e);
         } finally {

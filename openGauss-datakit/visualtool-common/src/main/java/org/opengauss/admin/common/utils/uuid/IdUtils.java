@@ -53,7 +53,7 @@ public class IdUtils {
      *
      */
     public static String fastUuid() {
-        return UUID.fastUuid().toString();
+        return UUID.randomUuid().toString();
     }
 
     /**

@@ -40,7 +40,6 @@ com.google.guava:guava:jar:20.0:compile
 org.junit.jupiter:junit-jupiter-api:jar:5.7.2:test
 org.springframework.boot:spring-boot-starter-logging:jar:2.5.6:compile
 com.github.jsqlparser:jsqlparser:jar:4.4:compile
-ch.qos.logback:logback-core:jar:1.2.6:compile
 jakarta.xml.bind:jakarta.xml.bind-api:jar:2.3.3:test
 eu.bitwalker:UserAgentUtils:jar:1.21:provided
 org.apache.logging.log4j:log4j-to-slf4j:jar:2.14.1:compile

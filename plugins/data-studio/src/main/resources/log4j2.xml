@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="DEBUG" monitorInterval="30">
+<Configuration status="WARN" monitorInterval="30">
   <Properties>
     <Property name="LOG_PATH">$${sys:logging.file.path:-./logs}</Property>
-    <Property name="SAFE_MSG">%enc{%msg}{CRLF}%n</Property>
+    <Property name="SAFE_MSG">%enc{%desensitize{%msg}}{CRLF}%n</Property>
     <Property name="LOG_PATTERN">%style{%d{yyyy-MM-dd HH:mm:ss}}{blue} [%style{%t}{cyan}] [%style{%c{32}}{yellow}] - [%highlight{%p}] ${SAFE_MSG}</Property>
   </Properties>
 
@@ -11,8 +11,8 @@
       <PatternLayout pattern="${LOG_PATTERN}"/>
     </Console>
     <RollingFile name="FileInfo"
-                 fileName="${LOG_PATH}/plugins_observability_log_search.log"
-                 filePattern="${LOG_PATH}/plugins_observability_log_search.%d{yyyy-MM-dd}-%i.log">
+                 fileName="${LOG_PATH}/plugins_webds.log"
+                 filePattern="${LOG_PATH}/plugins_webds.%d{yyyy-MM-dd}-%i.log">
       <PatternLayout pattern="${LOG_PATTERN}"/>
       <Policies>
         <SizeBasedTriggeringPolicy size="20 MB"/>
@@ -20,14 +20,14 @@
       </Policies>
       <DefaultRolloverStrategy>
         <Delete basePath="${LOG_PATH}" maxDepth="1">
-          <IfFileName glob="plugins_observability_log_search.*.log" />
+          <IfFileName glob="plugins_webds.*.log" />
           <IfLastModified age="60d" />
         </Delete>
       </DefaultRolloverStrategy>
     </RollingFile>
     <RollingFile name="FileError"
-                 fileName="${LOG_PATH}/plugins_observability_log_search-error.log"
-                 filePattern="${LOG_PATH}/plugins_observability_log_search-error.%d{yyyy-MM-dd}.log">
+                 fileName="${LOG_PATH}/plugins_webds-error.log"
+                 filePattern="${LOG_PATH}/plugins_webds-error.%d{yyyy-MM-dd}.log">
       <PatternLayout pattern="${LOG_PATTERN}"/>
       <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
       <Policies>
@@ -35,7 +35,7 @@
       </Policies>
       <DefaultRolloverStrategy>
         <Delete basePath="${LOG_PATH}" maxDepth="1">
-          <IfFileName glob="plugins_observability_log_search-error.*.log" />
+          <IfFileName glob="plugins_webds-error.*.log" />
           <IfLastModified age="60d" />
         </Delete>
       </DefaultRolloverStrategy>
@@ -43,7 +43,7 @@
   </Appenders>
 
   <Loggers>
-    <Root level="DEBUG">
+    <Root level="info">
       <AppenderRef ref="Console"/>
       <AppenderRef ref="FileInfo"/>
       <AppenderRef ref="FileError"/>

@@ -202,7 +202,7 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
             encryptionUtils.decrypt(userEntity.getPassword()));
         if (userEntity.isRootUser()) {
             if (!jschExecutorService.checkOsUserExist(sshLogin)) {
-                throw new OpsException("Incorrect password, please enter correct password");
+                throw new OpsException("User does not exist or the password is incorrect");
             }
             userEntity.setSudo(true);
             return isAdd ? save(userEntity) : updateById(userEntity);
@@ -223,7 +223,7 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
         SshLogin rootLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), rootUser.getUsername(),
             encryptionUtils.decrypt(rootUser.getPassword()));
         if (jschExecutorService.checkOsUserExist(rootLogin, userEntity.getUsername())) {
-            throw new OpsException("Incorrect password, please enter correct password");
+            throw new OpsException("User does not exist or the password is incorrect");
         }
         if (isAdd) {
             createPhysicalUser(rootLogin, userEntity.getUsername(), userEntity.getPassword());

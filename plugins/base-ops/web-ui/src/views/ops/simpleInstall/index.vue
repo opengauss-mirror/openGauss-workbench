@@ -115,7 +115,6 @@
         <svg-icon class="succ-icon-size mb" icon-class="ops-install-success"></svg-icon>
         <div class="mb-lg">{{ $t('simpleInstall.index.5mpn813gvqo0') }}</div>
         <div class="install-connect-c flex-col mb-xlg">
-          <div class="ft-b mb">{{ $t('simpleInstall.index.5mpn813gvu40') }}</div>
           <div class="flex-row mb-s">
             <div class="label-w">{{ $t('simple.InstallConfig.5mpmu0larj40') }}</div>
             <div class="label-value">{{ data.form.port }}</div>

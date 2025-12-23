@@ -15,13 +15,19 @@
 
 package org.opengauss.admin.web.controller;
 
+import com.gitee.starblues.loader.PluginResourceStorage;
+
 import org.opengauss.admin.common.core.controller.BaseController;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.framework.config.SystemHandleDiagnostic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * SysHandleDiagnosticController
@@ -46,6 +52,39 @@ public class SysHandleDiagnosticController extends BaseController {
     public AjaxResult startMonitor() {
         systemHandleDiagnostic.startMonitor();
         return AjaxResult.success();
+    }
+
+    /**
+     * get spring brick class loader cached plugin resource keys
+     *
+     * @return all keys
+     */
+    @GetMapping("/handler/plugin/resource/key")
+    public AjaxResult getCachedPluginResourceKey() {
+        Map<String, List<String>> allCachedJarFiles = PluginResourceStorage.getAllCachedJarFiles();
+        return AjaxResult.success(allCachedJarFiles.keySet());
+    }
+
+    /**
+     * get spring brick class loader cached all plugin resource
+     *
+     * @return all resource
+     */
+    @GetMapping("/handler/plugin/all/resource")
+    public AjaxResult getCachedAllPluginResource() {
+        return AjaxResult.success(PluginResourceStorage.getAllCachedJarFiles());
+    }
+
+    /**
+     * get spring brick class loader cached all plugin resource by key
+     *
+     * @param key key
+     * @return resource
+     */
+    @GetMapping("/handler/plugin/resource")
+    public AjaxResult getCachedPluginResource(@RequestParam("key") String key) {
+        Map<String, List<String>> allCachedJarFiles = PluginResourceStorage.getAllCachedJarFiles();
+        return AjaxResult.success(allCachedJarFiles.get(key));
     }
 
     /**

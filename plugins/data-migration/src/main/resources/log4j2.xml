@@ -2,7 +2,7 @@
 <Configuration status="WARN" monitorInterval="30">
   <Properties>
     <Property name="LOG_PATH">$${sys:logging.file.path:-./logs}</Property>
-    <Property name="SAFE_MSG">%enc{%msg}{CRLF}%n</Property>
+    <Property name="SAFE_MSG">%enc{%desensitize{%msg}}{CRLF}%n</Property>
     <Property name="LOG_PATTERN">%style{%d{yyyy-MM-dd HH:mm:ss}}{blue} [%style{%t}{cyan}] [%style{%c{32}}{yellow}] - [%highlight{%p}] ${SAFE_MSG}</Property>
   </Properties>
 

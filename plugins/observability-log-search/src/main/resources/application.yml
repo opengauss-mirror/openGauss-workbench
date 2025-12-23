@@ -47,7 +47,7 @@ server.compression:
   mime-types: application/javascript,text/css,application/json,application/xml,text/html,text/xml,text/plain
 mybatis-plus:
   # Search for the specified package alias
-  typeAliasesPackage: com.nctigba.observability.entity
+  typeAliasesPackage: com.nctigba.observability.log.model.entity
   # Configure mapper scanning and find all mapper.xml mapping files
   mapperLocations: classpath*:mapper/*.xml
   # Load global configuration file

@@ -731,14 +731,14 @@ public class JschExecutorService {
          * @return result
          */
         public String execCommand(SshLogin sshLogin, String command) {
-            SessionConfig execConfig = new SessionConfig(sshLogin.getHost(), sshLogin.getUsername(),
-                sshLogin.getPassword()).withChannelType(ChannelType.EXEC).withTimeout(15000);
+            SessionConfig execConfig = new SessionConfig(sshLogin.getHost(), sshLogin.getPort(), sshLogin.getUsername(),
+                    sshLogin.getPassword()).withChannelType(ChannelType.EXEC).withTimeout(15000);
             try {
                 ExecOperations.ExecResult result = ExecOperations.executeCommand(execConfig, command);
                 return result.getResult();
             } catch (Exception ex) {
                 throw new OpsException(
-                    "exec command failed, sshLogin:" + sshLogin + " command:" + command + " ex:" + ex.getMessage());
+                        "exec command failed, sshLogin:" + sshLogin + " command:" + command + " ex:" + ex.getMessage());
             }
         }
 
@@ -750,19 +750,18 @@ public class JschExecutorService {
          * @return result
          */
         public String execCommands(SshLogin sshLogin, String commands) {
-            SessionConfig execConfig = new SessionConfig(sshLogin.getHost(), sshLogin.getUsername(),
-                sshLogin.getPassword()).withChannelType(ChannelType.EXEC).withTimeout(15000);
+            SessionConfig execConfig = new SessionConfig(sshLogin.getHost(), sshLogin.getPort(), sshLogin.getUsername(),
+                    sshLogin.getPassword()).withChannelType(ChannelType.EXEC).withTimeout(15000);
             try {
                 List<ExecOperations.ExecResult> results = ExecOperations.executeCommands(execConfig, commands);
                 results.stream().filter(result -> result.getExitCode() != 0).findFirst().map(result -> {
-                    throw new OpsException(
-                        "exec command failed, sshLogin:" + sshLogin + " command:" + commands + " ex: "
-                            + result.getError().toString());
+                    throw new OpsException("exec command failed, sshLogin:" + sshLogin
+                            + " command:" + commands + " ex: " + result.getError().toString());
                 });
                 return results.stream().map(ExecOperations.ExecResult::getOutput).collect(Collectors.joining());
             } catch (Exception ex) {
-                throw new OpsException(
-                    "exec command failed, sshLogin:" + sshLogin + " command:" + commands + " ex:" + ex.getMessage());
+                throw new OpsException("exec command failed, sshLogin:" + sshLogin
+                        + " command:" + commands + " ex:" + ex.getMessage());
             }
         }
 

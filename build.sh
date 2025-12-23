@@ -169,6 +169,7 @@ function copy_agent_pkg() {
 }
 
 function build_pkg() {
+    build_install_common_component
     cd $root_path
     echo "build dir:${root_path} ,to run cmd: mvn ${mvn_target} ${mvn_args}"
     mvn --threads=4C ${mvn_target} ${mvn_args}
@@ -180,6 +181,14 @@ function build_pkg() {
     cp ./run.sh ${output_path}/
     cp ./${build_main_pkg}/README.md ${output_path}/${plugin_doc_output}/datakit-README.md
     cp ./${build_main_pkg}/config/application-temp.yml ${output_path}/
+}
+
+function build_install_common_component() {
+   cd $root_path/${build_main_pkg}/visualtool-common-cipher
+   mvn clean install -Dmaven.test.skip=true
+
+   cd $root_path/${build_main_pkg}/visualtool-log4j2-desensitize
+   mvn clean install -Dmaven.test.skip=true
 }
 
 function copy_plugin_pkg() {
