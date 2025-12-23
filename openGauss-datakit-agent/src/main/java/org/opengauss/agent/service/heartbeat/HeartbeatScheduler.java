@@ -32,7 +32,6 @@ import org.opengauss.agent.constant.AgentConstants;
 import org.opengauss.agent.entity.HeartbeatHeader;
 import org.opengauss.agent.entity.HeartbeatReport;
 
-import java.time.Instant;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -82,7 +81,7 @@ public class HeartbeatScheduler {
         if (scheduler != null) {
             scheduler.shutdownNow();
         }
-        HeartbeatReport report = new HeartbeatReport(appConfig.getAgentId(), Instant.now());
+        HeartbeatReport report = new HeartbeatReport(appConfig.getAgentId());
         try {
             report.setStatus(AgentConstants.HEARTBEAT_STATUS_DOWN);
             heartbeatServerClient.deregister(heartbeatHeader.toHeartbeatHeader(), report);
@@ -98,12 +97,12 @@ public class HeartbeatScheduler {
     }
 
     private void sendHeartbeat() {
-        HeartbeatReport report = new HeartbeatReport(appConfig.getAgentId(), Instant.now());
+        HeartbeatReport report = new HeartbeatReport(appConfig.getAgentId());
         try {
             heartbeatServerClient.heartbeat(heartbeatHeader.toHeartbeatHeader(), report);
             HEARTBEAT_BREAK_TIMES.set(0);
-            log.info("agent heartbeat name=[{}] local=[{}] server=[{}]", heartbeatHeader.getAgentName(),
-                heartbeatHeader.getAgentAddress(), heartbeatHeader.getTarget());
+            log.info("agent heartbeat name=[{}] local=[{}] server=[{}] : [{}]", heartbeatHeader.getAgentName(),
+                    heartbeatHeader.getAgentAddress(), heartbeatHeader.getTarget(), report.toHeartbeat());
         } catch (Exception e) {
             if (HEARTBEAT_BREAK_TIMES.get() <= appConfig.getHeartbeatBreakWaitMaxTimes()) {
                 HEARTBEAT_BREAK_TIMES.incrementAndGet();

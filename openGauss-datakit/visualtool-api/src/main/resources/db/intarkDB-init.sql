@@ -2014,7 +2014,7 @@ CREATE TABLE IF NOT EXISTS   "agent_task_instance" (
     "task_template_id" varchar(100) NOT NULL,
     "task_name" varchar(100) NOT NULL,
     "agent_id" varchar(100) NOT NULL,
-    "cluster_id" varchar(100),
+    "cluster_node_id" varchar(100),
     "cluster_original" varchar(100),
     "task_status" varchar(100) NOT NULL,
     "start_time" timestamp,
