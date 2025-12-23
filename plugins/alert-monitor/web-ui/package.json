@@ -63,5 +63,8 @@
     "vite": "^3.0.0",
     "vite-plugin-svg-icons": "^2.0.1",
     "vue-tsc": "^0.38.4"
+  },
+  "overrides": {
+    "follow-redirects": "1.15.11"
   }
 }

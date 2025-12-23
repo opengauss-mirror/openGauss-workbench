@@ -76,6 +76,7 @@
     ]
   },
   "overrides": {
-    "get-east-asian-width": "^1.3.0"
+    "get-east-asian-width": "^1.3.0",
+    "follow-redirects": "1.15.11"
   }
 }

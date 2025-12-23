@@ -65,5 +65,8 @@
     "hooks": {
       "pre-commit": ""
     }
+  },
+  "overrides": {
+    "follow-redirects": "1.15.11"
   }
 }
