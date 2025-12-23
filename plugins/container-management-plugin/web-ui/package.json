@@ -40,5 +40,9 @@
     "> 1%",
     "last 2 versions",
     "not dead"
-  ]
+  ],
+  "overrides": {
+    "js-yaml": "4.1.1",
+    "follow-redirects": "1.15.11"
+  }
 }
