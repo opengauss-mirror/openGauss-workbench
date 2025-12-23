@@ -25,9 +25,9 @@
         </Delete>
       </DefaultRolloverStrategy>
     </RollingFile>
-    <RollingFile name="HostAgentHeartbeatInfo"
-                 fileName="${LOG_PATH}/agent_heartbeat.log"
-                 filePattern="${LOG_PATH}/agent_heartbeat.%d{yyyy-MM-dd}-%i.log">
+    <RollingFile name="HostAgentAppend"
+                 fileName="${LOG_PATH}/agent.log"
+                 filePattern="${LOG_PATH}/agent.%d{yyyy-MM-dd}-%i.log">
       <PatternLayout pattern="${LOG_PATTERN}"/>
       <Policies>
         <SizeBasedTriggeringPolicy size="20 MB"/>
@@ -35,7 +35,7 @@
       </Policies>
       <DefaultRolloverStrategy>
         <Delete basePath="${LOG_PATH}" maxDepth="1">
-          <IfFileName glob="agent_heartbeat.*.log" />
+          <IfFileName glob="agent.*.log" />
           <IfLastModified age="60d" />
         </Delete>
       </DefaultRolloverStrategy>
@@ -59,8 +59,8 @@
 
   <Loggers>
     <!-- 专门处理AgentHeartbeatServiceImpl类的日志 additivity="false"确保日志不会传播到父 Logger（Root），从而防止在其他 Appender 中重复记录-->
-    <Logger name="org.opengauss.agent.impl.AgentHeartbeatServiceImpl" level="info" additivity="false">
-      <AppenderRef ref="HostAgentHeartbeatInfo"/>
+    <Logger name="org.opengauss.agent" level="info" additivity="false">
+      <AppenderRef ref="HostAgentAppend"/>
     </Logger>
 
     <Root level="info">

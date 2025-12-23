@@ -42,9 +42,9 @@ public class AgentHeartbeatStatus {
     public void updateFromHeartbeat(Instant heartbeatTime) {
         this.lastHeartbeat = heartbeatTime;
         if (!isOnline) {
-            isOnline = true;
             isStatusChanged = true;
         }
+        isOnline = true;
     }
 
     @Override

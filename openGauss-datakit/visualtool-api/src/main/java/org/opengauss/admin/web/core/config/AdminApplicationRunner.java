@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.system.service.ISysPluginService;
 import org.opengauss.admin.system.service.ISysSettingService;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.opengauss.agent.service.IAgentHeartbeatService;
 import org.opengauss.agent.service.IAgentInstallService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -56,6 +57,8 @@ public class AdminApplicationRunner implements ApplicationRunner {
     @Resource
     private IAgentInstallService agentInstallService;
     @Resource
+    private IAgentHeartbeatService agentHeartbeatService;
+    @Resource
     private ISysSettingService sysSettingService;
     @Autowired
     private PluginOperator pluginOperator;
@@ -67,6 +70,7 @@ public class AdminApplicationRunner implements ApplicationRunner {
         clearDirtyDataOfPlugins();
         this.encryptionUtils.refreshKeyPair();
         sysSettingService.initHttpProxy();
+        agentHeartbeatService.startHeartbeatService();
         agentInstallService.startAllOfAgent();
     }
 

@@ -21,8 +21,6 @@ import com.cronutils.utils.StringUtils;
 
 import lombok.Data;
 
-import java.time.Instant;
-
 /**
  * HeartbeatReport
  *
@@ -33,7 +31,6 @@ import java.time.Instant;
  **/
 @Data
 public class HeartbeatReport {
-    private Instant timestamps;
     private String status;
     private Long agentId;
     private String additionalInfo;
@@ -42,11 +39,9 @@ public class HeartbeatReport {
      * Constructor
      *
      * @param agentId agent id
-     * @param timestamps timestamps
      */
-    public HeartbeatReport(Long agentId, Instant timestamps) {
+    public HeartbeatReport(Long agentId) {
         this.agentId = agentId;
-        this.timestamps = timestamps;
         this.status = HEARTBEAT_STATUS_UP;
     }
 
@@ -57,8 +52,8 @@ public class HeartbeatReport {
      */
     public String toHeartbeat() {
         if (StringUtils.isEmpty(additionalInfo)) {
-            return "send heartbeat report " + status + ", at " + timestamps;
+            return "send heartbeat report " + status;
         }
-        return "send heartbeat report " + status + ", at " + timestamps + ", additionalInfo: " + additionalInfo;
+        return "send heartbeat report " + status + ", additionalInfo: " + additionalInfo;
     }
 }
