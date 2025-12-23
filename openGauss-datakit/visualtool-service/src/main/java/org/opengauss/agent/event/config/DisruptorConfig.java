@@ -15,7 +15,7 @@
 
 package org.opengauss.agent.event.config;
 
-import com.lmax.disruptor.SleepingWaitStrategy;
+import com.lmax.disruptor.TimeoutBlockingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 
@@ -35,6 +35,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.annotation.PreDestroy;
 
@@ -72,7 +73,7 @@ public class DisruptorConfig {
     @Bean
     public PipelineEventProducer orderEventProducer() {
         disruptor = new Disruptor<>(PipelineEvent::new, bufferSize * 1024, Executors.defaultThreadFactory(),
-            ProducerType.SINGLE, new SleepingWaitStrategy(100, 1000));
+                ProducerType.SINGLE, new TimeoutBlockingWaitStrategy(1000, TimeUnit.MILLISECONDS));
         // bind event handlers to the disruptor:
         // all of the event handlers will be broadcast to all of the event messages.
         disruptor.handleEventsWith(new PipeRealTimeStorageHandler());
