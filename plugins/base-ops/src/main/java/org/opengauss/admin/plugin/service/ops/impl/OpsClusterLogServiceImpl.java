@@ -29,13 +29,17 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import org.opengauss.admin.plugin.config.DbDataLocationHolder;
+import org.opengauss.admin.plugin.constant.OpsConstants;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterOperateLog;
+import org.opengauss.admin.plugin.enums.DbDataLocationEnum;
 import org.opengauss.admin.plugin.enums.ops.ClusterOperateTypeEnum;
 import org.opengauss.admin.plugin.mapper.ops.OpsClusterOperateLogMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterLogService;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
+
 import java.util.List;
 import java.util.Objects;
 
@@ -47,13 +51,16 @@ import java.util.Objects;
  **/
 @Service("opsClusterLogService")
 public class OpsClusterLogServiceImpl implements IOpsClusterLogService {
-
     @Resource
     private OpsClusterOperateLogMapper opsClusterOperateLogMapper;
 
     @Override
     public void insertOperateLog(OpsClusterOperateLog operateLog) {
-        opsClusterOperateLogMapper.insert(operateLog);
+        if (Objects.equals(DbDataLocationEnum.INTARKDB, DbDataLocationHolder.getLocationDatabase())) {
+            operateLog.setOperateLog(StrUtil.subPre(operateLog.getOperateLog(), OpsConstants.INTARKDB_MAX_LENGTH));
+        } else {
+            opsClusterOperateLogMapper.insert(operateLog);
+        }
     }
 
     @Override

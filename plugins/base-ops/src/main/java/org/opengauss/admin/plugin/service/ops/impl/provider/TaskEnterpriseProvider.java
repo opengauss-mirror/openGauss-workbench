@@ -283,7 +283,8 @@ public class TaskEnterpriseProvider extends AbstractTaskProvider {
 
 
     private String checkInstallUserGroup(String installUsername, Session rootSession, RetBuffer retBuffer) {
-        String userGroupCommand = "groups " + installUsername + " | awk -F ':' '{print $2}' | sed 's/\\\"//g'";
+        String userGroupCommand = "groups " + installUsername + "| awk -F ': ' '{print $2}' | "
+                + " awk '{for(i=1;i<=NF;i++){if($i!=\"root\"){print $i; exit}}}'";
         return opsHostRemoteService.executeCommand(userGroupCommand, rootSession, retBuffer, "query user group");
     }
 

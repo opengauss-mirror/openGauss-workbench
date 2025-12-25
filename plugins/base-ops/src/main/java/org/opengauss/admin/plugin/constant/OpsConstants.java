@@ -34,4 +34,9 @@ public interface OpsConstants {
      * package remark v2
      */
     String PACKAGE_REMARK = "v2";
+
+    /**
+     * limit intarkdb max char length 2048 ,safe string to save
+     */
+    int INTARKDB_MAX_LENGTH = 2048;
 }
