@@ -135,7 +135,6 @@ public class ForeignTableSqlServiceImpl implements ForeignTableSqlService {
 
     @Override
     public List<Map<String, String>> queryServer(ForeignTableQuery request) throws SQLException {
-        log.info("ForeignTableSqlServiceImpl queryServer request: " + request);
         String sql = String.format(QUERY_FOREIGN_SERVER_SQL, DebugUtils.needQuoteName(request.getSchema()));
         log.info("ForeignTableSqlServiceImpl queryServer sql: " + sql);
         try (
@@ -167,7 +166,6 @@ public class ForeignTableSqlServiceImpl implements ForeignTableSqlService {
 
     @Override
     public void create(ForeignTableQuery request) throws SQLException {
-        log.info("ForeignTableSqlServiceImpl create request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
                 Statement statement = connection.createStatement()
@@ -179,7 +177,6 @@ public class ForeignTableSqlServiceImpl implements ForeignTableSqlService {
 
     @Override
     public void deleteForeignTable(ForeignTableQuery request) throws SQLException {
-        log.info("ForeignTableSqlServiceImpl deleteForeignTable request: " + request);
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid())
         ) {
@@ -191,7 +188,6 @@ public class ForeignTableSqlServiceImpl implements ForeignTableSqlService {
 
     @Override
     public void deleteForeignServer(ForeignTableQuery request) throws SQLException {
-        log.info("ForeignTableSqlServiceImpl deleteForeignServer request: " + request);
         String foreignServer = request.getForeignServer();
         try (
                 Connection connection = connectionConfig.connectDatabase(request.getUuid());
@@ -212,7 +208,6 @@ public class ForeignTableSqlServiceImpl implements ForeignTableSqlService {
 
     @Override
     public Map<String, String> ddl(ForeignTableQuery request) throws SQLException {
-        log.info("ForeignTableSqlServiceImpl ddl request: " + request);
         Map<String, String> resultMap = new HashMap<>();
         String sql = String.format(TABLE_DDL_SQL, DebugUtils.needQuoteName(request.getSchema()),
                 DebugUtils.needQuoteName(request.getForeignTable()));
@@ -236,7 +231,6 @@ public class ForeignTableSqlServiceImpl implements ForeignTableSqlService {
 
     @Override
     public List<Map<String, String>> attribute(ForeignTableQuery request) throws SQLException {
-        log.info("ForeignTableSqlServiceImpl attribute request: " + request);
         List<Map<String, String>> list = new ArrayList<>();
         String sql = String.format(FOREIGN_TABLE_ATTRIBUTE_SQL, request.getForeignTable(), request.getSchema());
         try (
@@ -283,7 +277,6 @@ public class ForeignTableSqlServiceImpl implements ForeignTableSqlService {
 
     @Override
     public void createServer(ForeignTableQuery request) throws SQLException {
-        log.info("ForeignTableSqlServiceImpl createServer request: " + request);
         String type;
         String datasourceType = request.getDatasourceType();
         switch (datasourceType) {
@@ -384,7 +377,6 @@ public class ForeignTableSqlServiceImpl implements ForeignTableSqlService {
     }
 
     private void createForeignTable(Statement statement, ForeignTableQuery request) throws SQLException {
-        log.info("ForeignTableSqlServiceImpl createForeignTable request: " + request);
         StringBuilder sqlSb = new StringBuilder();
         sqlSb.append("CREATE FOREIGN TABLE ");
         if (request.isExists()) {

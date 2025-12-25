@@ -44,8 +44,11 @@ import com.nctigba.datastudio.utils.DebugUtils;
 import com.nctigba.datastudio.utils.ExecuteUtils;
 import com.nctigba.datastudio.utils.LocaleStringUtils;
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.common.utils.StringUtils;
+import org.opengauss.admin.common.utils.uuid.UUID;
+
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
@@ -57,7 +60,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import static com.nctigba.datastudio.constants.CommonConstants.FDW_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.NAME;
@@ -123,7 +125,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
             if (StringUtils.isNotEmpty(request.getConnectionid())) {
                 uuid = request.getConnectionid();
             } else {
-                uuid = UUID.randomUUID().toString();
+                uuid = UUID.randomUuid().toString();
             }
             dataList.setConnectionid(uuid);
             ConnectionDTO connectionDTO = new ConnectionDTO();
@@ -167,7 +169,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
         if (StringUtils.isNotEmpty(request.getConnectionid())) {
             uuid = request.getConnectionid();
         } else {
-            uuid = UUID.randomUUID().toString();
+            uuid = UUID.randomUuid().toString();
         }
         dataList.setConnectionid(uuid);
         ConnectionDTO connectionDTO = new ConnectionDTO();
@@ -190,7 +192,7 @@ public class DbConnectionServiceImpl implements DbConnectionService {
         if (StringUtils.isNotEmpty(request.getConnectionid())) {
             uuid = request.getConnectionid();
         } else {
-            uuid = UUID.randomUUID().toString();
+            uuid = UUID.randomUuid().toString();
         }
         dataList.setConnectionid(uuid);
         ConnectionDTO connectionDTO = new ConnectionDTO();
@@ -550,7 +552,6 @@ public class DbConnectionServiceImpl implements DbConnectionService {
 
     @Override
     public Long test(DbConnectionCreateDTO request) {
-        log.info("test {}", request);
         try{
             long start = System.currentTimeMillis();
             Connection connection = ConnectionUtils.connectGet(

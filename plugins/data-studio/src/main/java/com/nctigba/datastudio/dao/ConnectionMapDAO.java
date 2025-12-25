@@ -64,7 +64,6 @@ public class ConnectionMapDAO {
         if (conMap.size() <= 100) {
             conMap.put(uuiD, con);
         } else {
-            log.info("The number of connections reached 100, conMap is: " + conMap);
             throw new CustomException(LocaleStringUtils.transLanguage("2014"));
         }
     }
@@ -78,7 +77,6 @@ public class ConnectionMapDAO {
     public void overtime() throws SQLException {
         log.info("Start scheduled cleanup of connections. Connection number is: " + conMap.size());
         Date nowData = new Date();
-        log.info("conMap is: {}", conMap);
         for (String key : conMap.keySet()) {
             ConnectionDTO connectionDTO = conMap.get(key);
             Date lastDate = connectionDTO.getLastDate();
@@ -87,12 +85,10 @@ public class ConnectionMapDAO {
             if (diff > 2 * 60 * 60 * 1000) {
                 log.info("connectionDTO.getSocketSet() is: " + connectionDTO.getSocketSet());
                 overtimeCloseSocket(connectionDTO.getSocketSet());
-
             }
             if (diff > connectionDTO.getTimeLength() * 60 * 60 * 1000) {
                 log.info("connectionDTO.getSocketSet() is: " + connectionDTO.getSocketSet());
                 conMap.remove(key);
-
             }
             log.info("End scheduled cleanup of connections. Connection number is: " + conMap.size());
         }
