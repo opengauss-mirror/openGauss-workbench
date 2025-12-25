@@ -26,6 +26,8 @@ package org.opengauss.admin;
 import com.gitee.starblues.loader.launcher.SpringBootstrap;
 import com.gitee.starblues.loader.launcher.SpringMainBootstrap;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -42,6 +44,7 @@ import org.springframework.web.socket.server.standard.ServerEndpointExporter;
  */
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @ComponentScan({"org.opengauss.admin", "org.opengauss.agent"})
+@Slf4j
 public class AdminApplication implements SpringBootstrap {
     public static void main(String[] args) {
         SpringMainBootstrap.launch(AdminApplication.class, args);
@@ -49,14 +52,28 @@ public class AdminApplication implements SpringBootstrap {
 
     @Override
     public void run(String[] args) throws Exception {
+        checkRootUser();
         SecurityContextHolder.setStrategyName("MODE_INHERITABLETHREADLOCAL");
         SpringApplication.run(AdminApplication.class, args);
+    }
+
+    /**
+     * start check : root user not start DataKit server
+     */
+    public static void checkRootUser() {
+        String userName = System.getProperty("user.name");
+        if ("root".equals(userName)) {
+            log.error("ERROR: Cannot run DataKit as root user");
+            log.error("Please run with a regular user account");
+            System.exit(1);
+        }
     }
 
     @Bean
     public ServerEndpointExporter serverEndpointExporter() {
         return new ServerEndpointExporter();
     }
+
     @Bean
     public RequestContextListener requestContextListener() {
         return new RequestContextListener();

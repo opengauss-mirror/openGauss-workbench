@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Prevent execution as root user
+if [ "$(id -u)" -eq 0 ]; then
+    echo "Error: DataKit cannot be executed as root user"
+    echo "Please run with a regular user: su <username> "
+    exit 1
+fi
+
 APP_NAME="datakit"
 JAR_PATTERN="openGauss-datakit-*.jar"
 PID_FILE="datakit.pid"
