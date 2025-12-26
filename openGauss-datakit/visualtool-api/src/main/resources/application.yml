@@ -14,6 +14,13 @@ server:
     key-store: ssl/keystore.p12
     key-store-password: '******'
     key-store-type: PKCS12
+    enabled-protocols: TLSv1.2,TLSv1.3
+    ciphers: >
+      TLS_AES_256_GCM_SHA384,
+      TLS_AES_128_GCM_SHA256,
+      TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+      TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+      TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
 spring:
   profiles:
     active: prod
@@ -71,7 +78,7 @@ disruptor:
     factor: 2
 management:
   server:
-    port: 9494
+    port: ${server.port}
   endpoints:
     enabled-by-default: false
     web:
