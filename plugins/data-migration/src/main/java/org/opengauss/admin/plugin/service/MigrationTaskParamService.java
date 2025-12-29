@@ -34,8 +34,14 @@ import java.util.List;
  * @date 2023/01/14 09:01
  */
 public interface MigrationTaskParamService extends IService<MigrationTaskParam> {
-
     List<MigrationTaskParam> selectByTaskId(Integer taskId);
 
     void deleteByMainTaskId(Integer mainTaskId);
+
+    /**
+     * Delete task params by task id
+     *
+     * @param taskId task id
+     */
+    void deleteByTaskId(Integer taskId);
 }
