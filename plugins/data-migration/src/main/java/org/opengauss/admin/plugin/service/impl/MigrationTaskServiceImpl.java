@@ -1189,11 +1189,13 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         resultMap.put("enable.stdin.password", "true");
 
         String tables = task.getSourceTables();
-        String database = task.getSourceDb();
-        String fullTableNames = Arrays.stream(tables.split(","))
-                .map(table -> database + "." + table)
-                .collect(Collectors.joining(","));
-        resultMap.put("mysql.database.table", fullTableNames);
+        if (StringUtils.isNotBlank(tables)) {
+            String database = task.getSourceDb();
+            String fullTableNames = Arrays.stream(tables.split(","))
+                    .map(table -> database + "." + table)
+                    .collect(Collectors.joining(","));
+            resultMap.put("mysql.database.table", fullTableNames);
+        }
 
         if (!taskParamMap.keySet().isEmpty()) {
             resultMap.putAll(taskParamMap);
