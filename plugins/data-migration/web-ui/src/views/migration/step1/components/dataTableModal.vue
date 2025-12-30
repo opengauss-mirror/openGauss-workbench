@@ -158,20 +158,16 @@ const fetchTblList = async () => {
   }
 }
 
+const isRestoring = ref(false)
+
 const restoreSelectionState = async () => {
   await nextTick()
   if (!tableRef.value) return
   const currentSelected = [...selectedTables.value]
+  isRestoring.value = true
   try {
     tableRef.value.clearSelection()
     await nextTick()
-
-    filteredData.value.forEach(row => {
-      tableRef.value.toggleRowSelection(row, false)
-    })
-
-    await nextTick()
-
     filteredData.value.forEach(row => {
       if (selectedTables.value.includes(row)) {
         tableRef.value.toggleRowSelection(row, true)
@@ -179,6 +175,10 @@ const restoreSelectionState = async () => {
     })
   } catch (error) {
     console.error('恢复选择状态时出错:', error)
+  } finally {
+    setTimeout(() => {
+      isRestoring.value = false
+    }, 0)
   }
 }
 
@@ -188,15 +188,31 @@ const getRowKey = (row: string): string => {
 
 const isInitializing = ref(true)
 const handleSelectionChange = (selection: string[]) => {
-  if (isInitializing.value || isLoading.value) {
+  if (isInitializing.value || isLoading.value || isRestoring.value) {
     return
   }
 
-  const currentPageTables = new Set(filteredData.value)
-
-  const otherPagesSelected = selectedTables.value.filter(table => !currentPageTables.has(table))
-  selectedTables.value = [...otherPagesSelected, ...selection]
+  if (searchTblNam.value.length > 0) {
+    const currentDisplayedSet = new Set(filteredData.value)
+    const notDisplayed = selectedTables.value.filter(table =>
+      !currentDisplayedSet.has(table)
+    )
+    selectedTables.value = [...notDisplayed, ...selection]
+  } else {
+    const currentPageTables = new Set(tableData.value)
+    const otherPagesSelected = selectedTables.value.filter(table => !currentPageTables.has(table))
+    selectedTables.value = [...otherPagesSelected, ...selection]
+  }
 }
+
+watch(searchTblNam, async (newVal) => {
+  if (!isInitializing.value && !isLoading.value) {
+    await nextTick()
+    if (newVal === '' && tableRef.value) {
+      restoreSelectionState()
+    }
+  }
+})
 
 const filteredData = computed(() => {
   if (searchTblNam.value.length > 0) {
