@@ -4,8 +4,8 @@
 
 package org.opengauss.admin.common.utils.uuid;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * IdUtilsTest
@@ -19,8 +19,8 @@ public class IdUtilsTest {
     public void testUUID() {
         String randomId = IdUtils.randomUuid();
         String fastId = IdUtils.fastUuid();
-        Assert.assertEquals(randomId.length(), fastId.length());
-        Assert.assertEquals(randomId.contains("-"), fastId.contains("-"));
-        Assert.assertEquals(randomId.split("-").length, fastId.split("-").length);
+        Assertions.assertEquals(randomId.length(), fastId.length());
+        Assertions.assertEquals(randomId.contains("-"), fastId.contains("-"));
+        Assertions.assertEquals(randomId.split("-").length, fastId.split("-").length);
     }
 }

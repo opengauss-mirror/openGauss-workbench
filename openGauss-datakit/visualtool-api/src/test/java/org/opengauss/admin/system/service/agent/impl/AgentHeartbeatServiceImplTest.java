@@ -15,12 +15,10 @@
 
 package org.opengauss.admin.system.service.agent.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -72,7 +70,7 @@ class AgentHeartbeatServiceImplTest {
         // 首次心跳
         HeartbeatReport report = new HeartbeatReport(agentId, Instant.now());
         service.receiveHeartbeat(report);
-        assertTrue(service.isAgentOnline(agentId));
+        Assertions.assertTrue(service.isAgentOnline(agentId));
     }
 
     @DisplayName("心跳接收逻辑测试 2")
@@ -83,7 +81,7 @@ class AgentHeartbeatServiceImplTest {
         HeartbeatReport report = new HeartbeatReport(agentId, Instant.now().minusSeconds(31));
         service.receiveHeartbeat(report);
         service.checkAgentsStatus();
-        assertFalse(service.isAgentOnline(agentId));
+        Assertions.assertFalse(service.isAgentOnline(agentId));
     }
 
     @DisplayName("心跳接收逻辑测试 3")
@@ -97,8 +95,8 @@ class AgentHeartbeatServiceImplTest {
         ArgumentCaptor<AgentStatusEvent> captor = ArgumentCaptor.forClass(AgentStatusEvent.class);
         verify(eventPublisher, times(2)).publishEvent(captor.capture());
         List<AgentStatusEvent> events = captor.getAllValues();
-        assertEquals(true, events.get(0).isOnline());  // 初始上线事件
-        assertEquals(false, events.get(1).isOnline()); // 后续离线事件
+        Assertions.assertEquals(true, events.get(0).isOnline());  // 初始上线事件
+        Assertions.assertEquals(false, events.get(1).isOnline()); // 后续离线事件
     }
 
     @DisplayName("状态检查任务测试1")
@@ -109,14 +107,14 @@ class AgentHeartbeatServiceImplTest {
         service.receiveHeartbeat(new HeartbeatReport(agentId, Instant.now().minusSeconds(31)));
         // 手动触发状态检查
         service.checkAgentsStatus();
-        assertFalse(service.isAgentOnline(agentId));
+        Assertions.assertFalse(service.isAgentOnline(agentId));
     }
 
     @DisplayName("边界条件测试1")
     @Test
     void whenQueryNonExistAgent_thenReturnOffline() {
         String agentId = "105";
-        assertFalse(service.isAgentOnline(agentId));
+        Assertions.assertFalse(service.isAgentOnline(agentId));
     }
 
     @DisplayName("边界条件测试2")
@@ -127,8 +125,8 @@ class AgentHeartbeatServiceImplTest {
         IntStream.range(0, 100)
             .forEach(i -> pool.submit(() -> service.receiveHeartbeat(new HeartbeatReport(agentId, Instant.now()))));
         pool.shutdown();
-        assertTrue(pool.awaitTermination(3, TimeUnit.SECONDS));
-        assertTrue(service.isAgentOnline(agentId));
+        Assertions.assertTrue(pool.awaitTermination(3, TimeUnit.SECONDS));
+        Assertions.assertTrue(service.isAgentOnline(agentId));
     }
 
     @DisplayName("事件验证：通过ArgumentCaptor捕获事件细节")
@@ -139,7 +137,7 @@ class AgentHeartbeatServiceImplTest {
         ArgumentCaptor<AgentStatusEvent> captor = ArgumentCaptor.forClass(AgentStatusEvent.class);
         verify(eventPublisher).publishEvent(captor.capture());
         AgentStatusEvent event = captor.getValue();
-        assertEquals("agent-07", event.getAgentId());
-        assertEquals(true, event.isOnline());
+        Assertions.assertEquals("agent-07", event.getAgentId());
+        Assertions.assertEquals(true, event.isOnline());
     }
 }

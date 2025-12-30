@@ -15,14 +15,12 @@
 
 package org.opengauss.admin.system.service.agent.impl;
 
-import static org.junit.Assert.assertEquals;
-
-import junit.framework.AssertionFailedError;
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.opengauss.admin.common.utils.CommonUtils;
+import org.opentest4j.AssertionFailedError;
 
 import java.util.Map;
 

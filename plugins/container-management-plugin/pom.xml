@@ -66,12 +66,6 @@
             <groupId>com.gitee.starblues</groupId>
             <artifactId>spring-brick-maven-packager</artifactId>
         </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
