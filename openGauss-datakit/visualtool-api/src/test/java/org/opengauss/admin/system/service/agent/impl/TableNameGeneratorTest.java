@@ -17,7 +17,7 @@ package org.opengauss.admin.system.service.agent.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.opengauss.agent.repository.TableNameGenerator;
 
 import java.util.HashSet;

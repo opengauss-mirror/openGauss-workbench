@@ -18,7 +18,7 @@ package org.opengauss.admin.system.service.agent.impl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.apache.commons.codec.digest.MurmurHash3;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;

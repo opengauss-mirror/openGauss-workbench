@@ -17,7 +17,7 @@
     <commons-codec.version>1.19.0</commons-codec.version>
     <hutool.version>5.8.39</hutool.version>
     <slf4j.version>1.7.36</slf4j.version>
-    <junit.version>4.13.2</junit.version>
+    <spring-boot.version>3.5.7</spring-boot.version>
     <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
     <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
     <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
@@ -51,9 +51,15 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <version>${spring-boot.version}</version>
+      <exclusions>
+        <exclusion>
+            <artifactId>spring-boot-starter-logging</artifactId>
+            <groupId>org.springframework.boot</groupId>
+        </exclusion>
+      </exclusions>
       <scope>test</scope>
     </dependency>
 
