@@ -41,8 +41,6 @@ import java.util.List;
 @Service
 @Slf4j
 public class MigrationTaskParamServiceImpl extends ServiceImpl<MigrationTaskParamMapper, MigrationTaskParam> implements MigrationTaskParamService {
-
-
     @Override
     public List<MigrationTaskParam> selectByTaskId(Integer taskId) {
         LambdaQueryWrapper<MigrationTaskParam> query = new LambdaQueryWrapper<>();
@@ -57,4 +55,10 @@ public class MigrationTaskParamServiceImpl extends ServiceImpl<MigrationTaskPara
         this.remove(query);
     }
 
+    @Override
+    public void deleteByTaskId(Integer taskId) {
+        LambdaQueryWrapper<MigrationTaskParam> query = new LambdaQueryWrapper<>();
+        query.eq(MigrationTaskParam::getTaskId, taskId);
+        remove(query);
+    }
 }

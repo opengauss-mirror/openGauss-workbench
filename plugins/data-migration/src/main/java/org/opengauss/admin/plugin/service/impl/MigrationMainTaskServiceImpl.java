@@ -689,8 +689,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                     migrationTaskParamService.save(taskParam);
                 });
             }
+            migrationTaskParamService.deleteByTaskId(subTaskId);
         });
-        migrationTaskParamService.deleteByMainTaskId(mainTaskId);
         return AjaxResult.success();
     }
 
