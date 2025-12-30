@@ -7,6 +7,8 @@ if [ "$(id -u)" -eq 0 ]; then
     exit 1
 fi
 
+umask 027
+
 APP_NAME="datakit"
 JAR_PATTERN="openGauss-datakit-*.jar"
 PID_FILE="datakit.pid"
@@ -40,6 +42,37 @@ refresh_pid() {
     fi
 }
 
+check_and_fix_log_permissions() {
+    LOG_DIR="logs"
+    EXPECTED_FILE_PERM="640"
+    EXPECTED_DIR_PERM="750"
+
+    echo "check log files and dir permissions..."
+
+    if [ -d "$LOG_DIR" ]; then
+        local dir_perm=$(stat -c "%a" "$LOG_DIR")
+        if [ "$dir_perm" != "$EXPECTED_DIR_PERM" ]; then
+            echo "  fixed log dir permissions: $dir_perm -> $EXPECTED_DIR_PERM"
+            chmod "$EXPECTED_DIR_PERM" "$LOG_DIR"
+        fi
+    fi
+
+    find "$LOG_DIR" -name "*.log" -type f 2>/dev/null | while read -r log_file; do
+        local file_perm=$(stat -c "%a" "$log_file")
+        if [ "$file_perm" != "$EXPECTED_FILE_PERM" ]; then
+            echo "  fixed log files permissions: $log_file ($file_perm -> $EXPECTED_FILE_PERM)"
+
+            if lsof "$log_file" >/dev/null 2>&1; then
+                echo "  warn: file is used ,not fixed permissions: $log_file"
+            else
+                chmod "$EXPECTED_FILE_PERM" "$log_file"
+            fi
+        fi
+    done
+
+    umask 027
+}
+
 start_up() {
     JAR_FILE=$(get_jar_path)
 
@@ -48,6 +81,9 @@ start_up() {
         echo "        Please set it with --aes-key option"
         exit 1
     fi
+
+    check_and_fix_log_permissions
+
     DEFAULT_JAVA_OPTS="-Xms2048m -Xmx4096m"
     JAVA_OPTS=${JAVA_OPTS:-$DEFAULT_JAVA_OPTS}
     echo "Starting ${APP_NAME} with DATA_KIT_AES_KEY..."

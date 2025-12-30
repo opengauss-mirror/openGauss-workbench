@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN" monitorInterval="30">
   <Properties>
-    <Property name="LOG_PATH">$${sys:logging.file.path:-./logs}</Property>
-    <Property name="SAFE_MSG">%enc{%msg}{CRLF}%n</Property>
-    <Property name="LOG_PATTERN">%style{%d{yyyy-MM-dd HH:mm:ss}}{blue} [%style{%t}{cyan}] [%style{%c{32}}{yellow}] - [%highlight{%p}] ${SAFE_MSG}</Property>
+      <Property name="LOG_PATH">$${sys:logging.file.path:-./logs}</Property>
+      <Property name="SAFE_MSG">%enc{%msg}{CRLF}%n</Property>
+      <Property name="FILE_PERMISSIONS">rw-r-----</Property>
+      <Property name="LOG_PATTERN">%style{%d{yyyy-MM-dd HH:mm:ss}}{blue} [%style{%t}{cyan}] [%style{%c{32}}{yellow}] - [%highlight{%p}] ${SAFE_MSG}</Property>
   </Properties>
 
   <Appenders>
     <Console name="Console" target="SYSTEM_OUT">
       <PatternLayout pattern="${LOG_PATTERN}"/>
     </Console>
-    <RollingFile name="FileInfo"
-                 fileName="${LOG_PATH}/sys.log"
-                 filePattern="${LOG_PATH}/sys.%d{yyyy-MM-dd}-%i.log">
+    <RollingFile name="FileInfo" filePermissions="${FILE_PERMISSIONS}"
+                 fileName="${LOG_PATH}/plugins_alert_monitor.log"
+                 filePattern="${LOG_PATH}/plugins_alert_monitor.%d{yyyy-MM-dd}-%i.log">
       <PatternLayout pattern="${LOG_PATTERN}"/>
       <Policies>
         <SizeBasedTriggeringPolicy size="20 MB"/>
@@ -20,14 +21,14 @@
       </Policies>
       <DefaultRolloverStrategy>
         <Delete basePath="${LOG_PATH}" maxDepth="1">
-          <IfFileName glob="sys.*.log" />
+          <IfFileName glob="plugins_alert_monitor.*.log" />
           <IfLastModified age="60d" />
         </Delete>
       </DefaultRolloverStrategy>
     </RollingFile>
-    <RollingFile name="FileError"
-                 fileName="${LOG_PATH}/sys-error.log"
-                 filePattern="${LOG_PATH}/sys-error.%d{yyyy-MM-dd}.log">
+    <RollingFile name="FileError" filePermissions="${FILE_PERMISSIONS}"
+                 fileName="${LOG_PATH}/plugins_alert_monitor-error.log"
+                 filePattern="${LOG_PATH}/plugins_alert_monitor-error.%d{yyyy-MM-dd}.log">
       <PatternLayout pattern="${LOG_PATTERN}"/>
       <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
       <Policies>
@@ -35,7 +36,7 @@
       </Policies>
       <DefaultRolloverStrategy>
         <Delete basePath="${LOG_PATH}" maxDepth="1">
-          <IfFileName glob="sys-error.*.log" />
+          <IfFileName glob="plugins_alert_monitor-error.*.log" />
           <IfLastModified age="60d" />
         </Delete>
       </DefaultRolloverStrategy>
