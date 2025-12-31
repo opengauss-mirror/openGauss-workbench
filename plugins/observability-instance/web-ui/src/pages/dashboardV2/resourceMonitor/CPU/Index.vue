@@ -245,7 +245,7 @@ import { useParamsStore } from "@/store/params";
 const { t } = useI18n();
 
 const props = withDefaults(defineProps<{ tabId: string }>(), {});
-const tab = 0;
+const tab = ref(0);
 
 interface LineData {
   name: string;

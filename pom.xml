@@ -601,9 +601,6 @@
                     <version>${exec-maven-plugin.version}</version>
                     <configuration>
                       <skip>${build.frontend.skip}</skip>
-                      <environmentVariables>
-                        <npm_config_cache>${npm.cache}</npm_config_cache>
-                      </environmentVariables>
                     </configuration>
                     <executions>
                         <execution>
@@ -616,9 +613,6 @@
                                 <executable>npm</executable>
                                 <arguments>
                                     <argument>install</argument>
-                                    <argument>--frozen-lockfile</argument>
-                                    <argument>--prefer-offline</argument>
-                                    <argument>--no-optional</argument>
                                 </arguments>
                                 <workingDirectory>${web.path}</workingDirectory>
                             </configuration>

@@ -46,6 +46,8 @@ export default defineConfig(({ command, mode }) => {
         resolve: {
             alias: {
                 '@': resolve(__dirname, './src/'),
+                'element-plus/lib/locale/lang/zh-cn': 'element-plus/es/locale/lang/zh-cn',
+                'element-plus/lib/locale/lang/en': 'element-plus/es/locale/lang/en',
             },
         },
         css: {
