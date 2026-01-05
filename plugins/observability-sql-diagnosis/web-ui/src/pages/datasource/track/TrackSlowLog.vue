@@ -484,7 +484,7 @@ watch(aggResult, (aggResult: aggRes) => {
 })
 
 const props = withDefaults(defineProps<{ tabId: string }>(), {});
-const tab = 2;
+const tab = ref(2);
 
 interface LineData {
   name: string;

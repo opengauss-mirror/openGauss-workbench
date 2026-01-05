@@ -544,7 +544,7 @@ const {
 } = storeToRefs(useMonitorStore(props.tabId))
 const { t } = useI18n()
 
-const tab = 0
+const tab = ref(0);
 
 const topSqlInfo = ref<any>({
   title: t("app.fieldOverview"),
