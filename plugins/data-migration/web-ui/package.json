@@ -20,7 +20,7 @@
     "pinia": "2.0.17",
     "vue": "3.2.41",
     "vue-echarts": "^7.0.3",
-    "vue-i18n": "^9.3.0-beta.6",
+    "vue-i18n": "^9.14.5",
     "vue-router": "4.0.3",
     "wujie-vue3": "^1.0.0",
     "wujie-polyfill": "^1.1.2",

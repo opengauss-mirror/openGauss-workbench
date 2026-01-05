@@ -34,7 +34,7 @@
     "vue": "^3.4.21",
     "vue-echarts": "6.2.3",
     "vue-grid-layout": "^3.0.0-beta1",
-    "vue-i18n": "^9.3.0-beta.6",
+    "vue-i18n": "^9.14.5",
     "vue-router": "^4.3.2",
     "vue-winbox": "^0.1.0",
     "xterm": "^5.3.0"
