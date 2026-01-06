@@ -15,7 +15,7 @@
         <caffeine.version>3.2.2</caffeine.version>
         <hutool.version>5.8.40</hutool.version>
         <lombok.version>1.18.34</lombok.version>
-        <snakeyaml.version>2.3</snakeyaml.version>
+        <snakeyaml.version>2.5</snakeyaml.version>
         <sshd.version>2.15.0</sshd.version>
         <opengauss-jdbc.version>6.0.0-og</opengauss-jdbc.version>
         <druid.version>1.2.27</druid.version>
@@ -90,6 +90,11 @@
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>${commons-codec.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>${snakeyaml.version}</version>
         </dependency>
     </dependencies>
     <build>

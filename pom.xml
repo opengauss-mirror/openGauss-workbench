@@ -52,7 +52,7 @@
         <jwt.version>0.9.1</jwt.version>
         <bitwalker.version>1.21</bitwalker.version>
         <jsch.version>2.27.2</jsch.version>
-        <snakeyaml.version>2.3</snakeyaml.version>
+        <snakeyaml.version>2.5</snakeyaml.version>
         <jakarta.websocket.version>2.1.1</jakarta.websocket.version>
         <prometheus.version>1.15.0</prometheus.version>
         <hutool.version>5.8.39</hutool.version>
