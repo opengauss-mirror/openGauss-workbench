@@ -19,7 +19,7 @@
         <log4j.version>2.23.1</log4j.version>
         <hutool.version>5.8.39</hutool.version>
         <mysql-connector-j.version>9.5.0</mysql-connector-j.version>
-        <jackson-dataformat-yaml.version>2.13.0</jackson-dataformat-yaml.version>
+        <jackson-dataformat-yaml.version>2.20.1</jackson-dataformat-yaml.version>
         <poi.version>5.4.0</poi.version>
         <maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>

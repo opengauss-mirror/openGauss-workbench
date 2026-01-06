@@ -6,8 +6,8 @@ org.eclipse.aether:aether-spi:
 jackson-datatype-jsr310:
   groupId: com.fasterxml.jackson.datatype
   artifactId: jackson-datatype-jsr310
-  version: 2.12.5
-  url: https://mvnrepository.com/artifact/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/2.12.5
+  version: 2.20.1
+  url: https://mvnrepository.com/artifact/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/2.20.1
 maven-artifact-manager:
   groupId: org.apache.maven
   artifactId: maven-artifact-manager
@@ -161,8 +161,8 @@ maven-settings-builder:
 jackson-datatype-jdk8:
   groupId: com.fasterxml.jackson.datatype
   artifactId: jackson-datatype-jdk8
-  version: 2.12.5
-  url: https://mvnrepository.com/artifact/com.fasterxml.jackson.datatype/jackson-datatype-jdk8/2.12.5
+  version: 2.20.1
+  url: https://mvnrepository.com/artifact/com.fasterxml.jackson.datatype/jackson-datatype-jdk8/2.20.1
 postgresql:
   groupId: org.postgresql
   artifactId: postgresql
@@ -271,8 +271,8 @@ springfox-oas:
 jackson-dataformat-yaml:
   groupId: com.fasterxml.jackson.dataformat
   artifactId: jackson-dataformat-yaml
-  version: 2.12.5
-  url: https://mvnrepository.com/artifact/com.fasterxml.jackson.dataformat/jackson-dataformat-yaml/2.12.5
+  version: 2.20.1
+  url: https://mvnrepository.com/artifact/com.fasterxml.jackson.dataformat/jackson-dataformat-yaml/2.20.1
 pagehelper:
   groupId: com.github.pagehelper
   artifactId: pagehelper
@@ -316,8 +316,8 @@ client-java-proto:
 jackson-core:
   groupId: com.fasterxml.jackson.core
   artifactId: jackson-core
-  version: 2.12.5
-  url: https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core/2.12.5
+  version: 2.20.1
+  url: https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core/2.20.1
 spring-jcl:
   groupId: org.springframework
   artifactId: spring-jcl
@@ -1226,8 +1226,8 @@ wagon-provider-api:
 jackson-annotations:
   groupId: com.fasterxml.jackson.core
   artifactId: jackson-annotations
-  version: 2.12.5
-  url: https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations/2.12.5
+  version: 2.20
+  url: https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations/2.20
 org.sonatype.aether:aether-spi:
   groupId: org.sonatype.aether
   artifactId: aether-spi
@@ -1356,8 +1356,8 @@ HikariCP:
 jackson-module-parameter-names:
   groupId: com.fasterxml.jackson.module
   artifactId: jackson-module-parameter-names
-  version: 2.12.5
-  url: https://mvnrepository.com/artifact/com.fasterxml.jackson.module/jackson-module-parameter-names/2.12.5
+  version: 2.20.1
+  url: https://mvnrepository.com/artifact/com.fasterxml.jackson.module/jackson-module-parameter-names/2.20.1
 mybatis-plus:
   groupId: com.baomidou
   artifactId: mybatis-plus
@@ -1401,8 +1401,8 @@ hutool-all:
 jackson-databind:
   groupId: com.fasterxml.jackson.core
   artifactId: jackson-databind
-  version: 2.12.3
-  url: https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind/2.12.3
+  version: 2.20.1
+  url: https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind/2.20.1
 jakarta.annotation-api:
   groupId: jakarta.annotation
   artifactId: jakarta.annotation-api
