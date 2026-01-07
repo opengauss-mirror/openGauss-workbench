@@ -18,11 +18,22 @@
     <commons.pool2.version>2.11.1</commons.pool2.version>
     <hutool.version>5.8.39</hutool.version>
     <slf4j.version>1.7.36</slf4j.version>
+    <snakeyaml.version>2.5</snakeyaml.version>
     <spring-boot.version>3.5.7</spring-boot.version>
     <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
     <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
     <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.yaml</groupId>
+        <artifactId>snakeyaml</artifactId>
+        <version>${snakeyaml.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <!-- JSCH SFTP library -->
