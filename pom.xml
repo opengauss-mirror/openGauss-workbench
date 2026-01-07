@@ -61,13 +61,7 @@
         <opentelemetry.version>1.44.1</opentelemetry.version>
         <oshi.version>6.4.6</oshi.version>
         <slf4j.version>1.7.36</slf4j.version>
-        <!-- jackson 2.13+ 引入了以下安全特性：
-            1.自动敏感字段检测：默认过滤包含敏感词（如 password, secret）的字段
-            2.更严格的序列化策略：默认忽略空值字段
-            3.安全配置增强：防止意外暴露敏感信息
-            升级需禁用该安全特性，否则导致项目前端敏感数据处理异常。暂不升级
-        -->
-        <jackson.version>2.19.2</jackson.version>
+        <jackson.version>2.20.1</jackson.version>
         <fastjson.version>1.2.83</fastjson.version>
         <istack-commons-runtime.version>3.0.6</istack-commons-runtime.version>
         <mockito.version>5.2.0</mockito.version>
@@ -98,6 +92,13 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
