@@ -67,6 +67,7 @@
   },
   "overrides": {
     "js-yaml": "4.1.1",
-    "follow-redirects": "1.15.11"
+    "follow-redirects": "1.15.11",
+    "decode-uri-component": "0.2.2"
   }
 }
