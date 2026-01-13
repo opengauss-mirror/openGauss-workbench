@@ -24,7 +24,7 @@
     "core-js": "^3.6.5",
     "crypto-js": "^4.1.1",
     "jsencrypt": "^3.0.0-rc.1",
-    "element-plus": "^2.7.4",
+    "element-plus": "2.11.9",
     "localforage": "^1.10.0",
     "nprogress": "^0.2.0",
     "path-browserify": "^1.0.1",
