@@ -69,6 +69,7 @@
     }
   },
   "overrides": {
-    "follow-redirects": "1.15.11"
+    "follow-redirects": "1.15.11",
+    "brace-expansion": "1.1.12"
   }
 }
