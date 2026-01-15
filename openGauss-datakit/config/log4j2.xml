@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30" >
+    <Properties>
+        <Property name="LOG_PATH">$${sys:logging.file.path:-./logs}</Property>
+        <Property name="SAFE_MSG">%enc{%desensitize{%m}}{CRLF}%n</Property>
+        <Property name="FILE_PERMISSIONS">rw-r-----</Property>
+        <Property name="LOG_PATTERN">%style{%d{yyyy-MM-dd HH:mm:ss}}{blue} [%style{%t}{cyan}] [%style{%c{32}}{yellow}] - [%highlight{%p}] ${SAFE_MSG}</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+        <RollingFile name="FileInfo" filePermissions="${FILE_PERMISSIONS}"
+                     fileName="${LOG_PATH}/sys.log"
+                     filePattern="${LOG_PATH}/sys.%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="20 MB"/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${LOG_PATH}" maxDepth="1">
+                    <IfFileName glob="sys.*.log" />
+                    <IfLastModified age="60d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+        <RollingFile name="HostAgentAppend" filePermissions="${FILE_PERMISSIONS}"
+                     fileName="${LOG_PATH}/agent.log"
+                     filePattern="${LOG_PATH}/agent.%d{yyyy-MM-dd}-%i.log">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="20 MB"/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${LOG_PATH}" maxDepth="1">
+                    <IfFileName glob="agent.*.log" />
+                    <IfLastModified age="60d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+        <RollingFile name="FileError" filePermissions="${FILE_PERMISSIONS}"
+                     fileName="${LOG_PATH}/sys-error.log"
+                     filePattern="${LOG_PATH}/sys-error.%d{yyyy-MM-dd}.log">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+            </Policies>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${LOG_PATH}" maxDepth="1">
+                    <IfFileName glob="sys-error.*.log" />
+                    <IfLastModified age="60d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <!-- 专门处理AgentHeartbeatServiceImpl类的日志 additivity="false"确保日志不会传播到父 Logger（Root），从而防止在其他 Appender 中重复记录-->
+        <Logger name="org.opengauss.agent" level="info" additivity="false">
+            <AppenderRef ref="HostAgentAppend"/>
+        </Logger>
+
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="FileInfo"/>
+            <AppenderRef ref="FileError"/>
+        </Root>
+        <Logger name="org.apache.tomcat.util" level="OFF"  additivity="false"/>
+        <Logger name="org.springframework.web.servlet" level="ERROR"  additivity="false"/>
+        <Logger name="org.opengauss.core.v3" level="ERROR"  additivity="false"/>
+    </Loggers>
+    <!--  <Plugins>-->
+    <!--    <Plugin name="DesensitizeConverter" category="Converter" class="org.opengauss.tool.log4j2.desensitize.converter.Log4j2DesensitizingConverter"/>-->
+    <!--  </Plugins>-->
+</Configuration>

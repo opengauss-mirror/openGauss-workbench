@@ -118,15 +118,15 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
    ./visualtool-plugin/observability-instance-{version}-repackage.jar
    ```
 2. 创建新目录\
-   在`datakit`安装目录下，创建新的目录`config`, `files`, `ssl`, `logs`
+   在`datakit`安装目录下，创建新的目录`files`, `ssl`, `logs`
    ```shell
    $ cd /path/datakit_server
-   mkdir config files ssl logs
+   mkdir files ssl logs
    ```
 3. 更改配置文件 - 修改工作目录\
-   修改`datakit`安装目录下的`application-temp.yml`文件，文件中的`/ops`默认工作目录路径统一修改为实际`datakit`安装目录的路径`/path/datakit_server`，而第二步创建的目录就是为了此处统一使用的
+   修改`datakit`安装目录下的`config/application-temp.yml`文件，文件中的`/ops`默认工作目录路径统一修改为实际`datakit`安装目录的路径`/path/datakit_server`，而第二步创建的目录就是为了此处统一使用的
    ```shell
-   $ vim application-temp.yml
+   $ vim config/application-temp.yml
    system.defaultStoragePath: /ops/files
    server.ssl.key-store: /ops/ssl/keystore.p12
    logging.file.path: /ops/logs
@@ -146,10 +146,8 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
    driver-class-name: org.intarkdb.Driver
    url: jdbc:intarkdb:data/datakit
    ```
-   配置文件更改完成后，保存并退出文件编辑，然后执行如下命令，将`application-temp.yml`文件移动到第二步创建的`config`目录下
-   ```shell
-   mv application-temp.yml config
-   ```
+   配置文件更改完成后，保存并退出文件编辑。
+
    *注意*：此处使用`openGauss`作为后台数据库时，需要提前对数据库做一些参数配置，详细步骤请参考下方目录**补充：openGauss参数配置**
 5. 生成密钥信息\
    修改并执行如下命令生成密钥信息。
