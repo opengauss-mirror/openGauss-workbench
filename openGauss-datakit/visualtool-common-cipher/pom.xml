@@ -15,7 +15,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <lombok.version>1.18.34</lombok.version>
     <commons-codec.version>1.19.0</commons-codec.version>
-    <hutool.version>5.8.39</hutool.version>
+    <hutool.version>5.8.40</hutool.version>
     <slf4j.version>1.7.36</slf4j.version>
     <spring-boot.version>3.5.7</spring-boot.version>
     <snakeyaml.version>2.5</snakeyaml.version>

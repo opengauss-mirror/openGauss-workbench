@@ -45,7 +45,7 @@
         <httpcore.version>4.4.16</httpcore.version>
         <httpclient.version>4.5.14</httpclient.version>
         <httpclient5.version>5.2.1</httpclient5.version>
-        <netty-all.version>4.1.127.Final</netty-all.version>
+        <netty-all.version>4.1.130.Final</netty-all.version>
 
         <guava.version>33.5.0-jre</guava.version>
         <lombok.version>1.18.34</lombok.version>
@@ -55,7 +55,7 @@
         <snakeyaml.version>2.5</snakeyaml.version>
         <jakarta.websocket.version>2.1.1</jakarta.websocket.version>
         <prometheus.version>1.15.0</prometheus.version>
-        <hutool.version>5.8.39</hutool.version>
+        <hutool.version>5.8.40</hutool.version>
         <hutool.lower.version>5.7.17</hutool.lower.version>
         <disruptor.version>4.0.0</disruptor.version>
         <opentelemetry.version>1.44.1</opentelemetry.version>
@@ -96,6 +96,13 @@
                 <groupId>com.fasterxml.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>
                 <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>${netty-all.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

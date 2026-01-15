@@ -25,7 +25,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.github.benmanes.caffeine.cache.Cache;
-import com.github.pagehelper.util.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -35,6 +34,7 @@ import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.common.utils.StringUtils;
 import org.opengauss.admin.plugin.config.ConfigDbStorageParams;
 import org.opengauss.admin.plugin.config.ConfigParseParams;
 import org.opengauss.admin.plugin.config.ConfigReplayParams;
@@ -173,18 +173,23 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
             throw new OpsException("An unknown error occurred while recording playback.");
         }
         threadPoolTaskExecutor.submit(() -> {
-            // In the general mode of transcribe and replay,
-            // both the recording and playback processes occur on the source end,
-            // thus special handling is required for the following conditions.
-            if (isGeneral || isTranscribe) {
-                download(tp, createSourceShellInfo(tp), id, url, tp.getSourceInstallPath());
-                addSourceConfigList(tp, id, config);
+            try {
+                // In the general mode of transcribe and replay,
+                // both the recording and playback processes occur on the source end,
+                // thus special handling is required for the following conditions.
+                if (isGeneral || isTranscribe) {
+                    download(tp, createSourceShellInfo(tp), id, url, tp.getSourceInstallPath());
+                    addSourceConfigList(tp, id, config);
+                }
+                if (!isGeneral) {
+                    download(tp, createTargetShellInfo(tp), id, url, tp.getTargetInstallPath());
+                    addTargetConfigList(tp, id, config);
+                }
+                updateStatus(transcribeReplayTask, TranscribeReplayStatus.NOT_RUN);
+            } catch (Throwable e) {
+                log.error("downloadAndConfig occurred error.", e);
+                updateStatus(transcribeReplayTask, TranscribeReplayStatus.RUN_FAIL);
             }
-            if (!isGeneral) {
-                download(tp, createTargetShellInfo(tp), id, url, tp.getTargetInstallPath());
-                addTargetConfigList(tp, id, config);
-            }
-            updateStatus(transcribeReplayTask, TranscribeReplayStatus.NOT_RUN);
         });
     }
 
@@ -445,7 +450,7 @@ public class TranscribeReplayServiceImpl extends ServiceImpl<TranscribeReplayMap
 
     private String getTaskPathById(TranscribeReplayTaskDto tp, Map<String, String> config) {
         String taskPath;
-        if (!StringUtil.isEmpty(config.get(TCPDUMP_FILE_ID))) {
+        if (!StringUtils.isEmpty(config.get(TCPDUMP_FILE_ID))) {
             String passwordObj = config.get(TCPDUMP_FILE_ID);
             TranscribeReplayTask byId = getById(Integer.valueOf(passwordObj));
             int lastIndex = byId.getTargetInstallPath().lastIndexOf('/');
