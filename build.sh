@@ -180,7 +180,10 @@ function build_pkg() {
     cp ./${build_main_pkg}/visualtool-api/target/openGauss-datakit-*.jar ${output_path}/
     cp ./run.sh ${output_path}/
     cp ./${build_main_pkg}/README.md ${output_path}/${plugin_doc_output}/datakit-README.md
-    cp ./${build_main_pkg}/config/application-temp.yml ${output_path}/
+
+    mkdir -p ${output_path}/config
+    cp ./${build_main_pkg}/config/application-temp.yml ${output_path}/config
+    cp ./${build_main_pkg}/config/log4j2.xml ${output_path}/config
 }
 
 function build_install_common_component() {
@@ -228,7 +231,7 @@ copy_agent_pkg
 cd $output_path
 tar -zcf openGauss-Datakit-All-${pom_version}.tar.gz ./*
 tar -zcf openGauss-Datakit-Mini-${pom_version}.tar.gz \
-      ./application-temp.yml \
+      ./config \
       ./build_commit_id.log \
       ./doc \
       ./openGauss-datakit* \
