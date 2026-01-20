@@ -156,7 +156,7 @@
         <host-user-mng ref="hostUserRef" class="elDialog"></host-user-mng>
         <host-terminal ref="hostTerminalRef"></host-terminal>
         <label-manage-dlg ref="labelManageDlgRef" @finish="labelClose"  class="elDialog"></label-manage-dlg>
-        <bulk-import v-if="showBulkImport" ref="addHostBulkRef" @finish="bulkClose"></bulk-import>
+        <bulk-import v-show="showBulkImport" ref="addHostBulkRef" @finish="bulkClose"></bulk-import>
         <batch-label-dlg ref="batchLabelDlgRef" @finish="batchFinish"></batch-label-dlg>
         <choose-terminal-user ref="chooseTerminalUserRef" @getUser="showTerminal"></choose-terminal-user>
       </div>
