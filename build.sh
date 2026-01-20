@@ -179,6 +179,7 @@ function build_pkg() {
     fi
     cp ./${build_main_pkg}/visualtool-api/target/openGauss-datakit-*.jar ${output_path}/
     cp ./run.sh ${output_path}/
+    cp ./install.sh ${output_path}/
     cp ./${build_main_pkg}/README.md ${output_path}/${plugin_doc_output}/datakit-README.md
 
     mkdir -p ${output_path}/config
@@ -236,6 +237,7 @@ tar -zcf openGauss-Datakit-Mini-${pom_version}.tar.gz \
       ./doc \
       ./openGauss-datakit* \
       ./run.sh \
+      ./install.sh \
       ./visualtool-plugin/webds-plugin* \
       ./visualtool-plugin/base-ops* \
       ./agent/*
