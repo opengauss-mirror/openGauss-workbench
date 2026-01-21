@@ -83,13 +83,13 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
 
 ## 安装步骤
 1. 解压安装包\
-   通过下载链接或编译代码获取安装包`Datakit-All-{version}.tar.gz`或`Datakit-Mini-{version}.tar.gz`，（如果不需要所有插件，建议下载`Datakit-Mini-7.0.0-RC3.tar.gz`，安装部署完成后，可以在插件管理界面按需下载插件）；
-   解压安装包至`datakit`安装目录下，例如安装目录为`/path/datakit_server`时，解压目录如下:
+   通过下载链接或编译代码获取安装包`Datakit-All-7.0.0-RC3.tar.gz`或`Datakit-Mini-7.0.0-RC3.tar.gz`，（如果不需要所有插件，建议下载`Datakit-Mini-7.0.0-RC3.tar.gz`，安装部署完成后，可以在插件管理界面按需下载插件）；
+   解压安装包至`datakit`安装目录下，例如安装目录为`/path/datakit_server`时，解压命令如下:
    ```shell
-   $ tar -zxvf Datakit-All-{version}.tar.gz -C /path/to/datakit_server
+   $ tar -zxvf Datakit-All-7.0.0-RC3.tar.gz -C /path/to/datakit_server
    ./agent/
    ./agent/application.yml
-   ./agent/datakit-agent-{version}-runner.jar
+   ./agent/datakit-agent-7.0.0-RC3-runner.jar
    ./application-temp.yml
    ./build_commit_id.log
    ./doc/
@@ -105,66 +105,58 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
    ./doc/alert-monitor-README.md
    ./doc/data-studio-README.md
    ./doc/datakit-README.md
-   ./openGauss-datakit-{version}.jar
+   ./openGauss-datakit-7.0.0-RC3.jar
    ./run.sh
    ./visualtool-plugin/
-   ./visualtool-plugin/observability-sql-diagnosis-{version}-repackage.jar
-   ./visualtool-plugin/compatibility-assessment-{version}-repackage.jar
-   ./visualtool-plugin/alert-monitor-{version}-repackage.jar
-   ./visualtool-plugin/webds-plugin-{version}-repackage.jar
-   ./visualtool-plugin/observability-log-search-{version}-repackage.jar
-   ./visualtool-plugin/base-ops-{version}-repackage.jar
-   ./visualtool-plugin/data-migration-{version}-repackage.jar
-   ./visualtool-plugin/observability-instance-{version}-repackage.jar
+   ./visualtool-plugin/observability-sql-diagnosis-7.0.0-RC3-repackage.jar
+   ./visualtool-plugin/compatibility-assessment-7.0.0-RC3-repackage.jar
+   ./visualtool-plugin/alert-monitor-7.0.0-RC3-repackage.jar
+   ./visualtool-plugin/webds-plugin-7.0.0-RC3-repackage.jar
+   ./visualtool-plugin/observability-log-search-7.0.0-RC3-repackage.jar
+   ./visualtool-plugin/base-ops-7.0.0-RC3-repackage.jar
+   ./visualtool-plugin/data-migration-7.0.0-RC3-repackage.jar
+   ./visualtool-plugin/observability-instance-7.0.0-RC3-repackage.jar
    ```
-2. 创建新目录\
-   在`datakit`安装目录下，创建新的目录`files`, `ssl`, `logs`
-   ```shell
-   $ cd /path/datakit_server
-   mkdir files ssl logs
-   ```
-3. 更改配置文件 - 修改工作目录\
-   修改`datakit`安装目录下的`config/application-temp.yml`文件，文件中的`/ops`默认工作目录路径统一修改为实际`datakit`安装目录的路径`/path/datakit_server`，而第二步创建的目录就是为了此处统一使用的
-   ```shell
-   $ vim config/application-temp.yml
-   system.defaultStoragePath: /ops/files
-   server.ssl.key-store: /ops/ssl/keystore.p12
-   logging.file.path: /ops/logs
-   ```
-4. 更改配置文件 - 配置数据库\
-   数据库可选用`openGauss`或轻量嵌入式数据库`Intarkdb`，平台默认使用`Intarkdb`作为后台数据库。使用`openGauss`作为后台数据库时，需要正确配置`openGauss`的连接信息。配置内容如下：
-   ```yaml
-   # For openGauss
-   driver-class-name: org.opengauss.Driver
-   url: jdbc:opengauss://ip:port/database?currentSchema=public&batchMode=off
-   username: dbuser
-   password: ******
-   ```
-   使用轻量嵌入式数据库`Intarkdb`作为后台数据库时，只需注释`openGauss`的配置内容，并解开对`Intarkdb`配置内容的注释，即可完成配置，配置内容如下： 
-   ```yaml
-   # For Intarkdb
-   driver-class-name: org.intarkdb.Driver
-   url: jdbc:intarkdb:data/datakit
-   ```
-   配置文件更改完成后，保存并退出文件编辑。
+2. 运行安装脚本
 
-   *注意*：此处使用`openGauss`作为后台数据库时，需要提前对数据库做一些参数配置，详细步骤请参考下方目录**补充：openGauss参数配置**
-5. 生成密钥信息\
-   修改并执行如下命令生成密钥信息。
-   - 配置命令中`-storepass`参数值与`application-temp.yml`配置文件中的`server.ssl.key-store-password`参数值保持一致，参数取值支持字母、数字、符号等；
-   - 修改命令中`-keystore`路径值与配置文件中的`key-store`路径值保持一致，即第三步中修改`/ops`后的路径。
-   - 配置命令中`-ext "SAN=IP:x.x.x.x"`参数，修改`x.x.x.x`为`datakit`服务安装在的主机`ip`。
+   切换到 DataKit 安装目录下，执行安装脚本`install.sh`，安装脚本会自动创建 DataKit 服务所需的目录结构，并修改配置文件中相关目录结构。
+
    ```shell
-   keytool -genkey -noprompt \
-   -dname "CN=opengauss, OU=opengauss, O=opengauss, L=Beijing, S=Beijing, C=CN" \
-   -alias opengauss -storetype PKCS12 -keyalg RSA -keysize 4096 \
-   -keystore /ops/ssl/keystore.p12 \
-   -validity 365 -storepass ****** \
-   -ext "SAN=IP:x.x.x.x"
+   sh install.sh
    ```
-   *注意*：此处为一条完整命令。
-6. 启动与日常运维\
-   启动应用： 启动脚本增加`--aes-key`参数。 参数值为Datakit启动密码，用于内部加解密操作，datakit不保存该密码且暂不支持修改，对该密码需要妥善保管。
+
+   运行日志如下：
+
+   ```
+   Checking the DataKit jar...
+   Check the DataKit jar is openGauss-datakit-7.0.0-RC3.jar
+   Check the DataKit jar successfully
+   Creating required directories...
+   Create required directories successfully
+   Checking Java version...
+   Check Java version is 17.0.13
+   Generating the SSL key...
+   Generating 4,096 bit RSA key pair and self-signed certificate (SHA384withRSA) with a validity of 365 days
+           for: CN=opengauss, OU=opengauss, O=opengauss, L=Beijing, ST=Beijing, C=CN
+   Generate the SSL key successfully
+   Configuring the application-temp.yml...
+   Configuring the application-temp.yml successfully
+   Datakit has been installed successfully.
+   Please go to the '/path/datakit_server' directory to manually start the DataKit server.
+   The command is as follows:
+       sh ./run.sh start --aes-key ******
+       sh ./run.sh status
+       sh ./run.sh stop
+       sh ./run.sh restart --aes-key ******
+   ```
+
+3. 启动与日常运维
+
+   安装成功后，参考如下命令运行`run.sh`脚本启停和管理 DataKit 服务。
+
+   启动脚本中`--aes-key`参数的值为 DataKit 启动密码，用于内部加解密操作，DataKit不保存该密码，且暂不支持修改。 对该密码需要妥善保管，多次启停时，启动密码需要保持一致，否则DataKit会启动失败。
+
+   启动应用：
    ```shell
    sh ./run.sh start --aes-key xxxxxx
    ```
@@ -180,8 +172,37 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
    ```shell
    sh ./run.sh status
    ```
-7. 访问服务\
+4. 访问服务
+
    启动成功后，通过浏览器输入如下地址：`https://ip:9494/` 访问`datakit`服务，这里的`ip`为`datakit`服务安装在的主机`ip`，`9494`为`datakit`服务默认端口，如有修改请根据实际情况替换。初始用户为`admin`，初始密码为`admin123`，首次登录需修改初始密码。
+
+## 补充：切换DataKit后台数据库
+
+   DataKit 安装完成后，会默认使用`Intarkdb`内置数据库作为 DataKit 后台数据库，用于保存 DataKit 的操作数据。 如果需要修改后台数据库为`openGauss`，请参考如下教程：
+
+### 启用openGauss数据库
+   
+   编辑 DataKit 安装目录下的`config/application-temp.yml`配置文件，首先注释`Intarkdb`的`driver-class-name`和`url`配置项， 然后对如下`openGauss`的配置内容解开注释，并准确配置其`jdbc`连接信息即可。
+   
+   **注意**：使用`openGauss`作为后台数据库时，`openGauss`需要支持远程连接，并且配置的连接用户需要拥有`sysadmin`权限，远程连接配置和用户权限配置步骤请参考目录**补充：openGauss参数配置**
+
+   ```yml
+   # For openGauss
+   driver-class-name: org.opengauss.Driver
+   url: jdbc:opengauss://ip:port/database?currentSchema=public&batchMode=off
+   username: dbuser
+   password: ******
+   ```
+
+### 启用Intarkdb数据库
+
+   编辑 DataKit 安装目录下的`config/application-temp.yml`配置文件，首先注释`openGauss`的`driver-class-name`、`url`、`username`和`password`配置项，然后对如下`Intarkdb`的配置内容解开注释即可。
+   
+   ```yml
+   # For Intarkdb
+   driver-class-name: org.intarkdb.Driver
+   url: jdbc:intarkdb:data/datakit
+   ```
 
 ## 补充：openGauss参数配置
 1. 安装`openGauss`数据库\
@@ -191,7 +212,7 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
    ```shell
    source ~/.bashrc
    ```
-3. 参数配置\
+3. 参数配置（开启远程连接）\
    修改并执行如下命令，设置配置文件`pg_hba.conf`相关参数（如果是ipv6地址，则将以下“0.0.0.0/0”换成“::/0”）
    ```shell
    gs_guc set -D /opt/software/openGauss/data/single_node -h "host all all 0.0.0.0/0 sha256"
@@ -211,7 +232,7 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
    ```shell
    gsql -d postgres -p 5432 -r
    ```
-6. 创建用户及数据库\
+6. 创建用户及数据库（赋予用户`sysadmin`权限）\
    成功连接数据库后，依次执行如下三条命令，分别进行创建用户，赋予用户管理员权限，创建数据库的操作。
    ```shell
    create user opengauss_test with password 'Sample@123';
