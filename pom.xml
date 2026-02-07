@@ -54,8 +54,9 @@
         <snakeyaml.version>2.5</snakeyaml.version>
         <jakarta.websocket.version>2.1.1</jakarta.websocket.version>
         <prometheus.version>1.15.0</prometheus.version>
-        <hutool.version>5.8.40</hutool.version>
+        <hutool.version>5.8.43</hutool.version>
         <hutool.lower.version>5.7.17</hutool.lower.version>
+        <log4j2.version>2.25.3</log4j2.version>
         <disruptor.version>4.0.0</disruptor.version>
         <opentelemetry.version>1.44.1</opentelemetry.version>
         <oshi.version>6.4.6</oshi.version>
@@ -455,6 +456,37 @@
                 <artifactId>mockito-inline</artifactId>
                 <version>${mockito.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <!-- Log4j2 依赖管理，修复 CVE-2025-13465 漏洞 -->
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-api</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j2-impl</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-jul</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-to-slf4j</artifactId>
+                <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j-impl</artifactId>
+                <version>${log4j2.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
