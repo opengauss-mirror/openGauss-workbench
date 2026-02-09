@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { AxiosRequestConfig, AxiosResponse } from 'axios'
+import type { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { Message, Modal } from '@arco-design/web-vue'
 import { useUserStore } from '@/store'
 import { getToken } from '@/utils/auth'
@@ -19,12 +19,9 @@ axios.defaults.timeout = 600000
 let isTimeout = false
 
 axios.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig) => {
     const token = getToken()
     if (token && config.url !== '/login') {
-      if (!config.headers) {
-        config.headers = {}
-      }
       config.headers.Authorization = `Bearer ${token}`
     }
     return config
@@ -35,7 +32,7 @@ axios.interceptors.request.use(
 )
 // add response interceptors
 axios.interceptors.response.use(
-  (response: AxiosResponse<HttpResponse>) => {
+  (response: AxiosResponse<any>) => {
     const res = response
     const code = res.data.code || 200
     const msg = ((errorCode as any)[code] && i18n.global.t((errorCode as any)[code])) || res.data.msg || i18n.global.t(errorCode['default'])
@@ -77,8 +74,9 @@ axios.interceptors.response.use(
   },
   (error) => {
     const { request, message, response } = error
-    if (request.responseURL.includes('plugins/base-ops')) {
-      if (response.status !== 404) {
+    const requestUrl = error.config?.url || ''
+    if (requestUrl.includes('plugins/base-ops')) {
+      if (response?.status !== 404) {
         Message.error({
           content: message || 'Error',
           duration: 3 * 1000

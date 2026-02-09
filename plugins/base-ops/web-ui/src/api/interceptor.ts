@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { AxiosRequestConfig, AxiosResponse } from 'axios'
+import type { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig  } from 'axios'
 import { Message, Modal, Notification } from '@arco-design/web-vue'
 import { getToken } from '@/utils/auth'
 import errorCode from '@/utils/errorCode'
@@ -22,16 +22,13 @@ axios.defaults.timeout = 1200000
 let isTimeout = false
 
 axios.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig ) => {
     // let each request carry token
     // this example using the JWT token
     // Authorization is a custom headers key
     // please modify it according to the actual situation
     const token = getToken()
     if (token) {
-      if (!config.headers) {
-        config.headers = {}
-      }
       config.headers.Authorization = `Bearer ${token}`
     }
 
@@ -54,7 +51,7 @@ axios.interceptors.request.use(
 )
 // add response interceptors
 axios.interceptors.response.use(
-  (response: AxiosResponse<HttpResponse>) => {
+  (response: AxiosResponse<any>) => {
     const res = response
     // If the status code is not set, the default status is success
     const code = res.data.code || 200
@@ -95,6 +92,8 @@ axios.interceptors.response.use(
       message = 'Request timed out'
     } else if (message.includes('Request failed with status code')) {
       message = 'System interface ' + message.substr(message.length - 3) + 'error'
+    } else if (!message && error.response) {
+      message = error.response.data?.msg || error.response.statusText || 'Request failed'
     }
     Message.error({
       content: message || 'Request failed',
