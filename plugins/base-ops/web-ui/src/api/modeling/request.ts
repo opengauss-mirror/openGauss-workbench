@@ -1,5 +1,5 @@
 import { Message } from '@arco-design/web-vue'
-import Axios, { AxiosRequestConfig } from 'axios'
+import Axios, { AxiosRequestConfig, InternalAxiosRequestConfig  } from 'axios'
 import router from '@/router'
 
 export interface KeyValue {
@@ -24,7 +24,7 @@ const whiteList = ['user/login']
 let timeoutNoNotice = false
 
 axios.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig ) => {
     // if include by white list
     if (config.url && !whiteList.includes(config.url.split(baseURL)[0])) {
       if (!config.data) config.data = {}
@@ -40,7 +40,8 @@ axios.interceptors.request.use(
 
 axios.interceptors.response.use(
   (response: KeyValue) => {
-    if (whiteList.includes(response.config.url.split(baseURL)[1])) {
+    const responseUrl = response.config?.url || ''
+    if (responseUrl && whiteList.includes(responseUrl.split(baseURL)[1])) {
       return response.data
     }
     const res = response.data
@@ -49,7 +50,7 @@ axios.interceptors.response.use(
     const notNeedMessage = requestData.notNeedMessage ? requestData.notNeedMessage : false
     // if code is not 200
     if (statusCode !== 200) {
-      if (response.request.responseURL.includes('excel/importPatent')) {
+      if (response.config?.url?.includes('excel/importPatent')) {
         return Promise.reject(res)
       } else if (!notNeedMessage) Message.error({ content: res.msg || res.message || 'Error', duration: 5 * 1000 })
       else {
