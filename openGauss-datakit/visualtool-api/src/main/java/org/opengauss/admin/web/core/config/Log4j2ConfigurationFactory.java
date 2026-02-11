@@ -8,6 +8,7 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.ConfigurationFactory;
 import org.apache.logging.log4j.core.config.ConfigurationSource;
+import org.apache.logging.log4j.core.config.xml.XmlConfiguration;
 
 import java.net.URI;
 
@@ -34,6 +35,6 @@ public class Log4j2ConfigurationFactory extends ConfigurationFactory {
 
     @Override
     public Configuration getConfiguration(LoggerContext loggerContext, ConfigurationSource configurationSource) {
-        return null;
+        return new XmlConfiguration(loggerContext, configurationSource);
     }
 }
