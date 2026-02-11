@@ -84,6 +84,7 @@ change_config_file() {
     sed -i "/defaultStoragePath:/s#.*#  defaultStoragePath: ${datakit_home_dir}/files#" ${config_file_path}
     sed -i "/key-store:/s#.*#    key-store: ${datakit_home_dir}/ssl/keystore.p12#" ${config_file_path}
     sed -i "/    path:/s#.*#    path: ${datakit_home_dir}/logs/#" ${config_file_path}
+    sed -i "/  config: /s#.*#  config: ${datakit_home_dir}/config/log4j2.xml#" ${config_file_path}
 
     echo "Configuring the application-temp.yml successfully"
 }

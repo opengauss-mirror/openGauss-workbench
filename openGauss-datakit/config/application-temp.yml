@@ -16,6 +16,7 @@ server:
 logging:
   file:
     path: /ops/logs/
+  config: /ops/config/log4j2.xml
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
