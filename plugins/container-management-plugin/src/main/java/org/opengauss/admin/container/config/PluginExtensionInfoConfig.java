@@ -36,7 +36,10 @@ import java.util.Map;
  **/
 @Component
 public class PluginExtensionInfoConfig implements PluginExtensionInfo {
-    public static final String PLUGIN_ID = "container-management-plugin";
+    /**
+     * container-management plugin id
+     */
+    public static final String PLUGIN_ID = "container-management";
 
     /**
      * extensionInfo

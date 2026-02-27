@@ -83,4 +83,11 @@
         ${entity.params.dataScope}
     </select>
 
+    <select id="selectRoleIdsByUserId" parameterType="java.lang.Long" resultType="java.lang.Long">
+        SELECT
+        role_id
+        FROM sys_user_role
+        WHERE user_id = #{userId}
+    </select>
+
 </mapper>

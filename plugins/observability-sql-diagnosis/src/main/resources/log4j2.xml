@@ -12,8 +12,8 @@
       <PatternLayout pattern="${LOG_PATTERN}"/>
     </Console>
     <RollingFile name="FileInfo" filePermissions="${FILE_PERMISSIONS}"
-                 fileName="${LOG_PATH}/plugins_observability_sql_search.log"
-                 filePattern="${LOG_PATH}/plugins_observability_sql_search.%d{yyyy-MM-dd}-%i.log">
+                 fileName="${LOG_PATH}/plugins_observability_sql_diagnosis.log"
+                 filePattern="${LOG_PATH}/plugins_observability_sql_diagnosis.%d{yyyy-MM-dd}-%i.log">
       <PatternLayout pattern="${LOG_PATTERN}"/>
       <Policies>
         <SizeBasedTriggeringPolicy size="20 MB"/>
@@ -21,14 +21,14 @@
       </Policies>
       <DefaultRolloverStrategy>
         <Delete basePath="${LOG_PATH}" maxDepth="1">
-          <IfFileName glob="plugins_observability_sql_search.*.log" />
+          <IfFileName glob="plugins_observability_sql_diagnosis.*.log" />
           <IfLastModified age="60d" />
         </Delete>
       </DefaultRolloverStrategy>
     </RollingFile>
     <RollingFile name="FileError" filePermissions="${FILE_PERMISSIONS}"
-                 fileName="${LOG_PATH}/plugins_observability_sql_search-error.log"
-                 filePattern="${LOG_PATH}/plugins_observability_sql_search-error.%d{yyyy-MM-dd}.log">
+                 fileName="${LOG_PATH}/plugins_observability_sql_diagnosis-error.log"
+                 filePattern="${LOG_PATH}/plugins_observability_sql_diagnosis-error.%d{yyyy-MM-dd}.log">
       <PatternLayout pattern="${LOG_PATTERN}"/>
       <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
       <Policies>
@@ -36,7 +36,7 @@
       </Policies>
       <DefaultRolloverStrategy>
         <Delete basePath="${LOG_PATH}" maxDepth="1">
-          <IfFileName glob="plugins_observability_sql_search-error.*.log" />
+          <IfFileName glob="plugins_observability_sql_diagnosis-error.*.log" />
           <IfLastModified age="60d" />
         </Delete>
       </DefaultRolloverStrategy>

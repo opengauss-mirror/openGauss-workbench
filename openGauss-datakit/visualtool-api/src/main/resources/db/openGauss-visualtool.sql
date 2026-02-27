@@ -899,6 +899,10 @@ INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_vers
 VALUES ('compatibility-assessment', 0, '7.0.0-RC3', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/compatibility-assessment-7.0.0-RC3-repackage.jar', 'openGauss兼容性评估工具', 'The openGauss compatibility evaluation tool') ON DUPLICATE KEY
 UPDATE NOTHING;
 
+INSERT INTO public.sys_plugins_repository (plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
+VALUES ('container-management', 0, '7.0.0-RC3', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/container-management-plugin-7.0.0-RC3-repackage.jar', '容器管理插件', 'Container Management Plugin') ON DUPLICATE KEY
+UPDATE NOTHING;
+
 DELETE FROM public.sys_plugins_repository WHERE plugin_id IN ('oauth-login', 'MetaTune', 'monitor-tools');
 -- ----------------------------
 -- Table structure for sys_role
