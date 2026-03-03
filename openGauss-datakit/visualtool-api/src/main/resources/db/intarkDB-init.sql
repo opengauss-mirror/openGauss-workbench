@@ -665,6 +665,9 @@ VALUES (9, 'observability-sql-diagnosis', 0, '7.0.0-RC3', 'https://opengauss.obs
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
 VALUES (11, 'compatibility-assessment', 0, '7.0.0-RC3', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/compatibility-assessment-7.0.0-RC3-repackage.jar', 'openGauss兼容性评估工具', 'The openGauss compatibility evaluation tool');
 
+INSERT INTO public.sys_plugins_repository (id,plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
+VALUES (12,'container-management', 0, '7.0.0-RC3', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/container-management-plugin-7.0.0-RC3-repackage.jar', '容器管理插件', 'Container Management Plugin') ON DUPLICATE KEY
+
 DELETE FROM sys_plugins_repository WHERE plugin_id IN ('oauth-login', 'MetaTune', 'monitor-tools');
 -- ----------------------------
 -- Table structure for sys_role

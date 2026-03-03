@@ -35,10 +35,15 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.opengauss.admin.common.constant.LogConstants;
+import org.opengauss.admin.common.core.domain.entity.SysMenu;
+import org.opengauss.admin.common.core.domain.entity.SysUser;
 import org.opengauss.admin.common.core.dto.SysLogConfigDto;
 import org.opengauss.admin.common.core.vo.SysLogConfigVo;
+import org.opengauss.admin.common.utils.SecurityUtils;
 import org.opengauss.admin.system.domain.SysLogConfig;
 import org.opengauss.admin.system.mapper.SysLogConfigMapper;
+import org.opengauss.admin.system.mapper.SysMenuMapper;
+import org.opengauss.admin.system.mapper.SysUserMapper;
 import org.opengauss.admin.system.service.ISysLogService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -53,8 +58,10 @@ import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * System log service
@@ -67,6 +74,12 @@ public class SysLogServiceImpl implements ISysLogService {
 
     @Autowired
     private SysLogConfigMapper sysLogConfigMapper;
+
+    @Autowired
+    private SysMenuMapper sysMenuMapper;
+
+    @Autowired
+    private SysUserMapper sysUserMapper;
 
     /**
      * Override log config from table sys_log_config
@@ -213,32 +226,214 @@ public class SysLogServiceImpl implements ISysLogService {
     }
 
     /**
-     * List all log files in the log directory
+     * List all log files in the log directory with user permission filter
+     *
      * @return FileList
      */
     @Override
     public List<Map<String, Object>> listAllLogFile() {
+        // Get current login user
+        String username = SecurityUtils.getUsername();
+
+        // Admin user can see all logs
+        if ("admin".equals(username)) {
+            return listAllLogFilesWithoutPermissionCheck();
+        }
+
+        // For non-admin users, apply permission filter
+        Set<String> allowedPluginIds = getAllowedPluginIds(username);
+        return listLogFilesWithPermissionFilter(allowedPluginIds);
+    }
+
+    /**
+     * Get allowed plugin IDs for current user
+     *
+     * @param username current login username
+     * @return set of allowed plugin IDs
+     */
+    private Set<String> getAllowedPluginIds(String username) {
+        // Get user information
+        SysUser user = getUserByUsername(username);
+
+        // Get user roles
+        List<Long> roleIds = sysUserMapper.selectRoleIdsByUserId(Long.valueOf(user.getUserId()));
+
+        // Get menus by roles
+        List<SysMenu> menus = getMenusByRoleIds(roleIds);
+
+        // Extract plugin IDs from menus
+        return extractPluginIdsFromMenus(menus);
+    }
+
+    /**
+     * Get user by username
+     *
+     * @param username username
+     * @return SysUser object
+     */
+    private SysUser getUserByUsername(String username) {
+        LambdaQueryWrapper<SysUser> userQuery = new LambdaQueryWrapper<>();
+        userQuery.eq(SysUser::getUserName, username);
+        return sysUserMapper.selectOne(userQuery);
+    }
+
+    /**
+     * Get menus by role IDs
+     *
+     * @param roleIds list of role IDs
+     * @return list of menus
+     */
+    private List<SysMenu> getMenusByRoleIds(List<Long> roleIds) {
+        List<SysMenu> menus = new ArrayList<>();
+        for (Long roleId : roleIds) {
+            List<SysMenu> roleMenus = sysMenuMapper.selectMenusByRoleId(roleId);
+            menus.addAll(roleMenus);
+        }
+        return menus;
+    }
+
+    /**
+     * Extract plugin IDs from menus
+     *
+     * @param menus list of menus
+     * @return set of plugin IDs
+     */
+    private Set<String> extractPluginIdsFromMenus(List<SysMenu> menus) {
+        Set<String> allowedPluginIds = new HashSet<>();
+        for (SysMenu menu : menus) {
+            if (menu.getPluginId() != null && !menu.getPluginId().isEmpty()) {
+                allowedPluginIds.add(menu.getPluginId());
+            }
+        }
+        return allowedPluginIds;
+    }
+
+    /**
+     * List log files with permission filter
+     *
+     * @param allowedPluginIds set of allowed plugin IDs
+     * @return list of log files
+     */
+    private List<Map<String, Object>> listLogFilesWithPermissionFilter(Set<String> allowedPluginIds) {
         File dir = new File(loggingFilePath);
         File[] childrenFiles = dir.listFiles();
         List<Map<String, Object>> files = new ArrayList<>();
-        if(null != childrenFiles){
+
+        if (childrenFiles != null) {
             for (File childFile : childrenFiles) {
                 if (childFile.isFile()) {
-                    Map<String, Object> file = new HashMap<>();
-                    file.put("name",childFile.getName());
-                    file.put("size", childFile.length());
-                    try {
-                        BasicFileAttributes attrs = Files.readAttributes(childFile.toPath(), BasicFileAttributes.class);
-                        file.put("createdAt", attrs.creationTime().toMillis());
-                        file.put("updatedAt", attrs.lastModifiedTime().toMillis());
-                    } catch (IOException e) {
-                        log.error("list all log error, message: {}", e.getMessage());
-                    }
-                    files.add(file);
+                    processLogFile(childFile, files, allowedPluginIds);
                 }
             }
         }
         return files;
+    }
+
+    /**
+     * Process single log file
+     *
+     * @param file             log file
+     * @param files            result list
+     * @param allowedPluginIds set of allowed plugin IDs
+     */
+    private void processLogFile(File file, List<Map<String, Object>> files, Set<String> allowedPluginIds) {
+        String fileName = file.getName();
+
+        // Check if it's a system log file (only admin can access)
+        if ("sys.log".equals(fileName) || "sys-error.log".equals(fileName) || "visualtool-main.out".equals(fileName)) {
+            // Admin already handled above
+            return;
+        }
+
+        // Check if it's a plugin log file (starts with "plugins")
+        if (fileName.startsWith("plugins")) {
+            String pluginId = extractPluginIdFromFileName(fileName);
+
+            // Handle plugin ID with underscores (replace underscores with hyphens)
+            if (pluginId.contains("_")) {
+                pluginId = pluginId.replace("_", "-");
+            }
+
+            // Check if user has permission for this plugin
+            if (allowedPluginIds.contains(pluginId)) {
+                addLogFileInfo(files, file);
+            }
+        } else {
+            // Other non-plugin log files are always allowed
+            addLogFileInfo(files, file);
+        }
+    }
+
+    /**
+     * Extract plugin ID from log file name
+     *
+     * @param fileName log file name
+     * @return plugin ID
+     */
+    private String extractPluginIdFromFileName(String fileName) {
+        if (fileName.length() > 8) { // "plugins_" is 8 characters
+            // Find the first dot or hyphen after "plugins_"
+            int dotIndex = fileName.indexOf(".", 8);
+            int dashIndex = fileName.indexOf("-", 8);
+            int endIndex = -1;
+
+            if (dotIndex != -1 && dashIndex != -1) {
+                endIndex = Math.min(dotIndex, dashIndex);
+            } else if (dotIndex != -1) {
+                endIndex = dotIndex;
+            } else if (dashIndex != -1) {
+                endIndex = dashIndex;
+            } else {
+                endIndex = -1;
+            }
+
+            if (endIndex != -1) {
+                return fileName.substring(8, endIndex);
+            } else {
+                // If no dot or dash, take the rest as pluginId
+                return fileName.substring(8);
+            }
+        }
+        return "";
+    }
+
+    /**
+     * List all log files without permission check (for admin user)
+     *
+     * @return FileList
+     */
+    private List<Map<String, Object>> listAllLogFilesWithoutPermissionCheck() {
+        File dir = new File(loggingFilePath);
+        File[] childrenFiles = dir.listFiles();
+        List<Map<String, Object>> files = new ArrayList<>();
+        if (childrenFiles != null) {
+            for (File childFile : childrenFiles) {
+                if (childFile.isFile()) {
+                    addLogFileInfo(files, childFile);
+                }
+            }
+        }
+        return files;
+    }
+
+    /**
+     * Add log file info to the list
+     *
+     * @param files     the file list
+     * @param childFile the log file
+     */
+    private void addLogFileInfo(List<Map<String, Object>> files, File childFile) {
+        Map<String, Object> file = new HashMap<>();
+        file.put("name", childFile.getName());
+        file.put("size", childFile.length());
+        try {
+            BasicFileAttributes attrs = Files.readAttributes(childFile.toPath(), BasicFileAttributes.class);
+            file.put("createdAt", attrs.creationTime().toMillis());
+            file.put("updatedAt", attrs.lastModifiedTime().toMillis());
+        } catch (IOException e) {
+            log.error("list all log error, message: {}", e.getMessage());
+        }
+        files.add(file);
     }
 
     /**

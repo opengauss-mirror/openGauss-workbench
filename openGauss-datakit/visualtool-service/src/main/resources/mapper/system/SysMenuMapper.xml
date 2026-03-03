@@ -24,6 +24,7 @@
         <result property="updateTime" column="update_time"/>
         <result property="updateBy" column="update_by"/>
         <result property="remark" column="remark"/>
+        <result property="pluginId" column="plugin_id"/>
         <result property="pluginTheme" column="plugin_theme"/>
         <result property="menuClassify" column="menu_classify"/>
         <result property="menuEnName" column="menu_en_name"/>
@@ -125,5 +126,31 @@
     <select id="selectParentMenuIdByPluginId" parameterType="String" resultType="Integer">
         SELECT distinct parent_id as menu_id from sys_menu where plugin_id= #{pluginId} and parent_id != 0
         and  parent_id not in (SELECT menu_id from sys_menu where plugin_id= #{pluginId})
+    </select>
+
+    <select id="selectMenusByRoleId" parameterType="java.lang.Long" resultMap="SysMenuResult">
+        SELECT DISTINCT
+        m.menu_id,
+        m.parent_id,
+        m.menu_name,
+        m.menu_en_name,
+        m.path,
+        m.component,
+        m.visible,
+        m.status,
+        CASE WHEN m.perms IS NULL THEN '' ELSE m.perms END AS perms,
+        m.is_frame,
+        m.is_cache,
+        m.menu_type,
+        m.icon,
+        m.order_num,
+        m.create_time,
+        m.plugin_id,
+        m.plugin_theme,
+        m.menu_classify
+        from sys_menu m
+        left join sys_role_menu rm on m.menu_id = rm.menu_id
+        where rm.role_id = #{roleId}
+        order by m.parent_id, m.order_num
     </select>
 </mapper>

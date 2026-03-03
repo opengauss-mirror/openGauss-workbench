@@ -96,4 +96,12 @@ public interface SysMenuMapper extends BaseMapper<SysMenu> {
      * @return parent menuIDs
      */
     List<Integer> selectParentMenuIdByPluginId(@Param("pluginId") String pluginId);
+
+    /**
+     * Query menus by role ID
+     *
+     * @param roleId role ID
+     * @return menu list
+     */
+    List<SysMenu> selectMenusByRoleId(Long roleId);
 }

@@ -31,6 +31,7 @@ import com.baomidou.mybatisplus.core.toolkit.Constants;
 import org.opengauss.admin.common.core.domain.entity.SysUser;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import java.util.List;
 
 
 /**
@@ -56,4 +57,11 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
      */
     public IPage<SysUser> selectUserList(IPage<SysUser> page, @Param("entity") SysUser sysUser);
 
+    /**
+     * Query role IDs by user ID
+     *
+     * @param userId user ID
+     * @return role ID list
+     */
+    List<Long> selectRoleIdsByUserId(Long userId);
 }

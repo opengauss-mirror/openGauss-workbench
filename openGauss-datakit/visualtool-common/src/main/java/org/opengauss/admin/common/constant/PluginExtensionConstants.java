@@ -60,7 +60,7 @@ public interface PluginExtensionConstants {
     /**
      * container management plugin id
      */
-    String CONTAINER_MANAGEMENT_PLUGIN_ID = "container-management-plugin";
+    String CONTAINER_MANAGEMENT_PLUGIN_ID = "container-management";
 
     /**
      * webds plugin id
