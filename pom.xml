@@ -45,7 +45,7 @@
         <httpcore.version>4.4.16</httpcore.version>
         <httpclient.version>4.5.14</httpclient.version>
         <netty-all.version>4.1.130.Final</netty-all.version>
-
+        <apache.tomcat.version>10.1.52</apache.tomcat.version>
         <guava.version>33.5.0-jre</guava.version>
         <lombok.version>1.18.34</lombok.version>
         <jwt.version>0.9.1</jwt.version>
@@ -487,6 +487,21 @@
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-slf4j-impl</artifactId>
                 <version>${log4j2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-core</artifactId>
+                <version>${apache.tomcat.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-websocket</artifactId>
+                <version>${apache.tomcat.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-el</artifactId>
+                <version>${apache.tomcat.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
