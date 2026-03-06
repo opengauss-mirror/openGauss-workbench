@@ -1784,17 +1784,24 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
      */
     private void checkJarName(MigrationHostPortalInstall install) {
         String pkgName = install.getPkgName();
-        if (!StringUtils.isEmpty(pkgName)) {
-            String[] parts = pkgName.split("-");
-            if (parts.length > 1) {
-                String versionNumber = parts[1];
-                String signVersion = "6.0.0";
-                if (versionNumber.compareTo(signVersion) >= 0) {
-                    install.setJarName("portalControl-" + versionNumber + "-exec.jar");
-                }
+        if (StringUtils.isEmpty(pkgName)) {
+            return;
+        }
+        String[] parts = pkgName.split("-");
+        if (parts.length <= 1) {
+            log.error("Failed to obtain the portal version number by parsing the installation package name.");
+            return;
+        }
+        String versionNumber = parts[1];
+        String signVersion = "6.0.0";
+        if (versionNumber.compareTo(signVersion) >= 0) {
+            if (Objects.equals(parts[2], "RC3")) {
+                install.setJarName("portalControl-" + versionNumber + "-RC3" + "-exec.jar");
             } else {
-                log.error("Failed to obtain the portal version number by parsing the installation package name.");
+                install.setJarName("portalControl-" + versionNumber + "-exec.jar");
             }
+        } else {
+            log.info("portal jar name used default value");
         }
     }
 

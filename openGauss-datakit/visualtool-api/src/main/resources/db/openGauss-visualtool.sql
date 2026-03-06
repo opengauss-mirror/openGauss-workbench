@@ -2230,8 +2230,8 @@ THEN
 ALTER TABLE sys_setting ADD COLUMN portal_jar_name text COLLATE "pg_catalog"."default";
 COMMENT ON COLUMN "public"."sys_setting"."portal_jar_name" IS ''portal的jar名称'';
 UPDATE "public"."sys_setting" SET portal_pkg_download_url = ''https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/'';
-UPDATE "public"."sys_setting" SET portal_pkg_name = ''PortalControl-7.0.0rc3.tar.gz'';
-UPDATE "public"."sys_setting" SET portal_jar_name = ''portalControl-7.0.0rc3-exec.jar'';
+UPDATE "public"."sys_setting" SET portal_pkg_name = ''PortalControl-7.0.0-RC3.tar.gz'';
+UPDATE "public"."sys_setting" SET portal_jar_name = ''PortalControl-7.0.0-RC3-exec.jar'';
 END IF;
 RETURN 0;
 END;'
@@ -2252,7 +2252,7 @@ ON COLUMN "public"."sys_setting"."upload_path" IS '文件上传目录';
 -- ----------------------------
 -- Records of sys_setting
 -- ----------------------------
-INSERT INTO "public"."sys_setting" VALUES (1, 1, '/ops/files/', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/', 'PortalControl-7.0.0rc3.tar.gz', 'portalControl-7.0.0rc3-exec.jar') ON DUPLICATE KEY UPDATE NOTHING;
+INSERT INTO "public"."sys_setting" VALUES (1, 1, '/ops/files/', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/', 'PortalControl-7.0.0-RC3.tar.gz', 'PortalControl-7.0.0-RC3-exec.jar') ON DUPLICATE KEY UPDATE NOTHING;
 INSERT INTO "public"."sys_menu" VALUES (209, '创建服务器', 2, 9, '/resource/physical/createserver', 'resource/physical/components/CreateServerPage', NULL, 1, 0, 'C', '1', '0', NULL, NULL, 'admin', '2025-07-15 20:11:27.003', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 1, 'Create Server') ON DUPLICATE KEY UPDATE NOTHING;
 CREATE OR REPLACE FUNCTION add_user_field_func() RETURNS integer AS 'BEGIN
 IF
