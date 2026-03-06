@@ -123,7 +123,7 @@ public class HostBasicService {
                 hostInfoMap.put(AgentConstants.HostMetric.CPU_FREQUENCY, freqValue);
             }
         } else {
-            hostInfoMap.put(AgentConstants.HostMetric.CPU_FREQUENCY, "Unknown Frequency Of lscpu cmd");
+            log.debug("Host Freq value is empty , Unknown Frequency Of lscpu cmd");
         }
         putIfValid(hostInfoMap, AgentConstants.HostMetric.OS_NAME, hostBaseInfo.getOsName());
         putIfValid(hostInfoMap, AgentConstants.HostMetric.OS_VERSION, hostBaseInfo.getOsVersion());
