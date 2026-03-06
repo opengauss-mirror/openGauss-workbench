@@ -20,7 +20,7 @@
     "echarts": "^5.4.0",
     "element-plus": "2.11.9",
     "jsencrypt": "^3.0.0-rc.1",
-    "lodash-es": "^4.17.21",
+    "lodash-es": "4.17.23",
     "md5": "^2.3.0",
     "moment": "^2.29.4",
     "monaco-editor": "^0.34.0",
