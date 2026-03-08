@@ -854,6 +854,8 @@
       "5qtkk97a2e68": "MySQL Executed_Gtid_Set verification：",
       "5qtkk97a2e69": "The param value is empty or the number of transactions is 1, the verification failed;",
       "5qtkk97a2e70": "successful;",
+      "5qtkk97a2e71": "openGauss enable subscription verification: ",
+      "5qtkk97a2e72": "not enabled, should be changed to: enable_subscription=",
       "subTaskTotal": "Details of the subtask",
       "migrationComplete": "The migration is complete",
       "migrationFail": "The migration failed",

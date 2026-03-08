@@ -854,6 +854,8 @@
       "5qtkk97a2e68": "MySQL Executed_Gtid_Set校验：",
       "5qtkk97a2e69": "值为空或事务数为1，校验不通过；",
       "5qtkk97a2e70": "通过；",
+      "5qtkk97a2e71": "openGauss启动发布订阅线程参数：",
+      "5qtkk97a2e72": "未开启，应改为：enable_subscription=",
       "subTaskTotal": "子任务详情",
       "migrationComplete": "迁移完成",
       "migrationFail": "迁移失败",

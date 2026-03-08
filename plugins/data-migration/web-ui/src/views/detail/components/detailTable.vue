@@ -99,6 +99,9 @@
                     <p v-if="judgeKeyExist(scope.row.statusDesc, 'gtid_set')">{{
                         parseGtidSet(scope.row.statusDesc) }}
                     </p>
+                    <p v-if="judgeKeyExist(scope.row.statusDesc, 'enable_subscription')">{{
+                        parseEnableSubscription(scope.row.statusDesc) }}
+                    </p>
                   </div>
                 </div>
               </template>
@@ -525,6 +528,22 @@ const parseGtidSet = (content) => {
     default:
       return result + t('detail.index.5qtkk97a2e40') + t('detail.index.5qtkk97a2e35')
   }
+}
+
+const parseEnableSubscription = (content) => {
+  const obj = JSON.parse ( content )
+  let result = t ( 'detail.index.5qtkk97a2e71' )
+
+  if ( obj.enable_subscription.result === 0) {
+    result = result + t('detail.index.5qtkk97a2e59')
+  } else if ( obj.enable_subscription.result === 1)  {
+    result = result + t ( 'detail.index.5qtkk97a2e72' ) + obj.enable_subscription.expected_value + t ( 'detail.index.5qtkk97a2e35' )
+  } else if ( obj.enable_subscription.result === 2)  {
+    result = result + obj.enable_subscription.error_message + t ( 'detail.index.5qtkk97a2e35' )
+  } else {
+    result = result + t ( 'detail.index.5qtkk97a2e40' ) + t ( 'detail.index.5qtkk97a2e35' )
+  }
+  return result
 }
 
 const handleLog = (row) => {
