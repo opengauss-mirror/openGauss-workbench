@@ -78,19 +78,17 @@ watch(visible, (v) => {
 const formRef = ref(null)
 const submit = async () => {
   try {
-    const res = await formRef.value?.validate()
-    if (res) {
-      return
-    }
+    await formRef.value?.validate()
     visible.value = false;
     try {
       await saveToolsParams(data.formData)
       props.flushTools();
     } catch (e) {
+      console.log("saveToolsParams fail ",e)
       props.flushTools();
     }
   } catch (err) {
-    console.log(err)
+    console.log("validate fail ",err)
   }
 };
 const close = () => {
