@@ -734,6 +734,9 @@ public class JschExecutorService {
             SessionConfig execConfig = new SessionConfig(sshLogin.getHost(), sshLogin.getPort(), sshLogin.getUsername(),
                     sshLogin.getPassword()).withChannelType(ChannelType.EXEC).withTimeout(15000);
             try {
+                if (sshLogin.isUpdatePoolForced()) {
+                    JschSessionPool.updatePoolForced(execConfig);
+                }
                 ExecOperations.ExecResult result = ExecOperations.executeCommand(execConfig, command);
                 return result.getResult();
             } catch (Exception ex) {

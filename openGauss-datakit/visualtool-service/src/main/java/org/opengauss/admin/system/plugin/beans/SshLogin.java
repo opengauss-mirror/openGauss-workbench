@@ -23,7 +23,6 @@
 
 package org.opengauss.admin.system.plugin.beans;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
@@ -33,12 +32,27 @@ import lombok.Data;
  * @since 2024/6/22 9:41
  **/
 @Data
-@AllArgsConstructor
 public class SshLogin {
     private String host;
     private Integer port;
     private String username;
     private String password;
+    private boolean isUpdatePoolForced;
+
+    /**
+     * Constructor SshLogin
+     *
+     * @param host     host
+     * @param port     port
+     * @param username username
+     * @param password password
+     */
+    public SshLogin(String host, Integer port, String username, String password) {
+        this.host = host;
+        this.port = port;
+        this.username = username;
+        this.password = password;
+    }
 
     @Override
     public String toString() {

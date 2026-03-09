@@ -60,6 +60,20 @@ public class JschSessionPool {
     }
 
     /**
+     * close session
+     *
+     * @param config session config
+     */
+    public static synchronized void close(SessionConfig config) {
+        HostUserKey key = config.getKey();
+        GenericObjectPool<Session> pool = POOL_MAP.get(key);
+        if (pool != null) {
+            GenericObjectPool<Session> remove = POOL_MAP.remove(key);
+            remove.close();
+        }
+    }
+
+    /**
      * preload pool
      *
      * @param pool session pool
@@ -186,6 +200,16 @@ public class JschSessionPool {
             sb.append("----------------------------------------\n");
         }
         return sb.toString();
+    }
+
+    /**
+     * update session pool forced by exec config
+     *
+     * @param execConfig exec Config
+     */
+    public static void updatePoolForced(SessionConfig execConfig) {
+        close(execConfig);
+        getOrCreatePool(execConfig);
     }
 
     /**
