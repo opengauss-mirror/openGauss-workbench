@@ -1291,7 +1291,7 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 .thirdPartySoftwareConfigType(ThirdPartySoftwareConfigType.INSTALL.getCode())
                 .build();
             thirdPartySoftwareConfig.replacePathHome(physicalInstallParams.getRunUser());
-            log.error("thirdPartySoftwareConfig = {}", thirdPartySoftwareConfig);
+            log.info("thirdPartySoftwareConfig = {}", thirdPartySoftwareConfig);
             migrationThirdPartySoftwareInstanceService.saveRecord(thirdPartySoftwareConfig);
         } else {
             thirdPartySoftwareConfig = migrationThirdPartySoftwareInstanceService.getById(install.getKafkaBindId());
@@ -1419,8 +1419,8 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
      * @param installParams portal install information
      */
     private void printInstallPortalLog(MigrationHostPortalInstall installParams, String logInfo) {
-        String command = String.format("mkdir -p %s && echo '%s' >> %s", installParams.getInstallPath(), logInfo,
-            installParams.getDatakitLogPath());
+        String command = String.format("mkdir -p %s && echo '%s' >> %s", installParams.getInstallPath(),
+                logInfo.replaceAll("'", "\""), installParams.getDatakitLogPath());
         JschResult result = ShellUtil.execCommandGetResult(installParams.getShellInfoVo(), command);
         if (!result.isOk()) {
             log.error("Output logs to datakit_install_portal.log failed: " + result.getResult());

@@ -4,9 +4,12 @@
 
 package org.opengauss.admin.plugin.portal;
 
-import cn.hutool.core.collection.CollUtil;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+
+import cn.hutool.core.collection.CollUtil;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -40,7 +43,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.annotation.Resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -493,8 +495,8 @@ public class MultiDbPortalInstaller {
     }
 
     private void printInstallPortalLog(MigrationHostPortalInstall installParams, String logInfo) {
-        String command = String.format("mkdir -p %s && echo '%s' > %s", installParams.getInstallPath(), logInfo,
-                installParams.getDatakitLogPath());
+        String command = String.format("mkdir -p %s && echo '%s' > %s", installParams.getInstallPath(),
+                logInfo.replaceAll("'", "\""), installParams.getDatakitLogPath());
         JschResult result = ShellUtil.execCommandGetResult(installParams.getHost(), installParams.getPort(),
                 installParams.getRunUser(), encryptionUtils.decrypt(installParams.getRunPassword()), command);
         if (!result.isOk()) {
