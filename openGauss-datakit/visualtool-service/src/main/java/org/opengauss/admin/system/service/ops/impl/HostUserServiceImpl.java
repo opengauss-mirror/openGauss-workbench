@@ -200,6 +200,7 @@ public class HostUserServiceImpl extends ServiceImpl<OpsHostUserMapper, OpsHostU
     private boolean doAddOrEdit(OpsHostEntity hostEntity, OpsHostUserEntity userEntity, boolean isAdd) {
         SshLogin sshLogin = new SshLogin(hostEntity.getPublicIp(), hostEntity.getPort(), userEntity.getUsername(),
             encryptionUtils.decrypt(userEntity.getPassword()));
+        sshLogin.setUpdatePoolForced(true);
         if (userEntity.isRootUser()) {
             if (!jschExecutorService.checkOsUserExist(sshLogin)) {
                 throw new OpsException("User does not exist or the password is incorrect");
