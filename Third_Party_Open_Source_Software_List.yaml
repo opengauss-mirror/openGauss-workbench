@@ -131,8 +131,8 @@ com.jcraft:jsch:
 commons-beanutils:
   groupId: commons-beanutils
   artifactId: commons-beanutils
-  version: 1.9.4
-  url: https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils/1.9.4
+  version: 1.11.0
+  url: https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils/1.11.0
 druid-spring-boot-starter:
   groupId: com.alibaba
   artifactId: druid-spring-boot-starter
