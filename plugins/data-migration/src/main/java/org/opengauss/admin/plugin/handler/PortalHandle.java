@@ -182,6 +182,20 @@ public class PortalHandle {
         throw new PortalInstallException("install portal package failed: " + installToolResult.getResult());
     }
 
+    /**
+     * Delete workspace path
+     *
+     * @param shellInfo shell info
+     * @param installPath install path
+     * @param taskId task id
+     */
+    public static void deleteWorkspacePath(ShellInfoVo shellInfo, String installPath, int taskId) {
+        String workspacePath = installPath + "portal/workspace/" + taskId;
+        JschResult jschResult = ShellUtil.execCommandGetResult(shellInfo, "rm -rf " + workspacePath, 10000);
+        log.info("Delete workspace {}, code {}, result: {}",
+                workspacePath, jschResult.getExitCode(), jschResult.getResult());
+    }
+
     private static String buildPortalThirdPartySoftwareParams(
             MigrationThirdPartySoftwareConfig thirdPartySoftwareConfig) {
         if (thirdPartySoftwareConfig == null) {
