@@ -61,6 +61,8 @@ public class DataSourceConfig {
     static final String GS_DRIVER = "org.opengauss.Driver";
     static final String SQLITE_DRIVER = "org.sqlite.JDBC";
     static final String SQLITE_URL = "jdbc:sqlite:";
+    static final String HIS_SLOW_SQL_INFO_DS = "hisSlowSqlInfo";
+    static final String HIS_SLOW_SQL_INFO_SQLITE_URL = "jdbc:sqlite:data/history-slowsql-info.db";
 
     @Autowired
     DynamicDataSourceProperties properties;
@@ -90,13 +92,20 @@ public class DataSourceConfig {
         d.addDataSource("primary", primary);
         d.setPrimary("primary");
         for (Map.Entry<String, DataSourceProperty> dataSourceProperty : properties.getDatasource().entrySet()) {
-            DataSource emDataSource = druidDataSourceCreator.createDataSource(dataSourceProperty.getValue());
-            if (SQLITE_DRIVER.equals(dataSourceProperty.getValue().getDriverClassName())) {
-                String url = dataSourceProperty.getValue().getUrl();
+            String dsName = dataSourceProperty.getKey();
+            DataSourceProperty dsProperty = dataSourceProperty.getValue();
+            // Force historical slow SQL metadata storage to sqlite for compatibility with sqlite-specific SQL.
+            if (HIS_SLOW_SQL_INFO_DS.equals(dsName)) {
+                dsProperty.setDriverClassName(SQLITE_DRIVER);
+                dsProperty.setUrl(HIS_SLOW_SQL_INFO_SQLITE_URL);
+            }
+            DataSource emDataSource = druidDataSourceCreator.createDataSource(dsProperty);
+            if (SQLITE_DRIVER.equals(dsProperty.getDriverClassName())) {
+                String url = dsProperty.getUrl();
                 String dbFile = url.substring(SQLITE_URL.length());
                 initDbFile(dbFile);
             }
-            d.addDataSource(dataSourceProperty.getKey(), emDataSource);
+            d.addDataSource(dsName, emDataSource);
         }
         return d;
     }
