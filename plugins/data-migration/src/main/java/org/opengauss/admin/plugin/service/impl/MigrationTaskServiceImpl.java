@@ -957,15 +957,16 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
      * @return check result
      */
     public boolean execMigrationCheck(MigrationHostPortalInstall installHost, MigrationTask t, String command) {
+        ShellInfoVo shellInfo = new ShellInfoVo(installHost.getHost(), installHost.getPort(), installHost.getRunUser(),
+                installHost.getRunPassword());
+        PortalHandle.deleteWorkspacePath(shellInfo, installHost.getInstallPath(), t.getId());
+
         JschResult checkResult = PortalHandle.checkBeforeMigration(installHost, t, installHost.getJarName(),
             getTaskParam(installHost, t), command);
         String logContent = checkResult.getResult();
         if (logContent.contains("verify migration success.")) {
             return true;
         }
-
-        ShellInfoVo shellInfo = new ShellInfoVo(installHost.getHost(), installHost.getPort(), installHost.getRunUser(),
-                installHost.getRunPassword());
         String logPath = String.format("%sportal/logs/portal_%s.log", installHost.getInstallPath(), t.getId());
         String fileContents = FileUtils.catRemoteFileContents(logPath, shellInfo);
         if (!ObjectUtils.isEmpty(fileContents)) {
