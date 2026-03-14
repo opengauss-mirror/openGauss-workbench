@@ -318,6 +318,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             logPaths = PortalHandle.getPortalLogPath(installHost.getHost(), installHost.getPort(),
                 installHost.getRunUser(), encryptionUtils.decrypt(installHost.getRunPassword()),
                 installHost.getInstallPath(), task);
+            filterKafkaConnectErrorLog(logPaths, taskId, installHost.getInstallPath());
         }
         wsInfo.setLogs(logPaths);
         return wsInfo;
@@ -487,6 +488,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             List<String> logPaths = PortalHandle.getPortalLogPath(installHost.getHost(), installHost.getPort(),
                     installHost.getRunUser(), encryptionUtils.decrypt(installHost.getRunPassword()),
                     installHost.getInstallPath(), task);
+            filterKafkaConnectErrorLog(logPaths, taskId, installHost.getInstallPath());
             Map<String, String> logsMap = extractFileNames(logPaths);
             List<String> filterLogPaths = "".equals(info.getFileName()) ? logPaths : getFilterLogPaths(logsMap,
                 info.getFileName());
@@ -497,6 +499,11 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             migLogsInfo.put("total", filterLogPaths.size());
         }
         return migLogsInfo;
+    }
+
+    private void filterKafkaConnectErrorLog(List<String> logPaths, Integer taskId, String portalInstallPath) {
+        String kafkaConnectLogPath = portalInstallPath + "portal/workspace/" + taskId + "/logs/debezium/kafka-connect/";
+        logPaths.removeIf(path -> path.contains(kafkaConnectLogPath));
     }
 
     @Override
@@ -959,7 +966,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     public boolean execMigrationCheck(MigrationHostPortalInstall installHost, MigrationTask t, String command) {
         ShellInfoVo shellInfo = new ShellInfoVo(installHost.getHost(), installHost.getPort(), installHost.getRunUser(),
                 installHost.getRunPassword());
-        PortalHandle.deleteWorkspacePath(shellInfo, installHost.getInstallPath(), t.getId());
+        if ("verify_pre_migration".equals(command)) {
+            PortalHandle.deleteWorkspacePath(shellInfo, installHost.getInstallPath(), t.getId());
+        }
 
         JschResult checkResult = PortalHandle.checkBeforeMigration(installHost, t, installHost.getJarName(),
             getTaskParam(installHost, t), command);
