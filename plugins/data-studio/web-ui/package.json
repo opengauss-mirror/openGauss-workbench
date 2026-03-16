@@ -67,6 +67,7 @@
     "js-yaml": "4.1.1",
     "follow-redirects": "1.15.11",
     "decode-uri-component": "0.2.2",
-    "brace-expansion": "2.0.2"
+    "brace-expansion": "2.0.2",
+    "flatted": "3.4.0"
   }
 }
