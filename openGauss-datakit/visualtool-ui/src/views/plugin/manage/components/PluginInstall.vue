@@ -116,6 +116,7 @@ const startInstall = async () => {
   } else {
     if (showDownloadArea.value === true) {
       if (progressPercent.value === 0) {
+        winLoading.value = true
         const formData = new FormData
         formData.append('file', fileList.raw)
         axios({
@@ -139,9 +140,12 @@ const startInstall = async () => {
         }).catch((error) => {
           uploadErrMsg.value = t('manage.PluginInstall.uploadErrAlert')
           console.log(error)
+        }).finally(() => {
+          winLoading.value = false
         })
       }
     } else {
+      winLoading.value = true
       const params = {
         pluginId: data.value.pluginName,
         pluginUrl: data.value.pluginUrl,
@@ -153,6 +157,7 @@ const startInstall = async () => {
         emit('downloadStart', 'ERROR')
         console.log(error)
       }).finally(() => {
+        winLoading.value = false
         emit('downloadStart', 'END')
       })
     }
