@@ -856,6 +856,8 @@
       "5qtkk97a2e70": "successful;",
       "5qtkk97a2e71": "openGauss enable subscription verification: ",
       "5qtkk97a2e72": "not enabled, should be changed to: enable_subscription=",
+      "5qtkk97a2e73": "Database encoding verification: ",
+      "5qtkk97a2e74": "failed;",
       "subTaskTotal": "Details of the subtask",
       "migrationComplete": "The migration is complete",
       "migrationFail": "The migration failed",
