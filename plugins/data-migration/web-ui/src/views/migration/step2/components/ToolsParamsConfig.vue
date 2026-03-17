@@ -66,7 +66,7 @@
           </el-collapse>
           <el-divider/>
           <el-collapse :v-model="activeCollapse" accordion :bordered="false" class="custom-collapse">
-            <el-collapse-item name="1" :class="customStyle">
+            <el-collapse-item name="2" :class="customStyle">
               <template #title>
                 <div style="display: flex; align-items: center">
                   {{ $t("components.ToolsParamsConfig.5q0toolspar1") }}
@@ -115,7 +115,7 @@
           </el-collapse>
           <el-divider/>
           <el-collapse v-model="activeCollapse" accordion>
-            <el-collapse-item name="1" :class="customStyle">
+            <el-collapse-item name="3" :class="customStyle">
               <template #title>
                 <div style="display: flex; align-items: center" >
                   {{ $t("components.ToolsParamsConfig.5q0toolspar2") }}
@@ -160,7 +160,7 @@
           </el-collapse>
           <el-divider/>
           <el-collapse v-model="activeCollapse" accordion>
-            <el-collapse-item name="1" :class="customStyle">
+            <el-collapse-item name="4" :class="customStyle">
               <template #title>
                 <div style="display: flex; align-items: center">
                   {{ $t("components.ToolsParamsConfig.5q0toolspar3") }}
@@ -205,7 +205,7 @@
           </el-collapse>
           <el-divider/>
           <el-collapse v-model="activeCollapse" accordion>
-            <el-collapse-item name="1" :class="customStyle">
+            <el-collapse-item name="5" :class="customStyle">
               <template #title>
                 <div class="collapse-header">
                   {{ $t("components.ToolsParamsConfig.5q0toolspar4") }}
@@ -250,7 +250,7 @@
           </el-collapse>
           <el-divider/>
           <el-collapse v-model="activeCollapse" accordion>
-            <el-collapse-item name="1" :class="customStyle">
+            <el-collapse-item name="6" :class="customStyle">
               <template #title>
                 <div class="flex items-center">
                   {{ $t("components.ToolsParamsConfig.5q0toolspar5") }}
@@ -295,7 +295,7 @@
           </el-collapse>
           <el-divider/>
           <el-collapse v-model="activeCollapse" accordion >
-            <el-collapse-item name="1" :class="customStyle">
+            <el-collapse-item name="7" :class="customStyle">
               <template #title>
                 <div class="flex items-center">
                   {{ $t("components.ToolsParamsConfig.5q0toolspar6") }}
@@ -341,7 +341,7 @@
           </el-collapse>
           <el-divider/>
           <el-collapse v-model="activeCollapse" accordion>
-            <el-collapse-item name="7" :class="customStyle">
+            <el-collapse-item name="8" :class="customStyle">
               <template #title>
                 <div class="flex items-center">
                   {{ $t("components.ToolsParamsConfig.5q0toolspar7") }}
@@ -387,7 +387,7 @@
           </el-collapse>
           <el-divider/>
           <el-collapse v-model="activeCollapse" accordion>
-            <el-collapse-item name="8" :class="customStyle">
+            <el-collapse-item name="9" :class="customStyle">
               <template #title>
                 <div class="flex items-center">
                   {{ $t("components.ToolsParamsConfig.5q0toolspar8") }}
