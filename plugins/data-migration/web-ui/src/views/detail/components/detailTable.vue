@@ -102,6 +102,9 @@
                     <p v-if="judgeKeyExist(scope.row.statusDesc, 'enable_subscription')">{{
                         parseEnableSubscription(scope.row.statusDesc) }}
                     </p>
+                    <p v-if="judgeKeyExist(scope.row.statusDesc, 'database_encoding')">{{
+                        parseDatabaseEncoding(scope.row.statusDesc) }}
+                    </p>
                   </div>
                 </div>
               </template>
@@ -540,6 +543,22 @@ const parseEnableSubscription = (content) => {
     result = result + t ( 'detail.index.5qtkk97a2e72' ) + obj.enable_subscription.expected_value + t ( 'detail.index.5qtkk97a2e35' )
   } else if ( obj.enable_subscription.result === 2)  {
     result = result + obj.enable_subscription.error_message + t ( 'detail.index.5qtkk97a2e35' )
+  } else {
+    result = result + t ( 'detail.index.5qtkk97a2e40' ) + t ( 'detail.index.5qtkk97a2e35' )
+  }
+  return result
+}
+
+const parseDatabaseEncoding = (content) => {
+  const obj = JSON.parse ( content )
+  let result = t ( 'detail.index.5qtkk97a2e73' )
+
+  if ( obj.database_encoding.result === 0) {
+    result = result + t('detail.index.5qtkk97a2e70')
+  } else if ( obj.database_encoding.result === 1) {
+    result = result + t('detail.index.5qtkk97a2e74') + obj.database_encoding.message + t('detail.index.5qtkk97a2e35')
+  } else if ( obj.database_encoding.result === 2) {
+    result = obj.database_encoding.error_message + t('detail.index.5qtkk97a2e35')
   } else {
     result = result + t ( 'detail.index.5qtkk97a2e40' ) + t ( 'detail.index.5qtkk97a2e35' )
   }
