@@ -24,7 +24,6 @@
 
 package org.opengauss.admin.framework.manager.factory;
 
-import org.opengauss.admin.common.utils.ip.AddressUtils;
 import org.opengauss.admin.common.utils.spring.SpringUtils;
 import org.opengauss.admin.system.domain.SysOperLog;
 import org.opengauss.admin.system.service.ISysOperLogService;
@@ -49,7 +48,6 @@ public class AsyncFactory {
         return new TimerTask() {
             @Override
             public void run() {
-            operLog.setOperLocation(AddressUtils.getRealAddressByIp(operLog.getOperIp()));
             operLog.setOperTime(new Date());
             SpringUtils.getBean(ISysOperLogService.class).insertOperlog(operLog);
             }

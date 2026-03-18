@@ -16,8 +16,10 @@
 package org.opengauss.admin.common.core.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.opengauss.admin.common.core.domain.entity.SysUser;
+
 import lombok.Data;
+
+import org.opengauss.admin.common.core.domain.entity.SysUser;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -42,16 +44,6 @@ public class LoginUser implements UserDetails {
      * Token
      */
     private String token;
-
-    /**
-     * Login IP
-     */
-    private String ipaddr;
-
-    /**
-     * Login Location
-     */
-    private String loginLocation;
 
     /**
      * Permission List
