@@ -25,23 +25,18 @@ package org.opengauss.admin.framework.web.service;
 
 import com.github.benmanes.caffeine.cache.Cache;
 
-import org.opengauss.admin.common.constant.Constants;
-import org.opengauss.admin.common.core.domain.model.LoginUser;
-import org.opengauss.admin.common.utils.RandomCharGenerator;
-import org.opengauss.admin.common.utils.ServletUtils;
-import org.opengauss.admin.common.utils.StringUtils;
-import org.opengauss.admin.common.utils.ip.AddressUtils;
-import org.opengauss.admin.common.utils.ip.IpUtils;
-import org.opengauss.admin.common.utils.uuid.IdUtils;
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import jakarta.servlet.http.HttpServletRequest;
 
+import org.opengauss.admin.common.constant.Constants;
+import org.opengauss.admin.common.core.domain.model.LoginUser;
+import org.opengauss.admin.common.utils.RandomCharGenerator;
+import org.opengauss.admin.common.utils.StringUtils;
+import org.opengauss.admin.common.utils.uuid.IdUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -114,7 +109,6 @@ public class TokenService {
     public String createToken(LoginUser loginUser) {
         String token = IdUtils.fastUuid();
         loginUser.setToken(token);
-        setUserAgent(loginUser);
         refreshToken(loginUser);
         Map<String, Object> claims = new HashMap<>();
         claims.put(Constants.LOGIN_USER_KEY, token);
@@ -127,17 +121,6 @@ public class TokenService {
     public void refreshToken(LoginUser loginUser) {
         String userKey = getTokenKey(loginUser.getToken());
         loginCache.put(userKey, loginUser);
-    }
-
-    /**
-     * setUserAgent
-     *
-     * @param loginUser login user
-     */
-    public void setUserAgent(LoginUser loginUser) {
-        String ip = IpUtils.getIpAddr(ServletUtils.getRequest());
-        loginUser.setIpaddr(ip);
-        loginUser.setLoginLocation(AddressUtils.getRealAddressByIp(ip));
     }
 
     /**
