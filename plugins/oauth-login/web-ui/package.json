@@ -61,5 +61,9 @@
     "hooks": {
       "pre-commit": ""
     }
+  },
+  "overrides": {
+    "brace-expansion": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-1.1.13.tgz",
+    "picomatch": "https://registry.npmjs.org/picomatch/-/picomatch-2.3.2.tgz"
   }
 }
