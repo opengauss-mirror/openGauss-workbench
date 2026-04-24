@@ -67,7 +67,8 @@
     "js-yaml": "4.1.1",
     "follow-redirects": "1.15.11",
     "decode-uri-component": "0.2.2",
-    "brace-expansion": "2.0.2",
-    "flatted": "3.4.0"
+    "brace-expansion": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.0.3.tgz",
+    "flatted": "https://registry.npmjs.org/flatted/-/flatted-3.4.0.tgz",
+    "picomatch": "https://registry.npmjs.org/picomatch/-/picomatch-2.3.2.tgz"
   }
 }
