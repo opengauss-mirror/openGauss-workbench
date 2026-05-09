@@ -388,6 +388,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         DbTypeEnum sourceDbType = task.getSourceDbType();
         if (sourceDbType == null) {
             migrationInfo.setSourceDbType(DbTypeEnum.MYSQL.name());
+            migrationInfo.setIsMigrationObject(task.getIsMigrationObject());
+        } else if (DbTypeEnum.POSTGRESQL.equals(sourceDbType) || DbTypeEnum.MYSQL.equals(sourceDbType)) {
+            migrationInfo.setSourceDbType(sourceDbType.name());
+            migrationInfo.setIsMigrationObject(task.getIsMigrationObject());
         } else {
             migrationInfo.setSourceDbType(sourceDbType.name());
         }
@@ -1197,6 +1201,11 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         resultMap.put("migration_mode", task.getMigrationModelId() + "");
         resultMap.put("is_adjustKernel_param", task.getIsAdjustKernelParam() + "");
         resultMap.put("enable.stdin.password", "true");
+        if (task.getIsMigrationObject() != null && task.getIsMigrationObject()) {
+            resultMap.put("snapshot.object", "yes");
+        } else {
+            resultMap.put("snapshot.object", "no");
+        }
 
         String tables = task.getSourceTables();
         if (StringUtils.isNotBlank(tables)) {

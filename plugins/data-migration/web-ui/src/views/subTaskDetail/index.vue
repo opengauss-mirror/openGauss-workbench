@@ -121,6 +121,7 @@ const descValueObj = ref({
   subTaskName: '',
   fatherTask: '',
   executionMode: '',
+  isMigrationObject: null,
   sourceIpPort: '',
   sourceLibrary: '',
   sourceDbType: '',
@@ -147,6 +148,11 @@ const descData = computed(() => [
     value: descValueObj.value.executionMode === 1 ? t('components.SubTaskDetail.offLineMigration')
       : descValueObj.value.executionMode === 1 ? t('components.SubTaskDetail.onLineMigration') : t('components.SubTaskDetail.fullMigration'),
     prop: 'executionMode'
+  },
+  {
+    label: t('components.SubTaskDetail.isMigrationObject'),
+    value: descValueObj.value.isMigrationObject === null ? '--' : descValueObj.value.isMigrationObject ? 'true' : 'false',
+    prop: 'isMigrationObject'
   },
   {
     label: t('detail.index.sourceIpPort'),
@@ -327,6 +333,7 @@ const getSubTaskBasicInfo = () => {
       let types = [JDBCType.MySQL, JDBCType.PostgreSQL].map(String)
       let shouldShowDbColumn =  types.includes(descValueObj.value.sourceDbType || '')
       descValueObj.value.executionMode = shouldShowDbColumn && res.data?.execMode !== undefined? res.data.execMode: 3
+      descValueObj.value.isMigrationObject = res.data?.isMigrationObject
       descValueObj.value.sourceLibrary = res.data?.sourceDb || '--'
       descValueObj.value.sinkLibrary = res.data?.targetDb
       // The fifth one is assigned in the websocket

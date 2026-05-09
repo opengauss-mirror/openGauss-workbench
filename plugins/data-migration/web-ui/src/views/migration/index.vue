@@ -153,6 +153,7 @@ const saveConfig = async () => {
       }
       return {
         isAdjustKernelParam: item.isAdjustKernelParam,
+        isMigrationObject: item.isMigrationObject,
         migrationModelId: item.mode,
         sourceDb: item.sourceDBName,
         sourceNodeId: item.sourceNodeId,
@@ -239,6 +240,7 @@ const initSubTask = (currentTab: string) => {
     targetDBName: '',
     configType: 1,
     isAdjustKernelParam: false,
+    isMigrationObject: false,
     isSystemAdmin: false,
     taskParamsObject: {
       basic:  [],
@@ -276,7 +278,7 @@ const getTaskDetail = async (id: number) => {
     }
     tasks.map((task: KeyValue, index: number) => {
       const {
-        isSystemAdmin, isAdjustKernelParam, migrationModelId, taskParams,
+        isSystemAdmin, isAdjustKernelParam, isMigrationObject, migrationModelId, taskParams,
         sourceDb, sourceDbHost, sourceDbPort, sourceDbUser, sourceDbPass, sourceNodeId,
         targetDb, targetDbHost, targetDbPort, targetDbUser, targetDbPass, targetNodeId, targetDbVersion,
         sourceTables, sourceDbType, sourceSchemas
@@ -295,6 +297,7 @@ const getTaskDetail = async (id: number) => {
       Object.assign(subTask, {
         isSystemAdmin,
         isAdjustKernelParam,
+        isMigrationObject,
         isDefaultConfig:!isDefaultConfigtemp,
         mode: migrationModelId,
         configType: taskParams.length ? 2 : 1,

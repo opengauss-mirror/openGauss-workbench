@@ -85,6 +85,7 @@ public class MigrationTask {
      * true: adjust false: no adjust
      */
     private Boolean isAdjustKernelParam;
+    private Boolean isMigrationObject;
 
     /**
      * execStatus（0：not_run；1：full_run；2：full_finish；3：incremental_run；4：reverse_run; 5: fail; 6: finish 1000: wait_resource）

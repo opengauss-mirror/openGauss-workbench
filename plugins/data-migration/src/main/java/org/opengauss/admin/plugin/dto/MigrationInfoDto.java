@@ -38,6 +38,7 @@ public class MigrationInfoDto {
     private Integer subTaskId;
     private String taskName;
     private Integer execMode;
+    private Boolean isMigrationObject;
     private String sourceDb;
     private String targetDb;
     private Long executedTime;

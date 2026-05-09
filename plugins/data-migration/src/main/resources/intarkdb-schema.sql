@@ -119,6 +119,10 @@ COMMENT ON TABLE "tb_migration_task" IS '迁移子任务表';
 ALTER TABLE tb_migration_task ADD COLUMN is_adjust_kernel_param BOOLEAN;
 COMMENT ON COLUMN "tb_migration_task"."is_adjust_kernel_param" IS '是否调整内核参数';
 
+ALTER TABLE tb_migration_task ADD COLUMN is_migration_object BOOLEAN;
+COMMENT ON COLUMN "tb_migration_task"."is_migration_object" IS '是否迁移对象';
+UPDATE tb_migration_task SET "is_migration_object" = true WHERE "is_migration_object" IS null;
+
 UPDATE sys_menu SET menu_en_name = 'Create Transcribe Replay Task' WHERE menu_name = '创建录制回放';
 
 UPDATE sys_menu SET menu_en_name = 'Transcribe Replay Task Detail' WHERE menu_name = '录制回放详情';
@@ -914,9 +918,8 @@ UPDATE "tb_migration_task_init_global_param"
 SET "db_type" = 'MYSQL'
 WHERE "db_type" IS NULL;
 
-INSERT INTO "tb_migration_task_init_global_param"
-("id", "param_key", "param_value", "param_desc", "param_type", "db_type")
-VALUES(32, 'is.migration.object', 'true', '是否迁移对象（view, trigger, function, procedure）', 3, 'POSTGRESQL');
+DELETE FROM "tb_migration_task_init_global_param" WHERE "param_key" = 'is.migration.object';
+DELETE FROM "tb_migration_task_param" WHERE "param_key" = 'is.migration.object';
 
 INSERT INTO "tb_migration_task_init_global_param"
 ("id", "param_key", "param_value", "param_desc", "param_type", "db_type")
