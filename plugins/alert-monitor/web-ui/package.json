@@ -29,7 +29,7 @@
     "pinia": "^2.0.16",
     "pinia-plugin-persistedstate": "^1.6.3",
     "sql-formatter": "^8.2.0",
-    "uuid": "^8.3.2",
+    "uuid": "14.0.0",
     "vis": "^4.21.0-EOL",
     "vue": "^3.2.37",
     "vue-grid-layout": "^3.0.0-beta1",
@@ -68,6 +68,8 @@
   "overrides": {
     "follow-redirects": "1.15.11",
     "brace-expansion": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.0.3.tgz",
-    "picomatch": "https://registry.npmjs.org/picomatch/-/picomatch-2.3.2.tgz"
+    "picomatch": "https://registry.npmjs.org/picomatch/-/picomatch-2.3.2.tgz",
+    "postcss": "https://registry.npmjs.org/postcss/-/postcss-8.5.10.tgz",
+    "uuid": "14.0.0"
   }
 }
