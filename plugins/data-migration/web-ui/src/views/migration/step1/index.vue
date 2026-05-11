@@ -241,6 +241,28 @@
                   </el-tooltip>
                 </el-form-item>
               </div>
+              <el-form-item
+                v-if="shouldShowMigrationObject"
+                :label="t('step1.index.migrationObject')"
+                label-position="left"
+              >
+                <a-popconfirm
+                  :popup-visible="showMigrationPopconfirm"
+                  :content="t('step1.index.migrationObjectMsg')"
+                  type="warning"
+                  :ok-text="t('step1.index.confirm')"
+                  :cancel-text="t('step1.index.cancel')"
+                  :content-style="{ minWidth: '200px', maxWidth: '500px' }"
+                  @ok="confirmMigrationObject"
+                  @cancel="cancelMigrationObject"
+                  placement="top"
+                >
+                  <el-switch
+                    :model-value="taskBasicInfo.subTaskData[curTableTabs].isMigrationObject"
+                    @change="handleMigrationObjectChange"
+                  />
+                </a-popconfirm>
+              </el-form-item>
               <el-form-item :label="t('step1.index.adjust')" label-position="left">
                 <el-switch v-model="taskBasicInfo.subTaskData[curTableTabs].isAdjustKernelParam"
                            :disabled="!taskBasicInfo.subTaskData[curTableTabs].isSystemAdmin"/>
@@ -367,6 +389,38 @@ const handlePopoverHide = () => {
       hoverTabName.value = null
     }
   }, 100);
+}
+
+const showMigrationPopconfirm = ref(false)
+
+const handleMigrationObjectChange = (value: boolean) => {
+  const currentTask = taskBasicInfo.value.subTaskData[curTableTabs.value]
+
+  if (!value) {
+    currentTask.isMigrationObject = false
+    return
+  }
+
+  if (currentTask.sourceDbType === JDBCType.PostgreSQL || currentTask.isSystemAdmin) {
+    currentTask.isMigrationObject = true
+    return
+  }
+
+  if (currentTask.sourceDbType === JDBCType.MySQL && !currentTask.isSystemAdmin) {
+    showMigrationPopconfirm.value = true
+  }
+}
+
+const confirmMigrationObject = () => {
+  const currentTask = taskBasicInfo.value.subTaskData[curTableTabs.value]
+  currentTask.isMigrationObject = true
+  showMigrationPopconfirm.value = false
+}
+
+const cancelMigrationObject = () => {
+  const currentTask = taskBasicInfo.value.subTaskData[curTableTabs.value]
+  currentTask.isMigrationObject = false
+  showMigrationPopconfirm.value = false
 }
 
 const removeTab = (tabname: string) => {
@@ -530,6 +584,11 @@ const shouldShowDbColumn = computed(() => {
   const types = [JDBCType.MySQL, JDBCType.PostgreSQL].map(String)
   const currentType = taskBasicInfo.value.subTaskData[curTableTabs.value]?.sourceDbType
   return types.includes(currentType || '')
+})
+
+const shouldShowMigrationObject = computed(() => {
+  const currentType = taskBasicInfo.value.subTaskData[curTableTabs.value]?.sourceDbType
+  return currentType === JDBCType.MySQL || currentType === JDBCType.PostgreSQL
 })
 
 const changeSourceType = (type?: string) => {
@@ -1108,6 +1167,7 @@ const initSubTask = (currentTab: string) => {
     configType: 1,
     isAdjustKernelParam: false,
     isSystemAdmin: false,
+    isMigrationObject: false,
     taskParamsObject: {
       basic: [],
       more: [{paramKey: "rules.enable", paramValue: "true", paramDesc: "规则过滤，true代表开启，false代表关闭"}],

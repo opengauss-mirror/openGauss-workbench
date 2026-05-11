@@ -297,6 +297,22 @@ SELECT add_migration_task_is_adjust_kernel_param_field_func();
 
 DROP FUNCTION add_migration_task_is_adjust_kernel_param_field_func;
 
+CREATE OR REPLACE FUNCTION add_migration_task_is_migration_object_field_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''tb_migration_task'' AND COLUMN_NAME = ''is_migration_object'' ) = 0
+THEN
+ALTER TABLE public.tb_migration_task ADD COLUMN is_migration_object BOOLEAN;
+COMMENT ON COLUMN "public"."tb_migration_task"."is_migration_object" IS ''是否迁移对象'';
+UPDATE public.tb_migration_task SET "is_migration_object" = true;
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_migration_task_is_migration_object_field_func();
+
+DROP FUNCTION add_migration_task_is_migration_object_field_func;
+
 CREATE OR REPLACE FUNCTION add_migration_task_create_transcribe_playback_task_and_details_func() RETURNS integer AS 'BEGIN
 IF
 ( SELECT COUNT ( * ) FROM sys_menu WHERE menu_name = ''创建录制回放'' AND (menu_en_name IS NULL OR menu_en_name = '''')) > 0
@@ -1301,10 +1317,8 @@ UPDATE "public"."tb_migration_task_init_global_param"
 SET "db_type" = 'MYSQL'
 WHERE "db_type" IS NULL;
 
-INSERT INTO "public"."tb_migration_task_init_global_param"
-("id", "param_key", "param_value", "param_desc", "param_type", "db_type")
-VALUES(32, 'is.migration.object', 'true', '是否迁移对象（view, trigger, function, procedure）', 3, 'POSTGRESQL')
-    ON DUPLICATE KEY UPDATE NOTHING;
+DELETE FROM "public"."tb_migration_task_init_global_param" WHERE "param_key" = 'is.migration.object';
+DELETE FROM "public"."tb_migration_task_param" WHERE "param_key" = 'is.migration.object';
 
 INSERT INTO "public"."tb_migration_task_init_global_param"
 ("id", "param_key", "param_value", "param_desc", "param_type", "db_type")

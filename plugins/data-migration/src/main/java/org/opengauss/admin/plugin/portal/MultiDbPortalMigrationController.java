@@ -278,13 +278,15 @@ public class MultiDbPortalMigrationController {
     }
 
     private void setMigrationTaskParams(Map<String, String> migrationConfig, MigrationTask task) {
+        if (task.getIsMigrationObject() != null && task.getIsMigrationObject()) {
+            migrationConfig.put("is.migration.object", "true");
+        } else {
+            migrationConfig.put("is.migration.object", "false");
+        }
+
         List<MigrationTaskParam> migrationTaskParams = migrationTaskParamService.selectByTaskId(task.getId());
         if (!migrationTaskParams.isEmpty()) {
             for (MigrationTaskParam taskParam : migrationTaskParams) {
-                if ("is.migration.object".equals(taskParam.getParamKey())) {
-                    migrationConfig.put("is.migration.object", taskParam.getParamValue());
-                    continue;
-                }
                 if ("schema.mappings".equals(taskParam.getParamKey())) {
                     migrationConfig.put("schema.mappings", taskParam.getParamValue());
                 }

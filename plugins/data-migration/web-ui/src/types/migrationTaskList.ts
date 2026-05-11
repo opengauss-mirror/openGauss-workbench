@@ -15,6 +15,7 @@ interface subTaskList {
   configType: number,
   isAdjustKernelParam: boolean,
   isSystemAdmin: boolean,
+  isMigrationObject: boolean,
   taskParamsObject: {
     basic:ParamItem[],
     more: ParamItem[],
