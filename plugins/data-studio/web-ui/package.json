@@ -69,6 +69,8 @@
     "decode-uri-component": "0.2.2",
     "brace-expansion": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.0.3.tgz",
     "flatted": "https://registry.npmjs.org/flatted/-/flatted-3.4.0.tgz",
-    "picomatch": "https://registry.npmjs.org/picomatch/-/picomatch-2.3.2.tgz"
+    "picomatch": "https://registry.npmjs.org/picomatch/-/picomatch-2.3.2.tgz",
+    "postcss": "https://registry.npmjs.org/postcss/-/postcss-8.5.10.tgz",
+    "uuid": "14.0.0"
   }
 }
