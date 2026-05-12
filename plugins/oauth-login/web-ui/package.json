@@ -21,7 +21,7 @@
     "@xterm/addon-attach": "^0.10.0-beta.1",
     "@xterm/addon-fit": "^0.9.0-beta.1",
     "animate.css": "4.1.1",
-    "axios": "1.7.2",
+    "axios": "https://registry.npmjs.org/axios/-/axios-1.15.1.tgz",
     "core-js": "^3.8.3",
     "cors": "^2.8.5",
     "dayjs": "1.11.4",
@@ -66,6 +66,9 @@
     "brace-expansion": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-1.1.13.tgz",
     "picomatch": "https://registry.npmjs.org/picomatch/-/picomatch-2.3.2.tgz",
     "postcss": "https://registry.npmjs.org/postcss/-/postcss-8.5.10.tgz",
-    "uuid": "14.0.0"
+    "uuid": "14.0.0",
+    "immutable": "4.3.7",
+    "axios": "https://registry.npmjs.org/axios/-/axios-1.15.1.tgz",
+    "proxy-from-env": "https://registry.npmjs.org/proxy-from-env/-/proxy-from-env-2.1.0.tgz"
   }
 }
