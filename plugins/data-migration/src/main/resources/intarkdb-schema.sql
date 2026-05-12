@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS "tb_migration_main_task" (
     "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "task_name" varchar(255),
     "exec_status" int4,
+    "is_full_failed" int4,
     "create_time" timestamp,
     "finish_time" timestamp,
     "exec_time" timestamp,
@@ -15,6 +16,8 @@ COMMENT ON COLUMN "tb_migration_main_task"."task_name" IS '任务名称';
 
 COMMENT ON COLUMN "tb_migration_main_task"."exec_status" IS '执行状态（0：未执行；1：执行中；2：已完成；）';
 
+COMMENT ON COLUMN "tb_migration_main_task"."is_full_failed" IS '全量迁移状态（0：非全量迁移失败；1：全量迁移失败；）';
+
 COMMENT ON COLUMN "tb_migration_main_task"."create_time" IS '创建时间';
 
 COMMENT ON COLUMN "tb_migration_main_task"."finish_time" IS '完成时间';
@@ -27,6 +30,8 @@ COMMENT ON COLUMN "tb_migration_main_task"."exec_progress" IS '迁移进度';
 
 COMMENT ON TABLE "tb_migration_main_task" IS '平台任务表';
 
+ALTER TABLE tb_migration_main_task ADD COLUMN is_full_failed int4;
+COMMENT ON COLUMN "tb_migration_main_task"."is_full_failed" IS '全量迁移状态（0：非全量迁移失败；1：全量迁移失败；）';
 
 CREATE TABLE IF NOT EXISTS "tb_migration_task" (
     "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -47,6 +52,7 @@ CREATE TABLE IF NOT EXISTS "tb_migration_task" (
     "target_db_pass" text,
     "create_time" timestamp,
     "exec_status" int4,
+    "is_full_failed" int4,
     "run_host" varchar(50),
     "run_port" varchar(50),
     "run_user" varchar(50),
@@ -96,6 +102,8 @@ COMMENT ON COLUMN "tb_migration_task"."create_time" IS '创建时间';
 
 COMMENT ON COLUMN "tb_migration_task"."exec_status" IS '执行状态（0：未执行；1：执行中；2：已完成；3：执行失败）';
 
+COMMENT ON COLUMN "tb_migration_task"."is_full_failed" IS '全量迁移状态（0：非全量迁移失败；1：全量迁移失败；）';
+
 COMMENT ON COLUMN "tb_migration_task"."run_host" IS '运行环境host';
 
 COMMENT ON COLUMN "tb_migration_task"."run_port" IS '运行环境port';
@@ -118,6 +126,9 @@ COMMENT ON TABLE "tb_migration_task" IS '迁移子任务表';
 
 ALTER TABLE tb_migration_task ADD COLUMN is_adjust_kernel_param BOOLEAN;
 COMMENT ON COLUMN "tb_migration_task"."is_adjust_kernel_param" IS '是否调整内核参数';
+
+ALTER TABLE tb_migration_task ADD COLUMN is_full_failed int4;
+COMMENT ON COLUMN "tb_migration_task"."is_full_failed" IS '全量迁移状态（0：非全量迁移失败；1：全量迁移失败；）';
 
 ALTER TABLE tb_migration_task ADD COLUMN is_migration_object BOOLEAN;
 COMMENT ON COLUMN "tb_migration_task"."is_migration_object" IS '是否迁移对象';

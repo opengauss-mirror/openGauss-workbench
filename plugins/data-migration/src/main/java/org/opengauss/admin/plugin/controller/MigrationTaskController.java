@@ -146,7 +146,7 @@ public class MigrationTaskController extends BaseController {
     @Log(title = "task", businessType = BusinessType.START)
     @PostMapping("/start/{id}")
     public AjaxResult start(@PathVariable Integer id ) {
-        return migrationMainTaskService.startTask(id);
+        return migrationMainTaskService.startTask(id, false);
     }
     
     /**
@@ -155,7 +155,16 @@ public class MigrationTaskController extends BaseController {
     @Log(title = "task", businessType = BusinessType.RESET)
     @PostMapping("/reset/{id}")
     public AjaxResult reset(@PathVariable Integer id ) {
-        return migrationMainTaskService.resetTask(id);
+        return migrationMainTaskService.resetTask(id, false);
+    }
+
+    /**
+     * resume task
+     */
+    @Log(title = "task", businessType = BusinessType.RESUME)
+    @PostMapping("/resume/{id}")
+    public AjaxResult resume(@PathVariable Integer id) {
+        return migrationMainTaskService.resumeTask(id);
     }
 
     /**

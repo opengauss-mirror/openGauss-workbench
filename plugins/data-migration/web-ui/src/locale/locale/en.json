@@ -36,6 +36,7 @@
       "5q08sf2djyc0": "Operate",
       "5q08sf2dk0o0": "Detail",
       "5q08sf2dk3c0": "End migration",
+      "resume": "Resume migration",
       "5q08sf2dk5s0": "Start",
       "5q08sf2dk800": "Are you sure to delete this task?",
       "5q08sf2dka40": "Delete",
@@ -43,6 +44,7 @@
       "5q08sf2dkek0": " min",
       "endMigration": "Are you sure to end the migration?",
       "resetWarning": "Resetting will clear the mission details",
+      "resumeWarning": "Are you sure to continue the migration",
       "resetConfirm": "Are you sure to reset?",
       "executeTimeRange": "The execution time frame",
       "executeTimeRangePlaceHolder": "Please select a time range",
@@ -53,6 +55,7 @@
       "startSuccess": "Task started successfully",
       "stopSuccess": "Task completed successfully",
       "resetSuccess": "Task reset successfully",
+      "resumeSuccess": "Task resumed successfully",
       "delSuccess": "Task deleted successfully",
       "delWarningText": "Please select at least one piece of data",
       "pleaseStart": "Please start"

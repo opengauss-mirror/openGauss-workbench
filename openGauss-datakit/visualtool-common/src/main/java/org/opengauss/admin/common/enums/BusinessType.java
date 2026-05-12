@@ -79,6 +79,10 @@ public enum BusinessType {
      */
     RESET,
     /**
+     * resume
+     */
+    RESUME,
+    /**
      * confirm
      */
     CONFIRM,

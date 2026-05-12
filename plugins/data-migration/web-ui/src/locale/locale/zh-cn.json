@@ -36,6 +36,7 @@
       "5q08sf2djyc0": "操作",
       "5q08sf2dk0o0": "详情",
       "5q08sf2dk3c0": "结束迁移",
+      "resume": "继续迁移",
       "5q08sf2dk5s0": "启动",
       "5q08sf2dk800": "你确认删除此任务吗？",
       "5q08sf2dka40": "删除",
@@ -43,6 +44,7 @@
       "5q08sf2dkek0": "分钟",
       "endMigration": "你确认结束迁移吗？",
       "resetWarning": "重置将会清空任务详情",
+      "resumeWarning": "是否确定继续迁移",
       "resetConfirm": "你确认重置吗？",
       "executeTimeRange": "执行时间范围",
       "executeTimeRangePlaceHolder": "请选择执行时间范围",
@@ -53,6 +55,7 @@
       "startSuccess": "启动任务成功",
       "stopSuccess": "结束任务成功",
       "resetSuccess": "重置任务成功",
+      "resumeSuccess": "任务继续",
       "delSuccess": "删除任务成功",
       "delWarningText": "请至少选择一条数据",
       "pleaseStart": "请启动"

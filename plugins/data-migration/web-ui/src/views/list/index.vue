@@ -120,6 +120,12 @@
               :cancel-text="$t('list.index.cancel')" @ok="resetTask(record.row)" class="aPopConfirmStyle">
               <el-button status="danger" text>{{ $t('list.index.5q08sf2diqs0') }}</el-button>
             </a-popconfirm>
+            <a-popconfirm
+              v-if="record.row.execStatus === 4 && record.row.isFullFailed && record.row.isFullFailed == 1"
+              :content="$t('list.index.resumeWarning')" type="warning" :ok-text="$t('list.index.confirm')"
+              :cancel-text="$t('list.index.cancel')" @ok="resumeTask(record.row)" class="aPopConfirmStyle">
+              <el-button status="danger" text>{{ $t('list.index.resume') }}</el-button>
+            </a-popconfirm>
           </template>
         </el-table-column>
       </el-table>
@@ -141,7 +147,7 @@ import showMessage from '@/utils/showMessage';
 import FusionSearch from '@/components/fusion-search';
 import { searchType } from '@/types/searchType';
 import { IconEmpty } from '@computing/opendesign-icons';
-import { list, start, stop, reset, deleteTask, userList } from '@/api/list';
+import { list, start, stop, reset, deleteTask, userList, resume } from '@/api/list';
 import dayjs from 'dayjs';
 import useTheme from '@/hooks/theme';
 import { useI18n } from 'vue-i18n';
@@ -474,6 +480,19 @@ const resetTask = async (row: rowsType) => {
     // Close the subtable
     closeSubTable(row.id)
     showMessage('success', t('list.index.resetSuccess'));
+    getList();
+  } catch (err) {
+    console.error(err, 'err')
+  }
+};
+
+// resume task
+const resumeTask = async (row: rowsType) => {
+  try {
+    await resume(row.id);
+    // Close the subtable
+    closeSubTable(row.id)
+    showMessage('success', t('list.index.resumeSuccess'));
     getList();
   } catch (err) {
     console.error(err, 'err')
