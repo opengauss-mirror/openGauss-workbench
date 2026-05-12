@@ -60,9 +60,11 @@ public interface MigrationMainTaskService extends IService<MigrationMainTask> {
 
     void updateStatus(Integer id, MainTaskStatus taskStatus);
 
-    AjaxResult startTask(Integer id);
+    AjaxResult startTask(Integer id, boolean isResume);
     
-    AjaxResult resetTask(Integer id);
+    AjaxResult resetTask(Integer id, boolean isResume);
+
+    AjaxResult resumeTask(Integer id);
     
     void finishTask(Integer id);
 

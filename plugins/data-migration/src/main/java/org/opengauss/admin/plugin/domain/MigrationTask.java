@@ -81,6 +81,12 @@ public class MigrationTask {
 
     private String targetDbVersion;
 
+    @TableField(exist = false)
+    private boolean isResume;
+
+    @TableField(exist = false)
+    private String progressTables;
+
     /**
      * true: adjust false: no adjust
      */
@@ -91,6 +97,7 @@ public class MigrationTask {
      * execStatus（0：not_run；1：full_run；2：full_finish；3：incremental_run；4：reverse_run; 5: fail; 6: finish 1000: wait_resource）
      */
     private Integer execStatus;
+    private Integer isFullFailed;
     private Integer mainTaskId;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

@@ -17,7 +17,7 @@
 
     <sql id="selectTaskVo">
         SELECT
-            id,task_name,exec_status,create_time,finish_time,exec_time,create_user,exec_progress
+            id,task_name,exec_status,is_full_failed,create_time,finish_time,exec_time,create_user,exec_progress
         FROM tb_migration_main_task
     </sql>
 

@@ -56,6 +56,11 @@ public class MigrationMainTask {
     private Integer execStatus;
 
     /**
+     * full migration status
+     */
+    private Integer isFullFailed;
+
+    /**
      * exec progress
      */
     private String execProgress;

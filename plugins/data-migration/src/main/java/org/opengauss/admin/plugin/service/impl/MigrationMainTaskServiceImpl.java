@@ -584,11 +584,14 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
 
     @Override
     @Transactional
-    public AjaxResult startTask(Integer mainTaskId) {
+    public AjaxResult startTask(Integer mainTaskId, boolean isResume) {
         long startTaskTimestamp = System.currentTimeMillis();
-        beforeStartCheck(mainTaskId);
+        if (!isResume) {
+            beforeStartCheck(mainTaskId);
+        }
         updateStatus(mainTaskId, MainTaskStatus.RUNNING);
 
+        MigrationMainTask mainTask = getById(mainTaskId);
         List<MigrationTask> tasks = migrationTaskService.listByMainTaskId(mainTaskId);
         List<MigrationTaskHostRef> hosts = migrationTaskHostRefService.listByMainTaskId(mainTaskId);
         int totalRunnableCount = hosts.stream().mapToInt(MigrationTaskHostRef::getRunnableCount).sum();
@@ -599,6 +602,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 int size = (int) hosts.stream().filter(h -> h.getRunnableCount() > 0).count();
                 int curHostIndex = x % size;
                 MigrationTask t = tasks.get(x);
+                t.setProgressTables(mainTask.getTaskName() + ".progress");
+                t.setResume(isResume);
                 t.setOrderInvokedTimestamp(startTaskTimestamp);
                 MigrationTaskHostRef h = hosts.get(curHostIndex);
                 h.addPlaceHolderCount();
@@ -609,6 +614,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 Integer runnableCount = h.getRunnableCount();
                 for (int i = tasks.size() - 1; i >= tasks.size() - runnableCount; i--) {
                     MigrationTask t = tasks.get(i);
+                    t.setProgressTables(mainTask.getTaskName());
+                    t.setResume(isResume);
                     t.setOrderInvokedTimestamp(startTaskTimestamp);
                     threadPoolTaskExecutor.submit(() -> runTask(h, t, operateUsername));
                     tasks.remove(i);
@@ -648,7 +655,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
 
     @Transactional
     @Override
-    public AjaxResult resetTask(Integer mainTaskId) {
+    public AjaxResult resetTask(Integer mainTaskId, boolean isResume) {
         if (mainTaskId == null) {
             throw new IllegalArgumentException("Migration task id cannot be empty");
         }
@@ -658,7 +665,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             throw new MigrationTaskException(MigrationErrorCode.MAIN_TASK_NOT_EXISTS_ERROR.getMsg());
         }
         if (!mainTask.getExecStatus().equals(MainTaskStatus.FINISH.getCode())
-                && !mainTask.getExecStatus().equals(MainTaskStatus.SUCCESS.getCode())) {
+                && !mainTask.getExecStatus().equals(MainTaskStatus.SUCCESS.getCode()) && !isResume) {
             throw new MigrationTaskException(MigrationErrorCode.MAIN_TASK_IS_RUNNING_ERROR.getMsg());
         }
 
@@ -692,6 +699,14 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
             migrationTaskParamService.deleteByTaskId(subTaskId);
         });
         return AjaxResult.success();
+    }
+
+    @Transactional
+    @Override
+    public AjaxResult resumeTask(Integer mainTaskId) {
+        finishTask(mainTaskId);
+        resetTask(mainTaskId, true);
+        return startTask(mainTaskId, true);
     }
 
     @Override

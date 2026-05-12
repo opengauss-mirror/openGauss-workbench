@@ -166,6 +166,7 @@ CREATE TABLE IF NOT EXISTS "public"."tb_migration_main_task" (
   "id" int8 NOT NULL DEFAULT nextval('sq_tb_main_task_id'::regclass),
   "task_name" varchar(255) COLLATE "pg_catalog"."default",
   "exec_status" int4,
+  "is_full_failed" int4,
   "create_time" timestamp(6),
   "finish_time" timestamp(6),
   "exec_time" timestamp(6),
@@ -180,6 +181,8 @@ COMMENT ON COLUMN "public"."tb_migration_main_task"."task_name" IS '任务名称
 
 COMMENT ON COLUMN "public"."tb_migration_main_task"."exec_status" IS '执行状态（0：未执行；1：执行中；2：已完成；）';
 
+COMMENT ON COLUMN "public"."tb_migration_main_task"."is_full_failed" IS '全量迁移状态（0：非全量迁移失败；1：全量迁移失败；）';
+
 COMMENT ON COLUMN "public"."tb_migration_main_task"."create_time" IS '创建时间';
 
 COMMENT ON COLUMN "public"."tb_migration_main_task"."finish_time" IS '完成时间';
@@ -192,6 +195,8 @@ COMMENT ON COLUMN "public"."tb_migration_main_task"."exec_progress" IS '迁移�
 
 COMMENT ON TABLE "public"."tb_migration_main_task" IS '平台任务表';
 
+ALTER TABLE public.tb_migration_main_task ADD COLUMN is_full_failed int4;
+COMMENT ON COLUMN "public"."tb_migration_main_task"."is_full_failed" IS '全量迁移状态（0：非全量迁移失败；1：全量迁移失败；）';
 
 CREATE TABLE IF NOT EXISTS "public"."tb_migration_task" (
   "id" int8 NOT NULL DEFAULT nextval('sq_migration_task_id'::regclass),
@@ -212,6 +217,7 @@ CREATE TABLE IF NOT EXISTS "public"."tb_migration_task" (
   "target_db_pass" text COLLATE "pg_catalog"."default",
   "create_time" timestamp(6),
   "exec_status" int4,
+  "is_full_failed" int4,
   "run_host" varchar(50) COLLATE "pg_catalog"."default",
   "run_port" varchar(50) COLLATE "pg_catalog"."default",
   "run_user" varchar(50) COLLATE "pg_catalog"."default",
@@ -262,6 +268,8 @@ COMMENT ON COLUMN "public"."tb_migration_task"."create_time" IS '创建时间';
 
 COMMENT ON COLUMN "public"."tb_migration_task"."exec_status" IS '执行状态（0：未执行；1：执行中；2：已完成；3：执行失败）';
 
+COMMENT ON COLUMN "public"."tb_migration_task"."is_full_failed" IS '全量迁移状态（0：非全量迁移失败；1：全量迁移失败；）';
+
 COMMENT ON COLUMN "public"."tb_migration_task"."run_host" IS '运行环境host';
 
 COMMENT ON COLUMN "public"."tb_migration_task"."run_port" IS '运行环境port';
@@ -281,6 +289,9 @@ COMMENT ON COLUMN "public"."tb_migration_task"."migration_process" IS '迁移进
 COMMENT ON COLUMN "public"."tb_migration_task"."run_hostname" IS '运行环境hostname';
 COMMENT ON COLUMN "public"."tb_migration_task"."target_db_version" IS '目标数据库版本';
 COMMENT ON TABLE "public"."tb_migration_task" IS '迁移子任务表';
+
+ALTER TABLE public.tb_migration_task ADD COLUMN is_full_failed int4;
+COMMENT ON COLUMN "public"."tb_migration_task"."is_full_failed" IS '全量迁移状态（0：非全量迁移失败；1：全量迁移失败；）';
 
 CREATE OR REPLACE FUNCTION add_migration_task_is_adjust_kernel_param_field_func() RETURNS integer AS 'BEGIN
 IF

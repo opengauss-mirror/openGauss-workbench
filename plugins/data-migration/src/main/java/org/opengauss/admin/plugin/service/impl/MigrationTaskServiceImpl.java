@@ -673,6 +673,17 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         return MigrationTaskExecResultDetail.builder().execResultDetail(MapUtil.getStr(detailsMap, processKey)).build();
     }
 
+    private boolean isFullFailed(List<Map<String, Object>> statusResultList) {
+        if (statusResultList.size() >= 2) {
+            Map<String, Object> migrationStatus = statusResultList.get(statusResultList.size() - 2);
+            Integer state = MapUtil.getInt(migrationStatus, "status");
+            if (state < TaskStatus.FULL_CHECK_FINISH.getCode()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public Map<String, Object> getSingleTaskStatusAndProcessByProtal(MigrationTask t) {
         if (!DbTypeEnum.MYSQL.equals(t.getSourceDbType())) {
@@ -680,6 +691,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             return new HashMap<>();
         }
 
+        int isFullFailed = 0;
         Map<String, Object> result = new HashMap<>();
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(t.getRunHostId());
         String password = encryptionUtils.decrypt(installHost.getRunPassword());
@@ -693,6 +705,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                 .collect(Collectors.toList());
             Map<String, Object> lastStatus = statusResultList.get(statusResultList.size() - 1);
             Integer state = MapUtil.getInt(lastStatus, "status");
+            if (Objects.equals(state, TaskStatus.MIGRATION_ERROR.getCode())) {
+                isFullFailed = isFullFailed(statusResultList) ? 1 : 0;
+            }
             MigrationTask update = MigrationTask.builder().id(t.getId()).build();
             migrationTaskStatusRecordService.saveTaskRecord(t.getId(), statusResultList);
             BigDecimal migrationProcess = new BigDecimal(0);
@@ -751,7 +766,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             }
 
             setUpdateStatus(update, t, lastStatus);
+            update.setIsFullFailed(isFullFailed);
             updateById(update);
+            setMainTaskFullStatus(t.getMainTaskId(), isFullFailed);
         }
         return result;
     }
@@ -792,6 +809,12 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                 update.setStatusDesc("");
             }
         }
+    }
+
+    private void setMainTaskFullStatus(Integer mainTaskId, int isFullFailed) {
+        MigrationMainTask mainTask = migrationMainTaskService.getById(mainTaskId);
+        mainTask.setIsFullFailed(isFullFailed);
+        migrationMainTaskService.updateById(mainTask);
     }
 
     private boolean isIncrementalOrReverseRestart(Integer taskId, Integer taskStatus, Integer portalStatus) {
@@ -1201,6 +1224,8 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         resultMap.put("migration_mode", task.getMigrationModelId() + "");
         resultMap.put("is_adjustKernel_param", task.getIsAdjustKernelParam() + "");
         resultMap.put("enable.stdin.password", "true");
+        resultMap.put("is_restart", String.valueOf(!task.isResume()));
+        resultMap.put("progress_tables", task.getProgressTables());
         if (task.getIsMigrationObject() != null && task.getIsMigrationObject()) {
             resultMap.put("snapshot.object", "yes");
         } else {

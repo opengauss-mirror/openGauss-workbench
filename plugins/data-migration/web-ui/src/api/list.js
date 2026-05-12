@@ -23,3 +23,7 @@ export function deleteTask (ids) {
 export function userList () {
   return axios.get('/plugins/data-migration/migration/list/createUsers')
 }
+
+export function resume (id) {
+  return axios.post(`/plugins/data-migration/migration/resume/${id}`)
+}
