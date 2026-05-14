@@ -14,7 +14,7 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.0.9",
     "@vueuse/core": "^9.0.0",
-    "axios": "1.12.0",
+    "axios": "https://registry.npmjs.org/axios/-/axios-1.15.1.tgz",
     "cron-parser": "^4.6.0",
     "dayjs": "^1.11.5",
     "echarts": "^5.4.0",
@@ -66,12 +66,15 @@
   },
   "overrides": {
     "js-yaml": "4.1.1",
-    "follow-redirects": "1.15.11",
+    "follow-redirects": "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.16.0.tgz",
     "decode-uri-component": "0.2.2",
     "brace-expansion": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.0.3.tgz",
     "flatted": "https://registry.npmjs.org/flatted/-/flatted-3.4.0.tgz",
     "picomatch": "https://registry.npmjs.org/picomatch/-/picomatch-2.3.2.tgz",
     "postcss": "https://registry.npmjs.org/postcss/-/postcss-8.5.10.tgz",
-    "uuid": "14.0.0"
+    "uuid": "14.0.0",
+    "immutable": "4.3.7",
+    "axios": "https://registry.npmjs.org/axios/-/axios-1.15.1.tgz",
+    "proxy-from-env": "https://registry.npmjs.org/proxy-from-env/-/proxy-from-env-2.1.0.tgz"
   }
 }
