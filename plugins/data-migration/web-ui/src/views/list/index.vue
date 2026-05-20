@@ -193,6 +193,9 @@ interface rowsType {
   expanded?: boolean,
   [key: string]: any,
 }
+
+const startLoadingTaskSet = new Set<number>();
+
 const tableData = ref<rowsType[]>([]);
 const selectedKeys = ref([]);
 const rowSelection = reactive({
@@ -408,8 +411,14 @@ const getList = (loopQuery?: string) => {
     tableData.value = res.rows.map(item => {
       // Here the resumption of the expansion
       if (expandList?.indexOf(item.id) > -1) {
+        if (startLoadingTaskSet.has(item.id)) {
+          return { ...item, disabled: item.execStatus === 1, expanded: true, startLoading: true };
+        }
         return { ...item, disabled: item.execStatus === 1, expanded: true, startLoading: false };
       } else {
+        if (startLoadingTaskSet.has(item.id)) {
+          return { ...item, disabled: item.execStatus === 1, expanded: false, startLoading: true };
+        }
         return { ...item, disabled: item.execStatus === 1, expanded: false, startLoading: false };
       }
     })
@@ -455,16 +464,15 @@ const createTask = () => {
 const startTask = async (row: rowsType) => {
   try {
     row.startLoading = true;
+    startLoadingTaskSet.add(row.id);
     await start(row.id);
     showMessage('success', t('list.index.startSuccess'));
-    let timer = setTimeout(() => {
-      row.startLoading = false;
-      clearTimeout(timer)
-    }, 1000)
   } catch (e) {
     row.startLoading = false;
+  } finally {
+    getList();
+    startLoadingTaskSet.delete(row.id);
   }
-  getList();
 };
 
 // stop task
