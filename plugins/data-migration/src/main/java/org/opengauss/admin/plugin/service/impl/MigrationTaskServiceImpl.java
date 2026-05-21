@@ -209,6 +209,9 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     @Autowired
     private Cache<Integer, String> restartIncrementalOrReverseTaskCache;
 
+    @Resource(name = "portalProcessExitedCache")
+    private Cache<Integer, Long> portalProcessExitedCache;
+
     @Override
     public void initMigrationTaskCheckProgressMonitor() {
         // 启动加载历史任务
@@ -614,7 +617,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         MigrationTaskExecResultDetail incrementalProcess = null;
         MigrationTaskExecResultDetail reverseProcess = null;
         MigrationTaskExecResultDetail dataCheckProcess = null;
-        if (isRefreshTaskStatus(task)) {
+        if (isRefreshTaskStatus(task.getExecStatus(), task.getMigrationModelId())) {
             Map<String, Object> getResult = getSingleTaskStatusAndProcessByProtal(task);
             fullProcess = generateProcessDetail(getResult, "fullProcess");
             if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
@@ -658,14 +661,13 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         }
     }
 
-    private boolean isRefreshTaskStatus(MigrationTask task) {
-        Integer execStatus = task.getExecStatus();
+    private boolean isRefreshTaskStatus(Integer execStatus, Integer migrationModelId) {
         if (TaskStatus.MIGRATION_FINISH.getCode().equals(execStatus)
                 || TaskStatus.MIGRATION_ERROR.getCode().equals(execStatus)
                 || TaskStatus.CHECK_ERROR.getCode().equals(execStatus)) {
             return false;
         }
-        return !MigrationMode.OFFLINE.getCode().equals(task.getMigrationModelId())
+        return !MigrationMode.OFFLINE.getCode().equals(migrationModelId)
                 || !TaskStatus.FULL_CHECK_FINISH.getCode().equals(execStatus);
     }
 
@@ -684,6 +686,23 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         return false;
     }
 
+    private boolean isPortalProcessExist(Integer taskId, MigrationHostPortalInstall portalInstallHost) {
+        ShellInfoVo shellInfo = new ShellInfoVo(portalInstallHost.getHost(), portalInstallHost.getPort(),
+                portalInstallHost.getRunUser(), encryptionUtils.decrypt(portalInstallHost.getRunPassword()));
+        String commandPrefix = PortalHandle.buildPortalStartCommandPrefix(portalInstallHost.getInstallPath(), taskId);
+        String processCheck = String.format("ps ux | grep -- '%s'", commandPrefix.replaceFirst("j", "[j]"));
+
+        JschResult checkResult = ShellUtil.execCommandGetResult(shellInfo, processCheck);
+        if (checkResult.getResult().contains(commandPrefix)) {
+            return true;
+        }
+        if (portalProcessExitedCache.asMap().containsKey(taskId)) {
+            return false;
+        }
+        portalProcessExitedCache.put(taskId, System.currentTimeMillis());
+        return true;
+    }
+
     @Override
     public Map<String, Object> getSingleTaskStatusAndProcessByProtal(MigrationTask t) {
         if (!DbTypeEnum.MYSQL.equals(t.getSourceDbType())) {
@@ -695,6 +714,8 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         Map<String, Object> result = new HashMap<>();
         MigrationHostPortalInstall installHost = migrationHostPortalInstallHostService.getOneByHostId(t.getRunHostId());
         String password = encryptionUtils.decrypt(installHost.getRunPassword());
+        boolean isPortalProcessExist = isPortalProcessExist(t.getId(), installHost);
+        log.debug("check portal process exist result: {}", isPortalProcessExist);
         String portalStatus = PortalHandle.getPortalStatus(installHost.getHost(), installHost.getPort(),
             installHost.getRunUser(), password, installHost.getInstallPath(), t);
         log.debug("get portal stauts content: {}, subTaskId: {}", portalStatus, t.getId());
@@ -765,7 +786,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                 log.debug("task status {} : {}", t.getId(), state);
             }
 
-            setUpdateStatus(update, t, lastStatus);
+            setUpdateStatus(update, t, lastStatus, isPortalProcessExist);
             update.setIsFullFailed(isFullFailed);
             updateById(update);
             setMainTaskFullStatus(t.getMainTaskId(), isFullFailed);
@@ -773,7 +794,8 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         return result;
     }
 
-    private void setUpdateStatus(MigrationTask update, MigrationTask task, Map<String, Object> lastStatus) {
+    private void setUpdateStatus(MigrationTask update, MigrationTask task, Map<String, Object> lastStatus,
+                                 boolean isPortalProcessExist) {
         Integer execStatus = task.getExecStatus();
         if (execStatus >= TaskStatus.MIGRATION_FINISH.getCode()) {
             return;
@@ -781,7 +803,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
 
         Integer state = MapUtil.getInt(lastStatus, "status");
         if (state == null) {
-            return;
+            state = execStatus;
         }
 
         if (TaskStatus.INCREMENTAL_PAUSE.getCode().equals(execStatus)
@@ -789,8 +811,6 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                 || state > execStatus
                 || isIncrementalOrReverseRestart(task.getId(), execStatus, state)) {
             update.setExecStatus(state);
-        } else {
-            return;
         }
 
         if (TaskStatus.FULL_CHECK_FINISH.getCode().equals(state) && task.getMigrationModelId().equals(1)) {
@@ -802,12 +822,19 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             update.setStatusDesc(msg);
             update.setFinishTime(Instant.now());
         } else {
-            // not check failure
             if (TaskStatus.CHECK_ERROR.getCode().equals(task.getExecStatus())) {
                 update.setFinishTime(Instant.now());
             } else {
                 update.setStatusDesc("");
             }
+        }
+
+        Integer newStatus = update.getExecStatus() == null ? execStatus : update.getExecStatus();
+        if (!isPortalProcessExist && isRefreshTaskStatus(newStatus, task.getMigrationModelId())) {
+            log.info("Migration task portal process exits abnormal, task id: {}", task.getId());
+            update.setExecStatus(TaskStatus.MIGRATION_ERROR.getCode());
+            update.setFinishTime(Instant.now());
+            update.setStatusDesc("Migration task portal process exits abnormal");
         }
     }
 

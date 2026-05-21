@@ -16,6 +16,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.io.FilenameUtils;
+import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.plugin.domain.FullMigrationProgress;
 import org.opengauss.admin.plugin.domain.FullMigrationSummaryData;
@@ -26,6 +27,7 @@ import org.opengauss.admin.plugin.domain.ReverseMigrationProgress;
 import org.opengauss.admin.plugin.dto.MultiDbPortalMigrationStatus;
 import org.opengauss.admin.plugin.enums.FullMigrationDbObjEnum;
 import org.opengauss.admin.plugin.enums.MainTaskStatus;
+import org.opengauss.admin.plugin.enums.MigrationMode;
 import org.opengauss.admin.plugin.enums.MultiDbPortalStatusEnum;
 import org.opengauss.admin.plugin.enums.TaskStatus;
 import org.opengauss.admin.plugin.service.FullMigrationProgressService;
@@ -37,6 +39,7 @@ import org.opengauss.admin.plugin.service.MigrationTaskService;
 import org.opengauss.admin.plugin.service.MigrationTaskStatusRecordService;
 import org.opengauss.admin.plugin.service.ReverseMigrationProgressService;
 import org.opengauss.admin.plugin.utils.FileUtils;
+import org.opengauss.admin.plugin.utils.ShellUtil;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +52,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -92,6 +96,9 @@ public class MultiDbPortalProgressLoader {
     @Autowired
     private Cache<String, Long> fileLastModifiedCache;
 
+    @Resource(name = "portalProcessExitedCache")
+    private Cache<Integer, Long> portalProcessExitedCache;
+
     /**
      * refresh task status
      *
@@ -106,6 +113,8 @@ public class MultiDbPortalProgressLoader {
         }
 
         MigrationHostPortalInstall portalInfo = portalInstallHostService.getOneByHostId(task.getRunHostId());
+        boolean isPortalProcessExist = isPortalProcessExist(task.getId(), portalInfo);
+        log.debug("check portal process exist result: {}", isPortalProcessExist);
         List<Map<String, Object>> migrationStatusList = loadMigrationStatus(portalInfo, task);
         if (ObjectUtils.isEmpty(migrationStatusList)) {
             return;
@@ -114,17 +123,34 @@ public class MultiDbPortalProgressLoader {
 
         DbTypeEnum sourceDbType = task.getSourceDbType();
         if (DbTypeEnum.POSTGRESQL.equals(sourceDbType)) {
-            refreshPostgresqlStatusAndProcess(task, portalInfo, lastStatus);
+            refreshPostgresqlStatusAndProcess(task, portalInfo, lastStatus, isPortalProcessExist);
         } else if (DbTypeEnum.MILVUS.equals(sourceDbType) || DbTypeEnum.ELASTICSEARCH.equals(sourceDbType)) {
-            refreshMilvusStatusAndProcess(task, portalInfo, lastStatus);
+            refreshMilvusStatusAndProcess(task, portalInfo, lastStatus, isPortalProcessExist);
         } else {
             throw new UnsupportedOperationException("DbTypeEnum " + sourceDbType + " is not supported");
         }
     }
 
-    private void refreshPostgresqlStatusAndProcess(
-            MigrationTask task, MigrationHostPortalInstall portalInfo, Map<String, Object> lastStatus
-    ) {
+    private boolean isPortalProcessExist(Integer taskId, MigrationHostPortalInstall portalInfo) {
+        String portalHome = portalInfo.getInstallPath() + "portal/";
+        String jarPath = portalHome + portalInfo.getJarName();
+        String commandPart = String.format(Locale.ROOT, "java -jar %s --migration start %d", jarPath, taskId);
+        String processCheck = String.format("ps ux | grep -- '%s'", commandPart.replaceFirst("j", "[j]"));
+        ShellInfoVo shellInfo = createShellInfo(portalInfo);
+
+        JschResult checkResult = ShellUtil.execCommandGetResult(shellInfo, processCheck);
+        if (checkResult.getResult().contains(commandPart)) {
+            return true;
+        }
+        if (portalProcessExitedCache.asMap().containsKey(taskId)) {
+            return false;
+        }
+        portalProcessExitedCache.put(taskId, System.currentTimeMillis());
+        return true;
+    }
+
+    private void refreshPostgresqlStatusAndProcess(MigrationTask task, MigrationHostPortalInstall portalInfo,
+                                                   Map<String, Object> lastStatus, boolean isPortalProcessExist) {
         Integer latestStatus = MapUtil.getInt(lastStatus, "status");
         IncrementalMigrationProgress incrementalMigrationProgress =
                 incrementalMigrationProgressService.getOneByTaskId(task.getId());
@@ -141,14 +167,13 @@ public class MultiDbPortalProgressLoader {
         if (TaskStatus.REVERSE_START.getCode() <= latestStatus) {
             loadReverseMigrationProgress(portalInfo, task);
         }
-        updateStatus(task, lastStatus);
+        updateStatus(task, lastStatus, isPortalProcessExist);
     }
 
-    private void refreshMilvusStatusAndProcess(
-            MigrationTask task, MigrationHostPortalInstall portalInfo, Map<String, Object> lastStatus
-    ) {
+    private void refreshMilvusStatusAndProcess(MigrationTask task, MigrationHostPortalInstall portalInfo,
+                                               Map<String, Object> lastStatus, boolean isPortalProcessExist) {
         loadMilvusFullMigrationProgress(portalInfo, task.getId());
-        updateStatus(task, lastStatus);
+        updateStatus(task, lastStatus, isPortalProcessExist);
 
         Integer execStatus = migrationTaskService.getById(task.getId()).getExecStatus();
         if (TaskStatus.MIGRATION_FINISH.getCode().equals(execStatus)
@@ -205,7 +230,7 @@ public class MultiDbPortalProgressLoader {
         }
     }
 
-    private void updateStatus(MigrationTask task, Map<String, Object> lastStatus) {
+    private void updateStatus(MigrationTask task, Map<String, Object> lastStatus, boolean isPortalProcessExist) {
         Integer execStatus = task.getExecStatus();
         if (execStatus >= TaskStatus.MIGRATION_FINISH.getCode()) {
             return;
@@ -217,8 +242,6 @@ public class MultiDbPortalProgressLoader {
                 || TaskStatus.REVERSE_PAUSE.getCode().equals(execStatus)
                 || latestStatus > execStatus) {
             update.setExecStatus(latestStatus);
-        } else {
-            return;
         }
 
         if ((TaskStatus.FULL_CHECK_FINISH.getCode().equals(latestStatus) && task.getMigrationModelId() == 1)
@@ -232,7 +255,27 @@ public class MultiDbPortalProgressLoader {
             update.setFinishTime(Instant.now());
             update.setStatusDesc(msg);
         }
-        migrationTaskService.updateById(update);
+
+        Integer newStatus = update.getExecStatus() == null ? execStatus : update.getExecStatus();
+        if (!isPortalProcessExist && isRefreshTaskStatus(newStatus, task.getMigrationModelId())) {
+            log.info("Migration task portal process exits abnormal, task id: {}", task.getId());
+            update.setExecStatus(TaskStatus.MIGRATION_ERROR.getCode());
+            update.setFinishTime(Instant.now());
+            update.setStatusDesc("Migration task portal process exits abnormal");
+        }
+        if (update.getExecStatus() != null) {
+            migrationTaskService.updateById(update);
+        }
+    }
+
+    private boolean isRefreshTaskStatus(Integer execStatus, Integer migrationModelId) {
+        if (TaskStatus.MIGRATION_FINISH.getCode().equals(execStatus)
+                || TaskStatus.MIGRATION_ERROR.getCode().equals(execStatus)
+                || TaskStatus.CHECK_ERROR.getCode().equals(execStatus)) {
+            return false;
+        }
+        return !MigrationMode.OFFLINE.getCode().equals(migrationModelId)
+                || !TaskStatus.FULL_CHECK_FINISH.getCode().equals(execStatus);
     }
 
     private void loadFullMigrationProgress(MigrationHostPortalInstall portalInfo, MigrationTask task) {

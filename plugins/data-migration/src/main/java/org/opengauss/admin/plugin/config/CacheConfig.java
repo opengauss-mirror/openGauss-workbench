@@ -60,4 +60,18 @@ public class CacheConfig {
                 .maximumSize(100)
                 .build();
     }
+
+    /**
+     * Set a caffeine cache instance to store the portal process exited cache
+     *
+     * @return Cache<Integer, Long>
+     */
+    @Bean(name = "portalProcessExitedCache")
+    public Cache<Integer, Long> portalProcessExitedCache() {
+        return Caffeine.newBuilder()
+                .expireAfterWrite(60, TimeUnit.SECONDS)
+                .initialCapacity(10)
+                .maximumSize(100)
+                .build();
+    }
 }
