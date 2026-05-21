@@ -596,7 +596,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         List<MigrationTaskHostRef> hosts = migrationTaskHostRefService.listByMainTaskId(mainTaskId);
         int totalRunnableCount = hosts.stream().mapToInt(MigrationTaskHostRef::getRunnableCount).sum();
         String operateUsername = SecurityUtils.getUsername();
-        if (totalRunnableCount > tasks.size()) {
+        if (totalRunnableCount >= tasks.size()) {
             // The number of host executable tasks is greater than the total number of tasks
             for (int x = 0; x < tasks.size(); x++) {
                 int size = (int) hosts.stream().filter(h -> h.getRunnableCount() > 0).count();
@@ -607,35 +607,13 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
                 t.setOrderInvokedTimestamp(startTaskTimestamp);
                 MigrationTaskHostRef h = hosts.get(curHostIndex);
                 h.addPlaceHolderCount();
-                threadPoolTaskExecutor.submit(() -> runTask(h, t, operateUsername));
+                migrationTaskService.runTask(h, t, operateUsername);
             }
-        } else { //The number of tasks that the host can perform is less than the total number of tasks
-            hosts.forEach(h -> {
-                Integer runnableCount = h.getRunnableCount();
-                for (int i = tasks.size() - 1; i >= tasks.size() - runnableCount; i--) {
-                    MigrationTask t = tasks.get(i);
-                    t.setProgressTables(mainTask.getTaskName());
-                    t.setResume(isResume);
-                    t.setOrderInvokedTimestamp(startTaskTimestamp);
-                    threadPoolTaskExecutor.submit(() -> runTask(h, t, operateUsername));
-                    tasks.remove(i);
-                }
-            });
-            //For tasks that have not been assigned a host,
-            // change the status to 1000 and be processed by the offline scheduler
-            tasks.forEach(t -> {
-                migrationTaskService.updateStatus(t.getId(), TaskStatus.WAIT_RESOURCE);
-            });
+        } else {
+            throw new MigrationTaskException("The number of tasks that the portal can perform is reached. "
+                    + "Please select other portal hosts or wait for existing tasks to complete.");
         }
         return AjaxResult.success();
-    }
-
-    private void runTask(MigrationTaskHostRef hostRef, MigrationTask task, String operateUsername) {
-        try {
-            migrationTaskService.runTask(hostRef, task, operateUsername);
-        } catch (Exception e) {
-            log.error("Run task error, host: {}, task id: {}", hostRef.getHost(), task.getId(), e);
-        }
     }
 
     private void beforeStartCheck(Integer mainTaskId) {
