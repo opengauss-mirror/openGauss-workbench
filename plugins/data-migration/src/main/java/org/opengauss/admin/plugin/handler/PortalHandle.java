@@ -261,6 +261,18 @@ public class PortalHandle {
     }
 
     /**
+     * build portal start command prefix
+     *
+     * @param portalInstallPath portal install path
+     * @param workspaceId workspace id
+     * @return command prefix
+     */
+    public static String buildPortalStartCommandPrefix(String portalInstallPath, Integer workspaceId) {
+        return String.format("java -Dpath=%s -Dworkspace.id=%s",
+                generatePortalHome(portalInstallPath), workspaceId.toString());
+    }
+
+    /**
      * verify before migration; pass in the task ID and task parameters
      *
      * @param host host info
@@ -272,14 +284,12 @@ public class PortalHandle {
      */
     public static JschResult checkBeforeMigration(MigrationHostPortalInstall host, MigrationTask task,
                                                 String portalJarName, Map<String, String> paramMap, String command) {
-        String portalHome = host.getInstallPath() + "portal/";
         StringBuilder commandSb = new StringBuilder();
-        commandSb.append("java -Dpath=").append(portalHome);
-        commandSb.append(" -Dworkspace.id=").append(task.getId());
+        commandSb.append(buildPortalStartCommandPrefix(host.getInstallPath(), task.getId()));
         setPortalParams(commandSb, paramMap);
         commandSb.append(" -Dorder.invoked.timestamp=").append(task.getOrderInvokedTimestamp());
         commandSb.append(" -Dorder=").append(command);
-        commandSb.append(" -Dskip=true -jar ").append(portalHome).append(portalJarName);
+        commandSb.append(" -Dskip=true -jar ").append(generatePortalHome(host.getInstallPath())).append(portalJarName);
         log.info("check before migration,host: {}, command: {}", host.getHost(), commandSb);
 
         LinkedHashMap<String, String> inputMap = getInteractParams(paramMap);
@@ -306,15 +316,13 @@ public class PortalHandle {
      */
     public static void startPortal(MigrationHostPortalInstall host, MigrationTask task, String portalJarName,
                                    Map<String, String> paramMap) {
-        String portalHome = host.getInstallPath() + "portal/";
         StringBuilder commandSb = new StringBuilder();
-        commandSb.append("java -Dpath=").append(portalHome);
-        commandSb.append(" -Dworkspace.id=").append(task.getId());
+        commandSb.append(buildPortalStartCommandPrefix(host.getInstallPath(), task.getId()));
         setPortalParams(commandSb, paramMap);
         commandSb.append(" -Dorder.invoked.timestamp=").append(task.getOrderInvokedTimestamp());
         commandSb.append(" -Ddatakit.timezone=").append(ZoneId.systemDefault().toString());
         commandSb.append(" -Dorder=").append(task.getMigrationOperations());
-        commandSb.append(" -Dskip=true -jar ").append(portalHome).append(portalJarName);
+        commandSb.append(" -Dskip=true -jar ").append(generatePortalHome(host.getInstallPath())).append(portalJarName);
         log.info("start portal,host: {}, command: {}", host.getHost(), commandSb.toString());
         LinkedHashMap<String, String> inputMap = getInteractParams(paramMap);
         ShellUtil.execInteractiveCommand(
