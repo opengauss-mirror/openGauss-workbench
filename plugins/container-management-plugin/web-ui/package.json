@@ -54,6 +54,7 @@
     "uuid": "14.0.0",
     "immutable": "4.3.7",
     "axios": "https://registry.npmjs.org/axios/-/axios-1.15.1.tgz",
+    "form-data": "4.0.4",
     "proxy-from-env": "https://registry.npmjs.org/proxy-from-env/-/proxy-from-env-2.1.0.tgz"
   }
 }
