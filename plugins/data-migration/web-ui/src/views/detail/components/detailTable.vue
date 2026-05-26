@@ -37,9 +37,7 @@
           <template #default="scope">
             <div v-if="scope.row.sourceDbType === JDBCType.MySQL || scope.row.sourceDbType === JDBCType.PostgreSQL">
               {{
-                scope.row.migrationModelId === TaskMode.Offline
-                  ? $t('detail.index.5q09asiwiyc0')
-                  : $t('detail.index.5q09asiwj1o0')
+                getMigrationModelName(scope.row.migrationModelId)
               }}
             </div>
             <div v-else>
@@ -55,9 +53,9 @@
         </el-table-column>
         <el-table-column :label="$t('detail.index.5q09asiwjvg0')" :min-width="156" ellipsis tooltip>
           <template #default="scope">
-            <el-tag style="min-width: 88px;" :type="statusColor(scope.row.execStatus, scope.row.migrationModelId) || '--'"
+            <el-tag style="min-width: 88px;" :type="statusColor(scope.row.execStatus, scope.row.isAutoFinish) || '--'"
             > {{
-                execSubStatusMap(scope.row.execStatus, scope.row.migrationModelId)
+                 execSubStatusMap(scope.row.execStatus, scope.row.isAutoFinish)
               }}</el-tag>
             <el-tooltip :title="titleMap(scope.row.execStatus)" :key="scope.row.id">
               <template #default>
@@ -116,10 +114,8 @@
             <a-popconfirm :content="tooltipMap(scope.row.checkDataLevelingAndIncrementFinish)" type="warning"
                           :ok-text="$t('list.index.confirm')" :cancel-text="$t('list.index.cancel')" @ok="stopSubIncrease(scope.row)"
                           class="aPopConfirmStyle">
-              <el-button v-if="(scope.row.migrationModelId === TaskMode.Online &&
-                  scope.row.execStatus ===
-                  SUB_TASK_STATUS.INCREMENTAL_RUNNING) ||
-                  scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_FINISHED
+              <el-button v-if="((scope.row.migrationModelId === TaskMode.Online || scope.row.migrationModelId === TaskMode.OnlineWithoutCheck)
+                  && scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_RUNNING) || scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_FINISHED
                 " size="small" type="text" :loading="scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_FINISHED
                   ">
                 {{
@@ -127,8 +123,8 @@
                 }}
               </el-button>
             </a-popconfirm>
-            <el-button v-if="scope.row.migrationModelId === TaskMode.Online &&
-              scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_STOPPED
+            <el-button v-if="(scope.row.migrationModelId === TaskMode.Online || scope.row.migrationModelId === TaskMode.OnlineWithoutCheck)
+              && scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_STOPPED
             " size="small" type="text" @click="startSubReverse(scope.row)">
               {{
                 $t('detail.index.5q09asiwkq40')
@@ -195,11 +191,23 @@ const replicationData = ref([])
 
 const TaskMode = reactive({
   Offline: 1,
-  Online: 2
+  Online: 2,
+  OfflineWithoutCheck: 3,
+  OnlineWithoutCheck: 4
 })
 
+const getMigrationModelName = (migrationModelId) => {
+  const maps = {
+    1: t('detail.index.5q09asiwiyc0'),
+    2: t('detail.index.5q09asiwj1o0'),
+    3: t('detail.index.5q09asiwj1o1'),
+    4: t('detail.index.5q09asiwj1o2')
+  }
+  return maps[migrationModelId]
+}
+
 // sub task status map
-const execSubStatusMap = (status, migrationModelId) => {
+const execSubStatusMap = (status, isAutoFinish) => {
   const maps = {
     0: t('detail.index.5q09asiwlcg0'),
     1: t('detail.index.5q09asiwlwc0'),
@@ -217,15 +225,19 @@ const execSubStatusMap = (status, migrationModelId) => {
     13: t('detail.index.5q09asiwncc0'),
     30: t('components.SubTaskDetail.incrementError'),
     40: t('components.SubTaskDetail.reverseError'),
-    100: migrationModelId === 2 ? t('list.index.5q08sf2dhj00') : t('detail.index.5q09asiwne80'), // 100 online is the stop, and 100 offline is the end
+    100: t('list.index.5q08sf2dhj00'),
     500: t('detail.index.5q09asiwngg0'),
     1000: t('detail.index.5q09asiwnik0'),
     3000: t('detail.index.5q09asiwlca0')
   }
+
+  if (status === 100 && isAutoFinish) {
+    return t('detail.index.5q09asiwne80')
+  }
   return maps[status]
 }
 
-const statusColor = (execStatus, migrationModelId) => {
+const statusColor = (execStatus, isAutoFinish) => {
   const statuColorMap = {
     0: 'info',
     1: 'primary',
@@ -243,10 +255,14 @@ const statusColor = (execStatus, migrationModelId) => {
     13: 'primary',
     30: 'danger',
     40: 'danger',
-    100: migrationModelId === 2 ? 'warning' : 'success', // 100 online is the stop, and 100 offline is the end
+    100:'warning',
     500: 'danger',
     1000: 'primary',
     3000: 'danger'
+  }
+
+  if (execStatus === 100 && isAutoFinish) {
+    return 'success'
   }
   return statuColorMap[execStatus]
 }

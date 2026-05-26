@@ -278,6 +278,7 @@ public class MultiDbPortal extends MigrationPortal {
 
         Integer execStatus = task.getExecStatus();
         wsInfo.setExecStatus(execStatus);
+        wsInfo.setIsAutoFinish(task.getIsAutoFinish());
         wsInfo.setExceptionAlertTotalCount(0L);
         setExecuteTime(wsInfo, task);
         if (DbTypeEnum.POSTGRESQL.equals(task.getSourceDbType())) {
@@ -515,7 +516,7 @@ public class MultiDbPortal extends MigrationPortal {
                 JSON.toJSONString(fullProcessEntry)).build());
         fullProcessEntry.clear();
         wsInfo.setDataCheckProcess(new MigrationTaskExecResultDetail());
-        if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
+        if (MigrationMode.hasIncrementalAndReverse(task.getMigrationModelId())) {
             wsInfo.setIncrementalProcess(MigrationTaskExecResultDetail.builder().execResultDetail(
                     JSON.toJSONString(incrementalMigrationProgressService.getOneByTaskId(taskId))).build());
             wsInfo.setReverseProcess(MigrationTaskExecResultDetail.builder().execResultDetail(

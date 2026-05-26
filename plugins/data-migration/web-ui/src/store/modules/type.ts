@@ -19,6 +19,7 @@ export interface TaskDetailStoreType {
   };
   exceptionAlertTotalCount: number;
   execStatus: number;
+  isAutoFinish: boolean;
   executedTime: number;
   fullProcess: ProcessContentType,
   funcCounts: CountContentType,

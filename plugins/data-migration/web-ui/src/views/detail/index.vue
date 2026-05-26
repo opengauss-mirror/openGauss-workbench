@@ -90,9 +90,7 @@
               <el-table-column :label="$t('detail.index.5q09asiwiqk0')" ellipsis tooltip>
                 <template #default="scope">
                   {{
-                    scope.row.migrationModelId === TaskMode.Offline
-                      ? $t ( 'detail.index.5q09asiwiyc0' )
-                      : $t ( 'detail.index.5q09asiwj1o0' )
+                    getMigrationModelName(scope.row.migrationModelId)
                   }}
                 </template>
               </el-table-column>
@@ -105,7 +103,7 @@
               <el-table-column :label="$t('detail.index.5q09asiwjvg0')" :min-width="180" ellipsis tooltip>
                 <template #default="scope">
                   <el-tag class="minWid88" :type="statusColorMap[scope.row.execStatus] || '--'"> {{
-                      execSubStatusMap ( scope.row.execStatus )
+                      execSubStatusMap ( scope.row.execStatus, scope.row.isAutoFinish)
                     }}
                   </el-tag>
                   <el-tooltip :title="titleMap(scope.row.execStatus)">
@@ -180,10 +178,8 @@
                   <el-popconfirm :title="tooltipMap(scope.row.checkDataLevelingAndIncrementFinish)"
                                  @confirm="stopSubIncrease(scope.row)">
                     <template #reference>
-                      <el-button v-if="(scope.row.migrationModelId === TaskMode.Online &&
-                        scope.row.execStatus ===
-                        SUB_TASK_STATUS.INCREMENTAL_RUNNING) ||
-                        scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_FINISHED
+                      <el-button v-if="((scope.row.migrationModelId === TaskMode.Online || scope.row.migrationModelId === TaskMode.OnlineWithoutCheck)
+                        && scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_RUNNING) || scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_FINISHED
                       " size="small" type="text" :loading="scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_FINISHED
                             ">
                         {{
@@ -193,8 +189,8 @@
                     </template>
 
                   </el-popconfirm>
-                  <el-button v-if="scope.row.migrationModelId === TaskMode.Online &&
-                    scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_STOPPED
+                  <el-button v-if="(scope.row.migrationModelId === TaskMode.Online || scope.row.migrationModelId === TaskMode.OnlineWithoutCheck)
+                    && scope.row.execStatus === SUB_TASK_STATUS.INCREMENTAL_STOPPED
                   " size="small" type="text" @click="startSubReverse(scope.row)">
                     {{
                       $t ( 'detail.index.5q09asiwkq40' )
@@ -304,11 +300,23 @@ const execStatusMap = (status) => {
 
 const TaskMode = reactive ( {
   Offline: 1,
-  Online: 2
+  Online: 2,
+  OfflineWithoutCheck: 3,
+  OnlineWithoutCheck: 4
 } )
 
+const getMigrationModelName = (migrationModelId) => {
+  const maps = {
+    1: t('detail.index.5q09asiwiyc0'),
+    2: t('detail.index.5q09asiwj1o0'),
+    3: t('detail.index.5q09asiwj1o1'),
+    4: t('detail.index.5q09asiwj1o2')
+  }
+  return maps[migrationModelId]
+}
+
 // sub task status map
-const execSubStatusMap = (status) => {
+const execSubStatusMap = (status, isAutoFinish) => {
   const maps = {
     0: t ( 'detail.index.5q09asiwlcg0' ),
     1: t ( 'detail.index.5q09asiwlwc0' ),
@@ -326,10 +334,14 @@ const execSubStatusMap = (status) => {
     13: t ( 'detail.index.5q09asiwncc0' ),
     30: t ( 'components.SubTaskDetail.incrementError' ),
     40: t ( 'components.SubTaskDetail.reverseError' ),
-    100: t ( 'detail.index.5q09asiwne80' ),
+    100: t ( 'list.index.5q08sf2dhj00' ),
     500: t ( 'detail.index.5q09asiwngg0' ),
     1000: t ( 'detail.index.5q09asiwnik0' ),
     3000: t ( 'detail.index.5q09asiwlca0' )
+  }
+
+  if (status === 100 && isAutoFinish) {
+    return t('detail.index.5q09asiwne80')
   }
   return maps[status]
 }

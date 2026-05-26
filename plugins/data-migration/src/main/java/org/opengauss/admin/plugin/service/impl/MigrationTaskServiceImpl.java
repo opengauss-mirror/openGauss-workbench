@@ -324,6 +324,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             filterKafkaConnectErrorLog(logPaths, taskId, installHost.getInstallPath());
         }
         wsInfo.setLogs(logPaths);
+        wsInfo.setIsAutoFinish(task.getIsAutoFinish());
         return wsInfo;
     }
 
@@ -362,6 +363,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             wsInfo.setCurrentExecStatus(task.getExecStatus());
         }
         wsInfo.setExecStatus(task.getExecStatus());
+        wsInfo.setIsAutoFinish(task.getIsAutoFinish());
         wsInfo.setExceptionAlertTotalCount(alertMapper.countGroupAlertByTaskId(taskId));
         if (task.getFinishTime() == null) {
             wsInfo.setExecutedTime(Duration.between(task.getExecTime(), Instant.now()).toSeconds());
@@ -620,7 +622,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         if (isRefreshTaskStatus(task.getExecStatus(), task.getMigrationModelId())) {
             Map<String, Object> getResult = getSingleTaskStatusAndProcessByProtal(task);
             fullProcess = generateProcessDetail(getResult, "fullProcess");
-            if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
+            if (MigrationMode.hasIncrementalAndReverse(task.getMigrationModelId())) {
                 incrementalProcess = generateProcessDetail(getResult, "incrementalProcess");
                 reverseProcess = generateProcessDetail(getResult, "reverseProcess");
             }
@@ -634,7 +636,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             dataCheckProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(task.getId(),
                 ProcessType.DATA_CHECK.getCode());
         }
-        if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
+        if (MigrationMode.hasIncrementalAndReverse(task.getMigrationModelId())) {
             if (incrementalProcess == null || incrementalProcess.isEmpty()) {
                 incrementalProcess = migrationTaskExecResultDetailService.getByTaskIdAndProcessType(task.getId(),
                     ProcessType.INCREMENTAL.getCode());
@@ -648,7 +650,7 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         if (dataCheckProcess != null && StringUtils.isNotBlank(dataCheckProcess.getExecResultDetail())) {
             wsInfo.setDataCheckProcess(dataCheckProcess);
         }
-        if (task.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())) {
+        if (MigrationMode.hasIncrementalAndReverse(task.getMigrationModelId())) {
             wsInfo.setIncrementalProcess(incrementalProcess);
             wsInfo.setReverseProcess(reverseProcess);
             List<MigrationTaskStatusRecord> migrationTaskStatusRecords
@@ -667,8 +669,14 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
                 || TaskStatus.CHECK_ERROR.getCode().equals(execStatus)) {
             return false;
         }
-        return !MigrationMode.OFFLINE.getCode().equals(migrationModelId)
-                || !TaskStatus.FULL_CHECK_FINISH.getCode().equals(execStatus);
+        return !isTaskAutoCompleted(migrationModelId, execStatus);
+    }
+
+    private boolean isTaskAutoCompleted(Integer migrationModelId, Integer execStatus) {
+        return (MigrationMode.OFFLINE.getCode().equals(migrationModelId)
+                && TaskStatus.FULL_CHECK_FINISH.getCode().equals(execStatus))
+                || (MigrationMode.OFFLINE_WITHOUT_DATA_CHECK.getCode().equals(migrationModelId)
+                && TaskStatus.FULL_FINISH.getCode().equals(execStatus));
     }
 
     private MigrationTaskExecResultDetail generateProcessDetail(Map<String, Object> detailsMap, String processKey) {
@@ -790,6 +798,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             update.setIsFullFailed(isFullFailed);
             updateById(update);
             setMainTaskFullStatus(t.getMainTaskId(), isFullFailed);
+        } else {
+            if (!isPortalProcessExist) {
+                refreshPortalExitedStatus(t);
+            }
         }
         return result;
     }
@@ -813,9 +825,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             update.setExecStatus(state);
         }
 
-        if (TaskStatus.FULL_CHECK_FINISH.getCode().equals(state) && task.getMigrationModelId().equals(1)) {
+        if (isTaskAutoCompleted(task.getMigrationModelId(), state)) {
             update.setExecStatus(TaskStatus.MIGRATION_FINISH.getCode());
             update.setFinishTime(Instant.now());
+            update.setIsAutoFinish(true);
         }
         if (TaskStatus.MIGRATION_ERROR.getCode().equals(state)) {
             String msg = MapUtil.getStr(lastStatus, "msg");
@@ -835,6 +848,17 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
             update.setExecStatus(TaskStatus.MIGRATION_ERROR.getCode());
             update.setFinishTime(Instant.now());
             update.setStatusDesc("Migration task portal process exits abnormal");
+        }
+    }
+
+    private void refreshPortalExitedStatus(MigrationTask task) {
+        if (isRefreshTaskStatus(task.getExecStatus(), task.getMigrationModelId())) {
+            MigrationTask update = MigrationTask.builder().id(task.getId()).build();
+            log.info("Migration task portal process exits abnormal, task id: {}", task.getId());
+            update.setExecStatus(TaskStatus.MIGRATION_ERROR.getCode());
+            update.setFinishTime(Instant.now());
+            update.setStatusDesc("Migration task portal process exits abnormal");
+            updateById(update);
         }
     }
 

@@ -224,12 +224,18 @@
               <h4>{{ $t('step1.index.migrationSet') }}</h4>
               <div v-if="shouldShowDbColumn">
                 <el-form-item :label="t('step1.index.migrationMode')" label-position="left" prop="mode">
-                  <el-radio-group v-model="taskBasicInfo.subTaskData[curTableTabs].mode">
-                    <el-radio-button :value='2'>{{ $t('step1.index.online') }}</el-radio-button>
-                    <el-radio-button :value='1'>{{ $t('step1.index.offline') }}</el-radio-button>
-                  </el-radio-group>
+                  <el-select v-model="taskBasicInfo.subTaskData[curTableTabs].mode"
+                             :placeholder="t('transcribe.create.mode')"
+                             filterable
+                             class="select-width"
+                             :teleported="false">
+                    <el-option :value="3" :label="$t('step1.index.offlineWithoutCheck')"></el-option>
+                    <el-option :value="1" :label="$t('step1.index.offline')" v-if="checkOptionVisible"></el-option>
+                    <el-option :value="4" :label="$t('step1.index.onlineWithoutCheck')"></el-option>
+                    <el-option :value="2" :label="$t('step1.index.online')" v-if="checkOptionVisible"></el-option>
+                  </el-select>
                   <el-tooltip class="item" effect="light"
-                              :content="t('step1.index.onlineMsg') + t('step1.index.offlineMsg')"
+                              :content="t('step1.index.modeMsg')"
                               placement="bottom"
                               :popper-style="{ maxWidth: '5vw', width: 'auto' }"
                               :teleported="false">
@@ -586,6 +592,11 @@ const shouldShowDbColumn = computed(() => {
   return types.includes(currentType || '')
 })
 
+const checkOptionVisible = computed(() => {
+  const currentType = taskBasicInfo.value.subTaskData[curTableTabs.value]?.sourceDbType
+  return currentType === JDBCType.MySQL
+})
+
 const shouldShowMigrationObject = computed(() => {
   const currentType = taskBasicInfo.value.subTaskData[curTableTabs.value]?.sourceDbType
   return currentType === JDBCType.MySQL || currentType === JDBCType.PostgreSQL
@@ -602,6 +613,8 @@ const changeSourceType = (type?: string) => {
     currentTask.targetDBName = ''
     currentTask.isDefaultConfig = true
     currentTask.isSystemAdmin = false
+    currentTask.isMigrationObject = false
+    currentTask.mode = 3
     defaultParamsConfig('customized')
     preSourceDb.value = ''
     changeSeleTbl(true)
@@ -1183,7 +1196,7 @@ const initSubTask = (currentTab: string) => {
     sourcePort: 0,
     targetPort: 0,
     selectHost: '',
-    mode: 2,
+    mode: 3,
     isDefaultConfig: true,
     isSelectAlltables: true
   }

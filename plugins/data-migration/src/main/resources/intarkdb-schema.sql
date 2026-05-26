@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS "tb_migration_task" (
     "create_time" timestamp,
     "exec_status" int4,
     "is_full_failed" int4,
+    "is_auto_finish" boolean,
     "run_host" varchar(50),
     "run_port" varchar(50),
     "run_user" varchar(50),
@@ -103,6 +104,8 @@ COMMENT ON COLUMN "tb_migration_task"."create_time" IS '创建时间';
 COMMENT ON COLUMN "tb_migration_task"."exec_status" IS '执行状态（0：未执行；1：执行中；2：已完成；3：执行失败）';
 
 COMMENT ON COLUMN "tb_migration_task"."is_full_failed" IS '全量迁移状态（0：非全量迁移失败；1：全量迁移失败；）';
+
+COMMENT ON COLUMN "tb_migration_task"."is_auto_finish" IS '是否自动完成';
 
 COMMENT ON COLUMN "tb_migration_task"."run_host" IS '运行环境host';
 
@@ -247,6 +250,15 @@ COMMENT ON COLUMN "tb_migration_task_model"."migration_operations" IS '迁移动
 
 COMMENT ON TABLE "tb_migration_task_model" IS '迁移模式表';
 
+INSERT INTO "tb_migration_task_model" ("id", "model_name", "migration_operations")
+VALUES (1, '全量迁移 + 全量校验', 'start_plan1');
+INSERT INTO "tb_migration_task_model" ("id", "model_name", "migration_operations")
+VALUES (2, '全量迁移 + 全量校验 + 增量迁移 + 反向迁移', 'start_plan3');
+INSERT INTO "tb_migration_task_model" ("id", "model_name", "migration_operations")
+VALUES (3, '全量迁移', 'start_plan4');
+INSERT INTO "tb_migration_task_model" ("id", "model_name", "migration_operations")
+VALUES (4, '全量迁移 + 增量迁移 + 反向迁移', 'start_plan5');
+
 CREATE TABLE IF NOT EXISTS "tb_migration_task_param" (
     "id" int8 NOT NULL PRIMARY KEY AUTOINCREMENT,
     "main_task_id" int8,
@@ -353,11 +365,6 @@ COMMENT ON COLUMN "tb_migration_task_status_record"."status_id" IS '状态ID';
 COMMENT ON COLUMN "tb_migration_task_status_record"."create_time" IS '记录时间';
 
 COMMENT ON TABLE "tb_migration_task_status_record" IS '任务状态记录表';
-
-INSERT INTO "tb_migration_task_model" ("id", "model_name", "migration_operations")
-VALUES (1, '离线模式', 'start_plan1');
-INSERT INTO "tb_migration_task_model" ("id", "model_name", "migration_operations")
-VALUES (2, '在线模式', 'start_plan3');
 
 INSERT INTO "tb_migration_task_init_global_param" ("id", "param_key", "param_value", "param_desc")
 VALUES (1, 'sink.query-dop', '8', 'sink端数据库并行查询会话配置');

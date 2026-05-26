@@ -10,6 +10,7 @@ const useSubTaskStore = defineStore('subTaskStore',  {
       },
       exceptionAlertTotalCount: 0,
       execStatus: 0,
+      isAutoFinish: false,
       executedTime: 0,
       fullProcess: {
         empty: false,

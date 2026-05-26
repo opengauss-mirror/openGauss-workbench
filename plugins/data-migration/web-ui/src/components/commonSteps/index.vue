@@ -20,6 +20,11 @@
             <svg-icon icon-class="circleCheck"></svg-icon>
           </div>
         </template>
+        <template #icon v-else-if="item.stepIndex === 2 && props.subTaskMode === 4">
+          <div class="lockCircle">
+            <svg-icon icon-class="circleCheck"></svg-icon>
+          </div>
+        </template>
         <!-- checked node  -->
         <template #icon v-else>
           <div class="checkCircle">
@@ -49,6 +54,10 @@ const props = defineProps({
   },
   subTaskDbType: {
     type: String,
+  },
+  subTaskMode: {
+    type: Number,
+    required: true
   }
 })
 const getStatus = (index) => {
@@ -64,6 +73,9 @@ const getStatus = (index) => {
 const emits = defineEmits(['update:active'])
 const clickNode = (index) => {
   if (index === 2 && props.subTaskDbType.toUpperCase() === 'POSTGRESQL') {
+    return
+  }
+  if (index === 2 && props.subTaskMode === 4) {
     return
   }
   if (index > props.current) {

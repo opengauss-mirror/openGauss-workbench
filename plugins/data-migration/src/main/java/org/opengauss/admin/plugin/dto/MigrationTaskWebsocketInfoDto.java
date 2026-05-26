@@ -42,6 +42,7 @@ import java.util.Map;
 public class MigrationTaskWebsocketInfoDto {
     private Integer currentExecStatus;
     private Integer execStatus;
+    private Boolean isAutoFinish;
     private long exceptionAlertTotalCount;
     private long executedTime;
     private MigrationTaskExecResultDetail fullProcess;
