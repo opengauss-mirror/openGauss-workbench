@@ -64,7 +64,7 @@ public class MultiDbPortalMigrationController {
      * @param portalInfo portal info
      * @param task task
      */
-    public void startTask(MigrationHostPortalInstall portalInfo, MigrationTask task) {
+    public synchronized void startTask(MigrationHostPortalInstall portalInfo, MigrationTask task) {
         ShellInfoVo shellInfo = createShellInfo(portalInfo);
         String portalHome = portalInfo.getInstallPath() + "portal/";
         String jarPath = portalHome + portalInfo.getJarName();
@@ -237,7 +237,7 @@ public class MultiDbPortalMigrationController {
         migrationConfig.put("use.interactive.password", "true");
 
         migrationConfig.put("is.adjust.kernel.param", task.getIsAdjustKernelParam() + "");
-        if (MigrationMode.ONLINE.getCode().equals(task.getMigrationModelId())) {
+        if (MigrationMode.hasIncrementalAndReverse(task.getMigrationModelId())) {
             migrationConfig.put("migration.mode", "plan3");
         } else {
             migrationConfig.put("migration.mode", "plan1");

@@ -12,12 +12,13 @@
                    @click="handleFix('reset')" :loading="isButtonLoading">{{
             t('components.SubTaskDetail.oneClickRepair')
           }}</el-button>
-        <el-button v-if="currentActive === 3 && subTaskMode === 2 &&
+        <el-button v-if="currentActive === 3 && (subTaskMode === 2 || subTaskMode === 4) &&
           currentExecStatus === SUB_TASK_STATUS.INCREMENTAL_RUNNING"
                    @click="stopSubIncrese" :loading="incrementalLoading" >{{
             t('components.SubTaskDetail.stopIncreaseMigration') }}</el-button>
         <el-button
-          v-if="currentActive === 3 && subTaskMode === 2 && currentExecStatus === SUB_TASK_STATUS.INCREMENTAL_STOPPED"
+          v-if="currentActive === 3 && (subTaskMode === 2 || subTaskMode === 4)
+          && currentExecStatus === SUB_TASK_STATUS.INCREMENTAL_STOPPED"
           @click="startSubReverse" :loading="startReverseLoading" >{{ t('detail.index.5q09asiwkq40') }}</el-button>
         <el-button v-if="currentActive === 4 && currentExecStatus !== SUB_TASK_STATUS.MIGRATION_FINISH"
                    @click="stopSubTask" :loading="reverseLoading">

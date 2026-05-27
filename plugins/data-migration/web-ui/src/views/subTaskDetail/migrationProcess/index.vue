@@ -1,7 +1,8 @@
 <template>
   <div class="common-layout">
     <div class="steps" v-if="shouldShowDbColumn">
-      <common-steps :steps="steps" :current="current" :subTaskDbType="subTaskDbType" v-model:active="active" class="steps-content"></common-steps>
+      <common-steps :steps="steps" :current="current" :subTaskDbType="subTaskDbType" :subTaskMode="subTaskMode"
+                    v-model:active="active" class="steps-content"></common-steps>
     </div>
     <div class="process-item">
       <full-migration :subTaskDbType="subTaskDbType" v-if="active === 1"></full-migration>

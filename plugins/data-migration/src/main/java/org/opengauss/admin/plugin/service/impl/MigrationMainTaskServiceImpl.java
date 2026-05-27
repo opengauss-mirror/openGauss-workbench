@@ -164,6 +164,7 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
      * @return SysTask
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public IPage<MigrationMainTask> selectList(IPage<MigrationMainTask> page, MigrationMainTaskDto task) {
         IPage<MigrationMainTask> taskPage = migrationMainTaskMapper.selectTaskPage(page, task);
         List<MigrationMainTask> tasks = taskPage.getRecords();
@@ -201,24 +202,28 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
 
     private void setOfflineMigrationTaskType(List<MigrationTask> subTasks, MigrationMainTask mainTask) {
         AtomicBoolean isOnline = new AtomicBoolean(false);
-        isOnline.set(subTasks.stream()
-                .anyMatch(t -> t.getMigrationModelId().equals(MigrationMode.ONLINE.getCode())));
+        isOnline.set(subTasks.stream().anyMatch(t -> MigrationMode.hasIncrementalAndReverse(t.getMigrationModelId())));
         if (!isOnline.get()) {
-            subTasks.stream()
-                .filter(t -> t.getMigrationModelId() == 1)
-                .forEach(t -> {
+            subTasks.forEach(t -> {
                     MigrationTaskStatusRecord lastTaskStatus = migrationTaskStatusRecordService.getLastByTaskId(t
                             .getId());
                     if (lastTaskStatus == null) {
                         return;
                     }
-                    if ((lastTaskStatus.getStatusId() == 3 && !DbTypeEnum.MYSQL.equals(t.getSourceDbType()))
-                            || lastTaskStatus.getStatusId() == 6) {
+                    if (isAutoCompleted(t.getSourceDbType(), t.getMigrationModelId(), lastTaskStatus.getStatusId())) {
                         mainTask.setExecStatus(MainTaskStatus.SUCCESS.getCode());
                         updateById(mainTask);
                     }
                 });
         }
+    }
+
+    private boolean isAutoCompleted(DbTypeEnum dbTypeEnum, Integer migrationModelId, Integer execStatus) {
+        return (!dbTypeEnum.isJdbcDriver() && TaskStatus.FULL_FINISH.getCode().equals(execStatus))
+                || (MigrationMode.OFFLINE.getCode().equals(migrationModelId)
+                && TaskStatus.FULL_CHECK_FINISH.getCode().equals(execStatus))
+                || (MigrationMode.OFFLINE_WITHOUT_DATA_CHECK.getCode().equals(migrationModelId)
+                && TaskStatus.FULL_FINISH.getCode().equals(execStatus));
     }
 
     /**
@@ -430,7 +435,8 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
         setTargetDatabaseInfo(task);
 
         DbTypeEnum sourceDbType = task.getSourceDbType();
-        Integer modeId = sourceDbType.isJdbcDriver() ? task.getMigrationModelId() : MigrationMode.OFFLINE.getCode();
+        Integer modeId = sourceDbType.isJdbcDriver() ? task.getMigrationModelId()
+                : MigrationMode.OFFLINE_WITHOUT_DATA_CHECK.getCode();
         if (modeId == null) {
             throw new IllegalArgumentException("Migration task migration mode id cannot be empty");
         }
@@ -731,7 +737,9 @@ public class MigrationMainTaskServiceImpl extends ServiceImpl<MigrationMainTaskM
 
     private void doFinishTask(MigrationTask task) {
         MigrationTask update = MigrationTask.builder().id(task.getId())
-                .execStatus(TaskStatus.MIGRATION_FINISH.getCode()).finishTime(Instant.now()).build();
+                .execStatus(TaskStatus.MIGRATION_FINISH.getCode())
+                .isAutoFinish(false)
+                .finishTime(Instant.now()).build();
         migrationTaskService.updateById(update);
 
         LoginUser loginUser = SecurityUtils.getLoginUser();

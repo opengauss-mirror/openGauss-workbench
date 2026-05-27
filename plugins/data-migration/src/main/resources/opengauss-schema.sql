@@ -324,6 +324,22 @@ SELECT add_migration_task_is_migration_object_field_func();
 
 DROP FUNCTION add_migration_task_is_migration_object_field_func;
 
+CREATE OR REPLACE FUNCTION add_migration_task_is_auto_finish_field_func() RETURNS integer AS 'BEGIN
+IF
+( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''tb_migration_task'' AND COLUMN_NAME = ''is_auto_finish'' ) = 0
+THEN
+ALTER TABLE public.tb_migration_task ADD COLUMN is_auto_finish BOOLEAN default false;
+COMMENT ON COLUMN "public"."tb_migration_task"."is_auto_finish" IS ''是否自动完成'';
+UPDATE public.tb_migration_task SET "is_auto_finish" = true WHERE "main_task_id" IN ( SELECT "id" FROM public.tb_migration_main_task WHERE "exec_status" = 3 );
+END IF;
+RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_migration_task_is_auto_finish_field_func();
+
+DROP FUNCTION add_migration_task_is_auto_finish_field_func;
+
 CREATE OR REPLACE FUNCTION add_migration_task_create_transcribe_playback_task_and_details_func() RETURNS integer AS 'BEGIN
 IF
 ( SELECT COUNT ( * ) FROM sys_menu WHERE menu_name = ''创建录制回放'' AND (menu_en_name IS NULL OR menu_en_name = '''')) > 0
@@ -486,6 +502,33 @@ COMMENT ON COLUMN "public"."tb_migration_task_model"."migration_operations" IS '
 
 COMMENT ON TABLE "public"."tb_migration_task_model" IS '迁移模式表';
 
+INSERT INTO "public"."tb_migration_task_model" ("id", "model_name", "migration_operations")
+VALUES (1, '全量迁移 + 全量校验', 'start_plan1')
+    ON DUPLICATE KEY UPDATE NOTHING;
+
+INSERT INTO "public"."tb_migration_task_model" ("id", "model_name", "migration_operations")
+VALUES (2, '全量迁移 + 全量校验 + 增量迁移 + 反向迁移', 'start_plan3')
+    ON DUPLICATE KEY UPDATE NOTHING;
+
+INSERT INTO "public"."tb_migration_task_model" ("id", "model_name", "migration_operations")
+VALUES (3, '全量迁移', 'start_plan4')
+    ON DUPLICATE KEY UPDATE NOTHING;
+
+INSERT INTO "public"."tb_migration_task_model" ("id", "model_name", "migration_operations")
+VALUES (4, '全量迁移 + 增量迁移 + 反向迁移', 'start_plan5')
+    ON DUPLICATE KEY UPDATE NOTHING;
+
+UPDATE "public"."tb_migration_task_model" SET "model_name" = '全量迁移 + 全量校验' WHERE "id" = 1;
+UPDATE "public"."tb_migration_task_model" SET "model_name" = '全量迁移 + 全量校验 + 增量迁移 + 反向迁移' WHERE "id" = 2;
+
+UPDATE "public"."tb_migration_task"
+SET "migration_model_id" = 3, "migration_operations" = 'start_plan4'
+WHERE "source_db_type" = 'POSTGRESQL' AND "migration_model_id" = 1;
+
+UPDATE "public"."tb_migration_task"
+SET "migration_model_id" = 4, "migration_operations" = 'start_plan5'
+WHERE "source_db_type" = 'POSTGRESQL' AND "migration_model_id" = 2;
+
 CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_param" (
   "id" int8 NOT NULL DEFAULT nextval('sq_tb_task_param_id'::regclass),
   "main_task_id" int8,
@@ -601,16 +644,6 @@ COMMENT ON COLUMN "public"."tb_migration_task_status_record"."create_time" IS '�
 COMMENT ON TABLE "public"."tb_migration_task_status_record" IS '任务状态记录表';
 
 CREATE OR REPLACE FUNCTION init_migration_data_fuc() RETURNS integer AS 'BEGIN
-
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema=''public'' and table_name=''tb_migration_task_model'') AND
-       NOT EXISTS (select 1 from "public"."tb_migration_task_model")
-    THEN
-        INSERT INTO "public"."tb_migration_task_model" ("id", "model_name", "migration_operations")
-        VALUES (1, ''离线模式'', ''start_plan1'');
-        INSERT INTO "public"."tb_migration_task_model" ("id", "model_name", "migration_operations")
-        VALUES (2, ''在线模式'', ''start_plan3'');
-    END IF;
-
     IF EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema = ''public'' and table_name = ''tb_migration_task_init_global_param'') AND
        NOT EXISTS(select 1 from "public"."tb_migration_task_init_global_param")
     THEN

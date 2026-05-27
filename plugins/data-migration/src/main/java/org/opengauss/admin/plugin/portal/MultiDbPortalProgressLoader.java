@@ -244,9 +244,10 @@ public class MultiDbPortalProgressLoader {
             update.setExecStatus(latestStatus);
         }
 
-        if ((TaskStatus.FULL_CHECK_FINISH.getCode().equals(latestStatus) && task.getMigrationModelId() == 1)
+        if (isTaskAutoCompleted(task.getSourceDbType(), task.getMigrationModelId(), latestStatus)
                 || TaskStatus.MIGRATION_FINISH.getCode().equals(latestStatus)) {
             update.setExecStatus(TaskStatus.MIGRATION_FINISH.getCode());
+            update.setIsAutoFinish(true);
             update.setFinishTime(Instant.now());
         }
         if (TaskStatus.MIGRATION_ERROR.getCode().equals(latestStatus)) {
@@ -257,7 +258,8 @@ public class MultiDbPortalProgressLoader {
         }
 
         Integer newStatus = update.getExecStatus() == null ? execStatus : update.getExecStatus();
-        if (!isPortalProcessExist && isRefreshTaskStatus(newStatus, task.getMigrationModelId())) {
+        if (!isPortalProcessExist
+                && isRefreshTaskStatus(task.getSourceDbType(), task.getMigrationModelId(), newStatus)) {
             log.info("Migration task portal process exits abnormal, task id: {}", task.getId());
             update.setExecStatus(TaskStatus.MIGRATION_ERROR.getCode());
             update.setFinishTime(Instant.now());
@@ -268,14 +270,21 @@ public class MultiDbPortalProgressLoader {
         }
     }
 
-    private boolean isRefreshTaskStatus(Integer execStatus, Integer migrationModelId) {
+    private boolean isRefreshTaskStatus(DbTypeEnum dbTypeEnum, Integer migrationModelId, Integer execStatus) {
         if (TaskStatus.MIGRATION_FINISH.getCode().equals(execStatus)
                 || TaskStatus.MIGRATION_ERROR.getCode().equals(execStatus)
                 || TaskStatus.CHECK_ERROR.getCode().equals(execStatus)) {
             return false;
         }
-        return !MigrationMode.OFFLINE.getCode().equals(migrationModelId)
-                || !TaskStatus.FULL_CHECK_FINISH.getCode().equals(execStatus);
+        return !isTaskAutoCompleted(dbTypeEnum, migrationModelId, execStatus);
+    }
+
+    private boolean isTaskAutoCompleted(DbTypeEnum dbTypeEnum, Integer migrationModelId, Integer execStatus) {
+        return (!dbTypeEnum.isJdbcDriver() && TaskStatus.FULL_FINISH.getCode().equals(execStatus))
+                || (MigrationMode.OFFLINE.getCode().equals(migrationModelId)
+                && TaskStatus.FULL_CHECK_FINISH.getCode().equals(execStatus))
+                || (MigrationMode.OFFLINE_WITHOUT_DATA_CHECK.getCode().equals(migrationModelId)
+                && TaskStatus.FULL_FINISH.getCode().equals(execStatus));
     }
 
     private void loadFullMigrationProgress(MigrationHostPortalInstall portalInfo, MigrationTask task) {

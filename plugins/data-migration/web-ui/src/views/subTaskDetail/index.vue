@@ -6,9 +6,9 @@
           <img src="@/assets/images/list.png" width="40" height="40" />
           <div class="title-right">
             <TextTooltip class="name-text" :content="subTaskId"></TextTooltip>
-            <el-tag v-if="execSubStatusMap(subTaskInfo.execStatus)"
-                    :type="statusColorMap(subTaskInfo?.execStatus) || ''" class="status-tag">{{
-                execSubStatusMap(subTaskInfo.execStatus) }}
+            <el-tag v-if="execSubStatusMap(subTaskInfo.execStatus, subTaskInfo.isAutoFinish)"
+                    :type="statusColorMap(subTaskInfo?.execStatus, subTaskInfo?.isAutoFinish) || ''" class="status-tag">{{
+                execSubStatusMap(subTaskInfo.execStatus, subTaskInfo.isAutoFinish) }}
             </el-tag>
           </div>
         </div>
@@ -145,8 +145,7 @@ const descData = computed(() => [
   },
   {
     label: t('components.SubTaskDetail.executionMode'),
-    value: descValueObj.value.executionMode === 1 ? t('components.SubTaskDetail.offLineMigration')
-      : descValueObj.value.executionMode === 1 ? t('components.SubTaskDetail.onLineMigration') : t('components.SubTaskDetail.fullMigration'),
+    value: getMigrationModelName(),
     prop: 'executionMode'
   },
   {
@@ -195,10 +194,28 @@ const descData = computed(() => [
     prop: 'initiateTime'
   }
 ])
+
+const getMigrationModelName = () => {
+  const maps = {
+    1: t('components.SubTaskDetail.offLineMigration'),
+    2: t('components.SubTaskDetail.onLineMigration'),
+    3: t('components.SubTaskDetail.offLineWithoutCheck'),
+    4: t('components.SubTaskDetail.onLineWithoutCheck')
+  }
+
+  if (descValueObj.value.sourceDbType.toLocaleUpperCase() === JDBCType.MySQL
+    || descValueObj.value.sourceDbType.toLocaleUpperCase() === JDBCType.PostgreSQL) {
+    return maps[descValueObj.value.executionMode]
+  }
+
+  return t('components.SubTaskDetail.fullMigration')
+}
+
 // Obtain the current step and execution time of the step bar
 const getTopExpressInfo = (info) => {
   subTaskInfo.value.execStatus = info?.execStatus
   subTaskInfo.value.currentExecStatus = info?.currentExecStatus
+  subTaskInfo.value.isAutoFinish = info?.isAutoFinish
   // Gets the state of the runtime returned by the current interface
   let subTaskStatus = info?.execStatus
   // Determine whether to run success/failure status, these states cannot directly determine the step, you need to use the previous state
@@ -331,7 +348,7 @@ const getSubTaskBasicInfo = () => {
       descValueObj.value.sourceDbType = JDBCType.normalize(res.data?.sourceDbType)
       // offline = 1; online = 2; other = 3
       let types = [JDBCType.MySQL, JDBCType.PostgreSQL].map(String)
-      let shouldShowDbColumn =  types.includes(descValueObj.value.sourceDbType || '')
+      let shouldShowDbColumn =  types.includes(descValueObj.value.sourceDbType.toLocaleUpperCase() || '')
       descValueObj.value.executionMode = shouldShowDbColumn && res.data?.execMode !== undefined? res.data.execMode: 3
       descValueObj.value.isMigrationObject = res.data?.isMigrationObject
       descValueObj.value.sourceLibrary = res.data?.sourceDb || '--'
@@ -384,7 +401,7 @@ const switchRefreshText = computed(() => {
   return autoRefresh.value ? t('components.SubTaskDetail.autoRefresh') : t('components.SubTaskDetail.stopRefresh')
 })
 // sub task status map
-const execSubStatusMap = (status) => {
+const execSubStatusMap = (status, isAutoFinish) => {
   const maps = {
     0: t('components.SubTaskDetail.5q09prnznzg0'),
     1: t('components.SubTaskDetail.5q09prnzo3s0'),
@@ -407,15 +424,14 @@ const execSubStatusMap = (status) => {
     1000: t('components.SubTaskDetail.5q09prnzp980'),
     3000: t('detail.index.5q09asiwlca0')
   };
-  if (status === 100
-    && subTaskInfo.value.currentExecStatus === 6
-    && descValueObj.value.executionMode === 1) {
+
+  if (status === 100 && isAutoFinish) {
     return t('components.SubTaskDetail.5q09prnzp540')
   }
   return maps[status];
 };
 
-const statusColorMap = (status) => {
+const statusColorMap = (status, isAutoFinish) => {
   const maps = {
     0: 'info',
     1: 'primary',
@@ -438,9 +454,8 @@ const statusColorMap = (status) => {
     1000: 'primary',
     3000: 'danger'
   }
-  if (status === 100
-    && subTaskInfo.value.currentExecStatus === 6
-    && descValueObj.value.executionMode === 1) {
+
+  if (status === 100 && isAutoFinish) {
     return 'success'
   }
   return maps[status]
