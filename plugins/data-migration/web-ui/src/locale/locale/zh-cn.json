@@ -501,7 +501,7 @@
       "onlineContent": "迁移模式必须选择",
       "modeMsg": "全量迁移、全量校验会自动执行，自动停止；增量迁移会自动执行，需要用户手动停止；反向迁移需要用户手动启动和停止。",
       "migrationObject": "是否迁移对象",
-      "migrationObjectMsg": "openGauss连接用户无sysadmin权限，对象可能会迁移失败，是否确认迁移？",
+      "migrationObjectPrompt": "openGauss连接用户无sysadmin权限，对象可能会迁移失败！参考赋权语句：GRANT ALL PRIVILEGES TO USERNAME;",
       "confirm": "确认",
       "cancel": "取消",
       "adjust": "调整内核参数",

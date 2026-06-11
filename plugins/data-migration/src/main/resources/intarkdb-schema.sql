@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS "tb_migration_task" (
     "exec_status" int4,
     "is_full_failed" int4,
     "is_auto_finish" boolean,
+    "is_migration_object" boolean,
     "run_host" varchar(50),
     "run_port" varchar(50),
     "run_user" varchar(50),
@@ -106,6 +107,8 @@ COMMENT ON COLUMN "tb_migration_task"."exec_status" IS '执行状态（0：未�
 COMMENT ON COLUMN "tb_migration_task"."is_full_failed" IS '全量迁移状态（0：非全量迁移失败；1：全量迁移失败；）';
 
 COMMENT ON COLUMN "tb_migration_task"."is_auto_finish" IS '是否自动完成';
+
+COMMENT ON COLUMN "tb_migration_task"."is_migration_object" IS '是否迁移对象';
 
 COMMENT ON COLUMN "tb_migration_task"."run_host" IS '运行环境host';
 

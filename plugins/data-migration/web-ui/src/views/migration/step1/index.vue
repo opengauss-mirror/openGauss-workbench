@@ -252,22 +252,12 @@
                 :label="t('step1.index.migrationObject')"
                 label-position="left"
               >
-                <a-popconfirm
-                  :popup-visible="showMigrationPopconfirm"
-                  :content="t('step1.index.migrationObjectMsg')"
-                  type="warning"
-                  :ok-text="t('step1.index.confirm')"
-                  :cancel-text="t('step1.index.cancel')"
-                  :content-style="{ minWidth: '200px', maxWidth: '500px' }"
-                  @ok="confirmMigrationObject"
-                  @cancel="cancelMigrationObject"
-                  placement="top"
-                >
-                  <el-switch
-                    :model-value="taskBasicInfo.subTaskData[curTableTabs].isMigrationObject"
-                    @change="handleMigrationObjectChange"
-                  />
-                </a-popconfirm>
+                <el-switch
+                  v-model="taskBasicInfo.subTaskData[curTableTabs].isMigrationObject"
+                />
+                <div v-if="shouldShowMigrationObjectPrompt" style="margin-left: 6px;">
+                  <el-text class="mx-1" type="warning"> {{ $t('step1.index.migrationObjectPrompt') }} </el-text>
+                </div>
               </el-form-item>
               <el-form-item :label="t('step1.index.adjust')" label-position="left">
                 <el-switch v-model="taskBasicInfo.subTaskData[curTableTabs].isAdjustKernelParam"
@@ -276,7 +266,7 @@
                             placement="bottom"
                             :popper-style="{ maxWidth: '10vw', width: 'auto' }"
                             :teleported="false">
-                  <i class="el-icon icon">
+                  <i class="el-icon icon" style="margin-left: 6px;">
                     <el-icon>
                       <IconHelpCircle/>
                     </el-icon>
@@ -397,37 +387,25 @@ const handlePopoverHide = () => {
   }, 100);
 }
 
-const showMigrationPopconfirm = ref(false)
+const shouldShowMigrationObjectPrompt = computed(() => {
+  const sourceDbType = taskBasicInfo.value.subTaskData[curTableTabs.value]?.sourceDbType;
+  const targetIpPort = taskBasicInfo.value.subTaskData[curTableTabs.value]?.targetIpPort;
 
-const handleMigrationObjectChange = (value: boolean) => {
-  const currentTask = taskBasicInfo.value.subTaskData[curTableTabs.value]
-
-  if (!value) {
-    currentTask.isMigrationObject = false
-    return
+  if (sourceDbType === JDBCType.PostgreSQL
+    || !taskBasicInfo.value.subTaskData[curTableTabs.value]?.isMigrationObject) {
+    return false
   }
 
-  if (currentTask.sourceDbType === JDBCType.PostgreSQL || currentTask.isSystemAdmin) {
-    currentTask.isMigrationObject = true
-    return
+  if (sourceDbType === JDBCType.MySQL) {
+    if (!targetIpPort || targetIpPort.trim() === '') {
+      return false
+    }
+
+    return targetIpPort && targetIpPort.trim() !== ''
+      && !taskBasicInfo.value.subTaskData[curTableTabs.value]?.isSystemAdmin
   }
-
-  if (currentTask.sourceDbType === JDBCType.MySQL && !currentTask.isSystemAdmin) {
-    showMigrationPopconfirm.value = true
-  }
-}
-
-const confirmMigrationObject = () => {
-  const currentTask = taskBasicInfo.value.subTaskData[curTableTabs.value]
-  currentTask.isMigrationObject = true
-  showMigrationPopconfirm.value = false
-}
-
-const cancelMigrationObject = () => {
-  const currentTask = taskBasicInfo.value.subTaskData[curTableTabs.value]
-  currentTask.isMigrationObject = false
-  showMigrationPopconfirm.value = false
-}
+  return false
+})
 
 const removeTab = (tabname: string) => {
   const tabIndex = editableTabs.value.findIndex(tab => tab.name === tabname)
@@ -613,7 +591,7 @@ const changeSourceType = (type?: string) => {
     currentTask.targetDBName = ''
     currentTask.isDefaultConfig = true
     currentTask.isSystemAdmin = false
-    currentTask.isMigrationObject = false
+    currentTask.isMigrationObject = true
     currentTask.mode = 3
     defaultParamsConfig('customized')
     preSourceDb.value = ''
@@ -1180,7 +1158,7 @@ const initSubTask = (currentTab: string) => {
     configType: 1,
     isAdjustKernelParam: false,
     isSystemAdmin: false,
-    isMigrationObject: false,
+    isMigrationObject: true,
     taskParamsObject: {
       basic: [],
       more: [{paramKey: "rules.enable", paramValue: "true", paramDesc: "规则过滤，true代表开启，false代表关闭"}],
