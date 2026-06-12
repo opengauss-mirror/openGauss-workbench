@@ -592,7 +592,14 @@ const changeSourceType = (type?: string) => {
     currentTask.isDefaultConfig = true
     currentTask.isSystemAdmin = false
     currentTask.isMigrationObject = true
-    currentTask.mode = 3
+
+    if (currentTask.sourceDbType === JDBCType.MySQL) {
+      currentTask.mode = 2
+    } else if (currentTask.sourceDbType === JDBCType.PostgreSQL) {
+      currentTask.mode = 4
+    } else {
+      currentTask.mode = 3
+    }
     defaultParamsConfig('customized')
     preSourceDb.value = ''
     changeSeleTbl(true)
@@ -1174,7 +1181,7 @@ const initSubTask = (currentTab: string) => {
     sourcePort: 0,
     targetPort: 0,
     selectHost: '',
-    mode: 3,
+    mode: 2,
     isDefaultConfig: true,
     isSelectAlltables: true
   }
