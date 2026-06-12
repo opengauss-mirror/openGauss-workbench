@@ -501,7 +501,7 @@
       "onlineContent": "Migration Mode must be choose",
       "modeMsg": "Full migration and Full data check are executed automatically and will stop automatically. Incremental migration is executed automatically and requires user manual stop. Reverse migration needs user manual start and stop.",
       "migrationObject": "Migration Object",
-      "migrationObjectMsg": "The openGauss connection user does not have the sysadmin permission. As a result, the object may fail to migrate. Are you sure to continue?",
+      "migrationObjectPrompt": "The openGauss connection user does not have the sysadmin permission. As a result, the object may fail to migrate. Please refer to the following statement for authorization: GRANT ALL PRIVILEGES TO USERNAME;",
       "confirm": "Confirm",
       "cancel": "Cancel",
       "adjust": "Adjusting kernel parameters",

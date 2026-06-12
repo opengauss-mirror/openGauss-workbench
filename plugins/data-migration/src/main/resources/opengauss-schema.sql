@@ -218,6 +218,7 @@ CREATE TABLE IF NOT EXISTS "public"."tb_migration_task" (
   "create_time" timestamp(6),
   "exec_status" int4,
   "is_full_failed" int4,
+  "is_migration_object" boolean DEFAULT true,
   "run_host" varchar(50) COLLATE "pg_catalog"."default",
   "run_port" varchar(50) COLLATE "pg_catalog"."default",
   "run_user" varchar(50) COLLATE "pg_catalog"."default",
@@ -270,6 +271,8 @@ COMMENT ON COLUMN "public"."tb_migration_task"."exec_status" IS '执行状态（
 
 COMMENT ON COLUMN "public"."tb_migration_task"."is_full_failed" IS '全量迁移状态（0：非全量迁移失败；1：全量迁移失败；）';
 
+COMMENT ON COLUMN "public"."tb_migration_task"."is_migration_object" IS '是否迁移对象';
+
 COMMENT ON COLUMN "public"."tb_migration_task"."run_host" IS '运行环境host';
 
 COMMENT ON COLUMN "public"."tb_migration_task"."run_port" IS '运行环境port';
@@ -312,9 +315,8 @@ CREATE OR REPLACE FUNCTION add_migration_task_is_migration_object_field_func() R
 IF
 ( SELECT COUNT ( * ) AS ct1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ''tb_migration_task'' AND COLUMN_NAME = ''is_migration_object'' ) = 0
 THEN
-ALTER TABLE public.tb_migration_task ADD COLUMN is_migration_object BOOLEAN;
+ALTER TABLE public.tb_migration_task ADD COLUMN is_migration_object BOOLEAN DEFAULT true;
 COMMENT ON COLUMN "public"."tb_migration_task"."is_migration_object" IS ''是否迁移对象'';
-UPDATE public.tb_migration_task SET "is_migration_object" = true;
 END IF;
 RETURN 0;
 END;'
@@ -1362,6 +1364,15 @@ SET "db_type" = 'MYSQL'
 WHERE "db_type" IS NULL;
 
 DELETE FROM "public"."tb_migration_task_init_global_param" WHERE "param_key" = 'is.migration.object';
+
+UPDATE "public"."tb_migration_task"
+SET "is_migration_object" = FALSE
+WHERE "id" IN (
+    SELECT "task_id"
+    FROM "public"."tb_migration_task_param"
+    WHERE "param_key" = 'is.migration.object'
+      AND "param_value" = 'false'
+);
 DELETE FROM "public"."tb_migration_task_param" WHERE "param_key" = 'is.migration.object';
 
 INSERT INTO "public"."tb_migration_task_init_global_param"

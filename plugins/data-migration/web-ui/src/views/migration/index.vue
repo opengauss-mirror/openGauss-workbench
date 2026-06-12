@@ -240,7 +240,7 @@ const initSubTask = (currentTab: string) => {
     targetDBName: '',
     configType: 1,
     isAdjustKernelParam: false,
-    isMigrationObject: false,
+    isMigrationObject: true,
     isSystemAdmin: false,
     taskParamsObject: {
       basic:  [],
