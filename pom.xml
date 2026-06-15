@@ -323,6 +323,11 @@
             <artifactId>jsch-session-pool</artifactId>
             <version>${admin.version}</version>
           </dependency>
+            <dependency>
+                <groupId>org.opengauss</groupId>
+                <artifactId>third-party-tools</artifactId>
+                <version>${admin.version}</version>
+            </dependency>
           <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
@@ -520,6 +525,7 @@
         <module>openGauss-datakit/visualtool-log4j2-desensitize</module>
         <module>openGauss-datakit/cov-analysis</module>
         <module>openGauss-datakit/jsch-session-pool</module>
+        <module>openGauss-datakit/third-party-tools</module>
         <module>openGauss-datakit-agent</module>
         <module>plugins/base-ops</module>
         <module>plugins/alert-monitor</module>
