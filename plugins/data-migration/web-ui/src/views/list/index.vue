@@ -341,6 +341,10 @@ const handleDocumentClick = (event: MouseEvent) => {
         isClickInsideTable = true
         break;
       }
+      if (currentElement.classList?.contains('el-popper') || currentElement.classList?.contains('el-tooltip')) {
+        isClickInsideTable = true
+        break;
+      }
       currentElement = currentElement.parentElement;
     }
   }
