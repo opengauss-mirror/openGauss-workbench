@@ -18,7 +18,7 @@
     "axios": "https://registry.npmjs.org/axios/-/axios-1.15.1.tgz",
     "core-js": "^3.8.3",
     "dayjs": "1.11.4",
-    "echarts": "5.2.2",
+    "echarts": "6.1.0",
     "element-plus": "2.11.9",
     "highlight.js": "11.6.0",
     "jsencrypt": "3.0.0-rc.1",
@@ -26,7 +26,6 @@
     "pinia": "2.0.17",
     "query-string": "7.1.1",
     "vue": "3.2.13",
-    "vue-echarts": "6.2.3",
     "vue-grid-layout": "^3.0.0-beta1",
     "vue-i18n": "^9.14.5",
     "vue-router": "4.0.3",
@@ -72,6 +71,8 @@
     "immutable": "4.3.7",
     "axios": "https://registry.npmjs.org/axios/-/axios-1.15.1.tgz",
     "form-data": "4.0.4",
-    "proxy-from-env": "https://registry.npmjs.org/proxy-from-env/-/proxy-from-env-2.1.0.tgz"
+    "proxy-from-env": "https://registry.npmjs.org/proxy-from-env/-/proxy-from-env-2.1.0.tgz",
+    "hasown": "2.0.2",
+    "es-object-atoms": "1.1.1"
   }
 }
