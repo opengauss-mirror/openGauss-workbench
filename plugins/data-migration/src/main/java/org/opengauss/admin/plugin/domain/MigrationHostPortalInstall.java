@@ -38,6 +38,7 @@ import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.plugin.enums.PortalType;
 import org.opengauss.admin.plugin.enums.PortalVersion;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
+import org.opengauss.third.party.tools.entity.PortalInstallInfo;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
@@ -171,5 +172,29 @@ public class MigrationHostPortalInstall {
      */
     public String getInstallRootPath() {
         return installPath + "portal/";
+    }
+
+    /**
+     * convert to portal install info
+     *
+     * @return PortalInstallInfo
+     */
+    public PortalInstallInfo toPortalInstallInfo() {
+        if (this.getId() == null) {
+            throw new IllegalStateException(
+                    "MigrationHostPortalInstall id is null, can not convert to PortalInstallInfo");
+        }
+        if (this.getPortalType() == null) {
+            throw new IllegalStateException(
+                    "MigrationHostPortalInstall portalType is null, can not convert to PortalInstallInfo");
+        }
+        return new PortalInstallInfo(
+                        this.getId().toString(),
+                        this.getHost(),
+                        this.getPort(),
+                        this.getRunUser(),
+                        this.getInstallPath(),
+                        this.getPortalType().name()
+        );
     }
 }

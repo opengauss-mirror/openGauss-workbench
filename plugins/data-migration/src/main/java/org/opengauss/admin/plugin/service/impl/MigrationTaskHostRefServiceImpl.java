@@ -113,6 +113,8 @@ import org.opengauss.admin.system.plugin.facade.JschExecutorFacade;
 import org.opengauss.admin.system.plugin.facade.OpsFacade;
 import org.opengauss.admin.system.plugin.facade.SysSettingFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.opengauss.third.party.tools.ThirdPartyToolManager;
+import org.opengauss.third.party.tools.enums.ThirdPartyToolEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -1179,6 +1181,13 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
         if (!result.isOk()) {
             return result;
         }
+        MigrationHostPortalInstall oldInstall = migrationHostPortalInstallHostService.getOneByHostId(
+                install.getRunHostId());
+        if (isReInstall && (!realInstallPath.equals(oldInstall.getInstallPath())
+                || !PortalType.MYSQL_ONLY.equals(oldInstall.getPortalType()))) {
+            deletePortal(hostId, false);
+        }
+
         MigrationHostPortalInstall physicalInstallParams = preparePhysicalInstallParams(opsHost, hostUser, install,
             realInstallPath);
         if (PortalInstallType.IMPORT_INSTALL.getCode().equals(install.getInstallType())) {
@@ -1189,12 +1198,6 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             physicalInstallParams);
         physicalInstallParams.setThirdPartySoftwareConfig(thirdPartySoftwareConfig);
         syncInstallPortalHandler(physicalInstallParams);
-        // if reinstall path changed, clear old package
-        MigrationHostPortalInstall oldInstall = migrationHostPortalInstallHostService.getOneByHostId(
-            install.getRunHostId());
-        if (isReInstall && !realInstallPath.equals(oldInstall.getInstallPath())) {
-            deletePortal(hostId, false);
-        }
         return AjaxResult.success();
     }
 
@@ -1261,7 +1264,14 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             }
         }
 
-        migrationHostPortalInstallHostService.saveRecord(physicalInstallParams);
+        try {
+            MigrationHostPortalInstall newInstall = migrationHostPortalInstallHostService.saveRecord(
+                    physicalInstallParams);
+            ThirdPartyToolManager.save(ThirdPartyToolEnum.MIGRATION_PORTAL, newInstall.toPortalInstallInfo());
+        } catch (IOException e) {
+            log.error("Failed to save install record to file system", e);
+            throw new PortalInstallException("Failed to save install record to file system, error: " + e.getMessage());
+        }
         if (isInstallSuccess) {
             threadPoolTaskExecutor.submit(() -> {
                 physicalInstallParams.setRunPassword(encryptionUtils.decrypt(physicalInstallParams.getRunPassword()));
@@ -1317,7 +1327,6 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             boolean isInstallSuccess;
             StringBuilder installPortalLogTemp = new StringBuilder();
             try {
-                // upload portal
                 if (installParams.getInstallType().equals(PortalInstallType.OFFLINE_INSTALL.getCode())) {
                     installPortalLogTemp.append("START_UPLOAD_OFFLINE_PACKAGE").append((char) 10);
                     UploadInfo uploadResult = uploadPortal(installParams.getFile(), installParams);
@@ -1325,13 +1334,11 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                     installParams.setPkgUploadPath(uploadResult);
                     installPortalLogTemp.append("END_UPLOAD_OFFLINE_PACKAGE").append((char) 10);
                 }
-                migrationHostPortalInstallHostService.saveRecord(installParams);
+                MigrationHostPortalInstall newInstall = migrationHostPortalInstallHostService.saveRecord(installParams);
+                ThirdPartyToolManager.save(ThirdPartyToolEnum.MIGRATION_PORTAL, newInstall.toPortalInstallInfo());
                 installParams.setRunPassword(encryptionUtils.decrypt(installParams.getRunPassword()));
-                // remove old datakit_install_portal.log
                 removeInstallPortalLog(installParams);
-                // check portal dependencies
                 checkPortalDependencies(installParams, installPortalLogTemp);
-                // install portal
                 installPortalLogTemp.append("START_INSTALL_PORTAL").append((char) 10);
                 isInstallSuccess = PortalHandle.installPortal(installParams);
             } catch (PortalInstallException e) {
@@ -1340,6 +1347,10 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 isInstallSuccess = false;
             } catch (OpsException e) {
                 log.error("install portal failed", e);
+                installPortalLogTemp.append(e.getMessage()).append((char) 10);
+                isInstallSuccess = false;
+            } catch (IOException e) {
+                log.error("Failed to save install record to file system", e);
                 installPortalLogTemp.append(e.getMessage()).append((char) 10);
                 isInstallSuccess = false;
             }
@@ -1571,6 +1582,13 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,
                 "rm -rf  " + realInstallPath + "portal");
             migrationHostPortalInstallHostService.removeById(install.getId());
+            try {
+                ThirdPartyToolManager.deleteById(ThirdPartyToolEnum.MIGRATION_PORTAL, install.getId().toString());
+            } catch (IOException e) {
+                log.error("Failed to delete portal install info from file system, id: {}", install.getId(), e);
+                throw new PortalInstallException("Failed to delete portal install info from file system, id: "
+                        + install.getId() + ", error: " + e.getMessage());
+            }
         }
         migrationHostPortalInstallHostService.clearPkgUploadPath(hostId);
         ShellUtil.rmFile(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,

@@ -32,9 +32,13 @@ import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
  * @date 2023/01/14 09:01
  */
 public interface MigrationHostPortalInstallHostService extends IService<MigrationHostPortalInstall> {
-
-
-    void saveRecord(MigrationHostPortalInstall install);
+    /**
+     * save install record
+     *
+     * @param install install record
+     * @return install record with id
+     */
+    MigrationHostPortalInstall saveRecord(MigrationHostPortalInstall install);
 
     void updateStatus(String hostId, Integer status);
 
