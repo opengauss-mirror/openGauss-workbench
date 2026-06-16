@@ -36,6 +36,8 @@ import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.plugin.facade.JschExecutorFacade;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.opengauss.third.party.tools.ThirdPartyToolManager;
+import org.opengauss.third.party.tools.enums.ThirdPartyToolEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
@@ -119,13 +121,20 @@ public class MultiDbPortalInstaller {
 
         String formatInstallPath = formatInstallPath(install.getInstallPath(), hostUser.getUsername());
         MigrationHostPortalInstall oldInstall = portalInstallHostService.getOneByHostId(install.getRunHostId());
-        if (isReinstall && !formatInstallPath.equals(oldInstall.getInstallPath())) {
+        if (isReinstall && (!formatInstallPath.equals(oldInstall.getInstallPath())
+                || !PortalType.MULTI_DB.equals(oldInstall.getPortalType()))) {
             deletePortal(hostId);
         }
 
         checkUserPermission(opsHost, hostUser, formatInstallPath);
         MigrationHostPortalInstall installInfo = prepareInstallInfo(install, opsHost, hostUser, formatInstallPath);
-        portalInstallHostService.saveRecord(installInfo);
+        try {
+            MigrationHostPortalInstall newInstall = portalInstallHostService.saveRecord(installInfo);
+            ThirdPartyToolManager.save(ThirdPartyToolEnum.MIGRATION_PORTAL, newInstall.toPortalInstallInfo());
+        } catch (IOException e) {
+            log.error("Failed to save portal install info to file system", e);
+            throw new PortalInstallException("Failed to save install record to file system, error: " + e.getMessage());
+        }
 
         if (PortalInstallType.IMPORT_INSTALL.getCode().equals(install.getInstallType())) {
             importPortal(installInfo);
@@ -161,6 +170,13 @@ public class MultiDbPortalInstaller {
                 portalInfo.getPkgName(), portalInfo.getDatakitLogPath());
         ShellUtil.execCommandGetResult(shellInfo, rmCommand);
         portalInstallHostService.removeById(portalInfo.getId());
+        try {
+            ThirdPartyToolManager.deleteById(ThirdPartyToolEnum.MIGRATION_PORTAL, portalInfo.getId().toString());
+        } catch (IOException e) {
+            log.error("Failed to delete portal install info from file system, id: {}", portalInfo.getId(), e);
+            throw new PortalInstallException("Failed to delete portal install info from file system, id: "
+                    + portalInfo.getId() + ", error: " + e.getMessage());
+        }
         portalInstallHostService.clearPkgUploadPath(hostId);
         toolsParamService.removeByHostId(portalInfo.getRunHostId());
         return AjaxResult.success();

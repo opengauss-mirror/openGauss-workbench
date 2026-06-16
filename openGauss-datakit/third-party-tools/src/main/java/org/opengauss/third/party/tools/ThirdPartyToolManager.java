@@ -48,6 +48,7 @@ public class ThirdPartyToolManager {
             if (!Files.exists(Paths.get(thirdPartyToolEnum.getInstallInfoCsvFilePath()))) {
                 THIRD_PARTY_TOOL_REPOSITORY.register(thirdPartyToolEnum);
             }
+            INSTALL_INFO_REPOSITORY.deleteById(thirdPartyToolEnum, installInfo.getId());
             INSTALL_INFO_REPOSITORY.save(thirdPartyToolEnum, installInfo);
         }
     }

@@ -24,10 +24,12 @@
 
 package org.opengauss.admin.plugin.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+
+import cn.hutool.core.bean.BeanUtil;
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.mapper.MigrationHostPortalInstallMapper;
@@ -44,7 +46,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class MigrationHostPortalInstallServiceImpl extends ServiceImpl<MigrationHostPortalInstallMapper, MigrationHostPortalInstall> implements MigrationHostPortalInstallHostService {
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void saveRecord(MigrationHostPortalInstall install) {
+    public MigrationHostPortalInstall saveRecord(MigrationHostPortalInstall install) {
         MigrationHostPortalInstall newInstall = new MigrationHostPortalInstall();
         BeanUtil.copyProperties(install, newInstall);
         MigrationHostPortalInstall pi = getOneByHostId(install.getRunHostId());
@@ -52,6 +54,7 @@ public class MigrationHostPortalInstallServiceImpl extends ServiceImpl<Migration
             newInstall.setId(pi.getId());
         }
         saveOrUpdate(newInstall);
+        return newInstall;
     }
 
     @Override
