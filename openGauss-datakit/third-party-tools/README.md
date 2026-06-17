@@ -44,8 +44,8 @@ DataKit 运行期间会依赖并安装多种工具，这些工具可能分布在
 | 工具名称              | 自定义字段    | 字段说明                                     |
 |:------------------| :------------ | :------------------------------------------- |
 | Migration Portal  | `portal_type` | Portal 类型，取值：`MYSQL_ONLY` / `MULTI_DB` |
-| Prometheus        | —             | —                                            |
-| Instance Exporter | —             | —                                            |
+| Prometheus        | `server_port` | Prometheus 服务端口                        |
+| Instance Exporter | —             | —                                      |
 
 ### 3.2 工具信息注册机制
 
