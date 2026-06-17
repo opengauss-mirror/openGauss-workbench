@@ -134,6 +134,10 @@
             <artifactId>visualtool-common-cipher</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.opengauss</groupId>
+            <artifactId>third-party-tools</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.github.mwiede</groupId>
             <artifactId>jsch</artifactId>
         </dependency>

@@ -23,6 +23,58 @@
 
 package com.nctigba.observability.instance.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.nctigba.observability.instance.constants.CommonConstants;
+import com.nctigba.observability.instance.enums.AgentStatusEnum;
+import com.nctigba.observability.instance.mapper.PromAgentRelationMapper;
+import com.nctigba.observability.instance.model.dto.AllocateServerDTO;
+import com.nctigba.observability.instance.model.dto.PromInstallDTO;
+import com.nctigba.observability.instance.model.dto.PrometheusConfigNodeDTO;
+import com.nctigba.observability.instance.model.entity.AgentNodeRelationDO;
+import com.nctigba.observability.instance.model.entity.CollectTemplateNodeDO;
+import com.nctigba.observability.instance.model.entity.NctigbaEnvDO;
+import com.nctigba.observability.instance.model.entity.NctigbaEnvDO.envType;
+import com.nctigba.observability.instance.model.entity.PromAgentRelationDO;
+import com.nctigba.observability.instance.model.vo.AgentExceptionVO;
+import com.nctigba.observability.instance.model.vo.AgentStatusVO;
+import com.nctigba.observability.instance.service.AbstractInstaller.Step.Status;
+import com.nctigba.observability.instance.service.allocate.AllocatorService;
+import com.nctigba.observability.instance.util.CommonUtils;
+import com.nctigba.observability.instance.util.MessageSourceUtils;
+import com.nctigba.observability.instance.util.SshSessionUtils;
+import com.nctigba.observability.instance.util.SshSessionUtils.command;
+import com.nctigba.observability.instance.util.YamlUtils;
+
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.date.StopWatch;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.io.FileUtils;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.model.ops.WsSession;
+import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.common.utils.ip.IpUtils;
+import org.opengauss.third.party.tools.ThirdPartyToolManager;
+import org.opengauss.third.party.tools.entity.PrometheusInstallInfo;
+import org.opengauss.third.party.tools.enums.ThirdPartyToolEnum;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.ResourcePatternResolver;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -51,55 +103,11 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.date.StopWatch;
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.json.JSONArray;
-import cn.hutool.json.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.nctigba.observability.instance.service.allocate.AllocatorService;
-import com.nctigba.observability.instance.model.dto.AllocateServerDTO;
-import com.nctigba.observability.instance.enums.AgentStatusEnum;
-import com.nctigba.observability.instance.mapper.PromAgentRelationMapper;
-import com.nctigba.observability.instance.model.dto.PromInstallDTO;
-import com.nctigba.observability.instance.model.dto.PrometheusConfigNodeDTO;
-import com.nctigba.observability.instance.model.entity.AgentNodeRelationDO;
-import com.nctigba.observability.instance.model.entity.CollectTemplateNodeDO;
-import com.nctigba.observability.instance.model.entity.PromAgentRelationDO;
-import com.nctigba.observability.instance.model.vo.AgentExceptionVO;
-import com.nctigba.observability.instance.model.vo.AgentStatusVO;
-import com.nctigba.observability.instance.util.CommonUtils;
-import com.nctigba.observability.instance.util.MessageSourceUtils;
-import com.nctigba.observability.instance.util.YamlUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.compress.archivers.ArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
-import org.apache.commons.io.FileUtils;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
-import org.opengauss.admin.common.core.domain.model.ops.WsSession;
-import org.opengauss.admin.common.exception.CustomException;
-import org.opengauss.admin.common.utils.ip.IpUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.ResourcePatternResolver;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.nctigba.observability.instance.constants.CommonConstants;
-import com.nctigba.observability.instance.model.entity.NctigbaEnvDO;
-import com.nctigba.observability.instance.model.entity.NctigbaEnvDO.envType;
-import com.nctigba.observability.instance.service.AbstractInstaller.Step.Status;
-import com.nctigba.observability.instance.util.SshSessionUtils;
-import com.nctigba.observability.instance.util.SshSessionUtils.command;
-
-import cn.hutool.core.thread.ThreadUtil;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpUtil;
-import lombok.Data;
-
+/**
+ * Prometheus service class
+ *
+ * @since 2023/2/21
+ */
 @Service
 @Slf4j
 public class PrometheusService extends AbstractInstaller {
@@ -151,6 +159,7 @@ public class PrometheusService extends AbstractInstaller {
             if (StrUtil.isBlank(mainEnv.getId())) {
                 // save env
                 envMapper.insert(mainEnv);
+                savePrometheusInstallInfo(mainEnv);
             }
             AgentExceptionVO agentExceptionVO = checkPidStatus(mainEnv);
             if (!agentExceptionVO.isUpStatus()) {
@@ -386,6 +395,9 @@ public class PrometheusService extends AbstractInstaller {
             paramJson.putOpt("storageDays", promInstall.getStorageDays());
             env.setPort(promInstall.getPort()).setParam(paramJson.toString());
             envMapper.updateById(env);
+            deletePrometheusInstallInfo(env);
+            env.setHost(hostFacade.getById(env.getHostid()));
+            savePrometheusInstallInfo(env);
             // step5 startup prometheus
             nextStep();
             sendMsg(null, "prominstall.startServer");
@@ -405,6 +417,9 @@ public class PrometheusService extends AbstractInstaller {
         OpsHostEntity hostEntity = hostFacade.getById(promInstall.getHostId());
         if (hostEntity == null) {
             throw new RuntimeException(CommonConstants.HOST_NOT_FOUND);
+        }
+        if (promInstall.getUsername() == null || promInstall.getUsername().isEmpty()) {
+            throw new CustomException("Prometheus install username must not be empty");
         }
         sendMsg(null, "install.use", promInstall.getUsername()); // step3.n install user
         try (SshSessionUtils sshSession = connect(promInstall.getHostId(), promInstall.getUsername())) {
@@ -458,6 +473,8 @@ public class PrometheusService extends AbstractInstaller {
         uploadMainScript(env.getPath(), promInstall.getPort(), true);
         env.setPort(promInstall.getPort());
         envMapper.updateById(env);
+        deletePrometheusInstallInfo(env);
+        savePrometheusInstallInfo(env);
         sendMsg(null, "prominstall.updatePort");
         nextStep();
         startProm(env);
@@ -534,6 +551,8 @@ public class PrometheusService extends AbstractInstaller {
         // save env
         env.setPath(promDir);
         envMapper.insert(env);
+        env.setHost(hostFacade.getById(env.getHostid()));
+        savePrometheusInstallInfo(env);
     }
 
     private NctigbaEnvDO checkMainPromAndGet() {
@@ -1367,6 +1386,7 @@ public class PrometheusService extends AbstractInstaller {
                 sendMsg(null, "prominstall.clearFolder");
                 clearInstallFolder(env);
                 envMapper.deleteById(env);
+                deletePrometheusInstallInfo(env);
             }
             nextStep();
             boolean isUsed = isPortUsed(promInstall.getPort());
@@ -1380,6 +1400,8 @@ public class PrometheusService extends AbstractInstaller {
             String promDir = wsInstallMain(promInstall, mainPromConf);
             env = new NctigbaEnvDO().setPath(promDir).setPort(promInstall.getPort()).setType(envType.PROMETHEUS_MAIN);
             envMapper.insert(env);
+            env.setHost(hostFacade.getById(env.getHostid()));
+            savePrometheusInstallInfo(env);
             nextStep();
             AgentExceptionVO agentExceptionVO = checkPidStatus(env);
             if (agentExceptionVO.isUpStatus()) {
@@ -1635,6 +1657,7 @@ public class PrometheusService extends AbstractInstaller {
             clearInstallFolder(env);
             nextStep();
             envMapper.deleteById(id);
+            deletePrometheusInstallInfo(env);
             sendMsg(Status.DONE, "");
         } catch (Exception e) {
             sendMsg(Status.ERROR, e.getMessage());
@@ -1669,6 +1692,55 @@ public class PrometheusService extends AbstractInstaller {
                     session.execute(cd + "rm -rf " + path);
                 }
             }
+        }
+    }
+
+    /**
+     * Refresh the third party tool install info of prometheus
+     */
+    public void refreshPrometheusInstallInfo() {
+        List<NctigbaEnvDO> envList = envMapper.selectList(Wrappers.<NctigbaEnvDO>lambdaQuery()
+                .in(NctigbaEnvDO::getType, envType.PROMETHEUS.name(), envType.PROMETHEUS_MAIN.name()));
+        try {
+            for (NctigbaEnvDO env : envList) {
+                env = envMapper.selectById(env.getId());
+                if (env == null) {
+                    continue;
+                }
+                if (env.getType().equals(envType.PROMETHEUS.name())) {
+                    env.setHost(hostFacade.getById(env.getHostid()));
+                }
+
+                PrometheusInstallInfo prometheusInstallInfo = env.toPrometheusInstallInfo();
+                if (prometheusInstallInfo.getUser() == null || prometheusInstallInfo.getUser().isEmpty()) {
+                    log.warn("Prometheus install info user is empty, envId: {}", env.getId());
+                    continue;
+                }
+                ThirdPartyToolManager.save(ThirdPartyToolEnum.PROMETHEUS, prometheusInstallInfo);
+            }
+        } catch (IOException e) {
+            log.error("Failed to save the prometheus install info to file system. "
+                    + "Please fix this error and restart Datakit", e);
+        }
+    }
+
+    private void savePrometheusInstallInfo(NctigbaEnvDO env) throws IOException {
+        try {
+            ThirdPartyToolManager.save(ThirdPartyToolEnum.PROMETHEUS, env.toPrometheusInstallInfo());
+        } catch (IOException e) {
+            log.error("Failed to save the prometheus install info to file system", e);
+            throw new IOException("Failed to save the prometheus install info to file system. "
+                    + "Please fix this error and restart Datakit", e);
+        }
+    }
+
+    private void deletePrometheusInstallInfo(NctigbaEnvDO env) throws IOException {
+        try {
+            ThirdPartyToolManager.deleteById(ThirdPartyToolEnum.PROMETHEUS, env.getId());
+        } catch (IOException e) {
+            log.error("Failed to delete the prometheus install info from file system, id: {}", env.getId(), e);
+            throw new IOException("Failed to delete the prometheus install info from file system. "
+                    + "Please fix this error and restart Datakit", e);
         }
     }
 }

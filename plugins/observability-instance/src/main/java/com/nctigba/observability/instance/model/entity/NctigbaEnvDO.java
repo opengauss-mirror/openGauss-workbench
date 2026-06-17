@@ -23,19 +23,25 @@
 
 package com.nctigba.observability.instance.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
-
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.third.party.tools.entity.PrometheusInstallInfo;
+
 import java.util.Date;
 
+/**
+ * Nctigba env entity class
+ *
+ * @since 2023/2/21
+ */
 @Data
 @Accessors(chain = true)
 @TableName("nctigba_env")
@@ -68,6 +74,32 @@ public class NctigbaEnvDO {
     public NctigbaEnvDO setType(envType type) {
         this.type = type.name();
         return this;
+    }
+
+    /**
+     * convert to prometheus install info
+     *
+     * @return PrometheusInstallInfo
+     */
+    public PrometheusInstallInfo toPrometheusInstallInfo() {
+        PrometheusInstallInfo prometheusInstallInfo = new PrometheusInstallInfo();
+        prometheusInstallInfo.setId(this.id);
+        prometheusInstallInfo.setInstallDir(this.path);
+        prometheusInstallInfo.setServerPort(this.port);
+        if (envType.PROMETHEUS_MAIN.name().equals(this.type)) {
+            prometheusInstallInfo.setIp("127.0.0.1");
+            prometheusInstallInfo.setPort(22);
+            prometheusInstallInfo.setUser(System.getProperty("user.name"));
+            return prometheusInstallInfo;
+        }
+
+        if (host == null) {
+            throw new IllegalArgumentException("NctigbaEnvDO host must not be null");
+        }
+        prometheusInstallInfo.setUser(this.username);
+        prometheusInstallInfo.setIp(this.host.getPublicIp());
+        prometheusInstallInfo.setPort(this.host.getPort());
+        return prometheusInstallInfo;
     }
 
     public enum envType {
