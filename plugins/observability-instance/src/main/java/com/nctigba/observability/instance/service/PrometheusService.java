@@ -1385,8 +1385,8 @@ public class PrometheusService extends AbstractInstaller {
                 transferRuleConfig(env.getPath() + CommonConstants.SLASH + RULE_PATH, RULE_PATH, false);
                 sendMsg(null, "prominstall.clearFolder");
                 clearInstallFolder(env);
-                envMapper.deleteById(env);
                 deletePrometheusInstallInfo(env);
+                envMapper.deleteById(env);
             }
             nextStep();
             boolean isUsed = isPortUsed(promInstall.getPort());
@@ -1656,8 +1656,8 @@ public class PrometheusService extends AbstractInstaller {
             nextStep();
             clearInstallFolder(env);
             nextStep();
-            envMapper.deleteById(id);
             deletePrometheusInstallInfo(env);
+            envMapper.deleteById(id);
             sendMsg(Status.DONE, "");
         } catch (Exception e) {
             sendMsg(Status.ERROR, e.getMessage());
@@ -1703,12 +1703,17 @@ public class PrometheusService extends AbstractInstaller {
                 .in(NctigbaEnvDO::getType, envType.PROMETHEUS.name(), envType.PROMETHEUS_MAIN.name()));
         try {
             for (NctigbaEnvDO env : envList) {
-                env = envMapper.selectById(env.getId());
                 if (env == null) {
                     continue;
                 }
                 if (env.getType().equals(envType.PROMETHEUS.name())) {
-                    env.setHost(hostFacade.getById(env.getHostid()));
+                    OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
+                    if (hostEntity == null) {
+                        log.warn("Host not found for prometheus, env id: {}, host id: {}",
+                                env.getId(), env.getHostid());
+                        continue;
+                    }
+                    env.setHost(hostEntity);
                 }
 
                 PrometheusInstallInfo prometheusInstallInfo = env.toPrometheusInstallInfo();

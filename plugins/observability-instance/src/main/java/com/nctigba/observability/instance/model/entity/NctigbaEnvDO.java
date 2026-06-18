@@ -33,6 +33,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.third.party.tools.entity.InstanceExporterInstallInfo;
 import org.opengauss.third.party.tools.entity.PrometheusInstallInfo;
 
 import java.util.Date;
@@ -100,6 +101,26 @@ public class NctigbaEnvDO {
         prometheusInstallInfo.setIp(this.host.getPublicIp());
         prometheusInstallInfo.setPort(this.host.getPort());
         return prometheusInstallInfo;
+    }
+
+    /**
+     * convert to instance-exporter install info
+     *
+     * @return InstanceExporterInstallInfo
+     */
+    public InstanceExporterInstallInfo toInstanceExporterInstallInfo() {
+        InstanceExporterInstallInfo instanceExporterInstallInfo = new InstanceExporterInstallInfo();
+        instanceExporterInstallInfo.setId(this.id);
+        instanceExporterInstallInfo.setInstallDir(this.path);
+        instanceExporterInstallInfo.setServerPort(this.port);
+
+        if (host == null) {
+            throw new IllegalArgumentException("NctigbaEnvDO host must not be null");
+        }
+        instanceExporterInstallInfo.setUser(this.username);
+        instanceExporterInstallInfo.setIp(this.host.getPublicIp());
+        instanceExporterInstallInfo.setPort(this.host.getPort());
+        return instanceExporterInstallInfo;
     }
 
     public enum envType {
