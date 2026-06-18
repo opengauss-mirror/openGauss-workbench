@@ -132,8 +132,10 @@ public class MultiDbPortalInstaller {
             MigrationHostPortalInstall newInstall = portalInstallHostService.saveRecord(installInfo);
             ThirdPartyToolManager.save(ThirdPartyToolEnum.MIGRATION_PORTAL, newInstall.toPortalInstallInfo());
         } catch (IOException e) {
-            log.error("Failed to save portal install info to file system", e);
-            throw new PortalInstallException("Failed to save install record to file system, error: " + e.getMessage());
+            String errorMsg = "Failed to save portal install info to file system. "
+                    + "Please fix this error and restart Datakit. " + e.getMessage();
+            log.error(errorMsg, e);
+            throw new PortalInstallException(errorMsg);
         }
 
         if (PortalInstallType.IMPORT_INSTALL.getCode().equals(install.getInstallType())) {
@@ -169,14 +171,14 @@ public class MultiDbPortalInstaller {
         String rmCommand = String.format("cd %s && rm -rf %s %s %s", portalInfo.getInstallPath(), "portal/",
                 portalInfo.getPkgName(), portalInfo.getDatakitLogPath());
         ShellUtil.execCommandGetResult(shellInfo, rmCommand);
-        portalInstallHostService.removeById(portalInfo.getId());
         try {
             ThirdPartyToolManager.deleteById(ThirdPartyToolEnum.MIGRATION_PORTAL, portalInfo.getId().toString());
         } catch (IOException e) {
             log.error("Failed to delete portal install info from file system, id: {}", portalInfo.getId(), e);
-            throw new PortalInstallException("Failed to delete portal install info from file system, id: "
-                    + portalInfo.getId() + ", error: " + e.getMessage());
+            throw new PortalInstallException("Failed to delete portal install info from file system. "
+                    + "Please fix this error and restart Datakit. " + e.getMessage());
         }
+        portalInstallHostService.removeById(portalInfo.getId());
         portalInstallHostService.clearPkgUploadPath(hostId);
         toolsParamService.removeByHostId(portalInfo.getRunHostId());
         return AjaxResult.success();
