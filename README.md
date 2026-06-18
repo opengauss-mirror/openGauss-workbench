@@ -28,8 +28,8 @@ openGauss的安装、运维场景对于初级用户或单纯想要测试openGaus
 
 | 包名                            | 备注                                                        | 下载链接                                                                                                           |
 |:------------------------------|-----------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
-| Datakit-All-7.0.0-RC3.tar.gz  | 完整包（包含所有插件）                                               | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/openGauss-Datakit-All-7.0.0-RC3.tar.gz |
-| Datakit-Mini-7.0.0-RC3.tar.gz | （推荐）最小化包（插件仅包含基础功能【业务开发】【基础运维】，其他插件可在DataKit的【插件管理】页面按需下载） | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/openGauss-Datakit-Mini-7.0.0-RC3.tar.gz          |
+| openGauss-Datakit-All-7.0.0-RC3.tar.gz  | 完整包（包含所有插件）                                               | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/openGauss-Datakit-All-7.0.0-RC3.tar.gz |
+| openGauss-Datakit-Mini-7.0.0-RC3.tar.gz | （推荐）最小化包（插件仅包含基础功能【业务开发】【基础运维】，其他插件可在DataKit的【插件管理】页面按需下载） | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/openGauss-Datakit-Mini-7.0.0-RC3.tar.gz          |
 
 #### 注意：
 1. 7.0.0-RC2之前的包不做区分，都包含所有插件，包名是Datakit-_$VERSION_.tar.gz（比如6.0.0版：Datakit-6.0.0.tar.gz）；
@@ -83,43 +83,50 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
 
 ## 安装步骤
 1. 解压安装包\
-   通过下载链接或编译代码获取安装包`Datakit-All-7.0.0-RC3.tar.gz`或`Datakit-Mini-7.0.0-RC3.tar.gz`，（如果不需要所有插件，建议下载`Datakit-Mini-7.0.0-RC3.tar.gz`，安装部署完成后，可以在插件管理界面按需下载插件）；
-   解压安装包至`datakit`安装目录下，例如安装目录为`/path/datakit_server`时，解压命令如下:
+   通过下载链接或编译代码获取安装包`openGauss-Datakit-All-7.0.0-RC3.tar.gz`或`openGauss-Datakit-Mini-7.0.0-RC3.tar.gz`，（如果不需要所有插件，建议下载`openGauss-Datakit-Mini-7.0.0-RC3.tar.gz`，安装部署完成后，可以在插件管理界面按需下载插件）；
+   
+   解压安装包，解压命令如下:
+   
    ```shell
-   $ tar -zxvf Datakit-All-7.0.0-RC3.tar.gz -C /path/to/datakit_server
-   ./agent/
-   ./agent/application.yml
-   ./agent/datakit-agent-7.0.0-RC3-runner.jar
-   ./application-temp.yml
-   ./build_commit_id.log
-   ./doc/
-   ./doc/data-migration-README.md
-   ./doc/base-ops-README.md
-   ./doc/oauth-login-README.md
-   ./doc/observability-log-search-README.md
-   ./doc/compatibility-assessment-README.md
-   ./doc/observability-sql-diagnosis-README.md
-   ./doc/observability-instance-README.md
-   ./doc/intelligent-parameter-tuning-README.md
-   ./doc/openGauss-tools-monitor-README.md
-   ./doc/alert-monitor-README.md
-   ./doc/data-studio-README.md
-   ./doc/datakit-README.md
-   ./openGauss-datakit-7.0.0-RC3.jar
-   ./run.sh
-   ./visualtool-plugin/
-   ./visualtool-plugin/observability-sql-diagnosis-7.0.0-RC3-repackage.jar
-   ./visualtool-plugin/compatibility-assessment-7.0.0-RC3-repackage.jar
-   ./visualtool-plugin/alert-monitor-7.0.0-RC3-repackage.jar
-   ./visualtool-plugin/webds-plugin-7.0.0-RC3-repackage.jar
-   ./visualtool-plugin/observability-log-search-7.0.0-RC3-repackage.jar
-   ./visualtool-plugin/base-ops-7.0.0-RC3-repackage.jar
-   ./visualtool-plugin/data-migration-7.0.0-RC3-repackage.jar
-   ./visualtool-plugin/observability-instance-7.0.0-RC3-repackage.jar
+   $ tar -zxvf openGauss-Datakit-All-7.0.0-RC3.tar.gz
+   openGauss-Datakit-All-7.0.0-RC3/
+   openGauss-Datakit-All-7.0.0-RC3/agent/
+   openGauss-Datakit-All-7.0.0-RC3/agent/datakit-agent-7.0.0-RC3-runner.jar
+   openGauss-Datakit-All-7.0.0-RC3/agent/application.yml
+   openGauss-Datakit-All-7.0.0-RC3/build_commit_id.log
+   openGauss-Datakit-All-7.0.0-RC3/config/
+   openGauss-Datakit-All-7.0.0-RC3/config/application-temp.yml
+   openGauss-Datakit-All-7.0.0-RC3/config/log4j2.xml
+   openGauss-Datakit-All-7.0.0-RC3/doc/
+   openGauss-Datakit-All-7.0.0-RC3/doc/datakit-README.md
+   openGauss-Datakit-All-7.0.0-RC3/doc/container-management-plugin-README.md
+   openGauss-Datakit-All-7.0.0-RC3/doc/alert-monitor-README.md
+   openGauss-Datakit-All-7.0.0-RC3/doc/compatibility-assessment-README.md
+   openGauss-Datakit-All-7.0.0-RC3/doc/oauth-login-README.md
+   openGauss-Datakit-All-7.0.0-RC3/doc/observability-instance-README.md
+   openGauss-Datakit-All-7.0.0-RC3/doc/data-studio-README.md
+   openGauss-Datakit-All-7.0.0-RC3/doc/data-migration-README.md
+   openGauss-Datakit-All-7.0.0-RC3/doc/intelligent-parameter-tuning-README.md
+   openGauss-Datakit-All-7.0.0-RC3/doc/openGauss-tools-monitor-README.md
+   openGauss-Datakit-All-7.0.0-RC3/doc/observability-sql-diagnosis-README.md
+   openGauss-Datakit-All-7.0.0-RC3/doc/observability-log-search-README.md
+   openGauss-Datakit-All-7.0.0-RC3/doc/base-ops-README.md
+   openGauss-Datakit-All-7.0.0-RC3/install.sh
+   openGauss-Datakit-All-7.0.0-RC3/openGauss-datakit-7.0.0-RC3.jar
+   openGauss-Datakit-All-7.0.0-RC3/run.sh
+   openGauss-Datakit-All-7.0.0-RC3/visualtool-plugin/
+   openGauss-Datakit-All-7.0.0-RC3/visualtool-plugin/alert-monitor-7.0.0-RC3-repackage.jar
+   openGauss-Datakit-All-7.0.0-RC3/visualtool-plugin/base-ops-7.0.0-RC3-repackage.jar
+   openGauss-Datakit-All-7.0.0-RC3/visualtool-plugin/compatibility-assessment-7.0.0-RC3-repackage.jar
+   openGauss-Datakit-All-7.0.0-RC3/visualtool-plugin/webds-plugin-7.0.0-RC3-repackage.jar
+   openGauss-Datakit-All-7.0.0-RC3/visualtool-plugin/data-migration-7.0.0-RC3-repackage.jar
+   openGauss-Datakit-All-7.0.0-RC3/visualtool-plugin/observability-instance-7.0.0-RC3-repackage.jar
+   openGauss-Datakit-All-7.0.0-RC3/visualtool-plugin/observability-sql-diagnosis-7.0.0-RC3-repackage.jar
+   openGauss-Datakit-All-7.0.0-RC3/visualtool-plugin/observability-log-search-7.0.0-RC3-repackage.jar
    ```
 2. 运行安装脚本
 
-   切换到 DataKit 安装目录下，执行安装脚本`install.sh`，安装脚本会自动创建 DataKit 服务所需的目录结构，并修改配置文件中相关目录结构。
+   切换到解压后的 DataKit 根目录下，执行安装脚本`install.sh`，安装脚本会自动创建 DataKit 服务所需的目录结构，并修改配置文件中相关目录结构。
 
    ```shell
    sh install.sh

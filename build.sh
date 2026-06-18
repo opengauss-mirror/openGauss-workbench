@@ -224,20 +224,38 @@ function copy_plugin_pkg() {
   wait
 }
 
+tar_package() {
+  cd $root_path
+
+  all_home="openGauss-Datakit-All-${pom_version}"
+  mini_home="openGauss-Datakit-Mini-${pom_version}"
+  mkdir $all_home
+  mkdir -p $mini_home/visualtool-plugin
+
+  cp -r $output_path/* $all_home
+
+  cp -r $output_path/config $mini_home
+  cp -r $output_path/doc $mini_home
+  cp -r $output_path/agent $mini_home
+  cp $output_path/build_commit_id.log $mini_home
+  cp $output_path/openGauss-datakit* $mini_home
+  cp $output_path/run.sh $mini_home
+  cp $output_path/install.sh $mini_home
+  cp $output_path/visualtool-plugin/webds-plugin* $mini_home/visualtool-plugin
+  cp $output_path/visualtool-plugin/base-ops* $mini_home/visualtool-plugin
+
+  tar -zcf $all_home.tar.gz $all_home
+  tar -zcf $mini_home.tar.gz $mini_home
+  rm -rf "$all_home" "$mini_home"
+}
+
 prepare_env
 get_git_log
 build_pkg
 copy_plugin_pkg
 copy_agent_pkg
-cd $output_path
-tar -zcf openGauss-Datakit-All-${pom_version}.tar.gz ./*
-tar -zcf openGauss-Datakit-Mini-${pom_version}.tar.gz \
-      ./config \
-      ./build_commit_id.log \
-      ./doc \
-      ./openGauss-datakit* \
-      ./run.sh \
-      ./install.sh \
-      ./visualtool-plugin/webds-plugin* \
-      ./visualtool-plugin/base-ops* \
-      ./agent/*
+tar_package
+
+cd $root_path
+cp $all_home.tar.gz $output_path
+cp $mini_home.tar.gz $output_path
