@@ -23,24 +23,16 @@
 
 package com.nctigba.observability.instance.service;
 
-import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.date.StopWatch;
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.thread.ThreadUtil;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpUtil;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.nctigba.observability.instance.caller.AlertCaller;
 import com.nctigba.observability.instance.constants.CommonConstants;
 import com.nctigba.observability.instance.enums.AgentStatusEnum;
+import com.nctigba.observability.instance.exception.TipsException;
 import com.nctigba.observability.instance.model.dto.ExporterInstallDTO;
 import com.nctigba.observability.instance.model.entity.AgentNodeRelationDO;
 import com.nctigba.observability.instance.model.entity.NctigbaEnvDO;
 import com.nctigba.observability.instance.model.entity.NctigbaEnvDO.envType;
-import com.nctigba.observability.instance.exception.TipsException;
 import com.nctigba.observability.instance.model.vo.AgentExceptionVO;
 import com.nctigba.observability.instance.model.vo.AgentStatusVO;
 import com.nctigba.observability.instance.service.AbstractInstaller.Step.Status;
@@ -51,7 +43,17 @@ import com.nctigba.observability.instance.util.RsaUtils;
 import com.nctigba.observability.instance.util.SshSessionUtils;
 import com.nctigba.observability.instance.util.SshSessionUtils.command;
 import com.nctigba.observability.instance.util.YamlUtils;
+
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.date.StopWatch;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
@@ -62,6 +64,8 @@ import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.system.service.ops.IOpsClusterService;
+import org.opengauss.third.party.tools.ThirdPartyToolManager;
+import org.opengauss.third.party.tools.enums.ThirdPartyToolEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -170,8 +174,12 @@ public class ExporterInstallService extends AbstractInstaller {
                 throw new CustomException(CommonConstants.HOST_NOT_FOUND);
             }
             // get user data
+            String username = exporterInstallDTO.getUsername();
+            if (StrUtil.isBlank(username)) {
+                throw new CustomException("exporter install username can not be empty");
+            }
             OpsHostUserEntity user = hostUserFacade.listHostUserByHostId(hostEntity.getHostId()).stream()
-                .filter(e -> exporterInstallDTO.getUsername().equals(e.getUsername())).findFirst()
+                .filter(e -> username.equals(e.getUsername())).findFirst()
                 .orElseThrow(() -> new CustomException("user not found"));
 
             try (SshSessionUtils session = SshSessionUtils.connect(hostEntity.getPublicIp(), hostEntity.getPort(),
@@ -193,7 +201,7 @@ public class ExporterInstallService extends AbstractInstaller {
                     }
 
                     expEnv = new NctigbaEnvDO().setHostid(exporterInstallDTO.getHostId()).setPort(httpPort)
-                        .setUsername(exporterInstallDTO.getUsername()).setType(envType.EXPORTER)
+                        .setUsername(username).setType(envType.EXPORTER)
                         .setPath(path);
                 } else {
                     expEnv = envMapper.selectById(exporterInstallDTO.getEnvId());
@@ -275,6 +283,7 @@ public class ExporterInstallService extends AbstractInstaller {
                     nextStep();
                     envMapper.insert(expEnv);
                     updateAgentNodeRel(expEnv.getId(), exporterInstallDTO.getNodeIds());
+                    saveExporterInstallInfo(expEnv);
                     // exec
                     sendMsg(null, "startup exporter");
                     session.executeNoWait("cd " + path + " && source /etc/profile && sh run_agent.sh start");
@@ -303,9 +312,6 @@ public class ExporterInstallService extends AbstractInstaller {
                 sendMsg(Status.DONE, "");
             }
         } catch (Exception e) {
-            if (StrUtil.isBlank(exporterInstallDTO.getEnvId()) && expEnv != null) {
-                envMapper.deleteById(expEnv);
-            }
             sendMsg(Status.ERROR, e.getMessage());
             var sw = new StringWriter();
             try (var pw = new PrintWriter(sw);) {
@@ -313,6 +319,14 @@ public class ExporterInstallService extends AbstractInstaller {
             }
             sendMsg(null, sw.toString());
             log.error("install fail!", e);
+            if (StrUtil.isBlank(exporterInstallDTO.getEnvId()) && expEnv != null) {
+                try {
+                    deleteExporterInstallInfo(expEnv);
+                } catch (IOException ex) {
+                    log.error("Fail to delete exporter install info during cleanup, env id: {}", expEnv.getId(), ex);
+                }
+                envMapper.deleteById(expEnv);
+            }
             WsSessionStep wsSessionStep = wsSessionStepTl.get();
             if (wsSessionStep == null) {
                 throw new CustomException("install fail! " + e.getMessage());
@@ -347,7 +361,16 @@ public class ExporterInstallService extends AbstractInstaller {
     }
 
     private void uploadExporter(SshSessionUtils session, String path) throws IOException {
-        session.execute("mkdir -p " + path);
+        boolean isDirExist = session.checkDirExist(path);
+        if (isDirExist) {
+            boolean isSubFileExist = session.isDirNotEmpty(path);
+            if (isSubFileExist) {
+                throw new CustomException("The directory is not empty: " + path);
+            }
+        } else {
+            session.execute("mkdir -p " + path);
+        }
+
         if (session.checkFileExist(path + "/" + EXPORTER_NAME)) {
             throw new CustomException("agent package is exist");
         }
@@ -573,6 +596,7 @@ public class ExporterInstallService extends AbstractInstaller {
         nextStep();
         clearInstallFolder(exporterEnv);
         nextStep();
+        deleteExporterInstallInfo(exporterEnv);
         envMapper.deleteById(envId);
         agentNodeRelationService.remove(Wrappers.<AgentNodeRelationDO>lambdaQuery().eq(AgentNodeRelationDO::getEnvId,
             envId));
@@ -948,6 +972,52 @@ public class ExporterInstallService extends AbstractInstaller {
             }
         } catch (IOException e) {
             throw new CustomException(e.getMessage());
+        }
+    }
+
+    /**
+     * Refresh the third party tool install info of instance-exporter
+     */
+    public void refreshExporterInstallInfo() {
+        List<NctigbaEnvDO> envList = envMapper.selectList(Wrappers.<NctigbaEnvDO>lambdaQuery()
+                .eq(NctigbaEnvDO::getType, NctigbaEnvDO.envType.EXPORTER.name()));
+        try {
+            for (NctigbaEnvDO env : envList) {
+                if (env == null) {
+                    continue;
+                }
+                OpsHostEntity hostEntity = hostFacade.getById(env.getHostid());
+                if (hostEntity == null) {
+                    log.warn("Host not found for instance-exporter, env id: {}, host id: {}",
+                            env.getId(), env.getHostid());
+                    continue;
+                }
+                env.setHost(hostEntity);
+                ThirdPartyToolManager.save(ThirdPartyToolEnum.INSTANCE_EXPORTER, env.toInstanceExporterInstallInfo());
+            }
+        } catch (IOException e) {
+            log.error("Failed to save the instance-exporter install info to file system. "
+                    + "Please fix this error and restart Datakit", e);
+        }
+    }
+
+    private void saveExporterInstallInfo(NctigbaEnvDO env) throws IOException {
+        try {
+            ThirdPartyToolManager.save(ThirdPartyToolEnum.INSTANCE_EXPORTER, env.toInstanceExporterInstallInfo());
+        } catch (IOException e) {
+            log.error("Failed to save the instance-exporter install info to file system", e);
+            throw new IOException("Failed to save the instance-exporter install info to file system. "
+                    + "Please fix this error and restart Datakit", e);
+        }
+    }
+
+    private void deleteExporterInstallInfo(NctigbaEnvDO env) throws IOException {
+        try {
+            ThirdPartyToolManager.deleteById(ThirdPartyToolEnum.INSTANCE_EXPORTER, env.getId());
+        } catch (IOException e) {
+            log.error("Failed to delete the instance-exporter install info from file system, id: {}", env.getId(), e);
+            throw new IOException("Failed to delete the instance-exporter install info from file system. "
+                    + "Please fix this error and restart Datakit", e);
         }
     }
 }
