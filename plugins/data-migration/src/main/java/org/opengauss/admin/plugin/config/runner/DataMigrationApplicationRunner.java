@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Technologies Co.,Ltd.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022-2022. All rights reserved.
  *
  * openGauss is licensed under Mulan PSL v2.
  * You can use this software according to the terms and conditions of the Mulan PSL v2.
@@ -21,11 +21,11 @@
  * -------------------------------------------------------------------------
  */
 
-
-package org.opengauss.admin.plugin.config;
+package org.opengauss.admin.plugin.config.runner;
 
 import cn.hutool.core.thread.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.plugin.service.MigrationMainTaskService;
 import org.opengauss.admin.plugin.service.MigrationTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,15 +36,13 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 /**
- * @className: DataMigrationApplicationRunner
- * @description: DataMigrationApplicationRunner
- * @author: xielibo
- * @date: 2022-12-17 15:43
+ * DataMigrationApplicationRunner
+ *
+ * @since 2023/2/28
  **/
 @Slf4j
 @Component
 public class DataMigrationApplicationRunner implements ApplicationRunner {
-
     @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
     @Autowired

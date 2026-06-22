@@ -1270,7 +1270,8 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             ThirdPartyToolManager.save(ThirdPartyToolEnum.MIGRATION_PORTAL, newInstall.toPortalInstallInfo());
         } catch (IOException e) {
             log.error("Failed to save install record to file system", e);
-            throw new PortalInstallException("Failed to save install record to file system, error: " + e.getMessage());
+            throw new PortalInstallException("Failed to save portal install info to file system. "
+                    + "Please fix this error and restart Datakit. " + e.getMessage());
         }
         if (isInstallSuccess) {
             threadPoolTaskExecutor.submit(() -> {
@@ -1350,8 +1351,10 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
                 installPortalLogTemp.append(e.getMessage()).append((char) 10);
                 isInstallSuccess = false;
             } catch (IOException e) {
-                log.error("Failed to save install record to file system", e);
-                installPortalLogTemp.append(e.getMessage()).append((char) 10);
+                String errorMsg = "Failed to save portal install info to file system. "
+                        + "Please fix this error and restart Datakit. " + e.getMessage();
+                log.error(errorMsg, e);
+                installPortalLogTemp.append(errorMsg).append((char) 10);
                 isInstallSuccess = false;
             }
             if (!isInstallSuccess && ThirdPartySoftwareConfigType.INSTALL.getCode()
@@ -1581,14 +1584,14 @@ public class MigrationTaskHostRefServiceImpl extends ServiceImpl<MigrationTaskHo
             removeKafkaTools(install, portalHome, opsHost, hostUser, password);
             ShellUtil.execCommandGetResult(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,
                 "rm -rf  " + realInstallPath + "portal");
-            migrationHostPortalInstallHostService.removeById(install.getId());
             try {
                 ThirdPartyToolManager.deleteById(ThirdPartyToolEnum.MIGRATION_PORTAL, install.getId().toString());
             } catch (IOException e) {
                 log.error("Failed to delete portal install info from file system, id: {}", install.getId(), e);
-                throw new PortalInstallException("Failed to delete portal install info from file system, id: "
-                        + install.getId() + ", error: " + e.getMessage());
+                throw new PortalInstallException("Failed to delete portal install info from file system. "
+                        + "Please fix this error and restart Datakit. " + e.getMessage());
             }
+            migrationHostPortalInstallHostService.removeById(install.getId());
         }
         migrationHostPortalInstallHostService.clearPkgUploadPath(hostId);
         ShellUtil.rmFile(opsHost.getPublicIp(), opsHost.getPort(), hostUser.getUsername(), password,
