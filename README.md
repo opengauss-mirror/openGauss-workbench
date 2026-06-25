@@ -114,6 +114,7 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
    openGauss-Datakit-All-7.0.0-RC3/install.sh
    openGauss-Datakit-All-7.0.0-RC3/openGauss-datakit-7.0.0-RC3.jar
    openGauss-Datakit-All-7.0.0-RC3/run.sh
+   openGauss-Datakit-All-7.0.0-RC3/uninstall.sh
    openGauss-Datakit-All-7.0.0-RC3/visualtool-plugin/
    openGauss-Datakit-All-7.0.0-RC3/visualtool-plugin/alert-monitor-7.0.0-RC3-repackage.jar
    openGauss-Datakit-All-7.0.0-RC3/visualtool-plugin/base-ops-7.0.0-RC3-repackage.jar
@@ -182,6 +183,26 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
 4. 访问服务
 
    启动成功后，通过浏览器输入如下地址：`https://ip:9494/` 访问`datakit`服务，这里的`ip`为`datakit`服务安装在的主机`ip`，`9494`为`datakit`服务默认端口，如有修改请根据实际情况替换。初始用户为`admin`，初始密码为`admin123`，首次登录需修改初始密码。
+
+## 卸载说明
+
+### 卸载步骤
+
+   切换到 Datakit 根目录下，执行卸载脚本`uninstall.sh`，卸载脚本会自动停止 DataKit 服务，并删除 DataKit 服务相关目录结构，且脚本支持通过选项控制是否卸载已安装的`migration-portal`、`prometheus`、`instance-exporter`工具。
+
+   脚本使用方式如下：
+
+   | 命令格式                            | 说明                                                         |
+   |:--------------------------------| :----------------------------------------------------------- |
+   | `sh uninstall.sh`               | 默认行为：卸载 DataKit 自身及所有已安装的工具（同 `--all`）  |
+   | `sh uninstall.sh -s\|--self`    | 仅卸载 DataKit 自身                                          |
+   | `sh uninstall.sh -a\|--all`     | 卸载 DataKit 自身及所有已安装的工具                          |
+   | `sh uninstall.sh -h\|--help`    | 显示帮助信息，列出所有支持的命令选项                         |
+
+### 使用限制
+
+1. 卸载远程环境上已安装的工具时，需要用户交互式输入安装环境的用户密码，用于连接远程主机执行卸载命令。
+2. 卸载远程环境上已安装的工具时，Datakit 所在环境需要提前安装 `sshpass` 命令，用于连接远程主机时传输用户密码。
 
 ## 补充：切换DataKit后台数据库
 
