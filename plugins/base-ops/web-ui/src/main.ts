@@ -18,6 +18,8 @@ import '@/api/interceptor'
 import '@arco-design/web-vue/dist/arco.less'
 import '@/assets/style/global.less'
 
+import '@/utils/vue-echarts-polyfill'
+
 const app = createApp(App)
 
 app.use(ArcoVue, {})
