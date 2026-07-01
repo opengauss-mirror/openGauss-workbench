@@ -4,7 +4,7 @@ sections:
   - label: 概述
     href: ./datakit.md
   - label: MySQL数据迁移
-    href: ./datakit_data_migration.md
+    href: ./datakit_mysql_migration.md
   - label: PostgreSQL数据迁移
     href: ./datakit_postgresql_migration.md
   - label: Elasticsearch和Milvus数据迁移
