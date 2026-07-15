@@ -28,6 +28,8 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 
+import org.opengauss.admin.common.core.dto.ops.OpsJdbcClusterImportDto;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -51,6 +53,26 @@ public class JdbcDbClusterImportAnalysisVO {
         jdbcDbClusterImportAnalysisVO.setSuccNum(jdbcDbClusterImportAnalysisVO.getTotal() - jdbcDbClusterImportAnalysisVO.getFailNum());
         jdbcDbClusterImportAnalysisVO.setFailDetail(failDetailList);
         return jdbcDbClusterImportAnalysisVO;
+    }
+
+    /**
+     * Generate jdbc db cluster import analysis vo
+     *
+     * @param importDtoList ops jdbc db cluster import dto list
+     * @return instance of JdbcDbClusterImportAnalysisVO
+     */
+    public static JdbcDbClusterImportAnalysisVO of(List<OpsJdbcClusterImportDto> importDtoList) {
+        JdbcDbClusterImportAnalysisVO analysisVO = new JdbcDbClusterImportAnalysisVO();
+        List<OpsJdbcClusterImportDto> errorImportDtoList = importDtoList.stream()
+                .filter(OpsJdbcClusterImportDto::hasError).toList();
+        analysisVO.setTotal(importDtoList.size());
+        analysisVO.setFailNum(errorImportDtoList.size());
+        analysisVO.setSuccNum(analysisVO.getTotal() - analysisVO.getFailNum());
+
+        analysisVO.setFailDetail(errorImportDtoList.stream().map((importDto) -> {
+            return JdbcErrorVO.of(importDto.getClusterName(), importDto.generateJdbcUrl(), importDto.getErrorMsg());
+        }).toList());
+        return analysisVO;
     }
 
     private static Integer count(List<JdbcDbClusterInputDto> errorCluster, List<JdbcErrorVO> failDetailList) {

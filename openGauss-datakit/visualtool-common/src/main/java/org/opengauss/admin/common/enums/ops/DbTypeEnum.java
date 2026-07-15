@@ -28,6 +28,8 @@ import cn.hutool.core.util.StrUtil;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.Locale;
+
 /**
  * @author lhf
  * @date 2023/1/13 11:00
@@ -35,14 +37,16 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum DbTypeEnum {
-    MYSQL("com.mysql.cj.jdbc.Driver"),
-    OPENGAUSS("org.opengauss.Driver"),
-    POSTGRESQL("org.postgresql.Driver"),
-    MILVUS(null),
-    ELASTICSEARCH(null),
+    MYSQL("com.mysql.cj.jdbc.Driver", "jdbc:mysql://%s:%d/%s", "mysql"),
+    OPENGAUSS("org.opengauss.Driver", "jdbc:opengauss://%s:%d/%s", "postgres"),
+    POSTGRESQL("org.postgresql.Driver", "jdbc:postgresql://%s:%d/%s", "postgres"),
+    MILVUS(null, null, null),
+    ELASTICSEARCH(null, null, null),
     ;
 
     private String driverClass;
+    private String jdbcUrlFormat;
+    private String defaultConnectDb;
 
     /**
      * Get driver class
@@ -76,5 +80,19 @@ public enum DbTypeEnum {
             }
         }
         return null;
+    }
+
+    /**
+     * Generate JDBC URL
+     *
+     * @param ip host ip
+     * @param port database port
+     * @return JDBC URL
+     */
+    public String generateJdbcUrl(String ip, Integer port) {
+        if (isJdbcDriver()) {
+            return String.format(Locale.ROOT, jdbcUrlFormat, ip, port, defaultConnectDb);
+        }
+        throw new UnsupportedOperationException("DbTypeEnum " + name() + " does not support generate jdbc url");
     }
 }

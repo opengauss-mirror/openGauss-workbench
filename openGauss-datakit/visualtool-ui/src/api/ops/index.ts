@@ -237,7 +237,9 @@ export const hasNameAZ = (data: KeyValue) => {
 // jdbc
 
 export const downloadTemplate = () => {
-  return axios.get('jdbcDbCluster/downloadTemplate')
+  return axios.get('jdbcDbCluster/downloadTemplate', {
+    responseType: 'blob', headers: { 'Content-Type': 'application/json;application/octet-stream' }
+  })
 }
 
 export const jdbcPage = (query: any) => {
