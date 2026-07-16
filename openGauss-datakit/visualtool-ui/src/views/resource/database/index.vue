@@ -14,7 +14,7 @@
                 action=""
                 :before-upload="beforeUpload"
                 :show-file-list="false"
-                accept=".csv"
+                accept=".xlsx"
               >
                 <el-button type="primary">
                   <el-icon><Upload /></el-icon>
@@ -301,12 +301,12 @@ const handleUpload = (fileObj: any) => {
   const index2 = fileObj.name.length
   const type = fileObj.name.substring(index1, index2)
   let flag = true
-  const file6 = '.csv'
+  const file6 = '.xlsx'
   if (file6 !== type) {
     flag = false
   }
   if (!flag) {
-    showMessage('error', 'Only.csv files can be uploaded. Upload the files again')
+    showMessage('error', 'Only .xlsx files can be uploaded. Upload the files again')
     return
   } else {
     const data = new FormData()
@@ -363,13 +363,13 @@ const downloadTemp = () => {
   downloadTemplate().then((res: any) => {
     if (res) {
       const blob = new Blob([res], {
-        type: 'text/plain'
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       })
       const a = document.createElement('a')
       const URL = window.URL || window.webkitURL
       const herf = URL.createObjectURL(blob)
       a.href = herf
-      a.download = 'jdbc-template.csv'
+      a.download = 'jdbc-template.xlsx'
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)

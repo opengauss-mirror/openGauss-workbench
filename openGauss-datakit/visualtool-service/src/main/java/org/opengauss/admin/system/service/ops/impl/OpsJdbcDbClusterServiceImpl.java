@@ -24,14 +24,15 @@
 
 package org.opengauss.admin.system.service.ops.impl;
 
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.core.domain.entity.ops.OpsJdbcDbClusterEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsJdbcDbClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterImportAnalysisVO;
@@ -40,28 +41,28 @@ import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterNodeIn
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcDbClusterVO;
 import org.opengauss.admin.common.core.domain.model.ops.jdbc.JdbcInfo;
+import org.opengauss.admin.common.core.dto.ops.OpsJdbcClusterDto;
+import org.opengauss.admin.common.core.dto.ops.OpsJdbcClusterImportDto;
 import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.common.enums.ops.DeployTypeEnum;
 import org.opengauss.admin.common.exception.ops.OpsException;
-import org.opengauss.admin.system.utils.MysqlUtils;
-import org.opengauss.admin.system.utils.OpengaussUtils;
-import org.opengauss.admin.system.utils.PostgresqlUtils;
 import org.opengauss.admin.common.utils.StringUtils;
+import org.opengauss.admin.common.utils.excel.OpsJdbcClusterImportListener;
 import org.opengauss.admin.common.utils.ops.JdbcUtil;
 import org.opengauss.admin.system.mapper.ops.OpsJdbcDbClusterMapper;
 import org.opengauss.admin.system.service.ops.IHostService;
 import org.opengauss.admin.system.service.ops.IOpsJdbcDbClusterNodeService;
 import org.opengauss.admin.system.service.ops.IOpsJdbcDbClusterService;
+import org.opengauss.admin.system.utils.MysqlUtils;
+import org.opengauss.admin.system.utils.OpengaussUtils;
+import org.opengauss.admin.system.utils.PostgresqlUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -70,7 +71,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -137,151 +137,189 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
 
     @Override
     public JdbcDbClusterImportAnalysisVO importAnalysis(MultipartFile file) {
-        List<JdbcDbClusterInputDto> jdbcDbClusterInputDto = null;
         try {
-            jdbcDbClusterInputDto = parseCSV(file);
-        } catch (Exception e) {
-            String msg = "The content of the file is malformed";
-
-            if (e instanceof OpsException) {
-                msg = msg + " : " + e.getMessage();
+            List<OpsJdbcClusterImportDto> importDtoList = EasyExcel
+                    .read(file.getInputStream(), OpsJdbcClusterImportDto.class, new OpsJdbcClusterImportListener())
+                    .sheet()
+                    .doReadSync();
+            if (CollUtil.isEmpty(importDtoList)) {
+                throw new OpsException("Import jdbc cluster read from the file are empty");
             }
 
-            log.error(msg, e);
-            throw new OpsException(msg);
+            parseImportData(importDtoList);
+            return JdbcDbClusterImportAnalysisVO.of(importDtoList);
+        } catch (IOException e) {
+            log.error("Failed to parse jdbc cluster import file", e);
+            throw new OpsException("Failed to parse jdbc cluster import file, exception: " + e.getClass().getName()
+                    + ", message: " + e.getMessage());
         }
-
-        List<JdbcDbClusterInputDto> jdbcDbClusterInputDtos = analysisWrongNodes(jdbcDbClusterInputDto);
-        return JdbcDbClusterImportAnalysisVO.of(jdbcDbClusterInputDto, jdbcDbClusterInputDtos);
-    }
-
-    private List<JdbcDbClusterInputDto> analysisWrongNodes(List<JdbcDbClusterInputDto> jdbcDbClusterInputDto) {
-        List<JdbcDbClusterInputDto> wrongClusters = new ArrayList<>();
-
-        for (JdbcDbClusterInputDto dbClusterInputDto : jdbcDbClusterInputDto) {
-            boolean clusterWrong = false;
-            DeployTypeEnum deployType = dbClusterInputDto.getDeployType();
-            if (Objects.isNull(deployType)) {
-                if (clusterWrong) {
-                    dbClusterInputDto.setRemark(dbClusterInputDto.getRemark() + "，deployType not null");
-                } else {
-                    dbClusterInputDto.setRemark("deployType not null");
-                }
-                clusterWrong = true;
-            }
-
-            List<JdbcDbClusterNodeInputDto> nodes = dbClusterInputDto.getNodes();
-            if (CollUtil.isEmpty(nodes)) {
-                if (clusterWrong) {
-                    dbClusterInputDto.setRemark(dbClusterInputDto.getRemark() + "，Cluster node cannot be empty");
-                } else {
-                    dbClusterInputDto.setRemark("Cluster node cannot be empty");
-                }
-                clusterWrong = true;
-            }
-
-            for (JdbcDbClusterNodeInputDto node : nodes) {
-                boolean nodeWrong = false;
-//                String name = node.getName();
-//                if (StrUtil.isEmpty(name)) {
-//                    if (nodeWrong) {
-//                        node.setRemark(node.getRemark() + "，Node name cannot be empty");
-//                    } else {
-//                        node.setRemark("Node name cannot be empty");
-//                    }
-//
-//                    nodeWrong = true;
-//                }
-
-                String url = node.getUrl();
-                try {
-                    JdbcInfo jdbcInfo = JdbcUtil.parseUrl(url);
-                    if (Objects.isNull(jdbcInfo)) {
-                        throw new OpsException("parsing url failed");
-                    }
-
-                    if (Objects.isNull(jdbcInfo.getDbType())) {
-                        throw new OpsException("wrong database type");
-                    }
-
-                    if (StrUtil.isEmpty(jdbcInfo.getIp())) {
-                        throw new OpsException("wrong ip");
-                    }
-
-                    if (StrUtil.isEmpty(jdbcInfo.getPort())) {
-                        throw new OpsException("wrong port");
-                    }
-
-                    OpsJdbcDbClusterNodeEntity clusterNodeByIpAndPort = opsJdbcDbClusterNodeService
-                            .getClusterNodeByIpAndPort(jdbcInfo.getIp(), jdbcInfo.getPort(), node.getUsername());
-                    if (Objects.nonNull(clusterNodeByIpAndPort)) {
-                        throw new OpsException("The current instance node already exists in other clusters");
-                    }
-                } catch (Exception e) {
-                    String msg = "";
-                    if (e instanceof OpsException) {
-                        msg = e.getMessage();
-                    } else {
-                        msg = "parsing url error";
-                    }
-                    if (nodeWrong) {
-                        node.setRemark(node.getRemark() + "，" + msg);
-                    } else {
-                        node.setRemark(msg);
-                    }
-                    nodeWrong = true;
-                }
-
-                String username = node.getUsername();
-                if (StrUtil.isEmpty(username)) {
-                    if (nodeWrong) {
-                        node.setRemark(node.getRemark() + "，username is empty");
-                    } else {
-                        node.setRemark("username is empty");
-                    }
-                    nodeWrong = true;
-                }
-
-                String password = node.getPassword();
-                if (StrUtil.isEmpty(password)) {
-                    if (nodeWrong) {
-                        node.setRemark(node.getRemark() + "，password is empty");
-                    } else {
-                        node.setRemark("password is empty");
-                    }
-                    nodeWrong = true;
-                }
-
-                clusterWrong |= nodeWrong;
-            }
-
-            if (clusterWrong) {
-                wrongClusters.add(dbClusterInputDto);
-            }
-        }
-
-        return wrongClusters;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void importCluster(MultipartFile file) {
-        List<JdbcDbClusterInputDto> jdbcDbClusterInputDto = null;
         try {
-            jdbcDbClusterInputDto = parseCSV(file);
-        } catch (Exception e) {
-            log.error("The content of the file is malformed", e);
-            throw new OpsException("The content of the file is malformed");
+            List<OpsJdbcClusterImportDto> importDtoList = EasyExcel
+                    .read(file.getInputStream(), OpsJdbcClusterImportDto.class, new OpsJdbcClusterImportListener())
+                    .sheet()
+                    .doReadSync();
+            if (CollUtil.isEmpty(importDtoList)) {
+                throw new OpsException("Import jdbc cluster read from the file are empty");
+            }
+
+            List<OpsJdbcClusterDto> opsJdbcClusterDtoList = parseImportData(importDtoList);
+            if (importDtoList.stream().anyMatch(OpsJdbcClusterImportDto::hasError)) {
+                throw new OpsException("Failed to import jdbc cluster, import records have errors. "
+                        + "Please call importAnalysis first.");
+            }
+
+            for (OpsJdbcClusterDto opsJdbcClusterDto : opsJdbcClusterDtoList) {
+                OpsJdbcDbClusterEntity clusterEntity = opsJdbcClusterDto.getClusterEntity();
+                Date now = new Date();
+                clusterEntity.setCreateTime(now);
+                clusterEntity.setUpdateTime(now);
+                save(clusterEntity);
+
+                List<OpsJdbcDbClusterNodeEntity> clusterNodeEntityList = opsJdbcClusterDto.getClusterNodeEntityList();
+                for (OpsJdbcDbClusterNodeEntity clusterNodeEntity : clusterNodeEntityList) {
+                    clusterNodeEntity.setClusterId(clusterEntity.getClusterId());
+                    clusterNodeEntity.setCreateTime(now);
+                    clusterNodeEntity.setUpdateTime(now);
+                }
+                opsJdbcDbClusterNodeService.saveBatch(clusterNodeEntityList);
+            }
+        } catch (IOException e) {
+            log.error("Failed to parse jdbc cluster import file", e);
+            throw new OpsException("Failed to parse jdbc cluster import file, exception: " + e.getClass().getName()
+                    + ", message: " + e.getMessage());
+        }
+    }
+
+    private List<OpsJdbcClusterDto> parseImportData(List<OpsJdbcClusterImportDto> importDtoList) {
+        Map<String, OpsJdbcClusterImportDto> ipPortUsernameMap = new HashMap<>();
+        Map<String, List<OpsJdbcClusterImportDto>> groupByClusterName = new HashMap<>();
+        for (OpsJdbcClusterImportDto dto : importDtoList) {
+            if (dto.hasError()) {
+                continue;
+            } else {
+                dto.setPassword(encryptionUtils.encrypt(dto.getPassword()));
+            }
+
+            String key = generateKey(dto.getIp(), dto.getPort(), dto.getUsername());
+            if (ipPortUsernameMap.containsKey(key)) {
+                dto.setErrorMsg("Multiple records with the same 'Node IP, Port, Username' cannot be imported");
+                continue;
+            } else {
+                ipPortUsernameMap.put(key, dto);
+            }
+
+            if (groupByClusterName.containsKey(dto.getClusterName())) {
+                if (dto.getDbType().equals(groupByClusterName.get(dto.getClusterName()).get(0).getDbType())) {
+                    groupByClusterName.get(dto.getClusterName()).add(dto);
+                } else {
+                    dto.setErrorMsg("Database type must be the same for all records with the same cluster name");
+                }
+            } else {
+                List<OpsJdbcClusterImportDto> sameClusterNameImportDtoList = new ArrayList<>();
+                sameClusterNameImportDtoList.add(dto);
+                groupByClusterName.put(dto.getClusterName(), sameClusterNameImportDtoList);
+            }
         }
 
-        List<JdbcDbClusterInputDto> wrongClusters = analysisWrongNodes(jdbcDbClusterInputDto);
-        if (CollUtil.isNotEmpty(wrongClusters)) {
-            throw new OpsException("There are " + wrongClusters.size() + " errors in the file content, please re-import after processing");
+        checkClusterNameDuplicateInDb(groupByClusterName);
+        checkIpPortUsernameDuplicateInDb(ipPortUsernameMap);
+
+        List<OpsJdbcClusterDto> opsJdbcClusterDtoList = new ArrayList<>();
+        if (importDtoList.stream().noneMatch(OpsJdbcClusterImportDto::hasError)) {
+            groupByClusterName.forEach((key, value) -> {
+                opsJdbcClusterDtoList.add(generateOpsJdbcClusterDto(value));
+            });
+        }
+        return opsJdbcClusterDtoList;
+    }
+
+    private void checkIpPortUsernameDuplicateInDb(Map<String, OpsJdbcClusterImportDto> ipPortUsernameMap) {
+        if (ipPortUsernameMap.isEmpty()) {
+            return;
+        }
+        LambdaQueryWrapper<OpsJdbcDbClusterNodeEntity> nodeQueryWrapper = new LambdaQueryWrapper<>();
+        nodeQueryWrapper.select(OpsJdbcDbClusterNodeEntity::getIp, OpsJdbcDbClusterNodeEntity::getPort,
+                OpsJdbcDbClusterNodeEntity::getUsername);
+        List<OpsJdbcDbClusterNodeEntity> clusterNodeEntityList = opsJdbcDbClusterNodeService.list(nodeQueryWrapper);
+        if (CollUtil.isNotEmpty(clusterNodeEntityList)) {
+            for (OpsJdbcDbClusterNodeEntity nodeEntity : clusterNodeEntityList) {
+                String key = generateKey(nodeEntity.getIp(), nodeEntity.getPort(), nodeEntity.getUsername());
+                if (ipPortUsernameMap.containsKey(key)) {
+                    ipPortUsernameMap.get(key).setErrorMsg("The cluster node with the same 'Node IP, Port, Username' "
+                            + "already exists in other clusters.");
+                }
+            }
+        }
+    }
+
+    private void checkClusterNameDuplicateInDb(Map<String, List<OpsJdbcClusterImportDto>> groupByClusterName) {
+        if (groupByClusterName.isEmpty()) {
+            return;
+        }
+        List<String> clusterNameList = groupByClusterName.keySet().stream().toList();
+        LambdaQueryWrapper<OpsJdbcDbClusterEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(OpsJdbcDbClusterEntity::getName, clusterNameList);
+        List<OpsJdbcDbClusterEntity> clusterEntityList = list(queryWrapper);
+        if (CollUtil.isNotEmpty(clusterEntityList)) {
+            clusterEntityList.forEach((clusterEntity) -> {
+                groupByClusterName.get(clusterEntity.getName()).forEach((dto) -> {
+                    dto.setErrorMsg("The cluster with the same name '" + clusterEntity.getName()
+                            + "' has already been managed.");
+                });
+            });
+        }
+    }
+
+    private String generateKey(String ip, String port, String username) {
+        return ip + ":" + port + ":" + username;
+    }
+
+    private OpsJdbcClusterDto generateOpsJdbcClusterDto(List<OpsJdbcClusterImportDto> importDtoList) {
+        OpsJdbcDbClusterEntity clusterEntity = new OpsJdbcDbClusterEntity();
+        clusterEntity.setName(importDtoList.get(0).getClusterName());
+        clusterEntity.setDbType(importDtoList.get(0).getDbType());
+
+        String version;
+        OpsJdbcDbClusterNodeEntity nodeEntity;
+        boolean isVersionDiff = false;
+        List<OpsJdbcDbClusterNodeEntity> nodeEntityList = new ArrayList<>();
+        for (OpsJdbcClusterImportDto importDto : importDtoList) {
+            nodeEntity = importDto.convertToOpsJdbcClusterNodeEntity();
+            nodeEntityList.add(nodeEntity);
+
+            try {
+                version = getClusterVersionNum(importDto.getDbType(), nodeEntity.getUrl(), nodeEntity.getUsername(),
+                        nodeEntity.getPassword());
+                if (isVersionDiff) {
+                    importDto.setErrorMsg("Version number must be the same for all records with the same cluster name");
+                    continue;
+                }
+
+                if (clusterEntity.getVersionNum() == null) {
+                    clusterEntity.setVersionNum(version);
+                    continue;
+                }
+
+                if (!clusterEntity.getVersionNum().equals(version)) {
+                    isVersionDiff = true;
+                    importDto.setErrorMsg("Version number must be the same for all records with the same cluster name");
+                }
+            } catch (OpsException e) {
+                importDto.setErrorMsg(e.getMessage());
+            }
         }
 
-        for (JdbcDbClusterInputDto dbClusterInputDto : jdbcDbClusterInputDto) {
-            add(dbClusterInputDto);
+        if (importDtoList.size() == 1) {
+            clusterEntity.setDeployType(DeployTypeEnum.SINGLE_NODE);
+        } else {
+            clusterEntity.setDeployType(DeployTypeEnum.CLUSTER);
         }
+        return new OpsJdbcClusterDto(clusterEntity, nodeEntityList);
     }
 
     @Override
@@ -427,118 +465,6 @@ public class OpsJdbcDbClusterServiceImpl extends ServiceImpl<OpsJdbcDbClusterMap
             jdbcDbClusterVos.add(JdbcDbClusterVO.of(cluster, nodes));
         }
         return jdbcDbClusterVos;
-    }
-
-    @Data
-    @AllArgsConstructor
-    class Cluster {
-        private String name;
-        private String deployType;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Cluster cluster = (Cluster) o;
-
-            return name.equals(cluster.name);
-        }
-
-        @Override
-        public int hashCode() {
-            return name.hashCode();
-        }
-    }
-
-    @Data
-    @AllArgsConstructor
-    class ClusterNode {
-        private String name;
-        private String url;
-        private String username;
-        private String password;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            ClusterNode that = (ClusterNode) o;
-
-            return url != null ? url.equals(that.url) : that.url == null;
-        }
-
-        @Override
-        public int hashCode() {
-            return url != null ? url.hashCode() : 0;
-        }
-    }
-
-    private List<JdbcDbClusterInputDto> parseCSV(MultipartFile file) {
-        List<JdbcDbClusterInputDto> clusterList = new ArrayList<>();
-        Map<Cluster, Set<ClusterNode>> clusterListMap = new HashMap<>();
-        Integer lineNum = 0;
-        try (InputStream inputStream = file.getInputStream(); final InputStreamReader inputStreamReader = new InputStreamReader(inputStream); BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
-            String line = null;
-            while ((line = bufferedReader.readLine()) != null) {
-                if (0 == lineNum++) {
-                    continue;
-                }
-
-                String[] col = line.split(",");
-                if (col.length != 4) {
-                    throw new OpsException("The data in row " + lineNum + " is wrong");
-                } else {
-                    if (StrUtil.isEmpty(col[0].trim()) && StrUtil.isEmpty(col[1].trim()) && StrUtil.isEmpty(col[2].trim()) && StrUtil.isEmpty(col[3].trim())) {
-                        continue;
-                    }
-
-                    Cluster thatCluster = new Cluster(col[0], null);
-                    ClusterNode thatClusterNode = new ClusterNode(null, col[1], col[2], col[3]);
-
-                    Set<ClusterNode> clusterNodes = clusterListMap.get(thatCluster);
-                    if (Objects.isNull(clusterNodes)) {
-                        clusterNodes = new HashSet<>();
-                        clusterListMap.put(thatCluster, clusterNodes);
-                    }
-
-                    clusterNodes.add(thatClusterNode);
-                }
-            }
-        } catch (IOException e) {
-            throw new OpsException("Failed to read zone file contents");
-        }
-
-        if (CollUtil.isNotEmpty(clusterListMap)) {
-            clusterListMap.forEach((cluster, nodes) -> {
-                List<JdbcDbClusterNodeInputDto> clusterNodes = new ArrayList<>();
-                for (ClusterNode node : nodes) {
-                    clusterNodes.add(JdbcDbClusterNodeInputDto.of(node.getName(), node.getUrl(), node.getUsername(), node.getPassword()));
-                }
-
-                JdbcDbClusterInputDto inputDto = JdbcDbClusterInputDto.of(cluster.getName(), DeployTypeEnum.nameOf(cluster.getDeployType()));
-                inputDto.setNodes(clusterNodes);
-                clusterList.add(inputDto);
-            });
-        }
-
-        if (CollUtil.isEmpty(clusterList)) {
-            throw new OpsException("The cluster content read from the file is empty");
-        }
-
-        for (JdbcDbClusterInputDto inputDto : clusterList) {
-            DeployTypeEnum deployType = inputDto.getDeployType();
-            if (Objects.isNull(deployType)) {
-                List<JdbcDbClusterNodeInputDto> nodes = inputDto.getNodes();
-                if (CollUtil.isEmpty(nodes) || nodes.size() < 2) {
-                    inputDto.setDeployType(DeployTypeEnum.SINGLE_NODE);
-                } else {
-                    inputDto.setDeployType(DeployTypeEnum.CLUSTER);
-                }
-            }
-        }
-        return clusterList;
     }
 
     private List<JdbcDbClusterVO> buildPageRecords(List<OpsJdbcDbClusterEntity> records) {
