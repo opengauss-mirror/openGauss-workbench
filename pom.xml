@@ -57,12 +57,12 @@
         <prometheus.version>1.15.0</prometheus.version>
         <hutool.version>5.8.43</hutool.version>
         <hutool.lower.version>5.7.17</hutool.lower.version>
-        <log4j2.version>2.25.3</log4j2.version>
+        <log4j2.version>2.25.5</log4j2.version>
         <disruptor.version>4.0.0</disruptor.version>
         <opentelemetry.version>1.44.1</opentelemetry.version>
         <oshi.version>6.4.6</oshi.version>
         <slf4j.version>1.7.36</slf4j.version>
-        <jackson.version>2.20.1</jackson.version>
+        <jackson.version>2.21.5</jackson.version>
         <fastjson.version>1.2.83</fastjson.version>
         <istack-commons-runtime.version>3.0.6</istack-commons-runtime.version>
         <mockito.version>5.2.0</mockito.version>

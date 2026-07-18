@@ -65,7 +65,7 @@
     "vue-tsc": "^1.8.0"
   },
   "overrides": {
-    "js-yaml": "4.2.0",
+    "js-yaml": "4.3.0",
     "follow-redirects": "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.16.0.tgz",
     "decode-uri-component": "0.2.2",
     "brace-expansion": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.0.3.tgz",
@@ -73,7 +73,7 @@
     "picomatch": "https://registry.npmjs.org/picomatch/-/picomatch-2.3.2.tgz",
     "postcss": "https://registry.npmjs.org/postcss/-/postcss-8.5.10.tgz",
     "uuid": "14.0.0",
-    "immutable": "4.3.7",
+    "immutable": "4.3.9",
     "axios": "https://registry.npmjs.org/axios/-/axios-1.15.1.tgz",
     "form-data": "4.0.4",
     "proxy-from-env": "https://registry.npmjs.org/proxy-from-env/-/proxy-from-env-2.1.0.tgz"
