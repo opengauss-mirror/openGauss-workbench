@@ -202,7 +202,7 @@
               <el-form-item :label="t('transcribe.create.targetdb')" prop="targetDBName" label-position="left"
                             :rules="[{ required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change'] }]">
                 <el-select v-model="taskBasicInfo.subTaskData[curTableTabs].targetDBName"
-                           :placeholder="t('transcribe.create.sourcedb')" filterable class="select-width"
+                           :placeholder="t('transcribe.create.targetdb')" filterable class="select-width"
                            :teleported="false"
                            :rules="[{ required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change'] }]">
                   <el-option v-for="option in targetDBOptions" :key="option.key" :label="option.key"
@@ -220,6 +220,16 @@
                     </el-icon>
                   </i>
                 </el-tooltip>
+                <div style="width: 100%">
+                  {{ $t('step1.index.targetDbPromptPart1') }}
+                  <span>{{ getTargetDbSqlCompatibility(taskBasicInfo.subTaskData[curTableTabs].sourceDbType) }}</span>
+                  {{ $t('step1.index.targetDbPromptPart2') }}
+                  <el-link type="primary"
+                           :href="t('step1.index.sqlCompatibilityDoc')"
+                           target="_blank">
+                    {{ t('step1.index.sqlCompatibility') }}
+                  </el-link>
+                </div>
               </el-form-item>
               <h4>{{ $t('step1.index.migrationSet') }}</h4>
               <div v-if="shouldShowDbColumn">
@@ -611,6 +621,16 @@ const changeSourceType = (type?: string) => {
       formRef.clearValidate()
     }
   }, 10)
+}
+
+const getTargetDbSqlCompatibility = (dbType: string) => {
+  const typeMap: Record<string, string> = {
+    [JDBCType.MySQL]: 'B',
+    [JDBCType.PostgreSQL]: 'PG',
+    [JDBCType.Milvus]: 'A',
+    [JDBCType.Elasticsearch]: 'A',
+  }
+  return typeMap[dbType] || 'A'
 }
 
 const taskNameFormRef = ref<InstanceType<typeof ElForm> | null>(null)
