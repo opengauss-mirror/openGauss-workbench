@@ -6,7 +6,6 @@ package org.opengauss.admin.plugin.portal;
 
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 
-import cn.hutool.core.collection.CollUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,7 +23,6 @@ import org.opengauss.admin.plugin.enums.PortalInstallType;
 import org.opengauss.admin.plugin.enums.PortalType;
 import org.opengauss.admin.plugin.enums.PortalVersion;
 import org.opengauss.admin.plugin.exception.PortalInstallException;
-import org.opengauss.admin.plugin.exception.ShellException;
 import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
 import org.opengauss.admin.plugin.service.MigrationToolPortalDownloadInfoService;
@@ -48,7 +46,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * MULTI_DB portal installer
@@ -203,8 +200,7 @@ public class MultiDbPortalInstaller {
                 installLog.append(checkResult).append(System.lineSeparator());
                 installLog.append("END_CHECK_INSTALL").append(System.lineSeparator());
 
-                String installSuccessMsg = "All migration tools are already installed";
-                if (checkResult != null && checkResult.contains(installSuccessMsg)) {
+                if (isInstallSuccess(checkResult)) {
                     isInstallSuccess = true;
                     log.info("Install portal successfully");
                     loadToolParams(installInfo);
@@ -220,6 +216,21 @@ public class MultiDbPortalInstaller {
                 printInstallPortalLog(installInfo, installLog.toString());
             }
         });
+    }
+
+    private boolean isInstallSuccess(String checkResult) {
+        if (checkResult == null) {
+            return false;
+        }
+
+        List<String> successMessages = List.of(
+                "FullReplicateTool is already installed",
+                "MilvusMigrationTool is already installed",
+                "ElasticsearchMigrationTool is already installed",
+                "Debezium is already installed",
+                "Kafka is already installed"
+        );
+        return successMessages.stream().allMatch(checkResult::contains);
     }
 
     private void searchJarPackage(MigrationHostPortalInstall installInfo) {
@@ -268,7 +279,6 @@ public class MultiDbPortalInstaller {
                     throw new PortalInstallException("Invalid install type: " + installInfo.getInstallType());
                 }
 
-                checkPortalDependencies(installInfo, installLog);
                 isInstallSuccess = installPortal(installInfo, installLog);
                 if (isInstallSuccess) {
                     log.info("Install portal successfully");
@@ -316,23 +326,16 @@ public class MultiDbPortalInstaller {
                     + "expected name: " + jarName + " but not found");
         }
 
-        String installDependenciesCommand = String.format("cd %s && java -jar %s --install dependencies",
-                portalHome, jarName);
-        JschResult dependResult = ShellUtil.execCommandGetResult(shellInfo, installDependenciesCommand, 60000);
-        installLog.append("START_INSTALL_PORTAL_DEPENDENCIES").append(System.lineSeparator());
-        installLog.append(dependResult.getResult()).append(System.lineSeparator());
-        installLog.append("END_INSTALL_PORTAL_DEPENDENCIES").append(System.lineSeparator());
-        log.info("Install portal dependencies result: {}", dependResult.getResult());
-
         installLog.append("START_INSTALL_PORTAL").append(System.lineSeparator());
-        String installCommand = String.format("cd %s && java -jar %s --install tools", portalHome, jarName);
+        String installCommand = String.format("cd %s && java -jar %s --install full_replicate milvus_migration_tool "
+                + "elasticsearch_migration_tool debezium kafka", portalHome, jarName);
         JschResult jschResult = ShellUtil.execCommandGetResult(shellInfo, installCommand, 600000);
         String installResult = jschResult.getResult();
         installLog.append(installResult).append(System.lineSeparator());
         installLog.append("END_INSTALL_PORTAL").append(System.lineSeparator());
         log.info("Install portal result: {}", installResult);
 
-        String installSuccessMsg = "Install all migration tools successfully";
+        String installSuccessMsg = "Install command execute done";
         return installResult != null && installResult.contains(installSuccessMsg);
     }
 
@@ -380,43 +383,6 @@ public class MultiDbPortalInstaller {
             throw new PortalInstallException("Upload portal failed: " + e.getMessage());
         }
         return result;
-    }
-
-    private void checkPortalDependencies(MigrationHostPortalInstall installInfo, StringBuilder installLog) {
-        installLog.append("START_CHECK_PORTAL_DEPENDENCIES").append(System.lineSeparator());
-        List<String> dependencies = List.of("mysql-devel", "mysql5-devel", "mariadb-devel", "python3-devel",
-                "python-devel");
-
-        ShellInfoVo shellInfo = createShellInfo(installInfo);
-        List<String> missingDependencies = ShellUtil.checkDependencies(shellInfo, dependencies);
-        if (CollUtil.isNotEmpty(missingDependencies)) {
-            installLog.append("miss dependencies:").append(missingDependencies).append(System.lineSeparator());
-        } else {
-            installLog.append("all dependencies are installed").append(System.lineSeparator());
-            ;
-            installLog.append("END_CHECK_PORTAL_DEPENDENCIES").append(System.lineSeparator());
-            return;
-        }
-
-        OpsHostUserEntity rootUser = hostUserFacade.getRootUserByHostId(installInfo.getRunHostId());
-        if (Objects.isNull(rootUser)) {
-            log.warn("host {} does not have root permission, to install dependencies:{} ,",
-                    installInfo.getRunHostId(), dependencies);
-            installLog.append("no root permission, to install dependencies:").append(dependencies);
-            installLog.append("END_CHECK_PORTAL_DEPENDENCIES").append(System.lineSeparator());
-            return;
-        }
-
-        ShellInfoVo rootShellInfo = new ShellInfoVo(installInfo.getHost(), installInfo.getPort(),
-                rootUser.getUsername(), encryptionUtils.decrypt(rootUser.getPassword()));
-        try {
-            ShellUtil.installDependencies(rootShellInfo, missingDependencies);
-        } catch (ShellException e) {
-            String logInfo = "Install portal dependencies failed, error message: " + e.getMessage();
-            log.error(logInfo);
-            installLog.append(logInfo).append(System.lineSeparator());
-        }
-        installLog.append("END_CHECK_PORTAL_DEPENDENCIES").append(System.lineSeparator());
     }
 
     private void preinstall(MigrationHostPortalInstall installInfo) {
