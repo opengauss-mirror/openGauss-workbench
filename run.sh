@@ -88,7 +88,7 @@ start_up() {
     JAVA_OPTS=${JAVA_OPTS:-$DEFAULT_JAVA_OPTS}
     echo "Starting ${APP_NAME} with DATA_KIT_AES_KEY..."
     export DATA_KIT_AES_KEY=${DATA_KIT_AES_KEY}
-    nohup java ${JAVA_OPTS} -Dlog4j.configurationFile=./config/log4j2.xml -jar "${JAR_FILE}" --spring.profiles.active=temp > "${LOG_FILE}" 2>&1 &
+    nohup java ${JAVA_OPTS} -Dlog4j.configurationFile=./config/log4j2.xml -Dfile.encoding=UTF-8 -jar "${JAR_FILE}" --spring.profiles.active=temp > "${LOG_FILE}" 2>&1 &
 
     echo $! > "${PID_FILE}"
     echo "${APP_NAME} started. PID: $(cat ${PID_FILE})"
