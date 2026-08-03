@@ -4,7 +4,7 @@
 
 1. DataKit录制回放支持录制MySQL客户端的业务SQL，然后在openGauss端进行回放。回放结果会输出慢SQL信息和失败SQL信息。
 
-2. 录制回放工具具体介绍，请参考[录制回放工具](../data_migration_guide/workload_tool.md)。
+2. 录制回放工具具体介绍，请参考[录制回放工具](https://docs.opengauss.org/zh/docs/latest/characteristic_description/workload_tool.html)。
 
 > 使用前提条件：
 >
@@ -16,25 +16,25 @@
 
 点击【创建录制回放任务】进入创建页面。
 
-![录制回放1.png](figures/录制回放1.png)
+![录制回放1.png](figures/workload_replay1.png)
 
 填写源端和目标端数据库信息和配置项信息（配置项信息如果没有特别大的数据量，无需进行配置，使用默认值就好）。
 
-![录制回放2.png](figures/录制回放2.png)
+![录制回放2.png](figures/workload_replay2.png)
 
-![录制回放3.png](figures/录制回放3.png)
+![录制回放3.png](figures/workload_replay3.png)
 
 配置完成后点击【保存】即可。
 
-![录制回放4.png](figures/录制回放4.png)
+![录制回放4.png](figures/workload_replay4.png)
 
 记得配置ip地址对应的网卡名，之后点击【提交】，即可创建任务成功。
 
-![录制回放5.png](figures/录制回放5.png)
+![录制回放5.png](figures/workload_replay5.png)
 
 如图是创建的任务，状态是”未执行“。
 
-![录制回放6.png](figures/录制回放6.png)
+![录制回放6.png](figures/workload_replay6.png)
 
 点击【执行任务】，任务状态变为“执行中”，此时在源端执行的SQL都会被录制到并在目标端进行回放。
 
@@ -44,13 +44,13 @@
 
 具体录制操作和设置的参数有关，参数含义请参考上面的链接。
 
-![录制回放7.png](figures/录制回放7.png)
+![录制回放7.png](figures/workload_replay7.png)
 
-![录制回放8.png](figures/录制回放8.png)
+![录制回放8.png](figures/workload_replay8.png)
 
 点击任务名称可以查看录制回放结果，即“录制回放详情页面”（慢SQL、失败SQL、SQL在源端和目标端的耗时对比）。
 
-![录制回放9.png](figures/录制回放9.png)
+![录制回放9.png](figures/workload_replay9.png)
 
 ## 2.录制回放详情
 
@@ -58,12 +58,12 @@
 
 慢SQL展示归一化SQL语句、源端耗时、目的端耗时、出现次数。
 
-![录制回放12.png](figures/录制回放10.png)
+![录制回放12.png](figures/workload_replay10.png)
 
 失败SQL展示在目的端执行失败的SQL语句以及失败原因。
 
-![录制回放13.png](figures/录制回放11.png)
+![录制回放13.png](figures/workload_replay11.png)
 
 红色曲线代表源端数据库，绿色曲线代表目标端数据库，横坐标代表录制到的SQL的ID，纵坐标代表SQL执行耗时（单位：微秒）。
 
-![录制回放14.png](figures/录制回放12.png)
+![录制回放14.png](figures/workload_replay12.png)

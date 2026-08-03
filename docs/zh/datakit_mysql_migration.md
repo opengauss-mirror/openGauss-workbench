@@ -24,7 +24,7 @@
 
 登录DataKit页面，进入“插件管理”菜单，确认“数据迁移插件”已安装。如未安装，点击“安装插件”完成安装。
 
-![插件管理](.\figures\datakit_mysql_migration_plugin_manage.png)
+![插件管理](./figures/datakit_mysql_migration_plugin_manage.png)
 
 ### 安装Portal
 
@@ -34,15 +34,15 @@ Portal是数据迁移门户工具，负责执行迁移任务，需单独安装�
 
    在DataKit页面“资源中心”→“服务器管理”中添加服务器，添加时请使用拥有sudo免密权限的普通用户。Portal支持安装的服务器系统架构有：CentOS7 x86_64、openEuler20.03 x86_64、openEuler20.03 aarch64、openEuler22.03 x86_64、openEuler22.03 aarch64、openEuler24.03 x86_64、openEuler24.03 aarch64。
 
-   ![服务器管理](.\figures\datakit_mysql_migration_create_host.png)
+   ![服务器管理](./figures/datakit_mysql_migration_create_host.png)
 
-   ![添加服务器](.\figures\datakit_mysql_migration_edit_host_info.png)
+   ![添加服务器](./figures/datakit_mysql_migration_edit_host_info.png)
 
 2. **安装Portal**
 
    在“数据迁移”→“迁移工具管理”中选择已添加的服务器，点击“开始安装”。
 
-   ![安装portal](.\figures\datakit_mysql_migration_install_portal.png)
+   ![安装portal](./figures/datakit_mysql_migration_install_portal.png)
 
 > [!NOTE] 说明
 >
@@ -116,17 +116,17 @@ CREATE DATABASE target_db WITH DBCOMPATIBILITY = 'B' ENCODING = 'UTF8';
 
 在DataKit页面“资源中心”→“实例管理”中，添加源MySQL数据库和目标openGauss数据库。
 
-![添加实例](.\figures\datakit_mysql_migration_jdbc_cluster.png)
+![添加实例](./figures/datakit_mysql_migration_jdbc_cluster.png)
 
 ## 创建迁移任务
 
 在“数据迁移”→“迁移任务中心”中，点击“创建数据迁移任务”，按页面提示完成配置。
 
-![迁移任务中心](.\figures\datakit_mysql_migration_task_center.png)
+![迁移任务中心](./figures/datakit_mysql_migration_task_center.png)
 
-![创建迁移任务1](.\figures\datakit_mysql_migration_create_task_step1.png)
+![创建迁移任务1](./figures/datakit_mysql_migration_create_task_step1.png)
 
-![创建迁移任务2](.\figures\datakit_mysql_migration_create_task_step2.png)
+![创建迁移任务2](./figures/datakit_mysql_migration_create_task_step2.png)
 
 > [!TIP] 须知
 >
@@ -141,21 +141,21 @@ CREATE DATABASE target_db WITH DBCOMPATIBILITY = 'B' ENCODING = 'UTF8';
 
    在“迁移任务中心”选择任务，点击“启动”
 
-   ![启动任务](.\figures\datakit_mysql_migration_start_task.png)
+   ![启动任务](./figures/datakit_mysql_migration_start_task.png)
 
 2. **查看详情**
 
    点击已启动任务，可下拉查看详情，再次点击“子任务ID”可查看表级进度
 
-   ![任务详情1](.\figures\datakit_mysql_migration_task_detail1.png)
+   ![任务详情1](./figures/datakit_mysql_migration_task_detail1.png)
 
-   ![子任务详情](.\figures\datakit_mysql_migration_task_detail2.png)
+   ![子任务详情](./figures/datakit_mysql_migration_task_detail2.png)
 
 3. 前置校验失败
 
    若任务状态为“前置校验失败”，请参考目录**前置校验失败处理**，完成后点击“结束迁移”再点击“重置”即可重新启动任务。
 
-   ![前置校验失败](.\figures\datakit_mysql_migration_task_check_failed.png)
+   ![前置校验失败](./figures/datakit_mysql_migration_task_check_failed.png)
 
 ## 迁移阶段操作
 
@@ -163,19 +163,19 @@ CREATE DATABASE target_db WITH DBCOMPATIBILITY = 'B' ENCODING = 'UTF8';
 
 仅当任务包含增量迁移时涉及此操作。任务执行至增量阶段时，可在“迁移任务中心”或“子任务详情”页点击“停止增量”。
 
-![停止增量](.\figures\datakit_mysql_migration_stop_incremental.png)
+![停止增量](./figures/datakit_mysql_migration_stop_incremental.png)
 
 ### 启动反向迁移
 
 仅当任务包含反向迁移时涉及此操作。增量迁移停止成功后，可在“迁移任务中心”或“子任务详情”页点击“启动反向”。
 
-![启动反向](.\figures\datakit_mysql_migration_start_reverse.png)
+![启动反向](./figures/datakit_mysql_migration_start_reverse.png)
 
 ### 结束迁移任务
 
 在“迁移任务中心”选择已启动任务，点击“结束迁移”。
 
-![结束迁移](.\figures\datakit_mysql_migration_stop_task.png)
+![结束迁移](./figures/datakit_mysql_migration_stop_task.png)
 
 ---
 
