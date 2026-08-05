@@ -24,10 +24,20 @@
 
 package org.opengauss.admin.common.utils.ops;
 
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.ChannelShell;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpException;
+import com.jcraft.jsch.SftpProgressMonitor;
+
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.core.domain.model.ops.HostFile;
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
 import org.opengauss.admin.common.core.domain.model.ops.WsSession;
@@ -43,7 +53,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Vector;
 
 /**
  * Jsch Tools
@@ -388,11 +405,10 @@ public class JschUtil {
                               StringBuilder resultStrBuilder, OutputStream out) {
         if (CollUtil.isNotEmpty(autoResponse)) {
             autoResponse.forEach((k, v) -> {
-                if (resultStrBuilder.toString().trim().endsWith(k.trim())) {
+                if (resultStrBuilder.toString().replaceAll("\r?\n", "").trim().endsWith(k.trim())) {
                     try {
                         out.write((v.trim() + System.getProperty("line.separator")).getBytes(StandardCharsets.UTF_8));
                         out.flush();
-                        resultStrBuilder.append(v.trim() + System.getProperty("line.separator"));
                     } catch (IOException e) {
                         log.error("Automatic response exception", e);
                     }

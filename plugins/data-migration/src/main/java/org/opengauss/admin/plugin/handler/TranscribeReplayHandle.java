@@ -24,6 +24,8 @@
 package org.opengauss.admin.plugin.handler;
 
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 
 import org.opengauss.admin.common.core.domain.model.ops.JschResult;
@@ -37,7 +39,6 @@ import org.opengauss.admin.plugin.utils.ShellUtil;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.Resource;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -110,14 +111,15 @@ public class TranscribeReplayHandle {
         commandSb.append("source ~/.bashrc; ");
         commandSb.append("cd ").append(installPath);
         if (DEFAULT_USER.equals(shellInfoVo.getUsername())) {
-            commandSb.append(" && (java -Xms256m -Xmx2g -jar ").append(jarPath);
+            commandSb.append(" && (java -Xms256m -Xmx2g");
         } else {
-            commandSb.append(" && (sudo java -Xms256m -Xmx2g -jar ").append(jarPath);
+            commandSb.append(" && (sudo java -Xms256m -Xmx2g");
         }
+        commandSb.append(" -Dlog.file=").append(String.format("%s_result.log", taskType));
+        commandSb.append(" -jar ").append(jarPath);
         commandSb.append(" -t ").append(taskType);
         commandSb.append(" -f ").append(configFilePath);
-        commandSb.append(" 2>&1 | tee ").append(String.format("%s_result.log", taskType));
-        commandSb.append("; exit ${PIPESTATUS[0]})");
+        commandSb.append(" 2>&1)");
         log.info("Start task {}, host: {}, command: {}", taskType, shellInfoVo.getIp(), commandSb.toString());
         SSHBody sshBody = new SSHBody(shellInfoVo.getIp(),
                 shellInfoVo.getPort(),
