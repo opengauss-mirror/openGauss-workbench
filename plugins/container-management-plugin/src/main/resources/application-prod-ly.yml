@@ -20,11 +20,11 @@ mybatis-plus:
 # 自定义配置文件
 myProps:
   # CMDB系统接口
-  customCmdbSystemUrl: http://restapi.zuul.cmdb.glb.cmos:20070/zuul/api-service/api/getAppInformation
+  customCmdbSystemUrl: http://127.0.0.1:8080/zuul/api-service/api/getAppInformation
   initdb:
     enable: true
   platform4a:
-    host: http://zx4a.cs.cmos
+    host: http://127.0.0.1:8080
     url: /zyzx/syncDataApi/api/dbSync
     businessSystemCode: default
   lock:
@@ -33,7 +33,7 @@ myProps:
     opengaussClusterRegister: OpengaussClusterRegisterLockKey
     opengaussOperatorRefresh: OpengaussOperatorRefreshLockKey
   monitor:
-    url: http://manu-monitor-service.web.cmos/api
+    url: http://127.0.0.1:8080/api
     host: no
   openGaussOperator:
     quantity:

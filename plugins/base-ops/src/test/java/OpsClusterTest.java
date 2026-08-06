@@ -2,12 +2,19 @@
  * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
  */
 
-import cn.hutool.core.collection.ListUtil;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+
+import cn.hutool.core.collection.ListUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -61,19 +68,11 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
 
 /**
  * OpsClusterTest
@@ -89,7 +88,7 @@ public class OpsClusterTest {
     private static final String NEW_INSTALL_CLUSTER_ID = "newInstallClusterId";
     private static final String OLD_CLUSTER_ID = "testClusterId";
     private static final String BUSINESS_ID = "testBusinessId";
-    private static final String ROOT_PASSWORD = "testRootPassword";
+    private static final String ROOT_PASSWORD = "******";
 
     @InjectMocks
     @Spy
@@ -319,7 +318,7 @@ public class OpsClusterTest {
         OpsHostUserEntity userEntity1 = new OpsHostUserEntity();
         userEntity1.setUsername("lhf");
         userEntity1.setHostId(HOST_ID);
-        userEntity1.setPassword("testPassword");
+        userEntity1.setPassword("******");
         return userEntity1;
     }
 
@@ -336,7 +335,7 @@ public class OpsClusterTest {
         OpsHostUserEntity userEntity1 = new OpsHostUserEntity();
         userEntity1.setUsername("lhf");
         userEntity1.setHostId(HOST_ID);
-        userEntity1.setPassword("testPassword");
+        userEntity1.setPassword("******");
         userList.add(userEntity1);
         OpsHostUserEntity userEntity2 = new OpsHostUserEntity();
         userEntity2.setUsername("root");
@@ -379,7 +378,7 @@ public class OpsClusterTest {
         enterpriseInstallConfig.setTmpPath("/opt/openGauss/tmp");
         enterpriseInstallConfig.setDatabaseKernelArch(DatabaseKernelArch.MASTER_SLAVE);
         enterpriseInstallConfig.setDatabaseUsername("");
-        enterpriseInstallConfig.setDatabasePassword("1qaz2wsx#EDC");
+        enterpriseInstallConfig.setDatabasePassword("******");
 
         EnterpriseInstallNodeConfig enterpriseInstallNodeConfig = new EnterpriseInstallNodeConfig();
         enterpriseInstallNodeConfig.setClusterRole(ClusterRoleEnum.MASTER);
@@ -416,7 +415,7 @@ public class OpsClusterTest {
         LiteInstallConfig liteInstallConfig = new LiteInstallConfig();
         liteInstallConfig.setPort(5432);
         liteInstallConfig.setDatabaseUsername("");
-        liteInstallConfig.setDatabasePassword("1qaz2wsx#EDC");
+        liteInstallConfig.setDatabasePassword("******");
         liteInstallConfig.setInstallPackagePath("/opt/software/openGauss");
         List<LiteInstallNodeConfig> nodeConfigList = new ArrayList<>();
         LiteInstallNodeConfig liteInstallNodeConfig = new LiteInstallNodeConfig();
@@ -446,7 +445,7 @@ public class OpsClusterTest {
         MinimalistInstallConfig miniInstallConfig = new MinimalistInstallConfig();
         miniInstallConfig.setPort(5432);
         miniInstallConfig.setDatabaseUsername("");
-        miniInstallConfig.setDatabasePassword("1qaz2wsx#EDC");
+        miniInstallConfig.setDatabasePassword("******");
         miniInstallConfig.setInstallPackagePath("/opt/software/openGauss");
         List<MinimalistInstallNodeConfig> nodeConfigList = new ArrayList<>();
         MinimalistInstallNodeConfig miniInstallNodeConfig = new MinimalistInstallNodeConfig();

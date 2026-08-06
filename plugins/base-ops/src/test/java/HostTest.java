@@ -2,6 +2,10 @@
  * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
  */
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
+
 import com.jcraft.jsch.Session;
 
 import org.junit.Assert;
@@ -26,10 +30,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
-
 /**
  * HostTest
  *
@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class HostTest {
     private static final String MASTER_NODE_HOST_ID = "testHostId";
-    private static final String ROOT_PASSWORD = "1qaz2wsx#EDC";
+    private static final String ROOT_PASSWORD = "******";
 
     @Mock
     private HostFacade hostFacade;
