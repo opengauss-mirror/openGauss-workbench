@@ -15,8 +15,10 @@
 
 package org.opengauss.admin.plugin.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.util.StrUtil;
+import static org.opengauss.admin.plugin.enums.TranscribeReplaySqlTransMode.ATTACH;
+import static org.opengauss.admin.plugin.enums.TranscribeReplaySqlTransMode.GENERAL;
+import static org.opengauss.admin.plugin.enums.TranscribeReplaySqlTransMode.TCPDUMP;
+
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -25,7 +27,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.github.benmanes.caffeine.cache.Cache;
+
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
@@ -76,7 +83,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.Resource;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
@@ -99,10 +105,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import static org.opengauss.admin.plugin.enums.TranscribeReplaySqlTransMode.ATTACH;
-import static org.opengauss.admin.plugin.enums.TranscribeReplaySqlTransMode.GENERAL;
-import static org.opengauss.admin.plugin.enums.TranscribeReplaySqlTransMode.TCPDUMP;
 
 /**
  * TranscribeReplay task Service
