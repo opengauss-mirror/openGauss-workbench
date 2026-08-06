@@ -15,6 +15,7 @@ import '@computing/opendesign2/themes/es/css'
 import '@arco-design/web-vue/dist/arco.less'
 import '@/assets/style/global.less'
 import store from '@/store';
+import '@/utils/vue-echarts-polyfill'
 
 const app = createApp(App)
 

@@ -1,6 +1,6 @@
 <template>
   <div class="echartContainer">
-    <v-chart :option="sqlOptions"></v-chart>
+    <v-chart :option="sqlOptions" autoresize />
   </div>
 </template>
 <script setup>
@@ -151,6 +151,13 @@ const initOptions = (demoData) => {
 <style lang="less">
 .echartContainer {
   width: 100%;
-  height: 100%
+  height: 500px;
+}
+
+.echartContainer x-vue-echarts {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
 }
 </style>
