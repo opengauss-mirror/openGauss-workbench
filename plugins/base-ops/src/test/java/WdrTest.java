@@ -2,6 +2,9 @@
  * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
  */
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import org.junit.Assert;
@@ -30,9 +33,6 @@ import org.opengauss.admin.system.plugin.facade.HostFacade;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 /**
  * WdrTest
@@ -80,7 +80,7 @@ public class WdrTest {
         clusterEntity.setInstallPath("/ops/opengauss");
         clusterEntity.setPort(5432);
         clusterEntity.setDatabaseUsername("gaussdb");
-        clusterEntity.setDatabasePassword("1qaz2wsx#EDC");
+        clusterEntity.setDatabasePassword("******");
         clusterEntity.setVersion(OpenGaussVersionEnum.ENTERPRISE);
         return clusterEntity;
     }
@@ -107,7 +107,7 @@ public class WdrTest {
         OpsHostUserEntity userEntity1 = new OpsHostUserEntity();
         userEntity1.setUsername("lhf");
         userEntity1.setHostId(HOST_ID);
-        userEntity1.setPassword("testPassword");
+        userEntity1.setPassword("******");
         return userEntity1;
     }
 

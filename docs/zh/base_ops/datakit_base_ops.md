@@ -115,7 +115,7 @@
 
 4. 安装成功
 
-   安装成功时，提示安装成功，点击【集群运维】可以跳转到集群运维页面进行运维操作。数据库的默认密码为`1qaz2wsx#EDC`。
+   安装成功时，提示安装成功，点击【集群运维】可以跳转到集群运维页面进行运维操作。
 
    ![](figures/018.png)
 
@@ -647,7 +647,7 @@
 
    用户在集群运维页面上进行备份操作，点击某个集群上的备份按钮进行数据库备份。弹出确认备份对话框，输入必要的备注以后点击备份按钮进行备份。
    
-   备份采用的是`gs_dumpall`逻辑备份，详细信息请查看openGauss官方文档：[备份与恢复](../../database_om_guide/overview_for_backup_and_restoration.md)
+   备份采用的是`gs_dumpall`逻辑备份，详细信息请查看openGauss官方文档：[备份与恢复](https://docs.opengauss.org/zh/docs/latest/database_om_guide/overview_for_backup_and_restoration.html)
    
    ![](figures/backup.png)
    
@@ -759,16 +759,16 @@
 
    ![](figures/cluster-op-extra.png)
 
-  - 主备切换：用来手动将备机切换为主机，该功能使用的命令为`gs_ctl switchover`。关于这个命令的详细文档请参照[实例主备切换](../../database_om_guide/performing_a_primary_standby_switchover.md)。**注意：一旦将备机转换为主机，可能导致集群中出现两个主节点的错误状态，此时可以参照此文档中的异常处理章节进行调整。**
+  - 主备切换：用来手动将备机切换为主机，该功能使用的命令为`gs_ctl switchover`。关于这个命令的详细文档请参照[实例主备切换](https://docs.opengauss.org/zh/docs/latest/database_om_guide/performing_a_primary_standby_switchover.html)。**注意：一旦将备机转换为主机，可能导致集群中出现两个主节点的错误状态，此时可以参照此文档中的异常处理章节进行调整。**
    
      ![](figures/cluster-op-switch.png)
    
   - 生成配置：如果静态配置文件无意损坏后，会影响openGauss感知openGauss拓扑结构和主备关系。使用本功能，可以替换已经损坏的配置文件，保证openGauss的正常运行。使用的命令为`gs_om -t generateconf`，这个操作在主节点和备节点上均可以执行。关于这个命令的详细文档请参照
-  [配置文件的备份与恢复](../../database_om_guide/configuration_files_backup_and_recovery.md)。
+  [配置文件的备份与恢复](https://docs.opengauss.org/zh/docs/latest/database_om_guide/configuration_files_backup_and_recovery.html)。
    
      ![](figures/cluster-op-genconf.png)
    
-  - 节点重建： 用来重建备机实例，使用的命令为`gs_ctl build`。关于这个命令的详细文档请参照[gs_ctl](../../tool_and_commandreference/gs_ctl.md)的build命令。
+  - 节点重建： 用来重建备机实例，使用的命令为`gs_ctl build`。关于这个命令的详细文档请参照[gs_ctl](https://docs.opengauss.org/zh/docs/latest/tool_and_commandreference/gs_ctl.html)的build命令。
    
      ![](figures/cluster-op-build.png)
 

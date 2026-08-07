@@ -2,10 +2,15 @@
  * Copyright (c) Huawei Technologies Co., Ltd. 2025-2025. All rights reserved.
  */
 
-import cn.hutool.core.collection.ListUtil;
-import jakarta.websocket.Session;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import com.alibaba.fastjson.JSON;
+
+import cn.hutool.core.collection.ListUtil;
+import jakarta.websocket.Session;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -42,11 +47,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
 
 /**
  * OpenLooKengTest
@@ -156,14 +156,14 @@ public class OpenLooKengTest {
         dsConfig1.setPort("5432");
         dsConfig1.setUsername("gaussdb");
         dsConfig1.setDbName("template1");
-        dsConfig1.setPassword("1qaz2wsx#EDC");
+        dsConfig1.setPassword("******");
         dsConfig1.setHost("175.24.226.99");
         dsConfigList.add(dsConfig1);
         ShardingDatasourceConfig dsConfig2 = new ShardingDatasourceConfig();
         dsConfig2.setPort("5432");
         dsConfig2.setUsername("gaussdb");
         dsConfig2.setDbName("template1");
-        dsConfig2.setPassword("1qaz2wsx#EDC");
+        dsConfig2.setPassword("******");
         dsConfig2.setHost("175.24.226.99");
         dsConfigList.add(dsConfig2);
         OlkConfig olkConfig = new OlkConfig();
