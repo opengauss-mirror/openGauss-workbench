@@ -5,12 +5,17 @@
 package org.opengauss.visualtool.api.ops;
 
 import io.restassured.RestAssured;
+import io.restassured.response.Response;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hamcrest.Matchers;
+import org.opengauss.utils.RsaUtils;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import static org.opengauss.global.Constants.getRequestSpecification;
+import static org.opengauss.global.Constants.getRequestSpecificationWithoutToken;
 
 /**
  * EncryptionController test
@@ -30,11 +35,26 @@ public class EncryptionControllerTest {
     public void getKeyTest() {
         RestAssured.basePath = "/encryption";
 
-        getRequestSpecification()
-                .when()
-                .get("/getKey")
-                .then()
-                .body("code", Matchers.equalTo(200))
-                .body("key", Matchers.notNullValue());
+        Response response = getRequestSpecification()
+            .when()
+            .get("/getKey");
+        response.then()
+            .statusCode(200)
+            .body("code", Matchers.equalTo(200))
+            .body("key", Matchers.notNullValue());
+        Assert.assertTrue(RsaUtils.isValidPublicKey(response.jsonPath().getString("key")),
+            "key should be a valid X509 RSA public key");
+    }
+
+    @Test(priority = 2)
+    public void getKeyWithoutTokenTest() {
+        RestAssured.basePath = "/encryption";
+
+        getRequestSpecificationWithoutToken()
+            .when()
+            .get("/getKey")
+            .then()
+            .statusCode(200)
+            .body("code", Matchers.equalTo(401));
     }
 }

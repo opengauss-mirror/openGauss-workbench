@@ -10,6 +10,7 @@ import io.restassured.config.SSLConfig;
 import io.restassured.http.Header;
 import io.restassured.specification.RequestSpecification;
 
+import org.opengauss.exception.ApiTestException;
 import org.opengauss.utils.LoginUtils;
 
 import java.util.HashMap;
@@ -25,6 +26,8 @@ public class Constants {
      * page params
      */
     public static final Map<String, Integer> PAGE_PARAMS = new HashMap<>();
+    private static final String TOKEN_HEADER_NAME = "Authorization";
+    private static final String TOKEN_PREFIX = "Bearer ";
     private static String token;
     private static Header tokenHeader;
 
@@ -38,7 +41,7 @@ public class Constants {
      */
     public static void loadToken() {
         token = LoginUtils.login();
-        tokenHeader = new Header("Authorization", "Bearer " + token);
+        tokenHeader = new Header(TOKEN_HEADER_NAME, TOKEN_PREFIX + token);
     }
 
     /**
@@ -47,10 +50,19 @@ public class Constants {
      * @return RequestSpecification
      */
     public static RequestSpecification getRequestSpecification() {
-        RestAssured.config = RestAssured.config().sslConfig(new SSLConfig().relaxedHTTPSValidation());
         if (ObjectUtil.isEmpty(token)) {
-            return RestAssured.given();
+            throw new ApiTestException("Token is not loaded, call loadToken() before sending requests.");
         }
-        return RestAssured.given().header(tokenHeader);
+        return getRequestSpecificationWithoutToken().header(tokenHeader);
+    }
+
+    /**
+     * get RequestSpecification without Authorization Header
+     *
+     * @return RequestSpecification
+     */
+    public static RequestSpecification getRequestSpecificationWithoutToken() {
+        RestAssured.config = RestAssured.config().sslConfig(new SSLConfig().relaxedHTTPSValidation());
+        return RestAssured.given();
     }
 }
