@@ -23,13 +23,6 @@
 
 package org.opengauss.admin.plugin.service.ops.impl;
 
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.lang.Assert;
-import cn.hutool.core.util.StrUtil;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -39,14 +32,44 @@ import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.Session;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.StrUtil;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
 import org.opengauss.admin.common.constant.CommonConstants;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.exception.ops.OpsException;
-import org.opengauss.admin.plugin.domain.entity.ops.*;
-import org.opengauss.admin.plugin.domain.model.ops.*;
+import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterEntity;
+import org.opengauss.admin.plugin.domain.entity.ops.OpsClusterNodeEntity;
+import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
+import org.opengauss.admin.plugin.domain.model.ops.ClusterSummaryVO;
+import org.opengauss.admin.plugin.domain.model.ops.DownloadBody;
+import org.opengauss.admin.plugin.domain.model.ops.HostFile;
+import org.opengauss.admin.plugin.domain.model.ops.HostInfoHolder;
+import org.opengauss.admin.plugin.domain.model.ops.InstallBody;
+import org.opengauss.admin.plugin.domain.model.ops.InstallContext;
+import org.opengauss.admin.plugin.domain.model.ops.JschResult;
+import org.opengauss.admin.plugin.domain.model.ops.ListDir;
+import org.opengauss.admin.plugin.domain.model.ops.NodeMonitorVO;
+import org.opengauss.admin.plugin.domain.model.ops.NodeNetMonitor;
+import org.opengauss.admin.plugin.domain.model.ops.OpsClusterBody;
+import org.opengauss.admin.plugin.domain.model.ops.OpsClusterContext;
+import org.opengauss.admin.plugin.domain.model.ops.OpsPackageVO;
+import org.opengauss.admin.plugin.domain.model.ops.SSHBody;
+import org.opengauss.admin.plugin.domain.model.ops.SshCommandConstants;
+import org.opengauss.admin.plugin.domain.model.ops.UnInstallBody;
+import org.opengauss.admin.plugin.domain.model.ops.UnInstallContext;
+import org.opengauss.admin.plugin.domain.model.ops.UpgradeBody;
+import org.opengauss.admin.plugin.domain.model.ops.UpgradeContext;
+import org.opengauss.admin.plugin.domain.model.ops.WsSession;
 import org.opengauss.admin.plugin.domain.model.ops.cache.SSHChannelManager;
 import org.opengauss.admin.plugin.domain.model.ops.cache.TaskManager;
 import org.opengauss.admin.plugin.domain.model.ops.cache.WsConnectorManager;
@@ -54,20 +77,35 @@ import org.opengauss.admin.plugin.domain.model.ops.env.HostEnv;
 import org.opengauss.admin.plugin.domain.model.ops.node.EnterpriseInstallNodeConfig;
 import org.opengauss.admin.plugin.domain.model.ops.node.LiteInstallNodeConfig;
 import org.opengauss.admin.plugin.domain.model.ops.node.MinimalistInstallNodeConfig;
-import org.opengauss.admin.plugin.enums.ops.*;
+import org.opengauss.admin.plugin.enums.ops.ClusterRoleEnum;
+import org.opengauss.admin.plugin.enums.ops.DeployTypeEnum;
+import org.opengauss.admin.plugin.enums.ops.GucSettingContextEnum;
+import org.opengauss.admin.plugin.enums.ops.OpenGaussSupportOSEnum;
+import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.mapper.ops.OpsClusterMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterNodeService;
 import org.opengauss.admin.plugin.service.ops.IOpsClusterService;
 import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerService;
 import org.opengauss.admin.plugin.utils.DBUtil;
-import org.opengauss.admin.plugin.utils.DownloadUtil;
 import org.opengauss.admin.plugin.utils.DecryptionUtil;
+import org.opengauss.admin.plugin.utils.DownloadUtil;
 import org.opengauss.admin.plugin.utils.JschUtil;
 import org.opengauss.admin.plugin.utils.OpsAssert;
 import org.opengauss.admin.plugin.utils.WsUtil;
-import org.opengauss.admin.plugin.vo.ops.*;
+import org.opengauss.admin.plugin.vo.ops.AuditLogVO;
+import org.opengauss.admin.plugin.vo.ops.CheckClusterVO;
+import org.opengauss.admin.plugin.vo.ops.CheckDbVO;
+import org.opengauss.admin.plugin.vo.ops.CheckDeviceVO;
+import org.opengauss.admin.plugin.vo.ops.CheckItemVO;
+import org.opengauss.admin.plugin.vo.ops.CheckNetworkVO;
+import org.opengauss.admin.plugin.vo.ops.CheckOSVO;
+import org.opengauss.admin.plugin.vo.ops.CheckVO;
+import org.opengauss.admin.plugin.vo.ops.GucSettingDto;
+import org.opengauss.admin.plugin.vo.ops.GucSettingVO;
+import org.opengauss.admin.plugin.vo.ops.OpsNodeLogVO;
 import org.opengauss.admin.plugin.vo.ops.SessionVO;
 import org.opengauss.admin.plugin.vo.ops.SlowSqlVO;
+import org.opengauss.admin.plugin.vo.ops.UpgradeOsCheckVO;
 import org.opengauss.admin.system.plugin.beans.SshLogin;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostMonitorFacade;
@@ -85,9 +123,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
-import jakarta.annotation.Resource;
-import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -103,7 +138,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -1704,8 +1742,8 @@ public class OpsClusterServiceImpl extends ServiceImpl<OpsClusterMapper, OpsClus
             if (!file.isFile() || !file.exists()) {
                 continue;
             }
-            OpsPackageManagerEntity entity = CollUtil.findOne(pkgList,
-                item -> item.getName() != null && filePath.contains(item.getName()));
+            OpsPackageManagerEntity entity = CollUtil.findOne(pkgList, item -> item.getName() != null
+                    && item.getPackagePath() != null && filePath.contains(item.getPackagePath().getRealPath()));
             // is managed, get info here
             if (entity != null && entity.getPackageVersion().equalsIgnoreCase(openGaussVersionEnum.toString())) {
                 OpsPackageVO vo = entity.toVO();
