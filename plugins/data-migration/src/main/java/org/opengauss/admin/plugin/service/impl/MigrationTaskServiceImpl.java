@@ -175,8 +175,8 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     @Autowired
     private MigrationTaskOperateRecordService migrationTaskOperateRecordService;
 
-    @Autowired
-    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+    @Resource(name = "migrationWsExecutor")
+    private ThreadPoolTaskExecutor migrationWsExecutor;
     @Autowired
     private MigrationHostPortalInstallHostService migrationHostPortalInstallHostService;
 
@@ -195,6 +195,12 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     @Resource
     private ScheduledExecutorService scheduledExecutorService;
     private Map<Integer, MigrationHostPortalInstall> installMap = new ConcurrentHashMap<>();
+
+    /**
+     * taskId -> sessionId, used to ensure only one websocket worker exists per task,
+     * preventing zombie worker accumulation from exhausting the thread pool.
+     */
+    private final Map<Integer, String> taskWsSessionMap = new ConcurrentHashMap<>();
 
     @Autowired
     private MigrationTaskAlertMapper alertMapper;
@@ -537,18 +543,36 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
         }
 
         worker = () -> {
-            while (session.isOpen()) {
-                try {
-                    wsFacade.sendMessage("data-migration", sessionId, JSON.toJSONString(getFullDataById(id)));
-                    ThreadUtil.safeSleep(1000L);
-                } catch (Exception e) {
-                    log.error("Send migration data by websocket error", e);
+            try {
+                // exit when the session is closed or removed from the registry (abnormal disconnect)
+                while (session.isOpen() && WsConnectorManager.getSession(pluginId, sessionId) != null
+                    && sessionId.equals(taskWsSessionMap.get(id))) {
+                    try {
+                        if (getById(id) == null) {
+                            log.info("Migration task not exist, task id: {}, stop sending websocket data", id);
+                            break;
+                        }
+                        wsFacade.sendMessage("data-migration", sessionId, JSON.toJSONString(getFullDataById(id)));
+                        ThreadUtil.safeSleep(1000L);
+                    } catch (Exception e) {
+                        log.error("Send migration data by websocket error, sessionId: {}, reason: {}", sessionId,
+                            e.getMessage());
+                    }
                 }
+            } finally {
+                TaskManager.remove(sessionId);
+                taskWsSessionMap.computeIfPresent(id, (k, v) -> v.equals(sessionId) ? null : v);
             }
-            TaskManager.remove(sessionId);
         };
+        // replace the previous worker of the same task to avoid worker accumulation
+        String oldSessionId = taskWsSessionMap.put(id, sessionId);
+        if (oldSessionId != null && !oldSessionId.equals(sessionId)) {
+            WsConnectorManager.remove(pluginId, oldSessionId);
+            TaskManager.remove(oldSessionId);
+            log.info("Replace the previous websocket worker of task id: {}, old sessionId: {}", id, oldSessionId);
+        }
         TaskManager.registryWorker(sessionId, worker);
-        Future<?> future = threadPoolTaskExecutor.submit(worker);
+        Future<?> future = migrationWsExecutor.submit(worker);
         TaskManager.registry(sessionId, future);
     }
 
@@ -1080,10 +1104,10 @@ public class MigrationTaskServiceImpl extends ServiceImpl<MigrationTaskMapper, M
     @Override
     public TaskProcessStatus checkStatusOfIncrementalOrReverseMigrationTask(Integer id) {
         MigrationTask migrationTask = getById(id);
+        OpsAssert.nonNull(migrationTask, "migration task not exist.");
         if (!DbTypeEnum.MYSQL.equals(migrationTask.getSourceDbType())) {
             return multiDbPortal.checkStatusOfIncrementalOrReverseMigrationTask(migrationTask);
         }
-        OpsAssert.nonNull(migrationTask, "migration task not exist.");
         MigrationTaskStatusRecord lastTaskStatus = migrationTaskStatusRecordService.getLastByTaskId(id);
         OpsAssert.nonNull(lastTaskStatus, "migration task status not exist.");
         TaskProcessStatus taskProcessStatus = new TaskProcessStatus();

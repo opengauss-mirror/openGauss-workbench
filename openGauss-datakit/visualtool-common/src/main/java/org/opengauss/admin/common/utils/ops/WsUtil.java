@@ -57,8 +57,9 @@ public class WsUtil {
                 if (session.isOpen()) {
                     try {
                         session.getBasicRemote().sendText(message);
-                    } catch (IOException e) {
-                        log.error("Failed to send a message to {}, error: {}", wsSession.getBusinessId(), e);
+                    } catch (IOException | IllegalStateException e) {
+                        log.error("Failed to send a message to {}, reason: {}", wsSession.getBusinessId(),
+                            e.getMessage());
                     }
                 } else {
                     log.error("Connection {} closed", wsSession.getBusinessId());

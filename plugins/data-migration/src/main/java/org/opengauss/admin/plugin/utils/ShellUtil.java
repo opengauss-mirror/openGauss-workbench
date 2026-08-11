@@ -368,7 +368,6 @@ public class ShellUtil {
             sftp = (ChannelSftp) channel;
             deleteFolder(sftp, path);
         } catch (JSchException | SftpException e) {
-            e.printStackTrace();
             log.error("exec rm dir error, message: {}", e.getMessage());
         } finally {
             JschUtil.close(sftp);

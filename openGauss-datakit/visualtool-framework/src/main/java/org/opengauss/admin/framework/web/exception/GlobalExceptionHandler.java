@@ -28,6 +28,8 @@ import com.alibaba.fastjson.JSONObject;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.enums.ResponseCode;
 import org.opengauss.admin.common.exception.ServiceException;
+import org.opengauss.admin.common.exception.base.BaseException;
+import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -125,6 +127,16 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * BaseException (business exception): log the reason message only, without redundant stack trace
+     */
+    @ExceptionHandler(BaseException.class)
+    public AjaxResult handleBaseException(BaseException e, HttpServletRequest request) {
+        String requestUri = request.getRequestURI();
+        log.error("Business exception. Request URL'{}' message{}", requestUri, e.getMessage());
+        return AjaxResult.error(e.getMessage());
+    }
+
+    /**
      * unknown runtime exception
      */
     @ExceptionHandler(RuntimeException.class)
@@ -133,6 +145,16 @@ public class GlobalExceptionHandler {
         StringWriter errorsWriter = new StringWriter();
         e.printStackTrace(new PrintWriter(errorsWriter));
         log.error("Unknown runtime exception. Request URL'{}' {}", requestUri, errorsWriter.toString());
+        return AjaxResult.error(e.getMessage());
+    }
+
+    /**
+     * OpsException (business exception): log the reason message only, without redundant stack trace
+     */
+    @ExceptionHandler(OpsException.class)
+    public AjaxResult handleOpsException(OpsException e, HttpServletRequest request) {
+        String requestUri = request.getRequestURI();
+        log.error("Business exception. Request URL'{}' message{}", requestUri, e.getMessage());
         return AjaxResult.error(e.getMessage());
     }
 

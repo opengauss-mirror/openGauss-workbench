@@ -19,7 +19,8 @@ import java.util.regex.Pattern;
  * @since 2025/11/14
  */
 public class OpengaussUtils {
-    private static final Pattern GS_VERSION_PATTERN = Pattern.compile("\\(openGauss\\s(\\d+\\.\\d+\\.\\d+[^\\s]*)");
+    private static final Pattern GS_VERSION_PATTERN = Pattern
+            .compile("\\(openGauss(?:-[a-zA-Z]+)?\\s+(\\d+\\.\\d+\\.\\d+(?:-\\S+)?)");
 
     /**
      * Get the openGauss version

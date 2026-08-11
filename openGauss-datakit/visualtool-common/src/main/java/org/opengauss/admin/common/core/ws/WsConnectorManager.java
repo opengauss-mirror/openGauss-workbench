@@ -62,7 +62,6 @@ public class WsConnectorManager {
      * get session
      */
     public static Session getSession(String pluginId, String sessionId) {
-        log.info("cache sessions list.");
         return CONNECTOR_CONTEXT.get(prepareKey(pluginId, sessionId));
     }
 
