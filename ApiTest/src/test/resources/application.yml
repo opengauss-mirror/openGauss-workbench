@@ -1,25 +1,25 @@
 datakit:
   username: admin
-  password: ******
+  password: "******"
   serverUrl: https://127.0.0.1:9494
   pluginPath: /ops/visualtool-plugin
 opsHost:
   privateIp: 127.0.0.1
   publicIp: 127.0.0.1
   port: 22
-  password: ******
+  password: "******"
   user:
     name: user
-    password: ******
+    password: "******"
 database:
   jdbc:
     mysql:
       hostIp: 127.0.0.1
       port: 3306
       username: user
-      password: ******
+      password: "******"
     opengauss:
       hostIp: 127.0.0.1
       port: 5432
       username: user
-      password: ******
+      password: "******"
