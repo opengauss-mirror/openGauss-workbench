@@ -4,7 +4,6 @@
 
 package org.opengauss.admin.plugin.service.impl;
 
-import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -12,23 +11,25 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import com.github.benmanes.caffeine.cache.Cache;
+
+import cn.hutool.core.date.DateUtil;
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.enums.ops.DbTypeEnum;
 import org.opengauss.admin.plugin.constants.TaskAlertConstants;
 import org.opengauss.admin.plugin.domain.MigrationHostPortalInstall;
 import org.opengauss.admin.plugin.domain.MigrationTask;
 import org.opengauss.admin.plugin.domain.MigrationTaskAlert;
-import org.opengauss.admin.plugin.domain.MigrationTaskAlertDetail;
 import org.opengauss.admin.plugin.dto.MigrationTaskAlertDto;
 import org.opengauss.admin.plugin.enums.AlertMigrationPhaseEnum;
 import org.opengauss.admin.plugin.handler.PortalHandle;
 import org.opengauss.admin.plugin.mapper.MigrationTaskAlertMapper;
 import org.opengauss.admin.plugin.service.MigrationHostPortalInstallHostService;
-import org.opengauss.admin.plugin.service.MigrationTaskAlertDetailService;
 import org.opengauss.admin.plugin.service.MigrationTaskAlertService;
 import org.opengauss.admin.plugin.service.MigrationTaskService;
 import org.opengauss.admin.plugin.utils.FileUtils;
+import org.opengauss.admin.plugin.vo.MigrationTaskAlertDetailVo;
 import org.opengauss.admin.plugin.vo.ShellInfoVo;
 import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,9 +58,6 @@ public class MigrationTaskAlertServiceImpl extends ServiceImpl<MigrationTaskAler
 
     @Autowired
     private MigrationTaskAlertMapper alertMapper;
-
-    @Autowired
-    private MigrationTaskAlertDetailService alertDetailService;
 
     @Autowired
     private MigrationHostPortalInstallHostService portalInstallHostService;
@@ -119,6 +117,7 @@ public class MigrationTaskAlertServiceImpl extends ServiceImpl<MigrationTaskAler
             if (!part.isEmpty()) {
                 MigrationTaskAlert alert = JSON.parseObject(part, MigrationTaskAlert.class);
                 alert.setTaskId(taskId);
+                alert.generateAlertDetail();
                 alertList.add(alert);
                 resolvedNumber++;
             }
@@ -126,14 +125,6 @@ public class MigrationTaskAlertServiceImpl extends ServiceImpl<MigrationTaskAler
         resolvedObjectsNumberCache.put(taskId, resolvedNumber);
 
         saveBatch(alertList);
-        List<MigrationTaskAlertDetail> alertDetailList = new ArrayList<>();
-        for (MigrationTaskAlert alert : alertList) {
-            alertDetailList.add(MigrationTaskAlertDetail.builder()
-                    .alertId(alert.getId())
-                    .detail(alert.generateAlertDetail())
-                    .build());
-        }
-        alertDetailService.saveBatch(alertDetailList);
     }
 
     @Override
@@ -205,7 +196,6 @@ public class MigrationTaskAlertServiceImpl extends ServiceImpl<MigrationTaskAler
 
         List<Long> alertIds = taskAlerts.stream().map(MigrationTaskAlert::getId).collect(Collectors.toList());
         removeBatchByIds(alertIds);
-        alertDetailService.removeBatchByIds(alertIds);
     }
 
     @Override
@@ -226,12 +216,41 @@ public class MigrationTaskAlertServiceImpl extends ServiceImpl<MigrationTaskAler
 
         List<Long> alertIds = taskAlerts.stream().map(MigrationTaskAlert::getId).collect(Collectors.toList());
         removeBatchByIds(alertIds);
-        alertDetailService.removeBatchByIds(alertIds);
     }
 
     @Override
     public List<Long> getGroupAlertIds(MigrationTaskAlert alert) {
         return alertMapper.getGroupAlertIds(alert);
+    }
+
+    @Override
+    public MigrationTaskAlertDetailVo getGroupAlertDetailVo(int alertId) {
+        MigrationTaskAlert alert = getById(alertId);
+        if (alert == null) {
+            throw new IllegalArgumentException("Alert not found, alert id: " + alertId);
+        }
+
+        List<Long> alertIds = getGroupAlertIds(alert);
+        LambdaQueryWrapper<MigrationTaskAlert> detailQueryWrapper = new LambdaQueryWrapper<>();
+        detailQueryWrapper.in(MigrationTaskAlert::getId, alertIds);
+        detailQueryWrapper.orderByDesc(MigrationTaskAlert::getId);
+        detailQueryWrapper.last("LIMIT 100");
+        List<MigrationTaskAlert> taskAlerts = list(detailQueryWrapper);
+
+        StringBuilder alertDetails = new StringBuilder();
+        for (MigrationTaskAlert taskAlert : taskAlerts) {
+            alertDetails.append(taskAlert.getDetail()).append(System.lineSeparator()).append(System.lineSeparator());
+        }
+        if (alertIds.size() > 100) {
+            alertDetails.append("...");
+            alertDetails.append(System.lineSeparator());
+            alertDetails.append("Only the latest 100 alerts are displayed. For more details, please see the log file.");
+        }
+
+        MigrationTaskAlertDetailVo alertDetailVo = new MigrationTaskAlertDetailVo();
+        alertDetailVo.setAlertId(alert.getId());
+        alertDetailVo.setDetail(alertDetails.toString());
+        return alertDetailVo;
     }
 
     private void syncRefreshAlertByPortal(MigrationTask task) {

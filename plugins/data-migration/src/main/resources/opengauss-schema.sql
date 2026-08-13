@@ -1093,6 +1093,7 @@ CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_alert" (
     "log_level" varchar(10),
     "log_code" varchar(4) NOT NULL,
     "log_source" int8 NOT NULL,
+    "detail" text NOT NULL,
     CONSTRAINT "tb_migration_task_alert_pkey" PRIMARY KEY ("id")
     );
 
@@ -1110,18 +1111,32 @@ COMMENT ON COLUMN "public"."tb_migration_task_alert"."log_level" IS '告警对�
 COMMENT ON COLUMN "public"."tb_migration_task_alert"."log_code" IS '告警对应的日志状态码';
 COMMENT ON COLUMN "public"."tb_migration_task_alert"."log_source" IS '告警对应的日志来源，0：portal_id.log；10：full_migration.log；20：check.log；21：source.log；22：sink.log；31：connect_source.log；32：connect_sink.log；41：reverse_connect_source.log；42：reverse_connect_sink.log';
 
--- ----------------------------
--- Table structure for tb_migration_task_alert_detail
--- ----------------------------
+-------------------------------------------
+-- ALTER TABLE tb_migration_task_alert
+-------------------------------------------
 
-CREATE TABLE IF NOT EXISTS "public"."tb_migration_task_alert_detail" (
-    "alert_id" int8 NOT NULL,
-    "detail" text NOT NULL,
-    CONSTRAINT "tb_migration_task_alert_detail_pkey" PRIMARY KEY ("alert_id")
-    );
+CREATE OR REPLACE FUNCTION add_tb_migration_task_alert_field_func() RETURNS integer AS 'BEGIN
+    IF
+            (SELECT COUNT(*) AS ct1
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_NAME = ''tb_migration_task_alert''
+               AND COLUMN_NAME = ''detail'') = 0
+    THEN
+        ALTER TABLE tb_migration_task_alert ADD COLUMN detail text;
+        UPDATE tb_migration_task_alert
+        SET detail = (SELECT detail FROM tb_migration_task_alert_detail WHERE tb_migration_task_alert_detail.alert_id = tb_migration_task_alert.id)
+        WHERE id IN (SELECT alert_id FROM tb_migration_task_alert_detail);
+        DROP TABLE IF EXISTS "public"."tb_migration_task_alert_detail";
+    END IF;
+    RETURN 0;
+END;'
+    LANGUAGE plpgsql;
 
-COMMENT ON COLUMN "public"."tb_migration_task_alert_detail"."alert_id" IS '告警信息主键ID';
-COMMENT ON COLUMN "public"."tb_migration_task_alert_detail"."detail" IS '告警对应的日志文本';
+SELECT add_tb_migration_task_alert_field_func();
+
+DROP FUNCTION add_tb_migration_task_alert_field_func;
+
+COMMENT ON COLUMN "public"."tb_migration_task_alert"."detail" IS '告警对应的日志文本';
 
 
 -- ----------------------------
