@@ -10,6 +10,7 @@ import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.plugin.domain.MigrationTask;
 import org.opengauss.admin.plugin.domain.MigrationTaskAlert;
 import org.opengauss.admin.plugin.dto.MigrationTaskAlertDto;
+import org.opengauss.admin.plugin.vo.MigrationTaskAlertDetailVo;
 
 import java.util.List;
 
@@ -73,4 +74,12 @@ public interface MigrationTaskAlertService extends IService<MigrationTaskAlert> 
      * @return alert id list
      */
     List<Long> getGroupAlertIds(MigrationTaskAlert alert);
+
+    /**
+     * get group alert detail vo by alert id
+     *
+     * @param alertId alert id
+     * @return alert detail vo
+     */
+    MigrationTaskAlertDetailVo getGroupAlertDetailVo(int alertId);
 }

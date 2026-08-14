@@ -5,12 +5,13 @@
 package org.opengauss.admin.plugin.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.page.TableDataInfo;
 import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.plugin.dto.MigrationTaskAlertDto;
-import org.opengauss.admin.plugin.service.MigrationTaskAlertDetailService;
 import org.opengauss.admin.plugin.service.MigrationTaskAlertService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,8 +30,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class MigrationTaskAlertController extends BaseController {
     @Autowired
     private MigrationTaskAlertService alertService;
-    @Autowired
-    private MigrationTaskAlertDetailService alertDetailService;
 
     /**
      * get alert log page info
@@ -64,6 +63,6 @@ public class MigrationTaskAlertController extends BaseController {
      */
     @GetMapping("/detail/{id}")
     public AjaxResult getDetail(@PathVariable int id) {
-        return AjaxResult.success(alertDetailService.getGroupDetailByAlertId(id));
+        return AjaxResult.success(alertService.getGroupAlertDetailVo(id));
     }
 }

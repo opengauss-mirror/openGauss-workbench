@@ -688,7 +688,8 @@ CREATE TABLE IF NOT EXISTS "tb_migration_task_alert" (
     "cause_en" text NOT NULL,
     "log_level" varchar(10),
     "log_code" varchar(4) NOT NULL,
-    "log_source" int8 NOT NULL
+    "log_source" int8 NOT NULL,
+    "detail" clob NOT NULL
     );
 
 COMMENT ON COLUMN "tb_migration_task_alert"."id" IS '告警信息主键ID';
@@ -704,18 +705,7 @@ COMMENT ON COLUMN "tb_migration_task_alert"."cause_en" IS '告警英文原因';
 COMMENT ON COLUMN "tb_migration_task_alert"."log_level" IS '告警对应的日志级别';
 COMMENT ON COLUMN "tb_migration_task_alert"."log_code" IS '告警对应的日志状态码';
 COMMENT ON COLUMN "tb_migration_task_alert"."log_source" IS '告警对应的日志来源，0：portal_id.log；10：full_migration.log；20：check.log；21：source.log；22：sink.log；31：connect_source.log；32：connect_sink.log；41：reverse_connect_source.log；42：reverse_connect_sink.log';
-
--- ----------------------------
--- Table structure for tb_migration_task_alert_detail
--- ----------------------------
-
-CREATE TABLE IF NOT EXISTS "tb_migration_task_alert_detail" (
-    "alert_id" int8 NOT NULL PRIMARY KEY,
-    "detail" clob NOT NULL
-    );
-
-COMMENT ON COLUMN "tb_migration_task_alert_detail"."alert_id" IS '告警信息主键ID';
-COMMENT ON COLUMN "tb_migration_task_alert_detail"."detail" IS '告警对应的日志文本';
+COMMENT ON COLUMN "tb_migration_task_alert"."detail" IS '告警对应的日志文本';
 
 
 -- ----------------------------
