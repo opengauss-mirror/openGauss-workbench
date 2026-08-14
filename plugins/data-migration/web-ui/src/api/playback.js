@@ -84,11 +84,11 @@ export function getHostInfo(id) {
 }
 
 export function getSlowSql(id, query) {
-  return axios.get(`/plugins/data-migration/transcribeReplay/list/slowSql/${id}/`, { params: query })
+  return axios.get(`/plugins/data-migration/transcribeReplay/list/slowSql/${id}`, { params: query })
 }
 
 export function getFailSql(id, query) {
-  return axios.get(`/plugins/data-migration/transcribeReplay/list/failSql/${id}/`, { params: query })
+  return axios.get(`/plugins/data-migration/transcribeReplay/list/failSql/${id}`, { params: query })
 }
 
 export function downloadFailSql(id) {
