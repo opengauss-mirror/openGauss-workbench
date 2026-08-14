@@ -287,6 +287,11 @@ const getFixStatus = async () => {
       fixStatus.value.sink = data.sink
     }
   } catch (error) {
+    // task has been deleted: stop polling to avoid endless requests and backend error logs
+    if (String(error && error.message).includes('not exist')) {
+      clearInterval(onlineReverseStatusTimer.value)
+      onlineReverseStatusTimer.value = null
+    }
     console.error(error)
   }
 }

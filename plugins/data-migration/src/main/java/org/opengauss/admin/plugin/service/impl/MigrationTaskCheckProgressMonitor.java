@@ -106,7 +106,8 @@ public class MigrationTaskCheckProgressMonitor implements Runnable {
                 }
                 ThreadUtil.safeSleep(1000);
             } catch (Exception exc) {
-                log.error("MigrationTaskCheckProgressMonitor parse error ,subTaskId={} ", taskId, exc);
+                log.error("MigrationTaskCheckProgressMonitor parse error, subTaskId={}, reason: {}", taskId,
+                    exc.getMessage());
             }
         }
     }
@@ -125,18 +126,18 @@ public class MigrationTaskCheckProgressMonitor implements Runnable {
             String resultMsg = getResultMessage(jschResult);
             if (!jschResult.isOk()) {
                 checkLogStatus.put(key, "failed");
-                log.warn("refresh data check detail information failed, subTaskId: {} {}", taskId, checkLogStatus);
+                log.debug("refresh data check detail information failed, subTaskId: {} {}", taskId, checkLogStatus);
                 return;
             }
             String message = PortalHandle.replaceAllBlank(resultMsg);
             if (StrUtil.isEmpty(message)) {
                 checkLogStatus.put(key, "failed");
-                log.warn("fetch data check detail information empty , subTaskId: {} {}", taskId, checkLogStatus);
+                log.debug("fetch data check detail information empty , subTaskId: {} {}", taskId, checkLogStatus);
                 return;
             }
             if (!message.endsWith(",")) {
                 checkLogStatus.put(key, "failed");
-                log.warn("fetch data check detail information is invalid , subTaskId: {} {}", taskId, checkLogStatus);
+                log.debug("fetch data check detail information is invalid , subTaskId: {} {}", taskId, checkLogStatus);
                 return;
             }
             message = "[" + message.substring(0, message.length() - 1) + "]";
@@ -156,7 +157,7 @@ public class MigrationTaskCheckProgressMonitor implements Runnable {
             }).collect(Collectors.toList());
             detailService.saveOrUpdateBatch(details, 100);
             checkLogStatus.put(key, "success");
-            log.info("refresh data check detail success: subTaskId: {}  {}, detailSize: {} {}", taskId, key,
+            log.debug("refresh data check detail success: subTaskId: {}  {}, detailSize: {} {}", taskId, key,
                 detailList.size(), checkLogStatus);
         });
     }
@@ -169,7 +170,7 @@ public class MigrationTaskCheckProgressMonitor implements Runnable {
             List<DataCheckVo> result = JSONObject.parseArray(message, DataCheckVo.class);
             return result != null ? result : Collections.emptyList();
         } catch (JSONException ex) {
-            log.warn("Failed to parse data check details. Message: '{}', Error: {}",
+            log.debug("Failed to parse data check details. Message: '{}', Error: {}",
                 message.substring(0, Math.min(100, message.length())), ex.getMessage());
         }
         return Collections.emptyList();
@@ -215,9 +216,9 @@ public class MigrationTaskCheckProgressMonitor implements Runnable {
                     summaryService.updateById(summary);
                 }
             });
-            log.info("refresh data check summary information, subTaskId: {} ", taskId);
+            log.debug("refresh data check summary information, subTaskId: {} ", taskId);
         } else {
-            log.warn("refresh data check summary information failed, subTaskId: {} {}", taskId, resultMsg);
+            log.debug("refresh data check summary information failed, subTaskId: {} {}", taskId, resultMsg);
         }
     }
 
@@ -226,7 +227,7 @@ public class MigrationTaskCheckProgressMonitor implements Runnable {
             return Optional.ofNullable(
                 JSONObject.parseObject(portalDataCheckProcess, MigrationTaskCheckProgressSummary.class));
         } catch (JSONException ex) {
-            log.warn("parse data check summary failed, {} {}", portalDataCheckProcess, ex.getMessage());
+            log.debug("parse data check summary failed, {} {}", portalDataCheckProcess, ex.getMessage());
         }
         return Optional.empty();
     }

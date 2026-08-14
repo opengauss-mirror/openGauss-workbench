@@ -45,6 +45,7 @@ import jakarta.annotation.PreDestroy;
 @Configuration
 public class ThreadPoolConfig {
     private ThreadPoolTaskExecutor executor;
+    private ThreadPoolTaskExecutor migrationWsExecutor;
     private ScheduledExecutorService scheduledExecutor;
 
     private int corePoolSize = 10;
@@ -72,6 +73,23 @@ public class ThreadPoolConfig {
     }
 
     /**
+     * thread pool for websocket push long-running tasks, isolated from the shared task executor
+     *
+     * @return thread pool task executor
+     */
+    @Bean(name = "migrationWsExecutor")
+    public ThreadPoolTaskExecutor migrationWsExecutor() {
+        migrationWsExecutor = new ThreadPoolTaskExecutor();
+        migrationWsExecutor.setCorePoolSize(2);
+        migrationWsExecutor.setMaxPoolSize(10);
+        migrationWsExecutor.setQueueCapacity(100);
+        migrationWsExecutor.setKeepAliveSeconds(60);
+        migrationWsExecutor.setThreadNamePrefix("migration-ws-");
+        migrationWsExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardOldestPolicy());
+        return migrationWsExecutor;
+    }
+
+    /**
      * scheduled executor service
      *
      * @return scheduled executor service
@@ -93,6 +111,9 @@ public class ThreadPoolConfig {
     private void destroyExecutor() {
         if (executor != null) {
             executor.shutdown();
+        }
+        if (migrationWsExecutor != null) {
+            migrationWsExecutor.shutdown();
         }
         if (scheduledExecutor != null) {
             scheduledExecutor.shutdown();

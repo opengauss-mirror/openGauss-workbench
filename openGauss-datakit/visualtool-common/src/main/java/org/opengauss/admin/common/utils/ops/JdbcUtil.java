@@ -86,7 +86,9 @@ public class JdbcUtil {
 
             connection = DriverManager.getConnection(url, username, password);
         } catch (Exception e) {
-            log.error("jdbc failed to get connection", e);
+            log.error("jdbc failed to get connection, url: {}, error class: {}, reason: {}",
+                    url, e.getClass().getName(), e.getMessage());
+            log.debug("jdbc failed to get connection, detail: ", e);
             throw new OpsException("jdbc failed to get connection, exception: " + e.getClass().getName()
                     + ", error message: " + e.getMessage());
         }

@@ -235,6 +235,10 @@ public class MigrationTaskAlertServiceImpl extends ServiceImpl<MigrationTaskAler
     }
 
     private void syncRefreshAlertByPortal(MigrationTask task) {
+        if (task == null) {
+            log.info("Migration task not exist, skip sync refresh task alert");
+            return;
+        }
         Integer taskId = task.getId();
         Long time = ALERT_REFRESH_RECORD.get(taskId);
         if (time == null
