@@ -156,7 +156,7 @@ public class ResourceCPUController extends ControllerConfig {
                 }
             }
         } catch (Exception e) {
-           log.error("parse to Array error:" + e.getMessage());
+            log.error("parse to Array error: {} {} ", e.getMessage(), str);
         }
         return AjaxResult.success(result);
     }

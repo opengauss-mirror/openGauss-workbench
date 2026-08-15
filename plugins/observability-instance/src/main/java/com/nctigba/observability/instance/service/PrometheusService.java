@@ -912,7 +912,7 @@ public class PrometheusService extends AbstractInstaller {
     /**
      * monitorStatus
      */
-    @Scheduled(fixedRate = CommonConstants.MONITOR_CYCLE, timeUnit = TimeUnit.SECONDS)
+    @Scheduled(initialDelay = 60, fixedRate = CommonConstants.MONITOR_CYCLE, timeUnit = TimeUnit.SECONDS)
     public void monitorStatus() {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
