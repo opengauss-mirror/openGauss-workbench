@@ -55,7 +55,7 @@ public class ScheduledTaskManager {
     /**
      * Scheduled switchRecord
      */
-    @Scheduled(initialDelay = 5, fixedDelay = 30, timeUnit = TimeUnit.SECONDS)
+    @Scheduled(initialDelay = 60, fixedDelay = 30, timeUnit = TimeUnit.SECONDS)
     public void switchRecord() {
         List<OpsClusterVO> allOpsCluster = clusterManager.getAllOpsCluster().stream()
                 .filter(cluster -> DeployTypeEnum.CLUSTER.equals(cluster.getDeployType())).collect(Collectors.toList());

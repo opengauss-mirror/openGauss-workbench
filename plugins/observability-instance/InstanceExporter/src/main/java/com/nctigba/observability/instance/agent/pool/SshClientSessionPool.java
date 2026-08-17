@@ -68,18 +68,22 @@ public class SshClientSessionPool {
      */
     public Optional<ClientSession> getSession() {
         try {
-            return Optional.ofNullable(pool.borrowObject());
+            ClientSession session = pool.borrowObject();
+            log.debug("{} borrowed session, active={}, idle={}",
+                    Thread.currentThread().getName(), pool.getNumActive(), pool.getNumIdle());
+            return Optional.of(session);
         } catch (Exception e) {
-            log.error("{} Get ssh client session error!", Thread.currentThread().getName());
+            log.error("Get ssh client session error {}, active={}, idle={}", Thread.currentThread().getName(),
+                    pool.getNumActive(), pool.getNumIdle());
             try (StringWriter sw = new StringWriter();
-                PrintWriter pw = new PrintWriter(sw)) {
+                 PrintWriter pw = new PrintWriter(sw)) {
                 e.printStackTrace(pw);
                 log.error(sw.toString());
             } catch (IOException ioe) {
                 log.error("StringWriter error!");
             }
+            return Optional.empty();
         }
-        return Optional.empty();
     }
 
     /**
@@ -88,12 +92,31 @@ public class SshClientSessionPool {
      * @param session SSH session
      */
     public void releaseSession(ClientSession session) {
+        if (session != null) {
+            pool.returnObject(session);
+            log.debug("Session returned, active={}, idle={}", pool.getNumActive(), pool.getNumIdle());
+        }
+    }
+
+    /**
+     * destroy Session
+     *
+     * @param session session
+     */
+    public void destroySession(ClientSession session) {
         try {
-            if (session != null) {
-                pool.returnObject(session);
-            }
+            pool.invalidateObject(session);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("invalidate session error", e);
+        }
+    }
+
+    /**
+     * close pool
+     */
+    public void close() {
+        if (pool != null) {
+            pool.close();
         }
     }
 }

@@ -62,7 +62,9 @@ import java.util.function.Consumer;
 @Slf4j
 @Component
 public class CmdUtils {
-    private static final int CHANNEL_TIMEOUT = 1000 * 3;
+    private static final int MAX_RETRY = 3;
+    private static final long RETRY_INTERVAL_MS = 1000L;
+    private static final int CHANNEL_TIMEOUT = 1000 * 10;
     private static TargetService targetService;
 
     @Autowired
@@ -96,14 +98,22 @@ public class CmdUtils {
         if(!session.isPresent()){
             return false;
         }
+        ChannelExec channel = null;
         try {
-            ChannelExec channel = session.get().createExecChannel("echo 1");
+            channel = session.get().createExecChannel("echo 1");
             channel.open();
             channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), 1000);
             return true;
         } catch (IOException e) {
             return false;
         } finally {
+            if (channel != null) {
+                try {
+                    channel.close();
+                } catch (IOException e) {
+                    log.warn("Failed to close channel", e);
+                }
+            }
             pool.releaseSession(session.get());
         }
     }
@@ -118,8 +128,24 @@ public class CmdUtils {
      * @throws CMDException read cmd fail
      * @since 2023/12/1
      */
-    public static final void readFromCmd(
+    public static void readFromCmd(
             String nodeId, String cmd, Consumer<String> consumer) throws IOException, CMDException {
+        for (int attempt = 0; attempt < MAX_RETRY; attempt++) {
+            try {
+                doExecute(nodeId, cmd, consumer);
+                return;
+            } catch (CollectException | IOException e) {
+                if (attempt == MAX_RETRY - 1) {
+                    throw e;
+                }
+                log.warn("Retry {}/{} for node {} due to: {}", attempt + 1, MAX_RETRY, nodeId, e.getMessage());
+                ThreadUtil.sleep(RETRY_INTERVAL_MS);
+            }
+        }
+    }
+
+    private static void doExecute(String nodeId, String cmd, Consumer<String> consumer)
+            throws CMDException, IOException {
         if (consumer != null) {
             readFromCmd(nodeId, cmd, (i, line) -> consumer.accept(line));
         }
@@ -155,8 +181,9 @@ public class CmdUtils {
         }
 
         ClientSession session = opSession.get();
+        ChannelExec channel = null;
         try {
-            var channel = session.createExecChannel(cmd);
+            channel = session.createExecChannel(cmd);
             channel.setPtyType("ansi");
             channel.setPtyColumns(300);
             channel.setPtyWidth(300);
@@ -168,19 +195,15 @@ public class CmdUtils {
             }
             if (channel.getExitStatus() != null && channel.getExitStatus() != 0) {
                 log.error("{}: exitStatus is {}", cmd, channel.getExitStatus());
-                channel.close();
-                pool.releaseSession(session);
-                stopWatch.stop();
-                log.error("exec {} costs {}ms", cmd, stopWatch.getTotalTimeMillis());
                 throw new CMDException(cmd + StrUtil.SPACE + StrUtil.LF + StrUtil.SPACE + channel.getInvertedErr());
             }
 
             try (var reader = new BufferedReader(
                 new InputStreamReader(channel.getInvertedOut(), Charset.defaultCharset()));) {
                 int i = -1;
-                while (reader.ready()) {
+                String line;
+                while ((line = reader.readLine()) != null) {
                     i++;
-                    String line = reader.readLine();
                     if (StrUtil.isBlank(line)) {
                         continue;
                     }
@@ -188,8 +211,6 @@ public class CmdUtils {
                         consumer.accept(i, line);
                     }
                 }
-            } finally {
-                channel.close();
             }
         } catch (Exception exp) {
             log.error("exec command fail!");
@@ -202,7 +223,23 @@ public class CmdUtils {
             }
             throw exp;
         } finally {
-            pool.releaseSession(session);
+            if (channel != null) {
+                try {
+                    channel.close();
+                } catch (IOException e) {
+                    log.warn("Failed to close channel", e);
+                }
+            }
+            if (channel == null || channel.getExitStatus() == null || channel.getExitStatus() != 0) {
+                try {
+                    pool.destroySession(session);
+                    log.debug("Abnormal channel, destroy session nodeId={}", nodeId);
+                } catch (Exception e) {
+                    log.error("Destroy session failed", e);
+                }
+            } else {
+                pool.releaseSession(session);
+            }
             stopWatch.stop();
             log.info("exec {} costs {}ms", cmd, stopWatch.getTotalTimeMillis());
         }

@@ -227,7 +227,12 @@ public class SshSessionUtils implements AutoCloseable {
     private String excessStr;
 
     private static final synchronized SshClient getClient() {
-        if (cli == null) {
+        if (cli == null || cli.isClosed() || !cli.isStarted()) {
+            if (cli != null) {
+                try {
+                    cli.stop();
+                } catch (Exception ignored) {}
+            }
             cli = SshClient.setUpDefaultClient();
             cli.start();
         }
