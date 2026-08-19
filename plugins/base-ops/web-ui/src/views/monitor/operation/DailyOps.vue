@@ -398,20 +398,34 @@
                     >{{
                       $t('operation.DailyOps.5mplp1xc0c00')
                     }}</a-button>
-                    <a-button
-                      type="outline"
-                      class="mr"
-                      @click="handleStop(clusterData)"
-                    >{{
-                      $t('operation.DailyOps.5mplp1xc0i80')
-                    }}</a-button>
-                    <a-button
-                      type="outline"
-                      class="mr"
-                      @click="handleReset(clusterData, index)"
-                    >{{
-                      $t('operation.DailyOps.5mplp1xc0o40')
-                    }}</a-button>
+                    <a-popconfirm
+                      :content="$t('operation.DailyOps.5mplp1xc0s20')"
+                      type="warning"
+                      :ok-text="$t('operation.DailyOps.5mplp1xc1580')"
+                      :cancel-text="$t('operation.DailyOps.5mplp1xc1b00')"
+                      @ok="handleStop(clusterData)"
+                    >
+                      <a-button
+                        type="outline"
+                        class="mr"
+                      >{{
+                        $t('operation.DailyOps.5mplp1xc0i80')
+                      }}</a-button>
+                    </a-popconfirm>
+                    <a-popconfirm
+                      :content="$t('operation.DailyOps.5mplp1xc0w30')"
+                      type="warning"
+                      :ok-text="$t('operation.DailyOps.5mplp1xc1580')"
+                      :cancel-text="$t('operation.DailyOps.5mplp1xc1b00')"
+                      @ok="handleReset(clusterData, index)"
+                    >
+                      <a-button
+                        type="outline"
+                        class="mr"
+                      >{{
+                        $t('operation.DailyOps.5mplp1xc0o40')
+                      }}</a-button>
+                    </a-popconfirm>
                     <a-button
                       type="outline"
                       class="mr"
@@ -422,6 +436,7 @@
                     <a-popconfirm
                       :content="$t('operation.DailyOps.5mplp1xc0zo0')"
                       type="warning"
+                      :content-style="{ whiteSpace: 'pre-line' }"
                       :ok-text="$t('operation.DailyOps.5mplp1xc1580')"
                       :cancel-text="$t('operation.DailyOps.5mplp1xc1b00')"
                       @ok="handleUninstallBefore(clusterData, index, false)"
@@ -436,6 +451,7 @@
                     <a-popconfirm
                       :content="$t('operation.DailyOps.5mplp1xc0zo0')"
                       type="warning"
+                      :content-style="{ whiteSpace: 'pre-line' }"
                       :ok-text="$t('operation.DailyOps.5mplp1xc1580')"
                       :cancel-text="$t('operation.DailyOps.5mplp1xc1b00')"
                       @ok="handleUninstallBefore(clusterData, index, true)"
@@ -448,8 +464,9 @@
                       }}</a-button>
                     </a-popconfirm>
                     <a-popconfirm
-                      :content="$t('operation.DailyOps.else5')"
+                      :content="$t('operation.DailyOps.5mplp1xc0er0')"
                       type="warning"
+                      :content-style="{ whiteSpace: 'pre-line' }"
                       :ok-text="$t('operation.DailyOps.5mplp1xc1580')"
                       :cancel-text="$t('operation.DailyOps.5mplp1xc1b00')"
                       @ok="handleDelCluster(clusterData, index)"
@@ -684,7 +701,7 @@
 
 <script lang="ts" setup>
 import { KeyValue } from '@/types/global'
-import {onBeforeUnmount, onMounted, reactive, ref, computed, onUnmounted, toRaw, watch} from 'vue'
+import {onBeforeUnmount, onMounted, reactive, ref, computed, onUnmounted, toRaw, watch, nextTick} from 'vue'
 import {
   clusterMonitor,
   delCluster,
@@ -722,7 +739,7 @@ import GucSettingDrawer from './GucSettingDrawer.vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 import * as echarts from 'echarts';
-import { Message } from '@arco-design/web-vue'
+import {Message, Modal} from '@arco-design/web-vue'
 import taskExecute from './taskExecute.vue'
 import axios from 'axios'
 import {useRoute, useRouter} from 'vue-router';
@@ -739,7 +756,6 @@ const data: {
   loading: false,
   socketArr: []
 })
-
 
 const list = reactive<KeyValue>({
   selectedDraftData:[],
@@ -2116,6 +2132,22 @@ const handleInstanceSwitchChange = (type: any, clusterIndex: number, nodeIndex: 
 
 // instance oper
 const handleInstanceOper = (type: any, clusterIndex: number, nodeIndex: number, isSwitch = false) => {
+  if (type === 'stop' && !isSwitch) {
+    Modal.warning({
+      title: t('operation.DailyOps.5mplp1xc0i80'),
+      content: t('operation.DailyOps.5mplp1xc0r80'),
+      hideCancel: false,
+      okText: t('operation.DailyOps.5mplp1xc1580'),
+      cancelText: t('operation.DailyOps.5mplp1xc1b00'),
+      onOk: () => {
+        doInstanceOper(type, clusterIndex, nodeIndex, isSwitch)
+      }
+    })
+    return
+  }
+  doInstanceOper(type, clusterIndex, nodeIndex, isSwitch)
+}
+const doInstanceOper = (type: any, clusterIndex: number, nodeIndex: number, isSwitch = false) => {
   data.clusterList[clusterIndex].loading = true
   const term = getTermObj()
   const socketKey = new Date().getTime()
