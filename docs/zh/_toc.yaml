@@ -18,8 +18,9 @@ sections:
   - label: 基础运维
     href: ./base_ops/datakit_base_ops.md
   - label: 业务开发
-    href: ./data_studio/datakit_business_development.md
     sections: 
+      - label: 业务开发-用户操作手册
+        href: ./data_studio/datakit_business_development.md
       - label: 连接信息
         href: ./data_studio/connection_information.md
       - label: 表
