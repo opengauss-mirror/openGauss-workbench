@@ -12,10 +12,14 @@ import org.apache.logging.log4j.Logger;
 import org.opengauss.global.Constants;
 import org.hamcrest.Matchers;
 import org.opengauss.visualtool.api.model.ops.Host;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.opengauss.global.Constants.getRequestSpecification;
 
@@ -27,24 +31,30 @@ import static org.opengauss.global.Constants.getRequestSpecification;
 public class OpsHostTagControllerTest {
     private static final Logger logger = LogManager.getLogger(OpsHostTagControllerTest.class);
 
+    private static final String TAG_NAME = "tag-" + UUID.randomUUID().toString().replace("-", "");
+    private static final String CHANGE_TAG_NAME = "tag-" + UUID.randomUUID().toString().replace("-", "");
+
     private final HostControllerTest hostControllerTest = new HostControllerTest();
     private Host host;
-    private Map<String, String> tag = new HashMap<>();
-    private Map<String, Object> hostTagDto = new HashMap<>();
-    private final String tagName = "testTag";
-    private final String changeTagName = "changeTag";
+    private String tagId;
 
-    @Test
-    public void setTestBasePath() {
+    private boolean isHostCreated;
+    private boolean isRelationAdded;
+    private boolean isRelationDeleted;
+    private boolean isTagDeleted;
+
+    @BeforeClass
+    public void setUp() {
         host = hostControllerTest.addHost();
-
+        isHostCreated = host != null && host.getHostId() != null;
         RestAssured.basePath = "/hostTag";
         logger.info("OpsHostTagControllerTest start.");
     }
 
-    @Test(dependsOnMethods = "setTestBasePath")
+    @Test
     public void addTest() {
-        tag.put("name", tagName);
+        Map<String, String> tag = new HashMap<>();
+        tag.put("name", TAG_NAME);
 
         getRequestSpecification()
                 .contentType(ContentType.JSON)
@@ -52,6 +62,7 @@ public class OpsHostTagControllerTest {
                 .when()
                 .post("/add")
                 .then()
+                .statusCode(200)
                 .body("code", Matchers.equalTo(200));
     }
 
@@ -59,27 +70,31 @@ public class OpsHostTagControllerTest {
     public void pageTest() {
         Response response = getRequestSpecification()
                 .params(Constants.PAGE_PARAMS)
+                .param("name", TAG_NAME)
                 .when()
                 .get("/page");
 
         response.then()
+                .statusCode(200)
                 .body("code", Matchers.equalTo(200))
-                .body("rows.name", Matchers.hasItem(tagName));
+                .body("rows.name", Matchers.hasItem(TAG_NAME));
 
-        tag.put("tagId", response.jsonPath().getString("rows.find { it.name == '" + tagName + "' }.id"));
+        tagId = response.jsonPath().getString("rows.find { it.name == '" + TAG_NAME + "' }.id");
     }
 
     @Test(dependsOnMethods = "pageTest")
     public void updateTest() {
-        tag.put("name", changeTagName);
+        Map<String, String> tag = new HashMap<>();
+        tag.put("name", CHANGE_TAG_NAME);
 
         getRequestSpecification()
                 .contentType(ContentType.JSON)
                 .body(tag)
-                .pathParam("tagId", tag.get("tagId"))
+                .pathParam("tagId", tagId)
                 .when()
                 .put("/update/{tagId}")
                 .then()
+                .statusCode(200)
                 .body("code", Matchers.equalTo(200));
     }
 
@@ -89,13 +104,15 @@ public class OpsHostTagControllerTest {
                 .when()
                 .get("/listAll")
                 .then()
+                .statusCode(200)
                 .body("code", Matchers.equalTo(200))
-                .body("data.name", Matchers.hasItem(changeTagName));
+                .body("data.name", Matchers.hasItem(CHANGE_TAG_NAME));
     }
 
     @Test(dependsOnMethods = "listAllTest")
     public void addTagTest() {
-        hostTagDto.put("names", new String[] {tag.get("name")});
+        Map<String, Object> hostTagDto = new HashMap<>();
+        hostTagDto.put("names", new String[] {CHANGE_TAG_NAME});
         hostTagDto.put("hostIds", new String[] {host.getHostId()});
 
         getRequestSpecification()
@@ -104,12 +121,31 @@ public class OpsHostTagControllerTest {
                 .when()
                 .put("/addTag")
                 .then()
+                .statusCode(200)
                 .body("code", Matchers.equalTo(200));
+
+        isRelationAdded = true;
     }
 
     @Test(dependsOnMethods = "addTagTest")
+    public void verifyRelationTest() {
+        Response response = getRequestSpecification()
+                .params(Constants.PAGE_PARAMS)
+                .param("name", CHANGE_TAG_NAME)
+                .when()
+                .get("/page");
+
+        response.then()
+                .statusCode(200)
+                .body("code", Matchers.equalTo(200))
+                .body("rows.find { it.name == '" + CHANGE_TAG_NAME + "' }.relNum", Matchers.equalTo(1));
+    }
+
+    @Test(dependsOnMethods = "verifyRelationTest")
     public void delTagRelationTest() {
-        hostTagDto.put("names", new String[] {tag.get("tagId")});
+        Map<String, Object> hostTagDto = new HashMap<>();
+        hostTagDto.put("names", new String[] {tagId});
+        hostTagDto.put("hostIds", new String[] {host.getHostId()});
 
         getRequestSpecification()
                 .contentType(ContentType.JSON)
@@ -117,18 +153,104 @@ public class OpsHostTagControllerTest {
                 .when()
                 .put("/delTag")
                 .then()
+                .statusCode(200)
                 .body("code", Matchers.equalTo(200));
+
+        isRelationDeleted = true;
     }
 
-    @Test(dependsOnMethods = "listAllTest")
+    @Test(dependsOnMethods = "delTagRelationTest")
     public void delTest() {
         getRequestSpecification()
-                .pathParam("tagId", tag.get("tagId"))
+                .pathParam("tagId", tagId)
                 .when()
                 .delete("/del/{tagId}")
                 .then()
+                .statusCode(200)
                 .body("code", Matchers.equalTo(200));
 
-        hostControllerTest.deleteHost();
+        isTagDeleted = true;
+    }
+
+    /**
+     * Best-effort cleanup so a failed chain does not leave the tag/relation/host created by this test.
+     */
+    @AfterClass(alwaysRun = true)
+    public void cleanUp() {
+        if (!isTagDeleted) {
+            String id = tagId;
+            if (id == null || id.isEmpty()) {
+                id = findTagIdByName().orElse(null);
+            }
+            if (id != null && !id.isEmpty()) {
+                if (isRelationAdded && !isRelationDeleted) {
+                    delTagRelationQuietly(id);
+                }
+                delTagQuietly(id);
+            }
+        }
+        if (isHostCreated) {
+            deleteHostQuietly();
+        }
+    }
+
+    private Optional<String> findTagIdByName() {
+        Optional<String> id = findTagIdByName(CHANGE_TAG_NAME);
+        if (id.isEmpty()) {
+            id = findTagIdByName(TAG_NAME);
+        }
+        return id;
+    }
+
+    private Optional<String> findTagIdByName(String name) {
+        try {
+            RestAssured.basePath = "/hostTag";
+            Response response = getRequestSpecification()
+                    .params(Constants.PAGE_PARAMS)
+                    .param("name", name)
+                    .when()
+                    .get("/page");
+            return Optional.ofNullable(response.jsonPath()
+                    .getString("rows.find { it.name == '" + name + "' }.id"));
+        } catch (RuntimeException | AssertionError e) {
+            return Optional.empty();
+        }
+    }
+
+    private void delTagRelationQuietly(String id) {
+        try {
+            RestAssured.basePath = "/hostTag";
+            Map<String, Object> hostTagDto = new HashMap<>();
+            hostTagDto.put("names", new String[] {id});
+            hostTagDto.put("hostIds", new String[] {host.getHostId()});
+            getRequestSpecification()
+                    .contentType(ContentType.JSON)
+                    .body(hostTagDto)
+                    .when()
+                    .put("/delTag");
+        } catch (Exception | AssertionError e) {
+            logger.warn("Failed to clean up host tag relation {}: {}", id, e.getMessage());
+        }
+    }
+
+    private void delTagQuietly(String id) {
+        try {
+            RestAssured.basePath = "/hostTag";
+            getRequestSpecification()
+                    .pathParam("tagId", id)
+                    .when()
+                    .delete("/del/{tagId}");
+        } catch (Exception | AssertionError e) {
+            logger.warn("Failed to clean up host tag {}: {}", id, e.getMessage());
+        }
+    }
+
+    private void deleteHostQuietly() {
+        try {
+            RestAssured.basePath = "/host";
+            hostControllerTest.deleteHost();
+        } catch (Exception | AssertionError e) {
+            logger.warn("Failed to clean up host {}: {}", host != null ? host.getHostId() : null, e.getMessage());
+        }
     }
 }

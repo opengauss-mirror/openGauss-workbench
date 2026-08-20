@@ -9,12 +9,16 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.opengauss.global.Constants;
 import org.hamcrest.Matchers;
+import org.opengauss.global.Constants;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.opengauss.global.Constants.getRequestSpecification;
 
@@ -26,38 +30,42 @@ import static org.opengauss.global.Constants.getRequestSpecification;
 public class AzControllerTest {
     private static final Logger logger = LogManager.getLogger(AzControllerTest.class);
 
-    private Map<String, String> addAz = new HashMap<>();
-    private String addAzAddress = "测试地址";
-    private String changeAddAzAddress = "改变后的测试地址";
-    private final String addAzName = "testAz";
+    private static final String AZ_NAME = "az-test-" + UUID.randomUUID().toString().replace("-", "");
+    private static final String AZ_ADDRESS = "测试地址";
+    private static final String CHANGED_AZ_ADDRESS = "改变后的测试地址";
 
-    @Test
-    public void setTestBasePath() {
+    private final Map<String, String> az = new HashMap<>();
+    private boolean isDeletedByTest;
+
+    @BeforeClass
+    public void setUp() {
         RestAssured.basePath = "/az";
         logger.info("AzControllerTest start.");
     }
 
-    @Test(priority = 1)
+    @Test
     public void addTest() {
-        addAz.put("address", addAzAddress);
-        addAz.put("name", addAzName);
+        az.put("name", AZ_NAME);
+        az.put("address", AZ_ADDRESS);
 
         getRequestSpecification()
                 .contentType(ContentType.JSON)
-                .body(addAz)
+                .body(az)
                 .when()
                 .post()
                 .then()
+                .statusCode(200)
                 .body("code", Matchers.equalTo(200));
     }
 
     @Test(dependsOnMethods = "addTest")
     public void hasNameTest() {
         getRequestSpecification()
-                .param("name", addAzName)
+                .param("name", AZ_NAME)
                 .when()
                 .get("/hasName")
                 .then()
+                .statusCode(200)
                 .body("code", Matchers.equalTo(200))
                 .body("data", Matchers.equalTo(true));
     }
@@ -66,14 +74,16 @@ public class AzControllerTest {
     public void pageTest() {
         Response response = getRequestSpecification()
                 .params(Constants.PAGE_PARAMS)
+                .param("name", AZ_NAME)
                 .when()
                 .get("/page");
 
         response.then()
+                .statusCode(200)
                 .body("code", Matchers.equalTo(200))
-                .body("rows.name", Matchers.hasItems("az1", addAzName));
+                .body("rows.name", Matchers.hasItem(AZ_NAME));
 
-        addAz.put("azId", response.jsonPath().getString("rows.find { it.name == '" + addAzName + "' }.azId"));
+        az.put("azId", response.jsonPath().getString("rows.find { it.name == '" + AZ_NAME + "' }.azId"));
     }
 
     @Test(dependsOnMethods = "pageTest")
@@ -82,42 +92,89 @@ public class AzControllerTest {
                 .when()
                 .get("/listAll")
                 .then()
+                .statusCode(200)
                 .body("code", Matchers.equalTo(200))
-                .body("data.address", Matchers.hasItem(addAzAddress));
+                .body("data.name", Matchers.hasItem(AZ_NAME))
+                .body("data.address", Matchers.hasItem(AZ_ADDRESS));
     }
 
     @Test(dependsOnMethods = "listAllTest")
     public void editTest() {
-        addAz.put("address", changeAddAzAddress);
+        az.put("address", CHANGED_AZ_ADDRESS);
 
         getRequestSpecification()
                 .contentType(ContentType.JSON)
-                .pathParam("azId", addAz.get("azId"))
-                .body(addAz)
+                .pathParam("azId", az.get("azId"))
+                .body(az)
                 .when()
                 .put("/{azId}")
                 .then()
+                .statusCode(200)
                 .body("code", Matchers.equalTo(200));
     }
 
     @Test(dependsOnMethods = "editTest")
     public void getTest() {
         getRequestSpecification()
-                .pathParam("azId", addAz.get("azId"))
+                .pathParam("azId", az.get("azId"))
                 .when()
                 .get("/{azId}")
                 .then()
+                .statusCode(200)
                 .body("code", Matchers.equalTo(200))
-                .body("data.address", Matchers.equalTo(changeAddAzAddress));
+                .body("data.name", Matchers.equalTo(AZ_NAME))
+                .body("data.address", Matchers.equalTo(CHANGED_AZ_ADDRESS));
     }
 
     @Test(dependsOnMethods = "getTest")
     public void delTest() {
+        String azId = az.get("azId");
         getRequestSpecification()
-                .pathParam("azId", addAz.get("azId"))
+                .pathParam("azId", azId)
                 .when()
                 .delete("/{azId}")
                 .then()
+                .statusCode(200)
                 .body("code", Matchers.equalTo(200));
+
+        isDeletedByTest = true;
+    }
+
+    /**
+     * Best-effort cleanup so a failed chain does not leave the AZ created by this test.
+     */
+    @AfterClass(alwaysRun = true)
+    public void cleanUp() {
+        if (isDeletedByTest) {
+            return;
+        }
+        String azId = az.get("azId");
+        if (azId == null || azId.isEmpty()) {
+            azId = findAzIdByName().orElse(null);
+        }
+        if (azId == null || azId.isEmpty()) {
+            return;
+        }
+        try {
+            getRequestSpecification()
+                    .pathParam("azId", azId)
+                    .when()
+                    .delete("/{azId}");
+        } catch (RuntimeException | AssertionError e) {
+            logger.warn("Failed to clean up AZ {}: {}", AZ_NAME, e.getMessage());
+        }
+    }
+
+    private Optional<String> findAzIdByName() {
+        try {
+            Response response = getRequestSpecification()
+                    .param("name", AZ_NAME)
+                    .when()
+                    .get("/page");
+            return Optional.ofNullable(response.jsonPath()
+                    .getString("rows.find { it.name == '" + AZ_NAME + "' }.azId"));
+        } catch (RuntimeException | AssertionError e) {
+            return Optional.empty();
+        }
     }
 }
