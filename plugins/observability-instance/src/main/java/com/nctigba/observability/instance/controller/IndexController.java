@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.nctigba.observability.instance.service.AgentService;
-import org.mybatis.spring.MyBatisSystemException;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.exception.CustomException;

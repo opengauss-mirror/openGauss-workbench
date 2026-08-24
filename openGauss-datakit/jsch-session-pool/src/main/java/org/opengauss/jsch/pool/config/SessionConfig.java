@@ -62,6 +62,12 @@ public class SessionConfig {
     private boolean isReuseSessionForMultipleChannels = false;
 
     /**
+     * max concurrent exec commands per host-user key, default 4
+     */
+    @Getter
+    private int maxConcurrent = 4;
+
+    /**
      * build session config , default port 22
      *
      * @param host host
@@ -117,6 +123,20 @@ public class SessionConfig {
      */
     public SessionConfig withTimeout(int timeout) {
         this.timeout = timeout;
+        return this;
+    }
+
+    /**
+     * set max concurrent exec commands
+     *
+     * @param maxConcurrent max concurrent
+     * @return this
+     */
+    public SessionConfig withMaxConcurrent(int maxConcurrent) {
+        if (maxConcurrent < 1) {
+            throw new IllegalArgumentException("maxConcurrent must be >= 1");
+        }
+        this.maxConcurrent = maxConcurrent;
         return this;
     }
 
