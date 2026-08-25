@@ -25,6 +25,8 @@
 package org.opengauss.admin.framework.config;
 
 import com.baomidou.mybatisplus.annotation.DbType;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import com.baomidou.mybatisplus.extension.parser.JsqlParserGlobal;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.BlockAttackInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
@@ -32,6 +34,13 @@ import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerIntercept
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Description: mybatis-plus configuration
@@ -44,6 +53,34 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement(proxyTargetClass = true)
 @Configuration
 public class MybatisPlusConfig {
+    private ExecutorService jsqlParserExecutor;
+
+    /**
+     * JSqlParser 独立线程池，Spring托管，容器关闭自动shutdown
+     */
+    @Bean(destroyMethod = "shutdown")
+    public ExecutorService jsqlParserExecutor() {
+        final String poolInstanceId = IdWorker.get32UUID().substring(0, 8);
+        AtomicInteger seq = new AtomicInteger(0);
+        ThreadFactory threadFactory = r -> {
+            Thread thread = new Thread(r);
+            thread.setName("jsqlparser‑" + poolInstanceId + "-" + seq.getAndIncrement());
+            thread.setDaemon(false);
+            return thread;
+        };
+        jsqlParserExecutor = new ThreadPoolExecutor(4, 4, 0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(), threadFactory, new ThreadPoolExecutor.AbortPolicy());
+        initJsqlParser();
+        return jsqlParserExecutor;
+    }
+
+    /**
+     * Bean初始化完成，设置到MyBatis‑Plus JsqlParserGlobal静态全局
+     */
+    public void initJsqlParser() {
+        JsqlParserGlobal.setExecutorService(jsqlParserExecutor);
+    }
+
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();

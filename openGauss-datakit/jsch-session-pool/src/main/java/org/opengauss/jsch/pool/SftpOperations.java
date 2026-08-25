@@ -175,11 +175,14 @@ public class SftpOperations {
             } catch (SftpException e) {
                 if (e.id == ChannelSftp.SSH_FX_NO_SUCH_FILE) {
                     createParentDirs(channel, parent);
+                    channel.mkdir(parent);
+                } else {
+                    throw e;
                 }
             }
-            channel.mkdir(parent);
         }
     }
+
 
     /**
      * progress monitor adapter

@@ -2,14 +2,15 @@
 <Configuration status="WARN" monitorInterval="30" >
     <Properties>
         <Property name="LOG_PATH">$${sys:logging.file.path:-./logs}</Property>
-        <Property name="SAFE_MSG">%enc{%desensitize{%m}}{CRLF}%n</Property>
+        <Property name="SAFE_MSG">%enc{%desensitize}{CRLF}%n</Property>
         <Property name="FILE_PERMISSIONS">rw-r-----</Property>
-        <Property name="LOG_PATTERN">%style{%d{yyyy-MM-dd HH:mm:ss}}{blue} [%style{%t}{cyan}] [%style{%c{32}}{yellow}] - [%highlight{%p}] ${SAFE_MSG}</Property>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss} [%t] [%c{32}] - [%p] ${SAFE_MSG}</Property>
+        <Property name="CONSOLE_PATTERN">%d{yyyy-MM-dd HH:mm:ss} [%t] [%c{32}] - [%p] ${SAFE_MSG}</Property>
     </Properties>
 
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <PatternLayout pattern="${CONSOLE_PATTERN}"/>
         </Console>
         <RollingFile name="FileInfo" filePermissions="${FILE_PERMISSIONS}"
                      fileName="${LOG_PATH}/sys.log"

@@ -41,7 +41,7 @@ import com.nctigba.observability.instance.util.DownloadUtils;
 import com.nctigba.observability.instance.util.MessageSourceUtils;
 import com.nctigba.observability.instance.util.RsaUtils;
 import com.nctigba.observability.instance.util.SshSessionUtils;
-import com.nctigba.observability.instance.util.SshSessionUtils.command;
+import com.nctigba.observability.instance.util.SshSessionUtils.Command;
 import com.nctigba.observability.instance.util.YamlUtils;
 
 import cn.hutool.core.collection.CollectionUtil;
@@ -532,10 +532,10 @@ public class ExporterInstallService extends AbstractInstaller {
                 encryptionUtils.decrypt(user.getPassword()));) {
             curr = nextStep(wsSession, steps, curr);
             if (nodeenv != null) {
-                var nodePid = sshsession.execute(command.PS.parse("node_exporter", nodeenv.getPort()));
+                var nodePid = sshsession.execute(Command.PS.parse("node_exporter", nodeenv.getPort()));
                 if (StrUtil.isNotBlank(nodePid)) {
                     curr = nextStep(wsSession, steps, curr);
-                    sshsession.execute(command.KILL.parse(nodePid));
+                    sshsession.execute(Command.KILL.parse(nodePid));
                 } else {
                     curr = skipStep(wsSession, steps, curr);
                 }
@@ -543,10 +543,10 @@ public class ExporterInstallService extends AbstractInstaller {
             } else curr = skipStep(wsSession, steps, curr);
 
             curr = nextStep(wsSession, steps, curr);
-            var gaussPid = sshsession.execute(command.PS.parse("opengauss_exporter", gaussExporterEnv.getPort()));
+            var gaussPid = sshsession.execute(Command.PS.parse("opengauss_exporter", gaussExporterEnv.getPort()));
             if (StrUtil.isNotBlank(gaussPid)) {
                 curr = nextStep(wsSession, steps, curr);
-                sshsession.execute(command.KILL.parse(gaussPid));
+                sshsession.execute(Command.KILL.parse(gaussPid));
             } else {
                 curr = skipStep(wsSession, steps, curr);
             }
@@ -622,7 +622,7 @@ public class ExporterInstallService extends AbstractInstaller {
                 return "/etc/jdk8/bin/java";
             }
             sendMsg(null, "java not found, downloading");
-            String arch = session.execute(command.ARCH);
+            String arch = session.execute(Command.ARCH);
             String v = "aarch64".equals(arch) ? "aarch64" : "x64";
             String tar = MessageFormat.format(JDKPKG, v);
             NctigbaEnvDO pkg = envMapper.selectOne(
@@ -671,7 +671,7 @@ public class ExporterInstallService extends AbstractInstaller {
     /**
      * monitorStatus
      */
-    @Scheduled(fixedRate = CommonConstants.MONITOR_CYCLE, timeUnit = TimeUnit.SECONDS)
+    @Scheduled(initialDelay = 60, fixedRate = CommonConstants.MONITOR_CYCLE, timeUnit = TimeUnit.SECONDS)
     public void monitorStatus() {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
@@ -899,7 +899,7 @@ public class ExporterInstallService extends AbstractInstaller {
                 if (!pid.matches("\\d+")) {
                     return;
                 }
-                session.execute(SshSessionUtils.command.KILL.parse(pid));
+                session.execute(Command.KILL.parse(pid));
             }
         } catch (IOException | RuntimeException e) {
             throw new CustomException(e.getMessage());

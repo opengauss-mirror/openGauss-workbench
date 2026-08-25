@@ -40,6 +40,16 @@ public class JschSessionPool {
     private static final GenericObjectPoolConfig<Session> DEFAULT_POOL_CONFIG = JschUtils.createDefaultPoolConfig();
 
     /**
+     * max borrow attempts, used to tolerate transient network jitter
+     */
+    private static final int MAX_BORROW_ATTEMPTS = 2;
+
+    /**
+     * backoff interval between borrow attempts in milliseconds
+     */
+    private static final long BORROW_BACKOFF_MS = 200L;
+
+    /**
      * create session pool
      *
      * @param config session config
@@ -70,6 +80,7 @@ public class JschSessionPool {
         if (pool != null) {
             GenericObjectPool<Session> remove = POOL_MAP.remove(key);
             remove.close();
+            ExecOperations.releaseSemaphore(key);
         }
     }
 
@@ -106,6 +117,7 @@ public class JschSessionPool {
     public static synchronized void closeAllPools() {
         for (Map.Entry<HostUserKey, GenericObjectPool<Session>> entry : POOL_MAP.entrySet()) {
             entry.getValue().close();
+            ExecOperations.releaseSemaphore(entry.getKey());
         }
         POOL_MAP.clear();
     }
@@ -119,6 +131,7 @@ public class JschSessionPool {
         GenericObjectPool<Session> pool = POOL_MAP.remove(key);
         if (pool != null) {
             pool.close();
+            ExecOperations.releaseSemaphore(key);
         }
     }
 
@@ -131,14 +144,28 @@ public class JschSessionPool {
      */
     public static Session borrowSession(SessionConfig config) throws JschPoolException {
         GenericObjectPool<Session> pool = getOrCreatePool(config);
-        try {
-            return pool.borrowObject();
-        } catch (Exception e) {
-            pool.clear();
-            throw new JschPoolException(
-                "Failed to borrow session from pool [" + config.getHost() + ":" + config.getUsername() + "] caused by "
-                    + e.getMessage(), e);
+        Exception lastException = null;
+        for (int attempt = 1; attempt <= MAX_BORROW_ATTEMPTS; attempt++) {
+            try {
+                return pool.borrowObject();
+            } catch (Exception e) {
+                lastException = e;
+                logger.warn("Borrow session attempt {}/{} failed for [{}@{}:{}], reason: {}",
+                    attempt, MAX_BORROW_ATTEMPTS, config.getUsername(), config.getHost(), config.getPort(),
+                    e.getMessage());
+                if (attempt < MAX_BORROW_ATTEMPTS) {
+                    try {
+                        Thread.sleep(BORROW_BACKOFF_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new JschPoolException("Borrow session interrupted", ie);
+                    }
+                }
+            }
         }
+        throw new JschPoolException(
+            "Failed to borrow session from pool [" + config.getHost() + ":" + config.getUsername() + "] after "
+                + MAX_BORROW_ATTEMPTS + " attempts, caused by " + lastException.getMessage(), lastException);
     }
 
     /**
@@ -248,6 +275,10 @@ public class JschSessionPool {
 
         @Override
         public void destroyObject(PooledObject<Session> p, DestroyMode destroyMode) throws Exception {
+            Session session = p.getObject();
+            if (session != null && session.isConnected()) {
+                session.disconnect();
+            }
             super.destroyObject(p, destroyMode);
         }
 

@@ -62,7 +62,10 @@ public class SshSessionUtils implements AutoCloseable {
     private static final int CHANNEL_TIMEOUT = 1000 * 60 * 5;
     private static final String BASH_ERR = "/.bashrc:";
 
-    public enum command {
+    /**
+     * Command
+     */
+    public enum Command {
         ARCH("arch"),
         CD("cd {0}"),
         LS("ls {0}"),
@@ -80,7 +83,12 @@ public class SshSessionUtils implements AutoCloseable {
 
         private String cmd;
 
-        command(String cmd) {
+        /**
+         * command
+         *
+         * @param cmd cmd
+         */
+        Command(String cmd) {
             this.cmd = cmd;
         }
 
@@ -160,7 +168,7 @@ public class SshSessionUtils implements AutoCloseable {
         return false;
     }
 
-    public String execute(command command) throws IOException {
+    public String execute(Command command) throws IOException {
         return execute(command.cmd, null);
     }
 
@@ -245,7 +253,7 @@ public class SshSessionUtils implements AutoCloseable {
         try {
             session.addPasswordIdentity(password);
             session.auth().verify(SESSION_TIMEOUT);
-            excessStr = execute(command.ECHO_NULL);
+            excessStr = execute(Command.ECHO_NULL);
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }

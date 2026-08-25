@@ -14,6 +14,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import org.opengauss.jsch.pool.config.SessionConfig;
+import org.opengauss.jsch.pool.records.HostUserKey;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,6 +24,8 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -39,10 +42,10 @@ public class ExecOperations {
     private static final int DEFAULT_TIMEOUT = 30000;
 
     /**
-     * semaphore size=4 , used to control the number of concurrent threads
+     * semaphore per HostUserKey, used to control concurrent exec commands per host-user
      * fair mode to avoid thread starvation
      */
-    private static final Semaphore SEMAPHORE = new Semaphore(4, true);
+    private static final ConcurrentMap<HostUserKey, Semaphore> SEMAPHORE_MAP = new ConcurrentHashMap<>();
 
     /**
      * execute single command
@@ -53,10 +56,7 @@ public class ExecOperations {
      * @throws JSchException exec exception
      */
     public static ExecResult executeCommand(SessionConfig config, String command) throws JSchException {
-        if (command.contains("nohup")) {
-            executeCommand(config, command, DEFAULT_TIMEOUT, false);
-        }
-        return executeCommand(config, command, DEFAULT_TIMEOUT, true);
+        return executeCommand(config, command, DEFAULT_TIMEOUT);
     }
 
     /**
@@ -70,10 +70,8 @@ public class ExecOperations {
      */
     public static ExecResult executeCommand(SessionConfig config, String command, int commandTimeout)
             throws JSchException {
-        if (command.contains("nohup")) {
-            executeCommand(config, command, commandTimeout, false);
-        }
-        return executeCommand(config, command, commandTimeout, true);
+        boolean isPty = !command.contains("nohup");
+        return executeCommand(config, command, commandTimeout, isPty);
     }
 
     /**
@@ -102,14 +100,32 @@ public class ExecOperations {
         List<ExecResult> results = new ArrayList<>();
         for (String command : commands) {
             if (!command.trim().isEmpty()) {
-                if (command.contains("nohup")) {
-                    results.add(executeCommand(config, command, DEFAULT_TIMEOUT, false));
-                } else {
-                    results.add(executeCommand(config, command, DEFAULT_TIMEOUT, true));
-                }
+                boolean isPty = !command.contains("nohup");
+                results.add(executeCommand(config, command, timeout, isPty));
             }
         }
         return results;
+    }
+
+    /**
+     * get or create semaphore for host-user key
+     *
+     * @param config session config
+     * @return semaphore
+     */
+    private static Semaphore getOrCreateSemaphore(SessionConfig config) {
+        HostUserKey key = config.getKey();
+        return SEMAPHORE_MAP.computeIfAbsent(key,
+            k -> new Semaphore(config.getMaxConcurrent(), true));
+    }
+
+    /**
+     * release and remove semaphore for host-user key, called when pool is closed
+     *
+     * @param key host user key
+     */
+    public static void releaseSemaphore(HostUserKey key) {
+        SEMAPHORE_MAP.remove(key);
     }
 
     /**
@@ -128,8 +144,9 @@ public class ExecOperations {
         ChannelExec channel = null;
         ExecResult result = new ExecResult();
         boolean isAcquired = false;
+        Semaphore semaphore = getOrCreateSemaphore(config);
         try {
-            if (!SEMAPHORE.tryAcquire(timeout, TimeUnit.MILLISECONDS)) {
+            if (!semaphore.tryAcquire(timeout, TimeUnit.MILLISECONDS)) {
                 throw new TimeoutException("Failed to acquire semaphore within timeout: " + timeout + "ms");
             }
             isAcquired = true;
@@ -159,7 +176,7 @@ public class ExecOperations {
             throw new JSchException("Command execution failed", e);
         } finally {
             if (isAcquired) {
-                SEMAPHORE.release();
+                semaphore.release();
             }
             ChannelProvider.closeChannel(channel);
             if (session != null) {

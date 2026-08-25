@@ -43,7 +43,7 @@ import com.nctigba.observability.instance.service.allocate.AllocatorService;
 import com.nctigba.observability.instance.util.CommonUtils;
 import com.nctigba.observability.instance.util.MessageSourceUtils;
 import com.nctigba.observability.instance.util.SshSessionUtils;
-import com.nctigba.observability.instance.util.SshSessionUtils.command;
+import com.nctigba.observability.instance.util.SshSessionUtils.Command;
 import com.nctigba.observability.instance.util.YamlUtils;
 
 import cn.hutool.core.bean.BeanUtil;
@@ -540,7 +540,7 @@ public class PrometheusService extends AbstractInstaller {
             sendMsg(null, "prominstall.pkgexists");
         }
         // Extract file
-        sshSession.execute("cd " + path + " && " + command.TAR.parse(resource.getFilename()));
+        sshSession.execute("cd " + path + " && " + Command.TAR.parse(resource.getFilename()));
 
         Map<String, Object> paramMap = new HashMap<>();
         paramMap.put("port", env.getPort());
@@ -569,7 +569,7 @@ public class PrometheusService extends AbstractInstaller {
     }
 
     private Resource getPromInstallPkg(SshSessionUtils sshSession) throws IOException {
-        String arch = sshSession.execute(command.ARCH);
+        String arch = sshSession.execute(Command.ARCH);
         Resource[] resources = resourcePatternResolver.getResources(
             basePath() + "pkg/prometheus-**-" + arch(arch) + TAR);
         if (resources.length == 0) {
@@ -1181,7 +1181,7 @@ public class PrometheusService extends AbstractInstaller {
                     if (!pid.matches("\\d+")) {
                         return;
                     }
-                    session.execute(SshSessionUtils.command.KILL.parse(pid));
+                    session.execute(Command.KILL.parse(pid));
                 }
             } catch (IOException | RuntimeException e) {
                 throw new CustomException(e.getMessage());

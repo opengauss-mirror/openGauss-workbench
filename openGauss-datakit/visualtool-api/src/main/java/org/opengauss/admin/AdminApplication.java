@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -42,7 +43,7 @@ import org.springframework.web.socket.server.standard.ServerEndpointExporter;
  *
  * @author xielibo
  */
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class, ElasticsearchRestClientAutoConfiguration.class})
 @ComponentScan({"org.opengauss.admin", "org.opengauss.agent"})
 @Slf4j
 public class AdminApplication implements SpringBootstrap {
