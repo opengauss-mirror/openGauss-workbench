@@ -19,6 +19,7 @@
         <log4j.version>2.25.5</log4j.version>
         <hutool.version>5.8.43</hutool.version>
         <mysql-connector-j.version>9.5.0</mysql-connector-j.version>
+        <opengauss-jdbc.version>6.0.0-og</opengauss-jdbc.version>
         <jackson-dataformat-yaml.version>2.20.1</jackson-dataformat-yaml.version>
         <poi.version>5.4.0</poi.version>
         <maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
@@ -95,6 +96,11 @@
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <version>${mysql-connector-j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opengauss</groupId>
+            <artifactId>opengauss-jdbc</artifactId>
+            <version>${opengauss-jdbc.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>

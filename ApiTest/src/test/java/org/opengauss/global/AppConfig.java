@@ -86,6 +86,7 @@ public class AppConfig {
                 private int port;
                 private String username;
                 private String password;
+                private String database;
             }
         }
     }

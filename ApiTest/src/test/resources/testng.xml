@@ -10,6 +10,8 @@
             <class name="org.opengauss.visualtool.api.SysLogControllerTest"/>
             <class name="org.opengauss.visualtool.api.SysMenuControllerTest"/>
             <class name="org.opengauss.visualtool.api.SysOperlogControllerTest"/>
+            <class name="org.opengauss.visualtool.api.SysTaskControllerTest"/>
+            <class name="org.opengauss.visualtool.api.SysHandleDiagnosticControllerTest"/>
             <class name="org.opengauss.visualtool.api.SysProfileControllerTest"/>
             <class name="org.opengauss.visualtool.api.SysRoleControllerTest"/>
             <class name="org.opengauss.visualtool.api.SysSettingControllerTest"/>
