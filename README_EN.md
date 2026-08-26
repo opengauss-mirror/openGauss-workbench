@@ -28,29 +28,29 @@ This project is a web-based visualization platform for openGauss. It aims to low
 
 | Package Name                           | Remarks                                                       | Download Link                                                                                                          |
 |:------------------------------|-----------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
-| Datakit-All-7.0.0-RC3.tar.gz  | Full package (includes all plug-ins)                                              | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/openGauss-Datakit-All-7.0.0-RC3.tar.gz |
-| Datakit-Mini-7.0.0-RC3.tar.gz | (Recommended) Minimal package (Includes only basic plug-ins: [Business Development] and [Basic O&M]. Additional plug-ins can be downloaded on the `Plug-in Management` page.)| https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/openGauss-Datakit-Mini-7.0.0-RC3.tar.gz          |
+| Datakit-All-7.0.0.tar.gz  | Full package (includes all plug-ins)                                              | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/openGauss-Datakit-All-7.0.0.tar.gz |
+| Datakit-Mini-7.0.0.tar.gz | (Recommended) Minimal package (Includes only basic plug-ins: [Business Development] and [Basic O&M]. Additional plug-ins can be downloaded on the `Plug-in Management` page.)| https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/openGauss-Datakit-Mini-7.0.0.tar.gz          |
 
 #### Note:
 1. For versions prior to 7.0.0-RC2, all plug-ins are included by default. The package naming convention is `Datakit-_$VERSION_.tar.gz`, for example, version 6.0.0 is named `Datakit-6.0.0.tar.gz`.
 2. For version 7.0.0-RC2 and later, use the links in the table above to choose between the full and minimal packages.
 3. If you use the minimal package, plug-ins can be downloaded later from the `Plug-in Management` page in DataKit using either online or offline methods.
 4. Online download: Select the required plug-in from the drop-down list and confirm your selection.
-5. Offline download: Visit the `openGauss Tools` section on the [official download page](https://opengauss.org/en/download/), select the specific plug-in JAR files from the `Datakit_Mini_7.0.0-RC3` drop-down list. Verify the file integrity by comparing the provided SHA256 checksum with the calculated value of your downloaded file. If they match, the file is complete; otherwise, re-download. Upload the verified JAR package to DataKit.
+5. Offline download: Visit the `openGauss Tools` section on the [official download page](https://opengauss.org/en/download/), select the specific plug-in JAR files from the `Datakit_Mini_7.0.0` drop-down list. Verify the file integrity by comparing the provided SHA256 checksum with the calculated value of your downloaded file. If they match, the file is complete; otherwise, re-download. Upload the verified JAR package to DataKit.
 6. For offline installation, the version of the uploaded plug-in must match the version of the deployed DataKit.
 
 ##### Plug-in Download Links
 
 | Package Name                                                 | Remarks         | Download Link                                                                                                                                        |
 |:----------------------------------------------------|-------------|----------------------------------------------------------------------------------------------------------------------------------------------|
-| alert-monitor-7.0.0-RC3-repackage.jar               | Alarm monitoring plug-in     | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/alert-monitor-7.0.0-RC3-repackage.jar                                         |
-| data-migration-7.0.0-RC3-repackage.jar              | Data migration plug-in     | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/data-migration-7.0.0-RC3-repackage.jar             |
-| webds-plugin-7.0.0-RC3-repackage.jar                | Service development plug-in     | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/webds-plugin-7.0.0-RC3-repackage.jar               |
-| base-ops-7.0.0-RC3-repackage.jar                    | Basic O&M plug-in     | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/base-ops-7.0.0-RC3-repackage.jar                   |
-| observability-instance-7.0.0-RC3-repackage.jar      | Instance monitoring plug-in     | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-instance-7.0.0-RC3-repackage.jar     |
-| observability-log-search-7.0.0-RC3-repackage.jar    | Log search plug-in     | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-log-search-7.0.0-RC3-repackage.jar   |
-| compatibility-assessment-7.0.0-RC3-repackage.jar    | Compatibility evaluation tool   | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/compatibility-assessment-7.0.0-RC3-repackage.jar |
-| observability-sql-diagnosis-7.0.0-RC3-repackage.jar | Intelligent diagnosis plug-in     | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-sql-diagnosis-7.0.0-RC3-repackage.jar                  |
+| alert-monitor-7.0.0-repackage.jar               | Alarm monitoring plug-in     | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/alert-monitor-7.0.0-repackage.jar                                         |
+| data-migration-7.0.0-repackage.jar              | Data migration plug-in     | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/data-migration-7.0.0-repackage.jar             |
+| webds-plugin-7.0.0-repackage.jar                | Service development plug-in     | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/webds-plugin-7.0.0-repackage.jar               |
+| base-ops-7.0.0-repackage.jar                    | Basic O&M plug-in     | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/base-ops-7.0.0-repackage.jar                   |
+| observability-instance-7.0.0-repackage.jar      | Instance monitoring plug-in     | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-instance-7.0.0-repackage.jar     |
+| observability-log-search-7.0.0-repackage.jar    | Log search plug-in     | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-log-search-7.0.0-repackage.jar   |
+| compatibility-assessment-7.0.0-repackage.jar    | Compatibility evaluation tool   | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/compatibility-assessment-7.0.0-repackage.jar |
+| observability-sql-diagnosis-7.0.0-repackage.jar | Intelligent diagnosis plug-in     | https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-sql-diagnosis-7.0.0-repackage.jar                  |
 
      
 ## Downloading the Release Version
@@ -83,13 +83,13 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
 
 ## Installation Procedure
 1. Decompress the installation package.
-   Obtain the installation package `Datakit-All-7.0.0-RC3.tar.gz` or `Datakit-Mini-7.0.0-RC3.tar.gz` with the download links or by compiling the source code. If you do not require all plug-ins, the `Datakit-Mini-7.0.0-RC3.tar.gz` package is recommended. You can add plug-ins as needed through the management interface later.)
+   Obtain the installation package `Datakit-All-7.0.0.tar.gz` or `Datakit-Mini-7.0.0.tar.gz` with the download links or by compiling the source code. If you do not require all plug-ins, the `Datakit-Mini-7.0.0.tar.gz` package is recommended. You can add plug-ins as needed through the management interface later.)
    Decompress the package into your chosen installation directory. For example, if your installation path is `/path/datakit_server`, run the following commands:
    ```shell
-   $ tar -zxvf Datakit-All-7.0.0-RC3.tar.gz -C /path/to/datakit_server
+   $ tar -zxvf Datakit-All-7.0.0.tar.gz -C /path/to/datakit_server
    ./agent/
    ./agent/application.yml
-   ./agent/datakit-agent-7.0.0-RC3-runner.jar
+   ./agent/datakit-agent-7.0.0-runner.jar
    ./application-temp.yml
    ./build_commit_id.log
    ./doc/
@@ -105,17 +105,17 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
    ./doc/alert-monitor-README.md
    ./doc/data-studio-README.md
    ./doc/datakit-README.md
-   ./openGauss-datakit-7.0.0-RC3.jar
+   ./openGauss-datakit-7.0.0.jar
    ./run.sh
    ./visualtool-plugin/
-   ./visualtool-plugin/observability-sql-diagnosis-7.0.0-RC3-repackage.jar
-   ./visualtool-plugin/compatibility-assessment-7.0.0-RC3-repackage.jar
-   ./visualtool-plugin/alert-monitor-7.0.0-RC3-repackage.jar
-   ./visualtool-plugin/webds-plugin-7.0.0-RC3-repackage.jar
-   ./visualtool-plugin/observability-log-search-7.0.0-RC3-repackage.jar
-   ./visualtool-plugin/base-ops-7.0.0-RC3-repackage.jar
-   ./visualtool-plugin/data-migration-7.0.0-RC3-repackage.jar
-   ./visualtool-plugin/observability-instance-7.0.0-RC3-repackage.jar
+   ./visualtool-plugin/observability-sql-diagnosis-7.0.0-repackage.jar
+   ./visualtool-plugin/compatibility-assessment-7.0.0-repackage.jar
+   ./visualtool-plugin/alert-monitor-7.0.0-repackage.jar
+   ./visualtool-plugin/webds-plugin-7.0.0-repackage.jar
+   ./visualtool-plugin/observability-log-search-7.0.0-repackage.jar
+   ./visualtool-plugin/base-ops-7.0.0-repackage.jar
+   ./visualtool-plugin/data-migration-7.0.0-repackage.jar
+   ./visualtool-plugin/observability-instance-7.0.0-repackage.jar
    ```
 2. Run the installation script.
 
@@ -129,7 +129,7 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
 
    ```
    Checking the DataKit jar...
-   Check the DataKit jar is openGauss-datakit-7.0.0-RC3.jar
+   Check the DataKit jar is openGauss-datakit-7.0.0.jar
    Check the DataKit jar successfully
    Creating required directories...
    Create required directories successfully

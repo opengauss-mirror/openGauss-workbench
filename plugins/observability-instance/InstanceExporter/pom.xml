@@ -24,7 +24,7 @@
         <jackson.version>2.21.5</jackson.version>
         <commons-codec.version>1.19.0</commons-codec.version>
         <prometheus-metrics.version>1.2.1</prometheus-metrics.version>
-        <visualtool-common-cipher.version>7.0.0-RC3</visualtool-common-cipher.version>
+        <visualtool-common-cipher.version>7.0.0</visualtool-common-cipher.version>
         <apache.tomcat.version>10.1.52</apache.tomcat.version>
     </properties>
     <dependencyManagement>

@@ -6,7 +6,7 @@
   <groupId>org.opengauss.tool</groupId>
   <artifactId>jsch-session-pool</artifactId>
   <name>jsch-session-pool</name>
-  <version>7.0.0-RC3</version>
+  <version>7.0.0</version>
 
   <properties>
     <java.version>17</java.version>

@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.opengauss.tool</groupId>
 	<artifactId>visualtool-log4j2-desensitize</artifactId>
-	<version>7.0.0-RC3</version>
+	<version>7.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>openGauss Log4j2 Desensitize Component</name>
