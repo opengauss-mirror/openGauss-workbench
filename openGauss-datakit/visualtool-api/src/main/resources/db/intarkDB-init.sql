@@ -639,34 +639,34 @@ COMMENT ON COLUMN "sys_plugins_repository"."download_url" IS '插件下载地址
 COMMENT ON COLUMN "sys_plugins_repository"."plugin_desc" IS '插件描述';
 COMMENT ON COLUMN "sys_plugins_repository"."plugin_desc_en" IS '插件英文描述';
 
---pluginsURL-(7.0.0-RC3)
+--pluginsURL-(7.0.0)
 truncate table sys_plugins_repository;
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (1, 'alert-monitor', 0, '7.0.0-RC3', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/alert-monitor-7.0.0-RC3-repackage.jar', '告警插件', 'Alarm Plugin');
+VALUES (1, 'alert-monitor', 0, '7.0.0', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/alert-monitor-7.0.0-repackage.jar', '告警插件', 'Alarm Plugin');
 
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (2, 'webds-plugin', 1, '7.0.0-RC3', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/webds-plugin-7.0.0-RC3-repackage.jar', '业务开发', 'Data Studio Plugin');
+VALUES (2, 'webds-plugin', 1, '7.0.0', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/webds-plugin-7.0.0-repackage.jar', '业务开发', 'Data Studio Plugin');
 
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (4, 'observability-log-search', 0, '7.0.0-RC3', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-log-search-7.0.0-RC3-repackage.jar', '日志检索插件', 'Log Retrieval Plugin');
+VALUES (4, 'observability-log-search', 0, '7.0.0', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-log-search-7.0.0-repackage.jar', '日志检索插件', 'Log Retrieval Plugin');
 
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (6, 'observability-instance', 0, '7.0.0-RC3', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-instance-7.0.0-RC3-repackage.jar', '实例监控插件', 'Instance Monitoring Plugin');
+VALUES (6, 'observability-instance', 0, '7.0.0', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-instance-7.0.0-repackage.jar', '实例监控插件', 'Instance Monitoring Plugin');
 
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (7, 'data-migration', 0, '7.0.0-RC3', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/data-migration-7.0.0-RC3-repackage.jar', '数据迁移插件', 'Data Migration Plugin');
+VALUES (7, 'data-migration', 0, '7.0.0', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/data-migration-7.0.0-repackage.jar', '数据迁移插件', 'Data Migration Plugin');
 
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (8, 'base-ops', 1, '7.0.0-RC3', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/base-ops-7.0.0-RC3-repackage.jar', '基础运维插件', 'Basic Operation Plugin');
+VALUES (8, 'base-ops', 1, '7.0.0', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/base-ops-7.0.0-repackage.jar', '基础运维插件', 'Basic Operation Plugin');
 
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (9, 'observability-sql-diagnosis', 0, '7.0.0-RC3', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-sql-diagnosis-7.0.0-RC3-repackage.jar', '智能诊断插件', 'Intelligent Diagnosis Plugin');
+VALUES (9, 'observability-sql-diagnosis', 0, '7.0.0', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/observability-sql-diagnosis-7.0.0-repackage.jar', '智能诊断插件', 'Intelligent Diagnosis Plugin');
 
 INSERT INTO sys_plugins_repository (id, plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (11, 'compatibility-assessment', 0, '7.0.0-RC3', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/compatibility-assessment-7.0.0-RC3-repackage.jar', 'openGauss兼容性评估工具', 'The openGauss compatibility evaluation tool');
+VALUES (11, 'compatibility-assessment', 0, '7.0.0', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/compatibility-assessment-7.0.0-repackage.jar', 'openGauss兼容性评估工具', 'The openGauss compatibility evaluation tool');
 
 INSERT INTO public.sys_plugins_repository (id,plugin_id, is_downloaded, plugin_version, download_url, plugin_desc, plugin_desc_en)
-VALUES (12,'container-management', 0, '7.0.0-RC3', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/container-management-plugin-7.0.0-RC3-repackage.jar', '容器管理插件', 'Container Management Plugin') ON DUPLICATE KEY
+VALUES (12,'container-management', 0, '7.0.0', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/Datakit/visualtool-plugin/container-management-plugin-7.0.0-repackage.jar', '容器管理插件', 'Container Management Plugin') ON DUPLICATE KEY
 
 DELETE FROM sys_plugins_repository WHERE plugin_id IN ('oauth-login', 'MetaTune', 'monitor-tools');
 -- ----------------------------
@@ -1772,8 +1772,8 @@ COMMENT ON COLUMN "sys_setting"."portal_pkg_name" IS 'portal的安装包名称';
 ALTER TABLE sys_setting ADD COLUMN portal_jar_name text ;
 COMMENT ON COLUMN "sys_setting"."portal_jar_name" IS 'portal的jar名称';
 UPDATE "sys_setting" SET portal_pkg_download_url = 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/';
-UPDATE "sys_setting" SET portal_pkg_name = 'PortalControl-7.0.0rc1.tar.gz';
-UPDATE "sys_setting" SET portal_jar_name = 'portalControl-7.0.0rc1-exec.jar';
+UPDATE "sys_setting" SET portal_pkg_name = 'PortalControl-7.0.0.tar.gz';
+UPDATE "sys_setting" SET portal_jar_name = 'portalControl-7.0.0-exec.jar';
 
 COMMENT ON COLUMN "sys_setting"."id" IS 'ID';
 COMMENT ON COLUMN "sys_setting"."user_id" IS '关联的用户ID';
@@ -1782,7 +1782,7 @@ COMMENT ON COLUMN "sys_setting"."upload_path" IS '文件上传目录';
 -- ----------------------------
 -- Records of sys_setting
 -- ----------------------------
-INSERT INTO "sys_setting" VALUES (1, 1, '/ops/files/', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/', 'PortalControl-7.0.0-RC3.tar.gz', 'PortalControl-7.0.0-RC3-exec.jar');
+INSERT INTO "sys_setting" VALUES (1, 1, '/ops/files/', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/', 'PortalControl-7.0.0.tar.gz', 'PortalControl-7.0.0-exec.jar');
 INSERT INTO "sys_menu" VALUES (209, '创建服务器', 2, 9, '/resource/physical/createserver', 'resource/physical/components/CreateServerPage', NULL, 1, 0, 'C', '1', '0', NULL, NULL, 'admin', '2025-07-15 20:11:27.003', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 1, 'Create Server');
 ALTER TABLE sys_user ADD COLUMN update_pwd int2 DEFAULT 0;
 COMMENT ON COLUMN "sys_user"."update_pwd" IS '是否修改密码；1：是；0：否';

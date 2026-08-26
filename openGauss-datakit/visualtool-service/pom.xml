@@ -81,7 +81,7 @@
       <dependency>
         <groupId>org.opengauss.tool</groupId>
         <artifactId>visualtool-common-cipher</artifactId>
-        <version>7.0.0-RC3</version>
+        <version>7.0.0</version>
       </dependency>
     </dependencies>
     <build>

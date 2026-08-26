@@ -1,6 +1,6 @@
 agent:
   id: 1
-  version: 7.0.0-RC3
+  version: 7.0.0
   server: http://127.0.0.1:9494
   name: datakit-agent
   heartbeat:

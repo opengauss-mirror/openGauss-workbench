@@ -31,9 +31,9 @@ import java.util.Arrays;
 @Getter
 public enum TranscribeReplayVersion {
     /**
-     * replay version 7.0.0rc3
+     * replay version 7.0.0
      */
-    LATEST("latest", "7.0.0-RC3");
+    LATEST("latest", "7.0.0");
 
     private final String path;
     private final String version;

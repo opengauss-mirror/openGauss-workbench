@@ -978,47 +978,47 @@ COMMENT ON COLUMN "tb_migration_tool_portal_download_info"."portal_version" IS '
 
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(8, 'centos', '7', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/centos7/', 'PortalControl-7.0.0-RC3-x86_64.tar.gz', 'PortalControl-7.0.0-RC3-exec.jar', 'MYSQL_ONLY', 'EXPERIMENTAL');
+VALUES(8, 'centos', '7', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/centos7/', 'PortalControl-7.0.0-x86_64.tar.gz', 'PortalControl-7.0.0-exec.jar', 'MYSQL_ONLY', 'EXPERIMENTAL');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(9, 'openEuler', '20.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler20.03/', 'PortalControl-7.0.0-RC3-x86_64.tar.gz', 'PortalControl-7.0.0-RC3-exec.jar', 'MYSQL_ONLY', 'EXPERIMENTAL');
+VALUES(9, 'openEuler', '20.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler20.03/', 'PortalControl-7.0.0-x86_64.tar.gz', 'PortalControl-7.0.0-exec.jar', 'MYSQL_ONLY', 'EXPERIMENTAL');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(10, 'openEuler', '20.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler20.03/', 'PortalControl-7.0.0-RC3-aarch64.tar.gz', 'PortalControl-7.0.0-RC3-exec.jar', 'MYSQL_ONLY', 'EXPERIMENTAL');
+VALUES(10, 'openEuler', '20.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler20.03/', 'PortalControl-7.0.0-aarch64.tar.gz', 'PortalControl-7.0.0-exec.jar', 'MYSQL_ONLY', 'EXPERIMENTAL');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(11, 'openEuler', '22.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler22.03/', 'PortalControl-7.0.0-RC3-x86_64.tar.gz', 'PortalControl-7.0.0-RC3-exec.jar', 'MYSQL_ONLY', 'EXPERIMENTAL');
+VALUES(11, 'openEuler', '22.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler22.03/', 'PortalControl-7.0.0-x86_64.tar.gz', 'PortalControl-7.0.0-exec.jar', 'MYSQL_ONLY', 'EXPERIMENTAL');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(12, 'openEuler', '22.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler22.03/', 'PortalControl-7.0.0-RC3-aarch64.tar.gz', 'PortalControl-7.0.0-RC3-exec.jar', 'MYSQL_ONLY', 'EXPERIMENTAL');
+VALUES(12, 'openEuler', '22.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler22.03/', 'PortalControl-7.0.0-aarch64.tar.gz', 'PortalControl-7.0.0-exec.jar', 'MYSQL_ONLY', 'EXPERIMENTAL');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(13, 'openEuler', '24.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler24.03/', 'PortalControl-7.0.0-RC3-x86_64.tar.gz', 'PortalControl-7.0.0-RC3-exec.jar', 'MYSQL_ONLY', 'EXPERIMENTAL');
+VALUES(13, 'openEuler', '24.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler24.03/', 'PortalControl-7.0.0-x86_64.tar.gz', 'PortalControl-7.0.0-exec.jar', 'MYSQL_ONLY', 'EXPERIMENTAL');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(14, 'openEuler', '24.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler24.03/', 'PortalControl-7.0.0-RC3-aarch64.tar.gz', 'PortalControl-7.0.0-RC3-exec.jar', 'MYSQL_ONLY', 'EXPERIMENTAL');
+VALUES(14, 'openEuler', '24.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler24.03/', 'PortalControl-7.0.0-aarch64.tar.gz', 'PortalControl-7.0.0-exec.jar', 'MYSQL_ONLY', 'EXPERIMENTAL');
 
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(15, 'centos', '7', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/centos7/', 'openGauss-portal-7.0.0-RC3-CentOS7-x86_64.tar.gz', 'openGauss-portal-7.0.0-RC3.jar', 'MULTI_DB', 'EXPERIMENTAL');
+VALUES(15, 'centos', '7', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/centos7/', 'openGauss-portal-7.0.0-CentOS7-x86_64.tar.gz', 'openGauss-portal-7.0.0.jar', 'MULTI_DB', 'EXPERIMENTAL');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(16, 'openEuler', '20.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler20.03/', 'openGauss-portal-7.0.0-RC3-openEuler20.03-x86_64.tar.gz', 'openGauss-portal-7.0.0-RC3.jar', 'MULTI_DB', 'EXPERIMENTAL');
+VALUES(16, 'openEuler', '20.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler20.03/', 'openGauss-portal-7.0.0-openEuler20.03-x86_64.tar.gz', 'openGauss-portal-7.0.0.jar', 'MULTI_DB', 'EXPERIMENTAL');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(17, 'openEuler', '20.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler20.03/', 'openGauss-portal-7.0.0-RC3-openEuler20.03-aarch64.tar.gz', 'openGauss-portal-7.0.0-RC3.jar', 'MULTI_DB', 'EXPERIMENTAL');
+VALUES(17, 'openEuler', '20.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler20.03/', 'openGauss-portal-7.0.0-openEuler20.03-aarch64.tar.gz', 'openGauss-portal-7.0.0.jar', 'MULTI_DB', 'EXPERIMENTAL');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(18, 'openEuler', '22.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler22.03/', 'openGauss-portal-7.0.0-RC3-openEuler22.03-x86_64.tar.gz', 'openGauss-portal-7.0.0-RC3.jar', 'MULTI_DB', 'EXPERIMENTAL');
+VALUES(18, 'openEuler', '22.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler22.03/', 'openGauss-portal-7.0.0-openEuler22.03-x86_64.tar.gz', 'openGauss-portal-7.0.0.jar', 'MULTI_DB', 'EXPERIMENTAL');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(19, 'openEuler', '22.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler22.03/', 'openGauss-portal-7.0.0-RC3-openEuler22.03-aarch64.tar.gz', 'openGauss-portal-7.0.0-RC3.jar', 'MULTI_DB', 'EXPERIMENTAL');
+VALUES(19, 'openEuler', '22.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler22.03/', 'openGauss-portal-7.0.0-openEuler22.03-aarch64.tar.gz', 'openGauss-portal-7.0.0.jar', 'MULTI_DB', 'EXPERIMENTAL');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(20, 'openEuler', '24.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler24.03/', 'openGauss-portal-7.0.0-RC3-openEuler24.03-x86_64.tar.gz', 'openGauss-portal-7.0.0-RC3.jar', 'MULTI_DB', 'EXPERIMENTAL');
+VALUES(20, 'openEuler', '24.03', 'x86_64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler24.03/', 'openGauss-portal-7.0.0-openEuler24.03-x86_64.tar.gz', 'openGauss-portal-7.0.0.jar', 'MULTI_DB', 'EXPERIMENTAL');
 INSERT INTO "tb_migration_tool_portal_download_info"
 ("id", "host_os", "host_os_version", "host_cpu_arch", "portal_pkg_download_url", "portal_pkg_name", "portal_jar_name", "portal_type", "portal_version")
-VALUES(21, 'openEuler', '24.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler24.03/', 'openGauss-portal-7.0.0-RC3-openEuler24.03-aarch64.tar.gz', 'openGauss-portal-7.0.0-RC3.jar', 'MULTI_DB', 'EXPERIMENTAL');
+VALUES(21, 'openEuler', '24.03', 'aarch64', 'https://opengauss.obs.cn-south-1.myhuaweicloud.com/latest/tools/openEuler24.03/', 'openGauss-portal-7.0.0-openEuler24.03-aarch64.tar.gz', 'openGauss-portal-7.0.0.jar', 'MULTI_DB', 'EXPERIMENTAL');
 
 -------------------------------------------
 -- ALTER TABLE tb_migration_task
