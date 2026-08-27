@@ -1,0 +1,9 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
+<suite name="Issue20ReviewSemantics" verbose="1">
+    <test name="review-semantics">
+        <classes>
+            <class name="org.opengauss.plugins.system.PluginOnlineInstallReviewSemanticsTest"/>
+            <class name="org.opengauss.agent.AgentLifecycleReviewSemanticsTest"/>
+        </classes>
+    </test>
+</suite>

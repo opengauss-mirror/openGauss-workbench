@@ -32,7 +32,13 @@ public class AppConfigLoader {
     public static void loadConfig() {
         synchronized (AppConfigLoader.class) {
             if (Objects.isNull(appConfig)) {
-                String configFilePath = "src/test/resources/application.yml";
+                String configFilePath = System.getProperty("apitest.config");
+                if (Objects.isNull(configFilePath) || configFilePath.isBlank()) {
+                    configFilePath = System.getenv("APITEST_CONFIG");
+                }
+                if (Objects.isNull(configFilePath) || configFilePath.isBlank()) {
+                    configFilePath = "src/test/resources/application.yml";
+                }
                 ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
                 try {
                     appConfig = mapper.readValue(new File(configFilePath), AppConfig.class);

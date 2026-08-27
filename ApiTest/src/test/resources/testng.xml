@@ -14,6 +14,7 @@
             <class name="org.opengauss.visualtool.api.SysRoleControllerTest"/>
             <class name="org.opengauss.visualtool.api.SysSettingControllerTest"/>
             <class name="org.opengauss.visualtool.api.SystemPluginControllerTest"/>
+            <class name="org.opengauss.plugins.system.PluginReadOnlyApiTest"/>
             <class name="org.opengauss.visualtool.api.SysUserControllerTest"/>
             <class name="org.opengauss.visualtool.api.SysWhiteListControllerTest"/>
             <class name="org.opengauss.visualtool.api.ops.AzControllerTest"/>
@@ -24,6 +25,7 @@
             <class name="org.opengauss.visualtool.api.ops.JdbcDbClusterNodeControllerTest"/>
             <class name="org.opengauss.visualtool.api.ops.OpsClusterControllerTest"/>
             <class name="org.opengauss.visualtool.api.ops.OpsHostTagControllerTest"/>
+            <class name="org.opengauss.agent.AgentReadOnlyApiTest"/>
         </classes>
     </test>
 </suite>
