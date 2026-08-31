@@ -214,13 +214,34 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
    
    **注意**：使用`openGauss`作为后台数据库时，`openGauss`需要支持远程连接，并且配置的连接用户需要拥有`sysadmin`权限，远程连接配置和用户权限配置步骤请参考目录**补充：openGauss参数配置**
 
-   ```yml
-   # For openGauss
-   driver-class-name: org.opengauss.Driver
-   url: jdbc:opengauss://ip:port/database?currentSchema=public&batchMode=off
-   username: dbuser
-   password: ******
-   ```
+```yml
+# For openGauss
+driver-class-name: org.opengauss.Driver
+# 用户使用需创建一个单独的库用来存放DataKit后台数据
+# 根据实际情况配置<ip> <port> <database> <username> <password>
+url: jdbc:opengauss://ip:port/database?currentSchema=public&batchMode=off
+username: dbuser
+password: ******
+
+#样例参考
+#driver-class-name: org.opengauss.Driver
+#url: jdbc:opengauss://127.0.0.1:5432/userdb?currentSchema=public&batchMode=off
+#username: dbuser  
+#password: 123456
+```
+
+**参数说明:**
+
+| 参数              | 中文含义          | 是否必填 | 说明                                 |
+| --------------- |---------------| ---- | ---------------------------------- |
+| `ip`            | 数据库服务端 IP     | ✅ 是  | openGauss 实例所在的主机地址                |
+| `port`          | 数据库端口号        | ✅ 是  | openGauss 监听端口，默认为 `5432`          |
+| `database`      | 目标数据库名称       | ✅ 是  | ⚠️ 需单独创建专用库存放 DataKit 后台数据，不可复用业务库 |
+| `currentSchema` | 数据库模式（Schema） | ✅ 是  | 默认填 `public`，也可指定其他已存在的 schema     |
+| `batchMode`     | 批量执行模式        | ❌ 否  | 设为 `off` 表示关闭批量模式，建议保留             |
+| `username`     | 数据库用户         | ✅ 是  | 配置的连接用户需要拥有`sysadmin`权限             |
+| `password`     | 数据库明文密码       | ✅ 是  | 对应 username 的登录凭证。配置时需确保与数据库中设置的密码完全一致（区分大小写）。             |
+
 
 ### 启用Intarkdb数据库
 
