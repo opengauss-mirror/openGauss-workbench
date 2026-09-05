@@ -16,12 +16,12 @@
         <hutool.version>5.8.40</hutool.version>
         <lombok.version>1.18.34</lombok.version>
         <snakeyaml.version>2.5</snakeyaml.version>
-        <logback.version>1.5.28</logback.version>
+        <logback.version>1.6.3</logback.version>
         <log4j.version>2.25.5</log4j.version>
         <sshd.version>2.15.0</sshd.version>
         <opengauss-jdbc.version>6.0.0-og</opengauss-jdbc.version>
         <druid.version>1.2.27</druid.version>
-        <jackson.version>2.21.5</jackson.version>
+        <jackson.version>2.21.6</jackson.version>
         <commons-codec.version>1.19.0</commons-codec.version>
         <prometheus-metrics.version>1.2.1</prometheus-metrics.version>
         <visualtool-common-cipher.version>7.0.0</visualtool-common-cipher.version>

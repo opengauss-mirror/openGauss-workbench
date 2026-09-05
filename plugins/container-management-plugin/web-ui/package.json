@@ -51,6 +51,7 @@
     "flatted": "https://registry.npmjs.org/flatted/-/flatted-3.4.0.tgz",
     "picomatch": "https://registry.npmjs.org/picomatch/-/picomatch-2.3.2.tgz",
     "postcss": "https://registry.npmjs.org/postcss/-/postcss-8.5.26.tgz",
+    "svgo": "https://registry.npmjs.org/svgo/-/svgo-2.8.4.tgz",
     "nanoid": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.18.tgz",
     "uuid": "14.0.0",
     "immutable": "4.3.7",
