@@ -408,3 +408,10 @@ package-lock.json
 /backupPlugin/
 /agent/
 /visualtool-plugin/
+
+# Local Issue #20 execution evidence. These files may include machine-specific
+# paths and are intentionally retained outside of commits.
+/artifacts/issue20/
+/.tmp-issue20/
+
+ApiTest/application-issue20.yml
