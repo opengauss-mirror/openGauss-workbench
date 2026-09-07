@@ -67,11 +67,16 @@ public class DataMigrationPluginListener implements ApplicationListener<Applicat
                 menuFacade.savePluginMenu(pluginId, "录制回放",
                         "Transcribe Replay Service", 3, "transcribe",
                         parentMenu.getMenuId());
-                menuFacade.savePluginRoute(pluginId, "创建迁移任务", "taskConfig", parentMenu.getMenuId());
-                menuFacade.savePluginRoute(pluginId, "任务详情", "taskDetail", parentMenu.getMenuId());
-                menuFacade.savePluginRoute(pluginId, "子任务详情", "subTaskDetail", parentMenu.getMenuId());
-                menuFacade.savePluginRoute(pluginId, "录制回放详情", "transcribetaskDetail", parentMenu.getMenuId());
-                menuFacade.savePluginRoute(pluginId, "创建录制回放", "createtranscribetask", parentMenu.getMenuId());
+                menuFacade.savePluginRoute(pluginId, "创建迁移任务",
+                        "Create Migration Task", "taskConfig", parentMenu.getMenuId());
+                menuFacade.savePluginRoute(pluginId, "任务详情",
+                        "Task Detail", "taskDetail", parentMenu.getMenuId());
+                menuFacade.savePluginRoute(pluginId, "子任务详情",
+                        "Subtask Detail", "subTaskDetail", parentMenu.getMenuId());
+                menuFacade.savePluginRoute(pluginId, "录制回放详情",
+                        "Transcribe Replay Detail", "transcribetaskDetail", parentMenu.getMenuId());
+                menuFacade.savePluginRoute(pluginId, "创建录制回放",
+                        "Create Transcribe Replay Task", "createtranscribetask", parentMenu.getMenuId());
                 menuFacade.savePluginMenu(pluginId, "迁移工具管理",
                         "Migration Tool Management", 4, "migrationToolManagement",
                         parentMenu.getMenuId());

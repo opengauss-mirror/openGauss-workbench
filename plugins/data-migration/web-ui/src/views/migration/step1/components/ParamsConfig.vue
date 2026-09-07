@@ -408,6 +408,10 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
 
+  .params-title {
+    color: var(--o-text-color-primary);
+  }
+
   .params-info {
     font-size: 14px;
     font-weight: normal;
@@ -425,6 +429,7 @@ onMounted(() => {
 
   .basic-config-con {
     .basic-title {
+      color: var(--o-text-color-primary);
       padding-left: 13px;
       margin-bottom: 10px;
     }

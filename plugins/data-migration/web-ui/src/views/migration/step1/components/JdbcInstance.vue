@@ -295,8 +295,8 @@ defineExpose({
   flex: 1;
   height: 60px;
   padding: 12px 15px;
-  background: white;
-  border: 1px solid #d0e3ff;
+  background: var(--o-bg-color-base);
+  border: 1px solid var(--o-border-color-light);
   border-radius: 6px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
   overflow: hidden;
@@ -320,7 +320,7 @@ defineExpose({
   left: 0;
   width: 100%;
   padding: 12px 15px;
-  background: white;
+  background: var(--o-bg-color-base);
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   z-index: 10;
