@@ -23,26 +23,27 @@
 
 package com.nctigba.datastudio.dao;
 
+import static com.nctigba.datastudio.constants.SqlConstants.CONFIGURE_TIME;
+import static com.nctigba.datastudio.constants.SqlConstants.GET_DATABASELINK_COUNT_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.GET_DATA_CONNECTION_NOT_P_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.GET_DATA_CONNECTION_SQL;
+import static com.nctigba.datastudio.constants.SqlConstants.GET_URL_JDBC;
+
 import com.nctigba.datastudio.model.entity.DatabaseConnectionDO;
 import com.nctigba.datastudio.model.entity.DatabaseConnectionUrlDO;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static com.nctigba.datastudio.constants.SqlConstants.CONFIGURE_TIME;
-import static com.nctigba.datastudio.constants.SqlConstants.GET_DATABASELINK_COUNT_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.GET_DATA_CONNECTION_NOT_P_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.GET_DATA_CONNECTION_SQL;
-import static com.nctigba.datastudio.constants.SqlConstants.GET_URL_JDBC;
 
 /**
  * DatabaseConnectionDAO
@@ -53,7 +54,7 @@ import static com.nctigba.datastudio.constants.SqlConstants.GET_URL_JDBC;
 @Repository
 public class DatabaseConnectionDAO implements ApplicationRunner {
     @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     /**
      * insert table
@@ -61,14 +62,20 @@ public class DatabaseConnectionDAO implements ApplicationRunner {
      * @param databaseConnectionDO databaseConnectionDO
      */
     public void insertTable(DatabaseConnectionDO databaseConnectionDO) {
-        jdbcTemplate.execute(
-                "insert into DATABASELINK(type,name,driver,ip,port,dataname,username," +
-                        "userpassword,webuser,edition) values('" + databaseConnectionDO.getType()
-                        + "','" + databaseConnectionDO.getName() + "','" + databaseConnectionDO.getDriver()
-                        + "','" + databaseConnectionDO.getIp() + "','" + databaseConnectionDO.getPort()
-                        + "','" + databaseConnectionDO.getDataName() + "','" + databaseConnectionDO.getUserName()
-                        + "','" + databaseConnectionDO.getPassword() + "','" + databaseConnectionDO.getWebUser()
-                        + "','" + databaseConnectionDO.getEdition() + "');");
+        String sql = "INSERT INTO DATABASELINK (type, name, driver, ip, port, dataname, username, "
+                + "userpassword, webuser, edition) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        jdbcTemplate.update(sql,
+                databaseConnectionDO.getType(),
+                databaseConnectionDO.getName(),
+                databaseConnectionDO.getDriver(),
+                databaseConnectionDO.getIp(),
+                databaseConnectionDO.getPort(),
+                databaseConnectionDO.getDataName(),
+                databaseConnectionDO.getUserName(),
+                databaseConnectionDO.getPassword(),
+                databaseConnectionDO.getWebUser(),
+                databaseConnectionDO.getEdition()
+        );
     }
 
     /**

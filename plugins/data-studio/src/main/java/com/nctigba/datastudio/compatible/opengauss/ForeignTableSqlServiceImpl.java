@@ -23,39 +23,6 @@
 
 package com.nctigba.datastudio.compatible.opengauss;
 
-import com.nctigba.datastudio.compatible.ForeignTableSqlService;
-import com.nctigba.datastudio.compatible.TableColumnSQLService;
-import com.nctigba.datastudio.config.ConnectionConfig;
-import com.nctigba.datastudio.model.query.ForeignTableQuery;
-import com.nctigba.datastudio.model.query.TableDataEditQuery;
-import com.nctigba.datastudio.service.MetaDataByJdbcService;
-import com.nctigba.datastudio.utils.DebugUtils;
-import com.nctigba.datastudio.utils.ExecuteUtils;
-import com.nctigba.datastudio.utils.LocaleStringUtils;
-
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-
-import lombok.extern.slf4j.Slf4j;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.util.Strings;
-import org.opengauss.admin.common.exception.CustomException;
-import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
-import jakarta.annotation.Resource;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import static com.nctigba.datastudio.constants.CommonConstants.DESCRIPTION;
 import static com.nctigba.datastudio.constants.CommonConstants.FDW_NAME;
 import static com.nctigba.datastudio.constants.CommonConstants.FILE_FDW;
@@ -101,6 +68,38 @@ import static com.nctigba.datastudio.constants.SqlConstants.TABLE_DDL_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.TABLE_DESCRIPTION_SQL;
 import static com.nctigba.datastudio.constants.SqlConstants.UNIQUE_KEYWORD_SQL;
 import static com.nctigba.datastudio.utils.DebugUtils.comGetUuidType;
+
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.nctigba.datastudio.compatible.ForeignTableSqlService;
+import com.nctigba.datastudio.compatible.TableColumnSQLService;
+import com.nctigba.datastudio.config.ConnectionConfig;
+import com.nctigba.datastudio.model.query.ForeignTableQuery;
+import com.nctigba.datastudio.model.query.TableDataEditQuery;
+import com.nctigba.datastudio.service.MetaDataByJdbcService;
+import com.nctigba.datastudio.utils.DebugUtils;
+import com.nctigba.datastudio.utils.ExecuteUtils;
+import com.nctigba.datastudio.utils.LocaleStringUtils;
+
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
+import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.system.service.ops.impl.EncryptionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * ForeignTableSQLServiceImpl
