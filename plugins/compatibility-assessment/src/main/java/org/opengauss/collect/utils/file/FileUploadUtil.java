@@ -20,11 +20,8 @@
 package org.opengauss.collect.utils.file;
 
 import cn.hutool.core.util.ObjectUtil;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
@@ -33,6 +30,11 @@ import org.opengauss.collect.config.common.Constant;
 import org.opengauss.collect.utils.AssertUtil;
 import org.opengauss.collect.utils.CommandLineRunner;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * FileUploadUtil
@@ -60,6 +62,11 @@ public class FileUploadUtil {
                     continue;
                 }
                 File entryFile = new File(destinationDirectory, entry.getName());
+                String canonicalPath = entryFile.getCanonicalPath();
+                String basePath = new File(destinationDirectory).getCanonicalPath();
+                if (!canonicalPath.startsWith(basePath + File.separator)) {
+                    throw new SecurityException("Zip entry is outside target directory");
+                }
                 if (entry.isDirectory()) {
                     entryFile.mkdirs();
                 } else {

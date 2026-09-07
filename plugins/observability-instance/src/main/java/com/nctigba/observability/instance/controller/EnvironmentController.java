@@ -24,6 +24,40 @@
 
 package com.nctigba.observability.instance.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
+import com.nctigba.observability.instance.mapper.NctigbaEnvMapper;
+import com.nctigba.observability.instance.model.entity.AgentNodeRelationDO;
+import com.nctigba.observability.instance.model.entity.NctigbaEnvDO;
+import com.nctigba.observability.instance.model.entity.NctigbaEnvDO.envType;
+import com.nctigba.observability.instance.model.vo.InstalledAgentVO;
+import com.nctigba.observability.instance.service.AgentNodeRelationService;
+import com.nctigba.observability.instance.service.ClusterManager;
+import com.nctigba.observability.instance.service.ExporterInstallService;
+import com.nctigba.observability.instance.service.PrometheusService;
+
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollectionUtil;
+
+import org.opengauss.admin.common.core.domain.AjaxResult;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
+import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
+import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
+import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.system.plugin.facade.HostFacade;
+import org.opengauss.admin.system.plugin.facade.HostUserFacade;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -36,39 +70,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import cn.hutool.core.bean.BeanUtil;
-import com.nctigba.observability.instance.model.entity.AgentNodeRelationDO;
-import com.nctigba.observability.instance.model.vo.InstalledAgentVO;
-import com.nctigba.observability.instance.service.AgentNodeRelationService;
-import com.nctigba.observability.instance.service.ExporterInstallService;
-import org.opengauss.admin.common.core.domain.AjaxResult;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
-import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
-import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
-import org.opengauss.admin.system.plugin.facade.HostFacade;
-import org.opengauss.admin.system.plugin.facade.HostUserFacade;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType;
-import com.gitee.starblues.bootstrap.annotation.AutowiredType.Type;
-import com.nctigba.observability.instance.model.entity.NctigbaEnvDO;
-import com.nctigba.observability.instance.model.entity.NctigbaEnvDO.envType;
-import com.nctigba.observability.instance.mapper.NctigbaEnvMapper;
-import com.nctigba.observability.instance.service.ClusterManager;
-import com.nctigba.observability.instance.service.PrometheusService;
-
-import cn.hutool.core.collection.CollectionUtil;
-
+/**
+ * EnvironmentController
+ *
+ * @since 2023/2/21
+ */
 @RestController
 @RequestMapping("/observability")
 public class EnvironmentController {
@@ -224,11 +230,33 @@ public class EnvironmentController {
         return map;
     }
 
+    /**
+     * upload file
+     *
+     * @param name file path
+     * @param pkg file
+     * @return upload result
+     * @throws IOException io exception
+     */
     @PostMapping("/v1/environment/upload")
     public String upload(@RequestParam String name, MultipartFile pkg) throws IOException {
-        var file = new File("pkg/" + name);
-        var parent = file.getParentFile();
-        if (!parent.exists()) parent.mkdirs();
+        String baseDir = "pkg/";
+        File baseFile = new File(baseDir);
+        File file = new File(baseDir + name);
+        String canonicalBasePath = baseFile.getCanonicalPath();
+        String canonicalTargetPath = file.getCanonicalPath();
+
+        if (!canonicalTargetPath.startsWith(canonicalBasePath + File.separator)) {
+            throw new IllegalArgumentException("Invalid file path: path traversal detected");
+        }
+
+        File parent = file.getParentFile();
+        if (parent != null && !parent.exists()) {
+            if (!parent.mkdirs()) {
+                throw new CustomException("Failed to create parent directories");
+            }
+        }
+
         if (file.exists()) {
             Files.delete(file.toPath());
         }
