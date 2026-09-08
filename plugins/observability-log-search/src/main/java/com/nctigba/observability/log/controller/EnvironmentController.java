@@ -23,7 +23,8 @@
 
 package com.nctigba.observability.log.controller;
 
-import cn.hutool.core.collection.CollectionUtil;
+import static com.nctigba.observability.log.constants.CommonConstants.DIRECTORY_IS_EXIST;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
@@ -38,6 +39,9 @@ import com.nctigba.observability.log.service.ClusterManager;
 import com.nctigba.observability.log.service.impl.ElasticsearchService;
 import com.nctigba.observability.log.service.impl.FilebeatService;
 import com.nctigba.observability.log.util.SshSession;
+
+import cn.hutool.core.collection.CollectionUtil;
+
 import org.opengauss.admin.common.core.domain.entity.ops.OpsClusterNodeEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostEntity;
 import org.opengauss.admin.common.core.domain.entity.ops.OpsHostUserEntity;
@@ -72,8 +76,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.nctigba.observability.log.constants.CommonConstants.DIRECTORY_IS_EXIST;
-
+/**
+ * EnvironmentController
+ *
+ * @since 2023/2/21
+ */
 @RestController
 @RequestMapping("/observability/v1/environment")
 public class EnvironmentController {
@@ -306,16 +313,37 @@ public class EnvironmentController {
         return map;
     }
 
+    /**
+     * upload file
+     *
+     * @param name file path
+     * @param pkg file
+     * @return upload result
+     * @throws IOException io exception
+     */
     @PostMapping("/upload")
     public String upload(@RequestParam String name, MultipartFile pkg) throws IOException {
-        var file = new File("pkg/" + name);
-        var parent = file.getParentFile();
-        if (!parent.exists()) {
-            parent.mkdirs();
+        String baseDir = "pkg/";
+        File baseFile = new File(baseDir);
+        File file = new File(baseDir + name);
+        String canonicalBasePath = baseFile.getCanonicalPath();
+        String canonicalTargetPath = file.getCanonicalPath();
+
+        if (!canonicalTargetPath.startsWith(canonicalBasePath + File.separator)) {
+            throw new IllegalArgumentException("Invalid file path: path traversal detected");
         }
+
+        File parent = file.getParentFile();
+        if (parent != null && !parent.exists()) {
+            if (!parent.mkdirs()) {
+                throw new CustomException("Failed to create parent directories");
+            }
+        }
+
         if (file.exists()) {
             Files.delete(file.toPath());
         }
+
         try {
             pkg.transferTo(file.getCanonicalFile());
             return "success";

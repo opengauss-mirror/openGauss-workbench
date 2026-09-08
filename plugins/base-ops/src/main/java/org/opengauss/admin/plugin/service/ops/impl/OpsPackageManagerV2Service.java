@@ -23,8 +23,6 @@
 
 package org.opengauss.admin.plugin.service.ops.impl;
 
-import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -33,10 +31,16 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
+
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
 import org.opengauss.admin.common.core.dto.ops.PackageDto;
+import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.DateUtils;
 import org.opengauss.admin.plugin.constant.OpsConstants;
@@ -56,7 +60,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.annotation.Resource;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -284,10 +287,23 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
         String uploadFolder = pkg.getRealPath();
         // check upload folder
         checkPackageStoragePath(uploadFolder, isUpdate);
-        // upload file
+
+        String originalFileName = file.getOriginalFilename();
+        if (originalFileName == null || originalFileName.trim().isEmpty()) {
+            throw new CustomException("File name is empty");
+        }
+        File baseDir = new File(uploadFolder);
+        File targetFile = new File(baseDir, originalFileName);
+
         String fileRealPath = Path.of(uploadFolder, file.getOriginalFilename()).toString();
-        // save the MultipartFile file to the target (fileRealPath) directory
         try {
+            String canonicalBasePath = baseDir.getCanonicalPath();
+            String canonicalTargetPath = targetFile.getCanonicalPath();
+            if (!canonicalTargetPath.startsWith(canonicalBasePath + File.separator)) {
+                throw new CustomException("Invalid file path: path traversal detected");
+            }
+
+            fileRealPath = canonicalTargetPath;
             // transferTo param dest ,
             // dest is the absolute path to the file you want to save the uploaded file to
             file.transferTo(new File(fileRealPath));

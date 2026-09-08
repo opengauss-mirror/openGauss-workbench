@@ -20,14 +20,8 @@
 package org.opengauss.tun.utils.file;
 
 import cn.hutool.core.util.ObjectUtil;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
@@ -37,6 +31,14 @@ import org.opengauss.tun.common.FixedTuning;
 import org.opengauss.tun.domain.TuningLog;
 import org.opengauss.tun.utils.AssertUtil;
 import org.opengauss.tun.utils.DateUtil;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 /**
  * FileExtractor
@@ -67,6 +69,11 @@ public class FileExtractor {
                         continue;
                     }
                     File entryFile = new File(destinationDirectory, entry.getName());
+                    String canonicalPath = entryFile.getCanonicalPath();
+                    String basePath = new File(destinationDirectory).getCanonicalPath();
+                    if (!canonicalPath.startsWith(basePath + File.separator)) {
+                        throw new SecurityException("Zip entry is outside target directory");
+                    }
                     if (entry.isDirectory()) {
                         entryFile.mkdirs();
                     } else {
