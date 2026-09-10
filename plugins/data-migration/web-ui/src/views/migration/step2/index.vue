@@ -549,6 +549,10 @@ const filterChange = (filterObj) => {
 
 const getHostsData = () => {
   timer && clearTimeout(timer)
+  let checkTableData = tableData.value.length
+  if (checkTableData <= 0) {
+    tableLoading.value = true
+  }
   loading.value = true
   hostsData({
     ip: filterFlag.value? form.ip: null,
@@ -581,6 +585,10 @@ const getHostsData = () => {
       const isSelected = lastedSelectedRows.includes(row.hostId)
       tableRef.value?.toggleRowSelection(row, isSelected)
     })
+    if (checkTableData <= 0) {
+      tableLoading.value = false
+    }
+
   })
 }
 

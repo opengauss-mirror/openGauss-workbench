@@ -67,7 +67,6 @@
                 <el-tree-select
                   v-model="taskBasicInfo.subTaskData[curTableTabs].sourceIpPort"
                   :data="sourceClusterfilterOption"
-
                   :filter-method="filterSourceMethod"
                   filterable
                   highlight-current
@@ -106,6 +105,7 @@
                              :rules="[{ required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change'] }]"
                              @change="changeSourceDb"
                              :disabled="taskBasicInfo.subTaskData[curTableTabs].sourceDbType === JDBCType.Milvus"
+                             :loading="sourceClusterdbLoading"
                   >
                     <el-option v-for="option in sourceDBOptions" :key="option.key" :label="option.value"
                                :value="option.value"/>
@@ -204,6 +204,7 @@
                 <el-select v-model="taskBasicInfo.subTaskData[curTableTabs].targetDBName"
                            :placeholder="t('transcribe.create.targetdb')" filterable class="select-width"
                            :teleported="false"
+                           :loading="targetClusterdbLoading"
                            :rules="[{ required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change'] }]">
                   <el-option v-for="option in targetDBOptions" :key="option.key" :label="option.key"
                              :disabled="!option.select"
@@ -969,6 +970,7 @@ const updateDatabaseOptions = (databases: string[], type: string) => {
   }
 }
 
+const sourceClusterdbLoading = ref<boolean>(false)
 const getSourceClusterDB = async (type?: string) => {
   if (taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDBName !== '' && type !== 'init') {
     taskBasicInfo.value.subTaskData[curTableTabs.value].sourceDBName = ''
@@ -982,6 +984,7 @@ const getSourceClusterDB = async (type?: string) => {
   subTask.sourceNodeId = clusterNodeId
   const dbType = subTask.sourceDbType
   if (clusterNodeId && dbType !== JDBCType.Elasticsearch) {
+    sourceClusterdbLoading.value = true
     sourceClusterDbsType(clusterNodeId, dbType).then((res: any) => {
       if (Number(res.code) === 200) {
         updateDatabaseOptions(res.data, 'source')
@@ -989,6 +992,7 @@ const getSourceClusterDB = async (type?: string) => {
     }).catch((error) => {
       console.error('get source databases error:', error)
     }) .finally(() => {
+      sourceClusterdbLoading.value = false
       if (dbType === JDBCType.Milvus) {
         subTask.sourceDBName = 'default'
       }
@@ -998,10 +1002,12 @@ const getSourceClusterDB = async (type?: string) => {
 
 const targetDBOptions = ref<{ [key: string]: string }[]>([])
 
+const targetClusterdbLoading = ref<boolean>(false)
 const getTargetClusterDB = async (type?: string) => {
   if (taskBasicInfo.value.subTaskData[curTableTabs.value].targetDBName !== '' && type !== 'init') {
     taskBasicInfo.value.subTaskData[curTableTabs.value].targetDBName = ''
   }
+  targetClusterdbLoading.value = true
   targetDBOptions.value = []
   const subTask = taskBasicInfo.value.subTaskData[curTableTabs.value];
   const {targetIpPort} = subTask;
@@ -1019,6 +1025,8 @@ const getTargetClusterDB = async (type?: string) => {
     }
   }).catch((error) => {
     console.error('get target databases error:', error);
+  }).finally(() => {
+    targetClusterdbLoading.value = false
   })
 }
 
@@ -1478,4 +1486,3 @@ onMounted(() => {
   margin-right: 8px;
 }
 </style>
-

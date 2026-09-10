@@ -611,6 +611,9 @@ watch(
   display: flex;
   justify-content: space-between;
   align-items: center;
+  .params-title {
+    color: var(--o-text-color-primary);
+  }
   .params-info {
     font-size: 14px;
     font-weight: normal;

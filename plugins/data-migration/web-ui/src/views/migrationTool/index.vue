@@ -266,6 +266,11 @@
                 <el-icon><Delete /></el-icon>
                 {{ $t('step3.index.5q093f8y9zg1') }}
               </el-button>
+              <el-button size="small" type="primary" text @click="handleToolsParams(row)"
+                         v-if="row.installInfo.portalType !== 'MULTI_DB'">
+                <el-icon><Edit /></el-icon>
+                {{ $t('components.ToolsParamsConfig.5q0toolspar0') }}
+              </el-button>
             </template>
 
             <el-button
@@ -523,6 +528,10 @@ const filterChange = (filterObj) => {
 
 const getHostsData = () => {
   timer && clearTimeout(timer)
+  let checkTableData = tableData.value.length
+  if (checkTableData <= 0) {
+    tableLoading.value = true
+  }
   loading.value = true
   hostsData({
     ip: filterFlag.value? form.ip: null,
@@ -555,6 +564,10 @@ const getHostsData = () => {
       const isSelected = lastedSelectedRows.includes(row.hostId)
       tableRef.value?.toggleRowSelection(row, isSelected)
     })
+    if (checkTableData <= 0) {
+      tableLoading.value = false
+    }
+
   })
 }
 

@@ -81,7 +81,7 @@
               class="aPopConfirmStyle">
               <el-button link type="primary">{{ $t('transcribe.index.stop') }}</el-button>
             </a-popconfirm>
-            <a-popconfirm :content="$t('transcribe.index.confirmdelete')" type="warning" 
+            <a-popconfirm :content="$t('transcribe.index.confirmdelete')" type="warning"
               :ok-text="$t('list.index.confirm')" :cancel-text="$t('list.index.cancel')" @ok="deleteRows(scope.row)"
               class="aPopConfirmStyle">
               <el-button link type="danger" :disabled="scope.row.executionStatus === TASKSTATE.RUNNING_NUMERIC">

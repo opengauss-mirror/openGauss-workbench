@@ -1379,14 +1379,14 @@ defineExpose({
   min-height: 100vh;
   height: auto;
   width: 100vw;
-  background-color: #F4F6FA;
+  background-color: var(--o-bg-color-light);
   background-size: 100% 100%;
   position: absolute;
 
 }
 
 .backgroundform {
-  background-color: white;
+  background-color: var(--o-bg-color-base);
   padding-top: 10px;
   padding-bottom: 10px;
   padding-right: 20px;
@@ -1399,7 +1399,7 @@ defineExpose({
     text-align: start;
   }
 
-  background-color: white;
+  background-color: var(--o-bg-color-base);
   margin-bottom: 20px;
   box-shadow: 0px 0px 0px;
   border: 0;
@@ -1409,5 +1409,24 @@ defineExpose({
   line-height: 70px;
 }
 
-</style>
+.refresh-con {
+  display: flex;
+  align-items: center;
 
+  .el-icon {
+    font-size: 16px;
+    margin: 0 12px;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--o-color-primary);
+    }
+  }
+}
+
+i.el-icon.icon {
+  margin-left: 12px;
+  cursor: pointer;
+}
+
+</style>

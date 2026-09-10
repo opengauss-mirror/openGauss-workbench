@@ -396,6 +396,11 @@ defineExpose({
   justify-content: space-between;
   align-items: center;
 
+  .params-title {
+    color: var(--o-text-color-primary);
+    margin: 0;
+  }
+
   .params-info {
     font-size: 14px;
     font-weight: normal;
@@ -466,7 +471,7 @@ defineExpose({
 }
 
 .gray-card {
-  background-color: rgb(var(--gray-2));
+  background-color: var(--o-bg-color-light);
   margin-bottom: 16px;
 }
 
