@@ -492,6 +492,7 @@
       "targetData": "Target Data",
       "targetIpPort": "Target IP and Port",
       "targetDB": "Target Database",
+      "timezonePrompt": "Please ensure that the time zones of the target and source databases are consistent.",
       "targetDbPromptPart1": "Please select",
       "targetDbPromptPart2": "compatible mode database, compatible mode reference:",
       "sqlCompatibility": "sql_compatibility",

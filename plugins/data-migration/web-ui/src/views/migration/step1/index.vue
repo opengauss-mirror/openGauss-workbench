@@ -198,6 +198,9 @@
                     {{ $t('step1.index.getVersionBtn') }}
                   </el-link>
                 </div>
+                  <div style="width: 100%">
+                                  {{ $t('step1.index.timezonePrompt') }}
+                                </div>
               </el-form-item>
               <el-form-item :label="t('transcribe.create.targetdb')" prop="targetDBName" label-position="left"
                             :rules="[{ required: true, message: t('transcribe.create.required'), trigger: ['blur', 'change'] }]">

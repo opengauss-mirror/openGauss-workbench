@@ -492,6 +492,7 @@
       "targetData": "目的端数据",
       "targetIpPort": "目的IP和端口",
       "targetDB": "目的端数据库",
+      "timezonePrompt": "请保证目标端和源端数据库时区一致",
       "targetDbPromptPart1": "请选择",
       "targetDbPromptPart2": "兼容模式数据库，兼容模式参考：",
       "sqlCompatibility": "sql_compatibility",
