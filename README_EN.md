@@ -1,4 +1,7 @@
 # openGauss DataKit
+
+English | [简体中文](./README.md)
+
 The installation and O&M of openGauss can be technically challenging and complex for beginners or users who simply want to test basic database features. In particular, the installation of the Enterprise Edition presents a steep learning curve for many users. The visualized O&M platform abstracts the technical details of openGauss, enabling common users to quickly experience its functions and allowing O&M personnel to rapidly deploy or uninstall various openGauss clusters in enterprise environments. This reduces learning and O&M costs, visualizes common openGauss operations, and eliminates the command differences between various openGauss versions. Consequently, users can operate the database consistently without knowing low-level command details, allowing them to focus on their core business logic.
 
 To support customers with diverse configurations and O&M requirements, targeted monitoring and management tools are necessary. The community requires an integrated platform to consolidate these tools as plug-ins while supporting flexible, personalized configurations.
