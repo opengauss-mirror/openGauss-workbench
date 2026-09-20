@@ -18,7 +18,7 @@
     <sql id="selectTaskVo">
         SELECT
             id,task_name,exec_status,is_full_failed,create_time,finish_time,exec_time,create_user,exec_progress
-        FROM tb_migration_main_task
+        FROM tb_migration_main_task m
     </sql>
 
     <select id="selectTaskPage" parameterType="org.opengauss.admin.common.core.dto.SysTaskDto" resultMap="SysTaskResult">
@@ -34,10 +34,14 @@
                 and exec_status = #{entity.execStatus}
             </if>
             <if test="entity.execStartTime != null and entity.execEndTime != null">
-                and exec_time between #{entity.execStartTime} and #{entity.execEndTime}
+                and exists (select 1 from tb_migration_task t
+                            where t.main_task_id = m.id
+                              and t.exec_time between #{entity.execStartTime} and #{entity.execEndTime})
             </if>
             <if test="entity.finishStartTime != null and entity.finishEndTime != null">
-                and finish_time between #{entity.finishStartTime} and #{entity.finishEndTime}
+                and exists (select 1 from tb_migration_task t
+                            where t.main_task_id = m.id
+                              and t.finish_time between #{entity.finishStartTime} and #{entity.finishEndTime})
             </if>
         </where>
         order by id desc
