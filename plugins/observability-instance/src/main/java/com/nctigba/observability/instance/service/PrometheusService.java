@@ -132,6 +132,7 @@ public class PrometheusService extends AbstractInstaller {
 
     public void installMainProm() {
         NctigbaEnvDO mainEnv = getMainPromEnv();
+        boolean isNewInsert = false;
         try {
             // install the main Prometheus
             String pathStr = StrUtil.isBlank(mainEnv.getPath()) ? MAIN_INSTALL_PATH : mainEnv.getPath();
@@ -159,6 +160,7 @@ public class PrometheusService extends AbstractInstaller {
             if (StrUtil.isBlank(mainEnv.getId())) {
                 // save env
                 envMapper.insert(mainEnv);
+                isNewInsert = true;
                 savePrometheusInstallInfo(mainEnv);
             }
             AgentExceptionVO agentExceptionVO = checkPidStatus(mainEnv);
@@ -169,7 +171,29 @@ public class PrometheusService extends AbstractInstaller {
             checkHealthStatus(mainEnv);
             updateMainPromRemoteReadConfig();
         } catch (IOException | InterruptedException | RuntimeException e) {
+            if (isNewInsert) {
+                try {
+                    rmPath(mainEnv.getPath());
+                } catch (IOException | InterruptedException | RuntimeException ex) {
+                    log.error("Failed to remove the failed install folder: {}", mainEnv.getPath(), ex);
+                }
+                deleteInsertedEnv(mainEnv);
+            }
             throw new CustomException(e.getMessage(),e);
+        }
+    }
+
+    /**
+     * Delete the env record saved by a failed install
+     *
+     * @param env NctigbaEnvDO
+     */
+    private void deleteInsertedEnv(NctigbaEnvDO env) {
+        try {
+            envMapper.deleteById(env.getId());
+            deletePrometheusInstallInfo(env);
+        } catch (IOException e) {
+            log.error("Failed to delete the failed install record, id: {}", env.getId(), e);
         }
     }
 
@@ -429,16 +453,24 @@ public class PrometheusService extends AbstractInstaller {
             NctigbaEnvDO env = new NctigbaEnvDO().setHostid(promInstall.getHostId()).setPort(promInstall.getPort())
                 .setUsername(promInstall.getUsername()).setType(envType.PROMETHEUS).setHost(hostEntity)
                 .setParam(param.toString());
-            installSecondProm0(sshSession, env, promInstall);
-            // run Prometheus script
-            nextStep(); // step5 startup prometheus
-            sshSession.execute("cd " + env.getPath() + " && sh " + RUN_SCRIPT + " start");
-            // Circular waiting for Prometheus API connectivity
-            nextStep(); // step6 check prom status
-            checkHealthStatus(env);
-            updateMainPromRemoteReadConfig();
-            promAlloc();
-            nextStep(); // step7 done
+            try {
+                installSecondProm0(sshSession, env, promInstall);
+                // run Prometheus script
+                nextStep(); // step5 startup prometheus
+                sshSession.execute("cd " + env.getPath() + " && sh " + RUN_SCRIPT + " start");
+                // Circular waiting for Prometheus API connectivity
+                nextStep(); // step6 check prom status
+                checkHealthStatus(env);
+                updateMainPromRemoteReadConfig();
+                promAlloc();
+            } catch (IOException | RuntimeException e) {
+                if (env.getId() != null) {
+                    deleteInsertedEnv(env);
+                }
+                throw e;
+            }
+            // step7 done
+            nextStep();
             sendMsg(Status.DONE, "");
         }
     }
