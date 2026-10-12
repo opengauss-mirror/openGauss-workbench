@@ -60,6 +60,9 @@ const totalProcessDesc = reactive( {
   speedName: t ( 'components.SubTaskDetail.speed' ),
   speed: 0,
   speedRate: 'MB/s',
+  extractSpeed: 0,
+  csvSpeed: 0,
+  loadSpeed: 0,
   timeName: t ( 'components.SubTaskDetail.costTime' ),
   time: 0,
   timerRate: 's'
@@ -77,7 +80,10 @@ const constantRate = computed ( () => {
     timeName: t ( 'components.SubTaskDetail.costTime' ),
     increaseSpeed: t ( 'components.SubTaskDetail.increaseSpeed' ),
     increaseWriteSpeed: t ( 'components.SubTaskDetail.increaseWriteSpeed' ),
-    speedRate: t ( 'components.SubTaskDetail.speedRate' )
+    speedRate: t ( 'components.SubTaskDetail.speedRate' ),
+    extractSpeed: t ( 'components.SubTaskDetail.extractSpeed' ),
+    csvSpeed: t ( 'components.SubTaskDetail.csvSpeed' ),
+    loadSpeed: t ( 'components.SubTaskDetail.loadSpeed' )
   }
 } )
 
@@ -93,6 +99,18 @@ const reverseProcess = reactive ( {
 
 const subTaskMode = ref ( 2 );
 const subTaskDbType = ref ( '' )
+// whether the progress report contains the three stage speeds
+const hasStageSpeed = ref ( false )
+// hover text showing the three stage speeds of full migration
+const stageSpeedTooltip = computed ( () => {
+  if ( !hasStageSpeed.value ) {
+    return ''
+  }
+  return constantRate.value.extractSpeed + ' ' + totalProcessDesc.extractSpeed + constantRate.value.speedRate + ' ' +
+    constantRate.value.csvSpeed + ' ' + totalProcessDesc.csvSpeed + constantRate.value.speedRate + ' ' +
+    constantRate.value.loadSpeed + ' ' + totalProcessDesc.loadSpeed + constantRate.value.speedRate
+} )
+
 const steps = computed ( () => {
   // A value is assigned to the full migration description
   const totalDesc = constantRate.value.dataName + totalProcessDesc.data + 'MB ' +
@@ -125,7 +143,8 @@ const steps = computed ( () => {
   return [{
     stepIndex: 1,
     title: t ( 'components.SubTaskDetail.fullMigration' ),
-    description: current.value > 1 ? totalDesc + ' ' + constantRate.value.timeName + ' ' + totalProcessDesc.time + totalProcessDesc.timerRate : totalDesc
+    description: current.value > 1 ? totalDesc + ' ' + constantRate.value.timeName + ' ' + totalProcessDesc.time + totalProcessDesc.timerRate : totalDesc,
+    tooltip: stageSpeedTooltip.value
   }, {
     stepIndex: 2,
     title: t ( 'components.SubTaskDetail.fullCheck' ),
@@ -149,6 +168,11 @@ watch ( props, (newVal, oldVal) => {
         totalProcessDesc.data = fullProcessObj.total?.data || 0;
         totalProcessDesc.speed = fullProcessObj.total?.speed || 0;
         totalProcessDesc.time = fullProcessObj.total?.time || 0;
+        const totalObj = fullProcessObj.total || {};
+        totalProcessDesc.extractSpeed = totalObj.extractSpeed ?? 0;
+        totalProcessDesc.csvSpeed = totalObj.csvSpeed ?? 0;
+        totalProcessDesc.loadSpeed = totalObj.loadSpeed ?? 0;
+        hasStageSpeed.value = ['extractSpeed', 'csvSpeed', 'loadSpeed'].some ( key => totalObj[key] !== undefined );
       }
     }
     // Full check assignment

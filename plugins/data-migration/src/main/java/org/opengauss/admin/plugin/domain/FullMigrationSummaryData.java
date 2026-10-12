@@ -24,4 +24,7 @@ public class FullMigrationSummaryData {
     private Long record;
     private Double speed;
     private Integer time;
+    private Long extractSpeed;
+    private Long csvSpeed;
+    private Long loadSpeed;
 }

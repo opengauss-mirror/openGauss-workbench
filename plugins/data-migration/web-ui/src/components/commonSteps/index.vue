@@ -4,6 +4,12 @@
       <el-step v-for="(item, index) in props.steps" :key="item.title" :description="item.description" :title="item.title"
         :status="getStatus(item.stepIndex)" @click="clickNode(item.stepIndex)"
         :class="{ pointer: props.active && item.stepIndex <= props.current }">
+        <!-- hover tooltip for the step description -->
+        <template v-if="item.tooltip" #description>
+          <el-tooltip :content="item.tooltip" placement="top" effect="light" :show-after="200">
+            <span class="hover-description">{{ item.description }}</span>
+          </el-tooltip>
+        </template>
         <!-- enlarge double circle, clicked node or current node   -->
         <template #icon v-if="props.active ? item.stepIndex === props.active : item.stepIndex === props.current">
           <div class="doubleCircle outer">
@@ -101,6 +107,11 @@ const clickNode = (index) => {
 
 .pointer {
   cursor: pointer;
+}
+
+.hover-description {
+  cursor: default;
+  border-bottom: 1px dashed var(--o-color-primary);
 }
 
 .circle {
