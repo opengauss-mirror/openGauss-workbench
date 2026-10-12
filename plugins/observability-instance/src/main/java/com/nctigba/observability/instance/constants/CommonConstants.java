@@ -72,7 +72,7 @@ public class CommonConstants {
     /**
      * Check if the port exists
      */
-    public static final String PORT_IS_EXIST = "source /etc/profile && lsof -i :%s | grep LISTEN  && echo 'true' || "
+    public static final String PORT_IS_EXIST = "source /etc/profile && ss -tln | grep ':%s ' && echo 'true' || "
         + "echo 'false'";
 
     /**
