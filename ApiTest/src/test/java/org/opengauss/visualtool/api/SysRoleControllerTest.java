@@ -9,6 +9,7 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.opengauss.global.Constants;
 import org.hamcrest.Matchers;
 import org.testng.annotations.Test;
 
@@ -23,7 +24,7 @@ import static org.opengauss.global.Constants.getRequestSpecification;
  * @since 2024/10/29
  */
 public class SysRoleControllerTest {
-    private static final Logger logger = LogManager.getLogger(SysProfileControllerTest.class);
+    private static final Logger logger = LogManager.getLogger(SysRoleControllerTest.class);
 
     private Map<String, Object> sysRole = new HashMap<>();
 
@@ -59,6 +60,7 @@ public class SysRoleControllerTest {
     @Test(dependsOnMethods = "addTest")
     public void listTest() {
         Response response = getRequestSpecification()
+                .params(Constants.PAGE_PARAMS)
                 .when()
                 .get("/list");
         response.then()
@@ -142,5 +144,95 @@ public class SysRoleControllerTest {
         response.then()
                 .body("code", Matchers.equalTo(200))
                 .body("data.roleName", Matchers.hasItems("超级管理员"));
+    }
+
+    @Test(priority = 1)
+    public void addWithBlankRoleNameTest() {
+        Map<String, Object> invalidRole = new HashMap<>();
+        invalidRole.put("roleName", "");
+        invalidRole.put("menuIds", new int[] {2});
+        invalidRole.put("status", "0");
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(invalidRole)
+                .when()
+                .post()
+                .then()
+                .body("code", Matchers.equalTo(400));
+    }
+
+    @Test(priority = 1)
+    public void addWithTooLongRoleNameTest() {
+        Map<String, Object> invalidRole = new HashMap<>();
+        invalidRole.put("roleName", "12345678901234567890123456");
+        invalidRole.put("menuIds", new int[] {2});
+        invalidRole.put("status", "0");
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(invalidRole)
+                .when()
+                .post()
+                .then()
+                .body("code", Matchers.equalTo(400));
+    }
+
+    @Test(dependsOnMethods = "addTest")
+    public void addWithDuplicateRoleNameTest() {
+        Map<String, Object> duplicateRole = new HashMap<>();
+        duplicateRole.put("roleName", testRoleName);
+        duplicateRole.put("menuIds", new int[] {2});
+        duplicateRole.put("status", "0");
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(duplicateRole)
+                .when()
+                .post()
+                .then()
+                .body("code", Matchers.equalTo(50105));
+    }
+
+    @Test(priority = 1)
+    public void addWithTooLongRemarkTest() {
+        Map<String, Object> invalidRole = new HashMap<>();
+        invalidRole.put("roleName", "remarkTooLongRole");
+        invalidRole.put("remark", "a".repeat(201));
+        invalidRole.put("menuIds", new int[] {2});
+        invalidRole.put("status", "0");
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(invalidRole)
+                .when()
+                .post()
+                .then()
+                .body("code", Matchers.equalTo(50119));
+    }
+
+    @Test(priority = 1)
+    public void editAdminRoleNotAllowedTest() {
+        Map<String, Object> adminRole = new HashMap<>();
+        adminRole.put("roleId", 1);
+        adminRole.put("roleName", "超级管理员");
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(adminRole)
+                .when()
+                .put()
+                .then()
+                .body("code", Matchers.equalTo(500));
+    }
+
+    @Test(priority = 1)
+    public void removeAdminRoleNotAllowedTest() {
+        getRequestSpecification()
+                .pathParam("roleIds", 1)
+                .when()
+                .delete("/{roleIds}")
+                .then()
+                .body("code", Matchers.equalTo(500));
     }
 }

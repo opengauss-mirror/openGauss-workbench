@@ -100,7 +100,7 @@ public class SysWhiteListControllerTest {
                 .body("data.ipList", Matchers.equalTo(changeWhiteListIpList));
     }
 
-    @Test(dependsOnMethods = "getInfoTest")
+    @Test(dependsOnMethods = {"getInfoTest", "addWithDuplicateTitleTest"})
     public void removeTest() {
         getRequestSpecification()
                 .pathParam("ids", sysWhiteList.get("id"))
@@ -108,5 +108,80 @@ public class SysWhiteListControllerTest {
                 .delete("/{ids}")
                 .then()
                 .body("code", Matchers.equalTo(200));
+    }
+
+    @Test(priority = 1)
+    public void addWithTooLongTitleTest() {
+        Map<String, Object> invalidWhiteList = new HashMap<>();
+        invalidWhiteList.put("title", "a".repeat(101));
+        invalidWhiteList.put("ipList", "192.168.100.11");
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(invalidWhiteList)
+                .when()
+                .post()
+                .then()
+                .body("code", Matchers.equalTo(50124));
+    }
+
+    @Test(dependsOnMethods = "addTest")
+    public void addWithDuplicateTitleTest() {
+        Map<String, Object> invalidWhiteList = new HashMap<>();
+        invalidWhiteList.put("title", testWhiteListTitle);
+        invalidWhiteList.put("ipList", "192.168.100.12");
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(invalidWhiteList)
+                .when()
+                .post()
+                .then()
+                .body("code", Matchers.equalTo(50126));
+    }
+
+    @Test(priority = 1)
+    public void addWithDuplicateIpTest() {
+        Map<String, Object> invalidWhiteList = new HashMap<>();
+        invalidWhiteList.put("title", "api test duplicate ip");
+        invalidWhiteList.put("ipList", "192.168.100.13,192.168.100.13");
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(invalidWhiteList)
+                .when()
+                .post()
+                .then()
+                .body("code", Matchers.equalTo(50127));
+    }
+
+    @Test(priority = 1)
+    public void addWithTooLongIpListTest() {
+        Map<String, Object> invalidWhiteList = new HashMap<>();
+        invalidWhiteList.put("title", "api test too long ip list");
+        invalidWhiteList.put("ipList", "192.168.0.1,".repeat(17));
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(invalidWhiteList)
+                .when()
+                .post()
+                .then()
+                .body("code", Matchers.equalTo(50125));
+    }
+
+    @Test(dependsOnMethods = "addTest")
+    public void addWithExistingIpTest() {
+        Map<String, Object> invalidWhiteList = new HashMap<>();
+        invalidWhiteList.put("title", "api test existing ip");
+        invalidWhiteList.put("ipList", testWhiteListIpList);
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(invalidWhiteList)
+                .when()
+                .post()
+                .then()
+                .body("code", Matchers.equalTo(50128));
     }
 }
