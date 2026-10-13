@@ -1601,7 +1601,10 @@ CREATE TABLE IF NOT EXISTS "public"."tb_migration_full_migration_summary_data"
     data           DOUBLE PRECISION NOT NULL,
     record         BIGINT           NOT NULL,
     speed          DOUBLE PRECISION NOT NULL,
-    time           INT              NOT NULL
+    time           INT              NOT NULL,
+    extract_speed  BIGINT,
+    csv_speed      BIGINT,
+    load_speed     BIGINT
 );
 
 COMMENT
@@ -1616,6 +1619,12 @@ COMMENT
 ON COLUMN "public"."tb_migration_full_migration_summary_data"."speed" IS '当前迁移速率，MB/s';
 COMMENT
 ON COLUMN "public"."tb_migration_full_migration_summary_data"."time" IS '迁移总耗时，s';
+COMMENT
+ON COLUMN "public"."tb_migration_full_migration_summary_data"."extract_speed" IS '提取阶段速率，条/s';
+COMMENT
+ON COLUMN "public"."tb_migration_full_migration_summary_data"."csv_speed" IS 'CSV写入阶段速率，条/s';
+COMMENT
+ON COLUMN "public"."tb_migration_full_migration_summary_data"."load_speed" IS '导入阶段速率，条/s';
 
 ---------------------------------
 -- CREATE TABLE tb_migration_incremental_migration_progress
@@ -1757,3 +1766,43 @@ LANGUAGE plpgsql;
 SELECT change_password_field_to_text();
 
 DROP FUNCTION change_password_field_to_text;
+
+
+CREATE OR REPLACE FUNCTION add_full_migration_summary_data_field_func() RETURNS integer AS 'BEGIN
+    IF
+            (SELECT COUNT(*) AS ct1
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_NAME = ''tb_migration_full_migration_summary_data''
+               AND COLUMN_NAME = ''extract_speed'') = 0
+    THEN
+        ALTER TABLE tb_migration_full_migration_summary_data
+            ADD COLUMN extract_speed bigint;
+        COMMENT ON COLUMN "public"."tb_migration_full_migration_summary_data"."extract_speed" IS ''提取阶段速率，条/s'';
+    END IF;
+    IF
+            (SELECT COUNT(*) AS ct1
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_NAME = ''tb_migration_full_migration_summary_data''
+               AND COLUMN_NAME = ''csv_speed'') = 0
+    THEN
+        ALTER TABLE tb_migration_full_migration_summary_data
+            ADD COLUMN csv_speed bigint;
+        COMMENT ON COLUMN "public"."tb_migration_full_migration_summary_data"."csv_speed" IS ''CSV写入阶段速率，条/s'';
+    END IF;
+    IF
+            (SELECT COUNT(*) AS ct1
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_NAME = ''tb_migration_full_migration_summary_data''
+               AND COLUMN_NAME = ''load_speed'') = 0
+    THEN
+        ALTER TABLE tb_migration_full_migration_summary_data
+            ADD COLUMN load_speed bigint;
+        COMMENT ON COLUMN "public"."tb_migration_full_migration_summary_data"."load_speed" IS ''导入阶段速率，条/s'';
+    END IF;
+    RETURN 0;
+END;'
+LANGUAGE plpgsql;
+
+SELECT add_full_migration_summary_data_field_func();
+
+DROP FUNCTION add_full_migration_summary_data_field_func;

@@ -1078,7 +1078,10 @@ CREATE TABLE IF NOT EXISTS tb_migration_full_migration_summary_data
     data           DOUBLE PRECISION NOT NULL,
     record         BIGINT           NOT NULL,
     speed          DOUBLE PRECISION NOT NULL,
-    time           INT              NOT NULL
+    time           INT              NOT NULL,
+    extract_speed  BIGINT,
+    csv_speed      BIGINT,
+    load_speed     BIGINT
 );
 
 COMMENT
@@ -1093,6 +1096,12 @@ COMMENT
 ON COLUMN "tb_migration_full_migration_summary_data"."speed" IS '当前迁移速率，MB/s';
 COMMENT
 ON COLUMN "tb_migration_full_migration_summary_data"."time" IS '迁移总耗时，s';
+COMMENT
+ON COLUMN "tb_migration_full_migration_summary_data"."extract_speed" IS '提取阶段速率，条/s';
+COMMENT
+ON COLUMN "tb_migration_full_migration_summary_data"."csv_speed" IS 'CSV写入阶段速率，条/s';
+COMMENT
+ON COLUMN "tb_migration_full_migration_summary_data"."load_speed" IS '导入阶段速率，条/s';
 
 ---------------------------------
 -- CREATE TABLE tb_migration_incremental_migration_progress
