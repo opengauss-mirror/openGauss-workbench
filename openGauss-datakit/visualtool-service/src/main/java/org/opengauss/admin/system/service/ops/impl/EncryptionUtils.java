@@ -18,6 +18,7 @@ package org.opengauss.admin.system.service.ops.impl;
 import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.CryptoException;
+import cn.hutool.crypto.GlobalBouncyCastleProvider;
 import cn.hutool.crypto.asymmetric.KeyType;
 import cn.hutool.crypto.asymmetric.RSA;
 import lombok.extern.slf4j.Slf4j;
@@ -35,13 +36,21 @@ import java.security.*;
 import java.util.Objects;
 
 /**
- * @author lhf
- * @date 2022/11/28 14:20
+ * EncryptionUtils
+ *
+ * @since 2022/11/28 14:20
  **/
 @Slf4j
 @Component
 public class EncryptionUtils {
     private static final String SECRET = "secret";
+
+    static {
+        // Here, the automatic enabling of BC by hutool is disabled, so that encryption and decryption algorithms
+        // such as RSA are rolled back to the default JDK provider (the behavior is the same as that before bcprov
+        // is introduced).
+        GlobalBouncyCastleProvider.setUseBouncyCastle(false);
+    }
 
     @Autowired
     private OpsEncryptionMapper encryptionMapper;
