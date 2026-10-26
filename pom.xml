@@ -82,6 +82,7 @@
         <maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
         <exec-maven-plugin.version>3.5.1</exec-maven-plugin.version>
         <versions-maven-plugin.version>2.7</versions-maven-plugin.version>
+        <bcprov-jdk18on.version>1.86</bcprov-jdk18on.version>
         <web.path/>
         <web.build.path/>
         <web.resources.path/>
@@ -513,6 +514,11 @@
                 <groupId>org.apache.tomcat.embed</groupId>
                 <artifactId>tomcat-embed-el</artifactId>
                 <version>${apache.tomcat.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk18on</artifactId>
+                <version>${bcprov-jdk18on.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
