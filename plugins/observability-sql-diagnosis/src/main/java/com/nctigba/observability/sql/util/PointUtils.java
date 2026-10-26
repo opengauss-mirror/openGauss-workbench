@@ -34,6 +34,7 @@ import com.nctigba.observability.sql.mapper.HisThresholdMapper;
 import com.nctigba.observability.sql.model.dto.point.AnalysisDTO;
 import com.nctigba.observability.sql.model.dto.point.AspAnalysisDTO;
 import com.nctigba.observability.sql.model.dto.point.FunctionTableDTO;
+import com.nctigba.observability.sql.model.dto.point.LockDTO;
 import com.nctigba.observability.sql.model.entity.DiagnosisResultDO;
 import com.nctigba.observability.sql.model.entity.DiagnosisTaskDO;
 import com.nctigba.observability.sql.model.entity.DiagnosisThresholdDO;
@@ -41,6 +42,9 @@ import com.nctigba.observability.sql.model.vo.AutoShowDataVO;
 import com.nctigba.observability.sql.model.vo.collection.DatabaseVO;
 import com.nctigba.observability.sql.model.vo.collection.PrometheusVO;
 import com.nctigba.observability.sql.model.vo.point.ExecPlanDetailVO;
+import com.nctigba.observability.sql.model.vo.point.LockAnalysisVO;
+import com.nctigba.observability.sql.model.vo.point.LogDetailInfoVO;
+import com.nctigba.observability.sql.model.vo.point.LogInfoVO;
 import com.nctigba.observability.sql.model.vo.point.PlanVO;
 import com.nctigba.observability.sql.model.vo.point.ShowData;
 import com.nctigba.observability.sql.model.vo.point.TableShowDataColumnVO;
@@ -84,6 +88,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.nctigba.observability.sql.constant.CommonConstants.CHART_NAME_STRING;
 import static com.nctigba.observability.sql.constant.CommonConstants.COLUMN_NAME_STRING;
@@ -114,6 +120,9 @@ public class PointUtils {
     private static final String TABLE_CHART_NAME = "Table";
     private static final String DB_DYNAMIC_MEMORY = "DbDynamicMemory";
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
+    private static final Pattern LOCK_LOG_PATTERN = Pattern.compile(
+            "(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3})\\s+(\\w+)\\s+(\\w+)\\s+([\\d\\.]+)\\s"
+                    + "+(\\d+)\\s+\\d+\\[\\d+:\\d+#\\d+\\]\\s+(\\d+)\\s+\\[(\\w+)\\]\\s+(.*)");
 
     private int totalPlanRows = 0;
 
@@ -121,6 +130,50 @@ public class PointUtils {
 
     @Autowired
     private HisThresholdMapper hisThresholdMapper;
+
+    /**
+     * Build lock diagnosis analysis from collected log data.
+     * Shared by deadlock and lock-timeout history points.
+     *
+     * @param collectionData collected log data, expected {@link LogInfoVO}
+     * @param chartNameKey   i18n key for chart name
+     * @return analysis result
+     */
+    public AnalysisDTO buildLockAnalysis(Object collectionData, String chartNameKey) {
+        LogInfoVO logInfoVO = null;
+        if (collectionData instanceof LogInfoVO) {
+            logInfoVO = (LogInfoVO) collectionData;
+        }
+        AnalysisDTO analysisDTO = new AnalysisDTO();
+        if (logInfoVO != null && !logInfoVO.getLogs().isEmpty()) {
+            analysisDTO.setIsHint(DiagnosisResultDO.ResultState.SUGGESTIONS);
+            List<LockAnalysisVO> lockDtoList = new ArrayList<>();
+            for (LogDetailInfoVO logDetail : logInfoVO.getLogs()) {
+                String logMessage = logDetail.getLogData().toString();
+                Matcher matcher = LOCK_LOG_PATTERN.matcher(logMessage);
+                String processId = null;
+                String transactionId = null;
+                if (matcher.matches()) {
+                    processId = matcher.group(5);
+                    transactionId = matcher.group(6);
+                }
+                LockAnalysisVO lockAnalysisVO = new LockAnalysisVO();
+                lockAnalysisVO.setLogTime(logDetail.getLogTime().toString());
+                lockAnalysisVO.setLogData(logDetail.getLogData().toString());
+                lockAnalysisVO.setProcessId(processId);
+                lockAnalysisVO.setTransactionId(transactionId);
+                lockDtoList.add(lockAnalysisVO);
+            }
+            LockDTO lockDTO = new LockDTO();
+            lockDTO.setLockAnalysisVOList(lockDtoList);
+            lockDTO.setChartName(LocaleStringUtils.format(chartNameKey));
+            analysisDTO.setPointData(lockDTO);
+        } else {
+            analysisDTO.setIsHint(DiagnosisResultDO.ResultState.NO_ADVICE);
+        }
+        analysisDTO.setPointType(DiagnosisResultDO.PointType.DIAGNOSIS);
+        return analysisDTO;
+    }
 
     /**
      * Get asp time slot
