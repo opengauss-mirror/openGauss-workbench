@@ -35,11 +35,13 @@ import com.nctigba.observability.sql.service.DataStoreService;
 import com.nctigba.observability.sql.service.CollectionItem;
 import com.nctigba.observability.sql.service.impl.collection.elastic.DeadlockItem;
 import com.nctigba.observability.sql.service.impl.point.history.DeadlockAnalysis;
+import com.nctigba.observability.sql.util.PointUtils;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
@@ -62,6 +64,8 @@ public class TestDeadlockAnalysis {
     private DeadlockItem item;
     @Mock
     private DataStoreService dataStoreService;
+    @Spy
+    private PointUtils pointUtils = new PointUtils();
     @InjectMocks
     private DeadlockAnalysis deadlockAnalysis;
 
