@@ -648,6 +648,11 @@ bcprov-jdk15on:
   artifactId: bcprov-jdk15on
   version: '1.69'
   url: https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on/1.69
+bcprov-jdk18on:
+  groupId: org.bouncycastle
+  artifactId: bcprov-jdk18on
+  version: '1.86'
+  url: https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on/1.86
 spring-boot-starter:
   groupId: org.springframework.boot
   artifactId: spring-boot-starter
