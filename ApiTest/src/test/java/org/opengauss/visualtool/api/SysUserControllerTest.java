@@ -137,4 +137,110 @@ public class SysUserControllerTest {
                 .then()
                 .body("code", Matchers.equalTo(200));
     }
+
+    @Test(priority = 1)
+    public void getInfoWithoutUserIdTest() {
+        getRequestSpecification()
+                .when()
+                .get("/")
+                .then()
+                .body("code", Matchers.equalTo(200))
+                .body("roles", Matchers.notNullValue())
+                .body("data", Matchers.nullValue());
+    }
+
+    @Test(priority = 1)
+    public void addWithEmptyPasswordTest() {
+        SysUser invalidUser = SysUser.builder()
+                .userName("apiTestEmptyPwd")
+                .nickName("apiTestEmptyPwdNick")
+                .status("0").build();
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(invalidUser)
+                .when()
+                .post()
+                .then()
+                .body("code", Matchers.equalTo(50132));
+    }
+
+    @Test(priority = 1)
+    public void addWithTooLongUserNameTest() {
+        SysUser invalidUser = SysUser.builder()
+                .userName("a".repeat(31))
+                .nickName("apiTestLongNameNick")
+                .password(RsaUtils.encryptByPublicKey(passwordForAddingUser))
+                .status("0").build();
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(invalidUser)
+                .when()
+                .post()
+                .then()
+                .body("code", Matchers.equalTo(50120));
+    }
+
+    @Test(priority = 1)
+    public void addWithDuplicateUserNameTest() {
+        SysUser invalidUser = SysUser.builder()
+                .userName("admin")
+                .nickName("apiTestDupNameNick")
+                .password(RsaUtils.encryptByPublicKey(passwordForAddingUser))
+                .status("0").build();
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(invalidUser)
+                .when()
+                .post()
+                .then()
+                .body("code", Matchers.equalTo(50115));
+    }
+
+    @Test(priority = 1)
+    public void addWithTooLongNickNameTest() {
+        SysUser invalidUser = SysUser.builder()
+                .userName("apiTestLongNickName")
+                .nickName("a".repeat(31))
+                .password(RsaUtils.encryptByPublicKey(passwordForAddingUser))
+                .status("0").build();
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(invalidUser)
+                .when()
+                .post()
+                .then()
+                .body("code", Matchers.equalTo(50121));
+    }
+
+    @Test(priority = 1)
+    public void addWithTooLongRemarkTest() {
+        SysUser invalidUser = SysUser.builder()
+                .userName("apiTestLongRemark")
+                .nickName("apiTestLongRemarkNick")
+                .password(RsaUtils.encryptByPublicKey(passwordForAddingUser))
+                .remark("a".repeat(201))
+                .status("0").build();
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(invalidUser)
+                .when()
+                .post()
+                .then()
+                .body("code", Matchers.equalTo(50122));
+    }
+
+    @Test(priority = 1)
+    public void removeCurrentUserTest() {
+        getRequestSpecification()
+                .pathParam("userIds", 1)
+                .when()
+                .delete("/{userIds}")
+                .then()
+                .body("code", Matchers.equalTo(500));
+    }
 }

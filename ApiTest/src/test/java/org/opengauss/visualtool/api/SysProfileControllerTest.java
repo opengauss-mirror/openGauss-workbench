@@ -104,4 +104,56 @@ public class SysProfileControllerTest {
                 .then()
                 .body("code", Matchers.equalTo(200));
     }
+
+    @Test(priority = 1)
+    public void updateProfileWithMismatchedUserTest() {
+        HashMap<String, Object> invalidProfile = new HashMap<>();
+        invalidProfile.put("userId", -1);
+        invalidProfile.put("nickName", "nick_name_invalid");
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(invalidProfile)
+                .when()
+                .put()
+                .then()
+                .body("code", Matchers.equalTo(401));
+    }
+
+    @Test(priority = 1)
+    public void updatePwdWithWrongOldPasswordTest() {
+        String encryptedOldPassword = RsaUtils.encryptByPublicKey("wrongOldPassword");
+        String encryptedNewPassword = RsaUtils.encryptByPublicKey("newPasswordWrong");
+
+        HashMap<String, String> requestMap = new HashMap<>();
+        requestMap.put("oldPassword", encryptedOldPassword);
+        requestMap.put("newPassword", encryptedNewPassword);
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(requestMap)
+                .when()
+                .put("/updatePwd")
+                .then()
+                .body("code", Matchers.equalTo(50109));
+    }
+
+    @Test(priority = 1)
+    public void updatePwdWithSamePasswordTest() {
+        String currentPassword = AppConfigLoader.getAppConfig().getDatakit().getPassword();
+        String encryptedOldPassword = RsaUtils.encryptByPublicKey(currentPassword);
+        String encryptedNewPassword = RsaUtils.encryptByPublicKey(currentPassword);
+
+        HashMap<String, String> requestMap = new HashMap<>();
+        requestMap.put("oldPassword", encryptedOldPassword);
+        requestMap.put("newPassword", encryptedNewPassword);
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(requestMap)
+                .when()
+                .put("/updatePwd")
+                .then()
+                .body("code", Matchers.equalTo(50110));
+    }
 }

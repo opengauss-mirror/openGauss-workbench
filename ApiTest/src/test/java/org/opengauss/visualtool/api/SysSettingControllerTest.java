@@ -13,6 +13,9 @@ import org.opengauss.visualtool.api.model.SysSetting;
 import org.hamcrest.Matchers;
 import org.testng.annotations.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.opengauss.global.Constants.getRequestSpecification;
 
 /**
@@ -44,7 +47,7 @@ public class SysSettingControllerTest {
         sysSetting = response.jsonPath().getObject("data", SysSetting.class);
     }
 
-    @Test(priority = 1)
+    @Test(dependsOnMethods = "listTest")
     public void updateTest() {
         getRequestSpecification()
                 .contentType(ContentType.JSON)
@@ -55,7 +58,7 @@ public class SysSettingControllerTest {
                 .body("code", Matchers.equalTo(200));
     }
 
-    @Test(priority = 1)
+    @Test(dependsOnMethods = "listTest")
     public void checkSysUploadPathTest() {
         getRequestSpecification()
                 .param("path", sysSetting.getUploadPath())
@@ -63,5 +66,19 @@ public class SysSettingControllerTest {
                 .get("/checkUploadPath")
                 .then()
                 .body("code", Matchers.equalTo(200));
+    }
+
+    @Test(priority = 1)
+    public void updateWithMissingRequiredFieldTest() {
+        Map<String, Object> invalidSetting = new HashMap<>();
+        invalidSetting.put("uploadPath", "/home/datakit/upload");
+
+        getRequestSpecification()
+                .contentType(ContentType.JSON)
+                .body(invalidSetting)
+                .when()
+                .put()
+                .then()
+                .body("code", Matchers.equalTo(400));
     }
 }
