@@ -311,7 +311,7 @@ SHOW VARIABLES LIKE 'lower_case_table_names';
 
 ### openGauss配置
 
-openGauss控制表名大小写敏感性的参数为[dolphin.lower_case_table_names](https://docs.opengauss.org/zh/docs/latest/extension_reference/dolphin_guc_parameters.html#dolphinlower_case_table_names)。
+openGauss控制表名大小写敏感性的参数为[dolphin.lower_case_table_names](https://docs.opengauss.org/zh/docs/latest/extension_reference/extension_reference/plugin/dolphin_guc_parameters.html#dolphinlower_case_table_names)。
 
 ```sql
 ALTER USER username SET dolphin.lower_case_table_names TO 0;
