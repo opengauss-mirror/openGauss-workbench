@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit 视图 的功能与操作步骤，涵盖创建视图、删除视图、查看视图、编辑视图等内容
+keywords: [DataKit, openGauss, 业务开发, 视图]
+---
+
 # 视图
 
 ## 创建视图
@@ -19,7 +24,7 @@
 | 所属对象模式 | 是   | 用于定于所属对象模式，默认为当前模式，置灰不可选       |
 | 代码         | 是   | 用于编写sql语句，默认为空                              |
 
-<img src="figures/5-5-1.1.png" style="zoom: 50%;" />
+<img src="figures/5-5-1.1.png" alt="创建视图界面" style="zoom: 50%;" />
 
 **步骤 3：** 选择 "**SQL预览**"，可基于创建视图的配置信息进行 SQL 预览。
 
@@ -27,7 +32,7 @@
 
 "**SQL预览**" 界面的编辑框仅支持查看，不支持编辑。
 
-<img src="figures/5-5-1.2.png" style="zoom: 50%;" />
+<img src="figures/5-5-1.2.png" alt="创建视图界面" style="zoom: 50%;" />
 
 ## 删除视图
 
@@ -39,37 +44,37 @@
 
 单击 "**取消**" 即可退出本次对话框操作。
 
-<img src="figures/5-5-2.png" style="zoom:67%;" />
+<img src="figures/5-5-2.png" alt="删除视图界面" style="zoom:67%;" />
 
 ## 查看视图
 
 创建视图后，单击视图列表，支持查看该视图 DDL、一般、列、数据。
 
-**说明**：当前显示数据仅在首次加载时自动获取，若需更新数据请点击刷新按钮![image-20221216120857070](figures/icon_refresh.png)。
+**说明**：当前显示数据仅在首次加载时自动获取，若需更新数据请点击刷新按钮![刷新按钮图标](figures/icon_refresh.png)。
 
 **查看 DDL**
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击视图列表，所选视图对应的4大维度内容，默认显示DDL。
 
-<img src="figures/5-5-3.1.png" style="zoom:67%;" />
+<img src="figures/5-5-3.1.png" alt="查看视图界面" style="zoom:67%;" />
 
 **查看常规**
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击视图列表，所选视图对应的4大维度内容，选中 "**常规**"。
 
-<img src="figures/5-5-3.2.png" style="zoom:67%;" />
+<img src="figures/5-5-3.2.png" alt="查看视图界面" style="zoom:67%;" />
 
 **查看列**
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击视图列表，所选视图对应的4大维度内容，选中 "**列**"。
 
-<img src="figures/5-5-3.3.png" style="zoom:67%;" />
+<img src="figures/5-5-3.3.png" alt="查看视图界面" style="zoom:67%;" />
 
 **查看数据**
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击视图列表，所选视图对应的4大维度内容，选中 "**数据**"。
 
-<img src="figures/5-5-3.4.png" style="zoom:67%;" />
+<img src="figures/5-5-3.4.png" alt="查看视图界面" style="zoom:67%;" />
 
 ## 编辑视图
 
@@ -84,7 +89,7 @@
 | 所属对象模式 | 是           | 用于定于所属对象模式；默认数据回显                       |
 | 代码         | 否           | 用于编写sql语句，默认数据回显                            |
 
-<img src="figures/5-5-4.png" style="zoom:40%;" />
+<img src="figures/5-5-4.png" alt="编辑视图界面" style="zoom:40%;" />
 
 ## 导出视图 DDL
 
@@ -92,6 +97,6 @@
 
 ​                **说明：** 导出文件为 sql 文件。
 
-<img src="figures/5-5-5.png" style="zoom:50%;" />
+<img src="figures/5-5-5.png" alt="导出视图 DDL界面" style="zoom:50%;" />
 
 ​ 

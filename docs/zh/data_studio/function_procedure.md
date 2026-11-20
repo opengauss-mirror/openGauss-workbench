@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit 函数/过程 的功能与操作步骤，涵盖创建函数/过程、使用函数/过程、调试函数/过程/匿名块、覆盖率统计等内容
+keywords: [DataKit, openGauss, 函数/过程]
+---
+
 # 函数/过程
 
 函数/过程支持创建函数/过程、使用函数/过程、调试函数/过程、覆盖率统计。
@@ -12,7 +17,7 @@
 
 将在新页签中显示所选模板。
 
-<img src="figures/5-8-1.1.png" style="zoom: 50%;" />
+<img src="figures/5-8-1.1.png" alt="创建函数/过程界面" style="zoom: 50%;" />
 
 **步骤 2**：选择 “**创建函数**” 。系统打开新的页签。
 
@@ -20,7 +25,7 @@
 
 **步骤 4**：右键单击 "编译"，编译该过程。
 
-<img src="figures/5-8-1.2.png" style="zoom:67%;" />
+<img src="figures/5-8-1.2.png" alt="创建函数/过程界面" style="zoom:67%;" />
 
 **步骤 5**：编译成功，该创建的函数将被保存。
 
@@ -50,7 +55,7 @@
 
 **说明：** 导出文件为 sql 文件。
 
-<img src="figures/5-8-2.1.png" style="zoom:50%;" />
+<img src="figures/5-8-2.1.png" alt="导出函数/过程 DDL界面" style="zoom:50%;" />
 
 ## 调试函数/过程/匿名块
 
@@ -68,7 +73,7 @@
 
 函数/过程调试左键点击左侧连接中对应的函数/过程，进行调试。匿名块调试右键点击连接下的函数/过程父目录，然后左键点击“**匿名块**”，进行匿名块编辑/调试。调试操作详见 **使用断点**和**控制执行**。
 
-<img src="figures/5-8-3.1.png" style="zoom:67%;"/>
+<img src="figures/5-8-3.1.png" alt="调试函数/过程/匿名块界面" style="zoom:67%;"/>
 
 ### 使用断点
 
@@ -104,13 +109,13 @@
 
 **步骤** **1**：打开需要添加断点的 PL/SQL 函数。
 
-**步骤** **2**：步骤在“**PL/SQL Viewer**”窗格中，双击行号字段左侧，设置断点，断点标志 [<img src="figures/5-8.png" alt="image-20221219110904621" style="zoom:33%;" />] 表示操作成功。
+**步骤** **2**：步骤在“**PL/SQL Viewer**”窗格中，双击行号字段左侧，设置断点，断点标志 [<img src="figures/5-8.png" alt="使用断点界面" style="zoom:33%;" />] 表示操作成功。
 
 **说明：** 如果函数在调试过程中不会间断或停止执行，则说明其设置的断点不会生效。
 
 **启用或禁用断点**
 
-设置断点后，再次单击断点，暂时禁用该断点[<img src="figures/5-8.1.png" alt="image-20221219111008264" style="zoom:33%;" />]。“**PL/SQL Viewer**”窗格中，禁用的断点的状态列显示断点的状态为 禁用。
+设置断点后，再次单击断点，暂时禁用该断点[<img src="figures/5-8.1.png" alt="使用断点界面" style="zoom:33%;" />]。“**PL/SQL Viewer**”窗格中，禁用的断点的状态列显示断点的状态为 禁用。
 
 若要启用已禁用的断点，再次单击对应断点。
 
@@ -126,15 +131,15 @@
 
 **说明：** 如果无需输入参数，则 “**函数执行入参**” 对话框不会弹出。
 
-<img src="figures/5-8.10.png" alt="image-20221219111115688" style="zoom: 50%;" />
+<img src="figures/5-8.10.png" alt="使用断点界面" style="zoom: 50%;" />
 
 **步骤** **3**：输入信息，单击 “**确定**” 。
 
-可以看到箭头指向断点所在行[<img src="figures/5-8.2.png" alt="image-20221219111332411" style="zoom:50%;" />]，同时所在行高亮。箭头所指的行号，即为继续执行程序时的起始行号。
+可以看到箭头指向断点所在行[<img src="figures/5-8.2.png" alt="使用断点界面" style="zoom:50%;" />]，同时所在行高亮。箭头所指的行号，即为继续执行程序时的起始行号。
 
 **说明：** 用户可继续执行、单步执行跳过代码。
 
-<img src="figures/5-8.11.png" alt="image-20221219111418534" style="zoom: 67%;" />
+<img src="figures/5-8.11.png" alt="使用断点界面" style="zoom: 67%;" />
 
 **步骤** **4**：单击 继续执行至下一断点（如有）。“结果” 页签中显示执行 PL/SQL 程序的结果， “调用堆栈” 和 “变量” 窗格将被清除。
 
@@ -142,7 +147,7 @@
 
 本节描述控制调试执行相关操作。
 
-<img src="figures/5-8-4.1.png" style="zoom:67%;" />
+<img src="figures/5-8-4.1.png" alt="控制执行界面" style="zoom:67%;" />
 
 **开始调试**
 
@@ -162,7 +167,7 @@
 
 在主函数调试程序中调试执行子函数时，用户可使用工具栏中 “**函数步入**”。操作 "**函数步入**"，自动打开新的子函数窗口，可对子函数进行逐行调试程序。子函数窗口仅支持 "**继续执行**"、"**单步执行**"、"**进入函数**"、"**退出函数**"。
 
-<img src="figures/5-8-3-2.1.png" style="zoom:67%;" />
+<img src="figures/5-8-3-2.1.png" alt="控制执行界面" style="zoom:67%;" />
 
 **说明：** 进入子函数后，主函数的操作栏除 "停止调试" 启用状态外，其余操作均为禁用状态。
 
@@ -186,13 +191,13 @@
 
 “**变量**” 窗格用于监视信息或估算值。可从小化窗口窗格中打开 “**变量**” 窗格。通过这个窗格，可以估算或者修改 PL/SQL 过程中的变量或参数。执行代码时，一些本地变量可能被修改，值发生变化的参数会出现黄色标记，可以通过 “**变量**” 窗格观察参数的变化。
 
-<img src="figures/5-8-3-3.1.png" alt="image-20221219113001239" style="zoom:67%;" />
+<img src="figures/5-8-3-3.1.png" alt="查看堆栈信息界面" style="zoom:67%;" />
 
 **查看结果**
 
 “**结果**” 页签显示 PL/SQL 调试会话的结果。只有出现执行 PL/SQL 程序的结果时，“**结果**” 页签才会自动弹出。
 
-<img src="figures/5-8-3-3.2.png" style="zoom:67%;" />
+<img src="figures/5-8-3-3.2.png" alt="查看堆栈信息界面" style="zoom:67%;" />
 
 ## 覆盖率统计
 
@@ -204,25 +209,25 @@
 
 仅调试前将参数 [enable_proc_coverage](https://docs.opengauss.org/zh/docs/latest/database_reference/miscellaneous_parameters.html#section14683125861213)为on时才会将函数或存储过程调试记录存储至 coverage.proc_coverage 表，且仅特定用户（初始用户和 monadmin 用户）有访问权限。
 
-<img src="figures/5-8-4.0.png" style="zoom:60%;" />
+<img src="figures/5-8-4.0.png" alt="覆盖率统计界面" style="zoom:60%;" />
 
 ### 显示覆盖率
 
-按照 **调试函数/过程**后，点击图标<img src="figures/icon_cover.png" alt="image-20221215162907121" style="zoom:55%;" />，弹出覆盖率信息。
+按照 **调试函数/过程**后，点击图标<img src="figures/icon_cover.png" alt="覆盖率按钮图标" style="zoom:55%;" />，弹出覆盖率信息。
 
-<img src="figures/5-8-4.1.png" alt="image-20221215162907121" style="zoom:60%;" />
+<img src="figures/5-8-4.1.png" alt="显示覆盖率界面" style="zoom:60%;" />
 
-<img src="figures/5-8-4.2.png" style="zoom:67%;" />
+<img src="figures/5-8-4.2.png" alt="显示覆盖率界面" style="zoom:67%;" />
 
 ### 导出覆盖率报表
 
 选中需要查看的调试记录，点击 "**导出**"  ，导出 html 文件。
 
-<img src="figures/5-8-4.3.png" style="zoom:67%;" />
+<img src="figures/5-8-4.3.png" alt="导出覆盖率报表界面" style="zoom:67%;" />
 
 打开所导出的函数覆盖率报告文件，显示内容包含执行语句及调试信息列表，具体如图：
 
-<img src="figures/5-8-4.4.png" alt="image-20221219113136265" style="zoom:67%;" />
+<img src="figures/5-8-4.4.png" alt="导出覆盖率报表界面" style="zoom:67%;" />
 
 **说明：** 调试信息系统会自动在“数据库--public--普通表”中生成his_coverage中。
 

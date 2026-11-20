@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit 外表 的功能与操作步骤，涵盖创建外表、编辑外表、删除外表、FAQ等内容
+keywords: [DataKit, openGauss, 业务开发, 外表]
+---
+
 # 外表
 
 外部表是一种特殊类型的表，它表示数据库中的一个虚拟表，其数据存储在数据库外部的数据源中，而不是数据库本身的存储介质中。
@@ -34,7 +39,7 @@
 | 远端表         | 否       | 用于填写远端的表名。如果不指定的话，将使用外表自身的表名作为远端的表名 |
 | 描述           | 否       | 用于定义所外部表的描述                                       |
 
-<img src="figures/5-12-1.1.png" style="zoom:67%;" />
+<img src="figures/5-12-1.1.png" alt="定义外部界面" style="zoom:67%;" />
 
 ### 定义外部服务器
 
@@ -64,11 +69,11 @@
 | 远端数据库用户名 | 是       | 用于填写所连接远程服务器数据库用户名         |
 | 远端数据库密码   | 是       | 用于填写所连接远程服务器数据库密码           |
 
-<img src="figures/5-12-1.2.png" style="zoom:50%;" />
+<img src="figures/5-12-1.2.png" alt="创建外部服务器界面" style="zoom:50%;" />
 
 ### 删除外部服务器
 
-**步骤 1：** 在 "**外表**" 页面中，单击 "**外部服务器**" 选择框，移入下拉列表并点击 <img src="figures/icon_delete.jpg" style="zoom:60%;" /> ，弹出 "**删除外部服务器**" 确认框。
+**步骤 1：** 在 "**外表**" 页面中，单击 "**外部服务器**" 选择框，移入下拉列表并点击 <img src="figures/icon_delete.jpg" alt="icon 删除页面" style="zoom:60%;" /> ，弹出 "**删除外部服务器**" 确认框。
 
 **步骤 2：** 单击 "**确定**" 即可继续，或单击 "**取消**" 即可退出操作。
 
@@ -76,7 +81,7 @@
 
 单击 "**取消**" 即可退出本次对话框操作。
 
-<img src="figures/5-12-1.3.png" style="zoom:67%;" />
+<img src="figures/5-12-1.3.png" alt="删除外部服务器界面" style="zoom:67%;" />
 
 ### 定义列
 
@@ -93,7 +98,7 @@
 | 范围       | 否       | 用于定义数据类型的范围                                       |
 | 描述       | 否       | 用于说明列信息                                               |
 
-<img src="figures/5-12-1.4.png" style="zoom:67%;" />
+<img src="figures/5-12-1.4.png" alt="定义列界面" style="zoom:67%;" />
 
 ## 编辑外表
 
@@ -103,17 +108,17 @@
 
 ### 查看 DDL
 
-<img src="figures/5-12-2.1.png" style="zoom:67%;" />
+<img src="figures/5-12-2.1.png" alt="查看 DDL界面" style="zoom:67%;" />
 
 ### 查看外部
 
-<img src="figures/5-12-2.2.png" style="zoom:67%;" />
+<img src="figures/5-12-2.2.png" alt="查看外部界面" style="zoom:67%;" />
 
 ### 修改列
 
 与普通表管理列同，详情请参见 [**表-管理列**](table.md#管理列)
 
-<img src="figures/5-12-2.3.png" style="zoom:67%;" />
+<img src="figures/5-12-2.3.png" alt="修改列界面" style="zoom:67%;" />
 
 ### 修改数据
 
@@ -121,7 +126,7 @@
 
 **说明：** 外表数据操作内核不支持添加约束，故无法设置自定义唯一键，待内核完善后补齐该功能。
 
-<img src="figures/5-12-2.4.png" style="zoom:67%;" />
+<img src="figures/5-12-2.4.png" alt="修改数据界面" style="zoom:67%;" />
 
 ## 删除外表
 
@@ -133,7 +138,7 @@
 
 单击 "**取消**" 即可退出本次对话框操作。
 
-<img src="figures/5-12-3.png" style="zoom:67%;" />
+<img src="figures/5-12-3.png" alt="删除外表界面" style="zoom:67%;" />
 
 ## FAQ
 

@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit PostgreSQL数据迁移 的功能与操作步骤，涵盖数据库服务准备、迁移工具部署、openGauss数据库配置、PostgreSQL数据库配置等内容
+keywords: [DataKit, openGauss, 数据迁移, PostgreSQL数据迁移]
+---
+
 # PostgreSQL数据迁移
 
 # 环境准备

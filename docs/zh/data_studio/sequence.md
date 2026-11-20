@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit 序列 的功能与操作步骤，涵盖创建序列、删除序列、查看 DDL、导出序列 DDL等内容
+keywords: [DataKit, openGauss, 业务开发, 序列]
+---
+
 # 序列
 
 ## 创建序列
@@ -72,7 +77,7 @@
     </tr>
 </table>
 
-<img src="figures/5-4-1.1.png" style="zoom:50%;" />
+<img src="figures/5-4-1.1.png" alt="创建序列界面" style="zoom:50%;" />
 
 **步骤 3：** 选择 "**SQL预览**"，可基于创建序列的配置信息进行 SQL 预览。
 
@@ -80,7 +85,7 @@
 
 "**SQL预览**" 界面的编辑框仅支持查看，不支持编辑。
 
-<img src="figures/5-4-1.2.png" style="zoom:50%;" />
+<img src="figures/5-4-1.2.png" alt="创建序列界面" style="zoom:50%;" />
 
 ## 删除序列
 
@@ -92,13 +97,13 @@
 
 单击 "**取消**" 即可退出本次对话框操作。
 
-<img src="figures/5-4-2.png" alt="image-20221216110103852" style="zoom: 67%;" />
+<img src="figures/5-4-2.png" alt="删除序列界面" style="zoom: 67%;" />
 
 ## 查看 DDL
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击序列列表，将显示序列 DDL。
 
-<img src="figures/5-4-3.png" style="zoom:67%;" />
+<img src="figures/5-4-3.png" alt="查看 DDL界面" style="zoom:67%;" />
 
 ## 导出序列 DDL
 
@@ -106,7 +111,7 @@
 
 **说明：** 导出文件为 sql 文件。
 
-<img src="figures/5-4-4.png" style="zoom:50%;" />
+<img src="figures/5-4-4.png" alt="导出序列 DDL界面" style="zoom:50%;" />
 
 ## 导出序列 DDL 和数据
 
@@ -114,4 +119,4 @@
 
 **说明：** 导出文件为 sql 文件。
 
-<img src="figures/5-4-5.png" style="zoom:50%;" />
+<img src="figures/5-4-5.png" alt="导出序列 DDL 和数据界面" style="zoom:50%;" />

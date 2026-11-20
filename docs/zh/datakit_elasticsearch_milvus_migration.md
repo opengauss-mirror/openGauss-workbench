@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit Elasticsearch和Milvus数据迁移 的功能与操作步骤，涵盖功能介绍、安装说明、依赖安装、迁移功能使用等内容
+keywords: [DataKit, openGauss, 数据迁移, Elasticsearch和Milvus数据迁移]
+---
+
 # Elasticsearch和Milvus数据迁移
 
 ## 功能介绍

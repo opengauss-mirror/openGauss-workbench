@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit 日志检索插件 的功能与操作步骤，涵盖功能介绍、使用指导、FAQ等内容
+keywords: [DataKit, openGauss, 实例监控, 日志检索, 日志检索插件]
+---
+
 # 日志检索插件
 
 ## 功能介绍
@@ -69,11 +74,11 @@ openGauss用户以往查看日志，需要登录服务器查看或者下载对�
 
 1. 点击【日志检索】插件首页左上角的折叠按钮，打开【安装部署】侧边栏。
 
-    ![image-20230313203100902](figures/log_install_btn.png)
+    ![日志安装按钮](figures/log_install_btn.png)
 
 2. 点击【安装服务端】按钮，弹出安装框。
 
-    ![image-20230313203157726](figures/log_install_server.png)
+    ![日志安装服务页面](figures/log_install_server.png)
 
 3. 选择物理机，选择安装用户（非root用户），自定义修改服务端端口、安装目录、安装方式，点击【一键部署】即可开始安装，点击【取消】按钮可取消安装。
 
@@ -89,15 +94,15 @@ openGauss用户以往查看日志，需要登录服务器查看或者下载对�
 
    - 在线安装：
     
-      ![image-20240325113254468](figures/log_server_install_form.png)
+      ![日志服务安装表单](figures/log_server_install_form.png)
     
    - 离线安装：
     
-      ![image-20240325111654469](figures/log_server_install_form2.png)
+      ![安装服务端界面](figures/log_server_install_form2.png)
     
    - 离线安装-上传安装包：
     
-      ![image-20240325111754469](figures/log_server_install_form3.png)
+      ![安装服务端界面](figures/log_server_install_form3.png)
 
 4. 点击完【一键部署】按钮后，会弹出安装过程窗口，安装完成后，可以点击【返回】按钮，跳转到安装代理窗口，点击【取消】关闭安装窗口。
 
@@ -117,11 +122,11 @@ openGauss用户以往查看日志，需要登录服务器查看或者下载对�
     
     6. SSH上传服务端安装包、服务端配置文件、启动脚本。
 
-    ![image-20240325113254468](figures/log.install.png)
+    ![日志.安装页面](figures/log.install.png)
 
 5. 在安装过程界面中可以查看安装异常信息。
 
-    ![image-20240325113400407](figures/log.install_error.png)
+    ![日志.安装错误页面](figures/log.install_error.png)
 
 6. 安装完成后，即可在【已安装服务端】TAB中看到对应服务端的信息。
 
@@ -133,7 +138,7 @@ openGauss用户以往查看日志，需要登录服务器查看或者下载对�
 
     3. 运行中的代理可以停止以及卸载。
 
-    ![image-20230313203400407](figures/log_server_installed.png)
+    ![安装服务端界面](figures/log_server_installed.png)
 
 #### 停止服务端
 
@@ -141,17 +146,17 @@ openGauss用户以往查看日志，需要登录服务器查看或者下载对�
 
     **说明：** 仅能停止运行状态健康的服务端。
     
-    ![image-20240325113400407](figures/log_sever_stop.png)
+    ![停止服务端界面](figures/log_sever_stop.png)
     
-    ![image-20240325113400407](figures/log_server_stopping.png)
+    ![停止服务端界面](figures/log_server_stopping.png)
 
 2. 停止成功会在实例前显示黄色圆点，表示服务端已经停止。
 
-    ![image-20240325113400407](figures/log_server_stoped.png)
+    ![停止服务端界面](figures/log_server_stoped.png)
     
     停止失败在实例前显示红色圆点以及红色感叹号，表示服务端停止异常，当鼠标悬停在红色感叹上可以看到异常信息。
     
-    ![image-20240325113400407](figures/log_server_stop_error.png)
+    ![日志服务停止错误页面](figures/log_server_stop_error.png)
 
 #### 启动服务端
 
@@ -159,33 +164,33 @@ openGauss用户以往查看日志，需要登录服务器查看或者下载对�
 
     **说明：** 仅能启动运行状态不健康的服务端。
     
-    ![image-20240325113400407](figures/log_server_start.png)
+    ![日志服务启动页面](figures/log_server_start.png)
     
-    ![image-20240325113400407](figures/log_server_starting.png)
+    ![启动服务端界面](figures/log_server_starting.png)
 
 2. 启动成功会在实例前显示绿色圆点，表示服务端已经启动。
 
-    ![image-20240325113400407](figures/log_server_started.png)
+    ![启动服务端界面](figures/log_server_started.png)
 
 3. 启动失败在实例前显示红色圆点以及红色感叹号，表示服务端启动异常，当鼠标悬停在红色感叹上可以看到异常信息。
 
-    ![image-20240325113400407](figures/log_server_start_error.png)
+    ![日志服务启动错误页面](figures/log_server_start_error.png)
 
 #### 卸载服务端
 
 1. 在【已安装服务端】TAB中，当鼠标悬停在实例上时，可以看到实例后有【卸载】按钮，点击【卸载】按钮，弹出卸载窗口。
 
-    ![image-20240325113400407](figures/log_uninstall.png)
+    ![日志卸载页面](figures/log_uninstall.png)
 
 2. 点击【一键卸载】按钮，开始卸载操作，点击【取消】按钮，关闭卸载窗口。
 
     **注：** 卸载过程不可逆，卸载完成后将会清除该服务端所有有关的数据，请谨慎卸载！
     
-    ![image-20240325113400407](figures/log_server_uninstall.png)
+    ![日志服务卸载页面](figures/log_server_uninstall.png)
 
 3. 点击【一键卸载】按钮后，会弹出卸载过程窗口，卸载完成后，可以点击【返回】按钮，跳转到卸载服务端窗口，点击【取消】关闭卸载窗口。
 
-    ![image-20240325113400407](figures/log_uninstall_form.png)
+    ![日志卸载表单](figures/log_uninstall_form.png)
 
 4. 卸载服务端完成后，会在【已安装服务端】TAB中删除一条数据。
 
@@ -199,11 +204,11 @@ openGauss用户以往查看日志，需要登录服务器查看或者下载对�
 
 1. 点击【日志检索】插件首页左上角的折叠按钮，打开【安装部署】侧边栏。
 
-    ![image-20240313203100902](figures/log_install_btn.png)
+    ![日志安装按钮](figures/log_install_btn.png)
 
 2. 在首页点击【安装代理】按钮，弹出安装代理窗口。
 
-    ![image-20240313210957759](figures/log_proxy_install_form.png)
+    ![日志代理安装表单](figures/log_proxy_install_form.png)
 
 3. 选择对应数据库实例，点击【一键部署】按钮开始安装，点击【取消】按钮可取消安装。
 
@@ -224,15 +229,15 @@ openGauss用户以往查看日志，需要登录服务器查看或者下载对�
 
     - 在线安装：
 
-       ![image-20240313210957759](figures/log_proxy_install_form.png)
+       ![日志代理安装表单](figures/log_proxy_install_form.png)
 
     - 离线安装：
     
-       ![image-20240313210957759](figures/log_proxy_install_form2.png)
+       ![安装代理界面](figures/log_proxy_install_form2.png)
     
     - 离线安装-上传安装包：
     
-       ![image-20240313210957759](figures/log_proxy_install_form3.png)
+       ![安装代理界面](figures/log_proxy_install_form3.png)
 
 4. 点击完【一键部署】按钮后，会弹出安装过程窗口，安装完成后，可以点击【返回】按钮，跳转到安装代理窗口，点击【取消】关闭安装窗口。
 
@@ -250,11 +255,11 @@ openGauss用户以往查看日志，需要登录服务器查看或者下载对�
     
     5. SSH上传代理安装包、代理配置文件、启动脚本。
 
-    ![image-20240313210957759](figures/log_proxy_install.png)
+    ![日志代理安装页面](figures/log_proxy_install.png)
 
 5. 在安装过程界面中可以查看安装异常信息。
 
-    ![image-20240313210957759](figures/log_proxy_error.png)
+    ![日志代理错误页面](figures/log_proxy_error.png)
 
 6. 安装代理完成后，会在【已安装代理】TAB中新增一条数据。
 
@@ -266,7 +271,7 @@ openGauss用户以往查看日志，需要登录服务器查看或者下载对�
     
     3. 运行中的代理可以停止以及卸载。
 
-    ![image-20240313210957759](figures/log_proxy_installed.png)
+    ![安装代理界面](figures/log_proxy_installed.png)
 
 #### 停止代理
 
@@ -274,15 +279,15 @@ openGauss用户以往查看日志，需要登录服务器查看或者下载对�
 
     **说明：** 仅能停止运行状态健康的代理。
 
-    ![image-20240313210957759](figures/log_proxy_stopping.png)
+    ![停止代理界面](figures/log_proxy_stopping.png)
 
 2. 停止成功会在实例前显示黄色圆点，表示代理已经停止。
 
-    ![image-20240313210957759](figures/log_proxy_stoped.png)
+    ![停止代理界面](figures/log_proxy_stoped.png)
 
 3. 停止失败在实例前显示红色圆点以及红色感叹号，表示代理停止异常，当鼠标悬停在红色感叹上可以看到异常信息。
 
-    ![image-20240313210957759](figures/log_proxy_stop_error.png)
+    ![日志代理停止错误页面](figures/log_proxy_stop_error.png)
 
 #### 启动代理
 
@@ -290,31 +295,31 @@ openGauss用户以往查看日志，需要登录服务器查看或者下载对�
 
     **说明：** 仅能启动运行状态不健康的代理。
 
-    ![image-20240313210957759](figures/log_proxy_starting.png)
+    ![启动代理界面](figures/log_proxy_starting.png)
 
 2. 启动成功会在实例前显示绿色圆点，表示代理已经启动。
 
-    ![image-20240313210957759](figures/log_proxy_started.png)
+    ![启动代理界面](figures/log_proxy_started.png)
 
 3. 启动失败在实例前显示红色圆点以及红色感叹号，表示代理启动异常，当鼠标悬停在红色感叹上可以看到异常信息。
 
-    ![image-20240313210957759](figures/log_proxy_start_error.png)
+    ![日志代理启动错误页面](figures/log_proxy_start_error.png)
 
 #### 卸载代理
 
 1. 在【已安装代理】TAB中，当鼠标悬停在实例上时，可以看到实例后有【卸载】按钮，点击【卸载】按钮，弹出卸载窗口。
 
-    ![image-20240313210957759](figures/log_proxy_uninstall.png)
+    ![日志代理卸载页面](figures/log_proxy_uninstall.png)
 
 2. 点击【一键卸载】按钮，开始卸载操作，点击【取消】按钮，关闭卸载窗口。
 
     **注：** 卸载过程不可逆，卸载完成后将不会再采集该实例的日志，请谨慎卸载！
 
-    ![image-20240313210957759](figures/log_proxy_uninstall_from.png)
+    ![日志代理卸载页面](figures/log_proxy_uninstall_from.png)
 
 3. 点击【一键卸载】按钮后，会弹出卸载过程窗口，卸载完成后，可以点击【返回】按钮，跳转到卸载代理窗口，点击【取消】关闭卸载窗口。
 
-    ![image-20240313210957759](figures/log_proxy_uninstalled.png)
+    ![卸载代理界面](figures/log_proxy_uninstalled.png)
 
 4. 卸载代理完成后，会在【已安装代理】TAB中删除一条数据。
 
@@ -326,19 +331,19 @@ openGauss用户以往查看日志，需要登录服务器查看或者下载对�
 
 1. 在【日志检索】页面，输入对应的查询条件，点击【查询】，显示【日志分布图】和【日志列表】；查询支持输入Lucene语法进行全文检索操作。
 
-    ![image-20230313204448621](figures/log_lucene.png)
+    ![日志及日志上下文查询界面](figures/log_lucene.png)
 
 2. 选择某个【集群/实例】、【类型】、【级别】（可单选），将查询该实例的日志。
 
-    ![image-20230313204736957](figures/log_search_instance_type_leave.png)
+    ![日志及日志上下文查询界面](figures/log_search_instance_type_leave.png)
 
 3. 将鼠标移到列表中的日志，将在该日志右边显示【上下文】按钮图标，点击该图标，将打开新页面，查询该日志上下文。
 
     说明：在日志上下文中，该日志高亮。
 
-    ![image-20230313205050119](figures/log_context_btn.png)
+    ![日志及日志上下文查询界面](figures/log_context_btn.png)
 
-    ![image-20230313205150760](figures/logContext.png)
+    ![日志及日志上下文查询界面](figures/logContext.png)
 
 ## FAQ
 
@@ -348,7 +353,7 @@ openGauss用户以往查看日志，需要登录服务器查看或者下载对�
 
 2. 服务器端启动失败。
 
-    ![image-20230331163722608](figures/error.png)
+    ![错误页面](figures/error.png)
     
     问题原因：系统资源不足会导致Elasticsearch启动失败，具体可查看Elasticsearch安装目录下的logs文件夹下的日志信息。
     
