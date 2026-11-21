@@ -25,23 +25,28 @@
 package org.opengauss.admin.framework.security.handle;
 
 import com.alibaba.fastjson.JSON;
+import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.enums.ResponseCode;
 import org.opengauss.admin.common.utils.ServletUtils;
+import org.opengauss.admin.common.utils.ip.IpUtils;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Serializable;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Authentication failure processing class returns Unauthorized
  *
  * @author xielibo
  */
+@Slf4j
 @Component
 public class AuthenticationEntryPointImpl implements AuthenticationEntryPoint, Serializable {
     private static final long serialVersionUID = -8970718410437077606L;
@@ -50,7 +55,11 @@ public class AuthenticationEntryPointImpl implements AuthenticationEntryPoint, S
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException e)
             throws IOException {
         int code = ResponseCode.UNAUTHORIZED.code();
-        String msg = String.format("Authentication failed, unable to access system resource.URI: {}", request.getRequestURI());
+        String msg = String.format("Authentication failed, unable to access system resource.URI: %s",
+            request.getRequestURI());
+        // audit log: whitelist rejection (401) with source IP for security traceability
+        log.warn("AUDIT unauthorized access: ip={}, uri={}, reason={}",
+            IpUtils.getIpAddr(request), request.getRequestURI(), e.getMessage());
         ServletUtils.renderString(response, JSON.toJSONString(AjaxResult.error(code, msg)));
     }
 }

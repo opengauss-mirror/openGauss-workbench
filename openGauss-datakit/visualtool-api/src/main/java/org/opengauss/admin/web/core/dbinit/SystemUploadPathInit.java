@@ -23,9 +23,12 @@
 
 package org.opengauss.admin.web.core.dbinit;
 
+import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
+
 import org.opengauss.admin.common.config.SystemConfig;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
+import org.opengauss.admin.common.utils.SecurePathUtil;
 import org.opengauss.admin.system.service.ISysSettingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -63,14 +66,34 @@ public class SystemUploadPathInit implements CommandLineRunner {
 
         String defaultUploadPath = "/ops/files/";
         if (!setting.getUploadPath().equals(defaultUploadPath)) {
+            warnIfOutsideDataDir(setting.getUploadPath());
             mkdirFile(setting.getUploadPath());
             return;
         }
 
+        warnIfOutsideDataDir(SystemConfig.getUploadPath());
         mkdirFile(SystemConfig.getUploadPath());
 
         setting.setUploadPath(SystemConfig.getUploadPath());
         sysSettingService.saveOrUpdate(setting);
+    }
+
+    /**
+     * detect legacy upload paths stored in DB that escape the data root directory.
+     * Only warns: existing data must be migrated by ops scripts, never moved automatically.
+     *
+     * @param uploadPath upload path from DB or config
+     */
+    private void warnIfOutsideDataDir(String uploadPath) {
+        String dataDir = SystemConfig.getStoragePath();
+        if (StrUtil.isEmpty(dataDir) || StrUtil.isEmpty(uploadPath)) {
+            return;
+        }
+        if (!SecurePathUtil.isUnder(dataDir, uploadPath)) {
+            log.warn(String.format("Configured upload path [%s] is OUTSIDE the data root directory [%s]. "
+                    + "It can no longer be saved via system settings; please migrate the directory "
+                    + "into the data root by ops script.", uploadPath, dataDir));
+        }
     }
 
     /**

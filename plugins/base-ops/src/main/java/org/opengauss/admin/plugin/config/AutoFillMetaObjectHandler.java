@@ -49,7 +49,7 @@ public class AutoFillMetaObjectHandler implements MetaObjectHandler {
         try {
             loginUser = SecurityUtils.getLoginUser();
         } catch (Exception e) {
-            log.warn("No user information found, this is a new installation.");
+            log.debug("No user information found, this is a new installation.");
         }
         if (loginUser != null) {
             this.setFieldValByName("createBy", loginUser.getUser().getUserName(), metaObject);

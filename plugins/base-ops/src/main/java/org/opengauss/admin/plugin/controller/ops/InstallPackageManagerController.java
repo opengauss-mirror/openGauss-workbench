@@ -32,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.AjaxResult;
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.page.TableDataInfo;
-import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.plugin.base.BaseController;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
 import org.opengauss.admin.plugin.domain.model.ops.OpsPackageVO;
@@ -42,8 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorSupport;
 import java.util.List;
@@ -128,7 +125,7 @@ public class InstallPackageManagerController extends BaseController {
 
     @GetMapping("/getCpuArch")
     public AjaxResult getCpuArch(@RequestParam("installPackagePath") String installPackagePath, @RequestParam("version") OpenGaussVersionEnum version) {
-        String arch = opsPackageManagerService.getCpuArchByPackagePath(installPackagePath, version);
+        String arch = opsPackageManagerService.getCpuArchByPackagePath(installPackagePath, version, getUserId());
         return AjaxResult.success(arch);
     }
 
@@ -136,23 +133,6 @@ public class InstallPackageManagerController extends BaseController {
     public AjaxResult analysisPkg(@RequestParam String pkgName, @RequestParam String pkgType) {
         OpsPackageVO result = opsPackageManagerService.analysisPkg(pkgName, pkgType);
         return AjaxResult.success(result);
-    }
-
-    @Deprecated
-    @PostMapping("/upload")
-    public AjaxResult upload(@RequestParam MultipartFile file) {
-        try {
-            UploadInfo info = opsPackageManagerService.upload(file, getUserId());
-            return AjaxResult.success(info.toVO());
-        } catch (OpsException ex) {
-            return AjaxResult.error(ex.getMessage());
-        }
-    }
-
-    @DeleteMapping("/delPkgTar")
-    public AjaxResult deletePkgTar(@RequestParam String path, @RequestParam(required = false) String id) {
-        boolean result = opsPackageManagerService.deletePkgTar(path, id);
-        return result ? AjaxResult.success() : AjaxResult.error();
     }
 
     @GetMapping("/sysUploadPath")

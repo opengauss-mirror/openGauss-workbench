@@ -24,6 +24,7 @@
 
 package org.opengauss.admin.framework.config;
 
+import org.opengauss.admin.framework.security.constant.PermitAllPaths;
 import org.opengauss.admin.framework.security.filter.JwtAuthenticationTokenFilter;
 import org.opengauss.admin.framework.security.handle.AuthenticationEntryPointImpl;
 import org.opengauss.admin.framework.security.handle.LogoutSuccessHandlerImpl;
@@ -43,6 +44,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.filter.CorsFilter;
 
 /**
@@ -103,44 +105,36 @@ public class SecurityConfig {
         httpSecurity
             // 配置注销
             .logout(logout -> logout.logoutUrl("/logout").logoutSuccessHandler(logoutSuccessHandler))
-            // 添加过滤器
-            .addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(corsFilter, JwtAuthenticationTokenFilter.class)
+            // 添加过滤器（CORS 只注册一次，置于注销过滤器之前）
             .addFilterBefore(corsFilter, LogoutFilter.class)
+            .addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
             // 禁用 CSRF
             .csrf(AbstractHttpConfigurer::disable)
             // 异常处理
             .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(unauthorizedHandler))
             // 无状态会话
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            // 授权配置（关键修改）
+            // 授权配置：白名单集中定义于 PermitAllPaths，禁止整插件 "**" 放行
             .authorizeHttpRequests(authorize -> authorize
-                // 允许所有用户访问的端点
-                .requestMatchers("/login", "/register", "/captchaImage", "/pubKey")
+                .requestMatchers(PermitAllPaths.AUTH)
                 .permitAll()
-                // 静态资源
-                .requestMatchers(HttpMethod.GET, "/", "/*.html", "/*/*.html", "/*/*.css", "/*/*.js", "/img/**",
-                    "/profile/**")
+                .requestMatchers(HttpMethod.GET, PermitAllPaths.STATIC_RESOURCES)
                 .permitAll()
-                .requestMatchers("/*.ico", "/notice/send", "/common/download**", "/common/download/resource**")
+                .requestMatchers(PermitAllPaths.MISC)
                 .permitAll()
-                // WebSocket
-                .requestMatchers("/websocket/**", "/ws/**")
+                .requestMatchers(PermitAllPaths.WEBSOCKET)
                 .permitAll()
-                // 插件相关  添加需要的静态资源路径（关键）
-                .requestMatchers("/static-plugin/**", "/plugins/base-ops/**", "/plugins/oauth-login/oauth/**",
-                    "/plugins/alert-monitor/api/v1/alerts",
-                    "/plugins/observability-sql-diagnosis/sqlDiagnosis/api/open/v1/diagnosisTasks/**")
+                .requestMatchers(PermitAllPaths.PLUGIN)
                 .permitAll()
-                // 其他公共端点
-                .requestMatchers("/webjars/**", "/agent/**", "/receive/**", "/prometheus", "/system/plugins",
-                            "/modeling/visualization/report/share/**")
+                .requestMatchers(PermitAllPaths.PUBLIC_SERVICE)
                 .permitAll()
                 // 其他请求需要认证
                 .anyRequest()
                 .authenticated())
-            // 禁用 X-Frame-Options 以便嵌入 iframe
-            .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
+            // 同源 iframe 允许嵌入，阻止跨站点击劫持
+            .headers(headers -> headers
+                .frameOptions(frameOptions -> frameOptions.sameOrigin())
+                .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN)));
         return httpSecurity.build();
     }
 

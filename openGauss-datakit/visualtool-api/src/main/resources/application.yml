@@ -64,7 +64,7 @@ plugin:
 monitor:
   handle:
     enabled: true
-    report-dir: ./logs/handle
+    report-dir: /ops/logs/handle
 #  pluginRestPathPrefix: /static-plugin
 agent:
   localPath:  ./agent

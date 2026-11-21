@@ -27,7 +27,7 @@
 .idea/**/uiDesigner.xml
 .idea/**/dbnavigator.xml
 *.iml
-
+output/*
 # Gradle
 .idea/**/gradle.xml
 .idea/**/libraries

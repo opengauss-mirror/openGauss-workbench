@@ -49,6 +49,7 @@ import org.opengauss.admin.common.core.domain.model.ops.OpsClusterNodeVO;
 import org.opengauss.admin.common.core.domain.model.ops.OpsClusterVO;
 import org.opengauss.admin.common.enums.ops.DeployTypeEnum;
 import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.common.utils.SecurePathUtil;
 import org.opengauss.admin.system.plugin.facade.HostFacade;
 import org.opengauss.admin.system.plugin.facade.HostUserFacade;
 import org.opengauss.admin.system.service.ops.IOpsClusterNodeService;
@@ -324,12 +325,8 @@ public class EnvironmentController {
     @PostMapping("/upload")
     public String upload(@RequestParam String name, MultipartFile pkg) throws IOException {
         String baseDir = "pkg/";
-        File baseFile = new File(baseDir);
         File file = new File(baseDir + name);
-        String canonicalBasePath = baseFile.getCanonicalPath();
-        String canonicalTargetPath = file.getCanonicalPath();
-
-        if (!canonicalTargetPath.startsWith(canonicalBasePath + File.separator)) {
+        if (!SecurePathUtil.isUnder(baseDir, file.getPath())) {
             throw new IllegalArgumentException("Invalid file path: path traversal detected");
         }
 
@@ -357,6 +354,9 @@ public class EnvironmentController {
         var env = new NctigbaEnvDO();
         env.setPath("localhost");
         var file = new File("pkg/" + name);
+        if (!SecurePathUtil.isUnder("pkg/", file.getPath())) {
+            throw new CustomException("Invalid file path: path traversal detected");
+        }
         var parent = file.getParentFile();
         if (!parent.exists()) {
             parent.mkdirs();
@@ -368,7 +368,11 @@ public class EnvironmentController {
             byte[] byt = new byte[10 * 1024 * 1024];
             int len;
             for (int i = 0; i < total; i++) {
-                try (FileInputStream temp = new FileInputStream("pkg/" + name + "-" + i)) {
+                File chunkFile = new File("pkg/" + name + "-" + i);
+                if (!SecurePathUtil.isUnder("pkg/", chunkFile.getPath())) {
+                    throw new CustomException("Invalid file path: path traversal detected");
+                }
+                try (FileInputStream temp = new FileInputStream(chunkFile)) {
                     while ((len = temp.read(byt)) != -1) {
                         try (FileOutputStream outputStream = new FileOutputStream(file, true)) {
                             outputStream.write(byt, 0, len);

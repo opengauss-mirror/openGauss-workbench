@@ -130,13 +130,79 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
    ```
 2. 运行安装脚本
 
-   切换到解压后的 DataKit 根目录下，执行安装脚本`install.sh`，安装脚本会自动创建 DataKit 服务所需的目录结构，并修改配置文件中相关目录结构。
+   切换到解压后的 DataKit 根目录下执行安装脚本`install.sh`，脚本会自动创建 DataKit 服务所需的目录结构，并修改配置文件中相关目录结构。脚本根据执行身份自动选择安装模式：
+
+   > 注意：**不允许直接以 root 身份执行安装**（root 登录或`su - root`执行会被脚本拒绝）。生产安装请使用普通账号配合`sudo`执行，保证操作可审计（sudo 日志记录提权者身份）。
+
+   **常规模式**（当前用户安装，适合测试或个人试用）：
 
    ```shell
    sh install.sh
    ```
 
-   运行日志如下：
+   脚本只做目录创建与配置写入，不会删除任何已有数据，重复执行安全（覆盖安装/重装均不影响已有上传文件与密钥）。
+
+   **特权安装模式**（推荐生产环境，sudo 自动识别，零参数即可使用）：
+
+   ```shell
+   sudo sh install.sh
+   ```
+
+   以 sudo 执行时自动进入特权安装布局：安装目录归 root 所有（服务账号只读，防止文件写漏洞升级为持久化后门），数据目录归运行账号所有，`run.sh` 启动时强制校验运行账号。运行账号默认取 sudo 之前的当前用户（`SUDO_USER`，即安装者本人，装完后可直接以其身份启停，无需切换账号），也可通过环境变量`DATAKIT_RUN_USER`显式指定其他账号。数据根目录默认取`<安装目录>/data`，生产建议通过`DATAKIT_DATA_ROOT=/srv/datakit`指向独立挂载点并以`noexec,nosuid`挂载。`DATAKIT_DATA_ROOT`为**数据根目录**（其下自动创建`files`/`logs`/`ssl`子目录，实际上传目录为`<root>/files`）。属主矩阵、升级流程见下文，安全运维要点与上线验收清单见[安全运维要点](#安全运维要点)章节。
+
+   特权模式运行日志如下：
+
+   ```
+   Sudo detected: using privileged installation (standard mode).
+     data root : /path/datakit_server/data
+     run user  : opsuser
+   Checking the DataKit jar...
+   Check the DataKit jar is openGauss-datakit-7.0.0.jar
+   Check the DataKit jar successfully
+   Checking Java version...
+   Check Java version is 21.0.11
+   Generating the SSL key...
+   Generating 4,096 bit RSA key pair and self-signed certificate (SHA384withRSA) with a validity of 365 days
+           for: CN=opengauss, OU=opengauss, O=opengauss, L=Beijing, ST=Beijing, C=CN
+   Generate the SSL key successfully
+   Configuring the application-temp.yml...
+   Configuring the application-temp.yml successfully
+   Setting install directory ownership (root:root, service account read-only)...
+   Setting data directory ownership (opsuser:opsuser)...
+   Privileged installation completed.
+
+   Security notes:
+     1. Mount the data partition with 'noexec,nosuid' options (recommended), e.g. in /etc/fstab:
+          <device>  /path/datakit_server/data  <fstype>  defaults,noexec,nosuid  0 0
+     2. Start the service with:
+          su opsuser -c 'sh /path/datakit_server/run.sh start --aes-key ******'
+     3. run.sh enforces the dedicated account via DATAKIT_RUN_USER (see config/run-env.sh).
+   ```
+
+   特权模式落地后的属主/权限矩阵（默认数据根目录`<安装目录>/data`）：
+
+   | 位置 | 属主 | 权限 | 说明 |
+   |---|---|---|---|
+   | 安装目录 | root:root | 755 | jar/lib/脚本，服务账号只读 |
+   | `*.jar` | root:root | 644 | 服务账号不可替换，杜绝持久化后门 |
+   | `config/` | root:运行账号 | 750 | 运行账号组可读不可写 |
+   | `config/application-temp.yml`、`config/run-env.sh` | root:运行账号 | 640 | 含密钥，仅运行账号组可读 |
+   | `data/files`、`data/logs` | 运行账号 | 750 | 上传文件与日志（PID 同目录） |
+   | `data/ssl/keystore.p12` | 运行账号 | 700 / 600 | TLS 密钥 |
+   | `data/.secure/` | 运行账号 | 700 | AES 主密钥 keystore（`datakit.jceks`），首次启动自动生成，勿删否则已加密数据无法解密 |
+
+   升级流程（仅替换 jar，属主权限不变）：
+
+   ```shell
+   su datakit -c 'sh /path/datakit_server/run.sh stop'                                # 1. 停服（运行账号）
+   sudo install -m 644 -o root -g root openGauss-datakit-*.jar /path/datakit_server/  # 2. 替换 jar（root）
+   ls -l /path/datakit_server/*.jar                                                   # 3. 校验属主仍为 root:root / 644
+   su datakit -c 'sh /path/datakit_server/run.sh start --aes-key ******'              # 4. 启动（运行账号）
+   ```
+
+   > 弱隔离模式（`sh install.sh`）下安装目录归运行用户，服务账号可写自身程序目录，文件写漏洞存在升级为持久化后门的残余风险，仅建议测试环境使用。
+
+   常规模式运行日志如下：
 
    ```
    Checking the DataKit jar...
@@ -145,20 +211,22 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
    Creating required directories...
    Create required directories successfully
    Checking Java version...
-   Check Java version is 17.0.13
+   Check Java version is 21.0.11
    Generating the SSL key...
    Generating 4,096 bit RSA key pair and self-signed certificate (SHA384withRSA) with a validity of 365 days
            for: CN=opengauss, OU=opengauss, O=opengauss, L=Beijing, ST=Beijing, C=CN
    Generate the SSL key successfully
    Configuring the application-temp.yml...
    Configuring the application-temp.yml successfully
+   Tightening file permissions...
+   Tighten file permissions successfully
    Datakit has been installed successfully.
    Please go to the '/path/datakit_server' directory to manually start the DataKit server.
    The command is as follows:
-       sh ./run.sh start --aes-key ******
-       sh ./run.sh status
-       sh ./run.sh stop
-       sh ./run.sh restart --aes-key ******
+       sh run.sh start --aes-key ******
+       sh run.sh status
+       sh run.sh stop
+       sh run.sh restart --aes-key ******
    ```
 
 3. 启动与日常运维
@@ -166,6 +234,13 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
    安装成功后，参考如下命令运行`run.sh`脚本启停和管理 DataKit 服务。
 
    启动脚本中`--aes-key`参数的值为 DataKit 启动密码，用于内部加解密操作，DataKit不保存该密码，且暂不支持修改。 对该密码需要妥善保管，多次启停时，启动密码需要保持一致，否则DataKit会启动失败。
+
+   > 安全提示：命令行方式传递的`--aes-key`会出现在`ps`进程列表中，存在泄露风险。生产环境推荐使用环境变量方式：
+   >
+   > ```shell
+   > export DATA_KIT_AES_KEY=xxxxxx
+   > sh ./run.sh start
+   > ```
 
    启动应用：
    ```shell
@@ -183,15 +258,45 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
    ```shell
    sh ./run.sh status
    ```
+
+   > 说明：`stop`操作先发送`SIGTERM`优雅停机（触发 Spring shutdown hook，最长等待 30 秒），进程仍未退出时才发送`SIGKILL`强制结束。
 4. 访问服务
 
    启动成功后，通过浏览器输入如下地址：`https://ip:9494/` 访问`datakit`服务，这里的`ip`为`datakit`服务安装在的主机`ip`，`9494`为`datakit`服务默认端口，如有修改请根据实际情况替换。初始用户为`admin`，初始密码为`admin123`，首次登录需修改初始密码。
+
+## 安全运维要点
+
+### 文件上传路径约束
+
+系统设置页的"文件上传路径"被强制约束在数据根目录内（`system.data-dir`，未配置时回落`system.defaultStoragePath`），越界保存返回错误。存量环境中若已配置数据目录之外的上传路径，启动时会打印告警日志（`Configured upload path ... is OUTSIDE the data root directory`），需运维手工迁移，系统不做自动移动。
+
 
 ## 卸载说明
 
 ### 卸载步骤
 
    切换到 Datakit 根目录下，执行卸载脚本`uninstall.sh`，卸载脚本会自动停止 DataKit 服务，并删除 DataKit 服务相关目录结构，且脚本支持通过选项控制是否卸载已安装的`migration-portal`、`prometheus`、`instance-exporter`工具。
+
+   卸载命令按安装模式选择：
+
+   **常规模式安装**（`sh install.sh` 安装）：
+
+   ```shell
+   sh uninstall.sh
+   ```
+
+   **特权模式安装**（`sudo sh install.sh` 安装，安装目录归 root 所有）：
+
+   ```shell
+   sudo sh uninstall.sh
+   ```
+
+   若忘记安装模式也可直接执行`sh uninstall.sh`：脚本会自动检测，发现安装目录归 root 而当前用户无写权限时，会明确报错并提示改用`sudo sh uninstall.sh`。
+
+   卸载过程中的数据目录处理：
+
+   - 常规模式：数据目录（`files`/`ssl`/`logs`）位于安装目录内，随安装目录一并删除；
+   - 特权模式：默认数据目录位于安装目录的`data`子目录下，同样随安装目录一并删除；若安装时通过`DATAKIT_DATA_ROOT`将数据根目录指定在安装目录之外（如`/srv/datakit`），卸载时会**交互确认**是否连同上传文件一并删除，选择保留则需在卸载完成后手工清理。
 
    脚本使用方式如下：
 
@@ -201,6 +306,8 @@ sha256sum Datakit-7.0.0-RC1.tar.gz
    | `sh uninstall.sh -s\|--self`    | 仅卸载 DataKit 自身                                          |
    | `sh uninstall.sh -a\|--all`     | 卸载 DataKit 自身及所有已安装的工具                          |
    | `sh uninstall.sh -h\|--help`    | 显示帮助信息，列出所有支持的命令选项                         |
+
+   > 停止服务说明：卸载前脚本会自动停止 DataKit 进程，采用优雅停机方式（先发送`SIGTERM`触发 Spring shutdown hook，最长等待 15 秒），进程仍未退出时才发送`SIGKILL`强制结束；若强制结束后进程仍存活，脚本会报错退出并提示手工处理。
 
 ### 使用限制
 

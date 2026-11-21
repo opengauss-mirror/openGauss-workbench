@@ -90,9 +90,9 @@ import {
   getVersionNum,
   checkNetStatus,
   checkVersionNumber,
-  delPkgTar, getSysUploadPath, hasPkgName, packageOnlineUpdate
+  getSysUploadPath, hasPkgName, packageOnlineUpdate
 } from '@/api/ops'
-import { FileItem, Message, Modal } from '@arco-design/web-vue'
+import { Message } from '@arco-design/web-vue'
 import message from '@arco-design/web-vue/es/message'
 import axios from 'axios'
 import { Path } from '@antv/x6'
@@ -223,31 +223,6 @@ const formRules = computed(() => {
 const uploadStatusTag = ref(false)
 const uploadStatusChange = () => {
   uploadStatusTag.value = true
-}
-
-const handleBeforeRemove = (file: FileItem) => {
-  return new Promise((resolve, reject) => {
-    if (file.status === 'done') {
-      Modal.confirm({
-        title: t('packageManage.AddPackageDlg.5myq6nnecc45'),
-        content: `${t('packageManage.AddPackageDlg.5myq6nnecc45')}${file.name
-          }${t('packageManage.AddPackageDlg.5myq6nnecc46')}`,
-        onOk: () => {
-          delPkgTar(
-            data.formData.packagePath?.realPath,
-            data.formData.packageId
-          ).then((res) => {
-            data.formData.packagePath = {}
-            emits(`finish`)
-            resolve(true)
-          })
-        },
-        onCancel: () => reject('cancel')
-      })
-    } else {
-      resolve(true)
-    }
-  })
 }
 
 // web socket

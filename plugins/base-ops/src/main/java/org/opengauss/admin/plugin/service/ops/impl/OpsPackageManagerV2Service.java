@@ -43,6 +43,7 @@ import org.opengauss.admin.common.core.dto.ops.PackageDto;
 import org.opengauss.admin.common.exception.CustomException;
 import org.opengauss.admin.common.exception.ops.OpsException;
 import org.opengauss.admin.common.utils.DateUtils;
+import org.opengauss.admin.common.utils.SecurePathUtil;
 import org.opengauss.admin.plugin.constant.OpsConstants;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
 import org.opengauss.admin.plugin.domain.model.ops.OpsPackageVO;
@@ -181,12 +182,34 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
     }
 
     @Override
-    public void delPackage(List<String> packageIds) {
+    public void delPackage(List<String> packageIds, Integer userId) {
         List<OpsPackageManagerEntity> packageEntityList = getAndValidPackageByIds(packageIds);
+        String uploadRoot = resolveUploadRoot(userId);
         packageEntityList.forEach(entry -> {
             UploadInfo packagePath = entry.getPackagePath();
             if (Objects.nonNull(packagePath)) {
                 Path dir = Paths.get(packagePath.getRealPath());
+                // strictly inside: the upload root itself must never become a deletion target
+                if (!SecurePathUtil.isStrictlyUnder(uploadRoot, dir.toString())) {
+                    // audit log: rejected path-escape attempt with operator for security traceability
+                    log.warn("AUDIT delPackage rejected: user={}, target outside upload root={}", userId, dir);
+                    throw new OpsException("Illegal package path: outside upload directory");
+                }
+                // re-check with the canonical path to rule out symlink indirection (TOCTOU)
+                if (Files.exists(dir)) {
+                    Path canonicalDir;
+                    try {
+                        canonicalDir = dir.toRealPath();
+                    } catch (IOException e) {
+                        throw new OpsException("Failed to resolve package path: " + dir);
+                    }
+                    if (!SecurePathUtil.isStrictlyUnder(uploadRoot, canonicalDir.toString())) {
+                        log.warn("AUDIT delPackage rejected: user={}, symlink target outside upload root={}",
+                            userId, canonicalDir);
+                        throw new OpsException("Illegal package path: outside upload directory");
+                    }
+                    dir = canonicalDir;
+                }
                 try (Stream<Path> pathStream = Files.walk(dir)) {
                     pathStream.sorted(Comparator.reverseOrder()).forEach(path -> {
                         try {
@@ -292,18 +315,17 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
         if (originalFileName == null || originalFileName.trim().isEmpty()) {
             throw new CustomException("File name is empty");
         }
+        SecurePathUtil.sanitizeFileName(originalFileName);
         File baseDir = new File(uploadFolder);
         File targetFile = new File(baseDir, originalFileName);
 
-        String fileRealPath = Path.of(uploadFolder, file.getOriginalFilename()).toString();
+        String fileRealPath = Path.of(uploadFolder, originalFileName).toString();
         try {
-            String canonicalBasePath = baseDir.getCanonicalPath();
-            String canonicalTargetPath = targetFile.getCanonicalPath();
-            if (!canonicalTargetPath.startsWith(canonicalBasePath + File.separator)) {
+            if (!SecurePathUtil.isUnder(uploadFolder, targetFile.getPath())) {
                 throw new CustomException("Invalid file path: path traversal detected");
             }
 
-            fileRealPath = canonicalTargetPath;
+            fileRealPath = targetFile.getCanonicalPath();
             // transferTo param dest ,
             // dest is the absolute path to the file you want to save the uploaded file to
             file.transferTo(new File(fileRealPath));
@@ -333,17 +355,38 @@ public class OpsPackageManagerV2Service extends ServiceImpl<OpsPackageManagerMap
         SysSettingEntity sysSetting = sysSettingFacade.getSysSetting(userId);
         Assert.isTrue(Objects.nonNull(sysSetting), "System setting not found");
         String sysUploadPath = pathUtils.getPath(sysSetting.getUploadPath());
-        packagePath.setRealPath(sysUploadPath
-                + entity.getPackageVersionNum() + File.separatorChar
-                + entity.getOs() + File.separatorChar
-                + entity.getCpuArch() + File.separatorChar
-                + entity.getName());
-        packagePath.setName(parseDownloadFileName(entity.getPackageUrl()));
+        // every path segment comes from user input, sanitize before concatenation
+        String realPath = sysUploadPath
+                + SecurePathUtil.sanitizeSegment(entity.getPackageVersionNum()) + File.separatorChar
+                + SecurePathUtil.sanitizeSegment(entity.getOs()) + File.separatorChar
+                + SecurePathUtil.sanitizeSegment(entity.getCpuArch()) + File.separatorChar
+                + SecurePathUtil.sanitizeFileName(entity.getName());
+        SecurePathUtil.requireStrictlyUnder(sysUploadPath, realPath);
+        packagePath.setRealPath(realPath);
+        // offline upload: packageUrl may legitimately be empty when the version is
+        // absent from the online repository; the authoritative file name comes from
+        // the uploaded file itself and is set inside uploadPackage(), so only the
+        // online download flow needs the name derived from packageUrl
+        if (Objects.isNull(entity.getFile())) {
+            packagePath.setName(parseDownloadFileName(entity.getPackageUrl()));
+        }
         return packagePath;
     }
 
+    /**
+     * resolve the system upload root directory
+     *
+     * @param userId current user id
+     * @return absolute upload root path
+     */
+    private String resolveUploadRoot(Integer userId) {
+        SysSettingEntity sysSetting = sysSettingFacade.getSysSetting(userId);
+        Assert.isTrue(Objects.nonNull(sysSetting), "System setting not found");
+        return pathUtils.getPath(sysSetting.getUploadPath());
+    }
+
     private String parseDownloadFileName(String packageUrl) {
-        return packageUrl.substring(packageUrl.lastIndexOf("/") + 1);
+        return SecurePathUtil.sanitizeFileName(packageUrl.substring(packageUrl.lastIndexOf("/") + 1));
     }
 
     /**

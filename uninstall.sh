@@ -66,11 +66,80 @@ function stop_datakit_process() {
 
     if [ -z "${datakit_pid}" ]; then
         echo_warn "Datakit process not found."
-    else
-        echo_info "Stop Datakit process with PID: ${datakit_pid}..."
-        kill -9 "${datakit_pid}" >/dev/null 2>&1
-        echo_info "Datakit process stopped."
+        return 0
     fi
+
+    echo_info "Stop Datakit process with PID: ${datakit_pid}..."
+    # graceful shutdown first (SIGTERM triggers the Spring shutdown hook),
+    # fall back to SIGKILL only if the process is still alive after 15s
+    kill -15 "${datakit_pid}" >/dev/null 2>&1
+    for _ in $(seq 1 15); do
+        if ! ps -p "${datakit_pid}" > /dev/null 2>&1; then
+            echo_info "Datakit process stopped."
+            return 0
+        fi
+        sleep 1
+    done
+
+    if ps -p "${datakit_pid}" > /dev/null 2>&1; then
+        echo_warn "Process ${datakit_pid} still alive after 15s, sending SIGKILL..."
+        kill -9 "${datakit_pid}" >/dev/null 2>&1
+        sleep 1
+    fi
+
+    if ps -p "${datakit_pid}" > /dev/null 2>&1; then
+        echo_error "Failed to stop Datakit process ${datakit_pid}. Please stop it manually before uninstalling."
+        exit 1
+    fi
+    echo_info "Datakit process stopped."
+}
+
+function check_uninstall_permission() {
+    # privileged install leaves the install dir owned by root (service account read-only)
+    if [ "$(id -u)" -ne 0 ] && [ ! -w "${SCRIPT_DIR}" ]; then
+        echo_error "Current user cannot modify the install directory '${SCRIPT_DIR}'."
+        echo_error "It is likely a privileged (root-owned) installation, please run: sudo sh uninstall.sh"
+        exit 1
+    fi
+}
+
+function clear_datakit_data_dir() {
+    # privileged install may place the data root outside the install dir
+    # (custom DATAKIT_DATA_ROOT, e.g. /srv/datakit); remove it explicitly,
+    # otherwise keystore and uploaded files would be left behind
+    local config_file="${SCRIPT_DIR}/config/application-temp.yml"
+    if [ ! -f "${config_file}" ]; then
+        return 0
+    fi
+
+    local files_dir
+    files_dir=$(grep -oP '^\s*defaultStoragePath:\s*\K.*' "${config_file}" 2>/dev/null | head -n 1)
+    if [ -z "${files_dir}" ]; then
+        return 0
+    fi
+
+    local data_root
+    data_root=$(dirname "${files_dir}")
+    # data root inside the install dir is removed together with it
+    case "${data_root}" in
+        "${SCRIPT_DIR}"|"${SCRIPT_DIR}"/*) return 0 ;;
+    esac
+
+    if [ ! -d "${data_root}" ]; then
+        return 0
+    fi
+
+    echo_warn "Datakit data root directory '${data_root}' is OUTSIDE the install directory."
+    read -r -p "Remove it together with all uploaded files? [y/N] " reply
+    case "${reply}" in
+        y|Y|yes|YES)
+            rm -rf "${data_root}"
+            echo_info "Datakit data root directory removed."
+            ;;
+        *)
+            echo_warn "Keep data root directory '${data_root}'. Remove it manually if no longer needed."
+            ;;
+    esac
 }
 
 function clear_datakit_install_dir() {
@@ -94,8 +163,10 @@ function clear_datakit_install_dir() {
 
 function datakit_uninstall() {
     echo_info "Start Datakit uninstall"
+    check_uninstall_permission
     check_datakit_jar
     stop_datakit_process
+    clear_datakit_data_dir
     clear_datakit_install_dir
     echo_info "Datakit uninstalled successfully."
 }
@@ -603,7 +674,8 @@ declare -A THIRD_PARTY_TOOLS_MAP=()
 function load_third_party_tools() {
     echo_info "Start loading installed tools..."
     
-    local third_party_tools_csv="data/third-party-tools/third-party-tools.csv"
+    # anchored to the script location so it works regardless of the caller's cwd
+    local third_party_tools_csv="${SCRIPT_DIR}/data/third-party-tools/third-party-tools.csv"
     if ! is_file_exists "$third_party_tools_csv"; then
         echo_warn "No installed tools found."
         return 0

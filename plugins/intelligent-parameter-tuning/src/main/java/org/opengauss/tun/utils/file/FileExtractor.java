@@ -26,6 +26,7 @@ import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.utils.IOUtils;
+import org.opengauss.admin.common.utils.SecurePathUtil;
 import org.opengauss.admin.common.exception.ServiceException;
 import org.opengauss.tun.common.FixedTuning;
 import org.opengauss.tun.domain.TuningLog;
@@ -69,9 +70,7 @@ public class FileExtractor {
                         continue;
                     }
                     File entryFile = new File(destinationDirectory, entry.getName());
-                    String canonicalPath = entryFile.getCanonicalPath();
-                    String basePath = new File(destinationDirectory).getCanonicalPath();
-                    if (!canonicalPath.startsWith(basePath + File.separator)) {
+                    if (!SecurePathUtil.isUnder(destinationDirectory, entryFile.getPath())) {
                         throw new SecurityException("Zip entry is outside target directory");
                     }
                     if (entry.isDirectory()) {
