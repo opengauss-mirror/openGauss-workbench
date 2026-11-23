@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit 定时任务 的功能与操作步骤，涵盖查看定时任务、创建定时任务、编辑定时任务、启用/禁用定时任务等内容
+keywords: [DataKit, openGauss, 定时任务]
+---
+
 # 定时任务
 
 支持通过编写SQL脚本形式（自定义SQL语句或者调用已有的函数/存储过程）的任务内容并设定任务执行时间，数据库将在任务时间内执行对应的任务内容，以达到自动化执行任务的效果。
@@ -10,23 +15,23 @@
 
 **说明：**
 
-1. 点击定时任务页面操作栏中的<img src="figures/icon_refreshtask.png" style="zoom: 50%;" />，可刷新定时任务列表信息。
+1. 点击定时任务页面操作栏中的<img src="figures/icon_refreshtask.png" alt="iconrefreshtask页面" style="zoom: 50%;" />，可刷新定时任务列表信息。
 
-2. 点击定时任务页面操作栏中的<img src="figures/icon_addtask.png" style="zoom: 50%;" />，可创建定时任务，详情请参见 **创建定时任务**。
+2. 点击定时任务页面操作栏中的<img src="figures/icon_addtask.png" alt="iconaddtask页面" style="zoom: 50%;" />，可创建定时任务，详情请参见 **创建定时任务**。
 
-3. 点击定时任务页面列表中的任务ID，如<img src="figures/icon_taskid.png" style="zoom: 50%;" />，可编辑定时任务，详情请参见 **编辑定时任务**。
+3. 点击定时任务页面列表中的任务ID，如<img src="figures/icon_taskid.png" alt="icontaskid页面" style="zoom: 50%;" />，可编辑定时任务，详情请参见 **编辑定时任务**。
 
 4. 点击定时任务页面列表中的操作，如"**启用**"或"**禁用**"，可修改定时任务状态，详情请参见 **启用/禁用定时任务**。
 
 5. 点击定时任务页面列表中的操作，如"**删除**"，可删除定时任务，详情请参见 **删除定时任务**。
 
-<img src="figures/5-15-1.png" style="zoom:67%;" />
+<img src="figures/5-15-1.png" alt="查看定时任务界面" style="zoom:67%;" />
 
 ## 创建定时任务
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击连接名称下的 "**定时任务**" ，跳转至定时任务列表页面。
 
-**步骤 2：** 点击定时任务页面操作栏中的<img src="figures/icon_addtask.png" style="zoom: 50%;" />，弹出 "**创建定时任务**" 对话框。
+**步骤 2：** 点击定时任务页面操作栏中的<img src="figures/icon_addtask.png" alt="iconaddtask页面" style="zoom: 50%;" />，弹出 "**创建定时任务**" 对话框。
 
 **步骤 3：** 设置如下参数，创建定时任务。
 
@@ -39,13 +44,13 @@
 | 下次作业运行时间 | 是       | 用于指定下次作业运行时间，默认值为当前系统时间（sysdate）。如果是过去时间，在提交作业时表示立即执行 |
 | 时间表达式       | 否       | 用于计算下次作业运行时间的时间表达式，可以是interval表达式，也可以是sysdate加上一个numeric值（例如：sysdate+1.0/24）。如果为空值或字符串"null"表示只执行一次，执行后 JOB 状态 STATUS 变成'd' 不再执行 |
 
-<img src="figures/5-15-2.png" style="zoom:50%;" />
+<img src="figures/5-15-2.png" alt="创建定时任务界面" style="zoom:50%;" />
 
 ## 编辑定时任务
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击连接名称下的 "**定时任务**" ，跳转至定时任务列表页面。
 
-**步骤 2：** 定时任务页面列表中的任务ID，如<img src="figures/icon_taskid.png" style="zoom: 50%;" />，弹出 "**编辑定时任务**" 对话框。
+**步骤 2：** 定时任务页面列表中的任务ID，如<img src="figures/icon_taskid.png" alt="icontaskid页面" style="zoom: 50%;" />，弹出 "**编辑定时任务**" 对话框。
 
 **步骤 3：** 设置如下参数，编辑定时任务。
 
@@ -59,7 +64,7 @@
 | 下次作业运行时间 | 是               | 用于指定下次作业运行时间，默认数据回显。如果是过去时间，在提交作业时表示立即执行 |
 | 时间表达式       | 是               | 用于计算下次作业运行时间的时间表达式，默认数据回显。可以是interval表达式，也可以是sysdate加上一个numeric值（例如：sysdate+1.0/24）。如果为空值或字符串"null"表示只执行一次，执行后JOB状态STATUS变成'd' 不再执行 |
 
-<img src="figures/5-15-3.png" style="zoom:50%;" />
+<img src="figures/5-15-3.png" alt="编辑定时任务界面" style="zoom:50%;" />
 
 ## 启用/禁用定时任务
 
@@ -73,7 +78,7 @@
 
 **步骤 3：** 单击 "**确定**" 即可继续，或单击 "**取消**" 即可退出操作。
 
-<img src="figures/5-15-4.png" style="zoom:67%;" />
+<img src="figures/5-15-4.png" alt="启用/禁用定时任务界面" style="zoom:67%;" />
 
 ## 删除定时任务
 
@@ -89,4 +94,4 @@
 
 该操作仅支持在非正在执行的定时任务上执行。
 
-<img src="figures/5-15-5.png" style="zoom:67%;" />
+<img src="figures/5-15-5.png" alt="删除定时任务界面" style="zoom:67%;" />

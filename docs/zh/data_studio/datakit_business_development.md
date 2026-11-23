@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit 业务开发-用户操作手册 的功能与操作步骤，涵盖功能介绍、使用指导等内容
+keywords: [DataKit, openGauss, 业务开发, 兼容性评估, 业务开发-用户操作手册]
+---
+
 # 业务开发-用户操作手册
 
 ## 功能介绍
@@ -185,7 +190,7 @@
 
 **说明：** 所有搜索内容基于已加载过节点数据（通过展开节点操作）过滤，若所搜索的内容在未加载的节点数据中，将无法匹配。
 
-<img src="figures/5-1-1-1.png" style="zoom:50%;" />
+<img src="figures/5-1-1-1.png" alt="过滤数据库对象界面" style="zoom:50%;" />
 
 #### 数据库导航菜单
 
@@ -248,7 +253,7 @@
         <td colspan="4">当前连接下的所有数据库定时任务信息查看入口</td>
     </tr>
 </table>
-<img src="figures/5-1-1-2.png" style="zoom:50%;" />
+<img src="figures/5-1-1-2.png" alt="数据库导航菜单界面" style="zoom:50%;" />
 
 ### 数据库对象编辑栏
 
@@ -325,7 +330,7 @@
         <td>图标+sql/sql-postgres@connection1</td>
     </tr>
 </table>
-<img src="figures/5-1-2-1.1.png" style="zoom:50%;" />
+<img src="figures/5-1-2-1.1.png" alt="标签界面" style="zoom:50%;" />
 
 标签右键支持刷新、重命名、关闭等操作，具体功能如下：
 
@@ -355,7 +360,7 @@
         <td>除【运行及展示】外，其他所有页面都关闭</td>
     </tr>
 </table>
-<img src="figures/5-1-2-1.2.png" style="zoom:50%;" />
+<img src="figures/5-1-2-1.2.png" alt="标签界面" style="zoom:50%;" />
 
 标签窗口支持搜索、跳转等操作，具体功能如下：
 
@@ -373,7 +378,7 @@
         <td>点击指定的标签页，面板内容切换至指定的页面信息</td>
     </tr>
 </table>
-<img src="figures/5-1-2-1.3.png" style="zoom:50%;" />
+<img src="figures/5-1-2-1.3.png" alt="标签界面" style="zoom:50%;" />
 
 #### 功能区
 
@@ -421,7 +426,7 @@
         <td>页面数据展示区，通常用于数据库对象的数据管理、查看等操作</td>
     </tr>
 </table>
-<img src="figures/5-1-2-2.png" style="zoom:50%;" />
+<img src="figures/5-1-2-2.png" alt="功能区界面" style="zoom:50%;" />
 
 ### 整体功能
 
@@ -429,7 +434,7 @@
 
 ​             支持两种主题色：亮色主题（背景色：#ffffff  /  主题色：#e41d1d）、黑暗主题（背景色：#232324  /  主题色：#fcef92)
 
-<img src="figures/5-1-3-1.png" style="zoom:50%;" />
+<img src="figures/5-1-3-1.png" alt="主题色界面" style="zoom:50%;" />
 
 #### 窗口拖动
 
@@ -458,4 +463,4 @@
     </tr>
 </table>
 
-<img src="figures/5-1-3-2.png" style="zoom:50%;" />
+<img src="figures/5-1-3-2.png" alt="窗口拖动界面" style="zoom:50%;" />

@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit 智能诊断 的功能与操作步骤，涵盖功能介绍、使用指导、FAQ等内容
+keywords: [DataKit, openGauss, 实例监控, 业务开发, 智能诊断]
+---
+
 # 智能诊断
 
 ## 功能介绍
@@ -75,11 +80,11 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
 
 1. 登录一体化平台，点击【智能运维】下【SQL诊断】菜单进入SQL诊断首页。
 
-    ![image-20230313210957759](figures/install_01.PNG)
+    ![安装 01页面](figures/install_01.PNG)
 
 2. 在首页点击【安装代理】按钮，弹出安装代理窗口。
 
-    ![image-20230313210957759](figures/sql_proxy_install.png)
+    ![安装代理界面](figures/sql_proxy_install.png)
 
 3. 选择对应数据库实例，输入Root密码，点击【一键部署】按钮开始安装，点击【取消】按钮可取消安装。
 
@@ -93,7 +98,7 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
     | 回调路径     | 是   | 文本输入框 | 平台的地址，代理回传数据时调用平台Api接口，有默认值 |
     | 安装目录     | 是   | 文本输入框 | 代理安装在服务器上的绝对路径，有默认值              |
 
-    ![image-20230313211042855](figures/sql_proxy_install_form.png)
+    ![安装代理界面](figures/sql_proxy_install_form.png)
 
 4. 点击完【一键部署】按钮后，会弹出安装过程窗口，安装完成后，可以点击【返回】按钮，跳转到安装代理窗口，点击【取消】关闭安装窗口。
 
@@ -115,11 +120,11 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
     
     7. SSH上传代理jar包、FlameGraph工具、启动脚本。
 
-    ![image-20230313210957759](figures/install_02.PNG)
+    ![安装 02页面](figures/install_02.PNG)
 
 5. 在安装过程界面中可以查看安装异常信息。
 
-    ![image-20230313210957759](figures/install_03.PNG)
+    ![安装 03页面](figures/install_03.PNG)
 
 6. 安装代理完成后，会在【已安装代理】TAB中新增一条数据。
 
@@ -135,7 +140,7 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
 
 3. 运行中的代理可以停止以及卸载。
 
-    ![image-20230313211135139](figures/sql_proxy_installed.PNG)
+    ![查看已安装代理界面](figures/sql_proxy_installed.PNG)
 
 #### 停止代理
 
@@ -143,15 +148,15 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
 
     **说明：** 仅能停止运行状态健康的代理。
 
-    ![image-20230313211135139](figures/stopping.PNG)
+    ![停止代理界面](figures/stopping.PNG)
 
 2. 停止成功会在实例前显示黄色圆点，表示代理已经停止。
 
-    ![image-20230313211135139](figures/sql_proxy_stop.PNG)
+    ![停止代理界面](figures/sql_proxy_stop.PNG)
 
 3. 停止失败在实例前显示绿色圆点以及红色感叹号，表示代理停止异常，当鼠标悬停在红色感叹上可以看到异常信息。
 
-    ![image-20230313211135139](figures/stopping_fail.PNG)
+    ![停止代理界面](figures/stopping_fail.PNG)
 
 #### 启动代理
 
@@ -159,21 +164,21 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
 
     **说明：** 仅能启动运行状态不健康的代理。
 
-    ![image-20230313211135139](figures/starting.PNG)
+    ![启动代理界面](figures/starting.PNG)
 
 2. 启动成功会在实例前显示绿色圆点，表示代理已经启动。
 
-    ![image-20230313211135139](figures/start_success.PNG)
+    ![启动成功页面](figures/start_success.PNG)
 
 3. 启动失败在实例前显示黄色圆点以及红色感叹号，表示代理启动异常，当鼠标悬停在红色感叹上可以看到异常信息。
 
-    ![image-20230313211135139](figures/start_fail.PNG)
+    ![启动代理界面](figures/start_fail.PNG)
 
 #### 卸载代理
 
 1. 在【已安装代理】TAB中，当鼠标悬停在实例上时，可以看到实例后有【卸载】按钮，点击【卸载】按钮，弹出卸载窗口。
 
-    ![image-20230313211246773](figures/sql_proxy_uninstall.png)
+    ![卸载代理界面](figures/sql_proxy_uninstall.png)
 
 2. 输入Root密码，点击【一键卸载】按钮，开始卸载操作，点击【取消】按钮，关闭卸载窗口。
 
@@ -186,15 +191,15 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
 
     **注：** 卸载过程不可逆，卸载完成后将会清除该代理所有有关的数据（不影响SQL诊断历史诊断数据），请谨慎卸载！
 
-    ![image-20230313211350006](figures/sql_proxy_uninstall_form.png)
+    ![卸载代理界面](figures/sql_proxy_uninstall_form.png)
 
 3. 点击【一键卸载】按钮后，会弹出卸载过程窗口，卸载完成后，可以点击【返回】按钮，跳转到卸载代理窗口，点击【取消】关闭卸载窗口。
 
-    ![image-20230313210957759](figures/install_04.PNG)
+    ![安装 04页面](figures/install_04.PNG)
 
 4. 在卸载过程窗口可以查看卸载异常信息。
 
-    ![image-20230313210957759](figures/install_05.PNG)
+    ![安装 05页面](figures/install_05.PNG)
 
 5. 卸载代理完成后，会在【已安装代理】TAB中删除一条数据。
 
@@ -216,7 +221,7 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
     | 数据库       | 否   | 下拉框     | 实例下已安装的数据库    |
     | 执行开始时间 | 否   | 时间选择框 | 结束时间大于开始时间    |
 
-    ![image-20230313211630841](figures/sql_slow_search.png) 
+    ![查看慢SQL界面](figures/sql_slow_search.png) 
 
 #### 慢SQL诊断
 
@@ -224,9 +229,9 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
 
     **说明：** 创建诊断任务的配置信息可详见【SQL诊断任务】。
 
-    ![image-20230313211809035](figures/sql_slow_diagnosis_btn.png)
+    ![慢SQL诊断界面](figures/sql_slow_diagnosis_btn.png)
 
-    ![image-20230313212039988](figures/sql_slow_diagnosis_save.png)
+    ![慢SQL诊断界面](figures/sql_slow_diagnosis_save.png)
 
 ### SQL诊断
 
@@ -243,7 +248,7 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
     | 任务名称     | 否   | 文本输入框 | 任务名称，支持模糊筛选  |
     | 执行开始时间 | 否   | 时间选择框 | 结束时间大于开始时间    |
 
-    ![image-20230313212433973](figures/sql_01.PNG)
+    ![查看SQL诊断任务界面](figures/sql_01.PNG)
 
 #### 创建SQL诊断任务
 
@@ -261,7 +266,7 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
     | 本次诊断阈值配置 | 是   | 列表       | 有默认值，设置诊断项本次诊断是否建议的阈值           |
     | 全局阈值         | 否   | 按钮       | 设置诊断项全局生效是否建议的阈值                     |
 
-    ![image-20230313212433973](figures/sql_03.PNG)
+    ![创建SQL诊断任务界面](figures/sql_03.PNG)
 
 #### 查看SQL诊断详情
 
@@ -273,25 +278,25 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
     
     【诊断详情】默认展示【任务信息】诊断点的数据。
 
-    ![image-20230313212941334](figures/sql_diagnosis_one.png)
+    ![查看SQL诊断详情界面](figures/sql_diagnosis_one.png)
 
-    ![image-20230313213044557](figures/sql_diagnosis_detail.png)
+    ![查看SQL诊断详情界面](figures/sql_diagnosis_detail.png)
 
 2. 点击【分析报告】中下拉框【所有诊断项】按钮时，分析报告将展示拓扑图所有诊断点。
 
-    ![image-20230313212433973](figures/sql_04.PNG)
+    ![查看SQL诊断详情界面](figures/sql_04.PNG)
 
 3. 点击【分析报告】中拓扑图上相应的【诊断点】时，【诊断详情】将展示该诊断点的详细信息。
 
-    ![image-20230313213349863](figures/sql_detail_1.png)
+    ![查看SQL诊断详情界面](figures/sql_detail_1.png)
 
 4. 点击右上角的【放大】按钮，将放大诊断详情页面。
 
-    ![image-20230313213510042](figures/sql_btn1.png)
+    ![查看SQL诊断详情界面](figures/sql_btn1.png)
 
 5. 再点击右上角的【缩小】按钮，可恢复至放大前的页面。
 
-    ![image-20230313213543549](figures/sql_btn_2.png)
+    ![查看SQL诊断详情界面](figures/sql_btn_2.png)
 
 #### 删除SQL诊断任务
 
@@ -299,7 +304,7 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
 
     **注：** 删除过程不可逆，删除完成后将会清除该诊断任务的数据，请谨慎删除！
 
-    ![image-20230313213815873](figures/sql_del.png)
+    ![删除SQL诊断任务界面](figures/sql_del.png)
 
 2. 确定删除后，诊断任务列表将会刷新数据。
 
@@ -307,7 +312,7 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
 
 1. 登录一体化平台，点击【智能运维】下【历史数据诊断】菜单。
 
-    ![image-20230619114753111](figures/history_1.PNG)
+    ![历史数据诊断界面](figures/history_1.PNG)
 
 2. 输入诊断条件，点击【诊断】按钮，开始诊断。
 
@@ -322,11 +327,11 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
     | 本次诊断阈值配置 | 是   | 文本输入框 | 有默认值，设置诊断项本次诊断是否建议的阈值     |
     | 全局阈值         | 否   | 按钮       | 设置诊断项全局生效是否建议的阈值               |
 
-    ![image-20230619114941211](figures/history_2.PNG)
+    ![历史数据诊断界面](figures/history_2.PNG)
 
 3. 诊断过程需要等待一段时间，页面处于等待状态页面。
 
-    ![image-20230619114941211](figures/history_5.PNG)
+    ![历史数据诊断界面](figures/history_5.PNG)
 
 4. 诊断完成后，将打开一个新的TAB页【历史数据诊断详情】页面，点击【分析报告】页面下【建议项】/【所有建议项】下拉框，可查看全部诊断点。
 
@@ -336,7 +341,7 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
 
     【诊断详情】默认展示【任务详情】诊断点的数据。
 
-    ![image-20230619115205171](figures/history_3.PNG)
+    ![历史数据诊断界面](figures/history_3.PNG)
 
 5. 在拓扑图上点击【诊断点】，可查看诊断详情信息，详情信息有【诊断结果】和【诊断说明】2个TAB页面。
 
@@ -346,15 +351,15 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
 
     【诊断详情】主要展示诊断点诊断逻辑或者其他说明。
 
-    ![image-20230619115319451](figures/history_4.PNG)
+    ![历史数据诊断界面](figures/history_4.PNG)
 
-    ![image-20230619115319451](figures/history_6.PNG)
+    ![历史数据诊断界面](figures/history_6.PNG)
 
 6. 在诊断详情右上角可以点击【放大】/【缩小】按钮，可将【诊断详情】页面放大/缩小。
 
-    ![image-20230619115319451](figures/history_7.PNG)
+    ![历史数据诊断界面](figures/history_7.PNG)
 
-    ![image-20230619115319451](figures/history_8.PNG)
+    ![历史数据诊断界面](figures/history_8.PNG)
 
 7. 关闭【历史数据诊断详情】页面后，将不能再重新打开此页面，只能通过再次诊断查看最新诊断数据结果。
 
@@ -380,7 +385,7 @@ SQL诊断模块支持实时查询慢SQL，对正在执行的慢SQL执行诊断�
 
 4. 现象：如下图
 
-    ![image-20230425163703893](figures/image-20230425163703893.png)
+    ![FAQ界面](figures/image-20230425163703893.png)
    
    原因：插件版本低
 

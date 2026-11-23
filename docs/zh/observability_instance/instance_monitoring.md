@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit 实例监控插件 的功能与操作步骤，涵盖功能介绍、使用指导、FAQ等内容
+keywords: [DataKit, openGauss, 实例监控, 业务开发, 兼容性评估]
+---
+
 # 实例监控插件
 
 ## 功能介绍
@@ -77,7 +82,7 @@ WDR报告基于快照生成，而且必须至少要有两个不同版本的快�
 
 实例监控插件相关监控功能依赖于代理和服务端对指标的采集和存储，所以使用此插件相关功能前应先安装服务端，并对需要监控的数据库实例，安装对应的代理进行指标采集。代理和服务端架构如下所示：
 
-   ![image-20230313174751327](figures/architecture.jpg)
+   ![架构示意图](figures/architecture.jpg)
 
 1. 一级Prometheus：用于查询数据以及配置告警信息，查询监控数据时从二级Prometheus进行数据读取，一级Prometheus自身不存储数据，一级Prometheus必须安装且只能安装一个，因此在实例监控插件启动时，程序自动安装一级Prometheus。
 
@@ -91,11 +96,11 @@ WDR报告基于快照生成，而且必须至少要有两个不同版本的快�
 
 1. 点击左边菜单【智能运维】-【实例监控】，打开【实例监控】tab，点击tab内容的左上角的收缩按钮，如下图：
 
-   ![image-20230313174751327](figures/instance_install_btn.png)
+   ![实例安装按钮](figures/instance_install_btn.png)
 
 2. 安装代理/服务端：点击【安装代理】按钮或者【安装服务端】按钮。
 
-   ![image-20230313175428677](figures/instance_proxy_install_online.png)
+   ![实例代理安装在线页面](figures/instance_proxy_install_online.png)
 
 3. 填写表单，点击一键部署。
 
@@ -109,7 +114,7 @@ WDR报告基于快照生成，而且必须至少要有两个不同版本的快�
    | 代理web服务端口 | 是 | 输入框 | 默认9596，供服务端拉取指标数据使用                  |
    | 安装目录        | 是 | 输入框 | 代理器安装的目录                                    |
 
-   ![image-20230313184137232](figures/instance_install_proxy.png)
+   ![实例安装代理页面](figures/instance_install_proxy.png)
    
    | 配置项       | 必填 | **组件形式** | 配置说明                                                     |
    | ------------------- | --------- | ------------- | ------------------------------------------------------------ |
@@ -119,11 +124,11 @@ WDR报告基于快照生成，而且必须至少要有两个不同版本的快�
    | 安装目录     | 是 | 输入框 | 输入服务端的安装的目录                                |
    | 数据存储时长 | 是 | 输入框 | 指标数据在服务端保留的时长，超出时长数据会被清理      |
 
-   ![image-20230313184752891](figures/instance_install_server_offline.png)
+   ![实例安装服务离线页面](figures/instance_install_server_offline.png)
 
-   ![image-20230313184752891](figures/instance_server_installed.png)
+   ![代理和服务端的安装界面](figures/instance_server_installed.png)
 
-   ![image-20230313184752891](figures/instance_server_reinstall.png)
+   ![实例服务重装页面](figures/instance_server_reinstall.png)
 
 #### 代理的编辑
 
@@ -135,7 +140,7 @@ WDR报告基于快照生成，而且必须至少要有两个不同版本的快�
 
 4. 在弹出的编辑代理界面，可按需修改【采集实例】，点击【一键部署】按钮即可修改代理采集设置。
 
-   ![image-20231214162020717](figures/image-20231214162020717.png)
+   ![代理的编辑界面](figures/image-20231214162020717.png)
 
 #### 服务端的编辑
 
@@ -145,13 +150,13 @@ WDR报告基于快照生成，而且必须至少要有两个不同版本的快�
 
 3. 在弹出的编辑服务端界面，填写表单，点击【一键部署】按钮即可修改服务端。
 
-   ![image-20231214162020717](figures/main_server_edit1.png)
+   ![服务端的编辑界面](figures/main_server_edit1.png)
 
-   ![image-20231214162020717](figures/main_server_edit2.png)
+   ![服务端的编辑界面](figures/main_server_edit2.png)
 
-   ![image-20231214162020717](figures/second_server_edit1.png)
+   ![服务端的编辑界面](figures/second_server_edit1.png)
 
-   ![image-20231214162020717](figures/second_server_edit2.png)
+   ![服务端的编辑界面](figures/second_server_edit2.png)
 
 #### 代理和服务端的启动和停止
 
@@ -159,13 +164,13 @@ WDR报告基于快照生成，而且必须至少要有两个不同版本的快�
 
 2. 把鼠标放在代理/服务端上，显示【启动】/【停止】按钮，点击按钮即可启动或者停止代理或者服务端；
 
-   ![image-20231214162020717](figures/agent_start1.png)
+   ![Agentstart1页面](figures/agent_start1.png)
 
-   ![image-20231214162020717](figures/agent_start2.png)
+   ![Agentstart2页面](figures/agent_start2.png)
 
-   ![image-20231214162020717](figures/agent_stop1.png)
+   ![Agentstop1页面](figures/agent_stop1.png)
 
-   ![image-20231214162020717](figures/agent_stop2.png)
+   ![Agentstop2页面](figures/agent_stop2.png)
 
 #### 代理和服务端的卸载
 
@@ -173,7 +178,7 @@ WDR报告基于快照生成，而且必须至少要有两个不同版本的快�
 
 2. 点击【已安装代理】或者【已安装服务端】，展开对应的安装菜单，继续点击菜单，将鼠标移到对应的实例。
 
-    ![image-20230313185541419](figures/instance_uninstall_btn.png)
+    ![实例卸载按钮](figures/instance_uninstall_btn.png)
 
 3. 点击【卸载】，填写表单，点击【一键卸载】，完成卸载。
 
@@ -183,13 +188,13 @@ WDR报告基于快照生成，而且必须至少要有两个不同版本的快�
    | -------- | ---- | ------------ | -------------------------------- |
    | 代理信息 | 是   | 输入框       | 不可修改，显示需要卸载的代理信息 |
 
-   ![image-20230313190301842](figures/instance_uninstall_proxy_form.png)
+   ![实例卸载代理表单](figures/instance_uninstall_proxy_form.png)
    
    | 配置项 | 必填 | **组件形式** | 配置说明                         |
    | ------ | ---- | ------------ | ---------------------------- |
    | 物理机 | 是   | 输入框       | 不可修改，显示物理机相应信息 |
 
-   ![image-20230313190414855](figures/instance_uninstall_server_form.png)
+   ![实例卸载服务表单](figures/instance_uninstall_server_form.png)
 
 ### 首页
 
@@ -197,7 +202,7 @@ WDR报告基于快照生成，而且必须至少要有两个不同版本的快�
 
 进入插件后，默认选择【首页】 tab，展示数据库实例的CPU、内存、网络、IO、SWAP的总体情况；展示数据库实例的活跃会话情况，支持对其进行分析（TOP_SQL、智能诊断、WDR分析）；展示数据库实时TOPSQL、阻塞会话、长事务、等待事件。
 
-   ![image-20230613113127939](figures/image-20230613113127939.png)
+   ![首页界面](figures/image-20230613113127939.png)
 
 在活跃会话中选取区间，可对会话进行一步分析（TOP_SQL、智能诊断、WDR分析）：
 
@@ -205,7 +210,7 @@ WDR报告基于快照生成，而且必须至少要有两个不同版本的快�
 2. 点击【智能诊断】跳转到【历史数据诊断】页面，可对实例进行诊断；
 3. 点击【WDR分析】，跳转到【WDR报告】tab，可对实例的WDR进行进一步分析。
 
-   ![image-20230613113127939](figures/11.png)
+   ![首页界面](figures/11.png)
 
 ### 系统负载
 
@@ -217,29 +222,29 @@ WDR报告基于快照生成，而且必须至少要有两个不同版本的快�
 
 【CPU】tab包含CPU使用率、CPU平均负载、TOP操作系统进程、TOP数据库线程，支持TOP CPU SQL、智能诊断、WDR分析等功能。
 
-   ![image-20230613113228968](figures/image-20230613113228968.png)
+   ![CPU界面](figures/image-20230613113228968.png)
 
 #### 内存
 
 实时展示实例的内存相关指标数据、内存使用情况、交互区使用情况、操作系统前十进程的详细情况、数据库前十线程的详细情况。
 
-   ![image-20230613113238400](figures/image-20230613113238400.png)
+   ![内存界面](figures/image-20230613113238400.png)
 
 #### IO
 
 实时展示实例的磁盘分区IO统计数据、IO相关指标数据：展示磁盘分区IO统计、IOPS、磁盘每秒读/写字节数、I\O队列长度、I\O使用率、平均IO响应时间，支持TOP CPU SQL、智能诊断、WDR分析等功能。
 
-   ![image-20230613113252448](figures/image-20230613113252448.png)
+   ![IO界面](figures/image-20230613113252448.png)
 
-   ![image-20230613113252448](figures/13.png)
+   ![IO界面](figures/13.png)
 
 #### 网络
 
 实现对实例的网络情况进行监控，展示网络流量（流入）、网络流量（流出）、网卡丢包数量、网络socket连接信息、TCP socket数量统计、UDP socket数量统计、网卡传输统计等，支持智能诊断、WDR分析。
 
-   ![image-20230613113301228](figures/image-20230613113301228.png)
+   ![网络界面](figures/image-20230613113301228.png)
 
-   ![image-14](figures/14.png)
+   ![网络界面](figures/14.png)
 
 ### 实例指标
 
@@ -249,25 +254,25 @@ WDR报告基于快照生成，而且必须至少要有两个不同版本的快�
 
 展示数据库实例的缓存命中率表格、连接数、慢SQL数、平均SQL响应时间、每秒读取磁盘数据量。
 
-   ![image-20230613113414520](figures/image-20230613113414520.png)
+   ![实例概况界面](figures/image-20230613113414520.png)
 
-   ![image-20230613113414520](figures/15.png)
+   ![实例概况界面](figures/15.png)
 
 #### 实例负载
 
 展示数据库实例TPS、QPS、每秒插入数据量、每秒更新数据量、每秒删除数据量、每秒全表扫描数据量、每秒索引扫描回表数据量、每秒清除脏块数据量。
 
-   ![image-16](figures/16.png)
+   ![实例负载界面](figures/16.png)
 
-   ![image-16](figures/17.png)
+   ![实例负载界面](figures/17.png)
 
 #### 实例空间
 
 展示表空间概况、表空间使用总量、容量前十的表、容量前十的索引、容量前十的死元组、前十建议vacuum的表。
 
-   ![image-16](figures/18.png)
+   ![实例空间界面](figures/18.png)
 
-   ![image-16](figures/19.png)
+   ![实例空间界面](figures/19.png)
 
 ### TOPSQL
 
@@ -275,7 +280,7 @@ WDR报告基于快照生成，而且必须至少要有两个不同版本的快�
 
 选择 【TOPSQL】 tab可查看按不同维度（DB_TIME、CPU_TIME、、EXEC_TIME、IO_TIME）排列前十的 sql 语句 。
 
-   ![image-20221219112620776](figures/image-20221220111347.png)
+   ![TOPSQL界面](figures/image-20221220111347.png)
 
    可点击 【SQLID】 进入详情页面。
 
@@ -283,43 +288,43 @@ WDR报告基于快照生成，而且必须至少要有两个不同版本的快�
 
 1. 点击【 SQLID 】进入详情页面，默认展示统计信息页。
 
-   ![image-20221219112620776](figures/image-20221220112324.png)
+   ![TOPSQL界面](figures/image-20221220112324.png)
 
    完整的【统计信息】部分：
 
-   ![image-20221219112620776](figures/image-20221220112408.png)
+   ![TOPSQL界面](figures/image-20221220112408.png)
 
 2. 执行计划：
 
    展示可视化的【执行计划】数据，点击右侧按钮可高亮显示对应的行。
 
-   ![image-20221219112620776](figures/image-20221220112813.png)
+   ![TOPSQL界面](figures/image-20221220112813.png)
 
 3. 系统资源：
 
-   ![image-20221219112620776](figures/image-20221220113236.png)
+   ![TOPSQL界面](figures/image-20221220113236.png)
 
 4. 对象信息
 
    【对象信息】tab下，可选择对应的对象，右侧展示涉及到的【基本信息】，【对象结构】，【索引信息】。
 
-   ![image-20221219112620776](figures/image-20221220113411.png)
+   ![TOPSQL界面](figures/image-20221220113411.png)
 
 5. 索引建议
 
    根据建议规则给出 sql 对应的【索引建议】。
 
-   ![image-20221219112620776](figures/image-20221220113633.png)
+   ![TOPSQL界面](figures/image-20221220113633.png)
 
 6. 等待事件统计
 
-   ![image-20230613113511602](figures/image-20230613113511602.png)
+   ![TOPSQL界面](figures/image-20230613113511602.png)
 
 7. sql 诊断
 
    在这里可以对当前的sql进行诊断分析，通过点击可跳转至【诊断详情】。
 
-   ![image-20221219112620776](figures/image-20221220113804.png)
+   ![TOPSQL界面](figures/image-20221220113804.png)
 
 ### WDR报告
 
@@ -344,13 +349,13 @@ WDR是一个监控openGauss数据库特性的衍生品，通过分析时间范�
 | 报告类型 | 是   | 下拉框     | -            | 分【明细】、【汇总】和【全部】，默认明细。                            |
 | 生产时间 | 否   | 时间下拉框 | 时间类型     | yyyy-MM-dd HH:mm:ss，可为空，默认当天00:00:00到当天23:59:59。 |
 
-   ![image-20230313192957718](figures/wdr_list.png)
+   ![WDR 列表](figures/wdr_list.png)
 
 #### 快照管理
 
 点击【快照管理】按钮，进入快照管理页面。
 
-   ![image-20230313193205736](figures/snapshot_list.png)
+   ![快照列表](figures/snapshot_list.png)
 
 | 配置项    | 必填 | 组件形式 | 数据类型限制 | 配置说明     |
 | --------- | ---- | -------- | ------------ | ------------ |
@@ -366,7 +371,7 @@ WDR是一个监控openGauss数据库特性的衍生品，通过分析时间范�
 
 在主页面点击【生成WDR】，进入【生成WDR】编辑页面，填写表单，点击【生成】。
 
-   ![image-20230313194614658](figures/WDR_save.png)
+   ![WDR 保存页面](figures/WDR_save.png)
 
 | 配置项    | 必填 | 组件形式 | 数据类型限制 | 配置说明                                                    |
 | --------- | ---- | -------- | ------------ | ----------------------------------------------------------- |
@@ -380,7 +385,7 @@ WDR是一个监控openGauss数据库特性的衍生品，通过分析时间范�
 
 点击WDR报告列表中的某一个数据的【查看】操作按钮，将打开新页面，展示该数据的WDR报告详情。
 
-   ![image-20230313195354980](figures/WDR_detail.png)
+   ![WDR 详情页面](figures/WDR_detail.png)
 
 #### WDR报告下载
 
@@ -390,7 +395,7 @@ WDR是一个监控openGauss数据库特性的衍生品，通过分析时间范�
 
 点击WDR报告列表中的某一个数据的【删除】操作按钮，弹出删除提示，选择【确定】，将删除该WDR报告。
 
-![image-20230313195817268](figures/WDR_del.png)
+![WDRdel页面](figures/WDR_del.png)
 
 ### 系统配置
 
@@ -400,15 +405,15 @@ WDR是一个监控openGauss数据库特性的衍生品，通过分析时间范�
 
 点击【系统配置】tab，分【数据库配置】和【系统配置】tab，默认显示【数据库配置】tab；选择【集群/实例】，输入【显示推荐者】/【全部】、【参数类型】、【参数名称】，点击【查询】，可查询对应的数据。
 
-   ![image-20230313200118244](figures/image-20230313200118244.png)
+   ![系统配置查询界面](figures/image-20230313200118244.png)
 
-   ![image-20230313200118245](figures/12.png)
+   ![系统配置查询界面](figures/12.png)
 
 #### 系统配置刷新
 
 选择【集群/实例】，点击【刷新】，填写root密码，点击【确定】，可以刷新数据库配置参数或者系统配置参数。
 
-![image-20230313200736059](figures/sysconfig_refresh.png)
+![系统配置刷新页面](figures/sysconfig_refresh.png)
 
 ### ASP
 
@@ -416,13 +421,13 @@ WDR是一个监控openGauss数据库特性的衍生品，通过分析时间范�
 
 点击【ASP】tab，选择【集群/实例】
 
-   ![img.png](figures/ASP_count.png)
+   ![ASP 统计页面](figures/ASP_count.png)
 
 #### ASP分析
 
 点击【ASP】tab，选择【集群/实例】，选择【分析指标】
 
-   ![img.png](figures/ASP.png)
+   ![ASP页面](figures/ASP.png)
 
 【分析指标】下拉框选项：Wait Status、Event、Database ID、Application Name；单击图例可以增加对应【过滤条件】
 
@@ -432,7 +437,7 @@ WDR是一个监控openGauss数据库特性的衍生品，通过分析时间范�
 
 点击菜单【集群监控】，选择【集群列表】tab。
 
-   ![img.png](figures/cluster_list.png)
+   ![集群列表](figures/cluster_list.png)
 
 - 点击操作中的【实例监控】，可跳转到主节点的实例监控。
 
@@ -440,7 +445,7 @@ WDR是一个监控openGauss数据库特性的衍生品，通过分析时间范�
 
 点击菜单【集群监控】，选择【主备延迟列表】tab。
 
-   ![img.png](figures/cluster_delay.png)
+   ![集群时延页面](figures/cluster_delay.png)
 
 - 点击操作中的【实例监控】，可跳转到对应节点的实例监控
 - 点击节点名称，可以跳转到对应节点的集群详情
@@ -449,13 +454,13 @@ WDR是一个监控openGauss数据库特性的衍生品，通过分析时间范�
 
 点击菜单【集群监控】，选择【集群列表】tab，点击任一集群名称。
 
-   ![img.png](figures/cluster_detail1.png)
+   ![集群详情界面](figures/cluster_detail1.png)
 
 - 点击操作中的【性能监控】，可跳转到对应节点的实例监控。
 
-   ![img.png](figures/cluster_detail2.png)
+   ![集群详情界面](figures/cluster_detail2.png)
 
-   ![image-20231214170203869](figures/image-20231214170203869.png)
+   ![集群详情界面](figures/image-20231214170203869.png)
 
 ### 采集配置
 
@@ -471,7 +476,7 @@ WDR是一个监控openGauss数据库特性的衍生品，通过分析时间范�
 
 5. 点击【重置】按钮，可将所有指标的采集间隔重置为默认采集间隔15s，并打开所有指标的采集开关。
 
-   ![image-20231214171443769](figures/image-20231214171443769.png)
+   ![修改采集配置界面](figures/image-20231214171443769.png)
 
 ## FAQ
 
@@ -485,7 +490,7 @@ WDR是一个监控openGauss数据库特性的衍生品，通过分析时间范�
 
 3. 由于平台限制了上传文件大小，可能导致安装包上传失败，需要修改平台配置。
 
-   <img src="figures/image-20230331163722608.png" alt="image-20230331163722608">
+   <img src="figures/image-20230331163722608.png" alt="FAQ界面">
 
     解决方案：修改平台配置文件/ops/server/openGauss-visualtool/config/application-cus.yml中对上传文件的大小限制大于安装包大小，然后重启平台。
 

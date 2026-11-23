@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit 通用管理 的功能与操作步骤，涵盖复制数据库对象、批量导出等内容
+keywords: [DataKit, openGauss, 业务开发, 通用管理]
+---
+
 # 通用管理
 
 ## 复制数据库对象
@@ -47,11 +52,11 @@
 
 **步骤 2：** 勾选所需导出的模式名称。名称支持搜索。
 
-<img src="figures/5-16-2-1.1.png" style="zoom:50%;" />
+<img src="figures/5-16-2-1.1.png" alt="批量导出 DDL界面" style="zoom:50%;" />
 
 **步骤 3：** 单击 "**确定**" 即可继续，或单击 "**取消**" 即可退出操作。
 
-<img src="figures/5-16-2-1.2.png" style="zoom:67%;" />
+<img src="figures/5-16-2-1.2.png" alt="批量导出 DDL界面" style="zoom:67%;" />
 
 ### 批量导出 DDL 和数据
 
@@ -67,8 +72,8 @@
 
 **步骤 2：** 勾选所需导出的模式名称。名称支持搜索。
 
-<img src="figures/5-16-2-2.1.png" style="zoom:50%;" />
+<img src="figures/5-16-2-2.1.png" alt="批量导出 DDL 和数据界面" style="zoom:50%;" />
 
 **步骤 3：** 单击 "**确定**" 即可继续，或单击 "**取消**" 即可退出操作。
 
-<img src="figures/5-16-2-2.2.png" style="zoom:50%;" />
+<img src="figures/5-16-2-2.2.png" alt="批量导出 DDL 和数据界面" style="zoom:50%;" />

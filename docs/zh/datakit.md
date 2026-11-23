@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit DataKit 的功能与操作步骤，涵盖功能介绍、原理简介、特性优势、环境准备等内容
+keywords: [DataKit, openGauss, 数据迁移, 实例监控, 基础运维]
+---
+
 # DataKit
 
 ## 功能介绍

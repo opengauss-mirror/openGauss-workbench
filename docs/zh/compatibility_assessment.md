@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit 兼容性评估 的功能与操作步骤，涵盖工具介绍、使用指导等内容
+keywords: [DataKit, openGauss, 日志检索, 兼容性评估]
+---
+
 # 兼容性评估
 
 ## 工具介绍

@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit 智能参数调优 的功能与操作步骤，涵盖功能介绍、使用指导等内容
+keywords: [DataKit, openGauss, 数据迁移, 录制回放, 智能调优]
+---
+
 # 智能参数调优
 
 ## 功能介绍
@@ -49,7 +54,7 @@
 
 数据库智能参数调优工具主要架构如下图所示，主要由四部分组成：
 
-<img src="figures/architecture.jpg"/>
+<img src="figures/architecture.jpg" alt="架构示意图"/>
 
 1. **负载生成**: 
 
@@ -75,7 +80,7 @@
 据此在历史知识库中匹配最为相似的历史负载，通过知识迁移选择对应参数作为推荐配置应用在数据库中。如条件允许，可以在其基础上迭代运行安全调优模型，对参数
 做进一步微调，直到模型收敛或达到停止条件。调优后的运行结果同样可以作为历史数据记录到知识库中。
 
-   <img src="figures/architecture1.jpg"/>
+   <img src="figures/architecture1.jpg" alt="架构示意图"/>
 
 ### 软件环境要求
 

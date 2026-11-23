@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit 数据库 的功能与操作步骤，涵盖创建数据库、断开所有连接、打开连接、断开连接等内容
+keywords: [DataKit, openGauss, 数据库]
+---
+
 # 数据库
 
 ## 创建数据库
@@ -20,7 +25,7 @@
 | 连接限制   | 是    | 用于配置数据库可以接受的并发连接数，默认为-1，表示无限制；取值范围：>=-1的整数，建议填写1~50的整数 |
 | 连接数据库 | 否    | 用于是否在创建数据库成功后打开该数据库连接，默认为关闭       |
 
-<img src="figures/5-9-1.png" style="zoom: 50%;" />
+<img src="figures/5-9-1.png" alt="创建数据库界面" style="zoom: 50%;" />
 
 ## 断开所有连接
 
@@ -36,7 +41,7 @@
 
 单击 "**取消**" 即可退出本次对话框操作。
 
-<img src="figures/5-9-2.png" style="zoom:67%;" />
+<img src="figures/5-9-2.png" alt="断开所有连接界面" style="zoom:67%;" />
 
 ## 打开连接
 
@@ -56,7 +61,7 @@
 
 单击 "**取消**" 即可退出本次对话框操作。
 
-<img src="figures/5-9-2.png" style="zoom: 67%;" />
+<img src="figures/5-9-2.png" alt="断开连接界面" style="zoom: 67%;" />
 
 ## 编辑数据库属性
 
@@ -78,7 +83,7 @@
 | 连接限制   | 是           | 否   | 用于配置数据库可以接受的并发连接数，默认为回显数据；取值范围：>=-1的整数，建议填写1~50的整数 |
 | 连接数据库 | 是           | 否   | 用于是否在创建数据库成功后打开该数据库连接，默认为关闭       |
 
-<img src="figures/5-9-5.png" style="zoom: 50%;" />
+<img src="figures/5-9-5.png" alt="编辑数据库属性界面" style="zoom: 50%;" />
 
 ## 删除数据库
 
@@ -92,7 +97,7 @@
 
 单击 "**取消**" 即可退出本次对话框操作。
 
-<img src="figures/5-9-6.png" style="zoom:67%;" />
+<img src="figures/5-9-6.png" alt="删除数据库界面" style="zoom:67%;" />
 
 ## 查看数据库属性
 
@@ -100,7 +105,7 @@
 
 **说明：** 该操作仅能在已连接的数据库上执行。
 
-<img src="figures/5-9-7.png" style="zoom: 50%;" />
+<img src="figures/5-9-7.png" alt="查看数据库属性界面" style="zoom: 50%;" />
 
 ## 打开新终端
 
@@ -114,7 +119,7 @@
 
 **说明：** 默认 2 小时内用户未执行数据库操作将自动断开，取值区间为 2 ~ 24 的正整数。
 
-<img src="figures/5-9-9.png" style="zoom: 50%;" />
+<img src="figures/5-9-9.png" alt="设置数据库断连时间界面" style="zoom: 50%;" />
 
 ## 数据库连接失效重连
 

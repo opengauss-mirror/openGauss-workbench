@@ -1,3 +1,8 @@
+---
+description: Describes DataKit features and procedures, covering functions, principles, advantages, and environment preparation
+keywords: [DataKit, openGauss, O&M, installation, extensions]
+---
+
 # DataKit
 
 ## Function

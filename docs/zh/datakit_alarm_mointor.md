@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit 告警监控插件用户手册 的功能与操作步骤，涵盖功能介绍、使用指导等内容
+keywords: [DataKit, openGauss, 实例监控, 告警监控, 业务开发]
+---
+
 # 告警监控插件用户手册
 
 ## 功能介绍

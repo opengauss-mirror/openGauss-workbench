@@ -1,16 +1,21 @@
+---
+description: 介绍 DataKit SQL 终端 的功能与操作步骤，涵盖打开多个 "SQL 终端" 页签、使用 SQL 查询、使用 SQL 编辑器、重命名 SQL 终端等内容
+keywords: [DataKit, openGauss, 业务开发, SQL 终端]
+---
+
 # SQL 终端
 
 ## 打开多个 "SQL 终端" 页签
 
 通过该功能，可在当前 “SQL 终端”页签执行查询时使用多个 SQL 查询。执行如下步骤打开新“SQL 终端”页签：
 
-**步骤** **1**： 在页签栏的目标终端选择框中，选择目标终端，选择<img src="figures/5-7-1.0.png" style="zoom: 50%;" />新建终端，即可显示新的 "SQL终端" 页签。
+**步骤** **1**： 在页签栏的目标终端选择框中，选择目标终端，选择<img src="figures/5-7-1.0.png" alt="打开多个 SQL 终端 页签界面" style="zoom: 50%;" />新建终端，即可显示新的 "SQL终端" 页签。
 
 **说明：** 目标终端的下拉选项值为所有连接中的数据库，默认为最近打开连接的数据库。
 
-"SQL终端" 命名规则为：终端图标+数据库名+@+连接名称+(自增数)，如<img src="figures/5-7-1.1.png" style="zoom: 50%;" />。
+"SQL终端" 命名规则为：终端图标+数据库名+@+连接名称+(自增数)，如<img src="figures/5-7-1.1.png" alt="打开多个 SQL 终端 页签界面" style="zoom: 50%;" />。
 
-<img src="figures/5-7-1.2.png" style="zoom:67%;" />
+<img src="figures/5-7-1.2.png" alt="打开多个 SQL 终端 页签界面" style="zoom:67%;" />
 
 ## 使用 SQL 查询
 
@@ -24,7 +29,7 @@
 
 结果集中的表数据列宽支持拖动调整。
 
-<img src="figures/5-7-2-1.png" style="zoom:67%;" />
+<img src="figures/5-7-2-1.png" alt="使用单条 SQL 查询界面" style="zoom:67%;" />
 
 ### 执行多条 SQL 或函数/过程查询
 
@@ -32,7 +37,7 @@
 
 **步骤** **2**：在下一行添加新的函数/过程语句。
 
-<img src="figures/5-7-2-2.png" style="zoom:67%;" />
+<img src="figures/5-7-2-2.png" alt="执行多条 SQL 或函数/过程查询界面" style="zoom:67%;" />
 
 执行如下步骤执行多条 SQL 查询：
 
@@ -44,7 +49,7 @@
 
 支持同时查询多表，表数据的查询结果将以结果集的形式呈现，表数据列宽支持拖动调整，执行后将覆盖原先结果集。
 
-<img src="figures/5-7-2-2.1.png" style="zoom:67%;" />
+<img src="figures/5-7-2-2.1.png" alt="执行多条 SQL 或函数/过程查询界面" style="zoom:67%;" />
 
 ## 使用 SQL 编辑器
 
@@ -62,7 +67,7 @@
 
 **步骤** **2**：使用快捷键 “Ctrl+/” 单独注释/取消注释选中的行或整段内容。
 
-<img src="figures/5-7-2-3.png" style="zoom:67%;" />
+<img src="figures/5-7-2-3.png" alt="注释/取消注释界面" style="zoom:67%;" />
 
 ### 插入空格/取消插入空格
 
@@ -72,7 +77,7 @@
 
 **步骤 2**： 按下 Tab 键缩进，按下 “Shift+Tab” 键取消缩进。
 
-<img src="figures/5-7-2-4.png" style="zoom:67%;" />
+<img src="figures/5-7-2-4.png" alt="插入空格/取消插入空格界面" style="zoom:67%;" />
 
 ### 清空
 
@@ -88,7 +93,7 @@
 
 **步骤 2**： 在工具栏中单击 "**格式化**"。
 
-<img src="figures/5-7-2-5.png" style="zoom:67%;" />
+<img src="figures/5-7-2-5.png" alt="格式化界面" style="zoom:67%;" />
 
 ### 导入
 
@@ -98,7 +103,7 @@
 
 **步骤 2**： 选择 .sql 文件并点击 "**打开**"，若当前 "SQL终端" 不存在执行语句，将直接导入所选文件中的 sql 语句；若当前 "SQL终端" 存在执行语句，将弹出选择 "**覆盖**" 或 "**附加**" 的选择窗口，点击确定，将根据用户所选操作导入所选文件中的 sql 语句。
 
-<img src="figures/5-7-2-7.png" style="zoom:67%;" />
+<img src="figures/5-7-2-7.png" alt="导入界面" style="zoom:67%;" />
 
 ### 导出
 
@@ -108,7 +113,7 @@
 
 **说明：** 导出文件为 sql 文件。
 
-<img src="figures/5-7-2-8.png" style="zoom:50%;" />
+<img src="figures/5-7-2-8.png" alt="导出界面" style="zoom:50%;" />
 
 ## 重命名 SQL 终端
 
@@ -120,7 +125,7 @@
 
 仅新建的SQL终端支持修改终端名称，首页中 “运行及展示” 页签不支持重命名。
 
-<img src="figures/5-7-4.png" style="zoom:50%;" />
+<img src="figures/5-7-4.png" alt="重命名 SQL 终端界面" style="zoom:50%;" />
 
 ## SQL 助手
 
@@ -128,17 +133,17 @@ SQL 助手为用户在使用 SQL 终端和使用函数/过程中输入信息提�
 
 执行以下步骤打开 SQL 助手：
 
-**步骤** **1**： 在任意页中，单击 <img src="figures/5-7-5.1.png" style="zoom:50%;" />，右侧打开 "**SQL助手**" 窗口。
+**步骤** **1**： 在任意页中，单击 <img src="figures/5-7-5.1.png" alt="SQL 助手界面" style="zoom:50%;" />，右侧打开 "**SQL助手**" 窗口。
 
 **说明：** 用户可以从 SQL 语法、操作维度使用该手册，语法。
 
 **步骤** **2**： 选择 "**语法**" 项，将显示 openGauss SQL 语法，点击指定语法可查看详情，包括注意事项、示例、语法、函数和参数说明。
 
-<img src="figures/5-7-5.2.png" style="zoom:50%;" />
+<img src="figures/5-7-5.2.png" alt="SQL 助手界面" style="zoom:50%;" />
 
 选择 "**操作列表**" 项，用户可以基于功能维度、场景维度、操作维度快速找到所需执行的语句。
 
-<img src="figures/5-7-5.3.png" style="zoom:50%;" />
+<img src="figures/5-7-5.3.png" alt="SQL 助手界面" style="zoom:50%;" />
 
 ## SQL 查询执行历史
 
@@ -150,12 +155,12 @@ SQL 查询执行历史支持查看和管理频繁执行的 SQL 查询。SQL 查�
 | -------- | ------------------------------------------------------------ |
 | 序号     | 执行历史记录的序号                                           |
 | 开始时间 | SQL查询的开始时间                                            |
-| 状态     | SQL查询的执行状态：<img src="figures/icon_success.jpg" style="zoom:80%;" /> <img src="figures/icon_fail.jpg" style="zoom:80%;" /> |
+| 状态     | SQL查询的执行状态：<img src="figures/icon_success.jpg" alt="icon 成功页面" style="zoom:80%;" /> <img src="figures/icon_fail.jpg" alt="iconfail页面" style="zoom:80%;" /> |
 | SQL语句  | SQL查询的执行语句                                            |
 | 执行时间 | SQL查询的执行耗时，单位：ms                                  |
-| 操作     | <img src="figures/icon_preview.jpg" style="zoom:80%;" />预览SQL语句弹窗、<img src="figures/icon_lock.jpg" style="zoom:80%;" />锁定/<img src="figures/icon_unlock.jpg" style="zoom:80%;" />取消锁定、<img src="figures/icon_delete.jpg" style="zoom:80%;" />删除 |
+| 操作     | <img src="figures/icon_preview.jpg" alt="iconpreview页面" style="zoom:80%;" />预览SQL语句弹窗、<img src="figures/icon_lock.jpg" alt="iconlock页面" style="zoom:80%;" />锁定/<img src="figures/icon_unlock.jpg" alt="iconunlock页面" style="zoom:80%;" />取消锁定、<img src="figures/icon_delete.jpg" alt="icon 删除页面" style="zoom:80%;" />删除 |
 
-**步骤** **2**： 选择 <img src="figures/icon_preview.jpg" style="zoom:80%;" />，打开 SQL 语句预览弹窗，用于查看当前执行操作的 SQL 语句。
+**步骤** **2**： 选择 <img src="figures/icon_preview.jpg" alt="iconpreview页面" style="zoom:80%;" />，打开 SQL 语句预览弹窗，用于查看当前执行操作的 SQL 语句。
 
 **说明：** 单击 "**加载至终端**" 将追加当前执行SQL语句至SQL编辑器中。
 
@@ -163,17 +168,17 @@ SQL 查询执行历史支持查看和管理频繁执行的 SQL 查询。SQL 查�
 
 单击 "**取消**" 将关闭 SQL 语句预览弹窗。
 
-<img src="figures/5-7-6.1.png" style="zoom:50%;" />
+<img src="figures/5-7-6.1.png" alt="SQL 查询执行历史界面" style="zoom:50%;" />
 
-**步骤** **3**： 选择 <img src="figures/icon_lock.jpg" style="zoom:80%;" /> / <img src="figures/icon_unlock.jpg" style="zoom:80%;" />，锁定 / 解锁当前执行 SQL 操作记录，用于置顶 / 取消置顶当前执行操作的 SQL 语句。
+**步骤** **3**： 选择 <img src="figures/icon_lock.jpg" alt="iconlock页面" style="zoom:80%;" /> / <img src="figures/icon_unlock.jpg" alt="iconunlock页面" style="zoom:80%;" />，锁定 / 解锁当前执行 SQL 操作记录，用于置顶 / 取消置顶当前执行操作的 SQL 语句。
 
-**说明：**<img src="figures/icon_lock.jpg" style="zoom:80%;" />锁定：单击按钮可将当行记录锁定，锁定后置顶当行记录并置灰，序号前新增<img src="figures/icon_disablelock.jpg" style="zoom:80%;" />图标，不支持删除操作。
+**说明：**<img src="figures/icon_lock.jpg" alt="iconlock页面" style="zoom:80%;" />锁定：单击按钮可将当行记录锁定，锁定后置顶当行记录并置灰，序号前新增<img src="figures/icon_disablelock.jpg" alt="icondisablelock页面" style="zoom:80%;" />图标，不支持删除操作。
 
-<img src="figures/icon_unlock.jpg" style="zoom:80%;" />取消锁定：单击按钮可将当行记录取消锁定，取消锁定后取消当行记录置顶状态，取消<img src="figures/icon_disablelock.jpg" style="zoom:80%;" />图标，支持删除操作。
+<img src="figures/icon_unlock.jpg" alt="iconunlock页面" style="zoom:80%;" />取消锁定：单击按钮可将当行记录取消锁定，取消锁定后取消当行记录置顶状态，取消<img src="figures/icon_disablelock.jpg" alt="icondisablelock页面" style="zoom:80%;" />图标，支持删除操作。
 
 同一平台用户所操作的执行历史记录最多锁定50条，超出将显示提示语句。
 
-**步骤** **4**： 选择 <img src="figures/icon_delete.jpg" style="zoom:80%;" />，单击按钮将弹出确认删除弹窗，确认后可将当行记录删除，该删除操作不可逆。
+**步骤** **4**： 选择 <img src="figures/icon_delete.jpg" alt="icon 删除页面" style="zoom:80%;" />，单击按钮将弹出确认删除弹窗，确认后可将当行记录删除，该删除操作不可逆。
 
 ## FAQ
 

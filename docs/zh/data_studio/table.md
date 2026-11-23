@@ -1,3 +1,8 @@
+---
+description: 介绍 DataKit 表 的功能与操作步骤，涵盖查看表、创建表、管理表、管理表数据等内容
+keywords: [DataKit, openGauss, 业务开发, 表]
+---
+
 # 表
 
 ## 查看表
@@ -10,9 +15,9 @@
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击普通表列表，将显示所选表对应的属性与数据，选中 "**DDL**"。
 
-**说明**：当前显示数据仅在首次加载时自动获取，若需更新数据请点击刷新按钮![image-20221216120857070](figures/icon_refresh.png)。
+**说明**：当前显示数据仅在首次加载时自动获取，若需更新数据请点击刷新按钮![刷新按钮图标](figures/icon_refresh.png)。
 
-<img src="figures/5-3-1.1.png" style="zoom:67%;" />
+<img src="figures/5-3-1.1.png" alt="查看DDL界面" style="zoom:67%;" />
 
 ### 查看常规
 
@@ -20,9 +25,9 @@
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击普通表列表，将显示所选表对应的属性与数据，选中 "**常规**"。
 
-**说明**：当前显示数据仅在首次加载时自动获取，若需更新数据请点击刷新按钮![image-20221216120857070](figures/icon_refresh.png)。
+**说明**：当前显示数据仅在首次加载时自动获取，若需更新数据请点击刷新按钮![刷新按钮图标](figures/icon_refresh.png)。
 
-<img src="figures/5-3-1.2.png" style="zoom:67%;" />
+<img src="figures/5-3-1.2.png" alt="查看常规界面" style="zoom:67%;" />
 
 ### 查看列
 
@@ -30,9 +35,9 @@
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击普通表列表，将显示所选表对应的属性与数据，选中 "**列**"。
 
-**说明**：当前显示数据仅在首次加载时自动获取，若需更新数据请点击刷新按钮![image-20221216120857070](figures/icon_refresh.png)。
+**说明**：当前显示数据仅在首次加载时自动获取，若需更新数据请点击刷新按钮![刷新按钮图标](figures/icon_refresh.png)。
 
-<img src="figures/5-3-1.3.png" style="zoom:67%;" />
+<img src="figures/5-3-1.3.png" alt="查看列界面" style="zoom:67%;" />
 
 ### 查看约束
 
@@ -40,9 +45,9 @@
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击普通表列表，将显示所选表对应的属性与数据，选中 "**约束**"。
 
-**说明**：当前显示数据仅在首次加载时自动获取，若需更新数据请点击刷新按钮![image-20221216120857070](figures/icon_refresh.png)。
+**说明**：当前显示数据仅在首次加载时自动获取，若需更新数据请点击刷新按钮![刷新按钮图标](figures/icon_refresh.png)。
 
-<img src="figures/5-3-1.4.png" style="zoom:67%;" />
+<img src="figures/5-3-1.4.png" alt="查看约束界面" style="zoom:67%;" />
 
 ### 查看索引
 
@@ -50,9 +55,9 @@
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击普通表列表，将显示所选表对应的属性与数据，选中 "**索引**"。
 
-**说明**：当前显示数据仅在首次加载时自动获取，若需更新数据请点击刷新按钮![image-20221216120857070](figures/icon_refresh.png)。
+**说明**：当前显示数据仅在首次加载时自动获取，若需更新数据请点击刷新按钮![刷新按钮图标](figures/icon_refresh.png)。
 
-<img src="figures/5-3-1.5.png" style="zoom:67%;" />
+<img src="figures/5-3-1.5.png" alt="查看索引界面" style="zoom:67%;" />
 
 ### 查看数据
 
@@ -60,9 +65,9 @@
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击普通表列表，将显示所选表对应的属性与数据，选中 "**数据**"。
 
-**说明：** 当前显示数据仅在首次加载时自动获取，若需更新数据请点击刷新按钮![image-20221216120857070](figures/icon_refresh.png)。
+**说明：** 当前显示数据仅在首次加载时自动获取，若需更新数据请点击刷新按钮![刷新按钮图标](figures/icon_refresh.png)。
 
-<img src="figures/5-3-1.6.png" style="zoom:67%;" />
+<img src="figures/5-3-1.6.png" alt="查看数据界面" style="zoom:67%;" />
 
 ### 查看分区
 
@@ -70,9 +75,9 @@
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击普通表列表，若所选表为分区表，将显示分区属性，选中 "**分区**"。
 
-**说明：** 当前显示数据仅在首次加载时自动获取，若需更新数据请点击刷新按钮![image-20221216120857070](figures/icon_refresh.png)。
+**说明：** 当前显示数据仅在首次加载时自动获取，若需更新数据请点击刷新按钮![刷新按钮图标](figures/icon_refresh.png)。
 
-<img src="figures/5-3-1.7.png" style="zoom:67%;" />
+<img src="figures/5-3-1.7.png" alt="查看分区界面" style="zoom:67%;" />
 
 ## 创建表
 
@@ -112,7 +117,7 @@
 | 是否分区表 | 否   | 用于定义是否为分区表，默认不勾选为普通表，勾选后需要在”分区”栏填写分区信息 |
 | 描述       | 否   | 用于说明列信息                                               |
 
-<img src="figures/5-3-2.1.png" style="zoom:50%;" />
+<img src="figures/5-3-2.1.png" alt="创建表界面" style="zoom:50%;" />
 
 **定义列**
 
@@ -129,7 +134,7 @@
 | 范围       | 用于定义数据类型的范围                               |
 | 描述       | 用于说明列信息                                       |
 
-<img src="figures/5-3-2.2.png" style="zoom:50%;" />
+<img src="figures/5-3-2.2.png" alt="创建表界面" style="zoom:50%;" />
 
 **定义约束**
 
@@ -165,7 +170,7 @@
         <td>用于定义约束信息</td>
     </tr>
 </table>
-<img src="figures/5-3-2.3.png" style="zoom:50%;" />
+<img src="figures/5-3-2.3.png" alt="创建表界面" style="zoom:50%;" />
 
 **定义索引**
 
@@ -180,7 +185,7 @@
 | 表达式     | 用于输入用户自定义表达式   |
 | 描述       | 用于定义索引信息           |
 
-<img src="figures/5-3-2.4.png" style="zoom:50%;" />
+<img src="figures/5-3-2.4.png" alt="创建表界面" style="zoom:50%;" />
 
 **定义分区**
 
@@ -197,7 +202,7 @@
 | 分区列   | 是   | 用于定义分区列                         |
 | 分区值   | 是   | 用于定义分区列的分区值                 |
 
-<img src="figures/5-3-2.5.png" style="zoom:50%;" />
+<img src="figures/5-3-2.5.png" alt="创建表界面" style="zoom:50%;" />
 
 **SQL 预览**
 
@@ -205,7 +210,7 @@
 
 **说明：** 该 DDL 语句仅支持查看、选择、复制，不支持编辑。
 
-<img src="figures/5-3-2.6.png" style="zoom:50%;" />
+<img src="figures/5-3-2.6.png" alt="创建表界面" style="zoom:50%;" />
 
 ### 管理列
 
@@ -215,11 +220,11 @@
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击表名称，选择 "**列**"。
 
-**步骤 2：** 点击添加按钮 <img src="figures/icon_add.png" style="zoom:38%;" />将显示新增列数据行。
+**步骤 2：** 点击添加按钮 <img src="figures/icon_add.png" alt="iconadd页面" style="zoom:38%;" />将显示新增列数据行。
 
 **步骤 3：** 双击新增列数据行的每个表格即可启用编辑状态，定义列详情请参见 **定义列** 。
 
-**步骤 4：** 新增列数据编辑完成后，点击 <img src="figures/icon_save.png" style="zoom:38%;" /> 将保存新增列数据行；若点击 <img src="figures/icon_cancel.png" style="zoom:38%;" /> 将关闭新增列数据行，恢复至未创建前的操作状态。
+**步骤 4：** 新增列数据编辑完成后，点击 <img src="figures/icon_save.png" alt="icon 保存页面" style="zoom:38%;" /> 将保存新增列数据行；若点击 <img src="figures/icon_cancel.png" alt="iconcancel页面" style="zoom:38%;" /> 将关闭新增列数据行，恢复至未创建前的操作状态。
 
 **修改列**
 
@@ -227,15 +232,15 @@
 
 **步骤 2：** 双击已有列数据行的每个表格即可启用编辑状态，已修改数据背景将高亮。定义列详情请参见 **定义列** 。
 
-**步骤 3：** 已有列数据修改完成后，点击 <img src="figures/icon_save.png" style="zoom:38%;" /> 将保存修改列数据行；若点击 <img src="figures/icon_cancel.png" style="zoom:38%;" /> 将取消修改列数据行操作，恢复至未修改前的操作状态。
+**步骤 3：** 已有列数据修改完成后，点击 <img src="figures/icon_save.png" alt="icon 保存页面" style="zoom:38%;" /> 将保存修改列数据行；若点击 <img src="figures/icon_cancel.png" alt="iconcancel页面" style="zoom:38%;" /> 将取消修改列数据行操作，恢复至未修改前的操作状态。
 
 **删除列**
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击表名称，选择 "**列**"。
 
-**步骤 2：** 单击选择已有列数据行，点击 <img src="figures/icon_delete.png" style="zoom:38%;" /> 将使所需删除列数据行背景高亮。
+**步骤 2：** 单击选择已有列数据行，点击 <img src="figures/icon_delete.png" alt="icon 删除页面" style="zoom:38%;" /> 将使所需删除列数据行背景高亮。
 
-**步骤 3：** 所需删除列数据行选择完毕后，点击 <img src="figures/icon_save.png" style="zoom:38%;" /> 将删除所选列数据行；若点击 <img src="figures/icon_cancel.png" style="zoom:38%;" /> 将取消删除列数据行操作，恢复至未修改前的操作状态。
+**步骤 3：** 所需删除列数据行选择完毕后，点击 <img src="figures/icon_save.png" alt="icon 保存页面" style="zoom:38%;" /> 将删除所选列数据行；若点击 <img src="figures/icon_cancel.png" alt="iconcancel页面" style="zoom:38%;" /> 将取消删除列数据行操作，恢复至未修改前的操作状态。
 
 ### 管理约束
 
@@ -245,11 +250,11 @@
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击表名称，选择 "**约束**"。
 
-**步骤 2：** 点击添加按钮 <img src="figures/icon_add.png" style="zoom:38%;" />将显示新增约束数据行。
+**步骤 2：** 点击添加按钮 <img src="figures/icon_add.png" alt="iconadd页面" style="zoom:38%;" />将显示新增约束数据行。
 
 **步骤 3：** 双击新增约束数据行的每个表格即可启用编辑状态，定义约束详情请参见 **定义约束** 。
 
-**步骤 4：** 新增约束数据编辑完成后，点击 <img src="figures/icon_save.png" style="zoom:38%;" /> 将保存新增约束数据行；若点击 <img src="figures/icon_cancel.png" style="zoom:38%;" /> 将关闭新增约束数据行，恢复至未创建前的操作状态。
+**步骤 4：** 新增约束数据编辑完成后，点击 <img src="figures/icon_save.png" alt="icon 保存页面" style="zoom:38%;" /> 将保存新增约束数据行；若点击 <img src="figures/icon_cancel.png" alt="iconcancel页面" style="zoom:38%;" /> 将关闭新增约束数据行，恢复至未创建前的操作状态。
 
 **修改约束**
 
@@ -257,15 +262,15 @@
 
 **步骤 2：** 双击已有约束数据行的每个表格即可启用编辑状态，已修改数据背景将高亮。定义约束详情请参见 **定义约束** 。
 
-**步骤 3：** 已有约束数据修改完成后，点击 <img src="figures/icon_save.png" style="zoom:38%;" /> 将保存修改约束数据行；若点击 <img src="figures/icon_cancel.png" style="zoom:38%;" /> 将取消修改约束数据行操作，恢复至未修改前的操作状态。
+**步骤 3：** 已有约束数据修改完成后，点击 <img src="figures/icon_save.png" alt="icon 保存页面" style="zoom:38%;" /> 将保存修改约束数据行；若点击 <img src="figures/icon_cancel.png" alt="iconcancel页面" style="zoom:38%;" /> 将取消修改约束数据行操作，恢复至未修改前的操作状态。
 
 **删除约束**
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击表名称，选择 "**约束**"。
 
-**步骤 2：** 单击选择已有约束数据行，点击 <img src="figures/icon_delete.png" style="zoom:38%;" /> 将使所需删除约束数据行背景高亮。
+**步骤 2：** 单击选择已有约束数据行，点击 <img src="figures/icon_delete.png" alt="icon 删除页面" style="zoom:38%;" /> 将使所需删除约束数据行背景高亮。
 
-**步骤 3：** 所需删除约束数据行选择完毕后，点击 <img src="figures/icon_save.png" style="zoom:38%;" /> 将删除所选约束数据行；若点击 <img src="figures/icon_cancel.png" style="zoom:38%;" /> 将取消删除约束数据行操作，恢复至未修改前的操作状态。
+**步骤 3：** 所需删除约束数据行选择完毕后，点击 <img src="figures/icon_save.png" alt="icon 保存页面" style="zoom:38%;" /> 将删除所选约束数据行；若点击 <img src="figures/icon_cancel.png" alt="iconcancel页面" style="zoom:38%;" /> 将取消删除约束数据行操作，恢复至未修改前的操作状态。
 
 ### 管理索引
 
@@ -275,11 +280,11 @@
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击表名称，选择 "**索引**"。
 
-**步骤 2：** 点击添加按钮 <img src="figures/icon_add.png" style="zoom:38%;" />将显示新增索引数据行。
+**步骤 2：** 点击添加按钮 <img src="figures/icon_add.png" alt="iconadd页面" style="zoom:38%;" />将显示新增索引数据行。
 
 **步骤 3：** 双击新增索引数据行的每个表格即可启用编辑状态，定义索引详情请参见 **定义索引** 。
 
-**步骤 4：** 新增索引数据编辑完成后，点击 <img src="figures/icon_save.png" style="zoom:38%;" /> 将保存新增索引数据行；若点击 <img src="figures/icon_cancel.png" style="zoom:38%;" /> 将关闭新增索引数据行，恢复至未创建前的操作状态。
+**步骤 4：** 新增索引数据编辑完成后，点击 <img src="figures/icon_save.png" alt="icon 保存页面" style="zoom:38%;" /> 将保存新增索引数据行；若点击 <img src="figures/icon_cancel.png" alt="iconcancel页面" style="zoom:38%;" /> 将关闭新增索引数据行，恢复至未创建前的操作状态。
 
 **修改索引**
 
@@ -287,15 +292,15 @@
 
 **步骤 2：** 双击已有索引数据行的每个表格即可启用编辑状态，已修改数据背景将高亮。定义索引详情请参见 **定义索引** 。
 
-**步骤 3：** 已有索引数据修改完成后，点击 <img src="figures/icon_save.png" style="zoom:38%;" /> 将保存修改索引数据行；若点击 <img src="figures/icon_cancel.png" style="zoom:38%;" /> 将取消修改索引数据行操作，恢复至未修改前的操作状态。
+**步骤 3：** 已有索引数据修改完成后，点击 <img src="figures/icon_save.png" alt="icon 保存页面" style="zoom:38%;" /> 将保存修改索引数据行；若点击 <img src="figures/icon_cancel.png" alt="iconcancel页面" style="zoom:38%;" /> 将取消修改索引数据行操作，恢复至未修改前的操作状态。
 
 **删除索引**
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击表名称，选择 "**索引**"。
 
-**步骤 2：** 单击选择已有索引数据行，点击 <img src="figures/icon_delete.png" style="zoom:38%;" /> 将使所需删除索引数据行背景高亮。
+**步骤 2：** 单击选择已有索引数据行，点击 <img src="figures/icon_delete.png" alt="icon 删除页面" style="zoom:38%;" /> 将使所需删除索引数据行背景高亮。
 
-**步骤 3：** 所需删除索引数据行选择完毕后，点击 <img src="figures/icon_save.png" style="zoom:38%;" /> 将删除所选索引数据行；若点击 <img src="figures/icon_cancel.png" style="zoom:38%;" /> 将取消删除索引数据行操作，恢复至未修改前的操作状态。
+**步骤 3：** 所需删除索引数据行选择完毕后，点击 <img src="figures/icon_save.png" alt="icon 保存页面" style="zoom:38%;" /> 将删除所选索引数据行；若点击 <img src="figures/icon_cancel.png" alt="iconcancel页面" style="zoom:38%;" /> 将取消删除索引数据行操作，恢复至未修改前的操作状态。
 
 ## 管理表
 
@@ -307,7 +312,7 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，右键单击数据库中的表名称，选择 "**查询相关序列**" ，进入显示相关序列页面。
 
-<img src="figures/5-3-3.1.png" style="zoom:50%;" />
+<img src="figures/5-3-3.1.png" alt="查询相关序列界面" style="zoom:50%;" />
 
 ### 重建索引
 
@@ -325,7 +330,7 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 状态栏显示已完成操作的状态。
 
-<img src="figures/5-3-3.2.png" style="zoom:67%;" />
+<img src="figures/5-3-3.2.png" alt="重建索引界面" style="zoom:67%;" />
 
 ### 清理表
 
@@ -337,7 +342,7 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 状态栏显示已完成操作的状态。
 
-<img src="figures/5-3-3.3.png" style="zoom:67%;" />
+<img src="figures/5-3-3.3.png" alt="清理表界面" style="zoom:67%;" />
 
 ### 截断表
 
@@ -349,7 +354,7 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 状态栏显示已完成操作的状态。
 
-<img src="figures/5-3-3.4.png" style="zoom:67%;" />
+<img src="figures/5-3-3.4.png" alt="截断表界面" style="zoom:67%;" />
 
 ### 设置表模式
 
@@ -359,7 +364,7 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 状态栏显示已完成操作的状态。
 
-<img src="figures/5-3-3.5.png" style="zoom:60%;" />
+<img src="figures/5-3-3.5.png" alt="设置表模式界面" style="zoom:60%;" />
 
 ### 设置表空间
 
@@ -369,7 +374,7 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 状态栏显示已完成操作的状态。
 
-<img src="figures/5-3-3.6.png" style="zoom:60%;" />
+<img src="figures/5-3-3.6.png" alt="设置表空间界面" style="zoom:60%;" />
 
 ### 设置表描述
 
@@ -379,7 +384,7 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 状态栏显示已完成操作的状态。
 
-<img src="figures/5-3-3.7.png" style="zoom:60%;" />
+<img src="figures/5-3-3.7.png" alt="设置表描述界面" style="zoom:60%;" />
 
 ### 重命名表
 
@@ -389,7 +394,7 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 状态栏显示已完成操作的状态。
 
-<img src="figures/5-3-3.8.png" style="zoom:60%;" />
+<img src="figures/5-3-3.8.png" alt="重命名表界面" style="zoom:60%;" />
 
 ### 删除表
 
@@ -399,7 +404,7 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 **说明：** 单击 "**确定**" 将删除表，此操作不可逆。
 
-<img src="figures/5-3-3.9.png" style="zoom:67%;" />
+<img src="figures/5-3-3.9.png" alt="删除表界面" style="zoom:67%;" />
 
 ### 分析表
 
@@ -411,7 +416,7 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 状态栏显示已完成操作的状态，分析生成最新的表统计信息存储在系统表 PG_STATISTIC 中。
 
-<img src="figures/5-3-3.10.png" style="zoom:67%;" />
+<img src="figures/5-3-3.10.png" alt="分析表界面" style="zoom:67%;" />
 
 ## 管理表数据
 
@@ -421,21 +426,21 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 创建表后，可以在该表中添加新的数据。可对当前数据执行新增、修改、删除、筛选、排序、导入、导出操作，同时支持在表数据工具栏下方预览所有操作所对应的 SQL 语句。
 
-**说明：** 新增数据若未保存的单元格高亮为绿色<img src="figures/color_add.png" style="zoom:60%;" />，保存后，其颜色重置为默认颜色。
+**说明：** 新增数据若未保存的单元格高亮为绿色<img src="figures/color_add.png" alt="操作表数据界面" style="zoom:60%;" />，保存后，其颜色重置为默认颜色。
 
-编辑数据若未保存的单元格高亮为浅红色<img src="figures/color_edit.png" style="zoom:60%;" /> ，保存后，其颜色重置为默认颜色。
+编辑数据若未保存的单元格高亮为浅红色<img src="figures/color_edit.png" alt="操作表数据界面" style="zoom:60%;" /> ，保存后，其颜色重置为默认颜色。
 
-删除数据若未保存的单元格高亮为深红色<img src="figures/color_delete.png" style="zoom:55%;" />，保存后，其颜色重置为默认颜色。
+删除数据若未保存的单元格高亮为深红色<img src="figures/color_delete.png" alt="操作表数据界面" style="zoom:55%;" />，保存后，其颜色重置为默认颜色。
 
 **新增数据**
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击表名称，选择 "**数据**"。
 
-**步骤 2：** 点击添加按钮 <img src="figures/icon_add.png" style="zoom:38%;" />将显示新增数据行。
+**步骤 2：** 点击添加按钮 <img src="figures/icon_add.png" alt="iconadd页面" style="zoom:38%;" />将显示新增数据行。
 
 **步骤 3：** 双击新增数据行的每个表格即可启用编辑状态。
 
-**步骤 4：** 新增数据编辑完成后，点击 <img src="figures/icon_save.png" style="zoom:38%;" /> 将保存新增数据行；若点击 <img src="figures/icon_cancel.png" style="zoom:38%;" /> 将关闭新增数据行，恢复至未创建前的操作状态。
+**步骤 4：** 新增数据编辑完成后，点击 <img src="figures/icon_save.png" alt="icon 保存页面" style="zoom:38%;" /> 将保存新增数据行；若点击 <img src="figures/icon_cancel.png" alt="iconcancel页面" style="zoom:38%;" /> 将关闭新增数据行，恢复至未创建前的操作状态。
 
 **说明：** 若所操作表未设置主键，将显示 "**自定义唯一键**" 对话框，详情请参见 **自定义唯一键** 。
 
@@ -445,7 +450,7 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 **步骤 2：** 双击已有数据行的每个表格即可启用编辑状态，已修改数据背景将高亮。
 
-**步骤 3：** 已有数据修改完成后，点击 <img src="figures/icon_save.png" style="zoom:38%;" /> 将保存修改数据行；若点击 <img src="figures/icon_cancel.png" style="zoom:38%;" /> 将取消修改数据行操作，恢复至未修改前的操作状态。
+**步骤 3：** 已有数据修改完成后，点击 <img src="figures/icon_save.png" alt="icon 保存页面" style="zoom:38%;" /> 将保存修改数据行；若点击 <img src="figures/icon_cancel.png" alt="iconcancel页面" style="zoom:38%;" /> 将取消修改数据行操作，恢复至未修改前的操作状态。
 
 **说明：** 若所操作表未设置主键，将显示 "**自定义唯一键**" 对话框，详情请参见 **自定义唯一键** 。
 
@@ -453,9 +458,9 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击表名称，选择 "**数据**"。
 
-**步骤 2：** 单击选择已有数据行，点击 <img src="figures/icon_delete.png" style="zoom:38%;" /> 将使所需删除数据行背景高亮。
+**步骤 2：** 单击选择已有数据行，点击 <img src="figures/icon_delete.png" alt="icon 删除页面" style="zoom:38%;" /> 将使所需删除数据行背景高亮。
 
-**步骤 3：** 所需删除数据行选择完毕后，点击 <img src="figures/icon_save.png" style="zoom:38%;" /> 将删除所选数据行；若点击 <img src="figures/icon_cancel.png" style="zoom:38%;" /> 将取消删除数据行操作，恢复至未修改前的操作状态。
+**步骤 3：** 所需删除数据行选择完毕后，点击 <img src="figures/icon_save.png" alt="icon 保存页面" style="zoom:38%;" /> 将删除所选数据行；若点击 <img src="figures/icon_cancel.png" alt="iconcancel页面" style="zoom:38%;" /> 将取消删除数据行操作，恢复至未修改前的操作状态。
 
 **自定义唯一键**
 
@@ -463,43 +468,43 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 **步骤 2：** 勾选设置为唯一键的列，点击 "**确定**" 设置唯一键。
 
-<img src="figures/5-3-4.1.png" style="zoom:50%;" />
+<img src="figures/5-3-4.1.png" alt="操作表数据界面" style="zoom:50%;" />
 
 **数据筛选**
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击表名称，选择 "**数据**"。
 
-**步骤 2：** 点击 <img src="figures/icon_filter.png" style="zoom:60%;" /> 将打开数据筛选栏，点击<img src="figures/icon_filter_show.png" style="zoom:60%;" /> 或"**隐藏**" 按钮即可关闭数据筛选栏。
+**步骤 2：** 点击 <img src="figures/icon_filter.png" alt="iconfilter页面" style="zoom:60%;" /> 将打开数据筛选栏，点击<img src="figures/icon_filter_show.png" alt="iconfiltershow页面" style="zoom:60%;" /> 或"**隐藏**" 按钮即可关闭数据筛选栏。
 
 **步骤 3：** 在数据筛选栏中，可选择显示列，勾选表示显示，未勾选表示隐藏，默认为全选，即全部显示。
 
 **步骤 4：** 在数据筛选栏中，筛选项操作如下：
 
-<img src="figures/icon_addfilter.png" style="zoom:60%;" />为新增一组筛选项，新增后当前筛选项仅支持删除。筛选项由列、条件、值组成，点击下划线即可修改对应的下拉选项。
+<img src="figures/icon_addfilter.png" alt="iconaddfilter页面" style="zoom:60%;" />为新增一组筛选项，新增后当前筛选项仅支持删除。筛选项由列、条件、值组成，点击下划线即可修改对应的下拉选项。
 
-<img src="figures/icon_sonfilter.png" style="zoom:60%;" />为新增一组子筛选项，新增后当前筛选项仅支持删除，子筛选项仍支持新增<img src="figures/icon_addfilter.png" style="zoom:60%;" />以及加孙筛选项<img src="figures/icon_sonfilter.png" style="zoom:60%;" />，以此类推。
+<img src="figures/icon_sonfilter.png" alt="iconsonfilter页面" style="zoom:60%;" />为新增一组子筛选项，新增后当前筛选项仅支持删除，子筛选项仍支持新增<img src="figures/icon_addfilter.png" alt="iconaddfilter页面" style="zoom:60%;" />以及加孙筛选项<img src="figures/icon_sonfilter.png" alt="iconsonfilter页面" style="zoom:60%;" />，以此类推。
 
-<img src="figures/icon_delete.jpg" style="zoom:60%;" />为删除当前筛选项，不包含子级筛选，超过一组筛选项支持删除。
+<img src="figures/icon_delete.jpg" alt="icon 删除页面" style="zoom:60%;" />为删除当前筛选项，不包含子级筛选，超过一组筛选项支持删除。
 
 **说明：** 超出一个筛选项将出现拼接的运算符，选项为and、or，默认显示值为and。
 
 **步骤 5：** 单击 "**应用**"，所选操作项将被作为筛选条件进行查询，可查看左侧的数据变化。
 
-<img src="figures/5-3-4-1.1.png" style="zoom:50%;" />
+<img src="figures/5-3-4-1.1.png" alt="操作表数据界面" style="zoom:50%;" />
 
 **数据排序**
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击表名称，选择 "**数据**"。
 
-**步骤 2：** 点击 <img src="figures/icon_sort.png" style="zoom:60%;" /> 将打开数据筛选栏，点击<img src="figures/icon_sort_show.png" style="zoom:60%;" /> 或"**隐藏**" 按钮即可关闭数据排序栏。
+**步骤 2：** 点击 <img src="figures/icon_sort.png" alt="iconsort页面" style="zoom:60%;" /> 将打开数据筛选栏，点击<img src="figures/icon_sort_show.png" alt="iconsortshow页面" style="zoom:60%;" /> 或"**隐藏**" 按钮即可关闭数据排序栏。
 
 **步骤 3：** 在数据排序栏中，选择排序列，对应排序值的选项为ASC、DESC，其中ASC为升序，DESC为降序。
 
 **步骤 4：** 单击 "**应用**"，所选排序列的排序值将被作为排序条件进行查询，可查看左侧的数据变化。
 
-**说明：** 表格数据每列的表头新增<img src="figures/icon_sort_gray.png" style="zoom:60%;" />支持单列排序，<img src="figures/icon_sort_asc.png" style="zoom:60%;" />为升序状态，<img src="figures/icon_sort_desc.png" style="zoom:60%;" />为降序状态，表格数据进行升序/降序操作与排序栏选项相关联。
+**说明：** 表格数据每列的表头新增<img src="figures/icon_sort_gray.png" alt="iconsortgray页面" style="zoom:60%;" />支持单列排序，<img src="figures/icon_sort_asc.png" alt="iconsortasc页面" style="zoom:60%;" />为升序状态，<img src="figures/icon_sort_desc.png" alt="iconsortdesc页面" style="zoom:60%;" />为降序状态，表格数据进行升序/降序操作与排序栏选项相关联。
 
-<img src="figures/5-3-4-1.2.png" style="zoom:50%;" />
+<img src="figures/5-3-4-1.2.png" alt="操作表数据界面" style="zoom:50%;" />
 
 ### 导出表 DDL
 
@@ -507,7 +512,7 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 **说明：** 导出文件为 sql 文件。
 
-<img src="figures/5-3-4.2.png" style="zoom:50%;" />
+<img src="figures/5-3-4.2.png" alt="导出表 DDL界面" style="zoom:50%;" />
 
 ### 导出表 DDL 和数据
 
@@ -517,7 +522,7 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 **说明：** 导出文件为 sql 文件。
 
-<img src="figures/5-3-4.3.png" style="zoom:50%;" />
+<img src="figures/5-3-4.3.png" alt="导出表 DDL 和数据界面" style="zoom:50%;" />
 
 ### 导出表数据
 
@@ -542,13 +547,13 @@ openGauss 支持显示表和序列之间的依赖关系。
 | 将NULL替换为 | 否   | 可指定字符串，用于替换表中的null 值。该项不支持填入换行符或回车符，最多可填入 100 个字符。该字段的值不得与分隔符和引号值相同。该项默认对和文本格式启用，但不是必选。对 Excel（xlsx/xls）和Binary格式禁用 |
 | 编码         | 否   | 用于配置导出数据的编码格式，默认为UTF-8所有选项分别为：UTF-8、GBK、LATIN1 |
 
-<img src="figures/5-3-4.4.png" style="zoom:50%;" />
+<img src="figures/5-3-4.4.png" alt="导出表数据界面" style="zoom:50%;" />
 
 **导出所有查询数据**
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击表名称，选择 "**数据**"。
 
-**步骤 2：** 点击导出所有查询数据按钮 <img src="figures/icon_exportall.png" style="zoom:55%;" />，弹出导出查询数据对话框，选择导出格式，导出格式为 xlsx、xls，默认选择为 xlsx。
+**步骤 2：** 点击导出所有查询数据按钮 <img src="figures/icon_exportall.png" alt="iconexportall页面" style="zoom:55%;" />，弹出导出查询数据对话框，选择导出格式，导出格式为 xlsx、xls，默认选择为 xlsx。
 
 **步骤 3：** 单击 "**确定**" 即可继续，或单击 "**取消**" 即可退出操作。
 
@@ -558,17 +563,17 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 **步骤 1：** 在 "**数据库导航菜单**" 窗格中，单击表名称，选择 "**数据**"。
 
-**步骤 2：** 点击导出当前页查询数据按钮 <img src="figures/icon_export.png" style="zoom:55%;" />，弹出导出查询数据对话框，选择导出格式，导出格式为 xlsx、xls，默认选择为 xlsx。
+**步骤 2：** 点击导出当前页查询数据按钮 <img src="figures/icon_export.png" alt="iconexport页面" style="zoom:55%;" />，弹出导出查询数据对话框，选择导出格式，导出格式为 xlsx、xls，默认选择为 xlsx。
 
 **步骤 3：** 单击 "**确定**" 即可继续，或单击 "**取消**" 即可退出操作。
 
 **说明：** 单击 "**确定**" 将下载当前页查询数据至所选格式文件。
 
-<img src="figures/5-3-4-4.1.png" style="zoom:50%;" />
+<img src="figures/5-3-4-4.1.png" alt="导出表数据界面" style="zoom:50%;" />
 
 ### 导入表数据
 
-**步骤 1：** 在 "**数据库导航菜单**" 窗格中，右键单击数据库中的表名称，选择 "**导入表数据**" 或者在表数据操作工具栏点击<img src="figures/icon_import.png" style="zoom:55%;" />，弹出 "**导入表数据**" 对话框。
+**步骤 1：** 在 "**数据库导航菜单**" 窗格中，右键单击数据库中的表名称，选择 "**导入表数据**" 或者在表数据操作工具栏点击<img src="figures/icon_import.png" alt="icon 导入页面" style="zoom:55%;" />，弹出 "**导入表数据**" 对话框。
 
 **步骤 2：** 设置如下参数，导入表数据。
 
@@ -576,7 +581,7 @@ openGauss 支持显示表和序列之间的依赖关系。
 
 **步骤 3：** 单击 "**确定**" 即可继续，或单击 "**取消**" 即可退出操作。
 
-**说明：** 导入成功后点击刷新按钮![image-20221216120857070](figures/icon_refresh.png)即可获取最新数据。
+**说明：** 导入成功后点击刷新按钮![刷新按钮图标](figures/icon_refresh.png)即可获取最新数据。
 
 | 配置项       | 必填 | 配置说明                                                     |
 | ------------ | ---- | ------------------------------------------------------------ |
@@ -591,4 +596,4 @@ openGauss 支持显示表和序列之间的依赖关系。
 | 编码         | 否   | 用于配置导入数据的编码格式，默认为UTF-8所有选项分别为：UTF-8、GBK、LATIN1 |
 | 时间格式     | 否   | 用于配置导入数据的时间格式，默认为yyyy-MM-dd HH:mm:ss所有选项分别为：yyyy-MM-dd HH:mm:ss、yyyy-MM-dd hh:mm:ss该项仅对Excel（xlsx/xls）启用，对CSV、Binary、Text(txt) 格式禁用 |
 
-<img src="figures/5-3-4-5.png" style="zoom:40%;" />
+<img src="figures/5-3-4-5.png" alt="导入表数据界面" style="zoom:40%;" />
