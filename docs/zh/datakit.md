@@ -25,6 +25,22 @@ X86/ARM+openEuler 20.03 或 X86+CentOS 5.7。
 
 ## 操作步骤
 
+DataKit 提供两种部署方式：
+
+- **脚本部署（推荐）**：使用安装包内的`install.sh`一键完成目录创建、配置写入、密钥生成与权限收紧，支持常规模式（`sh install.sh`）与特权安装模式（`sudo sh install.sh`，sudo 自动识别；**不允许直接以 root 身份安装**，root 登录或`su - root`执行会被拒绝），详见安装包内`README.md`；
+- **手工部署**：以下步骤 1~6 适用于需要精细控制各环节的场景（如无法执行脚本的受限环境），效果与脚本部署一致。
+
+> **安全部署说明**：脚本安装方式已支持两种模式，生产环境推荐使用特权安装模式（零参数即可）：
+> `sudo sh install.sh`
+> （sudo 执行时自动识别并进入特权布局：安装目录归 root 只读、数据目录归运行账号、数据分区建议 `noexec,nosuid` 挂载；root 直登安装被禁止），
+> 并通过环境变量 `DATA_KIT_AES_KEY` 传递启动密码（避免 `--aes-key` 在 `ps` 中泄露）。
+> 属主矩阵、升级流程、弱隔离模式说明、审计日志与安全验收清单见`README.md`的"安装"与"安全运维要点"章节。
+>
+> 可选环境变量（均有合理默认，一般无需设置）：
+> - `DATAKIT_RUN_USER`：特权模式运行账号，默认取 sudo 之前的**当前用户**；账号不存在时自动创建；
+> - `DATAKIT_DATA_ROOT`：**数据根目录**，默认 `<安装目录>/data`，脚本在其下自动创建 `files`、`logs`、`ssl` 三个子目录，实际上传目录为 `<root>/files`；生产建议指向独立挂载点（如 `DATAKIT_DATA_ROOT=/srv/datakit`）；
+> - 注意变量前缀：启动密码的既有环境变量为 `DATA_KIT_AES_KEY`（DATA 与 KIT 之间有下划线），与 `DATAKIT_*` 系列变量前缀不同，属历史命名保持兼容。
+
 1. 解压安装包
 
    `Datakit`提供了两个安装包，分别是完整包（`Datakit-All-7.0.0-RC2.tar.gz`）和最小化包（`Datakit-Mini-7.0.0-RC2.tar.gz`），最小化包的插件仅包含基础功能：业务开发和基础运维。
@@ -96,6 +112,12 @@ X86/ARM+openEuler 20.03 或 X86+CentOS 5.7。
 
    启动应用： 启动脚本增加`--aes-key`参数。 参数值为`Datakit`启动密码，用于内部加解密操作，`datakit`不保存该密码且暂不支持修改，对该密码需要妥善保管。
 
+   > 安全提示：`--aes-key`命令行传参会在`ps`进程列表中泄露，生产环境推荐环境变量方式：
+   > ```shell
+   > export DATA_KIT_AES_KEY=xxxxxx
+   > sh ./run.sh start
+   > ```
+
    ```shell
    sh ./run.sh start --aes-key xxxxxx
    ```
@@ -103,7 +125,10 @@ X86/ARM+openEuler 20.03 或 X86+CentOS 5.7。
    停止应用：
 
    ```shell
+   sh ./run.sh stop
    ```
+
+   停止操作先发送`SIGTERM`优雅停机（最长等待 30 秒），进程仍未退出时才发送`SIGKILL`强制结束。
 
    重启应用：
 
@@ -114,6 +139,8 @@ X86/ARM+openEuler 20.03 或 X86+CentOS 5.7。
    检查应用状态：
 
    ```shell
+   sh ./run.sh status
+   ```
 
 7. 访问服务
 
@@ -181,7 +208,12 @@ X86/ARM+openEuler 20.03 或 X86+CentOS 5.7。
 
 ## 卸载工具
 
-DataKit工具是Jar包启动的，删除对应的Jar包即可卸载该工具。
+在`datakit`安装目录下执行卸载脚本`uninstall.sh`，脚本会自动停止 DataKit 服务并删除安装目录及数据目录：
+
+- 常规模式安装（`sh install.sh`）：执行 `sh uninstall.sh`；
+- 特权模式安装（`sudo sh install.sh`，安装目录归 root）：执行 `sudo sh uninstall.sh`；若安装时通过`DATAKIT_DATA_ROOT`将数据根目录指定在安装目录之外，卸载时会交互确认是否连同上传文件一并删除，选择保留则需手工清理。
+
+脚本还支持通过选项控制是否卸载已安装的`migration-portal`、`prometheus`、`instance-exporter`工具，详细用法见安装包内`README.md`的卸载说明。
 
 ## DataKit源码链接和使用说明
 

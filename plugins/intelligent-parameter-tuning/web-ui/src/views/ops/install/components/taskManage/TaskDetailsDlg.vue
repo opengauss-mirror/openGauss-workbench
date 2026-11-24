@@ -22,7 +22,6 @@ import { computed, reactive, ref } from 'vue'
 import {
   addPackage,
   analysisPkg,
-  delPkgTar,
   editPackage,
   getSysUploadPath,
   hasPkgName

@@ -363,10 +363,6 @@ export const analysisPkg = (pkgName: string, pkgType: string) => {
   })
 }
 
-export const delPkgTar = (path: string, id?: string) => {
-  return axios.delete('installPackageManager/delPkgTar', { params: { path: path, id: id } })
-}
-
 export const getSysUploadPath = () => {
   return axios.get('installPackageManager/sysUploadPath')
 }

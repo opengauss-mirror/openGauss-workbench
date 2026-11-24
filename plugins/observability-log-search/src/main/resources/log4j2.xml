@@ -44,7 +44,7 @@
   </Appenders>
 
   <Loggers>
-    <Root level="DEBUG">
+    <Root level="info">
       <AppenderRef ref="Console"/>
       <AppenderRef ref="FileInfo"/>
       <AppenderRef ref="FileError"/>

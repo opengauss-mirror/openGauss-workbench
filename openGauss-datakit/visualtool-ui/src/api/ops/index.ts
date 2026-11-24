@@ -359,10 +359,6 @@ export const download = (data: downloadPackage) => {
   return axios.post(`/plugins/base-ops/opsCluster/download`, data ? data : {})
 }
 
-export const delPkgTar = (path: string, id?: string) => {
-  return axios.delete('/plugins/base-ops/installPackageManager/delPkgTar', { params: { path: path, id: id }})
-}
-
 export const addAgent = (data: KeyValue) => {
   return axios.post('/agent/install', data)
 }

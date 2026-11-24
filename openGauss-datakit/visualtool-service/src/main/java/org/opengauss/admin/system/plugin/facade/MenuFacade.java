@@ -68,7 +68,7 @@ public class MenuFacade {
         } else {
             path = Constants.PLUGIN_PATH_PREFIX + "/" + pluginId + "/" + path;
         }
-        log.info("call save menu, pluginId={}, menuName={}, path={}, parentId={}", pluginId, menuName, path, parentId);
+        log.debug("call save menu, pluginId={}, menuName={}, path={}, parentId={}", pluginId, menuName, path, parentId);
         SysMenu menu = sysMenuService.existsMenu(parentId, null, null, menuName);
         if (menu == null) {
             menu = new SysMenu();

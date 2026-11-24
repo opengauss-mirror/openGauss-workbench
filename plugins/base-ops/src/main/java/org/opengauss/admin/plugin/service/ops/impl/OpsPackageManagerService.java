@@ -25,27 +25,26 @@ package org.opengauss.admin.plugin.service.ops.impl;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gitee.starblues.bootstrap.annotation.AutowiredType;
 import lombok.extern.slf4j.Slf4j;
 import org.opengauss.admin.common.core.domain.UploadInfo;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
-import org.opengauss.admin.common.core.domain.entity.ops.OpsAzEntity;
 import org.opengauss.admin.common.enums.CpuArchName;
 import org.opengauss.admin.common.enums.OsName;
 import org.opengauss.admin.common.exception.ops.OpsException;
+import org.opengauss.admin.common.utils.SecurePathUtil;
 import org.opengauss.admin.plugin.domain.entity.ops.OpsPackageManagerEntity;
 import org.opengauss.admin.plugin.domain.model.ops.OpsPackageVO;
 import org.opengauss.admin.plugin.enums.ops.OpenGaussVersionEnum;
 import org.opengauss.admin.plugin.enums.ops.PackageTypeEnum;
 import org.opengauss.admin.plugin.mapper.ops.OpsPackageManagerMapper;
 import org.opengauss.admin.plugin.service.ops.IOpsPackageManagerService;
+import org.opengauss.admin.plugin.utils.PathUtils;
 import org.opengauss.admin.system.plugin.facade.SysSettingFacade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -58,6 +57,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -76,21 +76,56 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
     @AutowiredType(AutowiredType.Type.PLUGIN_MAIN)
     private SysSettingFacade sysSettingFacade;
 
+    @Autowired
+    private PathUtils pathUtils;
+
     @Override
-    public String getCpuArchByPackagePath(String installPackagePath, OpenGaussVersionEnum version) {
-        if (!FileUtil.exist(installPackagePath)) {
+    public String getCpuArchByPackagePath(String installPackagePath, OpenGaussVersionEnum version, Integer userId) {
+        String resolvedPath = resolveUnderUploadRoot(installPackagePath, userId);
+        if (!FileUtil.exist(resolvedPath)) {
             throw new OpsException("The installation package does not exist");
         }
 
         if (version == OpenGaussVersionEnum.ENTERPRISE) {
-            return getEnterprisePackageCpuArch(installPackagePath);
+            return getEnterprisePackageCpuArch(resolvedPath);
         } else if (version == OpenGaussVersionEnum.MINIMAL_LIST) {
-            return getMinimalListPackageCpuArch(installPackagePath);
+            return getMinimalListPackageCpuArch(resolvedPath);
         } else if (version == OpenGaussVersionEnum.LITE) {
-            return getLitePackageCpuArch(installPackagePath);
+            return getLitePackageCpuArch(resolvedPath);
         } else {
             throw new OpsException("An unsupported version");
         }
+    }
+
+    /**
+     * resolve a user supplied path against the system upload root and reject any escape
+     *
+     * @param path user supplied relative or absolute path
+     * @param userId current user id, used to locate the upload root
+     * @return resolved absolute path inside the upload root
+     */
+    private String resolveUnderUploadRoot(String path, Integer userId) {
+        if (StrUtil.isEmpty(path)) {
+            throw new OpsException("Package path is empty");
+        }
+        String uploadRoot = resolveUploadRoot(userId);
+        Path target = Paths.get(path);
+        if (!target.isAbsolute()) {
+            target = Paths.get(uploadRoot, path);
+        }
+        if (!SecurePathUtil.isUnder(uploadRoot, target.toString())) {
+            log.error("Rejected package path outside upload root: {}", path);
+            throw new OpsException("Illegal package path: outside upload directory");
+        }
+        return target.toString();
+    }
+
+    private String resolveUploadRoot(Integer userId) {
+        SysSettingEntity setting = sysSettingFacade.getSysSetting(userId);
+        if (ObjectUtil.isNull(setting) || StrUtil.isEmpty(setting.getUploadPath())) {
+            throw new OpsException("Cannot find system upload path");
+        }
+        return pathUtils.getPath(setting.getUploadPath());
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -168,33 +203,6 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
         return result;
     }
 
-    @Deprecated
-    @Override
-    public UploadInfo upload(MultipartFile file, Integer userId) throws OpsException {
-        OpsPackageManagerEntity entity = new OpsPackageManagerEntity();
-        UploadInfo info = new UploadInfo();
-        entity.setPackagePath(info);
-        entity.setFile(file);
-        savePackageTarFile(entity, "", userId);
-        return info;
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    @Override
-    public boolean deletePkgTar(String path, String id) {
-        File file = new File(path);
-        boolean result = true;
-        if (file.exists()) {
-            result = file.delete();
-        }
-        if (ObjectUtil.isNotNull(id)) {
-            UpdateWrapper<OpsPackageManagerEntity> wrapper = new UpdateWrapper<>();
-            wrapper.set("package_path", "").eq("package_id", id);
-            update(wrapper);
-        }
-        return result;
-    }
-
     @Override
     public String getSysUploadPath(Integer userId) {
         SysSettingEntity entity = sysSettingFacade.getSysSetting(userId);
@@ -228,8 +236,7 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
 
         try {
             try {
-                Process tar = Runtime.getRuntime().exec(
-                        "tar -xvf " + installPackagePath + " -C " + tempAbsoluteFolder);
+                Process tar = new ProcessBuilder("tar", "-xvf", installPackagePath, "-C", tempAbsoluteFolder).start();
                 int exitCode = tar.waitFor();
                 if (0 != exitCode) {
                     throw new OpsException("Failed to decompress the installation package with exitCode " + exitCode);
@@ -240,7 +247,8 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
             }
             InputStream in = null;
             try {
-                Process file = Runtime.getRuntime().exec("file " + tempAbsoluteFolder + File.separator + "bin" + File.separator + "gs_ctl");
+                String gsCtlPath = tempAbsoluteFolder + File.separator + "bin" + File.separator + "gs_ctl";
+                Process file = new ProcessBuilder("file", gsCtlPath).start();
                 int exitCode = file.waitFor();
                 if (0 != exitCode) {
                     throw new OpsException("Failed to get cpu arch with exitCode " + exitCode);
@@ -282,9 +290,8 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
             return null;
         } finally {
             threadPoolTaskExecutor.submit(() -> {
-                String command = "rm -rf " + tempAbsoluteFolder;
                 try {
-                    Process exec = Runtime.getRuntime().exec(command);
+                    Process exec = new ProcessBuilder("rm", "-rf", tempAbsoluteFolder).start();
                     exec.waitFor();
                 } catch (Exception ignore) {
 
@@ -303,11 +310,9 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
 
         try {
             try {
-                String command = "tar -xvf " + installPackagePath + " -C " + tempAbsoluteFolder;
-                Process tar = Runtime.getRuntime().exec(command);
+                Process tar = new ProcessBuilder("tar", "-xvf", installPackagePath, "-C", tempAbsoluteFolder).start();
                 int exitCode = tar.waitFor();
                 if (0 != exitCode) {
-                    log.error("command:{}", command);
                     throw new OpsException("Failed to decompress the installation package with exitCode " + exitCode);
                 }
             } catch (IOException | InterruptedException e) {
@@ -316,11 +321,11 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
             }
 
             try {
-                String command = "tar -xvf " + tempAbsoluteFolder + File.separator + "openGauss-" + version + "-" + system + "-64bit-cm.tar.gz " + " -C " + tempAbsoluteFolder;
-                Process tar = Runtime.getRuntime().exec(command);
+                String cmTarPath = tempAbsoluteFolder + File.separator + "openGauss-" + version + "-" + system
+                        + "-64bit-cm.tar.gz";
+                Process tar = new ProcessBuilder("tar", "-xvf", cmTarPath, "-C", tempAbsoluteFolder).start();
                 int exitCode = tar.waitFor();
                 if (0 != exitCode) {
-                    log.error("command:{}", command);
                     throw new OpsException("Failed to decompress the installation package with exitCode " + exitCode);
                 }
             } catch (IOException | InterruptedException e) {
@@ -329,11 +334,10 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
             }
             InputStream in = null;
             try {
-                String command = "file " + tempAbsoluteFolder + File.separator + "bin" + File.separator + "cm_ctl";
-                Process file = Runtime.getRuntime().exec(command);
+                String cmCtlPath = tempAbsoluteFolder + File.separator + "bin" + File.separator + "cm_ctl";
+                Process file = new ProcessBuilder("file", cmCtlPath).start();
                 int exitCode = file.waitFor();
                 if (0 != exitCode) {
-                    log.error("command:{}", command);
                     throw new OpsException("Failed to get cpu arch with exitCode " + exitCode);
                 }
                 in = file.getInputStream();
@@ -374,9 +378,8 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
             return null;
         } finally {
             threadPoolTaskExecutor.submit(() -> {
-                String command = "rm -rf " + tempAbsoluteFolder;
                 try {
-                    Process exec = Runtime.getRuntime().exec(command);
+                    Process exec = new ProcessBuilder("rm", "-rf", tempAbsoluteFolder).start();
                     exec.waitFor();
                 } catch (Exception ignore) {
 
@@ -412,7 +415,14 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
             throw new OpsException("Cannot find system setting of your account, please try again");
         }
         // create folder
-        String uploadFolder = entity.getUploadPath() + pkgManagedName;
+        // managed folder segment comes from user input, sanitize and confine to upload root
+        String managedFolder = StrUtil.isEmpty(pkgManagedName) ? "" : SecurePathUtil.sanitizeSegment(pkgManagedName);
+        String uploadRoot = pathUtils.getPath(entity.getUploadPath());
+        String uploadFolder = entity.getUploadPath() + managedFolder;
+        if (!SecurePathUtil.isUnder(uploadRoot, uploadFolder)) {
+            log.error("Rejected upload folder outside upload root: {}", uploadFolder);
+            throw new OpsException("Illegal package path: outside upload directory");
+        }
         File folder = new File(uploadFolder);
         if (!folder.exists()) {
             boolean res = folder.mkdirs();
@@ -422,14 +432,22 @@ public class OpsPackageManagerService extends ServiceImpl<OpsPackageManagerMappe
                 throw new OpsException(errMsg);
             }
         }
-        String fileRealPath = Path.of(uploadFolder, file.getOriginalFilename()).toString();
+        String originalFileName = file.getOriginalFilename();
+        if (StrUtil.isEmpty(originalFileName) || originalFileName.trim().isEmpty()) {
+            throw new OpsException("File name is empty");
+        }
+        SecurePathUtil.sanitizeFileName(originalFileName);
+        String fileRealPath = Path.of(uploadFolder, originalFileName).toString();
+        if (!SecurePathUtil.isUnder(uploadFolder, fileRealPath)) {
+            throw new OpsException("Illegal file path: path traversal detected");
+        }
         try {
             file.transferTo(new File(fileRealPath));
             UploadInfo info = pkg.getPackagePath();
             if (ObjectUtil.isNull(info)) {
                 info = new UploadInfo();
             }
-            info.setName(file.getOriginalFilename());
+            info.setName(originalFileName);
             info.setRealPath(fileRealPath);
             pkg.setPackagePath(info);
         } catch (Exception ex) {

@@ -32,9 +32,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import org.opengauss.admin.common.constant.CommonConstants;
+import org.opengauss.admin.common.config.SystemConfig;
 import org.opengauss.admin.common.core.domain.entity.SysSettingEntity;
 import org.opengauss.admin.common.core.domain.entity.SysSettingExtEntity;
 import org.opengauss.admin.common.core.domain.entity.SysUser;
+import org.opengauss.admin.common.exception.CustomException;
+import org.opengauss.admin.common.utils.SecurePathUtil;
 import org.opengauss.admin.common.utils.http.HttpUtils;
 import org.opengauss.admin.system.mapper.SysSettingMapper;
 import org.opengauss.admin.system.service.ISysSettingExtService;
@@ -74,8 +77,16 @@ public class SysSettingServiceImpl extends ServiceImpl<SysSettingMapper, SysSett
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateSetting(SysSettingEntity setting) {
-        // create folder if not exist
         String uploadPath = setting.getUploadPath();
+        // confine the user-configurable upload path inside the data root directory,
+        // reject any escape attempt (e.g. "../", absolute path outside data dir)
+        String dataDir = SystemConfig.getStoragePath();
+        if (StrUtil.isEmpty(dataDir)) {
+            log.error("System config 'system.defaultStoragePath' is empty, cannot validate upload path");
+            throw new CustomException("Data root directory is not configured, upload path cannot be saved");
+        }
+        SecurePathUtil.requireUnder(dataDir, uploadPath);
+        // create folder if not exist
         File file = new File(uploadPath);
         // if create failed
         if (!(!file.exists() && file.mkdirs())) {

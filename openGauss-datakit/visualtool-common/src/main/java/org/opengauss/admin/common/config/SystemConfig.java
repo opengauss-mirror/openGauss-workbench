@@ -37,12 +37,14 @@ import java.nio.file.Paths;
 @Component
 @ConfigurationProperties(prefix = "system")
 public class SystemConfig {
-
     /**
-     * files storage path
+     * files storage path.
+     * It is also the data root directory used to confine user-configurable storage
+     * paths (e.g. sys_setting.upload_path): they MUST stay inside this directory.
+     * install.sh keeps the root consistent for both normal and privileged
+     * installation modes.
      */
     private static String defaultStoragePath;
-
 
     public static String getStoragePath() {
         return defaultStoragePath;

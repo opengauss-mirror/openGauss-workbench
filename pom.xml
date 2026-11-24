@@ -541,7 +541,7 @@
         <module>plugins/observability-log-search</module>
         <module>plugins/observability-sql-diagnosis</module>
         <module>plugins/compatibility-assessment</module>
-        <module>plugins/container-management-plugin</module>
+        <!-- <module>plugins/container-management-plugin</module> -->
     </modules>
     <packaging>pom</packaging>
 
@@ -579,9 +579,6 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
-                    <compilerArguments>
-                        <bootclasspath>${java.home}/lib/rt.jar</bootclasspath>
-                    </compilerArguments>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
@@ -658,6 +655,10 @@
                     <version>${exec-maven-plugin.version}</version>
                     <configuration>
                       <skip>${build.frontend.skip}</skip>
+                      <environmentVariables>
+                          <!-- 跳过 browserslist 过期数据检查，避免每次前端构建重复告警 -->
+                          <BROWSERSLIST_IGNORE_OLD_DATA>1</BROWSERSLIST_IGNORE_OLD_DATA>
+                      </environmentVariables>
                     </configuration>
                     <executions>
                         <execution>

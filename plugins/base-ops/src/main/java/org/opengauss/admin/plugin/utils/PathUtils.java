@@ -23,6 +23,7 @@
 
 package org.opengauss.admin.plugin.utils;
 
+import org.opengauss.admin.common.utils.SecurePathUtil;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -95,16 +96,7 @@ public class PathUtils {
     }
 
     private boolean contains(Path parent, Path child, boolean isLocalDevelopmentEnv) {
-        if (isLocalDevelopmentEnv) {
-            return parent.startsWith(child);
-        }
-        if (parent.equals(child)) {
-            return true;
-        }
-        if (parent.isAbsolute() != child.isAbsolute()) {
-            return false;
-        }
-        Path relative = parent.relativize(child);
-        return relative.equals(Paths.get("."));
+        // unified containment check: true means the two paths overlap (equal or nested either way)
+        return SecurePathUtil.isUnder(parent, child) || SecurePathUtil.isUnder(child, parent);
     }
 }

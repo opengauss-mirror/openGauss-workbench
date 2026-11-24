@@ -153,7 +153,7 @@ public class ClusterPackageManagerController extends BaseController {
      */
     @PostMapping("/delete/package")
     public AjaxResult del(@RequestBody List<String> packageIds) {
-        opsPackageManagerV2Service.delPackage(packageIds);
+        opsPackageManagerV2Service.delPackage(packageIds, getUserId());
         return AjaxResult.success();
     }
 

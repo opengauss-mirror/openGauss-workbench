@@ -10,6 +10,7 @@
     <a-form ref="formRef" :model="form" auto-label-width>
       <a-form-item field="uploadPath"
                    :label="$t('components.EditSysSettings.5mpivn7fwjc2')"
+                   :extra="$t('components.EditSysSettings.5mpivn7fwjc10')"
                    :rules="[{required: true, message: $t('components.EditSysSettings.5mpivn7fwjc6')}, { validator: pathValidator }]">
         <a-input v-model.trim="form.uploadPath" :placeholder="$t('components.EditSysSettings.5mpivn7fwjc6')"/>
       </a-form-item>
@@ -92,6 +93,12 @@ watch(() => props.open, (v) => {
 
 const pathValidator = (value: any, cb: any) => {
   return new Promise(resolve => {
+    // pre-check: reject parent-directory traversal segments before format checks
+    if (/(^|[\\/])\.\.([\\/]|$)/.test(value)) {
+      cb(t('components.EditSysSettings.5mpivn7fwjc10'))
+      resolve(false)
+      return
+    }
     const reg = /^(\/[\u4e00-\u9fa5\w-\\.]+)*\/$/
     const re = new RegExp(reg)
     const regWin = /[a-zA-Z]:\\(?:[^\\/:*?\"<>|\r\n]+\\)*[^\\/:*?\"<>|\r\n]*\\$/

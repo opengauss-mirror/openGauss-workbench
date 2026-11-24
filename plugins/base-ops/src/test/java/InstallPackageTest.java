@@ -80,7 +80,7 @@ public class InstallPackageTest {
     @Test
     public void testGetCpuArchByPackagePath() throws IOException {
         String result = opsPackageManagerService.getCpuArchByPackagePath(
-            "/upload/openGauss-Lite-5.1.1-CentOS-x86_64.tar.gz", OpenGaussVersionEnum.LITE);
+            "/upload/openGauss-Lite-5.1.1-CentOS-x86_64.tar.gz", OpenGaussVersionEnum.LITE, 1);
         Assert.assertEquals(result, "x86_64");
     }
 
@@ -97,11 +97,6 @@ public class InstallPackageTest {
         Assert.assertEquals(result.getCpuArch(), "x86_64");
         Assert.assertEquals(result.getPackageVersion(), "LITE");
         Assert.assertEquals(result.getPackageVersionNum(), "5.0.1");
-    }
-
-    @Test
-    public void testDeletePkgTar() {
-        Assert.assertTrue(opsPackageManagerService.deletePkgTar("upload/openGauss-5.0.1-CentOS-64bit.tar.bz2", "1"));
     }
 
     @Test

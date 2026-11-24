@@ -69,7 +69,7 @@ public interface IOpsPackageManagerV2Service extends IService<OpsPackageManagerE
      * download package and save package info
      *
      * @param entity       entity
-     * @param userId
+     * @param userId       userId
      * @param wsBusinessId wsBusinessId
      */
     void saveOnlinePackage(OpsPackageManagerEntity entity, Integer userId, String wsBusinessId);
@@ -112,6 +112,7 @@ public interface IOpsPackageManagerV2Service extends IService<OpsPackageManagerE
      * del package list
      *
      * @param packageIds packageIds
+     * @param userId     userId
      */
-    void delPackage(List<String> packageIds);
+    void delPackage(List<String> packageIds, Integer userId);
 }
