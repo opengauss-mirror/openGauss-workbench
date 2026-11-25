@@ -359,7 +359,7 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     @Override
     public String synonymSql(String schema) {
         String ddl;
-        ddl = "select pgs.oid,synname from PG_SYNONYM pgs, pg_namespace pgn" + LF
+        ddl = "select pgs.oid,synname from pg_synonym pgs, pg_namespace pgn" + LF
                 + "   where pgn.oid = pgs.synnamespace" + LF
                 + "     and pgn.nspname  ='"
                 + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(schema)) + "'" + LF
@@ -371,7 +371,7 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
     @Override
     public String synonymCountSql(String schema) {
         String ddl;
-        ddl = "select count(1) from PG_SYNONYM pgs, pg_namespace pgn" + LF
+        ddl = "select count(1) from pg_synonym pgs, pg_namespace pgn" + LF
                 + "   where pgn.oid = pgs.synnamespace" + LF
                 + "     and pgn.nspname  ='"
                 + DebugUtils.containsSqlInjection(DebugUtils.needQuoteName(schema)) + "';";
@@ -416,7 +416,7 @@ public class GainObjectSQLServiceImpl implements GainObjectSQLService {
 
     @Override
     public String resourceListSQL() {
-        return "select respool_name from PG_RESOURCE_POOL";
+        return "select respool_name from pg_resource_pool";
     }
 
     @Override

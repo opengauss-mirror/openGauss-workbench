@@ -344,7 +344,7 @@ public class SqlConstants {
             + "ARRAY_TO_STRING( p.boundaries,',' )as boundaries, n.spcname AS table_space  "
             + "from pg_class c  "
             + "left join  pg_partition p on p.parentid = c.oid "
-            + "left JOIN PG_TABLESPACE n ON n.oid = p.reltablespace "
+            + "left JOIN pg_tablespace n ON n.oid = p.reltablespace "
             + "where  c.parttype = 'p'   and p.parttype = 'p' and p.parentid =  %s ";
 
     /**
@@ -388,7 +388,7 @@ public class SqlConstants {
             + "left join (select oid, unnest(conkey) as conkey, conrelid,"
             + "contype, conname from pg_constraint) con  " + LF
             + "on  con.conrelid = pc.oid and col.ordinal_position = con.conkey and con.contype = 'u'" + LF
-            + "left join PG_DESCRIPTION pd on pd.objsubid = col.ORDINAL_POSITION and objoid = %s" + LF
+            + "left join pg_description pd on pd.objsubid = col.ORDINAL_POSITION and objoid = %s" + LF
             + "where  col.table_schema = '%s' and col.table_name = '%s'"
             + "order by col.ordinal_position";
 
@@ -457,7 +457,7 @@ public class SqlConstants {
             + "  left join pg_description d on (tbl.oid = d.objoid)" + LF
             + "  LEFT JOIN pg_tablespace tblsp ON (tbl.reltablespace = tblsp.oid)" + LF
             + "  left join pg_attribute pa on pa.attrelid = tbl.oid " + LF
-            + "  inner join PG_PARTITION pp on CAST(pp.partkey as VARCHAR2) = CAST(pa.attnum as VARCHAR2)" + LF
+            + "  inner join pg_partition pp on CAST(pp.partkey as VARCHAR2) = CAST(pa.attnum as VARCHAR2)" + LF
             + "     and parentid = %s" + LF
             + " WHERE tbl.oid = %s;";
 
@@ -619,8 +619,8 @@ public class SqlConstants {
      */
     public static final String ATTRIBUTE_TABLESPACE_SQL = "SELECT  " + LF
             + "pt.spcname,pt.spcoptions,pt.spcmaxsize,pt.relative,pa.rolname,pd.Description " + LF
-            + "FROM PG_TABLESPACE pt LEFT JOIN PG_SHDescription pd on pd.objoid = pt.oid " + LF
-            + "LEFT JOIN PG_AUTHID pa on pa.oid = pt.spcowner" + LF
+            + "FROM pg_tablespace pt LEFT JOIN pg_shdescription pd on pd.objoid = pt.oid " + LF
+            + "LEFT JOIN pg_authid pa on pa.oid = pt.spcowner" + LF
             + "where pt.oid = %s ;";
 
     /**
@@ -935,7 +935,7 @@ public class SqlConstants {
      * select sequence count sql
      */
     public static final String SELECT_SEQUENCE_COUNT_SQL = "SELECT  count(1) as count "
-            + " from PG_CLASS c INNER JOIN pg_namespace n ON n.oid = c.relnamespace" + LF
+            + " from pg_class c INNER JOIN pg_namespace n ON n.oid = c.relnamespace" + LF
             + "and n.nspname = '%s' where relname = '%s' and relkind = 'S';";
 
     /**
@@ -1200,10 +1200,10 @@ public class SqlConstants {
             + " CASE WHEN pg_catalog.pg_get_expr(pi.indexprs, pi.indrelid, true) is null "
             + "THEN string_agg(att.attname, ',' order by att.attname) ELSE null END attname, "
             + " pg_catalog.pg_get_expr(pi.indexprs, pi.indrelid, true) expression,  pg_description.description "
-            + "from PG_INDEX pi inner join PG_CLASS pc on pi.indexrelid = pc.oid and pc.relkind in ('i' ,'I') "
-            + "inner join PG_ATTRIBUTE att on pc.oid = att.attrelid and att.attname != 'tableoid' "
+            + "from pg_index pi inner join pg_class pc on pi.indexrelid = pc.oid and pc.relkind in ('i' ,'I') "
+            + "inner join pg_attribute att on pc.oid = att.attrelid and att.attname != 'tableoid' "
             + "LEFT JOIN pg_description  ON pi.indexrelid = pg_description.objoid JOIN pg_am am ON pc.relam = am.oid "
-            + "inner join (select pc.oid from PG_CLASS pc inner join pg_namespace pn on pn.oid = pc.relnamespace "
+            + "inner join (select pc.oid from pg_class pc inner join pg_namespace pn on pn.oid = pc.relnamespace "
             + "where pc.relname = '%s' and pn.nspname = '%s' ) tt on pi.indrelid = tt.oid "
             + "group by pc.relname, pi.indisunique, pi.indexprs, pi.indrelid, am.amname, pg_description.description;";
 
@@ -1242,22 +1242,22 @@ public class SqlConstants {
             + "case when a.rolauditadmin = true then 'AUDITADMIN' ELSE '' end rolauditadmin," + LF
             + "case when a.rolsystemadmin = true then 'SYSADMIN' ELSE '' end rolsystemadmin," + LF
             + "a.rolvalidbegin,a.rolvaliduntil,a.rolconnlimit," + LF
-            + "a.rolrespool,t1.merolname,t1.grrolname,t2.belong,pd.Description  from PG_ROLES a LEFT join " + LF
+            + "a.rolrespool,t1.merolname,t1.grrolname,t2.belong,pd.Description  from pg_roles a LEFT join " + LF
             + "(SELECT t2.roleid ,grrolname," + LF
             + " merolname from " + LF
             + "(SELECT b.roleid ,array_agg(c.rolname) grrolname " + LF
-            + "from PG_AUTH_MEMBERS b INNER JOIN PG_ROLES c on c.oid = b.member " + LF
+            + "from pg_auth_members b INNER JOIN pg_roles c on c.oid = b.member " + LF
             + "where admin_option =false" + LF
             + "GROUP BY b.roleid) t2" + LF
             + "full join (SELECT b.roleid,array_agg(c.rolname) merolname " + LF
-            + "from PG_AUTH_MEMBERS b INNER JOIN PG_ROLES c on c.oid = b.member " + LF
+            + "from pg_auth_members b INNER JOIN pg_roles c on c.oid = b.member " + LF
             + "where admin_option =true" + LF
             + "GROUP BY b.roleid) t3" + LF
             + "on t2.roleid = t3.roleid) t1" + LF
             + "on a.oid = t1.roleid" + LF
-            + "left join PG_SHDescription pd on a.oid = pd.objoid" + LF
+            + "left join pg_shdescription pd on a.oid = pd.objoid" + LF
             + "LEFT join (SELECT pg_authid.oid AS oid, array_agg(parent.rolname) AS belong" + LF
-            + "FROM PG_AUTHID" + LF
+            + "FROM pg_authid" + LF
             + "INNER JOIN pg_auth_members ON pg_authid.oid = pg_auth_members.member" + LF
             + "INNER JOIN pg_authid AS parent ON pg_auth_members.roleid = parent.oid" + LF
             + "WHERE pg_authid.rolname = '%s'" + LF
@@ -1275,22 +1275,22 @@ public class SqlConstants {
             + "case when a.rolauditadmin = true then 'AUDITADMIN' ELSE '' end rolauditadmin," + LF
             + "case when a.rolsystemadmin = true then 'SYSADMIN' ELSE '' end rolsystemadmin," + LF
             + "a.rolvalidbegin,a.rolvaliduntil,a.rolconnlimit," + LF
-            + "a.rolrespool,t1.merolname,t1.grrolname,t2.belong,pd.Description  from PG_ROLES a LEFT join " + LF
+            + "a.rolrespool,t1.merolname,t1.grrolname,t2.belong,pd.Description  from pg_roles a LEFT join " + LF
             + "(SELECT t2.roleid ,grrolname," + LF
             + " merolname from " + LF
             + "(SELECT b.roleid ,array_agg(c.rolname) grrolname " + LF
-            + "from PG_AUTH_MEMBERS b INNER JOIN PG_ROLES c on c.oid = b.member " + LF
+            + "from pg_auth_members b INNER JOIN pg_roles c on c.oid = b.member " + LF
             + "where admin_option =false" + LF
             + "GROUP BY b.roleid) t2" + LF
             + "full join (SELECT b.roleid,array_agg(c.rolname) merolname " + LF
-            + "from PG_AUTH_MEMBERS b INNER JOIN PG_ROLES c on c.oid = b.member " + LF
+            + "from pg_auth_members b INNER JOIN pg_roles c on c.oid = b.member " + LF
             + "where admin_option =true" + LF
             + "GROUP BY b.roleid) t3" + LF
             + "on t2.roleid = t3.roleid) t1" + LF
             + "on a.oid = t1.roleid" + LF
-            + "left join PG_SHDescription pd on a.oid = pd.objoid" + LF
+            + "left join pg_shdescription pd on a.oid = pd.objoid" + LF
             + "LEFT join (SELECT pg_authid.oid AS oid, array_agg(parent.rolname) AS belong" + LF
-            + "FROM PG_AUTHID" + LF
+            + "FROM pg_authid" + LF
             + "INNER JOIN pg_auth_members ON pg_authid.oid = pg_auth_members.member" + LF
             + "INNER JOIN pg_authid AS parent ON pg_auth_members.roleid = parent.oid" + LF
             + "WHERE pg_authid.rolname = '%s'" + LF
@@ -1331,7 +1331,7 @@ public class SqlConstants {
      * synonym attribute sql
      */
     public static final String SYNONYM_ATTRIBUTE_SQL = "select synname,synobjschema,rolname,synobjname from "
-            + "PG_SYNONYM  a inner join pg_authid b on a.synowner = b.oid where synname = '%s';";
+            + "pg_synonym  a inner join pg_authid b on a.synowner = b.oid where synname = '%s';";
 
     /**
      * database attribute sql
