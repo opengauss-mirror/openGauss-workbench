@@ -197,6 +197,7 @@
                     <skip>${build.frontend.skip}</skip>
                     <environmentVariables>
                         <npm_config_cache>${npm.cache}/compatibility_assessment</npm_config_cache>
+                        <NODE_OPTIONS>--max-old-space-size=4096</NODE_OPTIONS>
                     </environmentVariables>
                 </configuration>
                 <executions>
